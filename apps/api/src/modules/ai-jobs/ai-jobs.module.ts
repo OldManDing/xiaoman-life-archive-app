@@ -9,6 +9,6 @@ import { AiProviderService } from './ai-provider.service';
 @Module({
   controllers: [AiJobsController],
   providers: [AiJobsService, AiJobsProcessor, AiJobsQueue, AiProviderService],
-  exports: [AiJobsService],
+  exports: [AiJobsService, AiJobsQueue],
 })
 export class AiJobsModule {}

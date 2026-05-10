@@ -129,7 +129,7 @@ describe('Auth session flow', () => {
   });
 
   afterAll(async () => {
-    await app.close();
+    if (app) await app.close();
   });
 
   it('sets refresh cookie, rotates refresh token, and clears it on logout', async () => {

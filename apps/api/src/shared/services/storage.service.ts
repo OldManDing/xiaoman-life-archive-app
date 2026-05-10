@@ -8,9 +8,7 @@ import { getStorageProviderName } from '../env-config';
 export class StorageService {
   private readonly provider = getStorageProviderName();
   private readonly bucket = process.env.STORAGE_BUCKET ?? 'xiaoman-archive-local';
-  private readonly publicBaseUrl =
-    process.env.STORAGE_PUBLIC_BASE_URL ?? 'http://localhost:9000/xiaoman-archive-local';
-  private readonly endpoint = process.env.STORAGE_ENDPOINT ?? 'http://localhost:9000';
+  private readonly endpoint = process.env.STORAGE_ENDPOINT;
   private readonly expiresIn = Number(process.env.STORAGE_SIGNED_URL_EXPIRES_IN ?? 600);
 
   private readonly s3Client = this.createS3Client();
@@ -22,7 +20,7 @@ export class StorageService {
 
     return new S3Client({
       region: process.env.STORAGE_REGION ?? 'auto',
-      endpoint: this.endpoint,
+      ...(this.endpoint ? { endpoint: this.endpoint } : {}),
       forcePathStyle: String(process.env.STORAGE_FORCE_PATH_STYLE ?? 'true').toLowerCase() === 'true',
       credentials:
         process.env.STORAGE_ACCESS_KEY && process.env.STORAGE_SECRET_KEY
@@ -68,11 +66,12 @@ export class StorageService {
     }
 
     return {
-      upload_url: `${this.endpoint}/${this.bucket}/${objectKey}?mock_upload_token=1`,
+      upload_url: `${this.endpoint ?? 'http://localhost:9000'}/${this.bucket}/${objectKey}?mock_upload_token=1`,
       method: 'PUT',
       headers: {
         'Content-Type': mimeType,
       },
+      mock_upload: true,
       expires_in: this.expiresIn,
       expire_at: expireAt,
     };
@@ -97,9 +96,38 @@ export class StorageService {
     }
 
     return {
-      access_url: `${this.publicBaseUrl}/${objectKey}?mock_signed=1`,
+      access_url: this.createMockImageDataUrl(objectKey),
       expires_in: this.expiresIn,
       expire_at: new Date(Date.now() + this.expiresIn * 1000).toISOString(),
     };
+  }
+
+  private createMockImageDataUrl(objectKey: string) {
+    const label = objectKey.includes('orphan') ? '待审核照片' : '成长照片';
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="720" viewBox="0 0 960 720">
+      <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#f7efe4"/>
+          <stop offset="0.52" stop-color="#eaf4ef"/>
+          <stop offset="1" stop-color="#e9eef8"/>
+        </linearGradient>
+        <linearGradient id="sun" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#f8c66c"/>
+          <stop offset="1" stop-color="#e58f5c"/>
+        </linearGradient>
+      </defs>
+      <rect width="960" height="720" fill="url(#bg)"/>
+      <circle cx="736" cy="168" r="72" fill="url(#sun)" opacity="0.86"/>
+      <path d="M0 540 C180 430 300 520 460 430 C610 348 760 394 960 292 L960 720 L0 720 Z" fill="#d9e9dd"/>
+      <path d="M0 600 C190 520 330 610 520 505 C650 432 800 472 960 392 L960 720 L0 720 Z" fill="#b9d6c2"/>
+      <rect x="166" y="244" width="278" height="286" rx="56" fill="#ffffff" opacity="0.68"/>
+      <circle cx="306" cy="340" r="72" fill="#f0c7a7"/>
+      <path d="M214 478 C242 410 370 410 398 478" fill="#c9a38d"/>
+      <rect x="500" y="322" width="256" height="160" rx="42" fill="#ffffff" opacity="0.56"/>
+      <path d="M552 438 L610 382 L656 428 L696 394 L730 438 Z" fill="#8bb99c"/>
+      <text x="480" y="620" text-anchor="middle" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-size="42" font-weight="700" fill="#42544d">${label}</text>
+    </svg>`;
+
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
   }
 }

@@ -123,7 +123,7 @@ export class RecordsService {
         where,
         include: {
           creator: true,
-          media: { where: { deletedAt: null } },
+          media: { where: { status: MEDIA_STATUS_READY, deletedAt: null } },
           tags: true,
         },
         orderBy: { eventTime: 'desc' },

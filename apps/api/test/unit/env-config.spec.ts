@@ -31,8 +31,23 @@ describe('env-config', () => {
         JWT_REFRESH_SECRET: 'replace_me_refresh_secret',
         CORS_ORIGINS: 'https://app.example.com',
         SMS_PROVIDER: 'aliyun',
+        SMS_ACCESS_KEY: 'sms_access',
+        SMS_SECRET_KEY: 'sms_secret',
+        SMS_SIGN_NAME: '小满',
+        SMS_TEMPLATE_CODE: 'SMS_001',
         STORAGE_PROVIDER: 'minio',
-        AI_PROVIDER: 'mock',
+        STORAGE_REGION: 'local',
+        STORAGE_BUCKET: 'bucket',
+        STORAGE_ENDPOINT: 'https://storage.example.com',
+        STORAGE_ACCESS_KEY: 'storage_access',
+        STORAGE_SECRET_KEY: 'storage_secret',
+        AI_PROVIDER: 'openai-compatible',
+        AI_API_KEY: 'ai_key',
+        AI_BASE_URL: 'https://ai.example.com/v1',
+        AI_MODEL: 'model',
+        DATABASE_URL: 'mysql://user:pass@db:3306/app',
+        REDIS_HOST: 'redis',
+        REDIS_PORT: '6379',
       }),
     ).toThrow('JWT_ACCESS_SECRET cannot use the placeholder value outside local/test environments');
   });
@@ -45,8 +60,23 @@ describe('env-config', () => {
         JWT_ACCESS_SECRET: 'staging_access_secret',
         JWT_REFRESH_SECRET: 'staging_refresh_secret',
         SMS_PROVIDER: 'aliyun',
+        SMS_ACCESS_KEY: 'sms_access',
+        SMS_SECRET_KEY: 'sms_secret',
+        SMS_SIGN_NAME: '小满',
+        SMS_TEMPLATE_CODE: 'SMS_001',
         STORAGE_PROVIDER: 'minio',
-        AI_PROVIDER: 'mock',
+        STORAGE_REGION: 'local',
+        STORAGE_BUCKET: 'bucket',
+        STORAGE_ENDPOINT: 'https://storage.example.com',
+        STORAGE_ACCESS_KEY: 'storage_access',
+        STORAGE_SECRET_KEY: 'storage_secret',
+        AI_PROVIDER: 'openai-compatible',
+        AI_API_KEY: 'ai_key',
+        AI_BASE_URL: 'https://ai.example.com/v1',
+        AI_MODEL: 'model',
+        DATABASE_URL: 'mysql://user:pass@db:3306/app',
+        REDIS_HOST: 'redis',
+        REDIS_PORT: '6379',
       }),
     ).toThrow('CORS_ORIGINS is required outside local/test environments');
   });
@@ -60,7 +90,19 @@ describe('env-config', () => {
         JWT_REFRESH_SECRET: 'prod_refresh_secret',
         CORS_ORIGINS: 'https://app.example.com',
         SMS_PROVIDER: 'aliyun',
+        SMS_ACCESS_KEY: 'sms_access',
+        SMS_SECRET_KEY: 'sms_secret',
+        SMS_SIGN_NAME: '小满',
+        SMS_TEMPLATE_CODE: 'SMS_001',
         STORAGE_PROVIDER: 'minio',
+        STORAGE_REGION: 'local',
+        STORAGE_BUCKET: 'bucket',
+        STORAGE_ENDPOINT: 'https://storage.example.com',
+        STORAGE_ACCESS_KEY: 'storage_access',
+        STORAGE_SECRET_KEY: 'storage_secret',
+        DATABASE_URL: 'mysql://user:pass@db:3306/app',
+        REDIS_HOST: 'redis',
+        REDIS_PORT: '6379',
       }),
     ).toThrow('Missing required environment variable: AI_PROVIDER');
   });
@@ -83,11 +125,15 @@ describe('env-config', () => {
     expect(() => getStorageProviderName({ APP_ENV: 'production', STORAGE_PROVIDER: 'mock' })).toThrow(
       'STORAGE_PROVIDER=mock is not allowed outside local/test environments',
     );
+    expect(() => getAiProviderName({ APP_ENV: 'production', AI_PROVIDER: 'mock' })).toThrow(
+      'AI_PROVIDER=mock is not allowed outside local/test environments',
+    );
   });
 
   it('rejects invalid provider values', () => {
     expect(() => getSmsProviderName({ APP_ENV: 'local', SMS_PROVIDER: 'foo' })).toThrow('Invalid SMS_PROVIDER value: foo');
     expect(() => getStorageProviderName({ APP_ENV: 'local', STORAGE_PROVIDER: 'bar' })).toThrow('Invalid STORAGE_PROVIDER value: bar');
+    expect(() => getAiProviderName({ APP_ENV: 'local', AI_PROVIDER: 'baz' })).toThrow('Invalid AI_PROVIDER value: baz');
   });
 
   it('resolves app env, port and cookie security flags consistently', () => {
@@ -97,5 +143,6 @@ describe('env-config', () => {
     expect(resolveCorsOrigins({ APP_ENV: 'local' })).toBe(true);
     expect(resolveCorsOrigins({ APP_ENV: 'prod', CORS_ORIGINS: 'https://a.com, https://b.com' })).toEqual(['https://a.com', 'https://b.com']);
     expect(getStorageProviderName({ APP_ENV: 'prod', STORAGE_PROVIDER: 'minio' })).toBe('minio');
+    expect(getAiProviderName({ APP_ENV: 'prod', AI_PROVIDER: 'openai-compatible' })).toBe('openai-compatible');
   });
 });

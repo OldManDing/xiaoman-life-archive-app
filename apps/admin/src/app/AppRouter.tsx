@@ -8,6 +8,7 @@ import {
   AIJobsPage,
   AuditLogsPage,
   ChildrenPage,
+  DashboardPage,
   LoginPage,
   MediaPage,
   RecordsPage,
@@ -24,8 +25,9 @@ export const AppRouter = () => {
       </Route>
 
       <Route element={<ProtectedRoute />}>
-        <Route element={<AdminLayout />}>
-          <Route path="/" element={<Navigate to="/users" replace />} />
+          <Route element={<AdminLayout />}>
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/users" element={<UsersPage />} />
           <Route path="/children" element={<ChildrenPage />} />
           <Route path="/records" element={<RecordsPage />} />
@@ -35,7 +37,7 @@ export const AppRouter = () => {
         </Route>
       </Route>
 
-      <Route path="*" element={<Navigate to="/users" replace />} />
+      <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
 };

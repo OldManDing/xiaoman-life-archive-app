@@ -5,6 +5,7 @@ import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
 import type { ChildRecord, FamilyInviteResponse, FamilyMemberItem } from '../shared/api/types';
 import { useAsyncData } from '../shared/hooks';
+import { childStatusLabel, familyMemberStatusLabel, familyRoleLabel, genderLabel } from '../shared/labels';
 import { loadLocalSettings } from '../shared/localSettings';
 import { Field, PageShell, Panel, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle, textareaStyle } from '../shared/ui';
 import { EmptyState, buttonRowStyle, formSubmitSpacingStyle, rowStyle } from './shared';
@@ -74,7 +75,7 @@ export const FamilyPage = () => {
                 家庭编号：{activeChild.family_no ?? '未返回'}
               </span>
               <span style={{ fontSize: '12px', color: '#78716c', padding: '6px 10px', borderRadius: '999px', background: '#ffffff', border: '1px solid #e7e5e4' }}>
-                我的角色：{currentMember?.role ?? '暂未识别'}
+                我的角色：{currentMember ? familyRoleLabel(currentMember.role) : '暂未识别'}
               </span>
             </div>
             {error ? <p style={{ ...helperTextStyle, color: '#dc2626' }}>成员信息加载失败：{error}</p> : null}
@@ -123,7 +124,7 @@ export const FamilyPage = () => {
                       </span>
                     </div>
                     <span style={{ fontSize: '12px', color: '#a8a29e' }}>
-                      {member.invited_by_user_no ? `邀请人：${member.invited_by_user_no}` : '系统创建 / 当前 owner'}
+                      {member.invited_by_user_no ? `邀请人：${member.invited_by_user_no}` : '系统创建 / 当前管理员'}
                     </span>
                   </div>
                 </div>
@@ -159,7 +160,7 @@ export const FamilyPage = () => {
                     <span style={{ fontSize: '13px', color: '#57534e' }}>已加入家庭协作</span>
                   </div>
                   <span style={{ fontSize: '11px', color: '#a8a29e', fontWeight: 600 }}>
-                    {member.joined_at ? new Date(member.joined_at).toLocaleString() : '等待加入时间同步'}
+                    {member.joined_at ? new Date(member.joined_at).toLocaleString('zh-CN') : '等待加入时间同步'}
                   </span>
                 </div>
               </div>
@@ -234,6 +235,8 @@ export const FamilyChildPage = () => {
         {error ? <EmptyState message={`加载失败：${error}`} /> : null}
         {!loading && !error && data ? (
           <form onSubmit={onSubmit} style={rowStyle}>
+            <p style={helperTextStyle}>档案状态：{childStatusLabel(data.status)}</p>
+            <p style={helperTextStyle}>当前性别：{genderLabel(data.gender)}</p>
             <Field label="孩子姓名">
               <input style={inputStyle} value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} />
             </Field>
@@ -326,15 +329,16 @@ export const FamilyMembersPage = () => {
                 <strong>{member.nickname}</strong>
                 <p style={helperTextStyle}>用户编号：{member.user_no}</p>
                 <p style={helperTextStyle}>手机号：{settings.hideMobileMask ? '已隐藏' : member.mobile_masked ?? '未提供'}</p>
-                <p style={helperTextStyle}>角色：{member.role}</p>
-                <p style={helperTextStyle}>邀请人：{member.invited_by_user_no ?? '系统创建 / 当前 owner'}</p>
+                <p style={helperTextStyle}>角色：{familyRoleLabel(member.role)}</p>
+                <p style={helperTextStyle}>成员状态：{familyMemberStatusLabel(member.status)}</p>
+                <p style={helperTextStyle}>邀请人：{member.invited_by_user_no ?? '系统创建 / 当前管理员'}</p>
                 {member.role !== 'owner' ? (
                   <div style={{ ...buttonRowStyle, marginTop: '8px' }}>
                     <button style={secondaryButtonStyle} onClick={() => void onChangeRole(member.user_no, 'viewer')} disabled={updatingUserNo === member.user_no}>
-                      {updatingUserNo === member.user_no && member.role !== 'viewer' ? '处理中…' : '设为 viewer'}
+                      {updatingUserNo === member.user_no && member.role !== 'viewer' ? '处理中…' : '设为只读成员'}
                     </button>
                     <button style={secondaryButtonStyle} onClick={() => void onChangeRole(member.user_no, 'editor')} disabled={updatingUserNo === member.user_no}>
-                      {updatingUserNo === member.user_no && member.role !== 'editor' ? '处理中…' : '设为 editor'}
+                      {updatingUserNo === member.user_no && member.role !== 'editor' ? '处理中…' : '设为可编辑成员'}
                     </button>
                   </div>
                 ) : null}
@@ -395,8 +399,8 @@ export const FamilyInvitePage = () => {
           </Field>
           <Field label="邀请角色">
             <select style={inputStyle} value={form.role} onChange={(event) => setForm((current) => ({ ...current, role: event.target.value as 'viewer' | 'editor' }))}>
-              <option value="viewer">viewer</option>
-              <option value="editor">editor</option>
+              <option value="viewer">只读成员</option>
+              <option value="editor">可编辑成员</option>
             </select>
           </Field>
           {error ? <p style={{ ...helperTextStyle, color: '#dc2626' }}>{error}</p> : null}
@@ -413,7 +417,8 @@ export const FamilyInvitePage = () => {
             <strong>邀请码已生成</strong>
             <p style={helperTextStyle}>邀请编号：{inviteResult.invite_no}</p>
             <p style={helperTextStyle}>邀请码：{inviteResult.invite_token}</p>
-            <p style={helperTextStyle}>失效时间：{new Date(inviteResult.expires_at).toLocaleString()}</p>
+            <p style={helperTextStyle}>邀请角色：{familyRoleLabel(inviteResult.role)}</p>
+            <p style={helperTextStyle}>失效时间：{new Date(inviteResult.expires_at).toLocaleString('zh-CN')}</p>
             <div style={buttonRowStyle}>
               <button type="button" style={secondaryButtonStyle} onClick={() => void copyText(inviteResult.invite_token, '邀请码已复制')}>
                 复制邀请码

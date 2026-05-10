@@ -8,6 +8,7 @@ export const RECORD_STATUS_PUBLISHED = 2;
 export const MEDIA_STATUS_UPLOADING = 1;
 export const MEDIA_STATUS_READY = 2;
 export const MEDIA_STATUS_FAILED = 3;
+export const MEDIA_STATUS_REMOVED = 4;
 export const MEMBER_INVITE_STATUS_PENDING = 1;
 export const MEMBER_INVITE_STATUS_ACCEPTED = 2;
 export const MEMBER_INVITE_STATUS_REVOKED = 3;

@@ -1,0 +1,164 @@
+x-api-environment: &api-environment
+  NODE_ENV: ${NODE_ENV}
+  APP_ENV: ${APP_ENV}
+  APP_PORT: ${APP_PORT}
+  APP_BASE_URL: ${APP_BASE_URL}
+  ADMIN_BOOTSTRAP_ENABLED: ${ADMIN_BOOTSTRAP_ENABLED}
+  DATABASE_URL: ${DATABASE_URL}
+  REDIS_HOST: ${REDIS_HOST}
+  REDIS_PORT: ${REDIS_PORT}
+  REDIS_PASSWORD: ${REDIS_PASSWORD}
+  REDIS_DB: ${REDIS_DB}
+  JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+  JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+  JWT_ACCESS_EXPIRES_IN: ${JWT_ACCESS_EXPIRES_IN}
+  JWT_REFRESH_EXPIRES_IN: ${JWT_REFRESH_EXPIRES_IN}
+  STORAGE_PROVIDER: ${STORAGE_PROVIDER}
+  STORAGE_REGION: ${STORAGE_REGION}
+  STORAGE_BUCKET: ${STORAGE_BUCKET}
+  STORAGE_ENDPOINT: ${STORAGE_ENDPOINT}
+  STORAGE_ACCESS_KEY: ${STORAGE_ACCESS_KEY}
+  STORAGE_SECRET_KEY: ${STORAGE_SECRET_KEY}
+  STORAGE_FORCE_PATH_STYLE: ${STORAGE_FORCE_PATH_STYLE}
+  STORAGE_PUBLIC_BASE_URL: ${STORAGE_PUBLIC_BASE_URL}
+  STORAGE_SIGNED_URL_EXPIRES_IN: ${STORAGE_SIGNED_URL_EXPIRES_IN}
+  UPLOAD_IMAGE_MAX_BYTES: ${UPLOAD_IMAGE_MAX_BYTES}
+  UPLOAD_VIDEO_MAX_BYTES: ${UPLOAD_VIDEO_MAX_BYTES}
+  UPLOAD_AUDIO_MAX_BYTES: ${UPLOAD_AUDIO_MAX_BYTES}
+  UPLOAD_IMAGE_MAX_COUNT_PER_RECORD: ${UPLOAD_IMAGE_MAX_COUNT_PER_RECORD}
+  UPLOAD_VIDEO_MAX_COUNT_PER_RECORD: ${UPLOAD_VIDEO_MAX_COUNT_PER_RECORD}
+  UPLOAD_AUDIO_MAX_COUNT_PER_RECORD: ${UPLOAD_AUDIO_MAX_COUNT_PER_RECORD}
+  AI_PROVIDER: ${AI_PROVIDER}
+  AI_API_KEY: ${AI_API_KEY}
+  AI_BASE_URL: ${AI_BASE_URL}
+  AI_MODEL: ${AI_MODEL}
+  AI_TIMEOUT_MS: ${AI_TIMEOUT_MS}
+  AI_MAX_RETRY_COUNT: ${AI_MAX_RETRY_COUNT}
+  AI_DAILY_LIMIT_PER_USER: ${AI_DAILY_LIMIT_PER_USER}
+  SMS_PROVIDER: ${SMS_PROVIDER}
+  SMS_ACCESS_KEY: ${SMS_ACCESS_KEY}
+  SMS_SECRET_KEY: ${SMS_SECRET_KEY}
+  SMS_ENDPOINT: ${SMS_ENDPOINT}
+  SMS_SIGN_NAME: ${SMS_SIGN_NAME}
+  SMS_TEMPLATE_CODE: ${SMS_TEMPLATE_CODE}
+  SMS_CODE_TTL_SECONDS: ${SMS_CODE_TTL_SECONDS}
+  SMS_SEND_COOLDOWN_SECONDS: ${SMS_SEND_COOLDOWN_SECONDS}
+  SMS_DAILY_LIMIT_PER_MOBILE: ${SMS_DAILY_LIMIT_PER_MOBILE}
+  SMS_VERIFY_MAX_ATTEMPTS: ${SMS_VERIFY_MAX_ATTEMPTS}
+  SMS_CODE_PEPPER: ${SMS_CODE_PEPPER}
+  ADMIN_INITIAL_USERNAME: ${ADMIN_INITIAL_USERNAME}
+  ADMIN_INITIAL_PASSWORD: ${ADMIN_INITIAL_PASSWORD}
+  LOG_LEVEL: ${LOG_LEVEL}
+  ENABLE_REQUEST_LOG: ${ENABLE_REQUEST_LOG}
+  ENABLE_AUDIT_LOG: ${ENABLE_AUDIT_LOG}
+  LOG_DIR: ${LOG_DIR}
+  CORS_ORIGINS: ${CORS_ORIGINS}
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    command: --default-authentication-plugin=mysql_native_password
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./backups/mysql:/backups
+    healthcheck:
+      test: ['CMD-SHELL', 'mysqladmin ping -h 127.0.0.1 -uroot -p"$${MYSQL_ROOT_PASSWORD}"']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ['sh', '-c', 'redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD"']
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD-SHELL', 'redis-cli -a "$$REDIS_PASSWORD" ping | grep PONG']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  migrate:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+      target: base
+    profiles: ['migrate']
+    environment: *api-environment
+    depends_on:
+      mysql:
+        condition: service_healthy
+    command: ['npm', 'run', 'prisma:dbpush']
+
+  api:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+      target: runner
+    restart: unless-stopped
+    environment: *api-environment
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - api-logs:/var/log/xiaoman
+    expose:
+      - '3000'
+
+  web:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+        VITE_APP_NAME: ${VITE_APP_NAME}
+        VITE_STORAGE_PREVIEW_MODE: ${VITE_STORAGE_PREVIEW_MODE}
+    restart: unless-stopped
+    expose:
+      - '80'
+
+  admin:
+    build:
+      context: ..
+      dockerfile: apps/admin/Dockerfile
+      args:
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+        VITE_ADMIN_APP_NAME: ${VITE_ADMIN_APP_NAME}
+    restart: unless-stopped
+    expose:
+      - '80'
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    depends_on:
+      api:
+        condition: service_healthy
+      web:
+        condition: service_started
+      admin:
+        condition: service_started
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./nginx/reverse-proxy.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./certs:/etc/nginx/certs:ro
+      - nginx-logs:/var/log/nginx
+
+volumes:
+  mysql-data:
+  redis-data:
+  api-logs:
+  nginx-logs:

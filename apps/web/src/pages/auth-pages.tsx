@@ -7,9 +7,9 @@ import { Field, PageShell, Panel, helperTextStyle, inputStyle, primaryButtonStyl
 import { rowStyle } from './shared';
 
 export const SplashPage = () => (
-  <PageShell title="启动页" description="当前会在应用启动后自动进行登录态检查。">
+  <PageShell title="正在进入年轮" description="系统正在检查登录状态，并会自动前往合适的页面。">
     <Panel>
-      <p style={helperTextStyle}>如果你能看到这个页面，说明路由已就绪。正常流程会很快跳转到登录或首页。</p>
+      <p style={helperTextStyle}>请稍候，年轮会根据你的账号状态进入登录、建档或首页。</p>
     </Panel>
   </PageShell>
 );
@@ -73,7 +73,7 @@ export const LoginPage = () => {
   };
 
   return (
-    <PageShell title="登录 / 注册" description="用手机号验证码进入家庭成长档案馆。">
+    <PageShell title="登录注册" description="用手机号验证码进入年轮。">
       <Panel>
         <form onSubmit={onSubmit} style={rowStyle}>
           <Field label="手机号">
@@ -110,8 +110,11 @@ export const LoginPage = () => {
           </label>
           {infoMessage ? <p style={{ ...helperTextStyle, color: '#0f766e' }}>{infoMessage}</p> : null}
           {error ? <p style={{ ...helperTextStyle, color: '#dc2626' }}>{error}</p> : null}
+          <button type="button" style={{ ...secondaryButtonStyle, justifyContent: 'center' }} onClick={() => navigate('/legal')}>
+            查看完整协议与隐私政策
+          </button>
           <button type="submit" style={primaryButtonStyle} disabled={submitting || !acceptedAgreement}>
-            {submitting ? '登录中…' : '进入小满人生档案馆'}
+            {submitting ? '登录中…' : '进入年轮'}
           </button>
         </form>
       </Panel>

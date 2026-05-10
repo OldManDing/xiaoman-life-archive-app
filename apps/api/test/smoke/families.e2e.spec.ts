@@ -154,7 +154,7 @@ describe('Families invite flow', () => {
   });
 
   afterAll(async () => {
-    await app.close();
+    if (app) await app.close();
   });
 
   it('creates invite, accepts it, and lists members', async () => {

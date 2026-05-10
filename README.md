@@ -19,6 +19,8 @@
 - `docs/实施版_回归验证基线.md`
 - `docs/实施版_测试环境联调与部署手册.md`
 - `docs/实施版_发布执行清单.md`
+- `docs/实施版_生产部署运行手册.md`
+- `docs/实施版_上线闭环检查清单.md`
 - `docs/孩子的人生档案馆_prd_v_1.md`
 - `docs/验收标准.md`
 
@@ -66,7 +68,7 @@ docker compose up -d mysql redis minio minio-init
 
 `minio-init` 会创建本地上传所需的 `xiaoman-archive-local` bucket。若只启动 `minio` 而未运行初始化服务，图片上传会在对象存储 PUT 阶段返回 `NoSuchBucket`。
 
-`.env.example` 已与 Docker 暴露端口保持一致：
+本地开发请复制 `.env.local.example` 为 `.env`。该模板已与 Docker 暴露端口保持一致：
 
 ```env
 DATABASE_URL=mysql://xiaoman:password@localhost:3307/xiaoman_archive
@@ -74,8 +76,10 @@ DATABASE_URL=mysql://xiaoman:password@localhost:3307/xiaoman_archive
 
 ## 环境变量
 
-1. 复制 `.env.example` 为 `.env`
-2. 至少确认以下变量可用：
+1. 本地开发复制 `.env.local.example` 为 `.env`
+2. 生产或预发复制 `.env.example` 为 `.env.production`
+3. 生产或预发执行 `npm run verify:production-env`
+4. 至少确认以下变量可用：
 
 - `DATABASE_URL`
 - `APP_PORT`
@@ -83,7 +87,7 @@ DATABASE_URL=mysql://xiaoman:password@localhost:3307/xiaoman_archive
 - `JWT_REFRESH_SECRET`
 - `CORS_ORIGINS`
 
-本地开发默认可使用 mock SMS / mock AI；共享测试和生产环境必须替换默认 secret，并按部署文档接入真实 provider。
+本地开发默认可使用 mock SMS / mock AI；共享测试和生产环境必须替换默认 secret，并按部署文档接入真实 provider。生产环境禁止 `SMS_PROVIDER=mock`、`STORAGE_PROVIDER=mock`、`AI_PROVIDER=mock`。
 
 ## 快速验证
 
@@ -93,6 +97,12 @@ npm run typecheck:api
 npm run typecheck:web
 npm run typecheck:admin
 npm run smoke:test:api
+```
+
+生产模板校验：
+
+```bash
+npm run verify:production-template
 ```
 
 用户端默认开发地址：`http://localhost:5173`

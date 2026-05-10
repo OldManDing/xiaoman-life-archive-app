@@ -1,61 +1,15 @@
-import { useState, type FormEvent } from 'react';
+import type { CSSProperties, FormEvent, ReactNode } from 'react';
 
-import type { AdminListResponse } from '../shared/request';
 import { EmptyState, Panel } from '../shared/ui';
-import { inputStyle, primaryButtonStyle, tableStyle, thTdStyle } from '../shared/uiStyles';
+import { inputStyle, mutedTextStyle, primaryButtonStyle, secondaryButtonStyle, tableStyle, thTdStyle } from '../shared/uiStyles';
 
-export const useAdminListPage = <T,>(loader: (params: { keyword?: string; page?: number; page_size?: number }) => Promise<AdminListResponse<T>>) => {
-  const [keyword, setKeyword] = useState('');
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<AdminListResponse<T> | null>(null);
-
-  const load = async (nextPage = page, nextPageSize = pageSize, event?: FormEvent) => {
-    event?.preventDefault();
-    setLoading(true);
-    setError(null);
-    try {
-      const next = await loader({ keyword: keyword || undefined, page: nextPage, page_size: nextPageSize });
-      setResult(next);
-      setPage(next.page);
-      setPageSize(next.page_size);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const onSearch = async (event?: FormEvent) => {
-    await load(1, pageSize, event);
-  };
-
-  const onPrevPage = async () => {
-    if (loading || page <= 1) return;
-    await load(page - 1, pageSize);
-  };
-
-  const onNextPage = async () => {
-    if (loading || !result?.has_more) return;
-    await load(page + 1, pageSize);
-  };
-
-  return {
-    keyword,
-    setKeyword,
-    page,
-    pageSize,
-    loading,
-    error,
-    result,
-    load,
-    onSearch,
-    onPrevPage,
-    onNextPage,
-  };
-};
+const stickyLastColumnStyle = (isHeader = false): CSSProperties => ({
+  position: 'sticky',
+  right: 0,
+  zIndex: isHeader ? 2 : 1,
+  background: isHeader ? '#f6f8f7' : '#ffffff',
+  boxShadow: '-10px 0 14px rgba(15, 23, 42, 0.06)',
+});
 
 export const SearchPanel = ({
   keyword,
@@ -69,11 +23,20 @@ export const SearchPanel = ({
   onSearch: (event?: FormEvent) => Promise<void>;
 }) => (
   <Panel>
-    <form onSubmit={onSearch} style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-      <input style={{ ...inputStyle, maxWidth: '320px' }} value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="输入关键字筛选" />
-      <button type="submit" style={primaryButtonStyle} disabled={loading}>
-        {loading ? '查询中…' : '查询'}
-      </button>
+    <form onSubmit={onSearch} style={{ display: 'grid', gap: '12px' }}>
+      <div>
+        <strong style={{ display: 'block', color: '#16211f', marginBottom: '4px' }}>筛选条件</strong>
+        <p style={mutedTextStyle}>输入用户、孩子、记录、媒体或任务相关关键字后查询。</p>
+      </div>
+      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+        <input style={{ ...inputStyle, maxWidth: '360px' }} value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="输入关键字筛选" />
+        <button type="submit" style={primaryButtonStyle} disabled={loading}>
+          {loading ? '查询中…' : '查询'}
+        </button>
+        <button type="button" style={secondaryButtonStyle} onClick={() => setKeyword('')} disabled={loading || !keyword}>
+          清空
+        </button>
+      </div>
     </form>
   </Panel>
 );
@@ -84,7 +47,7 @@ export const TableShell = ({
   emptyMessage,
 }: {
   columns: string[];
-  rows: Array<Array<string | number | null>>;
+  rows: Array<Array<ReactNode>>;
   emptyMessage: string;
 }) => (
   <Panel>
@@ -92,11 +55,11 @@ export const TableShell = ({
       <EmptyState message={emptyMessage} />
     ) : (
       <div style={{ overflowX: 'auto' }}>
-        <table style={tableStyle}>
+        <table style={{ ...tableStyle, minWidth: '1120px' }}>
           <thead>
             <tr>
-              {columns.map((column) => (
-                <th key={column} style={thTdStyle}>
+              {columns.map((column, columnIndex) => (
+                <th key={column} style={{ ...thTdStyle, color: '#66736f', fontSize: '13px', background: '#f6f8f7', ...(columnIndex === columns.length - 1 ? stickyLastColumnStyle(true) : {}) }}>
                   {column}
                 </th>
               ))}
@@ -106,7 +69,7 @@ export const TableShell = ({
             {rows.map((row, rowIndex) => (
               <tr key={rowIndex}>
                 {row.map((cell, cellIndex) => (
-                  <td key={cellIndex} style={thTdStyle}>
+                  <td key={cellIndex} style={{ ...thTdStyle, ...(cellIndex === row.length - 1 ? stickyLastColumnStyle() : {}) }}>
                     {cell ?? '—'}
                   </td>
                 ))}
@@ -118,8 +81,6 @@ export const TableShell = ({
     )}
   </Panel>
 );
-
-export const formatListRows = <T,>(items: T[], mapper: (item: T) => Array<string | number | null>) => items.map(mapper);
 
 export const PaginationPanel = ({
   page,
@@ -140,7 +101,7 @@ export const PaginationPanel = ({
 }) => (
   <Panel>
     <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-      <div style={{ color: '#6b7280', fontSize: '14px' }}>
+      <div style={{ color: '#66736f', fontSize: '14px', fontWeight: 600 }}>
         当前第 {page} 页 · 每页 {pageSize} 条 · 共 {total} 条
       </div>
       <div style={{ display: 'flex', gap: '8px' }}>

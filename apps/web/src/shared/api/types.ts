@@ -104,6 +104,7 @@ export interface UploadTokenResponse {
   upload_url: string;
   method: string;
   headers: Record<string, string>;
+  mock_upload?: boolean;
   expires_in: number;
   expire_at?: string;
 }

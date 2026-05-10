@@ -93,6 +93,8 @@ export interface UpdateFamilyMemberRolePayload {
   role: 'viewer' | 'editor';
 }
 
+let refreshSessionPromise: Promise<LoginResponse> | null = null;
+
 export const webApi = {
   async sendCode(mobile: string) {
     const response = await http.post<ApiEnvelope<SendCodeResponse>>('/auth/send-code', { mobile });
@@ -105,8 +107,16 @@ export const webApi = {
   },
 
   async refresh() {
-    const response = await http.post<ApiEnvelope<LoginResponse>>('/auth/refresh');
-    return response.data.data;
+    if (!refreshSessionPromise) {
+      refreshSessionPromise = http
+        .post<ApiEnvelope<LoginResponse>>('/auth/refresh')
+        .then((response) => response.data.data)
+        .finally(() => {
+          refreshSessionPromise = null;
+        });
+    }
+
+    return refreshSessionPromise;
   },
 
   async logout() {

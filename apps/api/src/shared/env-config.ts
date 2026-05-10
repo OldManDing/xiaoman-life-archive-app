@@ -5,7 +5,9 @@ const DEFAULT_ACCESS_SECRET = 'replace_me_access_secret';
 const DEFAULT_REFRESH_SECRET = 'replace_me_refresh_secret';
 const SMS_PROVIDER_VALUES = new Set(['mock', 'aliyun']);
 const STORAGE_PROVIDER_VALUES = new Set(['mock', 'minio', 's3', 'oss', 'cos', 'r2']);
-const AI_PROVIDER_VALUES = new Set(['mock']);
+const AI_PROVIDER_VALUES = new Set(['mock', 'openai', 'openai-compatible']);
+
+export type AiProviderName = 'mock' | 'openai' | 'openai-compatible';
 
 type EnvSource = Record<string, unknown>;
 
@@ -142,11 +144,40 @@ export function getStorageProviderName(env: EnvSource = process.env): 'mock' | '
   }) as 'mock' | 'minio' | 's3' | 'oss' | 'cos' | 'r2';
 }
 
-export function getAiProviderName(env: EnvSource = process.env): 'mock' {
+export function getAiProviderName(env: EnvSource = process.env): AiProviderName {
   return resolveProviderValue(env, 'AI_PROVIDER', AI_PROVIDER_VALUES, {
     relaxedDefault: 'mock',
-    allowMockInStrict: true,
-  }) as 'mock';
+    allowMockInStrict: false,
+  }) as AiProviderName;
+}
+
+function requireEnvValues(env: EnvSource, names: string[]) {
+  for (const name of names) {
+    requireEnvValue(env, name);
+  }
+}
+
+function validateStrictProviderConfig(env: EnvSource) {
+  requireEnvValue(env, 'DATABASE_URL');
+  requireEnvValues(env, ['REDIS_HOST', 'REDIS_PORT']);
+
+  const smsProvider = getSmsProviderName(env);
+  if (smsProvider === 'aliyun') {
+    requireEnvValues(env, ['SMS_ACCESS_KEY', 'SMS_SECRET_KEY', 'SMS_SIGN_NAME', 'SMS_TEMPLATE_CODE']);
+  }
+
+  const storageProvider = getStorageProviderName(env);
+  if (storageProvider !== 'mock') {
+    requireEnvValues(env, ['STORAGE_REGION', 'STORAGE_BUCKET', 'STORAGE_ACCESS_KEY', 'STORAGE_SECRET_KEY']);
+    if (storageProvider !== 's3') {
+      requireEnvValue(env, 'STORAGE_ENDPOINT');
+    }
+  }
+
+  const aiProvider = getAiProviderName(env);
+  if (aiProvider !== 'mock') {
+    requireEnvValues(env, ['AI_API_KEY', 'AI_BASE_URL', 'AI_MODEL']);
+  }
 }
 
 export function validateRuntimeConfig(config: Record<string, unknown>): Record<string, unknown> {
@@ -160,6 +191,8 @@ export function validateRuntimeConfig(config: Record<string, unknown>): Record<s
   getAiProviderName(config);
 
   if (isStrictEnvironment(config)) {
+    validateStrictProviderConfig(config);
+
     if (isPlaceholderSecret(accessSecret, 'JWT_ACCESS_SECRET')) {
       throw new Error('JWT_ACCESS_SECRET cannot use the placeholder value outside local/test environments');
     }

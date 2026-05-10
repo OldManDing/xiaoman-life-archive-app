@@ -150,7 +150,7 @@ describe('Admin RBAC and media contract', () => {
   });
 
   afterAll(async () => {
-    await app.close();
+    if (app) await app.close();
   });
 
   it('denies audit log access to viewer admins', async () => {

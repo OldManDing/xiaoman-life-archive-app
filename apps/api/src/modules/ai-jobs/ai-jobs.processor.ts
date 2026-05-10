@@ -30,6 +30,11 @@ export class AiJobsProcessor {
       return;
     }
 
+    if (aiJob.status !== AiJobStatus.pending) {
+      this.logger.warn(`AI job ${jobId.toString()} skipped because status is ${aiJob.status}`);
+      return;
+    }
+
     const startedAt = new Date();
     await this.prisma.aiJob.update({
       where: { id: aiJob.id },
@@ -43,6 +48,15 @@ export class AiJobsProcessor {
         title: aiJob.record.title ?? '',
         existingTags: aiJob.record.tags.map((item) => item.tagName),
       });
+
+      const latest = await this.prisma.aiJob.findUnique({
+        where: { id: aiJob.id },
+        select: { status: true },
+      });
+      if (latest?.status === AiJobStatus.cancelled) {
+        this.logger.warn(`AI job ${jobId.toString()} output ignored because it was cancelled`);
+        return;
+      }
 
       await this.prisma.$transaction(async (tx) => {
         if (aiJob.jobType === AiJobType.record_title) {
@@ -84,6 +98,15 @@ export class AiJobsProcessor {
         });
       });
     } catch (error) {
+      const latest = await this.prisma.aiJob.findUnique({
+        where: { id: aiJob.id },
+        select: { status: true },
+      });
+      if (latest?.status === AiJobStatus.cancelled) {
+        this.logger.warn(`AI job ${jobId.toString()} failure ignored because it was cancelled`);
+        return;
+      }
+
       const retryCount = aiJob.retryCount + 1;
       await this.prisma.aiJob.update({
         where: { id: aiJob.id },

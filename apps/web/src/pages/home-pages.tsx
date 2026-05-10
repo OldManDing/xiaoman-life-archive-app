@@ -9,19 +9,21 @@ import {
   Edit3,
   Image as ImageIcon,
   PlayCircle,
+  RefreshCw,
   Search,
   SlidersHorizontal,
   Sparkles,
   Star,
   Tag,
   User,
-  Video,
 } from 'lucide-react';
 
 import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
 import type { RecordSummary } from '../shared/api/types';
 import { useAsyncData } from '../shared/hooks';
+import { membershipTypeLabel, recordTypeLabel } from '../shared/labels';
+import { loadLocalSettings } from '../shared/localSettings';
 import { helperTextStyle } from '../shared/ui';
 import { EmptyState } from './shared';
 
@@ -91,15 +93,12 @@ const chipStyle: CSSProperties = {
 
 const formatDay = (value: string) => new Date(value).getDate();
 
-const formatMonth = (value: string) => new Date(value).toLocaleString('en-US', { month: 'short' }).toUpperCase();
+const formatMonth = (value: string) => new Date(value).toLocaleDateString('zh-CN', { month: 'short' });
 
 const formatShortDate = (value: string) => new Date(value).toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-const getRecordTypeLabel = (record: RecordSummary) => {
-  if (record.record_type === 'milestone' || record.is_milestone) return '里程碑档案';
-  if (record.record_type === 'text') return '文字档案';
-  return record.cover_url ? '图文档案' : '成长记录';
-};
+const getRecordTypeLabel = (record: RecordSummary) =>
+  record.cover_url ? recordTypeLabel(record.record_type, record.is_milestone) : recordTypeLabel(record.record_type, record.is_milestone).replace('图文档案', '成长记录');
 
 const InitialAvatar = ({ label, size = 48, radius = '999px' }: { label: string; size?: number; radius?: string }) => (
   <div
@@ -121,6 +120,23 @@ const InitialAvatar = ({ label, size = 48, radius = '999px' }: { label: string; 
   </div>
 );
 
+const ChildAvatar = ({ src, label }: { src?: string | null; label: string }) => {
+  const [failed, setFailed] = useState(false);
+
+  if (src && !failed) {
+    return (
+      <img
+        src={src}
+        alt={label}
+        onError={() => setFailed(true)}
+        style={{ width: '52px', height: '52px', borderRadius: '999px', objectFit: 'cover', border: '1px solid #eee9df', boxShadow: '0 2px 8px rgba(15,23,42,0.03)' }}
+      />
+    );
+  }
+
+  return <InitialAvatar label={label} size={52} />;
+};
+
 export const HomePage = () => {
   const navigate = useNavigate();
   const { user, activeChild, children, setActiveChild, refreshChildren } = useAuth();
@@ -132,6 +148,12 @@ export const HomePage = () => {
     },
     [activeChild?.child_no],
   );
+
+  useEffect(() => {
+    if (loadLocalSettings().autoRefreshHome) {
+      void refreshChildren();
+    }
+  }, [refreshChildren]);
 
   useEffect(() => {
     if (!activeChild && children.length > 0) {
@@ -147,41 +169,33 @@ export const HomePage = () => {
     <div style={appPageStyle}>
       <header style={{ ...paddedSectionStyle, paddingTop: 'calc(44px + env(safe-area-inset-top))', paddingBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
-          {activeChild?.avatar_url ? (
-            <img
-              src={activeChild.avatar_url}
-              alt={activeChild.name}
-              style={{ width: '52px', height: '52px', borderRadius: '999px', objectFit: 'cover', border: '1px solid #eee9df', boxShadow: '0 2px 8px rgba(15,23,42,0.03)' }}
-            />
-          ) : (
-            <InitialAvatar label={activeChild?.name ?? user?.nickname ?? '宝'} size={52} />
-          )}
+          <ChildAvatar src={activeChild?.avatar_url} label={activeChild?.name ?? user?.nickname ?? '宝'} />
           <div style={{ minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <strong style={{ fontSize: '17px', fontWeight: 600, color: '#292524', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeChild?.name ?? user?.nickname ?? '未登录用户'}</strong>
               <ChevronDown size={16} color="#a8a29e" strokeWidth={2.4} />
             </div>
-            <p style={{ margin: '3px 0 0', color: '#78716c', fontSize: '13px', fontWeight: 500 }}>{activeChild ? activeChild.current_age_display : `会员状态：${user?.membership_type ?? 'free'}`}</p>
+            <p style={{ margin: '3px 0 0', color: '#78716c', fontSize: '13px', fontWeight: 500 }}>{activeChild ? activeChild.current_age_display : `会员状态：${membershipTypeLabel(user?.membership_type)}`}</p>
           </div>
         </div>
         <button type="button" aria-label="刷新孩子信息" style={iconButtonStyle} onClick={() => void refreshChildren()}>
-          <Search size={18} strokeWidth={2.2} />
+          <RefreshCw size={18} strokeWidth={2.2} />
         </button>
       </header>
 
       <section style={{ ...paddedSectionStyle, display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '10px', marginTop: '24px' }}>
         {[
-          { label: '拍照记录', icon: Camera },
-          { label: '视频记录', icon: Video },
-          { label: '写一句话', icon: Edit3 },
-          { label: '里程碑', icon: Star },
+          { label: '添加照片', icon: Camera, to: '/record/create' },
+          { label: '写文字', icon: Edit3, to: '/record/create' },
+          { label: '里程碑', icon: Star, to: '/record/create' },
+          { label: '时间轴', icon: Clock, to: '/timeline' },
         ].map((item) => {
           const Icon = item.icon;
           return (
             <button
               key={item.label}
               type="button"
-              onClick={() => navigate('/record/create')}
+              onClick={() => navigate(item.to)}
               disabled={!activeChild}
               style={{
                 minHeight: '82px',
@@ -280,7 +294,7 @@ export const HomePage = () => {
       <section style={{ ...paddedSectionStyle, marginTop: '36px' }}>
         <div style={sectionHeaderStyle}>
           <h2 style={{ margin: 0, fontSize: '17px', fontWeight: 600, color: '#292524' }}>一年前的今天</h2>
-          <span style={{ color: '#a8a29e', fontSize: '12px', fontWeight: 600 }}>{featuredMediaRecord ? new Date(featuredMediaRecord.event_time).toLocaleDateString() : '待接入影像'}</span>
+          <span style={{ color: '#a8a29e', fontSize: '12px', fontWeight: 600 }}>{featuredMediaRecord ? new Date(featuredMediaRecord.event_time).toLocaleDateString('zh-CN') : '暂无影像'}</span>
         </div>
         {featuredMediaRecord?.cover_url ? (
           <button

@@ -1,13 +1,11 @@
 const STORAGE_KEY = 'xiaoman-web-local-settings';
 
 export interface LocalSettings {
-  notificationsEnabled: boolean;
   hideMobileMask: boolean;
   autoRefreshHome: boolean;
 }
 
 export const defaultLocalSettings: LocalSettings = {
-  notificationsEnabled: true,
   hideMobileMask: false,
   autoRefreshHome: true,
 };

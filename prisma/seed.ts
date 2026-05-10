@@ -60,8 +60,8 @@ async function main() {
   const demoUser = await prisma.user.upsert({
     where: { userNo: 'u_demo_parent_001' },
     update: {
-      nickname: 'Demo Parent',
-      avatarUrl: 'https://example.com/demo/avatar-parent.png',
+      nickname: '小满妈妈',
+      avatarUrl: null,
       mobile: '13800000000',
       email: 'parent@example.com',
       status: ACTIVE_STATUS,
@@ -70,8 +70,8 @@ async function main() {
     },
     create: {
       userNo: 'u_demo_parent_001',
-      nickname: 'Demo Parent',
-      avatarUrl: 'https://example.com/demo/avatar-parent.png',
+      nickname: '小满妈妈',
+      avatarUrl: null,
       mobile: '13800000000',
       email: 'parent@example.com',
       status: ACTIVE_STATUS,
@@ -83,8 +83,8 @@ async function main() {
   const familyViewer = await prisma.user.upsert({
     where: { userNo: 'u_demo_viewer_001' },
     update: {
-      nickname: 'Demo Viewer',
-      avatarUrl: 'https://example.com/demo/avatar-viewer.png',
+      nickname: '小满外婆',
+      avatarUrl: null,
       mobile: '13900000000',
       email: 'viewer@example.com',
       status: ACTIVE_STATUS,
@@ -92,8 +92,8 @@ async function main() {
     },
     create: {
       userNo: 'u_demo_viewer_001',
-      nickname: 'Demo Viewer',
-      avatarUrl: 'https://example.com/demo/avatar-viewer.png',
+      nickname: '小满外婆',
+      avatarUrl: null,
       mobile: '13900000000',
       email: 'viewer@example.com',
       status: ACTIVE_STATUS,
@@ -143,14 +143,14 @@ async function main() {
     where: { username: 'admin' },
     update: {
       passwordHash: adminPasswordHash,
-      displayName: 'System Admin',
+      displayName: '系统管理员',
       role: AdminRole.super_admin,
       status: ACTIVE_STATUS,
     },
     create: {
       username: 'admin',
       passwordHash: adminPasswordHash,
-      displayName: 'System Admin',
+      displayName: '系统管理员',
       role: AdminRole.super_admin,
       status: ACTIVE_STATUS,
     },
@@ -160,13 +160,13 @@ async function main() {
     where: { familyNo: 'f_demo_001' },
     update: {
       ownerUserId: demoUser.id,
-      name: 'Demo Family Archive',
+      name: '小满成长家庭',
       status: ACTIVE_STATUS,
     },
     create: {
       familyNo: 'f_demo_001',
       ownerUserId: demoUser.id,
-      name: 'Demo Family Archive',
+      name: '小满成长家庭',
       status: ACTIVE_STATUS,
     },
   });
@@ -220,25 +220,68 @@ async function main() {
     update: {
       familyId: family.id,
       ownerUserId: demoUser.id,
-      name: 'Xiaoman',
-      avatarUrl: 'https://example.com/demo/avatar-child.png',
+      name: '小满',
+      avatarUrl: null,
       birthday: new Date('2025-01-01T00:00:00.000Z'),
       gender: ChildGender.female,
-      birthPlace: 'Shanghai',
-      remark: 'Demo child profile for local development and integration testing.',
+      birthPlace: '上海',
+      remark: '本地开发与联调使用的演示孩子档案。',
       status: ACTIVE_STATUS,
     },
     create: {
       childNo: 'c_demo_xiaoman_001',
       familyId: family.id,
       ownerUserId: demoUser.id,
-      name: 'Xiaoman',
-      avatarUrl: 'https://example.com/demo/avatar-child.png',
+      name: '小满',
+      avatarUrl: null,
       birthday: new Date('2025-01-01T00:00:00.000Z'),
       gender: ChildGender.female,
-      birthPlace: 'Shanghai',
-      remark: 'Demo child profile for local development and integration testing.',
+      birthPlace: '上海',
+      remark: '本地开发与联调使用的演示孩子档案。',
       status: ACTIVE_STATUS,
+    },
+  });
+
+  const fixedDemoRecordNos = ['r_demo_001', 'r_demo_002'];
+  const fixedDemoMediaNos = ['m_demo_001', 'm_demo_orphan_upload_001'];
+
+  const staleDemoRecords = await prisma.record.findMany({
+    where: {
+      familyId: family.id,
+      childId: child.id,
+      recordNo: { notIn: fixedDemoRecordNos },
+    },
+    select: { id: true },
+  });
+  const staleDemoRecordIds = staleDemoRecords.map((record) => record.id);
+
+  if (staleDemoRecordIds.length) {
+    await prisma.aiJob.deleteMany({
+      where: { recordId: { in: staleDemoRecordIds } },
+    });
+    await prisma.recordTag.deleteMany({
+      where: { recordId: { in: staleDemoRecordIds } },
+    });
+    await prisma.recordMedia.deleteMany({
+      where: { recordId: { in: staleDemoRecordIds } },
+    });
+    await prisma.record.deleteMany({
+      where: { id: { in: staleDemoRecordIds } },
+    });
+  }
+
+  await prisma.recordMedia.deleteMany({
+    where: {
+      familyId: family.id,
+      childId: child.id,
+      mediaNo: { notIn: fixedDemoMediaNos },
+    },
+  });
+
+  await prisma.aiJob.deleteMany({
+    where: {
+      familyId: family.id,
+      jobNo: { notIn: ['job_demo_001'] },
     },
   });
 
@@ -249,13 +292,13 @@ async function main() {
       familyId: family.id,
       creatorUserId: demoUser.id,
       recordType: RecordType.mixed,
-      title: 'First independent meal',
-      contentText: 'Xiaoman tried eating independently with a spoon for the first time and looked very proud.',
-      locationText: 'Home',
+      title: '第一次自己吃饭',
+      contentText: '小满第一次尝试用勺子自己吃饭，虽然洒了一点，但看起来特别自豪。',
+      locationText: '家里',
       visibilityScope: VisibilityScope.family,
       isMilestone: true,
-      aiGeneratedTitle: 'First independent meal',
-      aiSummary: 'Xiaoman tried eating independently with a spoon. This is a memorable growth moment.',
+      aiGeneratedTitle: '第一次自己吃饭',
+      aiSummary: '小满开始尝试独立吃饭，这是值得记录的成长瞬间。',
       aiStatus: RecordAiStatus.success,
       status: RECORD_PUBLISHED_STATUS,
       publishedAt: yesterday,
@@ -266,14 +309,14 @@ async function main() {
       familyId: family.id,
       creatorUserId: demoUser.id,
       recordType: RecordType.mixed,
-      title: 'First independent meal',
-      contentText: 'Xiaoman tried eating independently with a spoon for the first time and looked very proud.',
+      title: '第一次自己吃饭',
+      contentText: '小满第一次尝试用勺子自己吃饭，虽然洒了一点，但看起来特别自豪。',
       eventTime: yesterday,
-      locationText: 'Home',
+      locationText: '家里',
       visibilityScope: VisibilityScope.family,
       isMilestone: true,
-      aiGeneratedTitle: 'First independent meal',
-      aiSummary: 'Xiaoman tried eating independently with a spoon. This is a memorable growth moment.',
+      aiGeneratedTitle: '第一次自己吃饭',
+      aiSummary: '小满开始尝试独立吃饭，这是值得记录的成长瞬间。',
       aiStatus: RecordAiStatus.success,
       status: RECORD_PUBLISHED_STATUS,
       publishedAt: yesterday,
@@ -287,9 +330,9 @@ async function main() {
       familyId: family.id,
       creatorUserId: demoUser.id,
       recordType: RecordType.text,
-      title: 'Learned to say thanks',
-      contentText: 'Today Xiaoman said thanks while handing over a toy, which surprised everyone at home.',
-      locationText: 'Living room',
+      title: '学会说谢谢',
+      contentText: '今天小满把玩具递给家人时主动说了谢谢，大家都很惊喜。',
+      locationText: '客厅',
       visibilityScope: VisibilityScope.family,
       isMilestone: false,
       aiStatus: RecordAiStatus.pending,
@@ -302,10 +345,10 @@ async function main() {
       familyId: family.id,
       creatorUserId: demoUser.id,
       recordType: RecordType.text,
-      title: 'Learned to say thanks',
-      contentText: 'Today Xiaoman said thanks while handing over a toy, which surprised everyone at home.',
+      title: '学会说谢谢',
+      contentText: '今天小满把玩具递给家人时主动说了谢谢，大家都很惊喜。',
       eventTime: now,
-      locationText: 'Living room',
+      locationText: '客厅',
       visibilityScope: VisibilityScope.family,
       isMilestone: false,
       aiStatus: RecordAiStatus.pending,
@@ -331,7 +374,7 @@ async function main() {
       storageProvider: 'mock',
       bucket: 'xiaoman-archive-local',
       objectKey: 'families/f_demo_001/children/c_demo_xiaoman_001/2026/04/m_demo_001.jpg',
-      originalName: 'first-meal.jpg',
+      originalName: '第一次自己吃饭.jpg',
       mimeType: 'image/jpeg',
       sizeBytes: BigInt(512000),
       width: 1200,
@@ -360,7 +403,7 @@ async function main() {
       storageProvider: 'mock',
       bucket: 'xiaoman-archive-local',
       objectKey: 'families/f_demo_001/children/c_demo_xiaoman_001/2026/04/m_demo_orphan_upload_001.jpg',
-      originalName: 'pending-upload.jpg',
+      originalName: '待确认照片.jpg',
       mimeType: 'image/jpeg',
       sizeBytes: BigInt(256000),
       status: 1,
@@ -490,9 +533,9 @@ async function main() {
         child_age_display: '1岁3月',
       },
       outputJson: {
-        suggested_title: 'First independent meal',
-        summary: 'Xiaoman tried eating independently with a spoon. This is a memorable growth moment.',
-        tags: ['first-time', 'meal', 'growth'],
+        suggested_title: '第一次自己吃饭',
+        summary: '小满开始尝试独立吃饭，这是值得记录的成长瞬间。',
+        tags: ['第一次', '吃饭', '成长'],
       },
       retryCount: 0,
       startedAt: yesterday,

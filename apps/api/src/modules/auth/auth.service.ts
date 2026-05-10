@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { AuthType, MembershipType } from '@prisma/client';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
+import { randomUUID } from 'node:crypto';
 
 import { PrismaService } from '../../prisma/prisma.service';
 import { USER_ACTIVE_STATUS } from '../../shared/constants';
@@ -25,6 +26,14 @@ export class AuthService {
 
   private get refreshTokenTtlSeconds() {
     return parseDurationToSeconds(process.env.JWT_REFRESH_EXPIRES_IN ?? '30d');
+  }
+
+  private get accessTokenJwtExpiresIn(): JwtSignOptions['expiresIn'] {
+    return (process.env.JWT_ACCESS_EXPIRES_IN ?? '2h') as JwtSignOptions['expiresIn'];
+  }
+
+  private get refreshTokenJwtExpiresIn(): JwtSignOptions['expiresIn'] {
+    return (process.env.JWT_REFRESH_EXPIRES_IN ?? '30d') as JwtSignOptions['expiresIn'];
   }
 
   async sendLoginCode(mobile: string) {
@@ -143,6 +152,13 @@ export class AuthService {
     const nextRefreshToken = await this.issueRefreshToken(session.user.id, session.user.userNo);
     await this.createSession(session.user.id, nextRefreshToken);
 
+    const childCount = await this.prisma.child.count({
+      where: {
+        ownerUserId: session.user.id,
+        deletedAt: null,
+      },
+    });
+
     return {
       access_token: accessToken,
       refresh_token: nextRefreshToken,
@@ -153,6 +169,7 @@ export class AuthService {
         avatar_url: session.user.avatarUrl,
         membership_type: session.user.membershipType,
       },
+      need_create_child: childCount === 0,
       payload,
     };
   }
@@ -174,7 +191,7 @@ export class AuthService {
       },
       {
         secret: getJwtAccessSecret(),
-        expiresIn: process.env.JWT_ACCESS_EXPIRES_IN ?? '2h',
+        expiresIn: this.accessTokenJwtExpiresIn,
       },
     );
   }
@@ -185,10 +202,11 @@ export class AuthService {
         type: 'user',
         sub: userId.toString(),
         user_no: userNo,
+        jti: randomUUID(),
       },
       {
         secret: getJwtRefreshSecret(),
-        expiresIn: process.env.JWT_REFRESH_EXPIRES_IN ?? '30d',
+        expiresIn: this.refreshTokenJwtExpiresIn,
       },
     );
   }

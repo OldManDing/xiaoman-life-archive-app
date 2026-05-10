@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
-import { Eye, Image, ImagePlus, Mic, X } from 'lucide-react';
+import { Eye, Image, ImagePlus, X } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 
 import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
 import type { AiJobDetail, RecordDetail } from '../shared/api/types';
 import { useAsyncData } from '../shared/hooks';
+import { aiJobStatusLabel, mediaTypeLabel, recordStatusLabel, recordTypeLabel, visibilityScopeLabel } from '../shared/labels';
 import { Field, PageShell, Panel, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle, textareaStyle } from '../shared/ui';
 import { EmptyState, buttonRowStyle, formSubmitSpacingStyle, formatDateTimeLocal, mutedChipStyle, recordTypes, rowStyle } from './shared';
 
@@ -93,11 +94,13 @@ const RecordForm = ({
         media_type: 'image',
       });
 
-      await fetch(uploadToken.upload_url, {
-        method: uploadToken.method,
-        headers: uploadToken.headers,
-        body: file,
-      });
+      if (!uploadToken.mock_upload) {
+        await fetch(uploadToken.upload_url, {
+          method: uploadToken.method,
+          headers: uploadToken.headers,
+          body: file,
+        });
+      }
 
       await webApi.confirmUpload({ media_no: uploadToken.media_no });
       setMediaNos((current) => [...current, uploadToken.media_no]);
@@ -274,8 +277,8 @@ const RecordForm = ({
               position: 'relative',
             }}
           >
-            <span style={{ position: 'absolute', top: '10px', left: '14px', fontSize: '11px', color: '#a8a29e', fontWeight: 600, letterSpacing: '0.08em' }}>MEDIA</span>
-            <div style={{ width: '100%', display: 'grid', gridTemplateColumns: '1fr 1px 1fr', alignItems: 'center', gap: '22px' }}>
+            <span style={{ position: 'absolute', top: '10px', left: '14px', fontSize: '11px', color: '#a8a29e', fontWeight: 600 }}>媒体</span>
+            <div style={{ width: '100%', display: 'grid', justifyItems: 'center', gap: '8px' }}>
               <label
                 style={{
                   display: 'grid',
@@ -300,7 +303,7 @@ const RecordForm = ({
                 >
                   <ImagePlus size={21} strokeWidth={2} />
                 </span>
-                <span style={{ fontSize: '13px', fontWeight: 600, color: '#78716c' }}>{uploading ? '上传中…' : '添加照片/视频'}</span>
+                <span style={{ fontSize: '13px', fontWeight: 600, color: '#78716c' }}>{uploading ? '上传中…' : '添加照片'}</span>
                 <input
                   type="file"
                   accept="image/*"
@@ -309,37 +312,7 @@ const RecordForm = ({
                   style={{ display: 'none' }}
                 />
               </label>
-              <span style={{ width: '1px', height: '58px', background: '#e7e5e4' }} />
-              <button
-                type="button"
-                disabled
-                style={{
-                  display: 'grid',
-                  justifyItems: 'center',
-                  gap: '10px',
-                  border: 'none',
-                  background: 'transparent',
-                  color: '#78716c',
-                  opacity: 0.55,
-                  cursor: 'not-allowed',
-                }}
-              >
-                <span
-                  style={{
-                    width: '48px',
-                    height: '48px',
-                    borderRadius: '999px',
-                    background: '#fff',
-                    border: '1px solid #e7e5e4',
-                    display: 'grid',
-                    placeItems: 'center',
-                    boxShadow: '0 2px 6px rgba(15,23,42,0.03)',
-                  }}
-                >
-                  <Mic size={21} strokeWidth={2} />
-                </span>
-                <span style={{ fontSize: '13px', fontWeight: 600 }}>录制语音</span>
-              </button>
+              <span style={{ color: '#a8a29e', fontSize: '12px', fontWeight: 600 }}>支持 JPG、PNG、WebP 照片</span>
             </div>
             {mediaPreviews.length ? (
               <div style={{ width: '100%', display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
@@ -420,7 +393,7 @@ const RecordForm = ({
                 color: '#44403c',
                 boxSizing: 'border-box',
               }}
-              placeholder="在想什么呢？记录一下这一刻发生的故事..."
+              placeholder="在想什么呢？记录一下这一刻发生的故事…"
               value={form.content_text}
               onChange={(event) => setForm((current) => ({ ...current, content_text: event.target.value }))}
             />
@@ -436,7 +409,7 @@ const RecordForm = ({
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
               <button type="button" style={{ ...mutedChipStyle, cursor: 'default' }}>
-                时间：{form.event_time ? new Date(form.event_time).toLocaleString() : '未选择'}
+                时间：{form.event_time ? new Date(form.event_time).toLocaleString('zh-CN') : '未选择'}
               </button>
               <button type="button" style={{ ...mutedChipStyle, cursor: 'default' }}>
                 地点：{form.location_text || '未填写'}
@@ -653,9 +626,12 @@ export const ViewRecordPage = () => {
           <div style={rowStyle}>
             <strong>{data.title ?? '未命名记录'}</strong>
             <p style={helperTextStyle}>记录编号：{data.record_no}</p>
+            <p style={helperTextStyle}>记录类型：{recordTypeLabel(data.record_type, data.is_milestone)}</p>
+            <p style={helperTextStyle}>发布状态：{recordStatusLabel(data.status)}</p>
+            <p style={helperTextStyle}>可见范围：{visibilityScopeLabel(data.visibility_scope)}</p>
             <p style={helperTextStyle}>正文：{data.content_text ?? '暂无正文'}</p>
             <p style={helperTextStyle}>标签：{data.tags.join('、') || '暂无标签'}</p>
-            <p style={helperTextStyle}>发生时间：{new Date(data.event_time).toLocaleString()}</p>
+            <p style={helperTextStyle}>发生时间：{new Date(data.event_time).toLocaleString('zh-CN')}</p>
             <p style={helperTextStyle}>地点：{data.location_text ?? '未填写'}</p>
             <p style={helperTextStyle}>媒体数量：{data.media_list.length}</p>
             {data.media_list.length ? (
@@ -681,7 +657,10 @@ export const ViewRecordPage = () => {
                         />
                       ) : (
                         <div style={{ minHeight: '132px', display: 'grid', placeItems: 'center', color: '#78716c' }}>
-                          <Image size={28} strokeWidth={1.8} />
+                          <div style={{ display: 'grid', justifyItems: 'center', gap: '8px' }}>
+                            <Image size={28} strokeWidth={1.8} />
+                            <span>{mediaTypeLabel(media.media_type)}</span>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -694,6 +673,7 @@ export const ViewRecordPage = () => {
               <p style={helperTextStyle}>{data.ai_summary ?? '当前还没有 AI 生成的摘要。'}</p>
               {aiJob?.status === 'pending' || aiJob?.status === 'processing' ? <p style={helperTextStyle}>AI 正在处理中，请稍候…</p> : null}
               {aiJob?.status === 'success' ? <p style={{ ...helperTextStyle, color: '#0f766e' }}>AI 摘要已生成并同步到记录详情。</p> : null}
+              {aiJob ? <p style={helperTextStyle}>AI 任务状态：{aiJobStatusLabel(aiJob.status)}</p> : null}
               {aiJob?.status === 'failed' ? <p style={{ ...helperTextStyle, color: '#dc2626' }}>AI 处理失败：{aiJob.error_message ?? '未知错误'}</p> : null}
               {aiError ? <p style={{ ...helperTextStyle, color: '#dc2626' }}>{aiError}</p> : null}
               {deleteError ? <p style={{ ...helperTextStyle, color: '#dc2626' }}>{deleteError}</p> : null}

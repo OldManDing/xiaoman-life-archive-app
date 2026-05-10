@@ -6,7 +6,7 @@ import {
 import { FamilyMemberRole } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
-import { FAMILY_MEMBER_ACTIVE_STATUS } from '../constants';
+import { FAMILY_MEMBER_ACTIVE_STATUS, MEDIA_STATUS_READY } from '../constants';
 
 @Injectable()
 export class AccessControlService {
@@ -85,7 +85,7 @@ export class AccessControlService {
       include: {
         child: true,
         creator: true,
-        media: { where: { deletedAt: null } },
+        media: { where: { status: MEDIA_STATUS_READY, deletedAt: null } },
         tags: true,
       },
     });

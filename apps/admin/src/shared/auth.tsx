@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
 
+import { adminApi } from './request';
 import { AuthContext, type AuthContextValue, type AdminProfile } from './authContext';
 import { clearAccessTokenMemory, getAccessToken, setAccessTokenMemory } from './authMemory';
 
@@ -8,7 +9,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [admin, setAdmin] = useState<AdminProfile | null>(null);
 
   const login = useCallback(async (payload: { username: string; password: string }) => {
-    const { adminApi } = await import('./request');
     const response = await adminApi.login(payload);
     setAccessTokenMemory(response.access_token);
     setAccessToken(response.access_token);

@@ -7,7 +7,7 @@ export const AuthLayout = () => {
         minHeight: '100vh',
         display: 'grid',
         placeItems: 'center',
-        background: '#f6f8fb',
+        background: '#eef2f1',
         padding: '24px',
       }}
     >
@@ -15,10 +15,6 @@ export const AuthLayout = () => {
         style={{
           width: '100%',
           maxWidth: '420px',
-          background: '#ffffff',
-          borderRadius: '20px',
-          padding: '24px',
-          boxShadow: '0 10px 30px rgba(15, 23, 42, 0.08)',
         }}
       >
         <Outlet />

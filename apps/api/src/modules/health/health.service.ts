@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from '../../prisma/prisma.service';
+import { getAiProviderName, getAppEnv, getSmsProviderName, getStorageProviderName } from '../../shared/env-config';
 
 @Injectable()
 export class HealthService {
@@ -17,6 +18,14 @@ export class HealthService {
     return {
       status: database === 'up' ? 'ok' : 'degraded',
       database,
+      runtime: {
+        app_env: getAppEnv(),
+      },
+      providers: {
+        sms: getSmsProviderName(),
+        storage: getStorageProviderName(),
+        ai: getAiProviderName(),
+      },
       timestamp: new Date().toISOString(),
     };
   }

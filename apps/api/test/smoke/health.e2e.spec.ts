@@ -28,7 +28,7 @@ describe('Health smoke', () => {
   });
 
   afterAll(async () => {
-    await app.close();
+    if (app) await app.close();
   });
 
   it('returns wrapped health status', async () => {

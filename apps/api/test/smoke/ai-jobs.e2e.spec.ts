@@ -119,7 +119,7 @@ describe('AI jobs async contract', () => {
   });
 
   afterAll(async () => {
-    await app.close();
+    if (app) await app.close();
   });
 
   it('creates pending jobs and enqueues them instead of processing inline', async () => {

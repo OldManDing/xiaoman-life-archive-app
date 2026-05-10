@@ -7,18 +7,32 @@ import {
   LoginPage, SplashPage, HomePage, TimelinePage, CreateRecordPage, 
   ViewRecordPage, EditRecordPage, FamilyPage, FamilyChildPage, 
   FamilyMembersPage, FamilyInvitePage, ProfilePage, AccountPage, 
-  SettingsPage, LegalPage, ErrorPage, OnboardingChildPage, FamilyInviteAcceptPage
+  SettingsPage, LegalPage, ReportsPage, HelpFeedbackPage, ErrorPage, OnboardingChildPage, FamilyInviteAcceptPage
 } from '../pages/index';
 
 export const AppRouter = () => {
   const { isBootstrapping, isAuthenticated, needsOnboarding } = useAuth();
 
   if (isBootstrapping) {
-    return <div>Auth Bootstrap Loading</div>;
+    return (
+      <div
+        style={{
+          minHeight: '100dvh',
+          display: 'grid',
+          placeItems: 'center',
+          background: '#faf8f5',
+          color: '#57534e',
+          fontSize: '14px',
+          fontWeight: 600,
+        }}
+      >
+        正在进入年轮…
+      </div>
+    );
   }
 
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
       <Routes>
         <Route element={<PublicLayout />}>
           <Route path="/splash" element={<SplashPage />} />
@@ -30,6 +44,7 @@ export const AppRouter = () => {
             path="/onboarding/child"
             element={isAuthenticated ? <OnboardingChildPage /> : <Navigate to="/auth/login" replace />}
           />
+          <Route path="/legal" element={<LegalPage />} />
         </Route>
         
         <Route element={<ProtectedRoute />}>
@@ -47,6 +62,8 @@ export const AppRouter = () => {
             <Route path="family/invite/:token/accept" element={<FamilyInviteAcceptPage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="profile/account" element={<AccountPage />} />
+            <Route path="profile/reports" element={<ReportsPage />} />
+            <Route path="profile/help" element={<HelpFeedbackPage />} />
             <Route path="profile/settings" element={<SettingsPage />} />
             <Route path="profile/legal" element={<LegalPage />} />
           </Route>

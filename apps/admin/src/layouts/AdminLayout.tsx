@@ -1,10 +1,49 @@
-import { Outlet, Link } from 'react-router-dom';
+import type { CSSProperties } from 'react';
+import { NavLink, Outlet } from 'react-router-dom';
 
 import { useAdminAuth } from '../shared/useAdminAuth';
+import { adminRoleLabel } from '../shared/labels';
 import { secondaryButtonStyle } from '../shared/uiStyles';
+
+const navItems = [
+  { to: '/dashboard', label: '总览' },
+  { to: '/users', label: '用户运营' },
+  { to: '/children', label: '孩子档案' },
+  { to: '/records', label: '成长记录' },
+  { to: '/media', label: '媒体库' },
+  { to: '/ai-jobs', label: 'AI 任务' },
+];
+
+const sidebarStyle: CSSProperties = {
+  position: 'sticky',
+  top: 0,
+  minHeight: '100vh',
+  background: '#123c37',
+  color: '#eff7f5',
+  padding: '22px 16px',
+  display: 'grid',
+  gridTemplateRows: 'auto auto 1fr auto',
+  gap: '22px',
+};
+
+const navLinkStyle = ({ isActive }: { isActive: boolean }): CSSProperties => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  minHeight: '42px',
+  padding: '10px 12px',
+  borderRadius: '8px',
+  color: isActive ? '#123c37' : '#d7e5e1',
+  background: isActive ? '#ffffff' : 'transparent',
+  border: isActive ? '1px solid #ffffff' : '1px solid rgba(255,255,255,0.08)',
+  textDecoration: 'none',
+  fontSize: '14px',
+  fontWeight: 700,
+});
 
 export const AdminLayout = () => {
   const { admin, logout } = useAdminAuth();
+  const displayName = admin?.display_name === 'System Admin' ? '系统管理员' : admin?.display_name;
 
   return (
     <div
@@ -12,36 +51,46 @@ export const AdminLayout = () => {
       style={{
         minHeight: '100vh',
         display: 'grid',
-        gridTemplateColumns: '220px 1fr',
-        background: '#f6f8fb',
+        gridTemplateColumns: '248px minmax(0, 1fr)',
+        background: '#eef2f1',
       }}
     >
-      <aside
-        style={{
-          borderRight: '1px solid #e5e7eb',
-          background: '#111827',
-          color: '#f9fafb',
-          padding: '20px 16px',
-        }}
-      >
-        <div style={{ fontSize: '18px', fontWeight: 700, marginBottom: '20px' }}>管理后台</div>
-        <div style={{ fontSize: '13px', color: '#cbd5e1', marginBottom: '20px' }}>
-          <div>{admin?.display_name ?? '未登录'}</div>
-          <div>{admin?.role ?? 'viewer'}</div>
+      <aside className="admin-sidebar" style={sidebarStyle}>
+        <div>
+          <div style={{ fontSize: '13px', color: '#a7c3bd', fontWeight: 700, marginBottom: '6px' }}>年轮</div>
+          <div style={{ fontSize: '22px', fontWeight: 800, letterSpacing: 0 }}>管理后台</div>
         </div>
-        <nav style={{ display: 'grid', gap: '12px' }}>
-          <Link to="/users" style={{ color: 'inherit', textDecoration: 'none' }}>用户</Link>
-          <Link to="/children" style={{ color: 'inherit', textDecoration: 'none' }}>孩子</Link>
-          <Link to="/records" style={{ color: 'inherit', textDecoration: 'none' }}>记录</Link>
-          <Link to="/media" style={{ color: 'inherit', textDecoration: 'none' }}>媒体</Link>
-          <Link to="/ai-jobs" style={{ color: 'inherit', textDecoration: 'none' }}>AI 任务</Link>
-          {admin?.role === 'super_admin' ? <Link to="/audit-logs" style={{ color: 'inherit', textDecoration: 'none' }}>审计日志</Link> : null}
+        <div style={{ border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', padding: '12px', background: 'rgba(255,255,255,0.06)' }}>
+          <div style={{ fontSize: '14px', fontWeight: 700 }}>{displayName ?? '未登录'}</div>
+          <div style={{ marginTop: '4px', fontSize: '12px', color: '#bdd3ce' }}>{adminRoleLabel(admin?.role)}</div>
+        </div>
+        <nav aria-label="后台导航" style={{ display: 'grid', gap: '8px', alignContent: 'start' }}>
+          {navItems.map((item) => (
+            <NavLink key={item.to} to={item.to} style={navLinkStyle}>
+              {item.label}
+            </NavLink>
+          ))}
+          {admin?.role === 'super_admin' ? (
+            <NavLink to="/audit-logs" style={navLinkStyle}>
+              审计日志
+            </NavLink>
+          ) : null}
         </nav>
-        <button type="button" style={{ ...secondaryButtonStyle, marginTop: '20px', width: '100%' }} onClick={logout}>
+        <button type="button" style={{ ...secondaryButtonStyle, width: '100%' }} onClick={logout}>
           退出登录
         </button>
       </aside>
-      <main style={{ padding: '24px' }}>
+      <main className="admin-main" style={{ padding: '28px', minWidth: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', alignItems: 'center', marginBottom: '22px', flexWrap: 'wrap' }}>
+          <div>
+            <div style={{ fontSize: '13px', color: '#66736f', fontWeight: 700 }}>当前工作台</div>
+            <div style={{ marginTop: '4px', color: '#16211f', fontSize: '16px', fontWeight: 700 }}>运营、内容与 AI 任务管理</div>
+          </div>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <span style={{ borderRadius: '999px', padding: '6px 10px', background: '#ffffff', border: '1px solid #dbe3df', color: '#4b5a56', fontSize: '12px', fontWeight: 700 }}>本地联调</span>
+            <span style={{ borderRadius: '999px', padding: '6px 10px', background: '#fff7ed', border: '1px solid #fed7aa', color: '#9a3412', fontSize: '12px', fontWeight: 700 }}>中文界面</span>
+          </div>
+        </div>
         <Outlet />
       </main>
     </div>
