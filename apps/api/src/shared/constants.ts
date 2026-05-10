@@ -1,0 +1,17 @@
+export const USER_ACTIVE_STATUS = 1;
+export const ADMIN_ACTIVE_STATUS = 1;
+export const FAMILY_MEMBER_ACTIVE_STATUS = 1;
+export const CHILD_STATUS_NORMAL = 1;
+export const CHILD_STATUS_ARCHIVED = 2;
+export const RECORD_STATUS_DRAFT = 1;
+export const RECORD_STATUS_PUBLISHED = 2;
+export const MEDIA_STATUS_UPLOADING = 1;
+export const MEDIA_STATUS_READY = 2;
+export const MEDIA_STATUS_FAILED = 3;
+export const MEMBER_INVITE_STATUS_PENDING = 1;
+export const MEMBER_INVITE_STATUS_ACCEPTED = 2;
+export const MEMBER_INVITE_STATUS_REVOKED = 3;
+export const DEFAULT_PAGE = 1;
+export const DEFAULT_PAGE_SIZE = 20;
+export const MAX_PAGE_SIZE = 100;
+export const REFRESH_TOKEN_COOKIE_NAME = 'xiaoman_refresh_token';

@@ -1,0 +1,37 @@
+name: Regression Baseline
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+jobs:
+  regression-baseline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run regression baseline
+        run: npm run regression:baseline
+
+      - name: Build API
+        run: npm run build:api
+
+      - name: Build Web
+        run: npm run build:web
+
+      - name: Build Admin
+        run: npm run build:admin

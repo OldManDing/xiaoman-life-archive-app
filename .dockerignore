@@ -1,0 +1,12 @@
+node_modules
+**/node_modules
+dist
+**/dist
+.git
+.env
+.env.local
+coverage
+npm-debug.log
+Dockerfile*
+apps/web/dist
+apps/admin/dist

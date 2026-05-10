@@ -1,0 +1,31 @@
+{
+  "name": "xiaoman-archive-app",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev:api": "npm run start:dev -w apps/api",
+    "dev:web": "npm run dev -w apps/web",
+    "dev:admin": "npm run dev -w apps/admin",
+    "build:api": "npm run build -w apps/api",
+    "build:web": "npm run build -w apps/web",
+    "build:admin": "npm run build -w apps/admin",
+    "start:api": "npm run start -w apps/api",
+    "regression:baseline": "npm run typecheck:api && npm run test:api && npm run smoke:test:api && npm run typecheck:web && npm run test:web && npm run typecheck:admin && npm run test:admin",
+    "typecheck:api": "npm run typecheck -w apps/api",
+    "typecheck:web": "npm run typecheck -w apps/web",
+    "typecheck:admin": "npm run typecheck -w apps/admin",
+    "test:api": "npm run test -w apps/api",
+    "test:web": "npm run test -w apps/web",
+    "test:admin": "npm run test -w apps/admin",
+    "smoke:test:api": "npm run smoke:test -w apps/api",
+    "prisma:generate": "npm run prisma:generate -w apps/api",
+    "prisma:dbpush": "npm run prisma:dbpush -w apps/api",
+    "prisma:seed": "npm run prisma:seed -w apps/api"
+  },
+  "devDependencies": {
+    "jsdom": "^29.0.2",
+    "playwright": "^1.59.1"
+  }
+}
