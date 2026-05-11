@@ -21,6 +21,7 @@ const apiEnv = {
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET ?? 'local_refresh_secret_for_e2e',
   JWT_ACCESS_EXPIRES_IN: process.env.JWT_ACCESS_EXPIRES_IN ?? '2h',
   JWT_REFRESH_EXPIRES_IN: process.env.JWT_REFRESH_EXPIRES_IN ?? '30d',
+  SMS_ENABLED: process.env.SMS_ENABLED ?? 'false',
   SMS_PROVIDER: process.env.SMS_PROVIDER ?? 'mock',
   SMS_MOCK_CODE: process.env.SMS_MOCK_CODE ?? '123456',
   SMS_SEND_COOLDOWN_SECONDS: process.env.SMS_SEND_COOLDOWN_SECONDS ?? '0',

@@ -29,12 +29,7 @@ const REQUIRED_KEYS = [
   'AI_API_KEY',
   'AI_BASE_URL',
   'AI_MODEL',
-  'SMS_PROVIDER',
-  'SMS_ACCESS_KEY',
-  'SMS_SECRET_KEY',
-  'SMS_SIGN_NAME',
-  'SMS_TEMPLATE_CODE',
-  'SMS_CODE_PEPPER',
+  'SMS_ENABLED',
   'ADMIN_INITIAL_USERNAME',
   'ADMIN_INITIAL_PASSWORD',
   'VITE_API_BASE_URL',
@@ -102,6 +97,10 @@ function validateProvider(env, name, expected) {
   }
 }
 
+function isEnabled(value) {
+  return ['1', 'true', 'yes', 'on'].includes(String(value ?? '').trim().toLowerCase());
+}
+
 function validateNoLocalDefaults(env) {
   for (const [key, value] of Object.entries(env)) {
     if (FORBIDDEN_EXACT_VALUES.has(value)) {
@@ -125,7 +124,12 @@ function validateSecrets(env, allowPlaceholders) {
     fail('JWT_ACCESS_SECRET 和 JWT_REFRESH_SECRET 不能相同');
   }
 
-  for (const key of ['JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET', 'SMS_CODE_PEPPER']) {
+  const secretKeys = ['JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET'];
+  if (isEnabled(env.SMS_ENABLED)) {
+    secretKeys.push('SMS_CODE_PEPPER');
+  }
+
+  for (const key of secretKeys) {
     const value = env[key] ?? '';
     if (allowPlaceholders && isPlaceholder(value)) continue;
     if (value.length < 32) {
@@ -150,7 +154,12 @@ function validate(filePath, options) {
     fail(`APP_ENV 必须是 production/prod/staging，当前为 ${env.APP_ENV}`);
   }
 
-  validateProvider(env, 'SMS_PROVIDER', ['aliyun']);
+  if (isEnabled(env.SMS_ENABLED)) {
+    for (const key of ['SMS_PROVIDER', 'SMS_ACCESS_KEY', 'SMS_SECRET_KEY', 'SMS_SIGN_NAME', 'SMS_TEMPLATE_CODE', 'SMS_CODE_PEPPER']) {
+      requireKey(env, key);
+    }
+    validateProvider(env, 'SMS_PROVIDER', ['aliyun']);
+  }
   validateProvider(env, 'STORAGE_PROVIDER', ['oss', 'cos', 's3', 'r2', 'minio']);
   validateProvider(env, 'AI_PROVIDER', ['openai', 'openai-compatible']);
   validateNoLocalDefaults(env);

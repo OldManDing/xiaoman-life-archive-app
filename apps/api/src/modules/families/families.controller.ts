@@ -26,11 +26,6 @@ export class FamiliesController {
     return this.familiesService.createInvite(user.id, familyNo, dto);
   }
 
-  @Post('invites/:token/accept')
-  acceptInvite(@CurrentUser() user: AuthenticatedUser, @Param('token') token: string) {
-    return this.familiesService.acceptInvite(user.id, token);
-  }
-
   @Put('families/:family_no/members/:user_no/role')
   updateMemberRole(
     @CurrentUser() user: AuthenticatedUser,

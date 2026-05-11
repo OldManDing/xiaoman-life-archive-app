@@ -16,6 +16,7 @@ import {
   VisibilityScope,
 } from '@prisma/client';
 import bcrypt from 'bcrypt';
+import { createHash } from 'node:crypto';
 
 const prisma = new PrismaClient();
 
@@ -26,6 +27,8 @@ const MEDIA_READY_STATUS = 2;
 const INVITE_PENDING_STATUS = 1;
 const SHARE_ACTIVE_STATUS = 1;
 const DEFAULT_ADMIN_PASSWORD = 'ChangeMe123!';
+const DEFAULT_DEMO_USER_PASSWORD = 'DemoUser123!';
+const DEMO_INVITE_CODE = 'demo-invite-001';
 
 function getSeedEnvironment(): string {
   return (process.env.APP_ENV ?? process.env.NODE_ENV ?? 'local').toLowerCase();
@@ -48,9 +51,31 @@ function getAdminSeedPassword(): string {
   throw new Error('ADMIN_INITIAL_PASSWORD is required outside local/test environments');
 }
 
+function getDemoUserPassword(): string {
+  const configured = process.env.DEMO_USER_PASSWORD?.trim();
+  if (configured) {
+    if (!['local', 'development', 'dev', 'test'].includes(getSeedEnvironment()) && configured === DEFAULT_DEMO_USER_PASSWORD) {
+      throw new Error('DEMO_USER_PASSWORD cannot use the default value outside local/test environments');
+    }
+
+    return configured;
+  }
+
+  if (['local', 'development', 'dev', 'test'].includes(getSeedEnvironment())) {
+    return DEFAULT_DEMO_USER_PASSWORD;
+  }
+
+  throw new Error('DEMO_USER_PASSWORD is required outside local/test environments');
+}
+
+function hashToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
+}
+
 async function main() {
   const now = new Date();
   const adminPasswordHash = await bcrypt.hash(getAdminSeedPassword(), 10);
+  const demoUserPasswordHash = await bcrypt.hash(getDemoUserPassword(), 10);
   const yesterday = new Date(now);
   yesterday.setDate(now.getDate() - 1);
 
@@ -123,6 +148,27 @@ async function main() {
   await prisma.userAuthAccount.upsert({
     where: {
       authType_authKey: {
+        authType: AuthType.password,
+        authKey: 'xiaoman_parent',
+      },
+    },
+    update: {
+      userId: demoUser.id,
+      credentialHash: demoUserPasswordHash,
+      status: ACTIVE_STATUS,
+    },
+    create: {
+      userId: demoUser.id,
+      authType: AuthType.password,
+      authKey: 'xiaoman_parent',
+      credentialHash: demoUserPasswordHash,
+      status: ACTIVE_STATUS,
+    },
+  });
+
+  await prisma.userAuthAccount.upsert({
+    where: {
+      authType_authKey: {
         authType: AuthType.mobile,
         authKey: '13900000000',
       },
@@ -135,6 +181,27 @@ async function main() {
       userId: familyViewer.id,
       authType: AuthType.mobile,
       authKey: '13900000000',
+      status: ACTIVE_STATUS,
+    },
+  });
+
+  await prisma.userAuthAccount.upsert({
+    where: {
+      authType_authKey: {
+        authType: AuthType.password,
+        authKey: 'xiaoman_viewer',
+      },
+    },
+    update: {
+      userId: familyViewer.id,
+      credentialHash: demoUserPasswordHash,
+      status: ACTIVE_STATUS,
+    },
+    create: {
+      userId: familyViewer.id,
+      authType: AuthType.password,
+      authKey: 'xiaoman_viewer',
+      credentialHash: demoUserPasswordHash,
       status: ACTIVE_STATUS,
     },
   });
@@ -463,10 +530,10 @@ async function main() {
     update: {
       familyId: family.id,
       inviterUserId: demoUser.id,
-      inviteeMobile: '13700000000',
+      inviteeMobile: null,
       inviteeUserId: null,
       role: FamilyMemberRole.viewer,
-      tokenHash: 'demo_invite_token_hash_001',
+      tokenHash: hashToken(DEMO_INVITE_CODE),
       status: INVITE_PENDING_STATUS,
       expiresAt: nextWeek,
       acceptedAt: null,
@@ -475,9 +542,9 @@ async function main() {
       inviteNo: 'inv_demo_001',
       familyId: family.id,
       inviterUserId: demoUser.id,
-      inviteeMobile: '13700000000',
+      inviteeMobile: null,
       role: FamilyMemberRole.viewer,
-      tokenHash: 'demo_invite_token_hash_001',
+      tokenHash: hashToken(DEMO_INVITE_CODE),
       status: INVITE_PENDING_STATUS,
       expiresAt: nextWeek,
     },

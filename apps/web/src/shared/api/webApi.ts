@@ -1,6 +1,5 @@
 import http from './http';
 import type {
-  AcceptInviteResponse,
   ApiEnvelope,
   ChildRecord,
   CreateAiJobResponse,
@@ -18,9 +17,16 @@ import type {
 } from './types';
 
 export interface LoginPayload {
-  login_type: 'mobile';
+  login_type: 'password';
   credential: string;
-  verify_code: string;
+  password: string;
+}
+
+export interface RegisterPayload {
+  credential: string;
+  password: string;
+  password_confirm: string;
+  invite_code: string;
 }
 
 export interface CreateChildPayload {
@@ -103,6 +109,11 @@ export const webApi = {
 
   async login(payload: LoginPayload) {
     const response = await http.post<ApiEnvelope<LoginResponse>>('/auth/login', payload);
+    return response.data.data;
+  },
+
+  async register(payload: RegisterPayload) {
+    const response = await http.post<ApiEnvelope<LoginResponse>>('/auth/register', payload);
     return response.data.data;
   },
 
@@ -208,11 +219,6 @@ export const webApi = {
 
   async createFamilyInvite(familyNo: string, payload: CreateFamilyInvitePayload) {
     const response = await http.post<ApiEnvelope<FamilyInviteResponse>>(`/families/${familyNo}/invites`, payload);
-    return response.data.data;
-  },
-
-  async acceptInvite(token: string) {
-    const response = await http.post<ApiEnvelope<AcceptInviteResponse>>(`/invites/${token}/accept`);
     return response.data.data;
   },
 

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from '../../prisma/prisma.service';
-import { getAiProviderName, getAppEnv, getSmsProviderName, getStorageProviderName } from '../../shared/env-config';
+import { getAiProviderName, getAppEnv, getSmsProviderName, getStorageProviderName, isSmsEnabled } from '../../shared/env-config';
 
 @Injectable()
 export class HealthService {
@@ -22,7 +22,7 @@ export class HealthService {
         app_env: getAppEnv(),
       },
       providers: {
-        sms: getSmsProviderName(),
+        sms: isSmsEnabled() ? getSmsProviderName() : 'disabled',
         storage: getStorageProviderName(),
         ai: getAiProviderName(),
       },

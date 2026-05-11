@@ -1,6 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
+import bcrypt from 'bcrypt';
 import request from 'supertest';
 
 import { hashToken } from '../../src/shared/utils';
@@ -28,36 +29,70 @@ describe('Auth session flow', () => {
   };
 
   const sessions: Array<{ hash: string; revokedAt: Date | null; expiresAt: Date }> = [];
-  const authAccount = { user, status: 1 };
-  const smsCodes = [
-    {
-      id: BigInt(1),
-      mobile: '13800000000',
-      scene: 'login',
-      codeHash: hashToken('sms_pepper:123456'),
-      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
-      consumedAt: null,
-      failedAttempts: 0,
-    },
-  ];
+  let authAccount: { user: typeof user; status: number; credentialHash: string };
+  const invite = {
+    id: BigInt(10),
+    familyId: BigInt(100),
+    inviterUserId: BigInt(2),
+    inviteNo: 'inv_001',
+    tokenHash: hashToken('join-family-001'),
+    inviteeMobile: null,
+    role: 'viewer',
+    status: 1,
+    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    acceptedAt: null as Date | null,
+    inviteeUserId: null as bigint | null,
+    family: { id: BigInt(100), familyNo: 'f_invite_001' },
+  };
+  const memberships: Array<{ familyId: bigint; userId: bigint; role: string; status: number; deletedAt: Date | null; joinedAt: Date | null }> = [];
 
   const prismaMock = {
     $transaction: jest.fn(async (input: unknown) => {
       if (typeof input === 'function') {
         return input({
           userAuthAccount: {
-            findFirst: jest.fn().mockResolvedValue(authAccount),
             create: jest.fn(),
           },
           user: {
             update: jest.fn().mockResolvedValue(user),
             create: jest.fn().mockResolvedValue(user),
+            findFirst: jest.fn().mockImplementation(async ({ where }: { where: { id?: bigint } }) => {
+              if (where.id === user.id) return user;
+              return null;
+            }),
+          },
+          memberInvite: {
+            findFirst: jest.fn().mockImplementation(async ({ where }: { where: { tokenHash?: string } }) => {
+              return where.tokenHash === invite.tokenHash ? invite : null;
+            }),
+            update: jest.fn().mockImplementation(async ({ data }: { data: Partial<typeof invite> }) => {
+              Object.assign(invite, data);
+              return invite;
+            }),
+          },
+          familyMember: {
+            upsert: jest.fn().mockImplementation(async ({ create, update, where }: { create: any; update: any; where: { familyId_userId: { familyId: bigint; userId: bigint } } }) => {
+              const existing = memberships.find((item) => item.familyId === where.familyId_userId.familyId && item.userId === where.familyId_userId.userId);
+              if (existing) {
+                Object.assign(existing, update);
+                return existing;
+              }
+
+              const created = { ...create, deletedAt: null };
+              memberships.push(created);
+              return created;
+            }),
           },
         });
       }
 
       return input;
     }),
+    userAuthAccount: {
+      findFirst: jest.fn().mockImplementation(async ({ where }: { where: { authKey: string } }) => {
+        return where.authKey === 'parent_account' ? authAccount : null;
+      }),
+    },
     child: {
       count: jest.fn().mockResolvedValue(0),
     },
@@ -74,14 +109,8 @@ describe('Auth session flow', () => {
       }),
     },
     smsVerificationCode: {
-      findFirst: jest.fn().mockImplementation(async ({ where }: { where: { mobile: string; scene: string } }) => {
-        return smsCodes.find((item) => item.mobile === where.mobile && item.scene === where.scene) ?? null;
-      }),
-      update: jest.fn().mockImplementation(async ({ where, data }: { where: { id: bigint }; data: Partial<(typeof smsCodes)[number]> }) => {
-        const code = smsCodes.find((item) => item.id === where.id)!;
-        Object.assign(code, data);
-        return code;
-      }),
+      findFirst: jest.fn(),
+      update: jest.fn(),
       create: jest.fn(),
       count: jest.fn().mockResolvedValue(0),
     },
@@ -112,6 +141,7 @@ describe('Auth session flow', () => {
     process.env.JWT_REFRESH_EXPIRES_IN = '30d';
     process.env.SMS_PROVIDER = 'mock';
     process.env.SMS_MOCK_CODE = '123456';
+    authAccount = { user, status: 1, credentialHash: await bcrypt.hash('Parent123!', 10) };
 
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
@@ -135,7 +165,7 @@ describe('Auth session flow', () => {
   it('sets refresh cookie, rotates refresh token, and clears it on logout', async () => {
     const loginResponse = await request(app.getHttpServer())
       .post('/api/v1/auth/login')
-      .send({ login_type: 'mobile', credential: '13800000000', verify_code: '123456' })
+      .send({ login_type: 'password', credential: 'parent_account', password: 'Parent123!' })
       .expect(200);
 
     const loginCookies = loginResponse.headers['set-cookie'];
@@ -161,6 +191,34 @@ describe('Auth session flow', () => {
       .post('/api/v1/auth/refresh')
       .set('Cookie', refreshCookies)
       .expect(401);
+  });
+
+  it('registers a password account with an invite code', async () => {
+    invite.status = 1;
+    invite.acceptedAt = null;
+    invite.inviteeUserId = null;
+    memberships.length = 0;
+
+    const registerResponse = await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .send({
+        credential: 'new_parent',
+        password: 'Parent123!',
+        password_confirm: 'Parent123!',
+        invite_code: 'join-family-001',
+      })
+      .expect(200);
+
+    expect(registerResponse.headers['set-cookie']?.[0]).toContain('xiaoman_refresh_token=');
+    expect(registerResponse.body.data.access_token).toBeTruthy();
+    expect(invite.status).toBe(2);
+    expect(invite.inviteeUserId).toBe(user.id);
+    expect(memberships[0]).toMatchObject({
+      familyId: invite.familyId,
+      userId: user.id,
+      role: 'viewer',
+      status: 1,
+    });
   });
 
   it('updates nickname through users/me patch', async () => {

@@ -6,6 +6,7 @@ import {
   getStorageProviderName,
   isAdminBootstrapAllowed,
   isSecureCookieEnvironment,
+  isSmsEnabled,
   resolveCorsOrigins,
   validateRuntimeConfig,
 } from '../../src/shared/env-config';
@@ -50,6 +51,44 @@ describe('env-config', () => {
         REDIS_PORT: '6379',
       }),
     ).toThrow('JWT_ACCESS_SECRET cannot use the placeholder value outside local/test environments');
+  });
+
+  it('rejects weak or reused jwt secrets in strict environments', () => {
+    const strictConfig = {
+      APP_ENV: 'production',
+      APP_PORT: '3000',
+      CORS_ORIGINS: 'https://app.example.com',
+      SMS_ENABLED: 'false',
+      STORAGE_PROVIDER: 'minio',
+      STORAGE_REGION: 'local',
+      STORAGE_BUCKET: 'bucket',
+      STORAGE_ENDPOINT: 'https://storage.example.com',
+      STORAGE_ACCESS_KEY: 'storage_access',
+      STORAGE_SECRET_KEY: 'storage_secret',
+      AI_PROVIDER: 'openai-compatible',
+      AI_API_KEY: 'ai_key',
+      AI_BASE_URL: 'https://ai.example.com/v1',
+      AI_MODEL: 'model',
+      DATABASE_URL: 'mysql://user:pass@db:3306/app',
+      REDIS_HOST: 'redis',
+      REDIS_PORT: '6379',
+    };
+
+    expect(() =>
+      validateRuntimeConfig({
+        ...strictConfig,
+        JWT_ACCESS_SECRET: 'short_access_secret',
+        JWT_REFRESH_SECRET: 'prod_refresh_secret_that_is_long_enough_123',
+      }),
+    ).toThrow('JWT_ACCESS_SECRET must be at least 32 characters outside local/test environments');
+
+    expect(() =>
+      validateRuntimeConfig({
+        ...strictConfig,
+        JWT_ACCESS_SECRET: 'same_secret_that_is_long_enough_123456',
+        JWT_REFRESH_SECRET: 'same_secret_that_is_long_enough_123456',
+      }),
+    ).toThrow('JWT_ACCESS_SECRET and JWT_REFRESH_SECRET must be different outside local/test environments');
   });
 
   it('rejects missing cors origins in strict environments', () => {
@@ -140,6 +179,8 @@ describe('env-config', () => {
     expect(getAppEnv({ APP_ENV: 'prod' })).toBe('prod');
     expect(getAppPort({ APP_PORT: '4100' })).toBe(4100);
     expect(isSecureCookieEnvironment({ APP_ENV: 'prod' })).toBe(true);
+    expect(isSmsEnabled({ APP_ENV: 'prod' })).toBe(false);
+    expect(isSmsEnabled({ APP_ENV: 'prod', SMS_ENABLED: 'true' })).toBe(true);
     expect(resolveCorsOrigins({ APP_ENV: 'local' })).toBe(true);
     expect(resolveCorsOrigins({ APP_ENV: 'prod', CORS_ORIGINS: 'https://a.com, https://b.com' })).toEqual(['https://a.com', 'https://b.com']);
     expect(getStorageProviderName({ APP_ENV: 'prod', STORAGE_PROVIDER: 'minio' })).toBe('minio');

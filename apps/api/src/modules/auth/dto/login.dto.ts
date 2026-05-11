@@ -1,15 +1,17 @@
-import { IsIn, IsString, Length, Matches } from 'class-validator';
+import { IsIn, IsString, Length, Matches, MaxLength, MinLength } from 'class-validator';
 
 export class LoginDto {
   @IsString()
-  @IsIn(['mobile'])
-  login_type!: 'mobile';
+  @IsIn(['password'])
+  login_type!: 'password';
 
   @IsString()
-  @Matches(/^1\d{10}$/)
+  @MinLength(3)
+  @MaxLength(64)
+  @Matches(/^\S+$/)
   credential!: string;
 
   @IsString()
-  @Length(4, 8)
-  verify_code!: string;
+  @Length(8, 72)
+  password!: string;
 }

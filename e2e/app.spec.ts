@@ -3,19 +3,17 @@ import { expect, test } from '@playwright/test';
 import { expectNoEnglishSeedCopy, expectNoUnfinishedCopy, loginWeb, webBaseURL } from './helpers';
 
 test.describe('App critical journeys', () => {
-  test('logs in with mobile code and renders localized home data', async ({ page }) => {
+  test('logs in with password and renders localized home data', async ({ page }) => {
     await page.goto(`${webBaseURL}/auth/login`);
     await expect(page.getByRole('button', { name: '进入年轮' })).toBeDisabled();
 
-    await page.getByPlaceholder('请输入手机号').fill('13800000000');
+    await page.getByPlaceholder('请输入账号').fill('xiaoman_parent');
+    await page.getByPlaceholder('请输入密码').fill('DemoUser123!');
     await page.getByRole('checkbox', { name: '我已阅读并同意《用户协议》和《隐私政策》' }).check();
-    await page.getByRole('button', { name: '发送验证码' }).click();
-    await expect(page.getByText('验证码已发送，300 秒内有效。')).toBeVisible();
-    await page.getByPlaceholder('请输入验证码').fill('123456');
     await page.getByRole('button', { name: '进入年轮' }).click();
 
     await expect(page).toHaveURL(/\/home$/);
-    await expect(page.getByText('小满')).toBeVisible();
+    await expect(page.getByText('小满', { exact: true })).toBeVisible();
     await expect(page.getByText('学会说谢谢').first()).toBeVisible();
     await expect(page.getByText('第一次自己吃饭').first()).toBeVisible();
     await expectNoEnglishSeedCopy(page);
@@ -92,5 +90,21 @@ test.describe('App critical journeys', () => {
     await expect(page.getByRole('heading', { name: '关于与协议' })).toBeVisible();
     await expect(page.getByText('儿童信息保护摘要')).toBeVisible();
     await expectNoUnfinishedCopy(page);
+  });
+
+  test('family invite flow uses registration invite code only', async ({ page }) => {
+    await loginWeb(page);
+    await page.getByRole('link', { name: '家庭' }).click();
+    await page.getByRole('link', { name: '邀请成员' }).click();
+
+    await expect(page.getByRole('heading', { name: '邀请家庭成员' })).toBeVisible();
+    await expect(page.getByText('创建邀请码后，被邀请人可用它注册账号并加入家庭。')).toBeVisible();
+
+    await page.getByRole('button', { name: '生成邀请码' }).click();
+
+    await expect(page.getByText('邀请码已生成', { exact: true })).toBeVisible();
+    await expect(page.getByText('对方在注册页填写后会自动加入家庭')).toBeVisible();
+    await expect(page.getByRole('button', { name: '复制邀请码' })).toBeVisible();
+    await expect(page.getByText(/接受邀请|邀请链接|打开接受邀请页/)).toHaveCount(0);
   });
 });

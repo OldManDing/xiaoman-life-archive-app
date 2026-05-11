@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
@@ -380,7 +380,11 @@ export const FamilyInvitePage = () => {
     setError(null);
     setMessage(null);
     try {
-      const result = await webApi.createFamilyInvite(activeChild.family_no, form);
+      const mobile = form.mobile.trim();
+      const result = await webApi.createFamilyInvite(activeChild.family_no, {
+        role: form.role,
+        ...(mobile ? { mobile } : {}),
+      });
       setInviteResult(result);
       setMessage('邀请码已生成，可直接复制后发送给家人。');
     } catch (err) {
@@ -391,11 +395,16 @@ export const FamilyInvitePage = () => {
   };
 
   return (
-    <PageShell title="邀请家庭成员" description="创建邀请码后，被邀请人登录并接受邀请即可加入家庭。">
+    <PageShell title="邀请家庭成员" description="创建邀请码后，被邀请人可用它注册账号并加入家庭。">
       <Panel>
         <form onSubmit={onSubmit} style={rowStyle}>
-          <Field label="邀请手机号">
-            <input style={inputStyle} value={form.mobile} onChange={(event) => setForm((current) => ({ ...current, mobile: event.target.value }))} />
+          <Field label="绑定手机号（可选）">
+            <input
+              style={inputStyle}
+              value={form.mobile}
+              onChange={(event) => setForm((current) => ({ ...current, mobile: event.target.value }))}
+              placeholder="不填写则生成通用邀请码"
+            />
           </Field>
           <Field label="邀请角色">
             <select style={inputStyle} value={form.role} onChange={(event) => setForm((current) => ({ ...current, role: event.target.value as 'viewer' | 'editor' }))}>
@@ -419,69 +428,15 @@ export const FamilyInvitePage = () => {
             <p style={helperTextStyle}>邀请码：{inviteResult.invite_token}</p>
             <p style={helperTextStyle}>邀请角色：{familyRoleLabel(inviteResult.role)}</p>
             <p style={helperTextStyle}>失效时间：{new Date(inviteResult.expires_at).toLocaleString('zh-CN')}</p>
+            <p style={helperTextStyle}>把邀请码发送给家人，对方在注册页填写后会自动加入家庭；登录时只需要账号和密码。</p>
             <div style={buttonRowStyle}>
               <button type="button" style={secondaryButtonStyle} onClick={() => void copyText(inviteResult.invite_token, '邀请码已复制')}>
                 复制邀请码
               </button>
-              <button
-                type="button"
-                style={secondaryButtonStyle}
-                onClick={() => void copyText(`${window.location.origin}/family/invite/${inviteResult.invite_token}/accept`, '邀请链接已复制')}
-              >
-                复制邀请链接
-              </button>
-              <Link to={`/family/invite/${inviteResult.invite_token}/accept`} style={secondaryButtonStyle as never}>
-                打开接受邀请页
-              </Link>
             </div>
           </div>
         </Panel>
       ) : null}
-    </PageShell>
-  );
-};
-
-export const FamilyInviteAcceptPage = () => {
-  const navigate = useNavigate();
-  const params = useParams<{ token: string }>();
-  const [status, setStatus] = useState<'idle' | 'submitting' | 'success'>('idle');
-  const [error, setError] = useState<string | null>(null);
-
-  const onAccept = async () => {
-    if (!params.token) return;
-    setStatus('submitting');
-    setError(null);
-    try {
-      await webApi.acceptInvite(params.token);
-      setStatus('success');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '接受邀请失败');
-      setStatus('idle');
-    }
-  };
-
-  return (
-    <PageShell title="接受邀请" description="被邀请人登录后可通过此页加入家庭。">
-      <Panel>
-        <div style={rowStyle}>
-          <p style={helperTextStyle}>当前邀请码：{params.token ?? '未提供'}</p>
-          {error ? <p style={{ ...helperTextStyle, color: '#dc2626' }}>{error}</p> : null}
-          {status === 'success' ? <p style={{ ...helperTextStyle, color: '#0f766e' }}>接受成功，已加入家庭。</p> : null}
-          <div style={buttonRowStyle}>
-            <button type="button" style={primaryButtonStyle} onClick={() => void onAccept()} disabled={status === 'submitting'}>
-              {status === 'submitting' ? '提交中…' : '接受邀请'}
-            </button>
-            {status === 'success' ? (
-              <button type="button" style={secondaryButtonStyle} onClick={() => navigate('/family', { replace: true })}>
-                查看家庭页
-              </button>
-            ) : null}
-            <button type="button" style={secondaryButtonStyle} onClick={() => navigate('/family')}>
-              返回家庭页
-            </button>
-          </div>
-        </div>
-      </Panel>
     </PageShell>
   );
 };

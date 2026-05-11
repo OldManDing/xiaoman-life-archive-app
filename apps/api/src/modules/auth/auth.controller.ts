@@ -6,6 +6,7 @@ import { Public } from '../../shared/decorators/public.decorator';
 import { isSecureCookieEnvironment } from '../../shared/env-config';
 import { parseDurationToSeconds } from '../../shared/utils';
 import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
 import { SendCodeDto } from './dto/send-code.dto';
 import { UserJwtAuthGuard } from './guards/user-jwt-auth.guard';
 import { AuthService } from './auth.service';
@@ -27,6 +28,17 @@ export class AuthController {
   @Post('login')
   async login(@Body() dto: LoginDto, @Res({ passthrough: true }) response: Response) {
     const result = await this.authService.login(dto);
+    this.setRefreshCookie(response, result.refresh_token);
+
+    const { refresh_token: _refreshToken, ...payload } = result;
+    return payload;
+  }
+
+  @Public()
+  @HttpCode(200)
+  @Post('register')
+  async register(@Body() dto: RegisterDto, @Res({ passthrough: true }) response: Response) {
+    const result = await this.authService.register(dto);
     this.setRefreshCookie(response, result.refresh_token);
 
     const { refresh_token: _refreshToken, ...payload } = result;

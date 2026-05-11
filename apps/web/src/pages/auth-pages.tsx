@@ -16,43 +16,23 @@ export const SplashPage = () => (
 
 export const LoginPage = () => {
   const navigate = useNavigate();
-  const { login, isAuthenticated, needsOnboarding } = useAuth();
-  const [form, setForm] = useState({ credential: '', verify_code: '' });
+  const { login, register, isAuthenticated, needsOnboarding } = useAuth();
+  const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [form, setForm] = useState({ credential: '', password: '', password_confirm: '', invite_code: '' });
   const [acceptedAgreement, setAcceptedAgreement] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [sendingCode, setSendingCode] = useState(false);
-  const [countdown, setCountdown] = useState(0);
-  const [infoMessage, setInfoMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const canSubmit =
+    acceptedAgreement &&
+    form.credential.trim().length > 0 &&
+    form.password.length > 0 &&
+    (mode === 'login' || (form.password_confirm.length > 0 && form.invite_code.trim().length > 0));
 
   useEffect(() => {
     if (isAuthenticated) {
       navigate(needsOnboarding ? '/onboarding/child' : '/home', { replace: true });
     }
   }, [isAuthenticated, navigate, needsOnboarding]);
-
-  useEffect(() => {
-    if (countdown <= 0) return;
-    const timer = window.setTimeout(() => {
-      setCountdown((current) => Math.max(0, current - 1));
-    }, 1000);
-    return () => window.clearTimeout(timer);
-  }, [countdown]);
-
-  const onSendCode = async () => {
-    setSendingCode(true);
-    setError(null);
-    setInfoMessage(null);
-    try {
-      const result = await webApi.sendCode(form.credential);
-      setCountdown(result.next_send_in);
-      setInfoMessage(`验证码已发送，${result.expires_in} 秒内有效。`);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '发送验证码失败');
-    } finally {
-      setSendingCode(false);
-    }
-  };
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -64,39 +44,100 @@ export const LoginPage = () => {
     setSubmitting(true);
     setError(null);
     try {
-      await login({ login_type: 'mobile', ...form });
+      if (mode === 'login') {
+        await login({
+          login_type: 'password',
+          credential: form.credential.trim(),
+          password: form.password,
+        });
+      } else {
+        if (form.password !== form.password_confirm) {
+          setError('两次输入的密码不一致');
+          return;
+        }
+
+        await register({
+          credential: form.credential.trim(),
+          password: form.password,
+          password_confirm: form.password_confirm,
+          invite_code: form.invite_code.trim(),
+        });
+      }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '登录失败，请稍后重试');
+      setError(err instanceof Error ? err.message : mode === 'login' ? '登录失败，请稍后重试' : '注册失败，请稍后重试');
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <PageShell title="登录注册" description="用手机号验证码进入年轮。">
+    <PageShell title="登录注册" description={mode === 'login' ? '使用账号密码进入年轮。' : '使用邀请码创建账号并加入家庭。'}>
       <Panel>
         <form onSubmit={onSubmit} style={rowStyle}>
-          <Field label="手机号">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            <button
+              type="button"
+              style={mode === 'login' ? primaryButtonStyle : secondaryButtonStyle}
+              onClick={() => {
+                setMode('login');
+                setError(null);
+              }}
+            >
+              登录
+            </button>
+            <button
+              type="button"
+              style={mode === 'register' ? primaryButtonStyle : secondaryButtonStyle}
+              onClick={() => {
+                setMode('register');
+                setError(null);
+              }}
+            >
+              注册
+            </button>
+          </div>
+          <Field label="账号">
             <input
               style={inputStyle}
               value={form.credential}
               onChange={(event) => setForm((current) => ({ ...current, credential: event.target.value }))}
-              placeholder="请输入手机号"
+              placeholder="请输入账号"
+              autoComplete="username"
             />
           </Field>
-          <Field label="验证码">
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '8px', alignItems: 'center' }}>
-              <input
-                style={inputStyle}
-                value={form.verify_code}
-                onChange={(event) => setForm((current) => ({ ...current, verify_code: event.target.value }))}
-                placeholder="请输入验证码"
-              />
-              <button type="button" style={secondaryButtonStyle} onClick={() => void onSendCode()} disabled={sendingCode || countdown > 0}>
-                {sendingCode ? '发送中…' : countdown > 0 ? `${countdown}s` : '发送验证码'}
-              </button>
-            </div>
+          <Field label="密码">
+            <input
+              style={inputStyle}
+              type="password"
+              value={form.password}
+              onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
+              placeholder="请输入密码"
+              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+            />
           </Field>
+          {mode === 'register' ? (
+            <>
+              <Field label="确认密码">
+                <input
+                  style={inputStyle}
+                  type="password"
+                  value={form.password_confirm}
+                  onChange={(event) => setForm((current) => ({ ...current, password_confirm: event.target.value }))}
+                  placeholder="请再次输入密码"
+                  autoComplete="new-password"
+                />
+              </Field>
+              <Field label="邀请码">
+                <input
+                  style={inputStyle}
+                  value={form.invite_code}
+                  onChange={(event) => setForm((current) => ({ ...current, invite_code: event.target.value }))}
+                  placeholder="请输入家庭邀请码"
+                  autoComplete="one-time-code"
+                />
+              </Field>
+            </>
+          ) : null}
           <label style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', color: '#78716c', fontSize: '13px', lineHeight: 1.6 }}>
             <input
               type="checkbox"
@@ -108,13 +149,12 @@ export const LoginPage = () => {
               我已阅读并同意《用户协议》和《隐私政策》
             </span>
           </label>
-          {infoMessage ? <p style={{ ...helperTextStyle, color: '#0f766e' }}>{infoMessage}</p> : null}
           {error ? <p style={{ ...helperTextStyle, color: '#dc2626' }}>{error}</p> : null}
           <button type="button" style={{ ...secondaryButtonStyle, justifyContent: 'center' }} onClick={() => navigate('/legal')}>
             查看完整协议与隐私政策
           </button>
-          <button type="submit" style={primaryButtonStyle} disabled={submitting || !acceptedAgreement}>
-            {submitting ? '登录中…' : '进入年轮'}
+          <button type="submit" style={primaryButtonStyle} disabled={submitting || !canSubmit}>
+            {submitting ? (mode === 'login' ? '登录中…' : '注册中…') : mode === 'login' ? '进入年轮' : '注册并进入'}
           </button>
         </form>
       </Panel>

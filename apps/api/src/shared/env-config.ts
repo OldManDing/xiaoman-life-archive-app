@@ -71,6 +71,12 @@ export function isSecureCookieEnvironment(env: EnvSource = process.env): boolean
   return SECURE_COOKIE_ENVIRONMENTS.has(getAppEnv(env));
 }
 
+export function isSmsEnabled(env: EnvSource = process.env): boolean {
+  const configured = readEnvValue(env, 'SMS_ENABLED');
+  if (!configured) return false;
+  return ['1', 'true', 'yes', 'on'].includes(configured.toLowerCase());
+}
+
 export function isAdminBootstrapAllowed(env: EnvSource = process.env): boolean {
   const configured = readEnvValue(env, 'ADMIN_BOOTSTRAP_ENABLED');
   if (configured) {
@@ -161,9 +167,11 @@ function validateStrictProviderConfig(env: EnvSource) {
   requireEnvValue(env, 'DATABASE_URL');
   requireEnvValues(env, ['REDIS_HOST', 'REDIS_PORT']);
 
-  const smsProvider = getSmsProviderName(env);
-  if (smsProvider === 'aliyun') {
-    requireEnvValues(env, ['SMS_ACCESS_KEY', 'SMS_SECRET_KEY', 'SMS_SIGN_NAME', 'SMS_TEMPLATE_CODE']);
+  if (isSmsEnabled(env)) {
+    const smsProvider = getSmsProviderName(env);
+    if (smsProvider === 'aliyun') {
+      requireEnvValues(env, ['SMS_ACCESS_KEY', 'SMS_SECRET_KEY', 'SMS_SIGN_NAME', 'SMS_TEMPLATE_CODE']);
+    }
   }
 
   const storageProvider = getStorageProviderName(env);
@@ -180,13 +188,29 @@ function validateStrictProviderConfig(env: EnvSource) {
   }
 }
 
+function validateStrictJwtSecrets(accessSecret: string, refreshSecret: string) {
+  if (accessSecret === refreshSecret) {
+    throw new Error('JWT_ACCESS_SECRET and JWT_REFRESH_SECRET must be different outside local/test environments');
+  }
+
+  if (accessSecret.length < 32) {
+    throw new Error('JWT_ACCESS_SECRET must be at least 32 characters outside local/test environments');
+  }
+
+  if (refreshSecret.length < 32) {
+    throw new Error('JWT_REFRESH_SECRET must be at least 32 characters outside local/test environments');
+  }
+}
+
 export function validateRuntimeConfig(config: Record<string, unknown>): Record<string, unknown> {
   const accessSecret = getJwtAccessSecret(config);
   const refreshSecret = getJwtRefreshSecret(config);
 
   getAppPort(config);
   resolveCorsOrigins(config);
-  getSmsProviderName(config);
+  if (isSmsEnabled(config)) {
+    getSmsProviderName(config);
+  }
   getStorageProviderName(config);
   getAiProviderName(config);
 
@@ -200,6 +224,8 @@ export function validateRuntimeConfig(config: Record<string, unknown>): Record<s
     if (isPlaceholderSecret(refreshSecret, 'JWT_REFRESH_SECRET')) {
       throw new Error('JWT_REFRESH_SECRET cannot use the placeholder value outside local/test environments');
     }
+
+    validateStrictJwtSecrets(accessSecret, refreshSecret);
 
     if (isAdminBootstrapAllowed(config) && getAdminInitialPassword(config) === DEFAULT_ADMIN_PASSWORD) {
       throw new Error('ADMIN_INITIAL_PASSWORD cannot use the default value when admin bootstrap is enabled outside local/test environments');

@@ -19,13 +19,6 @@ describe('Families invite flow', () => {
     mobile: '13800000000',
     deletedAt: null,
   };
-  const invitee = {
-    id: BigInt(2),
-    userNo: 'u_viewer',
-    nickname: '家人',
-    mobile: '13900000000',
-    deletedAt: null,
-  };
   const family = {
     id: BigInt(100),
     familyNo: 'f_001',
@@ -49,37 +42,6 @@ describe('Families invite flow', () => {
     },
   ];
 
-  const transactionClient = {
-    familyMember: {
-      upsert: jest.fn().mockImplementation(async ({ where, create, update }: { where: { familyId_userId: { familyId: bigint; userId: bigint } }; create: any; update: any }) => {
-        const existing = memberships.find((item) => item.familyId === where.familyId_userId.familyId && item.userId === where.familyId_userId.userId);
-        if (existing) {
-          Object.assign(existing, update, { updatedAt: new Date() });
-          return existing;
-        }
-
-        const created = {
-          id: BigInt(memberships.length + 1),
-          ...create,
-          deletedAt: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          user: invitee,
-          inviter: owner,
-        };
-        memberships.push(created);
-        return created;
-      }),
-    },
-    memberInvite: {
-      update: jest.fn().mockImplementation(async ({ where, data }: { where: { id: bigint }; data: any }) => {
-        const invite = invites.find((item) => item.id === where.id)!;
-        Object.assign(invite, data);
-        return invite;
-      }),
-    },
-  };
-
   const prismaMock = {
     family: {
       findFirst: jest.fn().mockImplementation(async ({ where }: { where: { familyNo?: string } }) => {
@@ -91,7 +53,6 @@ describe('Families invite flow', () => {
         return memberships.find((item) => item.familyId === where.familyId && item.userId === where.userId && item.deletedAt === null) ?? null;
       }),
       findMany: jest.fn().mockImplementation(async () => memberships),
-      upsert: transactionClient.familyMember.upsert,
       update: jest.fn().mockImplementation(async ({ where, data }: { where: { id: bigint }; data: { role: string } }) => {
         const membership = memberships.find((item) => item.id === where.id)!;
         membership.role = data.role;
@@ -115,23 +76,14 @@ describe('Families invite flow', () => {
         invites.push(invite);
         return invite;
       }),
-      update: transactionClient.memberInvite.update,
     },
     user: {
       findFirst: jest.fn().mockImplementation(async ({ where }: { where: { id?: bigint; userNo?: string } }) => {
         if (where.id === owner.id) return owner;
-        if (where.id === invitee.id) return invitee;
-        if (where.userNo === invitee.userNo) return invitee;
         return null;
       }),
     },
-    $transaction: jest.fn(async (input: unknown) => {
-      if (typeof input === 'function') {
-        return (input as (tx: typeof transactionClient) => unknown)(transactionClient);
-      }
-
-      return input;
-    }),
+    $transaction: jest.fn(async (input: unknown) => input),
     $queryRaw: jest.fn().mockResolvedValue([{ ok: 1 }]),
   };
 
@@ -157,33 +109,29 @@ describe('Families invite flow', () => {
     if (app) await app.close();
   });
 
-  it('creates invite, accepts it, and lists members', async () => {
+  it('creates an invite code for registration and lists members', async () => {
     const ownerToken = await jwtService.signAsync({ type: 'user', sub: owner.id.toString(), user_no: owner.userNo }, { secret: process.env.JWT_ACCESS_SECRET });
-    const inviteeToken = await jwtService.signAsync({ type: 'user', sub: invitee.id.toString(), user_no: invitee.userNo }, { secret: process.env.JWT_ACCESS_SECRET });
 
     const createResponse = await request(app.getHttpServer())
       .post(`/api/v1/families/${family.familyNo}/invites`)
       .set('Authorization', `Bearer ${ownerToken}`)
-      .send({ mobile: invitee.mobile, role: 'viewer' })
+      .send({ mobile: '13900000000', role: 'viewer' })
       .expect(201);
 
     const inviteToken = createResponse.body.data.invite_token;
     expect(inviteToken).toBeTruthy();
-
-    await request(app.getHttpServer())
-      .post(`/api/v1/invites/${inviteToken}/accept`)
-      .set('Authorization', `Bearer ${inviteeToken}`)
-      .expect(201);
 
     const membersResponse = await request(app.getHttpServer())
       .get(`/api/v1/families/${family.familyNo}/members`)
       .set('Authorization', `Bearer ${ownerToken}`)
       .expect(200);
 
-    expect(membersResponse.body.data.list).toHaveLength(2);
-    expect(membersResponse.body.data.list[1]).toMatchObject({
-      user_no: invitee.userNo,
+    expect(createResponse.body.data).toMatchObject({
+      family_no: family.familyNo,
       role: 'viewer',
+      invitee_mobile: '13900000000',
     });
+    expect(membersResponse.body.data.list).toHaveLength(1);
+    expect(membersResponse.body.data.list[0].user_no).toBe(owner.userNo);
   });
 });

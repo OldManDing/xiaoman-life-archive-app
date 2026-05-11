@@ -5,12 +5,9 @@ export const adminBaseURL = process.env.E2E_ADMIN_BASE_URL ?? `http://127.0.0.1:
 
 export async function loginWeb(page: Page) {
   await page.goto(`${webBaseURL}/auth/login`);
-  await page.getByPlaceholder('请输入手机号').fill('13800000000');
-  await page.getByPlaceholder('请输入验证码').fill('123456');
+  await page.getByPlaceholder('请输入账号').fill('xiaoman_parent');
+  await page.getByPlaceholder('请输入密码').fill('DemoUser123!');
   await page.getByRole('checkbox', { name: '我已阅读并同意《用户协议》和《隐私政策》' }).check();
-  await page.getByRole('button', { name: '发送验证码' }).click();
-  await expect(page.getByText('验证码已发送，300 秒内有效。')).toBeVisible();
-  await page.getByPlaceholder('请输入验证码').fill('123456');
   await page.getByRole('button', { name: '进入年轮' }).click();
   await expect(page).toHaveURL(/\/home$/);
   await expect(page.getByText('最近更新')).toBeVisible();

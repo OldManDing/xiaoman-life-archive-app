@@ -10,6 +10,7 @@ vi.mock('../shared/api/webApi', () => ({
     listChildren: vi.fn(),
     logout: vi.fn(),
     login: vi.fn(),
+    register: vi.fn(),
     updateMe: vi.fn(),
     createChild: vi.fn(),
     createRecord: vi.fn(),
@@ -28,18 +29,18 @@ vi.mock('../shared/api/webApi', () => ({
 import { webApi } from '../shared/api/webApi';
 
 const refreshMock = vi.mocked(webApi.refresh);
-const sendCodeMock = vi.mocked(webApi.sendCode);
 const listChildrenMock = vi.mocked(webApi.listChildren);
 const loginMock = vi.mocked(webApi.login);
+const registerMock = vi.mocked(webApi.register);
 const createChildMock = vi.mocked(webApi.createChild);
 const logoutMock = vi.mocked(webApi.logout);
 
 describe('App Shell', () => {
   beforeEach(() => {
     refreshMock.mockReset();
-    sendCodeMock.mockReset();
     listChildrenMock.mockReset();
     loginMock.mockReset();
+    registerMock.mockReset();
     createChildMock.mockReset();
     logoutMock.mockReset();
     window.history.pushState({}, '', '/auth/login');
@@ -61,9 +62,8 @@ describe('App Shell', () => {
     expect(await screen.findByText('登录注册')).toBeDefined();
   });
 
-  it('sends login code and logs in after agreement is accepted', async () => {
+  it('logs in with password after agreement is accepted', async () => {
     refreshMock.mockRejectedValue(new Error('unauthorized'));
-    sendCodeMock.mockResolvedValue({ success: true, expires_in: 300, next_send_in: 60 });
     loginMock.mockResolvedValue({
       access_token: 'token-login',
       expires_in: 7200,
@@ -78,21 +78,50 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    fireEvent.change(await screen.findByPlaceholderText('请输入手机号'), { target: { value: '13800000000' } });
-    fireEvent.click(screen.getByText('发送验证码'));
-    await waitFor(() => {
-      expect(sendCodeMock).toHaveBeenCalledWith('13800000000');
-    });
-
-    fireEvent.change(screen.getByPlaceholderText('请输入验证码'), { target: { value: '123456' } });
+    fireEvent.change(await screen.findByPlaceholderText('请输入账号'), { target: { value: 'parent_account' } });
+    fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'Parent123!' } });
     fireEvent.click(screen.getByRole('checkbox'));
     fireEvent.click(screen.getByRole('button', { name: '进入年轮' }));
 
     await waitFor(() => {
       expect(loginMock).toHaveBeenCalledWith({
-        login_type: 'mobile',
-        credential: '13800000000',
-        verify_code: '123456',
+        login_type: 'password',
+        credential: 'parent_account',
+        password: 'Parent123!',
+      });
+    });
+  });
+
+  it('registers with password and invite code after agreement is accepted', async () => {
+    refreshMock.mockRejectedValue(new Error('unauthorized'));
+    registerMock.mockResolvedValue({
+      access_token: 'token-register',
+      expires_in: 7200,
+      user: {
+        user_no: 'u_register',
+        nickname: '注册用户',
+        avatar_url: null,
+        membership_type: 'free',
+      },
+      need_create_child: true,
+    });
+
+    render(<App />);
+
+    fireEvent.click(await screen.findByRole('button', { name: '注册' }));
+    fireEvent.change(screen.getByPlaceholderText('请输入账号'), { target: { value: 'new_parent' } });
+    fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'Parent123!' } });
+    fireEvent.change(screen.getByPlaceholderText('请再次输入密码'), { target: { value: 'Parent123!' } });
+    fireEvent.change(screen.getByPlaceholderText('请输入家庭邀请码'), { target: { value: 'join-family-001' } });
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('button', { name: '注册并进入' }));
+
+    await waitFor(() => {
+      expect(registerMock).toHaveBeenCalledWith({
+        credential: 'new_parent',
+        password: 'Parent123!',
+        password_confirm: 'Parent123!',
+        invite_code: 'join-family-001',
       });
     });
   });

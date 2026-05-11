@@ -7,7 +7,7 @@ import {
   LoginPage, SplashPage, HomePage, TimelinePage, CreateRecordPage, 
   ViewRecordPage, EditRecordPage, FamilyPage, FamilyChildPage, 
   FamilyMembersPage, FamilyInvitePage, ProfilePage, AccountPage, 
-  SettingsPage, LegalPage, ReportsPage, HelpFeedbackPage, ErrorPage, OnboardingChildPage, FamilyInviteAcceptPage
+  SettingsPage, LegalPage, ReportsPage, HelpFeedbackPage, ErrorPage, OnboardingChildPage
 } from '../pages/index';
 
 export const AppRouter = () => {
@@ -59,7 +59,6 @@ export const AppRouter = () => {
             <Route path="family/child" element={<FamilyChildPage />} />
             <Route path="family/members" element={<FamilyMembersPage />} />
             <Route path="family/invite" element={<FamilyInvitePage />} />
-            <Route path="family/invite/:token/accept" element={<FamilyInviteAcceptPage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="profile/account" element={<AccountPage />} />
             <Route path="profile/reports" element={<ReportsPage />} />

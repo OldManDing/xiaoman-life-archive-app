@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 
 import { clearAccessToken, getAccessToken, setAccessToken as persistAccessToken } from './auth/tokenMemory';
 import type { ChildRecord, UserProfile } from './api/types';
-import { webApi, type LoginPayload } from './api/webApi';
+import { webApi, type LoginPayload, type RegisterPayload } from './api/webApi';
 
 interface AuthContextValue {
   accessToken: string | null;
@@ -13,6 +13,7 @@ interface AuthContextValue {
   activeChild: ChildRecord | null;
   children: ChildRecord[];
   login: (payload: LoginPayload) => Promise<void>;
+  register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
   setUserProfile: (profile: UserProfile) => void;
   setActiveChild: (child: ChildRecord | null) => void;
@@ -100,6 +101,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     [hydrateAfterAuth],
   );
 
+  const register = useCallback(
+    async (payload: RegisterPayload) => {
+      const session = await webApi.register(payload);
+      await hydrateAfterAuth(session);
+    },
+    [hydrateAfterAuth],
+  );
+
   const logout = useCallback(async () => {
     try {
       await webApi.logout();
@@ -137,6 +146,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       activeChild,
       children: childrenList,
       login,
+      register,
       logout,
       setUserProfile,
       setActiveChild,
@@ -150,6 +160,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       completeOnboarding,
       isBootstrapping,
       login,
+      register,
       logout,
       needsOnboarding,
       refreshChildren,

@@ -1,7 +1,6 @@
 import {
   BadRequestException,
   ConflictException,
-  ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -9,7 +8,6 @@ import { FamilyMemberRole } from '@prisma/client';
 
 import {
   FAMILY_MEMBER_ACTIVE_STATUS,
-  MEMBER_INVITE_STATUS_ACCEPTED,
   MEMBER_INVITE_STATUS_PENDING,
 } from '../../shared/constants';
 import { AccessControlService } from '../../shared/services/access-control.service';
@@ -97,76 +95,6 @@ export class FamiliesService {
       invitee_mobile: invite.inviteeMobile,
       invite_token: inviteToken,
       expires_at: invite.expiresAt.toISOString(),
-    };
-  }
-
-  async acceptInvite(userId: bigint, inviteToken: string) {
-    const invite = await this.prisma.memberInvite.findFirst({
-      where: { tokenHash: hashToken(inviteToken) },
-      include: {
-        family: true,
-      },
-    });
-
-    if (!invite) {
-      throw new NotFoundException('邀请不存在');
-    }
-
-    if (invite.status !== MEMBER_INVITE_STATUS_PENDING || invite.expiresAt <= new Date()) {
-      throw new BadRequestException('邀请已失效');
-    }
-
-    const user = await this.prisma.user.findFirst({
-      where: { id: userId, deletedAt: null },
-    });
-    if (!user) {
-      throw new NotFoundException('用户不存在');
-    }
-
-    if (invite.inviteeMobile && user.mobile !== invite.inviteeMobile) {
-      throw new ForbiddenException('当前账号与邀请手机号不匹配');
-    }
-
-    const now = new Date();
-    await this.prisma.$transaction(async (tx) => {
-      await tx.familyMember.upsert({
-        where: {
-          familyId_userId: {
-            familyId: invite.familyId,
-            userId,
-          },
-        },
-        create: {
-          familyId: invite.familyId,
-          userId,
-          role: invite.role,
-          status: FAMILY_MEMBER_ACTIVE_STATUS,
-          inviterUserId: invite.inviterUserId,
-          joinedAt: now,
-        },
-        update: {
-          role: invite.role,
-          status: FAMILY_MEMBER_ACTIVE_STATUS,
-          inviterUserId: invite.inviterUserId,
-          joinedAt: now,
-          deletedAt: null,
-        },
-      });
-
-      await tx.memberInvite.update({
-        where: { id: invite.id },
-        data: {
-          status: MEMBER_INVITE_STATUS_ACCEPTED,
-          inviteeUserId: userId,
-          acceptedAt: now,
-        },
-      });
-    });
-
-    return {
-      family_no: invite.family.familyNo,
-      role: invite.role,
-      accepted_at: now.toISOString(),
     };
   }
 

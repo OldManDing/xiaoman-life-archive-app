@@ -143,12 +143,6 @@ export interface FamilyInviteResponse {
   expires_at: string;
 }
 
-export interface AcceptInviteResponse {
-  family_no: string;
-  role: string;
-  accepted_at: string;
-}
-
 export interface CreateAiJobResponse {
   list: AiJobDetail[];
 }
