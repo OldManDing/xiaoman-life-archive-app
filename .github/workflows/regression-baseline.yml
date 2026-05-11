@@ -71,7 +71,7 @@ jobs:
           DATABASE_URL: mysql://xiaoman:password@127.0.0.1:3307/xiaoman_archive
 
       - name: Upload Playwright report
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v5
         with:
           name: playwright-report
