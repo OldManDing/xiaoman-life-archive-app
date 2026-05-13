@@ -21,6 +21,7 @@ vi.mock('../shared/api/webApi', () => ({
     detailAiJob: vi.fn(),
     createUploadToken: vi.fn(),
     confirmUpload: vi.fn(),
+    mediaAccessUrl: vi.fn(),
     me: vi.fn(),
     detailChild: vi.fn(),
   },

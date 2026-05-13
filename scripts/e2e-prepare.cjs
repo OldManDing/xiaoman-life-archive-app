@@ -31,5 +31,5 @@ if (!existsSync(prismaClientPath)) {
 }
 
 run(['run', 'build:api'], apiEnv);
-run(['run', 'prisma:dbpush'], apiEnv);
+run(['run', 'prisma:dbpush:skip-generate', '-w', 'apps/api'], apiEnv);
 run(['run', 'prisma:seed'], apiEnv);

@@ -1,9 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
-import { Field, PageShell, Panel, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle, textareaStyle } from '../shared/ui';
+import { AppSegmentedControl, Field, PageShell, Panel, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle, textareaStyle } from '../shared/ui';
 import { rowStyle } from './shared';
 
 export const SplashPage = () => (
@@ -164,7 +164,9 @@ export const LoginPage = () => {
 
 export const OnboardingChildPage = () => {
   const navigate = useNavigate();
-  const { completeOnboarding, needsOnboarding } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { completeOnboarding, needsOnboarding, refreshChildren, setActiveChild } = useAuth();
+  const isAddingChild = searchParams.get('mode') === 'add';
   const [form, setForm] = useState({
     name: '',
     birthday: '',
@@ -176,10 +178,10 @@ export const OnboardingChildPage = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!needsOnboarding) {
+    if (!needsOnboarding && !isAddingChild) {
       navigate('/home', { replace: true });
     }
-  }, [navigate, needsOnboarding]);
+  }, [isAddingChild, navigate, needsOnboarding]);
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -187,8 +189,15 @@ export const OnboardingChildPage = () => {
     setError(null);
     try {
       const child = await webApi.createChild(form);
-      completeOnboarding(child);
-      navigate('/home', { replace: true });
+      if (needsOnboarding) {
+        completeOnboarding(child);
+        navigate('/home', { replace: true });
+        return;
+      }
+
+      await refreshChildren();
+      setActiveChild(child);
+      navigate('/family/child', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : '建档失败，请稍后重试');
     } finally {
@@ -197,7 +206,11 @@ export const OnboardingChildPage = () => {
   };
 
   return (
-    <PageShell title="完善宝宝信息" description="首次登录后请先完成孩子档案创建。">
+    <PageShell
+      title={isAddingChild ? '添加宝宝档案' : '完善宝宝信息'}
+      description={isAddingChild ? '为家庭新增一个孩子档案，保存后会自动切换到新档案。' : '首次登录后请先完成孩子档案创建。'}
+      backTo={isAddingChild ? '/profile' : undefined}
+    >
       <Panel>
         <form onSubmit={onSubmit} style={rowStyle}>
           <Field label="孩子姓名">
@@ -207,11 +220,16 @@ export const OnboardingChildPage = () => {
             <input style={inputStyle} type="date" value={form.birthday} onChange={(event) => setForm((current) => ({ ...current, birthday: event.target.value }))} />
           </Field>
           <Field label="性别">
-            <select style={inputStyle} value={form.gender} onChange={(event) => setForm((current) => ({ ...current, gender: event.target.value }))}>
-              <option value="female">女</option>
-              <option value="male">男</option>
-              <option value="unknown">未知</option>
-            </select>
+            <AppSegmentedControl
+              ariaLabel="性别"
+              value={form.gender}
+              onChange={(value) => setForm((current) => ({ ...current, gender: value }))}
+              options={[
+                { value: 'female', label: '女' },
+                { value: 'male', label: '男' },
+                { value: 'unknown', label: '未知' },
+              ]}
+            />
           </Field>
           <Field label="出生地">
             <input style={inputStyle} value={form.birth_place} onChange={(event) => setForm((current) => ({ ...current, birth_place: event.target.value }))} />

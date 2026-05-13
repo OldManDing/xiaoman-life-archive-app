@@ -20,6 +20,8 @@ export const formSubmitSpacingStyle = {
 export const recordTypes = [
   { label: '图文记录', value: 'mixed' },
   { label: '文字记录', value: 'text' },
+  { label: '视频记录', value: 'video' },
+  { label: '语音记录', value: 'audio' },
   { label: '里程碑', value: 'milestone' },
 ];
 
@@ -54,7 +56,7 @@ export const mutedChipStyle = {
 export const listCardStyle = {
   textAlign: 'left' as const,
   border: '1px solid #ece7df',
-  borderRadius: '20px',
+  borderRadius: '8px',
   padding: '16px',
   background: '#ffffff',
   cursor: 'pointer',
@@ -68,7 +70,7 @@ export const HubLink = ({ to, title, description }: { to: string; title: string;
       display: 'grid',
       gap: '6px',
       padding: '16px',
-      borderRadius: '16px',
+      borderRadius: '8px',
       border: '1px solid #e5e7eb',
       color: '#111827',
       textDecoration: 'none',

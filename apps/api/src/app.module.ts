@@ -7,6 +7,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { ChildrenModule } from './modules/children/children.module';
 import { FamiliesModule } from './modules/families/families.module';
 import { HealthModule } from './modules/health/health.module';
+import { LocationsModule } from './modules/locations/locations.module';
 import { MediaModule } from './modules/media/media.module';
 import { RecordsModule } from './modules/records/records.module';
 import { UsersModule } from './modules/users/users.module';
@@ -30,6 +31,7 @@ import { SharedModule } from './shared/shared.module';
     UsersModule,
     ChildrenModule,
     FamiliesModule,
+    LocationsModule,
     MediaModule,
     RecordsModule,
     AiJobsModule,

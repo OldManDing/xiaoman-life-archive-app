@@ -49,38 +49,42 @@ export const TableShell = ({
   columns: string[];
   rows: Array<Array<ReactNode>>;
   emptyMessage: string;
-}) => (
-  <Panel>
-    {!rows.length ? (
-      <EmptyState message={emptyMessage} />
-    ) : (
-      <div style={{ overflowX: 'auto' }}>
-        <table style={{ ...tableStyle, minWidth: '1120px' }}>
-          <thead>
-            <tr>
-              {columns.map((column, columnIndex) => (
-                <th key={column} style={{ ...thTdStyle, color: '#66736f', fontSize: '13px', background: '#f6f8f7', ...(columnIndex === columns.length - 1 ? stickyLastColumnStyle(true) : {}) }}>
-                  {column}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, rowIndex) => (
-              <tr key={rowIndex}>
-                {row.map((cell, cellIndex) => (
-                  <td key={cellIndex} style={{ ...thTdStyle, ...(cellIndex === row.length - 1 ? stickyLastColumnStyle() : {}) }}>
-                    {cell ?? '—'}
-                  </td>
+}) => {
+  const tableMinWidth = `${Math.max(1120, columns.length * 132)}px`;
+
+  return (
+    <Panel>
+      {!rows.length ? (
+        <EmptyState message={emptyMessage} />
+      ) : (
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ ...tableStyle, minWidth: tableMinWidth }}>
+            <thead>
+              <tr>
+                {columns.map((column, columnIndex) => (
+                  <th key={column} style={{ ...thTdStyle, color: '#66736f', fontSize: '13px', background: '#f6f8f7', ...(columnIndex === columns.length - 1 ? stickyLastColumnStyle(true) : {}) }}>
+                    {column}
+                  </th>
                 ))}
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    )}
-  </Panel>
-);
+            </thead>
+            <tbody>
+              {rows.map((row, rowIndex) => (
+                <tr key={rowIndex}>
+                  {row.map((cell, cellIndex) => (
+                    <td key={cellIndex} style={{ ...thTdStyle, ...(cellIndex === row.length - 1 ? stickyLastColumnStyle() : {}) }}>
+                      {cell ?? '—'}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </Panel>
+  );
+};
 
 export const PaginationPanel = ({
   page,

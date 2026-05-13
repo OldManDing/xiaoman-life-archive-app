@@ -102,5 +102,16 @@ export function extFromMime(mimeType: string): string {
   if (normalized === 'image/jpeg') return 'jpg';
   if (normalized === 'image/png') return 'png';
   if (normalized === 'image/webp') return 'webp';
+  if (normalized === 'image/heic') return 'heic';
+  if (normalized === 'image/heif') return 'heif';
+  if (normalized === 'video/mp4') return 'mp4';
+  if (normalized === 'video/webm') return 'webm';
+  if (normalized === 'video/quicktime') return 'mov';
+  if (normalized === 'audio/mpeg') return 'mp3';
+  if (normalized === 'audio/mp4' || normalized === 'audio/m4a' || normalized === 'audio/x-m4a') return 'm4a';
+  if (normalized === 'audio/aac') return 'aac';
+  if (normalized === 'audio/wav' || normalized === 'audio/x-wav') return 'wav';
+  if (normalized === 'audio/webm') return 'webm';
+  if (normalized === 'audio/ogg') return 'ogg';
   return 'bin';
 }

@@ -284,10 +284,17 @@ export class AdminService {
   async listMedia(admin: AuthenticatedAdmin, dto: AdminListDto, request: Request) {
     const page = normalizePage(dto.page);
     const pageSize = normalizePageSize(dto.page_size);
-    const where = dto.keyword
+    const where: Prisma.RecordMediaWhereInput = dto.keyword
       ? {
           deletedAt: null,
-          OR: [{ mediaNo: { contains: dto.keyword } }, { originalName: { contains: dto.keyword } }, { objectKey: { contains: dto.keyword } }],
+          OR: [
+            { mediaNo: { contains: dto.keyword } },
+            { originalName: { contains: dto.keyword } },
+            { objectKey: { contains: dto.keyword } },
+            { record: { is: { OR: [{ recordNo: { contains: dto.keyword } }, { title: { contains: dto.keyword } }, { contentText: { contains: dto.keyword } }] } } },
+            { child: { is: { OR: [{ childNo: { contains: dto.keyword } }, { name: { contains: dto.keyword } }] } } },
+            { uploader: { is: { OR: [{ userNo: { contains: dto.keyword } }, { nickname: { contains: dto.keyword } }, { mobile: { contains: dto.keyword } }] } } },
+          ],
         }
       : { deletedAt: null };
 
@@ -295,7 +302,7 @@ export class AdminService {
       this.prisma.recordMedia.count({ where }),
       this.prisma.recordMedia.findMany({
         where,
-        include: { child: true, family: true, uploader: true },
+        include: { child: true, family: true, uploader: true, record: true },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * pageSize,
         take: pageSize,
@@ -314,6 +321,10 @@ export class AdminService {
         mime_type: item.mimeType,
         size_bytes: item.sizeBytes ? Number(item.sizeBytes) : null,
         object_key: item.objectKey,
+        original_name: item.originalName,
+        record_no: item.record?.recordNo ?? null,
+        record_title: item.record?.title ?? null,
+        uploader_name: item.uploader.nickname,
         created_at: item.createdAt.toISOString(),
       })),
       page,

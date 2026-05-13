@@ -25,6 +25,14 @@ export class RecordsService {
     }
 
     this.ensureRecordPayload(dto.content_text, dto.media_nos, dto.visibility_scope);
+    this.ensureRecordPublishPayload({
+      status: dto.status,
+      recordType: dto.record_type,
+      title: dto.title,
+      contentText: dto.content_text,
+      mediaNos: dto.media_nos ?? [],
+      eventTime: dto.event_time,
+    });
     const mediaNos = dto.media_nos ?? [];
 
     const record = await this.prisma.$transaction(async (tx) => {
@@ -150,7 +158,16 @@ export class RecordsService {
 
   async update(userId: bigint, recordNo: string, dto: UpdateRecordDto) {
     const { record } = await this.accessControlService.ensureRecordEditable(userId, recordNo);
-    this.ensureRecordPayload(dto.content_text ?? record.contentText, dto.media_nos ?? record.media.map((item) => item.mediaNo), dto.visibility_scope ?? 'family');
+    const mergedMediaNos = dto.media_nos ?? record.media.map((item) => item.mediaNo);
+    this.ensureRecordPayload(dto.content_text ?? record.contentText, mergedMediaNos, dto.visibility_scope ?? 'family');
+    this.ensureRecordPublishPayload({
+      status: dto.status,
+      recordType: dto.record_type ?? record.recordType,
+      title: dto.title ?? record.title,
+      contentText: dto.content_text ?? record.contentText,
+      mediaNos: mergedMediaNos,
+      eventTime: dto.event_time ?? record.eventTime.toISOString(),
+    });
 
     await this.prisma.$transaction(async (tx) => {
       const nextMediaNos = dto.media_nos;
@@ -238,6 +255,50 @@ export class RecordsService {
     }
   }
 
+  private ensureRecordPublishPayload({
+    status,
+    recordType,
+    title,
+    contentText,
+    mediaNos,
+    eventTime,
+  }: {
+    status?: string;
+    recordType?: string;
+    title?: string | null;
+    contentText?: string | null;
+    mediaNos: string[];
+    eventTime?: string | null;
+  }) {
+    if (recordType === 'text' && mediaNos.length > 0) {
+      throw new BadRequestException('文字记录不能关联媒体');
+    }
+
+    if (status !== 'published') return;
+
+    if (!title?.trim()) {
+      throw new BadRequestException('发布前请填写标题');
+    }
+    if (!contentText?.trim()) {
+      throw new BadRequestException('发布前请填写正文');
+    }
+    if (!eventTime) {
+      throw new BadRequestException('发布前请选择发生时间');
+    }
+    if (recordType === 'mixed' && mediaNos.length === 0) {
+      throw new BadRequestException('图文记录发布前请至少上传一张照片或视频');
+    }
+    if (recordType === 'image' && mediaNos.length === 0) {
+      throw new BadRequestException('图片记录发布前请至少上传一张照片');
+    }
+    if (recordType === 'video' && mediaNos.length === 0) {
+      throw new BadRequestException('视频记录发布前请上传一段视频');
+    }
+    if (recordType === 'audio' && mediaNos.length === 0) {
+      throw new BadRequestException('语音记录发布前请上传一段语音');
+    }
+  }
+
   private async toRecordSummary(record: {
     recordNo: string;
     title: string | null;
@@ -247,13 +308,15 @@ export class RecordsService {
     isMilestone: boolean;
     creator: { nickname: string };
     tags: Array<{ tagName: string }>;
-    media: Array<{ objectKey: string; mediaNo: string }>;
+    media: Array<{ objectKey: string; mediaNo: string; mediaType: string }>;
   }) {
     const firstMedia = record.media[0];
     const cover = firstMedia ? await this.storageService.createAccessUrl(firstMedia.objectKey) : null;
 
     return {
       record_no: record.recordNo,
+      cover_media_no: firstMedia?.mediaNo ?? null,
+      cover_media_type: firstMedia?.mediaType ?? null,
       cover_url: cover?.access_url ?? null,
       title: record.title,
       summary: record.contentText,
@@ -282,6 +345,7 @@ export class RecordsService {
         sizeBytes: bigint | null;
         width: number | null;
         height: number | null;
+        durationSeconds: number | null;
       }>;
       tags: Array<{ tagName: string }>;
       eventTime: Date;
@@ -307,6 +371,7 @@ export class RecordsService {
           size_bytes: item.sizeBytes ? Number(item.sizeBytes) : null,
           width: item.width,
           height: item.height,
+          duration_seconds: item.durationSeconds,
         };
       }),
     );

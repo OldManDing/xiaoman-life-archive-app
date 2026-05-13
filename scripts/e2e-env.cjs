@@ -28,6 +28,7 @@ const apiEnv = {
   SMS_DAILY_LIMIT_PER_MOBILE: process.env.SMS_DAILY_LIMIT_PER_MOBILE ?? '100',
   STORAGE_PROVIDER: process.env.STORAGE_PROVIDER ?? 'mock',
   AI_PROVIDER: process.env.AI_PROVIDER ?? 'mock',
+  MAP_PROVIDER: process.env.MAP_PROVIDER ?? 'mock',
   AI_DAILY_LIMIT_PER_USER: process.env.AI_DAILY_LIMIT_PER_USER ?? '20',
   ADMIN_INITIAL_USERNAME: process.env.ADMIN_INITIAL_USERNAME ?? 'admin',
   ADMIN_INITIAL_PASSWORD: process.env.ADMIN_INITIAL_PASSWORD ?? 'ChangeMe123!',

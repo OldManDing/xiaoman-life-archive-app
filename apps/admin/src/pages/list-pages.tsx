@@ -32,7 +32,7 @@ import {
   userStatusLabel,
   visibilityScopeLabel,
 } from '../shared/labels';
-import { Badge, EmptyState, PageShell, Panel } from '../shared/ui';
+import { AdminSelect, Badge, EmptyState, PageShell, Panel } from '../shared/ui';
 import { inputStyle, mutedTextStyle, primaryButtonStyle, secondaryButtonStyle, tableStyle, thTdStyle } from '../shared/uiStyles';
 import { DetailDrawer, DetailGrid, DetailList, DetailSection, JsonBlock, MediaPreview } from './detail-drawer';
 import { formatListRows, useAdminListPage } from './list-page-state';
@@ -98,6 +98,21 @@ const auditTargetTypeFilterOptions = ['list', 'admin_user', 'user', 'child', 're
 const toIsoDateTime = (value: string) => (value ? new Date(value).toISOString() : undefined);
 const formatDateTime = (value: string | null | undefined) => (value ? new Date(value).toLocaleString('zh-CN', { hour12: false }) : '—');
 const formatDateOnly = (value: string | null | undefined) => (value ? new Date(value).toLocaleDateString('zh-CN') : '—');
+
+const CompactText = ({ value, maxWidth = 220 }: { value: string | null | undefined; maxWidth?: number }) => (
+  <span
+    title={value ?? '—'}
+    style={{
+      display: 'block',
+      maxWidth,
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap',
+    }}
+  >
+    {value ?? '—'}
+  </span>
+);
 
 const ListSummary = ({ total, label }: { total?: number; label: string }) => (
   <Panel>
@@ -610,13 +625,15 @@ export const MediaPage = () => {
   };
 
   const rows = formatListRows(state.result?.list ?? [], (item) => [
-    item.media_no,
+    <CompactText key={`${item.media_no}-no`} value={item.media_no} maxWidth={150} />,
     item.family_no,
     item.child_no,
-    item.uploader_user_no,
+    <CompactText key={`${item.media_no}-record`} value={item.record_no ? `${item.record_title ?? '未命名'}（${item.record_no}）` : '未关联记录'} maxWidth={260} />,
+    <CompactText key={`${item.media_no}-uploader`} value={item.uploader_name ? `${item.uploader_name}（${item.uploader_user_no}）` : item.uploader_user_no} maxWidth={190} />,
     <Badge key={`${item.media_no}-type`} tone="info">{mediaTypeLabel(item.media_type)}</Badge>,
     <Badge key={`${item.media_no}-status`} tone={badgeToneForStatus(item.status)}>{mediaStatusLabel(item.status)}</Badge>,
-    item.mime_type,
+    <CompactText key={`${item.media_no}-filename`} value={item.original_name} maxWidth={170} />,
+    <CompactText key={`${item.media_no}-mime`} value={item.mime_type} maxWidth={130} />,
     formatBytes(item.size_bytes),
     formatDateTime(item.created_at),
     <ActionGroup key={`${item.media_no}-actions`}>
@@ -633,7 +650,7 @@ export const MediaPage = () => {
       <ListSummary total={state.result?.total} label="媒体库概览" />
       {state.error ? <Panel><EmptyState message={`加载失败：${state.error}`} /></Panel> : null}
       {actionError ? <Panel><EmptyState message={`操作失败：${actionError}`} /></Panel> : null}
-      <TableShell columns={['媒体编号', '家庭编号', '孩子编号', '上传者', '类型', '状态', '文件类型', '大小', '创建时间', '操作']} rows={rows} emptyMessage="暂无媒体数据，请先点击查询。" />
+      <TableShell columns={['媒体编号', '家庭编号', '孩子编号', '关联记录', '上传者', '类型', '状态', '文件名', '文件类型', '大小', '创建时间', '操作']} rows={rows} emptyMessage="暂无媒体数据，请先点击查询。" />
       {state.result ? <PaginationPanel page={state.result.page} pageSize={state.result.page_size} total={state.result.total} hasMore={state.result.has_more} loading={state.loading} onPrevPage={state.onPrevPage} onNextPage={state.onNextPage} /> : null}
       <DetailDrawer open={detail.state.open} title={detail.state.title} subtitle={detail.state.subtitle} loading={detail.state.loading} error={detail.state.error} onClose={detail.closeDetail}>
         {detail.state.data ? <MediaDetailContent data={detail.state.data} /> : null}
@@ -784,22 +801,22 @@ export const AuditLogsPage = () => {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
             <input style={inputStyle} value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="关键字" />
-            <select style={inputStyle} value={action} onChange={(event) => setAction(event.target.value)}>
+            <AdminSelect value={action} onChange={(event) => setAction(event.target.value)}>
               <option value="">全部动作</option>
               {auditActionFilterOptions.map((value) => (
                 <option key={value} value={value}>
                   {auditActionLabel(value)}
                 </option>
               ))}
-            </select>
-            <select style={inputStyle} value={targetType} onChange={(event) => setTargetType(event.target.value)}>
+            </AdminSelect>
+            <AdminSelect value={targetType} onChange={(event) => setTargetType(event.target.value)}>
               <option value="">全部目标类型</option>
               {auditTargetTypeFilterOptions.map((value) => (
                 <option key={value} value={value}>
                   {auditTargetTypeLabel(value)}
                 </option>
               ))}
-            </select>
+            </AdminSelect>
             <input style={inputStyle} type="datetime-local" value={startTime} onChange={(event) => setStartTime(event.target.value)} aria-label="开始时间" />
             <input style={inputStyle} type="datetime-local" value={endTime} onChange={(event) => setEndTime(event.target.value)} aria-label="结束时间" />
           </div>

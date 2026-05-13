@@ -1,5 +1,11 @@
 import { IsEnum, IsInt, IsString, Max, Min } from 'class-validator';
 
+const mediaTypeValues = {
+  image: 'image',
+  video: 'video',
+  audio: 'audio',
+} as const;
+
 export class CreateUploadTokenDto {
   @IsString()
   child_no!: string;
@@ -12,10 +18,10 @@ export class CreateUploadTokenDto {
 
   @IsInt()
   @Min(1)
-  @Max(10 * 1024 * 1024)
+  @Max(200 * 1024 * 1024)
   size_bytes!: number;
 
   @IsString()
-  @IsEnum({ image: 'image' })
-  media_type!: 'image';
+  @IsEnum(mediaTypeValues)
+  media_type!: keyof typeof mediaTypeValues;
 }

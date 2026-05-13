@@ -12,6 +12,7 @@
     "smoke:test": "jest --runInBand --testPathPattern=test/smoke",
     "prisma:generate": "prisma generate --schema ./prisma/schema.prisma",
     "prisma:dbpush": "prisma db push --schema ./prisma/schema.prisma",
+    "prisma:dbpush:skip-generate": "prisma db push --schema ./prisma/schema.prisma --skip-generate",
     "prisma:seed": "ts-node --compiler-options \"{\\\"module\\\":\\\"CommonJS\\\"}\" ../../prisma/seed.ts"
   },
   "dependencies": {

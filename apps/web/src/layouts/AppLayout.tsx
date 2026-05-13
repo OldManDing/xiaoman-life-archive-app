@@ -27,7 +27,7 @@ export const AppLayout = () => {
         overflowX: 'hidden',
       }}
     >
-      <main style={{ flex: 1, overflow: 'auto', paddingBottom: hideBottomNav ? 0 : 'calc(104px + env(safe-area-inset-bottom))' }}>
+      <main style={{ flex: 1, overflow: 'auto', paddingBottom: hideBottomNav ? 0 : 'calc(92px + env(safe-area-inset-bottom))' }}>
         <Outlet />
       </main>
       {hideBottomNav ? null : <nav
@@ -38,7 +38,7 @@ export const AppLayout = () => {
           transform: 'translateX(-50%)',
           width: '100%',
           maxWidth: '430px',
-          height: '84px',
+          height: '78px',
           borderTop: '1px solid #f3f0ea',
           background: 'rgba(255,255,255,0.96)',
           backdropFilter: 'blur(18px)',
@@ -47,8 +47,8 @@ export const AppLayout = () => {
           alignItems: 'flex-start',
           zIndex: 10,
           marginTop: 'auto',
-          padding: '10px 8px calc(16px + env(safe-area-inset-bottom))',
-          boxShadow: '0 -4px 20px rgba(15,23,42,0.03)',
+          padding: '9px 8px calc(14px + env(safe-area-inset-bottom))',
+          boxShadow: '0 -3px 14px rgba(15,23,42,0.025)',
           boxSizing: 'border-box',
         }}
       >
@@ -75,18 +75,18 @@ export const AppLayout = () => {
                 <>
                   <span
                     style={{
-                      width: item.featured ? '50px' : '30px',
-                      height: item.featured ? '50px' : '30px',
-                      marginTop: item.featured ? '-28px' : 0,
+                      width: item.featured ? '46px' : '30px',
+                      height: item.featured ? '46px' : '30px',
+                      marginTop: item.featured ? '-24px' : 0,
                       borderRadius: '999px',
                       display: 'grid',
                       placeItems: 'center',
                       background: item.featured ? '#292524' : 'transparent',
                       color: item.featured ? '#ffffff' : isActive ? '#292524' : '#a8a29e',
-                      boxShadow: item.featured ? '0 8px 20px rgba(41,37,36,0.22)' : 'none',
+                      boxShadow: item.featured ? '0 7px 18px rgba(41,37,36,0.2)' : 'none',
                     }}
                   >
-                    <Icon size={item.featured ? 28 : 23} strokeWidth={isActive || item.featured ? 2.5 : 2} />
+                    <Icon size={item.featured ? 25 : 22} strokeWidth={isActive || item.featured ? 2.5 : 2} />
                   </span>
                   <span style={{ lineHeight: 1 }}>{item.label}</span>
                 </>

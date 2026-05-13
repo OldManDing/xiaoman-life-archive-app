@@ -7,7 +7,8 @@ import {
   LoginPage, SplashPage, HomePage, TimelinePage, CreateRecordPage, 
   ViewRecordPage, EditRecordPage, FamilyPage, FamilyChildPage, 
   FamilyMembersPage, FamilyInvitePage, ProfilePage, AccountPage, 
-  SettingsPage, LegalPage, ReportsPage, HelpFeedbackPage, ErrorPage, OnboardingChildPage
+  SettingsPage, LegalPage, ReportsPage, ExportBackupPage, MembershipPage,
+  SecurityPage, HelpFeedbackPage, ErrorPage, OnboardingChildPage
 } from '../pages/index';
 
 export const AppRouter = () => {
@@ -62,9 +63,13 @@ export const AppRouter = () => {
             <Route path="profile" element={<ProfilePage />} />
             <Route path="profile/account" element={<AccountPage />} />
             <Route path="profile/reports" element={<ReportsPage />} />
+            <Route path="profile/export" element={<ExportBackupPage />} />
+            <Route path="profile/membership" element={<MembershipPage />} />
+            <Route path="profile/security" element={<SecurityPage />} />
             <Route path="profile/help" element={<HelpFeedbackPage />} />
             <Route path="profile/settings" element={<SettingsPage />} />
             <Route path="profile/legal" element={<LegalPage />} />
+            <Route path="profile/about" element={<LegalPage />} />
           </Route>
         </Route>
         

@@ -8,7 +8,9 @@ import type {
   FamilyInviteResponse,
   FamilyMembersResponse,
   LoginResponse,
+  LocationsSearchResponse,
   AiJobDetail,
+  MediaAccessUrlResponse,
   RecordDetail,
   RecordsListResponse,
   SendCodeResponse,
@@ -48,7 +50,8 @@ export interface UpdateChildPayload {
 }
 
 export interface UpdateMePayload {
-  nickname: string;
+  nickname?: string;
+  avatar_url?: string;
 }
 
 export interface ListRecordsQuery {
@@ -80,7 +83,7 @@ export interface UploadTokenPayload {
   file_name: string;
   mime_type: string;
   size_bytes: number;
-  media_type: 'image';
+  media_type: 'image' | 'video' | 'audio';
 }
 
 export interface ConfirmMediaPayload {
@@ -97,6 +100,13 @@ export interface CreateFamilyInvitePayload {
 
 export interface UpdateFamilyMemberRolePayload {
   role: 'viewer' | 'editor';
+}
+
+export interface SearchLocationsQuery {
+  keyword: string;
+  city?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 let refreshSessionPromise: Promise<LoginResponse> | null = null;
@@ -209,6 +219,18 @@ export const webApi = {
 
   async confirmUpload(payload: ConfirmMediaPayload) {
     const response = await http.post<ApiEnvelope<ConfirmMediaResponse>>('/media/confirm', payload);
+    return response.data.data;
+  },
+
+  async mediaAccessUrl(mediaNo: string) {
+    const response = await http.get<ApiEnvelope<MediaAccessUrlResponse>>(`/media/${mediaNo}/access-url`);
+    return response.data.data;
+  },
+
+  async searchLocations(query: SearchLocationsQuery) {
+    const response = await http.get<ApiEnvelope<LocationsSearchResponse>>('/locations/search', {
+      params: query,
+    });
     return response.data.data;
   },
 

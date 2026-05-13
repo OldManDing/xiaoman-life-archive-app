@@ -3,7 +3,7 @@ import type { CSSProperties } from 'react';
 export const cardStyle: CSSProperties = {
   background: '#ffffff',
   border: '1px solid #dbe3df',
-  borderRadius: '8px',
+  borderRadius: '10px',
   padding: '20px',
   boxShadow: '0 10px 24px rgba(15, 23, 42, 0.05)',
 };
@@ -19,17 +19,19 @@ export const headingStyle: CSSProperties = {
 export const inputStyle: CSSProperties = {
   width: '100%',
   boxSizing: 'border-box',
-  borderRadius: '8px',
+  minHeight: '42px',
+  borderRadius: '10px',
   border: '1px solid #cbd5d1',
   padding: '10px 12px',
   fontSize: '14px',
   background: '#ffffff',
   color: '#1f2933',
+  outline: 'none',
 };
 
 export const primaryButtonStyle: CSSProperties = {
   border: 'none',
-  borderRadius: '8px',
+  borderRadius: '10px',
   padding: '10px 14px',
   background: '#123c37',
   color: '#ffffff',

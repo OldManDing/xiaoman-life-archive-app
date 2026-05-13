@@ -19,18 +19,15 @@ export class MediaService {
   ) {}
 
   async createUploadToken(userId: bigint, dto: CreateUploadTokenDto) {
-    const maxImageBytes = Number(process.env.UPLOAD_IMAGE_MAX_BYTES ?? 10 * 1024 * 1024);
+    const uploadPolicy = this.getUploadPolicy(dto.media_type);
+    const mimeType = dto.mime_type.toLowerCase();
 
-    if (dto.media_type !== 'image') {
-      throw new BadRequestException('V1 仅支持图片上传');
+    if (!uploadPolicy.mimeTypes.includes(mimeType)) {
+      throw new BadRequestException(`${uploadPolicy.label}格式不支持`);
     }
 
-    if (!['image/jpeg', 'image/png', 'image/webp'].includes(dto.mime_type)) {
-      throw new BadRequestException('图片格式不支持');
-    }
-
-    if (dto.size_bytes > maxImageBytes) {
-      throw new BadRequestException('图片大小超过限制');
+    if (dto.size_bytes > uploadPolicy.maxBytes) {
+      throw new BadRequestException(`${uploadPolicy.label}大小超过限制`);
     }
 
     const { child, membership } = await this.accessControlService.ensureChildReadable(userId, dto.child_no);
@@ -43,7 +40,7 @@ export class MediaService {
     const now = new Date();
     const objectKey = `families/${family.familyNo}/children/${child.childNo}/${now.getUTCFullYear()}/${String(
       now.getUTCMonth() + 1,
-    ).padStart(2, '0')}/${mediaNo}.${extFromMime(dto.mime_type)}`;
+    ).padStart(2, '0')}/${mediaNo}.${extFromMime(mimeType)}`;
 
     const media = await this.prisma.recordMedia.create({
       data: {
@@ -51,12 +48,12 @@ export class MediaService {
         familyId: child.familyId,
         childId: child.id,
         uploaderUserId: userId,
-        mediaType: MediaType.image,
+        mediaType: dto.media_type as MediaType,
         storageProvider: getStorageProviderName(),
         bucket: process.env.STORAGE_BUCKET ?? 'xiaoman-archive-local',
         objectKey,
         originalName: dto.file_name,
-        mimeType: dto.mime_type,
+        mimeType,
         sizeBytes: BigInt(dto.size_bytes),
         status: MEDIA_STATUS_UPLOADING,
       },
@@ -65,7 +62,31 @@ export class MediaService {
     return {
       media_no: media.mediaNo,
       object_key: objectKey,
-      ...(await this.storageService.createUploadToken(objectKey, dto.mime_type)),
+      ...(await this.storageService.createUploadToken(objectKey, mimeType)),
+    };
+  }
+
+  private getUploadPolicy(mediaType: CreateUploadTokenDto['media_type']) {
+    if (mediaType === 'image') {
+      return {
+        label: '图片',
+        maxBytes: Number(process.env.UPLOAD_IMAGE_MAX_BYTES ?? 10 * 1024 * 1024),
+        mimeTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif'],
+      };
+    }
+
+    if (mediaType === 'video') {
+      return {
+        label: '视频',
+        maxBytes: Number(process.env.UPLOAD_VIDEO_MAX_BYTES ?? 200 * 1024 * 1024),
+        mimeTypes: ['video/mp4', 'video/webm', 'video/quicktime'],
+      };
+    }
+
+    return {
+      label: '音频',
+      maxBytes: Number(process.env.UPLOAD_AUDIO_MAX_BYTES ?? 50 * 1024 * 1024),
+        mimeTypes: ['audio/mpeg', 'audio/mp4', 'audio/m4a', 'audio/x-m4a', 'audio/aac', 'audio/wav', 'audio/x-wav', 'audio/webm', 'audio/ogg'],
     };
   }
 

@@ -1,28 +1,119 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
-import { Eye, Image, ImagePlus, X } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { BookOpen, Check, ChevronRight, Clock, Eye, FileAudio, Image, ImagePlus, MapPin, Mic, PlayCircle, Star, Tag, Video, X } from 'lucide-react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
-import type { AiJobDetail, RecordDetail } from '../shared/api/types';
+import type { AiJobDetail, LocationSuggestion, RecordDetail } from '../shared/api/types';
 import { useAsyncData } from '../shared/hooks';
 import { aiJobStatusLabel, mediaTypeLabel, recordStatusLabel, recordTypeLabel, visibilityScopeLabel } from '../shared/labels';
-import { Field, PageShell, Panel, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle, textareaStyle } from '../shared/ui';
-import { EmptyState, buttonRowStyle, formSubmitSpacingStyle, formatDateTimeLocal, mutedChipStyle, recordTypes, rowStyle } from './shared';
+import { createPersistableMediaPreview, resolveMediaPreviewUrl, saveLocalMediaPreview } from '../shared/localMediaPreview';
+import { AppSelect, AppTopBar, PageShell, Panel, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle } from '../shared/ui';
+import { EmptyState, buttonRowStyle, formSubmitSpacingStyle, formatDateTimeLocal, recordTypes, rowStyle } from './shared';
 
 type MediaPreview = {
   media_no: string;
   preview_url: string;
+  media_type: 'image' | 'video' | 'audio';
   original_name?: string | null;
   is_local?: boolean;
+};
+
+type MediaType = MediaPreview['media_type'];
+
+const tagOptions = ['生日纪念', '户外日常', '语言发育', '大动作发展', '睡前时光', '亲子陪伴', '第一次', '家庭日常'];
+
+const locationOptions = ['家里', '小区', '公园', '学校', '医院', '游乐场', '爷爷奶奶家', '外婆家'];
+
+const metadataPanelStyle = {
+  borderTop: '1px solid #f1eee8',
+  borderBottom: '1px solid #f1eee8',
+  background: '#ffffff',
+  padding: '14px 0',
+  display: 'grid',
+  gap: '12px',
+} as const;
+
+const metadataSelectStyle = {
+  minHeight: '36px',
+  borderRadius: '6px',
+  background: '#f3f3f5',
+  border: '1px solid rgba(0, 0, 0, 0.1)',
+  boxShadow: 'none',
+} as const;
+
+const metadataIconSelectStyle = {
+  ...metadataSelectStyle,
+  paddingLeft: '36px',
+} as const;
+
+const metadataPillStyle = {
+  minHeight: '40px',
+  borderRadius: '999px',
+  border: '1px solid #eee9df',
+  background: '#fafaf9',
+  boxShadow: '0 1px 4px rgba(41,37,36,0.025)',
+} as const;
+
+const compactPillButtonStyle = {
+  ...secondaryButtonStyle,
+  minHeight: '36px',
+  padding: '8px 13px',
+  borderRadius: '999px',
+  fontSize: '12px',
+  boxShadow: '0 4px 12px rgba(41,37,36,0.035)',
+} as const;
+
+const selectedChipButtonStyle = {
+  minHeight: '34px',
+  border: '1px solid #ded8cf',
+  borderRadius: '999px',
+  background: '#fffdf9',
+  color: '#57534e',
+  padding: '7px 11px',
+  fontSize: '12px',
+  fontWeight: 700,
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '5px',
+  cursor: 'pointer',
+  boxShadow: '0 4px 12px rgba(41,37,36,0.03)',
+} as const;
+
+const deriveMediaType = (file: File): MediaType | null => {
+  if (file.type.startsWith('image/')) return 'image';
+  if (file.type.startsWith('video/')) return 'video';
+  if (file.type.startsWith('audio/')) return 'audio';
+  return null;
+};
+
+const splitTags = (value: string) =>
+  value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+const formatDateTimeDisplay = (value: string) => {
+  if (!value) return '请选择发生时间';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '请选择发生时间';
+  return date.toLocaleString('zh-CN', {
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  });
 };
 
 const RecordForm = ({
   mode,
   initialValue,
+  initialFocus,
   onSubmit,
 }: {
   mode: 'create' | 'edit';
+  initialFocus?: 'media' | 'content' | null;
   initialValue: {
     child_no: string;
     record_type: string;
@@ -32,6 +123,7 @@ const RecordForm = ({
     media_items: MediaPreview[];
     tags: string;
     location_text: string;
+    visibility_scope: string;
     event_time: string;
     status: string;
   };
@@ -43,20 +135,33 @@ const RecordForm = ({
     media_nos?: string[];
     tags: string[];
     location_text?: string;
+    visibility_scope?: string;
     event_time?: string;
+    is_milestone?: boolean;
     status: string;
   }) => Promise<void>;
 }) => {
+  const navigate = useNavigate();
   const { activeChild, children } = useAuth();
   const [form, setForm] = useState(initialValue);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'publish' | 'draft' | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [selectorMessage, setSelectorMessage] = useState<string | null>(null);
+  const [visibilityOpen, setVisibilityOpen] = useState(false);
+  const [tagSelectValue, setTagSelectValue] = useState('');
+  const [poiSuggestions, setPoiSuggestions] = useState<LocationSuggestion[]>([]);
+  const [poiLoading, setPoiLoading] = useState(false);
   const [mediaNos, setMediaNos] = useState<string[]>(initialValue.media_nos);
   const [mediaPreviews, setMediaPreviews] = useState<MediaPreview[]>(initialValue.media_items);
   const mediaPreviewsRef = useRef<MediaPreview[]>(initialValue.media_items);
+  const titleInputRef = useRef<HTMLInputElement | null>(null);
+  const contentInputRef = useRef<HTMLTextAreaElement | null>(null);
+  const timeInputRef = useRef<HTMLInputElement | null>(null);
 
   const currentChild = children.find((child) => child.child_no === form.child_no) ?? activeChild;
+  const selectedTags = splitTags(form.tags);
 
   useEffect(() => {
     setForm(initialValue);
@@ -69,6 +174,50 @@ const RecordForm = ({
   }, [mediaPreviews]);
 
   useEffect(() => {
+    const keyword = form.location_text.trim();
+    if (keyword.length < 2) {
+      setPoiSuggestions([]);
+      setPoiLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setPoiLoading(true);
+    const timer = window.setTimeout(() => {
+      void webApi
+        .searchLocations({ keyword })
+        .then((result) => {
+          if (!cancelled) {
+            setPoiSuggestions(result.list);
+          }
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setPoiSuggestions([]);
+            setSelectorMessage('地点搜索暂时不可用，可继续手动填写或选择常用地点。');
+          }
+        })
+        .finally(() => {
+          if (!cancelled) setPoiLoading(false);
+        });
+    }, 350);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [form.location_text]);
+
+  useEffect(() => {
+    if (initialFocus === 'content') {
+      titleInputRef.current?.focus();
+    }
+    if (initialFocus === 'media') {
+      contentInputRef.current?.focus();
+    }
+  }, [initialFocus]);
+
+  useEffect(() => {
     return () => {
       mediaPreviewsRef.current.forEach((item) => {
         if (item.is_local) {
@@ -78,21 +227,82 @@ const RecordForm = ({
     };
   }, []);
 
+  const switchChild = () => {
+    if (!children.length) {
+      navigate('/onboarding/child?mode=add');
+      return;
+    }
+
+    if (children.length === 1) {
+      navigate('/family/child');
+      return;
+    }
+
+    const currentIndex = children.findIndex((child) => child.child_no === form.child_no);
+    const nextChild = children[(currentIndex + 1 + children.length) % children.length];
+    setForm((current) => ({ ...current, child_no: nextChild.child_no }));
+    setSelectorMessage(`已切换为 ${nextChild.name}`);
+  };
+
+  const clearMediaSelection = () => {
+    setMediaNos([]);
+    setMediaPreviews((current) => {
+      current.forEach((item) => {
+        if (item.is_local) {
+          URL.revokeObjectURL(item.preview_url);
+        }
+      });
+      return [];
+    });
+  };
+
+  const updateRecordType = (recordType: string) => {
+    if (recordType === 'text') {
+      clearMediaSelection();
+    } else if (recordType === 'audio' || recordType === 'video') {
+      const hasOtherMedia = mediaPreviews.some((item) => item.media_type !== recordType);
+      if (hasOtherMedia) {
+        clearMediaSelection();
+      }
+    }
+    setForm((current) => ({ ...current, record_type: recordType }));
+    setSelectorMessage(null);
+  };
+
   const onFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !form.child_no) return;
+    const mediaType = deriveMediaType(file);
+    if (!mediaType) {
+      setError('暂不支持该媒体格式，请选择图片、视频或语音文件。');
+      event.target.value = '';
+      return;
+    }
 
     setUploading(true);
     setError(null);
     const previewUrl = URL.createObjectURL(file);
+    let previewSource = previewUrl;
+    let shouldRevokePreview = true;
     try {
       const uploadToken = await webApi.createUploadToken({
         child_no: form.child_no,
         file_name: file.name,
         mime_type: file.type,
         size_bytes: file.size,
-        media_type: 'image',
+        media_type: mediaType,
       });
+
+      if (uploadToken.mock_upload) {
+        try {
+          previewSource = await createPersistableMediaPreview(file);
+          shouldRevokePreview = false;
+          saveLocalMediaPreview(uploadToken.media_no, previewSource);
+          URL.revokeObjectURL(previewUrl);
+        } catch {
+          previewSource = previewUrl;
+        }
+      }
 
       if (!uploadToken.mock_upload) {
         await fetch(uploadToken.upload_url, {
@@ -103,14 +313,23 @@ const RecordForm = ({
       }
 
       await webApi.confirmUpload({ media_no: uploadToken.media_no });
+      setForm((current) => {
+        if (mediaType === 'audio') return { ...current, record_type: 'audio' };
+        if (mediaType === 'video') return { ...current, record_type: 'video' };
+        if (current.record_type === 'text' || current.record_type === 'audio' || current.record_type === 'video') {
+          return { ...current, record_type: 'mixed' };
+        }
+        return current;
+      });
       setMediaNos((current) => [...current, uploadToken.media_no]);
       setMediaPreviews((current) => [
         ...current,
         {
           media_no: uploadToken.media_no,
-          preview_url: previewUrl,
+          preview_url: previewSource,
+          media_type: mediaType,
           original_name: file.name,
-          is_local: true,
+          is_local: shouldRevokePreview,
         },
       ]);
     } catch (err) {
@@ -134,27 +353,65 @@ const RecordForm = ({
   };
 
   const submitRecord = async (nextStatus = form.status) => {
+    if (nextStatus === 'published') {
+      const title = form.title.trim();
+      const contentText = form.content_text.trim();
+      if (!form.child_no) {
+        setError('发布前请选择孩子档案');
+        return;
+      }
+      if (!title) {
+        setError('发布前请填写标题');
+        titleInputRef.current?.focus();
+        return;
+      }
+      if (!contentText) {
+        setError('发布前请填写正文');
+        contentInputRef.current?.focus();
+        return;
+      }
+      if (!form.event_time) {
+        setError('发布前请选择发生时间');
+        window.setTimeout(() => timeInputRef.current?.focus(), 0);
+        return;
+      }
+      if (form.record_type === 'mixed' && mediaNos.length === 0) {
+        setError('图文记录发布前请至少上传一张照片或视频');
+        return;
+      }
+      if (form.record_type === 'video' && mediaNos.length === 0) {
+        setError('视频记录发布前请上传一段视频');
+        return;
+      }
+      if (form.record_type === 'audio' && mediaNos.length === 0) {
+        setError('语音记录发布前请录制或上传一段语音');
+        return;
+      }
+    }
+
     setSubmitting(true);
+    setPendingAction(nextStatus === 'draft' ? 'draft' : 'publish');
     setError(null);
     try {
+      const nextMediaNos = form.record_type === 'text' ? [] : mediaNos;
       await onSubmit({
         child_no: form.child_no,
         record_type: form.record_type,
-        title: form.title || undefined,
-        content_text: form.content_text || undefined,
-        media_nos: mediaNos,
-        tags: form.tags
-          .split(',')
-          .map((item) => item.trim())
-          .filter(Boolean),
-        location_text: form.location_text || undefined,
+        title: form.title.trim() || undefined,
+        content_text: form.content_text.trim() || undefined,
+        media_nos: nextMediaNos,
+        tags: splitTags(form.tags),
+        location_text: form.location_text.trim() || undefined,
+        visibility_scope: form.visibility_scope,
         event_time: form.event_time ? new Date(form.event_time).toISOString() : undefined,
+        is_milestone: form.record_type === 'milestone',
         status: nextStatus,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : '保存失败');
     } finally {
       setSubmitting(false);
+      setPendingAction(null);
     }
   };
 
@@ -163,189 +420,240 @@ const RecordForm = ({
     await submitRecord('published');
   };
 
+  const addSelectedTag = (tag: string) => {
+    if (!tag || selectedTags.includes(tag)) return;
+    setForm((current) => ({ ...current, tags: [...selectedTags, tag].join(', ') }));
+    setTagSelectValue('');
+  };
+
+  const removeSelectedTag = (tag: string) => {
+    setForm((current) => ({ ...current, tags: splitTags(current.tags).filter((item) => item !== tag).join(', ') }));
+  };
+
+  const filteredLocationOptions = locationOptions.filter((item) => item.includes(form.location_text.trim()) || form.location_text.trim().includes(item));
+  const mergedLocationSuggestions: LocationSuggestion[] = [
+    ...filteredLocationOptions.map((name, index) => ({
+      id: `local-${index}-${name}`,
+      name,
+      address: null,
+      city: null,
+      district: null,
+      latitude: null,
+      longitude: null,
+      source: 'local',
+    })),
+    ...poiSuggestions.filter((suggestion) => !filteredLocationOptions.includes(suggestion.name)),
+  ].slice(0, 5);
+  const showMediaSection = form.record_type !== 'text';
+  const showPhotoVideoAction = showMediaSection && form.record_type !== 'audio';
+  const showAudioAction = showMediaSection && form.record_type !== 'video';
+  const mediaActionCount = Number(showPhotoVideoAction) + Number(showAudioAction);
+  const photoVideoLabel = form.record_type === 'video' ? '拍摄/上传视频' : '添加照片/视频';
+  const photoVideoAccept = form.record_type === 'video' ? 'video/mp4,video/webm,video/quicktime' : 'image/jpeg,image/png,image/webp,image/heic,image/heif,video/mp4,video/webm,video/quicktime';
+  const mediaHint =
+    form.record_type === 'video'
+      ? '支持 MP4、WebM、MOV 视频'
+      : form.record_type === 'audio'
+        ? '支持 M4A、MP3、WAV、WebM、OGG 语音'
+      : '支持 JPG、PNG、WebP、HEIC、MP4、WebM、M4A、MP3、WAV';
+
+  const useCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setSelectorMessage('当前浏览器不支持定位，可直接搜索或选择常用地点。');
+      return;
+    }
+
+    setSelectorMessage('正在获取当前位置…');
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const latitude = position.coords.latitude.toFixed(5);
+        const longitude = position.coords.longitude.toFixed(5);
+        setForm((current) => ({ ...current, location_text: `当前位置（${latitude}, ${longitude}）` }));
+        setSelectorMessage('已写入当前位置，可按需要补充具体地点名称。');
+      },
+      () => setSelectorMessage('定位失败，请检查浏览器定位权限，或手动搜索地点。'),
+      { enableHighAccuracy: true, timeout: 8000 },
+    );
+  };
+
   return (
     <div
       style={{
         minHeight: '100dvh',
         background: '#ffffff',
         color: '#292524',
-        padding: 'calc(34px + env(safe-area-inset-top)) 20px 20px',
+        padding: '0 20px 20px',
         boxSizing: 'border-box',
       }}
     >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <button
-            type="button"
-            style={{
-              border: 'none',
-              background: 'transparent',
-              color: '#78716c',
-              fontSize: '15px',
-              fontWeight: 500,
-              cursor: 'pointer',
-              padding: 0,
-            }}
-            onClick={() => window.history.back()}
-          >
-            取消
-          </button>
-          <span style={{ fontSize: '15px', fontWeight: 700, color: '#44403c' }}>{mode === 'create' ? '记录时光' : '编辑记录'}</span>
-          <button
-            type="submit"
-            form="record-form"
-            style={{
-              border: 'none',
-              borderRadius: '999px',
-              padding: '8px 18px',
-              background: '#292524',
-              color: '#fff',
-              fontSize: '14px',
-              fontWeight: 600,
-              cursor: 'pointer',
-              boxShadow: '0 4px 12px rgba(41,37,36,0.18)',
-            }}
-            disabled={submitting || uploading}
-          >
-            {submitting ? '保存中…' : mode === 'create' ? '发布' : '保存'}
-          </button>
-        </div>
+        <AppTopBar
+          title={mode === 'create' ? '记录时光' : '编辑记录'}
+          backLabel={mode === 'create' ? '取消' : '返回'}
+          backVariant={mode === 'create' ? 'text' : 'icon'}
+          onBack={() => {
+            if (mode === 'create') {
+              navigate('/home');
+              return;
+            }
+            navigate(-1);
+          }}
+          background="rgba(255, 255, 255, 0.96)"
+          style={{ margin: '0 -20px 20px', padding: 'calc(28px + env(safe-area-inset-top)) 20px 18px' }}
+          action={
+            <button
+              type="submit"
+              form="record-form"
+              style={{
+                ...primaryButtonStyle,
+                minHeight: '40px',
+                padding: '8px 18px',
+                fontSize: '14px',
+                cursor: submitting || uploading ? 'not-allowed' : 'pointer',
+                boxShadow: '0 8px 18px rgba(41,37,36,0.18)',
+                opacity: submitting || uploading ? 0.72 : 1,
+              }}
+              disabled={submitting || uploading}
+            >
+              {pendingAction === 'publish' ? (mode === 'create' ? '发布中…' : '保存中…') : mode === 'create' ? '发布' : '保存'}
+            </button>
+          }
+        />
         <form id="record-form" onSubmit={handleSubmit} style={{ ...rowStyle, gap: '24px' }}>
           <div
             style={{
               borderRadius: '20px',
-              padding: '14px 16px',
+              minHeight: '74px',
+              padding: '14px',
               background: '#fafaf9',
-              border: '1px solid #e7e5e4',
-              display: 'flex',
-              justifyContent: 'space-between',
+              border: '1px solid #f2efe9',
+              display: 'grid',
+              gridTemplateColumns: 'minmax(0, 1fr) auto',
               alignItems: 'center',
-              gap: '12px',
-              boxShadow: '0 2px 8px rgba(15,23,42,0.03)',
+              gap: '16px',
+              boxShadow: '0 2px 8px rgba(41,37,36,0.015)',
             }}
           >
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <button
+              type="button"
+              onClick={switchChild}
+              style={{
+                minWidth: 0,
+                border: 'none',
+                background: 'transparent',
+                padding: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                cursor: 'pointer',
+                textAlign: 'left',
+              }}
+            >
               <div
                 style={{
-                  width: '38px',
-                  height: '38px',
+                  width: '36px',
+                  height: '36px',
                   borderRadius: '999px',
                   background: '#fff',
                   border: '1px solid #e7e5e4',
                   display: 'grid',
                   placeItems: 'center',
                   color: '#57534e',
-                  fontWeight: 600,
+                  fontWeight: 700,
                   boxShadow: '0 2px 6px rgba(15,23,42,0.03)',
+                  flexShrink: 0,
                 }}
               >
                 {currentChild?.name?.slice(0, 1) ?? '宝'}
               </div>
-              <div style={{ display: 'grid', gap: '2px' }}>
-                <span style={{ fontSize: '15px', color: '#44403c', fontWeight: 600 }}>记录给：{currentChild?.name ?? '请选择孩子'}</span>
-                <span style={{ fontSize: '12px', color: '#a8a29e' }}>可切换孩子归属与记录类型</span>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', minWidth: 0 }}>
+                <span style={{ fontSize: '15px', color: '#57534e', fontWeight: 500, flexShrink: 0 }}>记录给：</span>
+                <strong style={{ fontSize: '15px', color: '#292524', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{currentChild?.name ?? '请选择孩子'}</strong>
               </div>
-            </div>
-            <div style={{ display: 'grid', gap: '8px', minWidth: '120px' }}>
-              <select style={{ ...inputStyle, padding: '10px 12px', borderRadius: '12px', background: '#fff' }} value={form.child_no} onChange={(event) => setForm((current) => ({ ...current, child_no: event.target.value }))}>
-                <option value="">请选择孩子</option>
-                {children.map((child) => (
-                  <option key={child.child_no} value={child.child_no}>
-                    {child.name}
-                  </option>
-                ))}
-              </select>
-              <select style={{ ...inputStyle, padding: '10px 12px', borderRadius: '12px', background: '#fff' }} value={form.record_type} onChange={(event) => setForm((current) => ({ ...current, record_type: event.target.value }))}>
-                {recordTypes.map((item) => (
-                  <option key={item.value} value={item.value}>
-                    {item.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            </button>
+            <button
+              type="button"
+              aria-label="切换或查看孩子资料"
+              onClick={switchChild}
+              style={{ border: 'none', background: 'transparent', color: '#a8a29e', display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', padding: 0, fontSize: '15px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+            >
+              切换孩子
+              <ChevronRight size={17} strokeWidth={2.3} />
+            </button>
           </div>
 
-          <div
-            style={{
-              minHeight: '120px',
-              borderRadius: '20px',
-              border: '1.5px dashed #d6d3d1',
-              background: '#fafaf9',
-              display: 'grid',
-              placeItems: 'center',
-              padding: '18px',
-              gap: '10px',
-              position: 'relative',
-            }}
-          >
-            <span style={{ position: 'absolute', top: '10px', left: '14px', fontSize: '11px', color: '#a8a29e', fontWeight: 600 }}>媒体</span>
-            <div style={{ width: '100%', display: 'grid', justifyItems: 'center', gap: '8px' }}>
-              <label
+          {showMediaSection ? (
+            <div style={{ minHeight: mediaPreviews.length ? '174px' : '120px', display: 'grid', alignContent: 'start', gap: '12px', position: 'relative' }}>
+              <div
                 style={{
-                  display: 'grid',
-                  justifyItems: 'center',
-                  gap: '10px',
-                  cursor: uploading ? 'not-allowed' : 'pointer',
-                  opacity: uploading ? 0.65 : 1,
+                  display: 'flex',
+                  gap: mediaPreviews.length ? '12px' : 0,
+                  overflowX: 'auto',
+                  paddingBottom: mediaPreviews.length ? '4px' : 0,
+                  border: mediaPreviews.length ? 'none' : '1.5px dashed #d6d3d1',
+                  borderRadius: mediaPreviews.length ? 0 : '22px',
+                  minHeight: mediaPreviews.length ? undefined : '120px',
+                  position: 'relative',
+                  WebkitOverflowScrolling: 'touch',
                 }}
               >
-                <span
-                  style={{
-                    width: '48px',
-                    height: '48px',
-                    borderRadius: '999px',
-                    background: '#fff',
-                    border: '1px solid #e7e5e4',
-                    display: 'grid',
-                    placeItems: 'center',
-                    color: '#78716c',
-                    boxShadow: '0 2px 6px rgba(15,23,42,0.03)',
-                  }}
-                >
-                  <ImagePlus size={21} strokeWidth={2} />
-                </span>
-                <span style={{ fontSize: '13px', fontWeight: 600, color: '#78716c' }}>{uploading ? '上传中…' : '添加照片'}</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(event) => void onFileChange(event)}
-                  disabled={uploading}
-                  style={{ display: 'none' }}
-                />
-              </label>
-              <span style={{ color: '#a8a29e', fontSize: '12px', fontWeight: 600 }}>支持 JPG、PNG、WebP 照片</span>
-            </div>
-            {mediaPreviews.length ? (
-              <div style={{ width: '100%', display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
+                {!mediaPreviews.length ? (
+                  <span style={{ position: 'absolute', left: '22px', top: '18px', color: '#a8a29e', fontSize: '12px', letterSpacing: '0.16em', fontWeight: 700 }}>
+                    MEDIA
+                  </span>
+                ) : null}
                 {mediaPreviews.map((media) => (
                   <div
                     key={media.media_no}
                     style={{
                       position: 'relative',
-                      aspectRatio: '1 / 1',
+                      width: media.media_type === 'audio' ? '172px' : '156px',
+                      height: '156px',
+                      flex: '0 0 auto',
                       borderRadius: '16px',
                       overflow: 'hidden',
                       border: '1px solid #e7e5e4',
                       background: '#ffffff',
+                      boxShadow: '0 4px 14px rgba(15,23,42,0.05)',
                     }}
                   >
-                    <img
-                      src={media.preview_url}
-                      alt={media.original_name ?? '已上传照片'}
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                    />
+                    {media.media_type === 'image' ? (
+                      <img
+                        src={media.preview_url}
+                        alt={media.original_name ?? '已上传照片'}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                      />
+                    ) : null}
+                    {media.media_type === 'video' ? (
+                      <video
+                        src={media.preview_url}
+                        controls
+                        muted
+                        playsInline
+                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', background: '#292524' }}
+                      />
+                    ) : null}
+                    {media.media_type === 'audio' ? (
+                      <div style={{ width: '100%', height: '100%', display: 'grid', alignContent: 'center', gap: '10px', padding: '14px', background: '#faf8f5' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '9px', color: '#57534e', fontSize: '13px', fontWeight: 700 }}>
+                          <PlayCircle size={19} strokeWidth={2.2} />
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{media.original_name ?? '语音记录'}</span>
+                        </div>
+                        <audio src={media.preview_url} controls style={{ width: '100%', height: '32px' }} />
+                      </div>
+                    ) : null}
                     <button
                       type="button"
-                      aria-label="移除照片"
+                      aria-label="移除媒体"
                       onClick={() => removeMedia(media.media_no)}
                       style={{
                         position: 'absolute',
-                        top: '6px',
-                        right: '6px',
-                        width: '26px',
-                        height: '26px',
+                        top: '8px',
+                        right: '8px',
+                        width: '28px',
+                        height: '28px',
                         borderRadius: '999px',
-                        border: '1px solid rgba(255,255,255,0.7)',
-                        background: 'rgba(41,37,36,0.72)',
+                        border: '1px solid rgba(255,255,255,0.72)',
+                        background: 'rgba(41,37,36,0.74)',
                         color: '#fff',
                         display: 'grid',
                         placeItems: 'center',
@@ -357,18 +665,126 @@ const RecordForm = ({
                     </button>
                   </div>
                 ))}
+                {showPhotoVideoAction ? (
+                  <label
+                    style={{
+                      width: mediaPreviews.length ? '156px' : showAudioAction ? '50%' : '100%',
+                      height: mediaPreviews.length ? '156px' : '120px',
+                      flex: '0 0 auto',
+                      borderRadius: mediaPreviews.length ? '16px' : 0,
+                      border: mediaPreviews.length ? '1.5px dashed #d6d3d1' : 'none',
+                      background: mediaPreviews.length ? '#fafaf9' : 'transparent',
+                      display: 'grid',
+                      alignContent: 'center',
+                      justifyItems: 'center',
+                      gap: '10px',
+                      cursor: uploading ? 'not-allowed' : 'pointer',
+                      opacity: uploading ? 0.65 : 1,
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '999px',
+                        background: '#ffffff',
+                        border: '1px solid #e7e5e4',
+                        display: 'grid',
+                        placeItems: 'center',
+                        color: '#78716c',
+                        boxShadow: '0 2px 6px rgba(15,23,42,0.03)',
+                      }}
+                    >
+                      {form.record_type === 'video' ? <Video size={21} strokeWidth={2} /> : <ImagePlus size={21} strokeWidth={2} />}
+                    </span>
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#78716c', textAlign: 'center' }}>{uploading ? '上传中…' : photoVideoLabel}</span>
+                    <input
+                      type="file"
+                      accept={photoVideoAccept}
+                      capture={form.record_type === 'video' ? 'environment' : undefined}
+                      onChange={(event) => void onFileChange(event)}
+                      disabled={uploading}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+                ) : null}
+                {showAudioAction ? (
+                  <label
+                    style={{
+                      width: mediaPreviews.length ? (mediaActionCount > 1 ? '156px' : '172px') : showPhotoVideoAction ? '50%' : '100%',
+                      height: mediaPreviews.length ? '156px' : '120px',
+                      flex: '0 0 auto',
+                      borderRadius: mediaPreviews.length ? '16px' : 0,
+                      border: mediaPreviews.length ? '1.5px dashed #d6d3d1' : 'none',
+                      borderLeft: !mediaPreviews.length && showPhotoVideoAction ? '1px solid #e7e5e4' : undefined,
+                      background: mediaPreviews.length ? '#fafaf9' : 'transparent',
+                      display: 'grid',
+                      alignContent: 'center',
+                      justifyItems: 'center',
+                      gap: '10px',
+                      cursor: uploading ? 'not-allowed' : 'pointer',
+                      opacity: uploading ? 0.65 : 1,
+                    }}
+                  >
+                    <span
+                      style={{
+                        width: '48px',
+                        height: '48px',
+                        borderRadius: '999px',
+                        background: '#ffffff',
+                        border: '1px solid #e7e5e4',
+                        display: 'grid',
+                        placeItems: 'center',
+                        color: '#78716c',
+                        boxShadow: '0 2px 6px rgba(15,23,42,0.03)',
+                      }}
+                    >
+                      <Mic size={21} strokeWidth={2} />
+                    </span>
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#78716c', textAlign: 'center' }}>{uploading ? '上传中…' : form.record_type === 'audio' ? '录制/上传语音' : '录制语音'}</span>
+                    <input
+                      type="file"
+                      accept="audio/mpeg,audio/mp4,audio/m4a,audio/x-m4a,audio/aac,audio/wav,audio/x-wav,audio/webm,audio/ogg"
+                      capture
+                      onChange={(event) => void onFileChange(event)}
+                      disabled={uploading}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+                ) : null}
               </div>
-            ) : null}
-          </div>
+              <span
+                style={{
+                  position: 'absolute',
+                  left: '2px',
+                  right: '2px',
+                  top: '164px',
+                  display: mediaPreviews.length ? 'block' : 'none',
+                  color: '#a8a29e',
+                  fontSize: '10px',
+                  lineHeight: 1.2,
+                  fontWeight: 600,
+                  textAlign: 'left',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {mediaHint}
+              </span>
+            </div>
+          ) : null}
 
           <div style={{ display: 'grid', gap: '18px' }}>
             <input
+              ref={titleInputRef}
+              className="record-title-input"
               style={{
                 width: '100%',
                 border: 'none',
                 borderBottom: '1px solid #e7e5e4',
                 padding: '0 0 12px',
-                fontSize: '20px',
+                fontSize: '21px',
                 fontWeight: 600,
                 color: '#292524',
                 outline: 'none',
@@ -380,9 +796,11 @@ const RecordForm = ({
               onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
             />
             <textarea
+              ref={contentInputRef}
+              className="record-body-input"
               style={{
                 width: '100%',
-                minHeight: '260px',
+                minHeight: '190px',
                 border: 'none',
                 outline: 'none',
                 resize: 'vertical',
@@ -399,41 +817,178 @@ const RecordForm = ({
             />
           </div>
 
-          <div style={{ display: 'grid', gap: '16px' }}>
-            <div style={{ borderRadius: '18px', border: '1px solid #f2efe9', background: '#fafaf9', padding: '14px 16px', display: 'flex', justifyContent: 'space-between', gap: '14px', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#57534e' }}>
+          <div style={{ display: 'grid', gap: '12px' }}>
+            <button
+              type="button"
+              aria-expanded={visibilityOpen}
+              onClick={() => {
+                setVisibilityOpen((current) => !current);
+                setSelectorMessage(null);
+              }}
+              style={{
+                borderRadius: '18px',
+                border: '1px solid #efede9',
+                background: visibilityOpen ? '#fffdf9' : '#ffffff',
+                padding: '15px 16px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: '12px',
+                cursor: 'pointer',
+                textAlign: 'left',
+                boxShadow: visibilityOpen ? '0 8px 20px rgba(41,37,36,0.045)' : '0 2px 10px rgba(41,37,36,0.025)',
+              }}
+            >
+              <span style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#57534e', fontSize: '15px', fontWeight: 600 }}>
                 <Eye size={18} strokeWidth={2.2} />
-                <span style={{ fontSize: '15px', fontWeight: 600 }}>可见范围</span>
+                可见范围
+              </span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#57534e', fontSize: '14px', fontWeight: 600 }}>
+                家庭成员可见
+                <ChevronRight size={16} strokeWidth={2.2} style={{ transform: visibilityOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.16s ease' }} />
+              </span>
+            </button>
+            {visibilityOpen ? (
+              <div
+                style={{
+                  borderRadius: '18px',
+                  border: '1px solid #eee9df',
+                  background: '#faf8f5',
+                  padding: '12px',
+                  display: 'grid',
+                  gap: '10px',
+                }}
+              >
+                <button
+                  type="button"
+                  aria-pressed="true"
+                  style={{
+                    width: '100%',
+                    border: '1px solid #ded8cf',
+                    borderRadius: '14px',
+                    background: '#ffffff',
+                    color: '#292524',
+                    padding: '12px 13px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '12px',
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 14px rgba(41,37,36,0.04)',
+                  }}
+                  onClick={() => {
+                    setForm((current) => ({ ...current, visibility_scope: 'family' }));
+                    setSelectorMessage('已设为家庭成员可见。');
+                  }}
+                >
+                  <span style={{ display: 'grid', gap: '3px' }}>
+                    <span>家庭成员可见</span>
+                    <span style={{ color: '#78716c', fontSize: '12px', fontWeight: 600 }}>与后台权限保持一致，家庭成员可查看这条记录。</span>
+                  </span>
+                  <Check size={18} strokeWidth={2.5} color="#a16207" />
+                </button>
+                <p style={{ ...helperTextStyle, lineHeight: 1.65 }}>当前版本仅开放家庭内共享，后续扩展私密记录时会在这里切换。</p>
               </div>
-              <span style={{ color: '#57534e', fontSize: '14px', fontWeight: 600 }}>家庭成员可见 ›</span>
-            </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
-              <button type="button" style={{ ...mutedChipStyle, cursor: 'default' }}>
-                时间：{form.event_time ? new Date(form.event_time).toLocaleString('zh-CN') : '未选择'}
-              </button>
-              <button type="button" style={{ ...mutedChipStyle, cursor: 'default' }}>
-                地点：{form.location_text || '未填写'}
-              </button>
-              <button type="button" style={{ ...mutedChipStyle, cursor: 'default' }}>
-                标签：{form.tags || '未填写'}
-              </button>
-            </div>
+            ) : null}
 
-            <Field label="发生时间">
-              <input style={inputStyle} type="datetime-local" value={form.event_time} onChange={(event) => setForm((current) => ({ ...current, event_time: event.target.value }))} />
-            </Field>
-            <Field label="地点">
-              <input style={inputStyle} value={form.location_text} onChange={(event) => setForm((current) => ({ ...current, location_text: event.target.value }))} />
-            </Field>
-            <Field label="标签（逗号分隔）">
-              <input style={inputStyle} value={form.tags} onChange={(event) => setForm((current) => ({ ...current, tags: event.target.value }))} />
-            </Field>
-            <Field label="发布状态">
-              <select style={inputStyle} value={form.status} onChange={(event) => setForm((current) => ({ ...current, status: event.target.value }))}>
-                <option value="published">发布</option>
-                <option value="draft">草稿</option>
-              </select>
-            </Field>
+            <section style={metadataPanelStyle}>
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                <AppSelect
+                  aria-label="记录类型"
+                  value={form.record_type}
+                  onChange={(event) => updateRecordType(event.target.value)}
+                  containerStyle={{ flex: '0 1 118px', width: 'auto' }}
+                  selectStyle={{ ...metadataSelectStyle, ...metadataPillStyle, borderRadius: '999px', minHeight: '38px', padding: '7px 12px', fontSize: '13px', fontWeight: 700 }}
+                >
+                  {recordTypes.map((type) => (
+                    <option key={type.value} value={type.value}>
+                      {type.label}
+                    </option>
+                  ))}
+                </AppSelect>
+                <div style={{ ...metadataPillStyle, position: 'relative', overflow: 'hidden', flex: '0 1 142px' }}>
+                  <input
+                    ref={timeInputRef}
+                    className="app-date-time-input"
+                    aria-label="发生时间 *"
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
+                    type="datetime-local"
+                    value={form.event_time}
+                    onChange={(event) => setForm((current) => ({ ...current, event_time: event.target.value }))}
+                  />
+                  <div style={{ minHeight: '38px', padding: '7px 12px', display: 'flex', alignItems: 'center', gap: '7px', pointerEvents: 'none' }}>
+                    <Clock size={14} strokeWidth={2.2} color="#a8a29e" />
+                    <span style={{ flex: 1, minWidth: 0, color: form.event_time ? '#57534e' : '#78716c', fontSize: '13px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {form.event_time ? formatDateTimeDisplay(form.event_time) : '选择时间'}
+                    </span>
+                  </div>
+                </div>
+                <div style={{ position: 'relative', flex: '1 1 138px', minWidth: '138px' }}>
+                  <MapPin size={14} strokeWidth={2.2} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#a8a29e', pointerEvents: 'none' }} />
+                  <input
+                    aria-label="搜索地点"
+                    style={{ ...inputStyle, ...metadataPillStyle, width: '100%', minHeight: '38px', borderRadius: '999px', background: '#fafaf9', padding: '7px 12px 7px 34px', fontSize: '13px', fontWeight: 700 }}
+                    value={form.location_text}
+                    onChange={(event) => setForm((current) => ({ ...current, location_text: event.target.value }))}
+                    placeholder="添加地点"
+                  />
+                </div>
+                <div style={{ position: 'relative', flex: '1 1 138px', minWidth: '138px' }}>
+                  <Tag size={14} strokeWidth={2.2} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#a8a29e', pointerEvents: 'none', zIndex: 1 }} />
+                  <AppSelect
+                    aria-label="选择标签"
+                    value={tagSelectValue}
+                    onChange={(event) => {
+                      setTagSelectValue(event.target.value);
+                      addSelectedTag(event.target.value);
+                    }}
+                    selectStyle={{ ...metadataIconSelectStyle, ...metadataPillStyle, borderRadius: '999px', minHeight: '38px', paddingTop: '7px', paddingBottom: '7px', fontSize: '13px', fontWeight: 700 }}
+                  >
+                    <option value="">添加标签</option>
+                    {tagOptions.map((tag) => (
+                      <option key={tag} value={tag} disabled={selectedTags.includes(tag)}>
+                        {tag}
+                      </option>
+                    ))}
+                  </AppSelect>
+                </div>
+              </div>
+              {form.location_text.trim() || poiLoading ? (
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <button type="button" style={compactPillButtonStyle} onClick={useCurrentLocation}>
+                    定位当前
+                  </button>
+                  {mergedLocationSuggestions.map((location) => (
+                    <button
+                      key={location.id}
+                      type="button"
+                      style={compactPillButtonStyle}
+                      title={[location.name, location.district, location.address].filter(Boolean).join(' · ')}
+                      onClick={() => {
+                        setForm((current) => ({ ...current, location_text: location.name }));
+                        setSelectorMessage(location.source === 'amap' ? '已选择地图搜索结果。' : null);
+                      }}
+                    >
+                      {location.name}
+                    </button>
+                  ))}
+                  {poiLoading ? <span style={{ ...helperTextStyle, alignSelf: 'center' }}>搜索地点中…</span> : null}
+                </div>
+              ) : null}
+              {selectedTags.length ? (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  {selectedTags.map((tag) => (
+                    <button key={tag} type="button" onClick={() => removeSelectedTag(tag)} style={selectedChipButtonStyle}>
+                      #{tag}
+                      <X size={12} strokeWidth={2.4} />
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+            </section>
           </div>
 
           <div style={{ marginTop: '8px', paddingTop: '20px', borderTop: '1px solid #e7e5e4', display: 'flex', justifyContent: 'space-between', gap: '16px', alignItems: 'flex-start' }}>
@@ -450,17 +1005,21 @@ const RecordForm = ({
                   color: form.record_type === 'milestone' ? '#d97706' : '#78716c',
                 }}
               >
-                ★
+                <Star size={20} strokeWidth={2.4} fill={form.record_type === 'milestone' ? 'currentColor' : 'none'} />
               </div>
               <div style={{ display: 'grid', gap: '4px', flex: 1 }}>
                 <span style={{ fontSize: '16px', fontWeight: 600, color: '#292524' }}>标记为里程碑</span>
                 <span style={{ fontSize: '13px', lineHeight: 1.6, color: '#78716c' }}>选择“里程碑”记录类型时，这条内容会以更高优先级出现在时间轴中。</span>
               </div>
             </div>
-            <div
+            <button
+              type="button"
+              aria-label="切换里程碑记录"
+              aria-pressed={form.record_type === 'milestone'}
               style={{
                 width: '48px',
                 height: '26px',
+                border: 'none',
                 borderRadius: '999px',
                 background: form.record_type === 'milestone' ? '#a16207' : '#d6d3d1',
                 padding: '2px',
@@ -480,24 +1039,20 @@ const RecordForm = ({
                   boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
                 }}
               />
-            </div>
+            </button>
           </div>
 
+          {selectorMessage ? <p style={{ ...helperTextStyle, color: '#0f766e' }}>{selectorMessage}</p> : null}
           {mediaNos.length ? <p style={helperTextStyle}>已选择 {mediaNos.length} 个媒体，将随记录一起保存。</p> : null}
-          {activeChild ? <p style={helperTextStyle}>当前默认孩子：{activeChild.name}</p> : null}
-          {uploading ? <p style={helperTextStyle}>正在上传图片…</p> : null}
+          {uploading ? <p style={helperTextStyle}>正在上传媒体…</p> : null}
           {error ? <p style={{ ...helperTextStyle, color: '#dc2626' }}>{error}</p> : null}
 
           <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center' }}>
             <button
               type="button"
               style={{
-                borderRadius: '999px',
-                border: '1px solid #e7e5e4',
-                background: '#fff',
-                color: '#78716c',
-                fontSize: '14px',
-                fontWeight: 600,
+                ...secondaryButtonStyle,
+                minHeight: '42px',
                 padding: '10px 20px',
                 cursor: 'pointer',
               }}
@@ -507,7 +1062,8 @@ const RecordForm = ({
               }}
               disabled={submitting || uploading}
             >
-              {submitting && form.status === 'draft' ? '保存中…' : '存为草稿'}
+              <BookOpen size={15} strokeWidth={2.1} />
+              {pendingAction === 'draft' ? '保存中…' : '存为草稿'}
             </button>
           </div>
         </form>
@@ -517,26 +1073,33 @@ const RecordForm = ({
 
 export const CreateRecordPage = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { activeChild } = useAuth();
+  const requestedType = searchParams.get('type');
+  const requestedFocus = searchParams.get('focus');
+  const initialRecordType = ['mixed', 'text', 'video', 'audio', 'milestone'].includes(requestedType ?? '') ? requestedType! : 'mixed';
+  const initialFocus = requestedFocus === 'media' || requestedFocus === 'content' ? requestedFocus : null;
 
   return (
     <RecordForm
       mode="create"
+      initialFocus={initialFocus}
       initialValue={{
         child_no: activeChild?.child_no ?? '',
-        record_type: 'mixed',
+        record_type: initialRecordType,
         title: '',
         content_text: '',
         media_nos: [],
         media_items: [],
         tags: '',
         location_text: '',
+        visibility_scope: 'family',
         event_time: '',
         status: 'published',
       }}
       onSubmit={async (value) => {
         const record = await webApi.createRecord(value);
-        navigate(`/record/${record.record_no}`);
+        navigate(`/record/${record.record_no}`, { replace: true });
       }}
     />
   );
@@ -617,58 +1180,122 @@ export const ViewRecordPage = () => {
     }
   };
 
+  const primaryMedia = data?.media_list[0] ?? null;
+  const primaryMediaUrl = primaryMedia ? resolveMediaPreviewUrl(primaryMedia.media_no, primaryMedia.access_url) ?? primaryMedia.access_url : null;
+
   return (
-    <PageShell title="记录详情" description="查看完整记录内容，并可继续编辑。">
-      <Panel>
-        {loading ? <EmptyState message="正在加载记录详情…" /> : null}
-        {error ? <EmptyState message={`加载失败：${error}`} /> : null}
-        {data ? (
-          <div style={rowStyle}>
-            <strong>{data.title ?? '未命名记录'}</strong>
-            <p style={helperTextStyle}>记录编号：{data.record_no}</p>
-            <p style={helperTextStyle}>记录类型：{recordTypeLabel(data.record_type, data.is_milestone)}</p>
-            <p style={helperTextStyle}>发布状态：{recordStatusLabel(data.status)}</p>
-            <p style={helperTextStyle}>可见范围：{visibilityScopeLabel(data.visibility_scope)}</p>
-            <p style={helperTextStyle}>正文：{data.content_text ?? '暂无正文'}</p>
-            <p style={helperTextStyle}>标签：{data.tags.join('、') || '暂无标签'}</p>
-            <p style={helperTextStyle}>发生时间：{new Date(data.event_time).toLocaleString('zh-CN')}</p>
-            <p style={helperTextStyle}>地点：{data.location_text ?? '未填写'}</p>
-            <p style={helperTextStyle}>媒体数量：{data.media_list.length}</p>
-            {data.media_list.length ? (
-              <div style={{ display: 'grid', gap: '10px', paddingTop: '4px' }}>
-                <strong>媒体</strong>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
-                  {data.media_list.map((media) => (
-                    <div
-                      key={media.media_no}
-                      style={{
-                        borderRadius: '18px',
-                        overflow: 'hidden',
-                        border: '1px solid #e7e5e4',
-                        background: '#fafaf9',
-                        minHeight: '132px',
-                      }}
-                    >
-                      {media.media_type === 'image' ? (
-                        <img
-                          src={media.access_url}
-                          alt={media.original_name ?? '记录照片'}
-                          style={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', display: 'block' }}
-                        />
-                      ) : (
-                        <div style={{ minHeight: '132px', display: 'grid', placeItems: 'center', color: '#78716c' }}>
-                          <div style={{ display: 'grid', justifyItems: 'center', gap: '8px' }}>
-                            <Image size={28} strokeWidth={1.8} />
-                            <span>{mediaTypeLabel(media.media_type)}</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
+    <PageShell
+      title="记录详情"
+      backTo="/timeline"
+      onBack={() => {
+        if (window.history.length > 1) {
+          navigate(-1);
+          return;
+        }
+        navigate('/timeline');
+      }}
+    >
+      {loading ? <Panel><EmptyState message="正在加载记录详情…" /></Panel> : null}
+      {error ? <Panel><EmptyState message={`加载失败：${error}`} /></Panel> : null}
+      {data ? (
+        <article style={{ display: 'grid', gap: '16px' }}>
+          <section style={{ borderRadius: '16px', border: '1px solid #ebe6dc', background: '#ffffff', overflow: 'hidden', boxShadow: '0 2px 12px rgba(15,23,42,0.025)' }}>
+            {primaryMedia && primaryMediaUrl && primaryMedia.media_type !== 'audio' ? (
+              <div style={{ position: 'relative', background: '#fafaf9' }}>
+                {primaryMedia.media_type === 'video' ? (
+                  <video src={primaryMediaUrl} controls playsInline style={{ width: '100%', aspectRatio: '16 / 10', objectFit: 'cover', display: 'block', background: '#292524' }} />
+                ) : (
+                  <img src={primaryMediaUrl} alt={data.title ?? primaryMedia.original_name ?? '记录封面'} style={{ width: '100%', aspectRatio: '16 / 10', objectFit: 'cover', display: 'block' }} />
+                )}
+                <span style={{ position: 'absolute', left: '14px', bottom: '14px', borderRadius: '999px', background: 'rgba(41,37,36,0.72)', color: '#fff', padding: '6px 10px', fontSize: '12px', fontWeight: 700 }}>
+                  {mediaTypeLabel(primaryMedia.media_type)}
+                </span>
               </div>
             ) : null}
-            <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '12px', display: 'grid', gap: '8px' }}>
+            <div style={{ padding: '18px', display: 'grid', gap: '14px' }}>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: '999px', background: data.is_milestone ? '#fef3c7' : '#fafaf9', color: data.is_milestone ? '#a16207' : '#57534e', border: '1px solid #ebe6dc', padding: '6px 10px', fontSize: '12px', fontWeight: 700 }}>
+                  {data.is_milestone ? <Star size={13} fill="currentColor" /> : null}
+                  {recordTypeLabel(data.record_type, data.is_milestone)}
+                </span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: '999px', background: '#fafaf9', color: '#78716c', border: '1px solid #ebe6dc', padding: '6px 10px', fontSize: '12px', fontWeight: 700 }}>
+                  {recordStatusLabel(data.status)}
+                </span>
+              </div>
+              <div style={{ display: 'grid', gap: '8px' }}>
+                <h2 style={{ margin: 0, color: '#292524', fontSize: '23px', lineHeight: 1.28, fontWeight: 700 }}>{data.title ?? '未命名记录'}</h2>
+                <p style={{ margin: 0, color: '#57534e', fontSize: '15px', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{data.content_text ?? '暂无正文'}</p>
+              </div>
+              <div style={{ display: 'grid', gap: '8px' }}>
+                <p style={helperTextStyle}>记录编号：{data.record_no}</p>
+                <p style={helperTextStyle}>媒体数量：{data.media_list.length}</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: '999px', background: '#fafaf9', border: '1px solid #ebe6dc', padding: '7px 10px', color: '#57534e', fontSize: '12px', fontWeight: 700 }}>
+                    <Clock size={13} />
+                    {new Date(data.event_time).toLocaleString('zh-CN', { hour12: false })}
+                  </span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: '999px', background: '#fafaf9', border: '1px solid #ebe6dc', padding: '7px 10px', color: '#57534e', fontSize: '12px', fontWeight: 700 }}>
+                    <Eye size={13} />
+                    {visibilityScopeLabel(data.visibility_scope)}
+                  </span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: '999px', background: '#fafaf9', border: '1px solid #ebe6dc', padding: '7px 10px', color: '#57534e', fontSize: '12px', fontWeight: 700 }}>
+                    <MapPin size={13} />
+                    {data.location_text ?? '未填写地点'}
+                  </span>
+                </div>
+                {data.tags.length ? (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px' }}>
+                    {data.tags.map((tag) => (
+                      <span key={tag} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '8px', background: '#fffdf9', border: '1px solid #ebe6dc', padding: '5px 8px', color: '#78716c', fontSize: '11px', fontWeight: 700 }}>
+                        <Tag size={10} />
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </section>
+
+          {data.media_list.length ? (
+            <Panel>
+              <div style={{ display: 'grid', gap: '12px' }}>
+                <strong style={{ color: '#292524' }}>媒体</strong>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
+                  {data.media_list.map((media) => {
+                    const mediaUrl = resolveMediaPreviewUrl(media.media_no, media.access_url) ?? media.access_url;
+                    return (
+                      <div key={media.media_no} style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid #e7e5e4', background: '#fafaf9', minHeight: '132px' }}>
+                        {media.media_type === 'image' ? <img src={mediaUrl} alt={media.original_name ?? data.title ?? '记录照片'} style={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', display: 'block' }} /> : null}
+                        {media.media_type === 'video' ? <video src={mediaUrl} controls playsInline style={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', display: 'block', background: '#292524' }} /> : null}
+                        {media.media_type === 'audio' ? (
+                          <div style={{ minHeight: '132px', display: 'grid', alignContent: 'center', gap: '10px', padding: '14px', color: '#57534e' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700 }}>
+                              <FileAudio size={22} strokeWidth={2.1} />
+                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{media.original_name ?? '语音记录'}</span>
+                            </div>
+                            <audio src={mediaUrl} controls style={{ width: '100%' }} />
+                            {media.duration_seconds ? <span style={{ fontSize: '12px', color: '#a8a29e' }}>{media.duration_seconds} 秒</span> : null}
+                          </div>
+                        ) : null}
+                        {!['image', 'video', 'audio'].includes(media.media_type) ? (
+                          <div style={{ minHeight: '132px', display: 'grid', placeItems: 'center', color: '#78716c' }}>
+                            <div style={{ display: 'grid', justifyItems: 'center', gap: '8px' }}>
+                              <Image size={28} strokeWidth={1.8} />
+                              <span>{mediaTypeLabel(media.media_type)}</span>
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </Panel>
+          ) : null}
+
+          <Panel>
+            <div style={{ display: 'grid', gap: '10px' }}>
               <strong>AI 摘要</strong>
               <p style={helperTextStyle}>{data.ai_summary ?? '当前还没有 AI 生成的摘要。'}</p>
               {aiJob?.status === 'pending' || aiJob?.status === 'processing' ? <p style={helperTextStyle}>AI 正在处理中，请稍候…</p> : null}
@@ -677,24 +1304,22 @@ export const ViewRecordPage = () => {
               {aiJob?.status === 'failed' ? <p style={{ ...helperTextStyle, color: '#dc2626' }}>AI 处理失败：{aiJob.error_message ?? '未知错误'}</p> : null}
               {aiError ? <p style={{ ...helperTextStyle, color: '#dc2626' }}>{aiError}</p> : null}
               {deleteError ? <p style={{ ...helperTextStyle, color: '#dc2626' }}>{deleteError}</p> : null}
-            </div>
-            <div style={buttonRowStyle}>
-              <button style={secondaryButtonStyle} onClick={() => void onGenerateSummary()} disabled={aiLoading || aiJob?.status === 'pending' || aiJob?.status === 'processing'}>
+              <button style={{ ...secondaryButtonStyle, justifyContent: 'center' }} onClick={() => void onGenerateSummary()} disabled={aiLoading || aiJob?.status === 'pending' || aiJob?.status === 'processing'}>
                 {aiLoading || aiJob?.status === 'pending' || aiJob?.status === 'processing' ? 'AI 生成中…' : '生成 AI 摘要'}
               </button>
-              <button style={secondaryButtonStyle} onClick={() => void onDelete()} disabled={deleting}>
-                {deleting ? '删除中…' : '删除记录'}
-              </button>
-              <button style={primaryButtonStyle} onClick={() => navigate(`/record/${data.record_no}/edit`)}>
-                编辑记录
-              </button>
-              <button style={secondaryButtonStyle} onClick={() => navigate('/timeline')}>
-                返回时间轴
-              </button>
             </div>
+          </Panel>
+
+          <div style={{ ...buttonRowStyle, paddingBottom: '10px' }}>
+            <button style={primaryButtonStyle} onClick={() => navigate(`/record/${data.record_no}/edit`)}>
+              编辑记录
+            </button>
+            <button style={{ ...secondaryButtonStyle, color: '#dc2626' }} onClick={() => void onDelete()} disabled={deleting}>
+              {deleting ? '删除中…' : '删除记录'}
+            </button>
           </div>
-        ) : null}
-      </Panel>
+        </article>
+      ) : null}
     </PageShell>
   );
 };
@@ -712,7 +1337,7 @@ export const EditRecordPage = () => {
 
   if (loading) {
     return (
-      <PageShell title="编辑记录" description="正在加载记录详情。">
+      <PageShell title="编辑记录" description="正在加载记录详情。" backTo={params.record_no ? `/record/${params.record_no}` : '/timeline'}>
         <Panel>
           <EmptyState message="加载中…" />
         </Panel>
@@ -722,7 +1347,7 @@ export const EditRecordPage = () => {
 
   if (error || !data) {
     return (
-      <PageShell title="编辑记录" description="记录加载失败。">
+      <PageShell title="编辑记录" description="记录加载失败。" backTo="/timeline">
         <Panel>
           <EmptyState message={error ?? '记录不存在'} />
         </Panel>
@@ -741,18 +1366,20 @@ export const EditRecordPage = () => {
         media_nos: data.media_list.map((item) => item.media_no),
         media_items: data.media_list.map((item) => ({
           media_no: item.media_no,
-          preview_url: item.access_url,
+          preview_url: resolveMediaPreviewUrl(item.media_no, item.access_url) ?? item.access_url,
+          media_type: item.media_type === 'audio' || item.media_type === 'video' ? item.media_type : 'image',
           original_name: item.original_name,
         })),
         tags: data.tags.join(', '),
         location_text: data.location_text ?? '',
+        visibility_scope: data.visibility_scope,
         event_time: formatDateTimeLocal(data.event_time),
         status: data.status,
       }}
       onSubmit={async (value) => {
         if (!params.record_no) return;
         const record = await webApi.updateRecord(params.record_no, value);
-        navigate(`/record/${record.record_no}`);
+        navigate(`/record/${record.record_no}`, { replace: true });
       }}
     />
   );

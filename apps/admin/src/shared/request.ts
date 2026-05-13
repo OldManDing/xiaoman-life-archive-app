@@ -90,11 +90,15 @@ export interface AdminMediaItem {
   family_no: string;
   child_no: string | null;
   uploader_user_no: string;
+  uploader_name?: string | null;
   media_type: string;
   status: string;
+  original_name?: string | null;
   mime_type: string | null;
   size_bytes: number | null;
   object_key: string;
+  record_no?: string | null;
+  record_title?: string | null;
   created_at: string;
 }
 

@@ -29,6 +29,9 @@ const REQUIRED_KEYS = [
   'AI_API_KEY',
   'AI_BASE_URL',
   'AI_MODEL',
+  'MAP_PROVIDER',
+  'MAP_API_KEY',
+  'MAP_AMAP_ENDPOINT',
   'SMS_ENABLED',
   'ADMIN_INITIAL_USERNAME',
   'ADMIN_INITIAL_PASSWORD',
@@ -162,6 +165,7 @@ function validate(filePath, options) {
   }
   validateProvider(env, 'STORAGE_PROVIDER', ['oss', 'cos', 's3', 'r2', 'minio']);
   validateProvider(env, 'AI_PROVIDER', ['openai', 'openai-compatible']);
+  validateProvider(env, 'MAP_PROVIDER', ['amap']);
   validateNoLocalDefaults(env);
   validateSecrets(env, options.allowPlaceholders);
 

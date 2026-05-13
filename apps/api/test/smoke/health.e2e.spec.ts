@@ -40,6 +40,9 @@ describe('Health smoke', () => {
       data: {
         status: 'ok',
         database: 'up',
+        providers: {
+          map: 'mock',
+        },
       },
     });
 

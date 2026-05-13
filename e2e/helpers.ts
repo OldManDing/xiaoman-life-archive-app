@@ -23,7 +23,11 @@ export async function loginAdmin(page: Page) {
 }
 
 export async function expectNoUnfinishedCopy(page: Page) {
-  await expect(page.getByText(/准备中|待接入|规划中|暂未开放|Coming soon/)).toHaveCount(0);
+  await expect(page.getByText(/准备中|待接入|规划中|设计中|暂未开放|Coming soon/)).toHaveCount(0);
+}
+
+export async function expectNoTechnicalTestCopy(page: Page) {
+  await expect(page.getByText(/自动化|mock|Mock|E2E/)).toHaveCount(0);
 }
 
 export async function expectNoEnglishSeedCopy(page: Page) {

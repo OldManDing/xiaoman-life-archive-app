@@ -19,6 +19,7 @@ export class UsersService {
       where: { id: user.id },
       data: {
         nickname: dto.nickname,
+        avatarUrl: dto.avatar_url,
       },
     });
 

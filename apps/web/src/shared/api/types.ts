@@ -49,6 +49,8 @@ export interface ChildrenListResponse {
 
 export interface RecordSummary {
   record_no: string;
+  cover_media_no: string | null;
+  cover_media_type?: string | null;
   cover_url: string | null;
   title: string | null;
   summary: string | null;
@@ -76,6 +78,7 @@ export interface RecordMediaItem {
   size_bytes: number | null;
   width: number | null;
   height: number | null;
+  duration_seconds?: number | null;
 }
 
 export interface RecordDetail {
@@ -109,6 +112,13 @@ export interface UploadTokenResponse {
   expire_at?: string;
 }
 
+export interface MediaAccessUrlResponse {
+  media_no: string;
+  access_url: string;
+  expires_in: number;
+  expire_at?: string;
+}
+
 export interface ConfirmMediaResponse {
   media_no: string;
   status: string;
@@ -117,6 +127,22 @@ export interface ConfirmMediaResponse {
   duration_seconds: number | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface LocationSuggestion {
+  id: string;
+  name: string;
+  address: string | null;
+  city: string | null;
+  district: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  source: string;
+}
+
+export interface LocationsSearchResponse {
+  provider: string;
+  list: LocationSuggestion[];
 }
 
 export interface FamilyMemberItem {

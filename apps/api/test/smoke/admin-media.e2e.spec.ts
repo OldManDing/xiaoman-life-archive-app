@@ -216,6 +216,52 @@ describe('Admin RBAC and media contract', () => {
       expires_in: expect.any(Number),
       expire_at: expect.any(String),
     });
+
+    const videoUploadResponse = await request(app.getHttpServer())
+      .post('/api/v1/media/upload-token')
+      .set('Authorization', `Bearer ${userToken}`)
+      .send({
+        child_no: child.childNo,
+        file_name: 'first-step.mp4',
+        mime_type: 'video/mp4',
+        size_bytes: 2048,
+        media_type: 'video',
+      })
+      .expect(201);
+
+    expect(videoUploadResponse.body.data).toMatchObject({
+      media_no: expect.any(String),
+      expires_in: expect.any(Number),
+      expire_at: expect.any(String),
+    });
+
+    const heicUploadResponse = await request(app.getHttpServer())
+      .post('/api/v1/media/upload-token')
+      .set('Authorization', `Bearer ${userToken}`)
+      .send({
+        child_no: child.childNo,
+        file_name: 'iphone-photo.heic',
+        mime_type: 'image/heic',
+        size_bytes: 2048,
+        media_type: 'image',
+      })
+      .expect(201);
+
+    expect(heicUploadResponse.body.data.object_key).toMatch(/\.heic$/);
+
+    const audioUploadResponse = await request(app.getHttpServer())
+      .post('/api/v1/media/upload-token')
+      .set('Authorization', `Bearer ${userToken}`)
+      .send({
+        child_no: child.childNo,
+        file_name: 'voice.m4a',
+        mime_type: 'audio/x-m4a',
+        size_bytes: 2048,
+        media_type: 'audio',
+      })
+      .expect(201);
+
+    expect(audioUploadResponse.body.data.object_key).toMatch(/\.m4a$/);
   });
 
   it('allows super admin to disable and re-enable a user with audit logging', async () => {

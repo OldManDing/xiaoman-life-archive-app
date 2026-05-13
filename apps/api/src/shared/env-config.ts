@@ -6,8 +6,10 @@ const DEFAULT_REFRESH_SECRET = 'replace_me_refresh_secret';
 const SMS_PROVIDER_VALUES = new Set(['mock', 'aliyun']);
 const STORAGE_PROVIDER_VALUES = new Set(['mock', 'minio', 's3', 'oss', 'cos', 'r2']);
 const AI_PROVIDER_VALUES = new Set(['mock', 'openai', 'openai-compatible']);
+const MAP_PROVIDER_VALUES = new Set(['mock', 'amap', 'disabled']);
 
 export type AiProviderName = 'mock' | 'openai' | 'openai-compatible';
+export type MapProviderName = 'mock' | 'amap' | 'disabled';
 
 type EnvSource = Record<string, unknown>;
 
@@ -157,6 +159,13 @@ export function getAiProviderName(env: EnvSource = process.env): AiProviderName 
   }) as AiProviderName;
 }
 
+export function getMapProviderName(env: EnvSource = process.env): MapProviderName {
+  return resolveProviderValue(env, 'MAP_PROVIDER', MAP_PROVIDER_VALUES, {
+    relaxedDefault: 'mock',
+    allowMockInStrict: false,
+  }) as MapProviderName;
+}
+
 function requireEnvValues(env: EnvSource, names: string[]) {
   for (const name of names) {
     requireEnvValue(env, name);
@@ -186,6 +195,14 @@ function validateStrictProviderConfig(env: EnvSource) {
   if (aiProvider !== 'mock') {
     requireEnvValues(env, ['AI_API_KEY', 'AI_BASE_URL', 'AI_MODEL']);
   }
+
+  const mapProvider = getMapProviderName(env);
+  if (mapProvider === 'disabled') {
+    throw new Error('MAP_PROVIDER=disabled is not allowed outside local/test environments');
+  }
+  if (mapProvider === 'amap') {
+    requireEnvValue(env, 'MAP_API_KEY');
+  }
 }
 
 function validateStrictJwtSecrets(accessSecret: string, refreshSecret: string) {
@@ -213,6 +230,7 @@ export function validateRuntimeConfig(config: Record<string, unknown>): Record<s
   }
   getStorageProviderName(config);
   getAiProviderName(config);
+  getMapProviderName(config);
 
   if (isStrictEnvironment(config)) {
     validateStrictProviderConfig(config);

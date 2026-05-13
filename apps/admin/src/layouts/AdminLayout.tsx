@@ -32,7 +32,7 @@ const navLinkStyle = ({ isActive }: { isActive: boolean }): CSSProperties => ({
   justifyContent: 'space-between',
   minHeight: '42px',
   padding: '10px 12px',
-  borderRadius: '8px',
+  borderRadius: '10px',
   color: isActive ? '#123c37' : '#d7e5e1',
   background: isActive ? '#ffffff' : 'transparent',
   border: isActive ? '1px solid #ffffff' : '1px solid rgba(255,255,255,0.08)',
@@ -60,7 +60,7 @@ export const AdminLayout = () => {
           <div style={{ fontSize: '13px', color: '#a7c3bd', fontWeight: 700, marginBottom: '6px' }}>年轮</div>
           <div style={{ fontSize: '22px', fontWeight: 800, letterSpacing: 0 }}>管理后台</div>
         </div>
-        <div style={{ border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', padding: '12px', background: 'rgba(255,255,255,0.06)' }}>
+        <div style={{ border: '1px solid rgba(255,255,255,0.12)', borderRadius: '12px', padding: '12px', background: 'rgba(255,255,255,0.06)' }}>
           <div style={{ fontSize: '14px', fontWeight: 700 }}>{displayName ?? '未登录'}</div>
           <div style={{ marginTop: '4px', fontSize: '12px', color: '#bdd3ce' }}>{adminRoleLabel(admin?.role)}</div>
         </div>
