@@ -9,7 +9,7 @@ import { useAsyncData } from '../shared/hooks';
 import { aiJobStatusLabel, mediaTypeLabel, recordStatusLabel, recordTypeLabel, visibilityScopeLabel } from '../shared/labels';
 import { createPersistableMediaPreview, resolveMediaPreviewUrl, saveLocalMediaPreview } from '../shared/localMediaPreview';
 import { AppSelect, AppTopBar, PageShell, Panel, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle } from '../shared/ui';
-import { EmptyState, buttonRowStyle, formSubmitSpacingStyle, formatDateTimeLocal, recordTypes, rowStyle } from './shared';
+import { EmptyState, buttonRowStyle, formSubmitSpacingStyle, formatDateTimeLocal, rowStyle } from './shared';
 
 type MediaPreview = {
   media_no: string;
@@ -26,20 +26,18 @@ const tagOptions = ['生日纪念', '户外日常', '语言发育', '大动作�
 const locationOptions = ['家里', '小区', '公园', '学校', '医院', '游乐场', '爷爷奶奶家', '外婆家'];
 
 const metadataPanelStyle = {
-  borderTop: '1px solid #f1eee8',
-  borderBottom: '1px solid #f1eee8',
   background: '#ffffff',
-  padding: '14px 0',
+  padding: '0',
   display: 'grid',
   gap: '12px',
 } as const;
 
 const metadataSelectStyle = {
-  minHeight: '36px',
-  borderRadius: '6px',
-  background: '#f3f3f5',
-  border: '1px solid rgba(0, 0, 0, 0.1)',
-  boxShadow: 'none',
+  minHeight: '40px',
+  borderRadius: '999px',
+  background: '#ffffff',
+  border: '1px solid #eee9df',
+  boxShadow: '0 4px 12px rgba(41,37,36,0.035)',
 } as const;
 
 const metadataIconSelectStyle = {
@@ -97,6 +95,13 @@ const formatDateTimeDisplay = (value: string) => {
   if (!value) return '请选择发生时间';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '请选择发生时间';
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  const sameDay = (left: Date, right: Date) => left.getFullYear() === right.getFullYear() && left.getMonth() === right.getMonth() && left.getDate() === right.getDate();
+  const time = date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false });
+  if (sameDay(date, today)) return `今天 ${time}`;
+  if (sameDay(date, yesterday)) return `昨天 ${time}`;
   return date.toLocaleString('zh-CN', {
     month: 'long',
     day: 'numeric',
@@ -242,31 +247,6 @@ const RecordForm = ({
     const nextChild = children[(currentIndex + 1 + children.length) % children.length];
     setForm((current) => ({ ...current, child_no: nextChild.child_no }));
     setSelectorMessage(`已切换为 ${nextChild.name}`);
-  };
-
-  const clearMediaSelection = () => {
-    setMediaNos([]);
-    setMediaPreviews((current) => {
-      current.forEach((item) => {
-        if (item.is_local) {
-          URL.revokeObjectURL(item.preview_url);
-        }
-      });
-      return [];
-    });
-  };
-
-  const updateRecordType = (recordType: string) => {
-    if (recordType === 'text') {
-      clearMediaSelection();
-    } else if (recordType === 'audio' || recordType === 'video') {
-      const hasOtherMedia = mediaPreviews.some((item) => item.media_type !== recordType);
-      if (hasOtherMedia) {
-        clearMediaSelection();
-      }
-    }
-    setForm((current) => ({ ...current, record_type: recordType }));
-    setSelectorMessage(null);
   };
 
   const onFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
@@ -896,20 +876,7 @@ const RecordForm = ({
 
             <section style={metadataPanelStyle}>
               <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-                <AppSelect
-                  aria-label="记录类型"
-                  value={form.record_type}
-                  onChange={(event) => updateRecordType(event.target.value)}
-                  containerStyle={{ flex: '0 1 118px', width: 'auto' }}
-                  selectStyle={{ ...metadataSelectStyle, ...metadataPillStyle, borderRadius: '999px', minHeight: '38px', padding: '7px 12px', fontSize: '13px', fontWeight: 700 }}
-                >
-                  {recordTypes.map((type) => (
-                    <option key={type.value} value={type.value}>
-                      {type.label}
-                    </option>
-                  ))}
-                </AppSelect>
-                <div style={{ ...metadataPillStyle, position: 'relative', overflow: 'hidden', flex: '0 1 142px' }}>
+                <div style={{ ...metadataPillStyle, position: 'relative', overflow: 'hidden', flex: '0 1 154px' }}>
                   <input
                     ref={timeInputRef}
                     className="app-date-time-input"
@@ -919,14 +886,14 @@ const RecordForm = ({
                     value={form.event_time}
                     onChange={(event) => setForm((current) => ({ ...current, event_time: event.target.value }))}
                   />
-                  <div style={{ minHeight: '38px', padding: '7px 12px', display: 'flex', alignItems: 'center', gap: '7px', pointerEvents: 'none' }}>
+                  <div style={{ minHeight: '40px', padding: '8px 13px', display: 'flex', alignItems: 'center', gap: '7px', pointerEvents: 'none' }}>
                     <Clock size={14} strokeWidth={2.2} color="#a8a29e" />
                     <span style={{ flex: 1, minWidth: 0, color: form.event_time ? '#57534e' : '#78716c', fontSize: '13px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {form.event_time ? formatDateTimeDisplay(form.event_time) : '选择时间'}
                     </span>
                   </div>
                 </div>
-                <div style={{ position: 'relative', flex: '1 1 138px', minWidth: '138px' }}>
+                <div style={{ position: 'relative', flex: '0 1 156px', minWidth: '142px' }}>
                   <MapPin size={14} strokeWidth={2.2} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#a8a29e', pointerEvents: 'none' }} />
                   <input
                     aria-label="搜索地点"
@@ -1009,7 +976,7 @@ const RecordForm = ({
               </div>
               <div style={{ display: 'grid', gap: '4px', flex: 1 }}>
                 <span style={{ fontSize: '16px', fontWeight: 600, color: '#292524' }}>标记为里程碑</span>
-                <span style={{ fontSize: '13px', lineHeight: 1.6, color: '#78716c' }}>选择“里程碑”记录类型时，这条内容会以更高优先级出现在时间轴中。</span>
+                <span style={{ fontSize: '13px', lineHeight: 1.6, color: '#78716c' }}>点亮这颗星星，记录并高亮孩子成长过程中的重要里程碑时刻。</span>
               </div>
             </div>
             <button
@@ -1079,6 +1046,7 @@ export const CreateRecordPage = () => {
   const requestedFocus = searchParams.get('focus');
   const initialRecordType = ['mixed', 'text', 'video', 'audio', 'milestone'].includes(requestedType ?? '') ? requestedType! : 'mixed';
   const initialFocus = requestedFocus === 'media' || requestedFocus === 'content' ? requestedFocus : null;
+  const defaultEventTime = formatDateTimeLocal(new Date().toISOString());
 
   return (
     <RecordForm
@@ -1094,7 +1062,7 @@ export const CreateRecordPage = () => {
         tags: '',
         location_text: '',
         visibility_scope: 'family',
-        event_time: '',
+        event_time: defaultEventTime,
         status: 'published',
       }}
       onSubmit={async (value) => {

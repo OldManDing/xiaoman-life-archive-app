@@ -4,6 +4,7 @@ import {
   Calendar,
   Camera,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
   Edit3,
   Image as ImageIcon,
@@ -31,7 +32,7 @@ import { EmptyState } from './shared';
 
 const appPageStyle: CSSProperties = {
   minHeight: '100dvh',
-  background: '#ffffff',
+  background: '#f8f9fa',
   color: '#292524',
   overflowX: 'hidden',
 };
@@ -49,11 +50,11 @@ const softCardStyle: CSSProperties = {
 };
 
 const iconButtonStyle: CSSProperties = {
-  width: '44px',
-  height: '44px',
+  width: '40px',
+  height: '40px',
   borderRadius: '999px',
   border: '1px solid #eee9df',
-  background: '#fafaf9',
+  background: '#ffffff',
   color: '#78716c',
   display: 'grid',
   placeItems: 'center',
@@ -157,8 +158,6 @@ export const HomePage = () => {
   const navigate = useNavigate();
   const { user, activeChild, children, setActiveChild, refreshChildren } = useAuth();
   const [promptIndex, setPromptIndex] = useState(0);
-  const [homeSearchOpen, setHomeSearchOpen] = useState(false);
-  const [homeSearchQuery, setHomeSearchQuery] = useState('');
   const { data: records, loading, error } = useAsyncData<RecordSummary[]>(
     async () => {
       if (!activeChild) return [];
@@ -186,15 +185,6 @@ export const HomePage = () => {
   const monthlyProgress = Math.min(100, (records?.length ?? 0) * 20);
   const todayPrompts = getTodayPrompts(activeChild?.name ?? '孩子');
   const todayPrompt = todayPrompts[promptIndex % todayPrompts.length];
-  const normalizedHomeSearch = homeSearchQuery.trim().toLowerCase();
-  const homeSearchResults = normalizedHomeSearch
-    ? (records ?? []).filter((record) =>
-        [record.title, record.summary, record.creator_name, ...record.tags]
-          .filter(Boolean)
-          .some((value) => String(value).toLowerCase().includes(normalizedHomeSearch)),
-      )
-    : (records ?? []).slice(0, 3);
-
   const onChildSwitcherClick = () => {
     if (children.length > 1 && activeChild) {
       const currentIndex = children.findIndex((child) => child.child_no === activeChild.child_no);
@@ -212,107 +202,35 @@ export const HomePage = () => {
 
   return (
     <div style={appPageStyle}>
-      <section style={{ ...paddedSectionStyle, paddingTop: 'calc(46px + env(safe-area-inset-top))' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+      <section style={{ ...paddedSectionStyle, paddingTop: 'calc(20px + env(safe-area-inset-top))' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <button
             type="button"
             aria-label={children.length > 1 ? '切换孩子档案' : activeChild ? '查看孩子档案' : '添加孩子档案'}
             onClick={onChildSwitcherClick}
-            style={{ flex: 1, minWidth: 0, border: 'none', background: 'transparent', padding: 0, display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left', cursor: 'pointer' }}
+            style={{ flex: 1, minWidth: 0, border: 'none', background: 'transparent', padding: 0, display: 'flex', alignItems: 'center', gap: '10px', textAlign: 'left', cursor: 'pointer' }}
           >
-            <ChildAvatar src={activeChild?.avatar_url} label={activeChild?.name ?? user?.nickname ?? '宝'} size={52} />
+            <ChildAvatar src={activeChild?.avatar_url} label={activeChild?.name ?? user?.nickname ?? '宝'} size={46} />
             <div style={{ minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <strong style={{ fontSize: '20px', fontWeight: 700, color: '#292524', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.18 }}>{activeChild?.name ?? user?.nickname ?? '未登录用户'}</strong>
+                <strong style={{ fontSize: '20px', fontWeight: 800, color: '#292524', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', lineHeight: 1.18 }}>{activeChild?.name ?? user?.nickname ?? '未登录用户'}</strong>
                 <ChevronDown size={15} color="#a8a29e" strokeWidth={2.4} />
               </div>
-              <p style={{ margin: '5px 0 0', color: '#78716c', fontSize: '14px', fontWeight: 500 }}>{activeChild ? activeChild.current_age_display : `会员状态：${membershipTypeLabel(user?.membership_type)}`}</p>
+              <p style={{ margin: '4px 0 0', color: '#78716c', fontSize: '13px', fontWeight: 600 }}>{activeChild ? activeChild.current_age_display : `会员状态：${membershipTypeLabel(user?.membership_type)}`}</p>
             </div>
           </button>
           <button
             type="button"
             aria-label="搜索记录"
-            aria-pressed={homeSearchOpen}
-            onClick={() => setHomeSearchOpen((current) => !current)}
-            style={{ ...iconButtonStyle, background: homeSearchOpen ? '#292524' : '#ffffff', color: homeSearchOpen ? '#ffffff' : iconButtonStyle.color }}
+            onClick={() => navigate('/search')}
+            style={iconButtonStyle}
           >
-            <Search size={19} strokeWidth={2.2} />
+            <Search size={18} strokeWidth={2.2} />
           </button>
         </div>
       </section>
 
-      {homeSearchOpen ? (
-        <section style={{ ...paddedSectionStyle, marginTop: '18px' }}>
-          <div
-            style={{
-              borderRadius: '20px',
-              border: '1px solid #eee9df',
-              background: '#ffffff',
-              padding: '14px',
-              boxShadow: '0 10px 24px rgba(41,37,36,0.055)',
-              display: 'grid',
-              gap: '12px',
-            }}
-          >
-            <div style={{ minHeight: '46px', borderRadius: '14px', border: '1px solid #ded8cf', background: '#fafaf9', display: 'flex', alignItems: 'center', gap: '10px', padding: '0 10px 0 13px' }}>
-              <Search size={17} color="#8a8177" strokeWidth={2.2} />
-              <input
-                aria-label="首页搜索关键词"
-                autoFocus
-                value={homeSearchQuery}
-                onChange={(event) => setHomeSearchQuery(event.target.value)}
-                placeholder="搜索标题、正文、标签"
-                style={{ minWidth: 0, flex: 1, border: 'none', outline: 'none', background: 'transparent', color: '#292524', fontSize: '14px', fontWeight: 600 }}
-              />
-              {homeSearchQuery ? (
-                <button
-                  type="button"
-                  aria-label="清空首页搜索"
-                  onClick={() => setHomeSearchQuery('')}
-                  style={{ width: '32px', height: '32px', border: 'none', borderRadius: '999px', background: '#ffffff', color: '#8a8177', display: 'grid', placeItems: 'center', cursor: 'pointer' }}
-                >
-                  <X size={16} strokeWidth={2.3} />
-                </button>
-              ) : null}
-            </div>
-            {homeSearchQuery.trim() ? (
-              homeSearchResults.length ? (
-                <div style={{ display: 'grid', gap: '4px' }}>
-                  {homeSearchResults.slice(0, 4).map((record) => (
-                    <button
-                      key={record.record_no}
-                      type="button"
-                      onClick={() => navigate(`/record/${record.record_no}`)}
-                      style={{
-                        border: 'none',
-                        borderRadius: '12px',
-                        background: '#ffffff',
-                        padding: '11px 8px',
-                        display: 'grid',
-                        gap: '4px',
-                        textAlign: 'left',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <strong style={{ color: '#292524', fontSize: '14px', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{record.title ?? '未命名记录'}</strong>
-                      <span style={{ color: '#78716c', fontSize: '12px', lineHeight: 1.45, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{record.summary ?? (record.tags.join('、') || '暂无正文')}</span>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <p style={{ ...helperTextStyle, lineHeight: 1.65 }}>首页最近记录里没有找到匹配内容，可进入时间轴查看更多记录。</p>
-              )
-            ) : (
-              <p style={{ ...helperTextStyle, lineHeight: 1.65 }}>在首页快速查找最近记录，不会离开当前页面。</p>
-            )}
-            <button type="button" onClick={() => navigate('/timeline')} style={{ ...smallMutedButtonStyle, justifyContent: 'flex-end', color: '#57534e' }}>
-              去时间轴查看全部 <ChevronRight size={15} />
-            </button>
-          </div>
-        </section>
-      ) : null}
-
-      <section style={{ ...paddedSectionStyle, display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '12px', marginTop: '24px' }}>
+      <section style={{ ...paddedSectionStyle, display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '9px', marginTop: '18px' }}>
         {[
           { label: '拍照记录', icon: Camera, to: '/record/create?type=mixed&focus=media' },
           { label: '视频记录', icon: Video, to: '/record/create?type=video&focus=media' },
@@ -327,41 +245,41 @@ export const HomePage = () => {
               onClick={() => navigate(item.to)}
               disabled={!activeChild}
               style={{
-                minHeight: '68px',
+                minHeight: '66px',
                 borderRadius: '16px',
-                border: '1px solid #f2efe9',
+                border: '1px solid #f4f1ea',
                 background: '#ffffff',
                 color: '#57534e',
                 display: 'grid',
                 justifyItems: 'center',
                 alignContent: 'center',
-                gap: '6px',
+                gap: '7px',
                 cursor: activeChild ? 'pointer' : 'not-allowed',
                 opacity: activeChild ? 1 : 0.55,
-                boxShadow: '0 8px 18px rgba(41,37,36,0.035)',
+                boxShadow: '0 6px 14px rgba(41,37,36,0.025)',
               }}
             >
-              <span style={{ width: '28px', height: '28px', borderRadius: '999px', background: '#fafaf9', display: 'grid', placeItems: 'center', border: '1px solid #f2efe9' }}>
-                <Icon size={17} strokeWidth={2.1} />
+              <span style={{ width: '30px', height: '30px', borderRadius: '999px', background: '#fafaf9', display: 'grid', placeItems: 'center' }}>
+                <Icon size={18} strokeWidth={1.8} />
               </span>
-              <span style={{ fontSize: '11px', fontWeight: 600, whiteSpace: 'nowrap' }}>{item.label}</span>
+              <span style={{ fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap' }}>{item.label}</span>
             </button>
           );
         })}
       </section>
 
-      <section style={{ ...paddedSectionStyle, marginTop: '28px' }}>
-        <div style={{ ...softCardStyle, background: '#fbfaf8', borderColor: '#eee9df', padding: '16px 18px' }}>
+      <section style={{ ...paddedSectionStyle, marginTop: '20px' }}>
+        <div style={{ ...softCardStyle, borderRadius: '22px', background: '#fcfaf5', borderColor: '#f5f1e6', padding: '17px 18px', minHeight: '138px', display: 'grid', alignContent: 'start' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
               <Sparkles size={16} color="#d4af37" strokeWidth={2.2} />
-              <span style={{ fontSize: '14px', fontWeight: 600, color: '#292524' }}>今日值得记录</span>
+              <span style={{ fontSize: '15px', fontWeight: 700, color: '#292524' }}>今日值得记录</span>
             </div>
             <button type="button" style={smallMutedButtonStyle} onClick={() => setPromptIndex((current) => current + 1)}>
               换一条 <ChevronRight size={14} />
             </button>
           </div>
-          <p style={{ margin: '0 0 12px', color: '#44403c', fontSize: '15px', lineHeight: 1.55 }}>{todayPrompt}</p>
+          <p style={{ margin: '0 0 14px', color: '#44403c', fontSize: '14px', lineHeight: 1.6, fontWeight: 600 }}>{todayPrompt}</p>
           <button
             type="button"
             onClick={() => navigate('/record/create')}
@@ -381,12 +299,12 @@ export const HomePage = () => {
             }}
           >
             <Edit3 size={14} strokeWidth={2} />
-            立即记录
+            去记录
           </button>
         </div>
       </section>
 
-      <section style={{ ...paddedSectionStyle, marginTop: '36px' }}>
+      <section style={{ ...paddedSectionStyle, marginTop: '26px' }}>
         <div style={sectionHeaderStyle}>
           <h2 style={{ margin: 0, fontSize: '17px', fontWeight: 600, color: '#292524' }}>最近更新</h2>
           <button type="button" onClick={() => navigate('/timeline')} style={smallMutedButtonStyle}>
@@ -396,18 +314,18 @@ export const HomePage = () => {
         {loading ? <EmptyState message="正在加载最近记录…" /> : null}
         {error ? <EmptyState message={`加载失败：${error}`} /> : null}
         {!loading && !error && recentRecords.length ? (
-          <div style={{ display: 'grid', gap: '12px' }}>
+          <div style={{ display: 'grid', gap: '10px' }}>
             {recentRecords.map((record) => {
               const recordCoverUrl = getRecordCoverUrl(record);
               const mediaKind = getRecordMediaKind(record);
               return (
-                <button key={record.record_no} type="button" onClick={() => navigate(`/record/${record.record_no}`)} style={{ ...softCardStyle, padding: '18px', textAlign: 'left', cursor: 'pointer', display: 'flex', gap: '18px', alignItems: 'center' }}>
-                  <div style={{ width: '54px', flexShrink: 0, borderRight: '1px solid #f3f0ea', display: 'grid', justifyItems: 'center', paddingRight: '14px' }}>
-                    <span style={{ fontSize: '25px', fontWeight: 800, color: '#44403c', lineHeight: 1 }}>{formatDay(record.event_time)}</span>
+                <button key={record.record_no} type="button" onClick={() => navigate(`/record/${record.record_no}`)} style={{ ...softCardStyle, padding: '16px', textAlign: 'left', cursor: 'pointer', display: 'flex', gap: '15px', alignItems: 'center' }}>
+                  <div style={{ width: '48px', flexShrink: 0, borderRight: '1px solid #f3f0ea', display: 'grid', justifyItems: 'center', paddingRight: '12px' }}>
+                    <span style={{ fontSize: '24px', fontWeight: 800, color: '#44403c', lineHeight: 1 }}>{formatDay(record.event_time)}</span>
                     <span style={{ marginTop: '6px', fontSize: '11px', color: '#a8a29e', fontWeight: 700, textTransform: 'uppercase' }}>{formatMonth(record.event_time)}</span>
                   </div>
                   <div style={{ flex: 1, minWidth: 0, display: 'grid', gap: '6px' }}>
-                    <strong style={{ fontSize: '15px', fontWeight: 600, color: '#292524', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{record.title ?? '未命名记录'}</strong>
+                    <strong style={{ fontSize: '14px', fontWeight: 800, color: '#292524', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{record.title ?? '未命名记录'}</strong>
                     <p style={{ ...helperTextStyle, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', lineHeight: 1.55 }}>{record.summary ?? '这条记录暂无正文'}</p>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#a8a29e', fontSize: '12px', fontWeight: 600 }}>
                       <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
@@ -518,6 +436,122 @@ export const HomePage = () => {
           <EmptyState message="还没有真实家庭动态。创建记录或邀请家人后，这里会展示最新协作进展。" />
         )}
       </section>
+    </div>
+  );
+};
+
+export const SearchPage = () => {
+  const navigate = useNavigate();
+  const { activeChild } = useAuth();
+  const [query, setQuery] = useState('');
+  const { data: records, loading, error } = useAsyncData<RecordSummary[]>(
+    async () => {
+      if (!activeChild) return [];
+      const result = await webApi.listRecords({ child_no: activeChild.child_no, page: 1, page_size: 50 });
+      return result.list;
+    },
+    [activeChild?.child_no],
+  );
+
+  const searchHistory = ['第一次走路', '生日', '游乐园', '满月'];
+  const hotTags = ['第一次', '生日快乐', '户外游', '情绪瞬间', '会走路了'];
+  const normalizedQuery = query.trim().toLowerCase();
+  const results = normalizedQuery
+    ? (records ?? []).filter((record) =>
+        [record.title, record.summary, record.creator_name, ...record.tags]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(normalizedQuery)),
+      )
+    : [];
+
+  return (
+    <div style={appPageStyle}>
+      <header style={{ ...paddedSectionStyle, paddingTop: 'calc(18px + env(safe-area-inset-top))', paddingBottom: '18px', background: '#ffffff', borderBottom: '1px solid #f3f0ea', position: 'sticky', top: 0, zIndex: 3 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '32px minmax(0, 1fr) 44px', gap: '8px', alignItems: 'center' }}>
+          <button
+            type="button"
+            aria-label="返回"
+            onClick={() => navigate(-1)}
+            style={{ width: '32px', height: '40px', border: 'none', background: 'transparent', color: '#292524', display: 'grid', placeItems: 'center', cursor: 'pointer', padding: 0 }}
+          >
+            <ChevronLeft size={20} strokeWidth={2.3} />
+          </button>
+          <label style={{ minWidth: 0, minHeight: '36px', borderRadius: '999px', background: '#f1f5f9', display: 'flex', alignItems: 'center', gap: '8px', padding: '0 12px', color: '#94a3b8' }}>
+            <Search size={15} strokeWidth={2.2} />
+            <input
+              aria-label="搜索关键词"
+              autoFocus
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="搜索时间、地点、标签或内容..."
+              style={{ minWidth: 0, flex: 1, border: 'none', outline: 'none', background: 'transparent', color: '#292524', fontSize: '13px', fontWeight: 600 }}
+            />
+            {query ? (
+              <button
+                type="button"
+                aria-label="清空搜索"
+                onClick={() => setQuery('')}
+                style={{ width: '24px', height: '24px', border: 'none', borderRadius: '999px', background: '#ffffff', color: '#94a3b8', display: 'grid', placeItems: 'center', cursor: 'pointer', padding: 0 }}
+              >
+                <X size={13} strokeWidth={2.4} />
+              </button>
+            ) : null}
+          </label>
+          <button type="button" onClick={() => navigate('/timeline')} style={{ border: 'none', background: 'transparent', color: '#292524', fontSize: '13px', fontWeight: 700, cursor: 'pointer', padding: 0 }}>
+            搜索
+          </button>
+        </div>
+      </header>
+
+      <main style={{ ...paddedSectionStyle, paddingTop: '26px', display: 'grid', gap: '30px' }}>
+        {query.trim() ? (
+          <section style={{ display: 'grid', gap: '12px' }}>
+            <h2 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#292524' }}>搜索结果</h2>
+            {loading ? <EmptyState message="正在搜索记录…" /> : null}
+            {error ? <EmptyState message={`搜索失败：${error}`} /> : null}
+            {!loading && !error && !results.length ? <EmptyState message="没有找到匹配内容，换个关键词试试。" /> : null}
+            {results.slice(0, 8).map((record) => (
+              <button
+                key={record.record_no}
+                type="button"
+                onClick={() => navigate(`/record/${record.record_no}`)}
+                style={{ ...softCardStyle, padding: '14px 16px', borderRadius: '18px', display: 'grid', gap: '6px', textAlign: 'left', cursor: 'pointer' }}
+              >
+                <strong style={{ fontSize: '14px', color: '#292524', fontWeight: 800 }}>{record.title ?? '未命名记录'}</strong>
+                <span style={{ ...helperTextStyle, lineHeight: 1.5 }}>{record.summary ?? (record.tags.join('、') || '暂无正文')}</span>
+              </button>
+            ))}
+          </section>
+        ) : (
+          <>
+            <section>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                <h2 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#292524' }}>搜索历史</h2>
+                <button type="button" style={{ border: 'none', background: 'transparent', color: '#a8a29e', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}>
+                  清空
+                </button>
+              </div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                {searchHistory.map((item) => (
+                  <button key={item} type="button" onClick={() => setQuery(item)} style={{ ...chipStyle, minHeight: '34px', padding: '7px 13px', background: '#ffffff', borderColor: '#edf0f3', color: '#6b7280', fontSize: '12px' }}>
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h2 style={{ margin: '0 0 14px', fontSize: '15px', fontWeight: 800, color: '#292524' }}>热门标签</h2>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                {hotTags.map((item) => (
+                  <button key={item} type="button" onClick={() => setQuery(item)} style={{ ...chipStyle, minHeight: '34px', padding: '7px 13px', background: '#fff4d6', borderColor: '#ffe6a6', color: '#d97706', fontSize: '12px', fontWeight: 800 }}>
+                    #{item}
+                  </button>
+                ))}
+              </div>
+            </section>
+          </>
+        )}
+      </main>
     </div>
   );
 };

@@ -17,14 +17,6 @@ export const formSubmitSpacingStyle = {
   paddingBottom: '72px',
 };
 
-export const recordTypes = [
-  { label: '图文记录', value: 'mixed' },
-  { label: '文字记录', value: 'text' },
-  { label: '视频记录', value: 'video' },
-  { label: '语音记录', value: 'audio' },
-  { label: '里程碑', value: 'milestone' },
-];
-
 export const formatDateTimeLocal = (value: string) => {
   const date = new Date(value);
   const timezoneOffset = date.getTimezoneOffset() * 60_000;

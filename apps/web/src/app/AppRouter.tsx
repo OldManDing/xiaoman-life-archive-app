@@ -5,10 +5,10 @@ import { AppLayout } from '../layouts/AppLayout';
 import { ProtectedRoute } from '../components/ProtectedRoute';
 import { 
   LoginPage, SplashPage, HomePage, TimelinePage, CreateRecordPage, 
-  ViewRecordPage, EditRecordPage, FamilyPage, FamilyChildPage, 
-  FamilyMembersPage, FamilyInvitePage, ProfilePage, AccountPage, 
+  SearchPage, ViewRecordPage, EditRecordPage, FamilyPage, FamilyChildPage, 
+  FamilyMembersPage, FamilyMemberDetailPage, FamilyInvitePage, ProfilePage, AccountPage, 
   SettingsPage, LegalPage, ReportsPage, ExportBackupPage, MembershipPage,
-  SecurityPage, HelpFeedbackPage, ErrorPage, OnboardingChildPage
+  SecurityPage, HelpFeedbackPage, AboutPage, ErrorPage, OnboardingChildPage
 } from '../pages/index';
 
 export const AppRouter = () => {
@@ -52,6 +52,7 @@ export const AppRouter = () => {
           <Route element={<AppLayout />}>
             <Route path="/" element={<Navigate to={needsOnboarding ? '/onboarding/child' : '/home'} replace />} />
             <Route path="home" element={<HomePage />} />
+            <Route path="search" element={<SearchPage />} />
             <Route path="timeline" element={<TimelinePage />} />
             <Route path="record/create" element={<CreateRecordPage />} />
             <Route path="record/:record_no" element={<ViewRecordPage />} />
@@ -59,6 +60,7 @@ export const AppRouter = () => {
             <Route path="family" element={<FamilyPage />} />
             <Route path="family/child" element={<FamilyChildPage />} />
             <Route path="family/members" element={<FamilyMembersPage />} />
+            <Route path="family/members/:user_no" element={<FamilyMemberDetailPage />} />
             <Route path="family/invite" element={<FamilyInvitePage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="profile/account" element={<AccountPage />} />
@@ -69,7 +71,7 @@ export const AppRouter = () => {
             <Route path="profile/help" element={<HelpFeedbackPage />} />
             <Route path="profile/settings" element={<SettingsPage />} />
             <Route path="profile/legal" element={<LegalPage />} />
-            <Route path="profile/about" element={<LegalPage />} />
+            <Route path="profile/about" element={<AboutPage />} />
           </Route>
         </Route>
         

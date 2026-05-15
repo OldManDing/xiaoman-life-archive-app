@@ -1,9 +1,11 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Calendar, Camera } from 'lucide-react';
 
 import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
-import { AppSegmentedControl, Field, PageShell, Panel, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle, textareaStyle } from '../shared/ui';
+import { createPersistableMediaPreview } from '../shared/localMediaPreview';
+import { Field, PageShell, Panel, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle } from '../shared/ui';
 import { rowStyle } from './shared';
 
 export const SplashPage = () => (
@@ -169,8 +171,9 @@ export const OnboardingChildPage = () => {
   const isAddingChild = searchParams.get('mode') === 'add';
   const [form, setForm] = useState({
     name: '',
+    avatar_url: '',
     birthday: '',
-    gender: 'female',
+    gender: 'male',
     birth_place: '',
     remark: '',
   });
@@ -182,6 +185,24 @@ export const OnboardingChildPage = () => {
       navigate('/home', { replace: true });
     }
   }, [isAddingChild, navigate, needsOnboarding]);
+
+  const onAvatarChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setError('头像仅支持 JPG、PNG、WebP 或 HEIC 图片');
+      return;
+    }
+
+    try {
+      const avatarUrl = await createPersistableMediaPreview(file);
+      setForm((current) => ({ ...current, avatar_url: avatarUrl }));
+      setError(null);
+    } catch {
+      setError('头像读取失败，请重新选择图片');
+    }
+  };
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -206,43 +227,71 @@ export const OnboardingChildPage = () => {
   };
 
   return (
-    <PageShell
-      title={isAddingChild ? '添加宝宝档案' : '完善宝宝信息'}
-      description={isAddingChild ? '为家庭新增一个孩子档案，保存后会自动切换到新档案。' : '首次登录后请先完成孩子档案创建。'}
-      backTo={isAddingChild ? '/profile' : undefined}
-    >
-      <Panel>
-        <form onSubmit={onSubmit} style={rowStyle}>
-          <Field label="孩子姓名">
-            <input style={inputStyle} value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} />
-          </Field>
-          <Field label="生日">
-            <input style={inputStyle} type="date" value={form.birthday} onChange={(event) => setForm((current) => ({ ...current, birthday: event.target.value }))} />
-          </Field>
-          <Field label="性别">
-            <AppSegmentedControl
-              ariaLabel="性别"
-              value={form.gender}
-              onChange={(value) => setForm((current) => ({ ...current, gender: value }))}
-              options={[
-                { value: 'female', label: '女' },
-                { value: 'male', label: '男' },
-                { value: 'unknown', label: '未知' },
-              ]}
-            />
-          </Field>
-          <Field label="出生地">
-            <input style={inputStyle} value={form.birth_place} onChange={(event) => setForm((current) => ({ ...current, birth_place: event.target.value }))} />
-          </Field>
-          <Field label="备注">
-            <textarea style={textareaStyle} value={form.remark} onChange={(event) => setForm((current) => ({ ...current, remark: event.target.value }))} />
-          </Field>
-          {error ? <p style={{ ...helperTextStyle, color: '#dc2626' }}>{error}</p> : null}
-          <button type="submit" style={primaryButtonStyle} disabled={submitting}>
-            {submitting ? '提交中…' : '完成建档'}
-          </button>
-        </form>
-      </Panel>
+    <PageShell title={isAddingChild ? '添加宝宝档案' : '完善宝宝信息'} backTo={isAddingChild ? '/profile' : undefined}>
+      <form onSubmit={onSubmit} style={{ ...rowStyle, gap: '22px' }}>
+        <div style={{ display: 'grid', justifyItems: 'center', gap: '10px', paddingTop: '6px' }}>
+          <label style={{ width: '96px', height: '96px', borderRadius: '999px', border: '4px solid #ffffff', background: '#f1f5f9', display: 'grid', placeItems: 'center', color: '#cbd5e1', position: 'relative', cursor: 'pointer', overflow: 'hidden', boxShadow: '0 8px 18px rgba(15,23,42,0.07)' }}>
+            {form.avatar_url ? <img src={form.avatar_url} alt="宝宝头像预览" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Camera size={34} strokeWidth={1.9} />}
+            <span style={{ position: 'absolute', right: '0', bottom: '0', width: '30px', height: '30px', borderRadius: '999px', background: '#292524', color: '#ffffff', display: 'grid', placeItems: 'center', fontSize: '19px', fontWeight: 700, border: '2px solid #ffffff', lineHeight: 1 }}>+</span>
+            <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" onChange={(event) => void onAvatarChange(event)} style={{ display: 'none' }} />
+          </label>
+          <span style={{ color: '#a1a1aa', fontSize: '12px', fontWeight: 700 }}>设置头像</span>
+        </div>
+
+        <Panel style={{ padding: 0, borderRadius: '24px', overflow: 'hidden', boxShadow: '0 8px 22px rgba(41,37,36,0.04)' }}>
+          <div style={{ display: 'grid' }}>
+            <div style={{ padding: '16px', borderBottom: '1px solid #f3f4f6' }}>
+            <Field label="宝宝小名">
+              <input style={{ ...inputStyle, border: 'none', padding: 0, minHeight: '24px' }} value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="请输入宝宝小名" />
+            </Field>
+            </div>
+            <div style={{ padding: '16px', borderBottom: '1px solid #f3f4f6' }}>
+            <Field label="性别">
+              <div role="radiogroup" aria-label="性别" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
+                {[
+                  { value: 'male', label: '男孩' },
+                  { value: 'female', label: '女孩' },
+                ].map((item) => {
+                  const selected = form.gender === item.value;
+                  return (
+                    <button
+                      key={item.value}
+                      type="button"
+                      role="radio"
+                      aria-checked={selected}
+                      onClick={() => setForm((current) => ({ ...current, gender: item.value }))}
+                      style={{
+                        minHeight: '44px',
+                        borderRadius: '14px',
+                        border: selected ? (item.value === 'male' ? '1px solid #bfdbfe' : '1px solid #fbcfe8') : '1px solid #eef1f4',
+                        background: selected ? (item.value === 'male' ? '#eff6ff' : '#fdf2f8') : '#f8fafc',
+                        color: selected ? '#2563eb' : '#78716c',
+                        fontSize: '13px',
+                        fontWeight: 800,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {item.label} {item.value === 'male' ? '👦' : '👧'}
+                    </button>
+                  );
+                })}
+              </div>
+            </Field>
+            </div>
+            <div style={{ padding: '16px', position: 'relative' }}>
+            <Field label="出生日期">
+              <input style={{ ...inputStyle, border: 'none', padding: '0 28px 0 0', minHeight: '26px' }} type="date" value={form.birthday} onChange={(event) => setForm((current) => ({ ...current, birthday: event.target.value }))} />
+            </Field>
+              <Calendar size={18} color="#cbd5e1" style={{ position: 'absolute', right: '16px', bottom: '20px', pointerEvents: 'none' }} />
+            </div>
+          </div>
+        </Panel>
+
+        {error ? <p style={{ ...helperTextStyle, color: '#dc2626' }}>{error}</p> : null}
+        <button type="submit" style={{ ...primaryButtonStyle, width: '100%', minHeight: '48px', boxShadow: '0 8px 20px rgba(41,37,36,0.16)' }} disabled={submitting}>
+          {submitting ? '提交中…' : '完成创建'}
+        </button>
+      </form>
     </PageShell>
   );
 };

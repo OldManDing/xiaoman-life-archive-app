@@ -158,17 +158,17 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    fireEvent.change(await screen.findByLabelText('孩子姓名'), { target: { value: '小满' } });
-    fireEvent.change(screen.getByLabelText('生日'), { target: { value: '2025-01-01' } });
-    fireEvent.change(screen.getByLabelText('出生地'), { target: { value: '上海' } });
-    fireEvent.click(screen.getByRole('button', { name: '完成建档' }));
+    fireEvent.change(await screen.findByLabelText('宝宝小名'), { target: { value: '小满' } });
+    fireEvent.change(screen.getByLabelText('出生日期'), { target: { value: '2025-01-01' } });
+    fireEvent.click(screen.getByRole('button', { name: '完成创建' }));
 
     await waitFor(() => {
       expect(createChildMock).toHaveBeenCalledWith({
         name: '小满',
+        avatar_url: '',
         birthday: '2025-01-01',
-        gender: 'female',
-        birth_place: '上海',
+        gender: 'male',
+        birth_place: '',
         remark: '',
       });
     });

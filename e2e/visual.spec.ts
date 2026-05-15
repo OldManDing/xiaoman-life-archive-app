@@ -35,6 +35,18 @@ test.describe('Visual review smoke', () => {
     await expectNoPageOverflow(page);
     await saveScreenshot(page, 'app-home-mobile.png', false);
 
+    await page.goto(`${webBaseURL}/onboarding/child?mode=add`);
+    await expect(page.getByRole('heading', { name: '添加宝宝档案' })).toBeVisible();
+    await expect(page.getByLabel('宝宝小名')).toBeVisible();
+    await expectNoPageOverflow(page);
+    await saveScreenshot(page, 'app-child-select-mobile.png', false);
+
+    await page.goto(`${webBaseURL}/search`);
+    await expect(page.getByRole('heading', { name: '搜索历史' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: '热门标签' })).toBeVisible();
+    await expectNoPageOverflow(page);
+    await saveScreenshot(page, 'app-search-mobile.png', false);
+
     await page.goto(`${webBaseURL}/timeline`);
     await expect(page.getByRole('heading', { name: '时间轴' })).toBeVisible();
     await expect(page.getByText('学会说谢谢').first()).toBeVisible();
@@ -48,10 +60,17 @@ test.describe('Visual review smoke', () => {
     await expect(page.getByRole('heading', { name: '家庭', exact: true })).toBeVisible();
     await expect(page.getByRole('heading', { name: '家庭成员' })).toBeVisible();
     await expect(page.getByText('小满妈妈').first()).toBeVisible();
+    await expect(page.getByText('正在加载家庭动态…')).toHaveCount(0);
     await expectNoEnglishSeedCopy(page);
     await expectNoUnfinishedCopy(page);
     await expectNoPageOverflow(page);
     await saveScreenshot(page, 'app-family-mobile.png', false);
+
+    await page.goto(`${webBaseURL}/family/members/u_demo_parent_001`);
+    await expect(page.getByRole('heading', { name: '家人资料' })).toBeVisible();
+    await expect(page.getByText('权限管理')).toBeVisible();
+    await expectNoPageOverflow(page);
+    await saveScreenshot(page, 'app-family-member-mobile.png', false);
 
     await page.goto(`${webBaseURL}/family/invite`);
     await expect(page.getByRole('heading', { name: '邀请家庭成员' })).toBeVisible();
@@ -63,7 +82,7 @@ test.describe('Visual review smoke', () => {
     await page.goto(`${webBaseURL}/record/create?type=milestone&focus=content`);
     await expect(page.getByRole('heading', { name: '记录时光' })).toBeVisible();
     await expect(page.getByRole('button', { name: /切换孩子|孩子资料/ })).toBeVisible();
-    await expect(page.getByRole('combobox', { name: '记录类型' })).toContainText('里程碑');
+    await expect(page.getByRole('button', { name: '切换里程碑记录' })).toHaveAttribute('aria-pressed', 'true');
     await expectNoPageOverflow(page);
     await saveScreenshot(page, 'app-record-create-mobile.png', false);
     await saveScreenshot(page, 'app-record-selects-mobile.png', true);
@@ -88,31 +107,32 @@ test.describe('Visual review smoke', () => {
 
     await page.goto(`${webBaseURL}/profile/reports`);
     await expect(page.getByRole('heading', { name: '月报与纪念册' })).toBeVisible();
-    await expect(page.getByText('本月回顾')).toBeVisible();
+    await expect(page.getByText('AI 月报摘要')).toBeVisible();
     await expectNoPageOverflow(page);
     await saveScreenshot(page, 'app-reports-mobile.png', false);
 
     await page.goto(`${webBaseURL}/profile/export`);
     await expect(page.getByRole('heading', { name: '导出与备份' })).toBeVisible();
-    await expect(page.getByText('导出预览')).toBeVisible();
+    await expect(page.getByText('选择导出内容')).toBeVisible();
+    await expect(page.getByText('正在整理档案摘要…')).toHaveCount(0);
     await expectNoPageOverflow(page);
     await saveScreenshot(page, 'app-export-mobile.png', false);
 
     await page.goto(`${webBaseURL}/profile/membership`);
     await expect(page.getByRole('heading', { name: '会员中心' })).toBeVisible();
-    await expect(page.getByText('已启用权益')).toBeVisible();
+    await expect(page.getByText('您的专属特权')).toBeVisible();
     await expectNoPageOverflow(page);
     await saveScreenshot(page, 'app-membership-mobile.png', false);
 
     await page.goto(`${webBaseURL}/profile/security`);
     await expect(page.getByRole('heading', { name: '账号与安全' })).toBeVisible();
-    await expect(page.getByText('安全建议')).toBeVisible();
+    await expect(page.getByRole('button', { name: '注销账号' })).toBeVisible();
     await expectNoPageOverflow(page);
     await saveScreenshot(page, 'app-security-mobile.png', false);
 
     await page.goto(`${webBaseURL}/profile/about`);
     await expect(page.getByRole('heading', { name: '关于我们' })).toBeVisible();
-    await expect(page.getByText('用户协议', { exact: true })).toBeVisible();
+    await expect(page.getByText('用户服务协议')).toBeVisible();
     await expectNoPageOverflow(page);
     await saveScreenshot(page, 'app-about-mobile.png', false);
   });

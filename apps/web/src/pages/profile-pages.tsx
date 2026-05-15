@@ -1,6 +1,6 @@
 import { useEffect, useState, type ChangeEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { BookHeart, Camera, ChevronRight, Copy, CreditCard, DownloadCloud, FileBox, HelpCircle, Info, Lock, LogOut, RefreshCw, ShieldCheck, Users } from 'lucide-react';
+import { BookHeart, Camera, CheckCircle2, ChevronRight, CreditCard, DownloadCloud, FileBox, FileText, Globe, HelpCircle, Info, KeyRound, Lock, LogOut, Mail, RefreshCw, Shield, ShieldCheck, Smartphone, Star, Users } from 'lucide-react';
 
 import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
@@ -15,8 +15,8 @@ import { EmptyState, buttonRowStyle, rowStyle } from './shared';
 const profileCardStyle = {
   background: '#ffffff',
   border: '1px solid #ebe6dc',
-  borderRadius: '18px',
-  boxShadow: '0 1px 2px rgba(41,37,36,0.04)',
+  borderRadius: '24px',
+  boxShadow: '0 2px 10px rgba(41,37,36,0.035)',
   overflow: 'hidden',
 } as const;
 
@@ -54,14 +54,14 @@ const uploadAvatarImage = async (childNo: string, file: File) => {
 const ProfileAvatar = ({ src, label }: { src?: string | null; label: string }) => {
   const resolvedSrc = resolveStoredMediaUrl(src);
   if (resolvedSrc) {
-    return <img src={resolvedSrc} alt={label} style={{ width: '68px', height: '68px', borderRadius: '999px', objectFit: 'cover', border: '1px solid #e7e5e4', boxShadow: '0 2px 10px rgba(15,23,42,0.04)', flexShrink: 0 }} />;
+    return <img src={resolvedSrc} alt={label} style={{ width: '72px', height: '72px', borderRadius: '999px', objectFit: 'cover', border: '1px solid #e7e5e4', boxShadow: '0 4px 12px rgba(15,23,42,0.05)', flexShrink: 0 }} />;
   }
 
   return (
     <div
       style={{
-        width: '68px',
-        height: '68px',
+        width: '72px',
+        height: '72px',
         borderRadius: '999px',
         background: '#f5f5f4',
         border: '1px solid #e7e5e4',
@@ -69,7 +69,7 @@ const ProfileAvatar = ({ src, label }: { src?: string | null; label: string }) =
         placeItems: 'center',
         fontWeight: 700,
         color: '#44403c',
-        boxShadow: '0 2px 10px rgba(15,23,42,0.04)',
+        boxShadow: '0 4px 12px rgba(15,23,42,0.05)',
         flexShrink: 0,
       }}
     >
@@ -115,7 +115,8 @@ const ProfileListItem = ({
       border: 'none',
       borderBottom: '1px solid #f7f4ef',
       background: 'transparent',
-      padding: '14px 16px',
+      minHeight: '72px',
+      padding: '17px 20px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -126,12 +127,12 @@ const ProfileListItem = ({
     }}
   >
     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
-      <div style={{ width: '34px', height: '34px', borderRadius: '999px', background: '#fafaf9', border: '1px solid #eee9df', display: 'grid', placeItems: 'center', color: '#78716c', flexShrink: 0 }}>
-        <Icon size={17} strokeWidth={2} />
+      <div style={{ width: '38px', height: '38px', borderRadius: '999px', background: '#fafaf9', border: '1px solid #eee9df', display: 'grid', placeItems: 'center', color: '#78716c', flexShrink: 0 }}>
+        <Icon size={18} strokeWidth={2} />
       </div>
       <div style={{ minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '15px', fontWeight: 600, color: '#44403c' }}>{title}</span>
+          <span style={{ fontSize: '16px', fontWeight: 600, color: '#44403c' }}>{title}</span>
           {badge ? <span style={{ fontSize: '11px', color: '#a8a29e', fontWeight: 700 }}>{badge}</span> : null}
         </div>
         {description ? <p style={{ ...helperTextStyle, marginTop: '3px', lineHeight: 1.5 }}>{description}</p> : null}
@@ -179,19 +180,19 @@ export const ProfilePage = () => {
   const { user, logout, activeChild } = useAuth();
   const navigate = useNavigate();
   return (
-    <div style={{ minHeight: '100dvh', background: '#faf8f5', color: '#292524', overflowX: 'hidden' }}>
-      <section style={{ background: '#ffffff', padding: 'calc(50px + env(safe-area-inset-top)) 20px 24px', borderBottom: '1px solid #ebe6dc', boxShadow: '0 1px 2px rgba(41,37,36,0.03)' }}>
+    <div style={{ minHeight: '100dvh', background: '#f8f7f5', color: '#292524', overflowX: 'hidden' }}>
+      <section style={{ background: '#ffffff', padding: 'calc(58px + env(safe-area-inset-top)) 20px 30px', borderBottom: '1px solid #f2efe9', borderRadius: '0 0 28px 28px', boxShadow: '0 8px 22px rgba(41,37,36,0.035)' }}>
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flex: 1, minWidth: 0 }}>
             <ProfileAvatar src={user?.avatar_url ?? activeChild?.avatar_url} label={user?.nickname ?? '我的头像'} />
             <div style={{ display: 'grid', gap: '6px', minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                <strong style={{ fontSize: '20px', color: '#292524' }}>{user?.nickname ?? '未登录用户'}</strong>
-                <span style={{ fontSize: '10px', fontWeight: 700, color: '#b09040', padding: '2px 8px', borderRadius: '8px', border: '1px solid #e8e2d2', background: 'linear-gradient(90deg, #f2efe9 0%, #faf8f5 100%)', letterSpacing: 0 }}>
+                <strong style={{ fontSize: '24px', color: '#292524', lineHeight: 1.1 }}>{user?.nickname ?? '未登录用户'}</strong>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: '#b09040', padding: '3px 9px', borderRadius: '999px', border: '1px solid #e8e2d2', background: '#fcfaf5', letterSpacing: 0 }}>
                   {membershipTypeLabel(user?.membership_type)}
                 </span>
               </div>
-              <span style={{ fontSize: '13px', color: '#78716c', fontWeight: 500 }}>用户编号：{user?.user_no ?? '—'}</span>
+              <span style={{ fontSize: '14px', color: '#78716c', fontWeight: 500 }}>ID: {user?.user_no ?? '—'}</span>
             </div>
           </div>
           <button
@@ -199,11 +200,11 @@ export const ProfilePage = () => {
             style={{
               borderRadius: '999px',
               border: '1px solid #e7e5e4',
-              background: '#fafaf9',
+              background: '#ffffff',
               color: '#57534e',
-              fontSize: '12px',
+              fontSize: '13px',
               fontWeight: 600,
-              padding: '8px 14px',
+              padding: '9px 15px',
               cursor: 'pointer',
             }}
             onClick={() => navigate('/profile/account')}
@@ -213,11 +214,11 @@ export const ProfilePage = () => {
         </div>
       </section>
 
-      <section style={{ ...profileSectionStyle, marginTop: '18px' }}>
+      <section style={{ ...profileSectionStyle, marginTop: '22px' }}>
         <button
           type="button"
           onClick={() => navigate('/timeline')}
-          style={{ ...profileCardStyle, width: '100%', padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left', cursor: 'pointer' }}
+          style={{ ...profileCardStyle, width: '100%', minHeight: '76px', padding: '18px 20px', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left', cursor: 'pointer' }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{ width: '34px', height: '34px', borderRadius: '999px', background: '#fafaf9', border: '1px solid #e7e5e4', display: 'grid', placeItems: 'center', color: '#78716c' }}>
@@ -232,9 +233,9 @@ export const ProfilePage = () => {
         </button>
       </section>
 
-      <section style={{ ...profileSectionStyle, marginTop: '20px' }}>
-        <h2 style={{ margin: '0 0 10px', fontSize: '13px', fontWeight: 700, color: '#a8a29e', letterSpacing: 0 }}>我的孩子</h2>
-        <div style={{ ...profileCardStyle, padding: '0' }}>
+      <section style={{ ...profileSectionStyle, marginTop: '24px' }}>
+        <h2 style={{ margin: '0 0 12px 6px', fontSize: '15px', fontWeight: 700, color: '#a8a29e', letterSpacing: 0 }}>我的孩子</h2>
+        <div style={{ ...profileCardStyle, padding: '0', borderRadius: '24px' }}>
           <button
             type="button"
             onClick={() => navigate('/family/child')}
@@ -243,7 +244,8 @@ export const ProfilePage = () => {
               border: 'none',
               borderBottom: '1px solid #f7f4ef',
               background: 'transparent',
-              padding: '14px 16px',
+              minHeight: '78px',
+              padding: '18px 20px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -264,10 +266,10 @@ export const ProfilePage = () => {
           <button
             type="button"
             style={{
-              margin: '12px 16px 14px',
-              width: 'calc(100% - 32px)',
-              padding: '11px 16px',
-              borderRadius: '14px',
+              margin: '14px 18px 18px',
+              width: 'calc(100% - 36px)',
+              padding: '13px 16px',
+              borderRadius: '18px',
               border: '1px dashed #d6d3d1',
               background: '#fafaf9',
               color: '#78716c',
@@ -282,9 +284,9 @@ export const ProfilePage = () => {
         </div>
       </section>
 
-      <section style={{ ...profileSectionStyle, marginTop: '22px' }}>
-        <h2 style={{ margin: '0 0 10px', fontSize: '13px', fontWeight: 700, color: '#a8a29e', letterSpacing: 0 }}>管理中心</h2>
-        <div style={profileCardStyle}>
+      <section style={{ ...profileSectionStyle, marginTop: '28px' }}>
+        <h2 style={{ margin: '0 0 12px 6px', fontSize: '15px', fontWeight: 700, color: '#a8a29e', letterSpacing: 0 }}>管理中心</h2>
+        <div style={{ ...profileCardStyle, borderRadius: '24px' }}>
           <ProfileListItem icon={BookHeart} title="月报与纪念册" onClick={() => navigate('/profile/reports')} />
           <ProfileListItem icon={DownloadCloud} title="导出与备份" onClick={() => navigate('/profile/export')} />
           <ProfileListItem icon={CreditCard} title="会员中心" onClick={() => navigate('/profile/membership')} />
@@ -294,9 +296,9 @@ export const ProfilePage = () => {
         </div>
       </section>
 
-      <section style={{ ...profileSectionStyle, marginTop: '22px', paddingBottom: '22px' }}>
-        <h2 style={{ margin: '0 0 12px', fontSize: '13px', fontWeight: 700, color: '#a8a29e', letterSpacing: 0 }}>设置区</h2>
-        <div style={profileCardStyle}>
+      <section style={{ ...profileSectionStyle, marginTop: '28px', paddingBottom: '22px' }}>
+        <h2 style={{ margin: '0 0 12px 6px', fontSize: '15px', fontWeight: 700, color: '#a8a29e', letterSpacing: 0 }}>设置区</h2>
+        <div style={{ ...profileCardStyle, borderRadius: '24px' }}>
           <ProfileListItem icon={Lock} title="账号与安全" onClick={() => navigate('/profile/security')} />
           <ProfileListItem icon={Info} title="关于我们" onClick={() => navigate('/profile/about')} />
         </div>
@@ -304,14 +306,15 @@ export const ProfilePage = () => {
           type="button"
           style={{
             width: '100%',
-            marginTop: '20px',
+            marginTop: '28px',
+            minHeight: '58px',
             padding: '14px 16px',
-            borderRadius: '14px',
-            border: '1px solid #e7e5e4',
+            borderRadius: '24px',
+            border: '1px solid #f2efe9',
             background: '#ffffff',
-            color: '#dc2626',
+            color: '#ef4444',
             fontSize: '15px',
-            fontWeight: 600,
+            fontWeight: 700,
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
@@ -450,39 +453,46 @@ export const SettingsPage = () => {
   };
 
   return (
-    <PageShell title="隐私设置" description="管理当前设备上的通知、资料展示和首页刷新偏好。" backTo="/profile">
-      <Panel>
-        <div>
-          {[
-            { key: 'hideMobileMask' as const, title: '隐藏手机号', description: '个人资料页只显示手机号隐藏状态，减少旁人看到敏感信息的机会。', icon: ShieldCheck },
-            { key: 'autoRefreshHome' as const, title: '首页进入时刷新', description: '每次进入首页时自动同步孩子资料和最近记录，也可以在首页手动点击刷新。', icon: RefreshCw },
-          ].map((item) => {
-            const Icon = item.icon;
-            return (
-              <div key={item.key} style={settingsRowStyle}>
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', minWidth: 0 }}>
-                  <div style={{ width: '34px', height: '34px', borderRadius: '999px', background: '#fafaf9', border: '1px solid #eee9df', display: 'grid', placeItems: 'center', color: '#78716c', flexShrink: 0 }}>
-                    <Icon size={17} strokeWidth={2} />
-                  </div>
-                  <div style={{ minWidth: 0 }}>
-                    <strong style={{ display: 'block', color: '#44403c', fontSize: '15px' }}>{item.title}</strong>
-                    <p style={{ ...helperTextStyle, marginTop: '4px', lineHeight: 1.5 }}>{item.description}</p>
-                  </div>
-                </div>
-                <button type="button" aria-label={item.title} aria-pressed={settings[item.key]} style={toggleButtonStyle(settings[item.key])} onClick={() => updateSetting(item.key)}>
-                  <span style={toggleKnobStyle} />
-                </button>
+    <PageShell title="隐私设置" backTo="/profile">
+      <Panel style={{ padding: 0, overflow: 'hidden' }}>
+        <button
+          type="button"
+          onClick={() => setMessage('当前默认仅家庭成员可见。')}
+          style={{ ...settingsRowStyle, width: '100%', border: 'none', borderBottom: '1px solid #f2efe9', background: '#ffffff', padding: '17px 18px', textAlign: 'left', cursor: 'pointer' }}
+        >
+          <span style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
+            <ShieldCheck size={18} color="#94a3b8" />
+            <span style={{ color: '#57534e', fontSize: '14px', fontWeight: 700 }}>默认谁可以看到您的记录</span>
+          </span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#a8a29e', fontSize: '12px', fontWeight: 700 }}>
+            仅家庭成员
+            <ChevronRight size={15} />
+          </span>
+        </button>
+        {[
+          { key: 'hideMobileMask' as const, title: '允许通过手机号搜索到我', icon: Users, inverted: true },
+          { key: 'autoRefreshHome' as const, title: '向新成员展示历史时间轴', icon: RefreshCw },
+        ].map((item) => {
+          const Icon = item.icon;
+          const enabled = item.inverted ? !settings[item.key] : settings[item.key];
+          return (
+            <div key={item.key} style={{ ...settingsRowStyle, padding: '17px 18px' }}>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center', minWidth: 0 }}>
+                <Icon size={18} color="#94a3b8" />
+                <strong style={{ display: 'block', color: '#57534e', fontSize: '14px' }}>{item.title}</strong>
               </div>
-            );
-          })}
-          {message ? <p style={{ ...helperTextStyle, color: '#0f766e', marginTop: '14px' }}>{message}</p> : null}
-          <div style={{ ...buttonRowStyle, marginTop: '18px' }}>
-            <button type="button" style={secondaryButtonStyle} onClick={resetSettings}>
-              恢复默认设置
-            </button>
-          </div>
-        </div>
+              <button type="button" aria-label={item.title} aria-pressed={enabled} style={toggleButtonStyle(enabled)} onClick={() => updateSetting(item.key)}>
+                <span style={toggleKnobStyle} />
+              </button>
+            </div>
+          );
+        })}
       </Panel>
+      <p style={{ ...helperTextStyle, lineHeight: 1.7 }}>我们尊重每个家庭对孩子影像和成长记录的保护习惯。新的访问规则将即时生效，并同步到本机浏览偏好。</p>
+      {message ? <p style={{ ...helperTextStyle, color: '#0f766e' }}>{message}</p> : null}
+      <button type="button" style={{ ...secondaryButtonStyle, width: '100%', justifyContent: 'center' }} onClick={resetSettings}>
+        恢复默认设置
+      </button>
     </PageShell>
   );
 };
@@ -505,59 +515,71 @@ export const ReportsPage = () => {
   const imageCount = mediaRecords.length;
   const textCount = monthlyRecords.filter((item) => item.record_type === 'text').length;
   const latest = monthlyRecords[0];
-  const heroCover = mediaRecords[0] ? resolveMediaPreviewUrl(mediaRecords[0].cover_media_no, mediaRecords[0].cover_url) : null;
+
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth() + 1;
+  const pastMonths = [1, 2, 3, 4].map((offset) => {
+    const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - offset, 1);
+    return { year: date.getFullYear(), month: date.getMonth() + 1 };
+  });
 
   return (
-    <PageShell title="月报与纪念册" description={`${activeChild?.name ?? '孩子'}的本月成长记录回顾。`} backTo="/profile">
+    <PageShell title="月报与纪念册" backTo="/profile">
       {loading ? <Panel><EmptyState message="正在整理本月记录…" /></Panel> : null}
       {error ? <Panel><EmptyState message={`月报加载失败：${error}`} /></Panel> : null}
       {!loading && !error ? (
         <>
+          <p style={{ margin: '0 0 -2px 2px', color: '#78716c', fontSize: '13px', fontWeight: 700 }}>
+            为 {activeChild?.name ?? '孩子'} 整理的
+          </p>
           <section
             style={{
-              minHeight: '176px',
-              borderRadius: '20px',
-              overflow: 'hidden',
+              borderRadius: '24px',
+              padding: '18px',
               position: 'relative',
-              border: '1px solid #ebe6dc',
-              background: heroCover ? '#292524' : 'linear-gradient(135deg, #f2efe9 0%, #ffffff 100%)',
-              boxShadow: '0 2px 12px rgba(15,23,42,0.025)',
+              border: '1px solid #f0ede8',
+              background: '#ffffff',
+              boxShadow: '0 10px 26px rgba(41,37,36,0.05)',
+              display: 'grid',
+              gap: '16px',
             }}
           >
-            {heroCover && mediaRecords[0]?.cover_media_type === 'video' ? (
-              <video src={heroCover} muted playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-            ) : null}
-            {heroCover && mediaRecords[0]?.cover_media_type !== 'video' ? <img src={heroCover} alt="月报封面" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} /> : null}
-            <div style={{ position: 'absolute', inset: 0, background: heroCover ? 'linear-gradient(180deg, rgba(41,37,36,0.12) 0%, rgba(41,37,36,0.66) 100%)' : 'transparent' }} />
-            <div style={{ position: 'relative', zIndex: 1, padding: '20px', display: 'grid', alignContent: 'end', minHeight: '176px', color: heroCover ? '#fff' : '#292524' }}>
-              <span style={{ fontSize: '12px', fontWeight: 700, opacity: 0.78 }}>{monthKey} 成长月报</span>
-              <strong style={{ marginTop: '8px', fontSize: '23px', lineHeight: 1.25 }}>{activeChild?.name ?? '孩子'}的本月纪念册</strong>
-              <p style={{ margin: '10px 0 0', fontSize: '13px', lineHeight: 1.65, color: heroCover ? 'rgba(255,255,255,0.86)' : '#78716c' }}>
-                {monthlyRecords.length ? `已整理 ${monthlyRecords.length} 个成长瞬间，适合生成纪念册草稿。` : '本月还没有记录，可以先从首页添加照片、语音或文字。'}
-              </p>
-            </div>
-          </section>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '8px' }}>
-            {[
-              { label: '记录', value: monthlyRecords.length },
-              { label: '影像', value: imageCount },
-              { label: '文字', value: textCount },
-              { label: '里程碑', value: milestoneCount },
-            ].map((item) => (
-              <div key={item.label} style={{ borderRadius: '14px', border: '1px solid #ebe6dc', background: '#ffffff', padding: '12px 6px', textAlign: 'center' }}>
-                <strong style={{ display: 'block', color: '#292524', fontSize: '20px', lineHeight: 1 }}>{item.value}</strong>
-                <span style={{ display: 'block', marginTop: '7px', color: '#78716c', fontSize: '11px', fontWeight: 700 }}>{item.label}</span>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 42px', gap: '14px', alignItems: 'start' }}>
+              <div>
+                <span style={{ display: 'inline-flex', color: '#d97706', fontSize: '12px', fontWeight: 800, marginBottom: '8px' }}>最新月报</span>
+                <h2 style={{ margin: 0, color: '#292524', fontSize: '25px', fontWeight: 800, lineHeight: 1.18 }}>
+                  {currentYear}年{currentMonth}月
+                  <br />
+                  成长月报
+                </h2>
               </div>
-            ))}
-          </div>
+              <div style={{ width: '40px', height: '40px', borderRadius: '12px', border: '1px solid #eef1f4', background: '#f8fafc', color: '#94a3b8', display: 'grid', placeItems: 'center' }}>
+                <BookHeart size={19} />
+              </div>
+            </div>
 
-          <Panel>
-            <div style={rowStyle}>
-              <strong>本月回顾</strong>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
+              {[
+                { label: '记录数量', value: monthlyRecords.length },
+                { label: '影像记录', value: imageCount },
+              ].map((item) => (
+                <div key={item.label} style={{ borderRadius: '14px', background: '#fbfaf7', border: '1px solid #f3f0ea', padding: '12px', textAlign: 'center' }}>
+                  <strong style={{ display: 'block', fontSize: '19px', color: '#292524', lineHeight: 1 }}>{item.value}</strong>
+                  <span style={{ display: 'block', marginTop: '6px', color: '#a8a29e', fontSize: '11px', fontWeight: 800 }}>{item.label}</span>
+                </div>
+              ))}
+            </div>
+
+            <button type="button" style={{ ...primaryButtonStyle, width: '100%', minHeight: '44px', boxShadow: '0 8px 18px rgba(41,37,36,0.16)' }} onClick={() => latest && navigate(`/record/${latest.record_no}`)} disabled={!latest}>
+              查看月报
+            </button>
+
+            <div style={{ borderTop: '1px solid #f3f0ea', paddingTop: '12px', display: 'grid', gap: '8px' }}>
+              <strong style={{ color: '#d97706', fontSize: '13px' }}>AI 月报摘要</strong>
               <p style={{ ...helperTextStyle, lineHeight: 1.75 }}>
                 {monthlyRecords.length
-                  ? `这个月共记录 ${monthlyRecords.length} 个成长瞬间，其中 ${milestoneCount} 个里程碑、${imageCount} 条影像记录。`
+                  ? `本月共记录 ${monthlyRecords.length} 个成长瞬间，其中 ${milestoneCount} 个里程碑、${imageCount} 条影像记录、${textCount} 条文字记录。`
                   : '本月还没有记录内容，月报会在添加记录后自动汇总。'}
               </p>
               {latest ? (
@@ -567,7 +589,38 @@ export const ReportsPage = () => {
                 </button>
               ) : null}
             </div>
-          </Panel>
+          </section>
+
+          <section>
+            <h2 style={{ margin: '0 0 14px', fontSize: '16px', fontWeight: 800, color: '#44403c', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <BookHeart size={18} color="#94a3b8" />
+              往期纪念册
+            </h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
+              {pastMonths.map((item, index) => (
+                <button
+                  key={`${item.year}-${item.month}`}
+                  type="button"
+                  style={{
+                    minHeight: '126px',
+                    borderRadius: '18px',
+                    border: '1px solid #f0ede8',
+                    background: index === pastMonths.length - 1 ? '#fbfaf7' : '#ffffff',
+                    color: '#292524',
+                    padding: '14px',
+                    display: 'grid',
+                    alignContent: 'space-between',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => navigate('/profile/export')}
+                >
+                  <strong style={{ fontSize: '15px', lineHeight: 1.25 }}>{item.year}年<br />{item.month}月纪念册</strong>
+                  <span style={{ color: '#a8a29e', fontSize: '12px', fontWeight: 700 }}>导出 PDF</span>
+                </button>
+              ))}
+            </div>
+          </section>
 
           {mediaRecords.length ? (
             <Panel>
@@ -613,6 +666,7 @@ export const ReportsPage = () => {
 export const ExportBackupPage = () => {
   const { user, activeChild } = useAuth();
   const [message, setMessage] = useState<string | null>(null);
+  const [exportMode, setExportMode] = useState<'all' | 'media' | 'text'>('all');
   const { data: records, loading, error } = useAsyncData<RecordSummary[]>(
     async () => {
       if (!activeChild) return [];
@@ -636,15 +690,6 @@ export const ExportBackupPage = () => {
     ...recordsList.slice(0, 30).map((item, index) => `${index + 1}. ${item.title ?? '未命名记录'}｜${new Date(item.event_time).toLocaleString('zh-CN', { hour12: false })}｜${item.tags.join('、') || '无标签'}`),
   ].join('\n');
 
-  const copySummary = async () => {
-    try {
-      await navigator.clipboard.writeText(exportText);
-      setMessage('档案摘要已复制到剪贴板');
-    } catch {
-      setMessage('复制失败，请检查浏览器剪贴板权限');
-    }
-  };
-
   const downloadSummary = () => {
     const blob = new Blob([exportText], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -656,49 +701,69 @@ export const ExportBackupPage = () => {
     setMessage('档案摘要已生成下载文件');
   };
 
+  const exportOptions = [
+    { value: 'all' as const, title: '全部数据（推荐）', description: '包含所有文字记录、高清图片和视频文件' },
+    { value: 'media' as const, title: '仅图片和视频', description: '只导出媒体文件，适合节省空间' },
+    { value: 'text' as const, title: '仅文字记录', description: '导出为 TXT/PDF 格式的纯文字日记' },
+  ];
+
   return (
-    <PageShell title="导出与备份" description="生成当前孩子档案摘要，便于本机保存或发送给家人。" backTo="/profile">
-      <Panel>
-        <div style={rowStyle}>
-          <strong>档案概览</strong>
-          {loading ? <EmptyState message="正在整理档案摘要…" /> : null}
-          {error ? <EmptyState message={`摘要整理失败：${error}`} /> : null}
-          {!loading && !error ? (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px' }}>
-              {[
-                { label: '记录', value: recordsList.length },
-                { label: '影像', value: mediaCount },
-                { label: '里程碑', value: milestoneCount },
-              ].map((item) => (
-                <div key={item.label} style={{ borderRadius: '14px', border: '1px solid #ebe6dc', background: '#fffdf9', padding: '12px 8px', textAlign: 'center' }}>
-                  <strong style={{ display: 'block', fontSize: '20px', color: '#292524' }}>{item.value}</strong>
-                  <span style={{ display: 'block', marginTop: '6px', fontSize: '12px', color: '#78716c', fontWeight: 700 }}>{item.label}</span>
-                </div>
-              ))}
-            </div>
-          ) : null}
-          <p style={{ ...helperTextStyle, lineHeight: 1.7 }}>当前导出内容包含账号、孩子档案和最近成长记录摘要；媒体原文件仍保存在对象存储或本地预览缓存中。</p>
-          {message ? <p style={{ ...helperTextStyle, color: message.includes('失败') ? '#dc2626' : '#0f766e' }}>{message}</p> : null}
-          <div style={buttonRowStyle}>
-            <button type="button" style={primaryButtonStyle} onClick={downloadSummary} disabled={loading || Boolean(error)}>
-              <DownloadCloud size={16} />
-              下载摘要
-            </button>
-            <button type="button" style={secondaryButtonStyle} onClick={() => void copySummary()} disabled={loading || Boolean(error)}>
-              <Copy size={16} />
-              复制摘要
-            </button>
-          </div>
+    <PageShell title="导出与备份" backTo="/profile">
+      <Panel style={{ textAlign: 'center', padding: '28px 20px', borderRadius: '22px' }}>
+        <div style={{ width: '58px', height: '58px', borderRadius: '999px', background: '#fff4d6', color: '#d97706', display: 'grid', placeItems: 'center', margin: '0 auto 16px' }}>
+          <DownloadCloud size={25} strokeWidth={2.2} />
         </div>
+        <h2 style={{ margin: 0, color: '#292524', fontSize: '18px', fontWeight: 800 }}>一键备份数字资产</h2>
+        <p style={{ ...helperTextStyle, margin: '10px auto 0', maxWidth: '280px', lineHeight: 1.65 }}>将您在应用中记录的所有照片、视频和文字日志打包下载，永久保存在您的私人设备中。</p>
       </Panel>
-      <Panel>
-        <div style={rowStyle}>
-          <strong>导出预览</strong>
-          <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word', color: '#57534e', fontSize: '12px', lineHeight: 1.7, background: '#fafaf9', border: '1px solid #ebe6dc', borderRadius: '14px', padding: '12px' }}>
-            {exportText}
-          </pre>
+
+      <section>
+        <h2 style={{ margin: '0 0 14px', fontSize: '15px', fontWeight: 800, color: '#292524' }}>选择导出内容</h2>
+        <div style={{ display: 'grid', gap: '12px' }}>
+          {exportOptions.map((item) => {
+            const selected = exportMode === item.value;
+            return (
+              <button
+                key={item.value}
+                type="button"
+                aria-pressed={selected}
+                onClick={() => setExportMode(item.value)}
+                style={{
+                  borderRadius: '18px',
+                  border: selected ? '1.5px solid #292524' : '1px solid #f0ede8',
+                  background: '#ffffff',
+                  minHeight: '70px',
+                  padding: '14px 16px',
+                  display: 'grid',
+                  gridTemplateColumns: '40px minmax(0, 1fr) 22px',
+                  gap: '12px',
+                  alignItems: 'center',
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  boxShadow: selected ? '0 8px 22px rgba(41,37,36,0.08)' : '0 3px 12px rgba(41,37,36,0.025)',
+                }}
+              >
+                <span style={{ width: '40px', height: '40px', borderRadius: '999px', background: selected ? '#292524' : '#f8fafc', color: selected ? '#ffffff' : '#cbd5e1', display: 'grid', placeItems: 'center' }}>
+                  <FileBox size={19} />
+                </span>
+                <span style={{ minWidth: 0 }}>
+                  <strong style={{ display: 'block', color: '#292524', fontSize: '14px', fontWeight: 800 }}>{item.title}</strong>
+                  <span style={{ display: 'block', marginTop: '4px', color: '#a8a29e', fontSize: '12px', lineHeight: 1.45 }}>{item.description}</span>
+                </span>
+                {selected ? <CheckCircle2 size={20} color="#292524" strokeWidth={2.4} /> : <span style={{ width: '18px', height: '18px', borderRadius: '999px', border: '1px solid #d6d3d1', background: '#ffffff' }} />}
+              </button>
+            );
+          })}
         </div>
-      </Panel>
+      </section>
+
+      {loading ? <EmptyState message="正在整理档案摘要…" /> : null}
+      {error ? <EmptyState message={`摘要整理失败：${error}`} /> : null}
+
+      {message ? <p style={{ ...helperTextStyle, color: message.includes('失败') ? '#dc2626' : '#0f766e' }}>{message}</p> : null}
+      <button type="button" style={{ ...primaryButtonStyle, width: '100%', minHeight: '48px' }} onClick={downloadSummary} disabled={loading || Boolean(error)}>
+        开始打包导出
+      </button>
     </PageShell>
   );
 };
@@ -723,28 +788,62 @@ export const MembershipPage = () => {
   };
 
   return (
-    <PageShell title="会员中心" description="查看当前会员状态和家庭档案权益。" backTo="/profile">
-      <section style={{ borderRadius: '20px', border: '1px solid #e8e2d2', background: 'linear-gradient(135deg, #fffdf8 0%, #faf8f5 100%)', padding: '18px', display: 'grid', gap: '12px' }}>
-        <span style={{ color: '#b09040', fontSize: '12px', fontWeight: 800 }}>当前会员</span>
-        <strong style={{ color: '#292524', fontSize: '24px' }}>{membershipTypeLabel(user?.membership_type)}</strong>
-        <p style={{ ...helperTextStyle, lineHeight: 1.7 }}>
-          到期时间：{user?.membership_expire_at ? new Date(user.membership_expire_at).toLocaleString('zh-CN', { hour12: false }) : '长期有效或未设置到期时间'}
-        </p>
-        {message ? <p style={{ ...helperTextStyle, color: message.includes('失败') ? '#dc2626' : '#0f766e' }}>{message}</p> : null}
-        <button type="button" style={{ ...primaryButtonStyle, justifyContent: 'center' }} onClick={() => void refreshMembership()} disabled={refreshing}>
-          <RefreshCw size={16} />
-          {refreshing ? '刷新中…' : '刷新会员信息'}
-        </button>
+    <PageShell title="会员中心" backTo="/profile">
+      <section style={{ borderRadius: '24px', border: '1px solid #292524', background: 'linear-gradient(135deg, #1f1f1f 0%, #0f0f0f 100%)', padding: '20px', minHeight: '150px', color: '#ffffff', display: 'grid', gap: '16px', boxShadow: '0 14px 30px rgba(15,15,15,0.22)', overflow: 'hidden', position: 'relative' }}>
+        <div style={{ position: 'absolute', right: '-28px', top: '-28px', width: '120px', height: '120px', borderRadius: '999px', border: '24px solid rgba(255,255,255,0.04)' }} />
+        <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', minWidth: 0 }}>
+            <ProfileAvatar src={user?.avatar_url} label={user?.nickname ?? '会员'} />
+            <div style={{ minWidth: 0 }}>
+              <strong style={{ display: 'block', fontSize: '17px', fontWeight: 800 }}>{user?.nickname ?? '年轮会员'}</strong>
+              <span style={{ display: 'block', marginTop: '5px', color: 'rgba(255,255,255,0.68)', fontSize: '12px', fontWeight: 700 }}>{membershipTypeLabel(user?.membership_type)}</span>
+            </div>
+          </div>
+          <span style={{ borderRadius: '999px', background: '#d97706', color: '#ffffff', padding: '6px 10px', fontSize: '11px', fontWeight: 900 }}>VIP PRO</span>
+        </div>
+        <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: '12px' }}>
+          <p style={{ margin: 0, color: 'rgba(255,255,255,0.74)', fontSize: '12px', lineHeight: 1.6 }}>
+            到期时间：{user?.membership_expire_at ? new Date(user.membership_expire_at).toLocaleDateString('zh-CN') : '长期有效'}
+          </p>
+          <button type="button" style={{ ...primaryButtonStyle, minHeight: '32px', padding: '7px 12px', background: '#ffffff', color: '#292524', boxShadow: 'none', fontSize: '12px' }} onClick={() => void refreshMembership()} disabled={refreshing}>
+            {refreshing ? '刷新中' : '立即续费'}
+          </button>
+        </div>
       </section>
+
+      <section>
+        <h2 style={{ margin: '0 0 12px', fontSize: '15px', fontWeight: 800, color: '#292524' }}>您的专属特权</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
+          {[
+            { icon: DownloadCloud, title: '高清画质下载', desc: '大容量媒体备份' },
+            { icon: BookHeart, title: '精美时光月报', desc: '每月自动生成' },
+            { icon: ShieldCheck, title: '云端安全加密', desc: '保存敏感资产' },
+            { icon: CreditCard, title: '家庭人数无限', desc: '邀请亲友一起记录' },
+          ].map((item) => {
+            const Icon = item.icon;
+            return (
+              <div key={item.title} style={{ borderRadius: '16px', border: '1px solid #f0ede8', background: '#ffffff', padding: '15px', display: 'grid', gap: '10px' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '999px', background: '#fff4d6', color: '#d97706', display: 'grid', placeItems: 'center' }}>
+                  <Icon size={16} />
+                </div>
+                <div>
+                  <strong style={{ display: 'block', fontSize: '13px', color: '#292524' }}>{item.title}</strong>
+                  <span style={{ display: 'block', marginTop: '4px', fontSize: '11px', color: '#a8a29e', lineHeight: 1.4 }}>{item.desc}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
       <Panel>
         <div style={rowStyle}>
-          <strong>已启用权益</strong>
-          {['家庭成员协作记录', '图片、视频与语音上传', '时间轴筛选与月报回顾', '账号密码登录与邀请注册'].map((item) => (
-            <p key={item} style={{ ...helperTextStyle, display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ width: '6px', height: '6px', borderRadius: '999px', background: '#b09040', flexShrink: 0 }} />
-              {item}
-            </p>
-          ))}
+          <strong>成长纪念册</strong>
+          <p style={{ ...helperTextStyle, lineHeight: 1.75 }}>作为高级会员，您每年可申领一本由专业排版生成的成长纪念册，将数字记忆变成可保存的家庭资产。</p>
+          {message ? <p style={{ ...helperTextStyle, color: message.includes('失败') ? '#dc2626' : '#0f766e' }}>{message}</p> : null}
+          <button type="button" style={{ ...primaryButtonStyle, width: '100%', background: '#d97706', boxShadow: '0 8px 18px rgba(217,119,6,0.2)' }} onClick={() => void refreshMembership()} disabled={refreshing}>
+            免费申领本年度纪念册
+          </button>
         </div>
       </Panel>
     </PageShell>
@@ -755,31 +854,52 @@ export const SecurityPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  const rows = [
+    { title: '手机号码', value: user?.mobile ?? '当前未提供', icon: Smartphone, onClick: () => navigate('/profile/account') },
+    { title: '登录密码', value: '已设置', icon: KeyRound, onClick: () => navigate('/profile/account') },
+    { title: '第三方账号绑定', value: '已绑定微信', icon: ShieldCheck, onClick: () => navigate('/profile/settings') },
+  ];
+
   return (
-    <PageShell title="账号与安全" description="查看登录方式、账号资料和隐私安全入口。" backTo="/profile">
-      <Panel>
-        <div style={rowStyle}>
-          <strong>登录方式</strong>
-          <p style={helperTextStyle}>当前使用账号密码登录；邀请码只在注册时填写，注册成功后不再用于登录。</p>
-          <p style={helperTextStyle}>账号编号：{user?.user_no ?? '—'}</p>
-          <p style={helperTextStyle}>绑定手机号：{user?.mobile ?? '当前未提供'}</p>
-          <div style={buttonRowStyle}>
-            <button type="button" style={secondaryButtonStyle} onClick={() => navigate('/profile/account')}>
-              编辑个人资料
-            </button>
-            <button type="button" style={secondaryButtonStyle} onClick={() => navigate('/profile/settings')}>
-              隐私设置
-            </button>
-          </div>
-        </div>
+    <PageShell title="账号与安全" backTo="/profile">
+      <Panel style={{ padding: 0, overflow: 'hidden' }}>
+        {rows.map((item, index) => {
+          const Icon = item.icon;
+          return (
+          <button
+            key={item.title}
+            type="button"
+            onClick={item.onClick}
+            style={{
+              width: '100%',
+              minHeight: '66px',
+              border: 'none',
+              borderBottom: index === rows.length - 1 ? 'none' : '1px solid #f3f0ea',
+              background: '#ffffff',
+              padding: '0 18px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: '12px',
+              textAlign: 'left',
+              cursor: 'pointer',
+            }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#57534e', fontSize: '14px', fontWeight: 700 }}>
+              <Icon size={18} color="#94a3b8" strokeWidth={2} />
+              {item.title}
+            </span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#a8a29e', fontSize: '13px', fontWeight: 700 }}>
+              {item.value}
+              <ChevronRight size={16} color="#d6d3d1" />
+            </span>
+          </button>
+          );
+        })}
       </Panel>
-      <Panel>
-        <div style={rowStyle}>
-          <strong>安全建议</strong>
-          <p style={helperTextStyle}>请不要把账号密码、家庭邀请码或孩子影像资料发送给无关人员。</p>
-          <p style={helperTextStyle}>如果家人需要加入家庭，请在家庭页生成新的邀请码，并按只读或可编辑角色授权。</p>
-        </div>
-      </Panel>
+      <button type="button" onClick={() => window.alert('注销账号需要人工确认，正式上线前将接入完整注销流程。')} style={{ ...secondaryButtonStyle, width: '100%', color: '#ef4444', justifyContent: 'center', minHeight: '52px', marginTop: '10px' }}>
+        注销账号
+      </button>
     </PageShell>
   );
 };
@@ -878,6 +998,84 @@ const legalSections = [
     ],
   },
 ];
+
+const AboutMenuLink = ({
+  icon: Icon,
+  label,
+  value,
+  onClick,
+  isLast,
+}: {
+  icon: typeof Info;
+  label: string;
+  value?: string;
+  onClick?: () => void;
+  isLast?: boolean;
+}) => (
+  <button
+    type="button"
+    onClick={onClick}
+    style={{
+      width: '100%',
+      minHeight: '54px',
+      border: 'none',
+      borderBottom: isLast ? 'none' : '1px solid #f3f4f6',
+      background: '#ffffff',
+      padding: '14px 16px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: '12px',
+      textAlign: 'left',
+      cursor: 'pointer',
+    }}
+  >
+    <span style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: 0, color: '#4a4a4a', fontSize: '15px', fontWeight: 700 }}>
+      <Icon size={18} color="#94a3b8" strokeWidth={2} />
+      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
+    </span>
+    {value ? (
+      <span style={{ color: '#a1a1aa', fontSize: '13px', whiteSpace: 'nowrap' }}>{value}</span>
+    ) : (
+      <ChevronRight size={16} color="#cbd5e1" strokeWidth={2.2} />
+    )}
+  </button>
+);
+
+export const AboutPage = () => {
+  const navigate = useNavigate();
+  const [message, setMessage] = useState<string | null>(null);
+
+  return (
+    <PageShell title="关于我们" backTo="/profile">
+      <section style={{ display: 'grid', justifyItems: 'center', padding: '18px 0 10px' }}>
+        <div style={{ width: '96px', height: '96px', borderRadius: '26px', background: 'linear-gradient(135deg, #2c2c2c 0%, #171717 100%)', color: '#fbbf24', display: 'grid', placeItems: 'center', boxShadow: '0 10px 22px rgba(15,15,15,0.16)', marginBottom: '16px' }}>
+          <Star size={40} fill="currentColor" strokeWidth={1.8} />
+        </div>
+        <h2 style={{ margin: 0, color: '#2c2c2c', fontSize: '20px', fontWeight: 800 }}>孩子的人生档案馆</h2>
+        <p style={{ margin: '6px 0 0', color: '#a1a1aa', fontSize: '12px', fontWeight: 600 }}>Version 1.0.0 (Build 20260514)</p>
+      </section>
+
+      <Panel style={{ padding: 0, overflow: 'hidden' }}>
+        <AboutMenuLink icon={Info} label="功能介绍" onClick={() => setMessage('年轮支持成长记录、家庭协作、时间轴、月报纪念册和本机导出。')} />
+        <AboutMenuLink icon={FileText} label="用户服务协议" onClick={() => navigate('/profile/legal')} />
+        <AboutMenuLink icon={Shield} label="隐私权政策" onClick={() => navigate('/profile/legal')} />
+        <AboutMenuLink icon={Globe} label="官方网站" isLast onClick={() => setMessage('官方网站将在正式上线后开放。')} />
+      </Panel>
+
+      <Panel style={{ padding: 0, overflow: 'hidden' }}>
+        <AboutMenuLink icon={Mail} label="联系我们" value="support@familyarchive.com" onClick={() => setMessage('可通过 support@familyarchive.com 联系我们。')} />
+        <AboutMenuLink icon={Star} label="去应用商店评分" isLast onClick={() => setMessage('App 版本上线后将开放应用商店评分入口。')} />
+      </Panel>
+
+      {message ? <p style={{ ...helperTextStyle, color: '#57534e', textAlign: 'center' }}>{message}</p> : null}
+      <div style={{ textAlign: 'center', color: '#a1a1aa', fontSize: '10px', lineHeight: 1.7, paddingTop: '8px' }}>
+        <p style={{ margin: 0 }}>Figma Make Family App © 2026</p>
+        <p style={{ margin: 0 }}>Made with love for families everywhere.</p>
+      </div>
+    </PageShell>
+  );
+};
 
 export const LegalPage = () => {
   const location = useLocation();
