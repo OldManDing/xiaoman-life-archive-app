@@ -73,7 +73,6 @@ export class AiProviderService {
         body: JSON.stringify({
           model,
           temperature: 0.2,
-          response_format: { type: 'json_object' },
           messages: [
             {
               role: 'system',
@@ -107,7 +106,7 @@ export class AiProviderService {
         throw new Error('AI 服务未返回内容');
       }
 
-      return this.normalizeProviderOutput(JSON.parse(content));
+      return this.normalizeProviderOutput(this.parseJsonContent(content));
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         throw new Error('AI 服务调用超时');
@@ -132,5 +131,18 @@ export class AiProviderService {
             .slice(0, 5)
         : undefined,
     };
+  }
+
+  private parseJsonContent(content: string): unknown {
+    try {
+      return JSON.parse(content);
+    } catch {
+      const match = content.match(/\{[\s\S]*\}/);
+      if (!match) {
+        throw new Error('AI provider response is not valid JSON');
+      }
+
+      return JSON.parse(match[0]);
+    }
   }
 }
