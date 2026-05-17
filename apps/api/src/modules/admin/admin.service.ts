@@ -267,7 +267,9 @@ export class AdminService {
       list: list.map((item) => ({
         record_no: item.recordNo,
         child_no: item.child.childNo,
+        child_name: item.child.name,
         creator_user_no: item.creator.userNo,
+        creator_name: item.creator.nickname,
         title: item.title,
         record_type: item.recordType,
         visibility_scope: item.visibilityScope,
@@ -315,6 +317,7 @@ export class AdminService {
         media_no: item.mediaNo,
         family_no: item.family.familyNo,
         child_no: item.child?.childNo ?? null,
+        child_name: item.child?.name ?? null,
         uploader_user_no: item.uploader.userNo,
         media_type: item.mediaType,
         status: statusToMediaLabel(item.status),

@@ -21,13 +21,13 @@ export const AppLayout = () => {
         minHeight: '100dvh',
         maxWidth: '430px',
         margin: '0 auto',
-        background: '#ffffff',
+        background: '#f8f9fa',
         color: '#292524',
         position: 'relative',
         overflowX: 'hidden',
       }}
     >
-      <main style={{ flex: 1, overflow: 'auto', paddingBottom: showBottomNav ? 'calc(82px + env(safe-area-inset-bottom))' : 0 }}>
+      <main style={{ flex: 1, overflow: 'auto', paddingBottom: showBottomNav ? 'calc(72px + env(safe-area-inset-bottom))' : 0 }}>
         <Outlet />
       </main>
       {showBottomNav ? <nav
@@ -38,17 +38,17 @@ export const AppLayout = () => {
           transform: 'translateX(-50%)',
           width: '100%',
           maxWidth: '430px',
-          height: '68px',
-          borderTop: '1px solid #f3f0ea',
-          background: 'rgba(255,255,255,0.96)',
+          height: '64px',
+          borderTop: '1px solid #eef0f2',
+          background: '#ffffff',
           backdropFilter: 'blur(18px)',
           display: 'flex',
           justifyContent: 'space-around',
           alignItems: 'flex-start',
           zIndex: 10,
           marginTop: 'auto',
-          padding: '7px 8px calc(10px + env(safe-area-inset-bottom))',
-          boxShadow: '0 -3px 14px rgba(15,23,42,0.025)',
+          padding: '5px 8px calc(8px + env(safe-area-inset-bottom))',
+          boxShadow: 'none',
           boxSizing: 'border-box',
         }}
       >
@@ -70,6 +70,8 @@ export const AppLayout = () => {
                 fontSize: '10px',
                 fontWeight: 600,
                 position: 'relative',
+                minHeight: '44px',
+                justifyContent: 'center',
               })}
             >
               {({ isActive }) => (
@@ -93,13 +95,13 @@ export const AppLayout = () => {
                     style={{
                       width: item.featured ? '48px' : '28px',
                       height: item.featured ? '48px' : '28px',
-                      marginTop: item.featured ? '-23px' : 0,
+                      marginTop: item.featured ? '-22px' : 0,
                       borderRadius: '999px',
                       display: 'grid',
                       placeItems: 'center',
                       background: item.featured ? '#292524' : 'transparent',
                       color: item.featured ? '#ffffff' : isActive ? '#292524' : '#a8a29e',
-                      boxShadow: item.featured ? '0 7px 18px rgba(41,37,36,0.2)' : 'none',
+                      boxShadow: item.featured ? '0 8px 18px rgba(41,37,36,0.22)' : 'none',
                     }}
                   >
                     <Icon size={item.featured ? 24 : 21} strokeWidth={isActive || item.featured ? 2.5 : 2} />

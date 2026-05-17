@@ -5,7 +5,7 @@ import { Check, ChevronDown, ChevronLeft } from 'lucide-react';
 const pageShellStyle: CSSProperties = {
   display: 'grid',
   alignContent: 'start',
-  gap: '16px',
+  gap: '18px',
   minHeight: '100dvh',
   padding: '0 20px 28px',
   background: '#f8f9fa',
@@ -15,8 +15,8 @@ const cardStyle: CSSProperties = {
   background: '#ffffff',
   borderRadius: '24px',
   padding: '18px',
-  border: '1px solid #f0ede8',
-  boxShadow: '0 4px 16px rgba(41, 37, 36, 0.03)',
+  border: '1px solid #eef0f2',
+  boxShadow: '0 3px 12px rgba(15, 23, 42, 0.035)',
 };
 
 const headingStyle: CSSProperties = {
@@ -28,7 +28,7 @@ const headingStyle: CSSProperties = {
 };
 
 const backControlStyle: CSSProperties = {
-  minHeight: '40px',
+  minHeight: '44px',
   borderRadius: '999px',
   border: '1px solid #ebe6dc',
   background: '#ffffff',
@@ -48,7 +48,7 @@ const backControlStyle: CSSProperties = {
 const topBarBackStyle = (variant: 'icon' | 'pill' | 'text'): CSSProperties => {
   if (variant === 'text') {
     return {
-      minHeight: '40px',
+      minHeight: '44px',
       border: 'none',
       background: 'transparent',
       color: '#57534e',
@@ -65,8 +65,8 @@ const topBarBackStyle = (variant: 'icon' | 'pill' | 'text'): CSSProperties => {
 
   if (variant === 'icon') {
     return {
-      minHeight: '40px',
-      width: '40px',
+      minHeight: '44px',
+      width: '44px',
       padding: 0,
       gap: 0,
       border: 'none',
@@ -92,7 +92,7 @@ export const AppTopBar = ({
   backVariant = 'icon',
   onBack,
   action,
-  background = 'rgba(250, 248, 245, 0.96)',
+  background = 'rgba(255, 255, 255, 0.96)',
   style,
 }: {
   title: string;
@@ -121,7 +121,7 @@ export const AppTopBar = ({
         zIndex: 3,
         padding: 'calc(13px + env(safe-area-inset-top)) 20px 11px',
         background,
-        borderBottom: '1px solid rgba(235, 230, 220, 0.72)',
+        borderBottom: '1px solid rgba(238, 240, 242, 0.95)',
         backdropFilter: 'blur(16px)',
         ...style,
       }}
@@ -228,7 +228,7 @@ export const inputStyle: CSSProperties = {
   width: '100%',
   boxSizing: 'border-box',
   minHeight: '48px',
-  borderRadius: '16px',
+  borderRadius: '17px',
   border: '1px solid #eef1f4',
   padding: '12px 14px',
   fontSize: '14px',
@@ -240,19 +240,19 @@ export const inputStyle: CSSProperties = {
 
 export const selectControlStyle: CSSProperties = {
   width: '100%',
-  minHeight: '48px',
+  minHeight: '44px',
   borderRadius: '16px',
-  border: '1px solid #eef1f4',
-  padding: '10px 14px',
+  border: '1px solid #edf0f3',
+  padding: '10px 13px',
   boxSizing: 'border-box',
   color: '#292524',
-  background: '#ffffff',
+  background: '#f8f9fa',
   fontSize: '14px',
   lineHeight: 1.35,
-  fontWeight: 700,
+  fontWeight: 600,
   cursor: 'pointer',
   outline: 'none',
-  boxShadow: 'none',
+  boxShadow: '0 1px 2px rgba(15, 23, 42, 0.025)',
   transition: 'border-color 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease',
 };
 
@@ -365,7 +365,7 @@ export const AppSelect = ({
           gap: '8px',
           textAlign: 'left',
           ...selectStyle,
-          ...(open ? { border: '1px solid #d6d3d1', boxShadow: '0 0 0 3px rgba(41, 37, 36, 0.06)' } : {}),
+          ...(open ? { border: '1px solid #d6d3d1', background: '#ffffff', boxShadow: '0 0 0 3px rgba(41, 37, 36, 0.055)' } : {}),
         }}
       >
         <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedOption?.label ?? ''}</span>
@@ -384,10 +384,10 @@ export const AppSelect = ({
             zIndex: 30,
             maxHeight: '220px',
             overflowY: 'auto',
-            borderRadius: '20px',
-            border: '1px solid #eef1f4',
+            borderRadius: '18px',
+            border: '1px solid #edf0f3',
             background: '#ffffff',
-            boxShadow: '0 18px 42px rgba(41, 37, 36, 0.12)',
+            boxShadow: '0 18px 36px rgba(15, 23, 42, 0.11)',
             padding: '7px',
           }}
         >
@@ -403,10 +403,10 @@ export const AppSelect = ({
                 onClick={() => emitChange(option.value)}
                 style={{
                   width: '100%',
-                  minHeight: '38px',
+                  minHeight: '36px',
                   border: 'none',
-                  borderRadius: '14px',
-                  background: selected ? '#f8f9fa' : 'transparent',
+                  borderRadius: '13px',
+                  background: selected ? '#f5f6f7' : 'transparent',
                   color: option.disabled ? '#a8a29e' : '#292524',
                   padding: '7px 32px 7px 9px',
                   display: 'flex',
@@ -415,7 +415,7 @@ export const AppSelect = ({
                   position: 'relative',
                   textAlign: 'left',
                   fontSize: '14px',
-                  fontWeight: selected ? 800 : 600,
+                  fontWeight: selected ? 700 : 600,
                   cursor: option.disabled ? 'not-allowed' : 'pointer',
                 }}
               >
@@ -509,16 +509,16 @@ export const primaryButtonStyle: CSSProperties = {
   gap: '8px',
   lineHeight: 1.2,
   textDecoration: 'none',
-  boxShadow: '0 6px 16px rgba(41,37,36,0.14)',
+  boxShadow: '0 7px 16px rgba(41,37,36,0.16)',
   transition: 'transform 0.14s ease, box-shadow 0.16s ease, background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, opacity 0.16s ease',
 };
 
 export const secondaryButtonStyle: CSSProperties = {
   ...primaryButtonStyle,
-  border: '1px solid #e3ded5',
-  background: '#fffdf9',
+  border: '1px solid #edf0f3',
+  background: '#ffffff',
   color: '#57534e',
-  boxShadow: '0 3px 10px rgba(41,37,36,0.035)',
+  boxShadow: '0 3px 10px rgba(15,23,42,0.035)',
 };
 
 export const helperTextStyle: CSSProperties = {

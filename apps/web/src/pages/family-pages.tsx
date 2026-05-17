@@ -90,7 +90,7 @@ export const FamilyPage = () => {
   const { data: familyRecords, loading: recordsLoading, error: recordsError } = useAsyncData<RecordSummary[]>(
     async () => {
       if (!activeChild) return [];
-      const result = await webApi.listRecords({ child_no: activeChild.child_no, page: 1, page_size: 3 });
+      const result = await webApi.listRecords({ child_no: activeChild.child_no, page: 1, page_size: 3, status: 'published' });
       return result.list;
     },
     [activeChild?.child_no],
@@ -101,13 +101,13 @@ export const FamilyPage = () => {
   const recentFamilyRecords = familyRecords?.slice(0, 2) ?? [];
 
   return (
-    <div style={{ minHeight: '100dvh', background: '#ffffff', color: '#292524', overflowX: 'hidden' }}>
+    <div style={{ minHeight: '100dvh', background: '#f8f9fa', color: '#292524', overflowX: 'hidden' }}>
       <header style={{ padding: 'calc(38px + env(safe-area-inset-top)) 20px 18px', position: 'sticky', top: 0, zIndex: 3, background: 'rgba(255,255,255,0.96)', backdropFilter: 'blur(16px)' }}>
         <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 700, color: '#292524', letterSpacing: 0 }}>家庭</h1>
       </header>
 
-      <main style={{ display: 'grid', gap: '28px', padding: '0 20px 28px' }}>
-        <section style={{ borderRadius: '28px', border: '1px solid #f5f1e6', background: '#fcfaf5', padding: '22px 20px', minHeight: '136px', display: 'grid', alignItems: 'center', boxShadow: '0 14px 30px rgba(41,37,36,0.04)' }}>
+      <main style={{ display: 'grid', gap: '26px', padding: '0 20px 28px' }}>
+        <section style={{ borderRadius: '28px', border: '1px solid #f5f1e6', background: '#fcfaf5', padding: '22px 20px', minHeight: '132px', display: 'grid', alignItems: 'center', boxShadow: '0 5px 18px rgba(15,23,42,0.04)' }}>
           {activeChild ? (
             <div style={{ display: 'grid', gap: '14px' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '14px' }}>
@@ -129,11 +129,37 @@ export const FamilyPage = () => {
           )}
         </section>
 
+        {activeChild ? (
+          <section style={{ borderRadius: '26px', border: '1px solid #eef0f2', background: '#ffffff', padding: '18px', display: 'grid', gap: '14px', boxShadow: '0 3px 12px rgba(15,23,42,0.035)' }}>
+            <div style={{ display: 'grid', gap: '5px' }}>
+              <span style={{ color: '#a16207', fontSize: '12px', fontWeight: 800 }}>全家一起记录</span>
+              <h2 style={{ margin: 0, color: '#292524', fontSize: '18px', fontWeight: 800 }}>让不同家人的视角进入同一份档案</h2>
+              <p style={{ margin: 0, color: '#78716c', fontSize: '13px', lineHeight: 1.75 }}>邀请家人不是为了多一个账号，而是让照片、语音、寄语和日常观察都沉淀到 {activeChild.name} 的成长时间轴里。</p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px' }}>
+              {[
+                { title: '父母', desc: '记录日常' },
+                { title: '祖辈', desc: '补充陪伴' },
+                { title: '亲友', desc: '留下寄语' },
+              ].map((item) => (
+                <div key={item.title} style={{ minHeight: '70px', borderRadius: '16px', border: '1px solid #f1eee8', background: '#fcfaf5', padding: '11px 9px', display: 'grid', alignContent: 'center', gap: '5px', textAlign: 'center' }}>
+                  <strong style={{ color: '#292524', fontSize: '13px' }}>{item.title}</strong>
+                  <span style={{ color: '#78716c', fontSize: '11px', fontWeight: 700 }}>{item.desc}</span>
+                </div>
+              ))}
+            </div>
+            <button type="button" onClick={() => navigate('/family/invite')} style={{ width: '100%', minHeight: '44px', border: 'none', borderRadius: '999px', background: '#292524', color: '#ffffff', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '14px', fontWeight: 800, cursor: 'pointer' }}>
+              <UserPlus size={16} strokeWidth={2.4} />
+              邀请家人共写
+            </button>
+          </section>
+        ) : null}
+
         <section>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
             <h2 style={{ margin: 0, fontSize: '17px', fontWeight: 700, color: '#292524' }}>家庭成员</h2>
           </div>
-          <div style={{ borderRadius: '24px', border: '1px solid #f2efe9', background: '#ffffff', overflow: 'hidden', boxShadow: '0 4px 16px rgba(15,23,42,0.025)' }}>
+          <div style={{ borderRadius: '24px', border: '1px solid #eef0f2', background: '#ffffff', overflow: 'hidden', boxShadow: '0 3px 12px rgba(15,23,42,0.035)' }}>
             {recentMembers.length ? (
               recentMembers.map((member, index) => (
                 <button key={member.user_no} type="button" onClick={() => navigate(`/family/members/${member.user_no}`)} style={{ width: '100%', minHeight: '84px', border: 'none', borderBottom: index === recentMembers.length - 1 ? 'none' : '1px solid #f7f4ef', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 20px', cursor: 'pointer', textAlign: 'left' }}>
@@ -153,8 +179,11 @@ export const FamilyPage = () => {
                 </button>
               ))
             ) : (
-              <div style={{ padding: '16px' }}>
-                <EmptyState message="暂无家庭成员信息。" />
+              <div style={{ padding: '18px', display: 'grid', gap: '12px', justifyItems: 'center' }}>
+                <EmptyState message="暂无家庭成员信息。先邀请一位家人，让这份档案不只来自一个视角。" />
+                <button type="button" onClick={() => navigate('/family/invite')} style={{ minHeight: '38px', border: 'none', borderRadius: '999px', background: '#292524', color: '#ffffff', padding: '8px 16px', fontSize: '13px', fontWeight: 800, cursor: 'pointer' }}>
+                  生成邀请码
+                </button>
               </div>
             )}
           </div>
@@ -165,13 +194,16 @@ export const FamilyPage = () => {
           {recordsLoading ? <EmptyState message="正在加载家庭动态…" /> : null}
           {recordsError ? <EmptyState message={`家庭动态加载失败：${recordsError}`} /> : null}
           {!recordsLoading && !recordsError && recentFamilyRecords.length ? (
-            <div style={{ display: 'grid', gap: '28px' }}>
+            <div style={{ position: 'relative', display: 'grid', gap: '28px', paddingLeft: '26px', marginLeft: '16px' }}>
+              <span aria-hidden="true" style={{ position: 'absolute', left: 0, top: '10px', bottom: '10px', width: '1px', background: '#e7eaf0' }} />
               {recentFamilyRecords.map((record, index) => {
                 const coverUrl = getFamilyRecordCoverUrl(record);
                 const mediaKind = getFamilyRecordMediaKind(record);
                 return (
                   <button key={record.record_no} type="button" aria-label={`查看家庭动态：${record.title ?? '未命名记录'}`} onClick={() => navigate(`/record/${record.record_no}`)} style={{ width: '100%', border: 'none', background: 'transparent', padding: 0, display: 'flex', gap: '14px', textAlign: 'left', cursor: 'pointer', position: 'relative' }}>
-                    <FamilyAvatar label={record.creator_name} size={42} />
+                    <span aria-hidden="true" style={{ position: 'absolute', left: '-43px', top: 0, width: '34px', height: '34px', borderRadius: '999px', background: '#ffffff', border: '4px solid #f8f9fa', display: 'grid', placeItems: 'center', boxSizing: 'border-box' }}>
+                      <span style={{ width: '22px', height: '22px', borderRadius: '999px', background: '#f5f5f4', border: '1px solid #eee9df', display: 'grid', placeItems: 'center', color: '#57534e', fontSize: '11px', fontWeight: 800 }}>{record.creator_name.slice(0, 1)}</span>
+                    </span>
                     <div style={{ flex: 1, minWidth: 0, borderBottom: index === recentFamilyRecords.length - 1 ? 'none' : '1px solid #f3f0ea', paddingBottom: index === recentFamilyRecords.length - 1 ? 0 : '22px' }}>
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'baseline', flexWrap: 'wrap' }}>
                       <span style={{ fontSize: '14px', fontWeight: 700, color: '#44403c' }}>{record.creator_name}</span>
@@ -179,7 +211,7 @@ export const FamilyPage = () => {
                     </div>
                     <span style={{ display: 'block', marginTop: '4px', fontSize: '11px', color: '#a8a29e', fontWeight: 700 }}>{new Date(record.event_time).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })}</span>
                     {coverUrl && mediaKind !== 'audio' ? (
-                      <div style={{ marginTop: '12px', width: '142px', height: '126px', borderRadius: '18px', border: '1px solid #eee9df', background: '#fafaf9', position: 'relative', overflow: 'hidden' }}>
+                      <div style={{ marginTop: '12px', width: '150px', height: '128px', borderRadius: '18px', border: '1px solid #eee9df', background: '#fafaf9', position: 'relative', overflow: 'hidden' }}>
                         {mediaKind === 'video' ? (
                           <>
                             <video src={coverUrl} muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', background: '#292524' }} />
@@ -210,11 +242,21 @@ export const FamilyPage = () => {
             </div>
           ) : null}
           {!recordsLoading && !recordsError && !recentFamilyRecords.length ? (
-            <EmptyState message="还没有可展示的真实家庭动态。邀请家人加入后，这里会显示协作进展。" />
+            <div style={{ display: 'grid', gap: '12px', justifyItems: 'center' }}>
+              <EmptyState message="还没有可展示的真实家庭动态。发布记录或邀请家人后，这里会显示协作进展。" />
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                <button type="button" onClick={() => navigate('/record/create')} style={{ minHeight: '38px', border: '1px solid #292524', borderRadius: '999px', background: '#292524', color: '#ffffff', padding: '8px 14px', fontSize: '13px', fontWeight: 800, cursor: 'pointer' }}>
+                  去记录
+                </button>
+                <button type="button" onClick={() => navigate('/family/invite')} style={{ minHeight: '38px', border: '1px solid #e7e5e4', borderRadius: '999px', background: '#ffffff', color: '#57534e', padding: '8px 14px', fontSize: '13px', fontWeight: 800, cursor: 'pointer' }}>
+                  邀请家人
+                </button>
+              </div>
+            </div>
           ) : null}
         </section>
 
-        <section style={{ borderRadius: '24px', border: '1px solid #f2efe9', background: '#faf8f5', padding: '22px', position: 'relative', overflow: 'hidden', minHeight: '134px' }}>
+        <section style={{ borderRadius: '24px', border: '1px solid #f5f1e6', background: '#fcfaf5', padding: '22px', position: 'relative', overflow: 'hidden', minHeight: '134px' }}>
           <Heart size={88} strokeWidth={1.2} style={{ position: 'absolute', right: '-18px', bottom: '-18px', color: '#f2efe9' }} />
           <div style={{ position: 'relative', zIndex: 1, display: 'grid', gap: '10px' }}>
             <h2 style={{ margin: 0, fontSize: '17px', fontWeight: 700, color: '#292524' }}>家人寄语</h2>
@@ -433,14 +475,14 @@ export const FamilyMembersPage = () => {
                         {familyRoleLabel(member.role)}
                       </span>
                     </div>
-                    <p style={{ ...helperTextStyle, marginTop: '3px' }}>用户编号：{member.user_no}</p>
+                    <p style={{ ...helperTextStyle, marginTop: '3px' }}>{member.role === 'owner' ? '家庭档案管理员' : '共同记录成员'}</p>
                   </div>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px' }}>
                   <p style={{ ...helperTextStyle, borderRadius: '6px', background: '#ffffff', border: '1px solid #f2efe9', padding: '8px' }}>手机号：{settings.hideMobileMask ? '已隐藏' : member.mobile_masked ?? '未提供'}</p>
                   <p style={{ ...helperTextStyle, borderRadius: '6px', background: '#ffffff', border: '1px solid #f2efe9', padding: '8px' }}>状态：{familyMemberStatusLabel(member.status)}</p>
                 </div>
-                <p style={helperTextStyle}>邀请人：{member.invited_by_user_no ?? '系统创建 / 当前管理员'}</p>
+                <p style={helperTextStyle}>来源：{member.invited_by_user_no ? '家人邀请加入' : '系统创建 / 当前管理员'}</p>
                 {member.role !== 'owner' ? (
                   <div style={{ ...buttonRowStyle, marginTop: '2px' }}>
                     <button style={secondaryButtonStyle} onClick={() => void onChangeRole(member.user_no, 'viewer')} disabled={updatingUserNo === member.user_no || member.role === 'viewer'}>
@@ -503,6 +545,9 @@ export const FamilyMemberDetailPage = () => {
   const member = members.find((item) => item.user_no === userNo) ?? members[0] ?? null;
   const memberRecords = member ? records.filter((record) => record.creator_name === member.nickname).slice(0, 3) : [];
   const canEditRole = Boolean(member && member.role !== 'owner' && activeChild?.family_no);
+  const memberJoinedDays = member?.joined_at
+    ? Math.max(1, Math.ceil((Date.now() - new Date(member.joined_at).getTime()) / (24 * 60 * 60 * 1000)))
+    : null;
 
   const changeRole = async () => {
     if (!member || !activeChild?.family_no || member.role === 'owner') {
@@ -533,20 +578,20 @@ export const FamilyMemberDetailPage = () => {
       {!loading && !member ? <Panel><EmptyState message="未找到该家庭成员。" /></Panel> : null}
       {member ? (
         <>
-          <Panel style={{ display: 'grid', justifyItems: 'center', gap: '14px', padding: '24px 20px' }}>
-            <FamilyAvatar label={member.nickname} size={82} />
+          <Panel style={{ display: 'grid', justifyItems: 'center', gap: '13px', padding: '22px 18px', borderRadius: '18px', boxShadow: '0 2px 8px rgba(41,37,36,0.03)' }}>
+            <FamilyAvatar label={member.nickname} size={72} />
             <div style={{ display: 'grid', justifyItems: 'center', gap: '7px' }}>
-              <h2 style={{ margin: 0, color: '#2c2c2c', fontSize: '21px', fontWeight: 800 }}>{member.nickname}</h2>
-              <span style={{ borderRadius: '999px', background: roleBg, color: roleColor, padding: '4px 11px', fontSize: '12px', fontWeight: 800 }}>{familyRoleLabel(member.role)}</span>
+              <h2 style={{ margin: 0, color: '#2c2c2c', fontSize: '20px', fontWeight: 800 }}>{member.nickname}</h2>
+              <span style={{ borderRadius: '999px', background: roleBg, color: roleColor, padding: '4px 10px', fontSize: '11px', fontWeight: 800 }}>{familyRoleLabel(member.role)}</span>
             </div>
             <div style={{ width: '100%', display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
-              <div style={{ borderRadius: '16px', border: '1px solid #f3f4f6', background: '#f8f9fa', padding: '13px', textAlign: 'center' }}>
-                <strong style={{ display: 'block', color: '#2c2c2c', fontSize: '20px', lineHeight: 1 }}>{memberRecords.length}</strong>
+              <div style={{ borderRadius: '14px', border: '1px solid #eef1f4', background: '#f8f9fa', padding: '12px', textAlign: 'center' }}>
+                <strong style={{ display: 'block', color: '#2c2c2c', fontSize: '19px', lineHeight: 1 }}>{memberRecords.length}</strong>
                 <span style={{ display: 'block', marginTop: '7px', color: '#a1a1aa', fontSize: '11px', fontWeight: 700 }}>发布记录</span>
               </div>
-              <div style={{ borderRadius: '16px', border: '1px solid #f3f4f6', background: '#f8f9fa', padding: '13px', textAlign: 'center' }}>
-                <strong style={{ display: 'block', color: '#2c2c2c', fontSize: '20px', lineHeight: 1 }}>12</strong>
-                <span style={{ display: 'block', marginTop: '7px', color: '#a1a1aa', fontSize: '11px', fontWeight: 700 }}>互动次数</span>
+              <div style={{ borderRadius: '14px', border: '1px solid #eef1f4', background: '#f8f9fa', padding: '12px', textAlign: 'center' }}>
+                <strong style={{ display: 'block', color: '#2c2c2c', fontSize: '19px', lineHeight: 1 }}>{memberJoinedDays ?? '-'}</strong>
+                <span style={{ display: 'block', marginTop: '7px', color: '#a1a1aa', fontSize: '11px', fontWeight: 700 }}>加入天数</span>
               </div>
             </div>
           </Panel>
@@ -555,8 +600,8 @@ export const FamilyMemberDetailPage = () => {
             <h2 style={{ margin: '0 0 12px 4px', color: '#2c2c2c', fontSize: '15px', fontWeight: 800 }}>TA的记录</h2>
             <div style={{ display: 'grid', gap: '10px' }}>
               {memberRecords.length ? memberRecords.map((record) => (
-                <button key={record.record_no} type="button" onClick={() => navigate(`/record/${record.record_no}`)} style={{ width: '100%', minHeight: '64px', border: '1px solid #f3f4f6', borderRadius: '16px', background: '#ffffff', padding: '12px 14px', display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left', cursor: 'pointer', boxShadow: '0 3px 12px rgba(41,37,36,0.025)' }}>
-                  <span style={{ width: '40px', height: '40px', borderRadius: '13px', background: '#f8f9fa', color: '#94a3b8', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                <button key={record.record_no} type="button" onClick={() => navigate(`/record/${record.record_no}`)} style={{ width: '100%', minHeight: '60px', border: '1px solid #eef1f4', borderRadius: '14px', background: '#ffffff', padding: '11px 13px', display: 'flex', alignItems: 'center', gap: '11px', textAlign: 'left', cursor: 'pointer', boxShadow: '0 1px 4px rgba(41,37,36,0.02)' }}>
+                  <span style={{ width: '36px', height: '36px', borderRadius: '12px', background: '#f8f9fa', color: '#94a3b8', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
                     {record.cover_url ? <ImageIcon size={16} /> : <FileText size={16} />}
                   </span>
                   <span style={{ minWidth: 0, flex: 1 }}>
@@ -570,22 +615,22 @@ export const FamilyMemberDetailPage = () => {
 
           <section>
             <h2 style={{ margin: '0 0 12px 4px', color: '#2c2c2c', fontSize: '15px', fontWeight: 800 }}>权限管理</h2>
-            <Panel style={{ padding: 0, overflow: 'hidden' }}>
-              <button type="button" onClick={() => void changeRole()} disabled={!canEditRole || updating} style={{ width: '100%', minHeight: '58px', border: 'none', borderBottom: '1px solid #f3f4f6', background: '#ffffff', padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', textAlign: 'left', cursor: canEditRole ? 'pointer' : 'default', opacity: canEditRole ? 1 : 0.68 }}>
+            <Panel style={{ padding: 0, overflow: 'hidden', borderRadius: '18px', boxShadow: '0 2px 8px rgba(41,37,36,0.03)' }}>
+              <button type="button" onClick={() => void changeRole()} disabled={!canEditRole || updating} style={{ width: '100%', minHeight: '56px', border: 'none', borderBottom: '1px solid #f3f4f6', background: '#ffffff', padding: '13px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', textAlign: 'left', cursor: canEditRole ? 'pointer' : 'default', opacity: canEditRole ? 1 : 0.68 }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#2c2c2c', fontSize: '14px', fontWeight: 700 }}>
                   <span style={{ width: '32px', height: '32px', borderRadius: '999px', background: '#eff6ff', color: '#3b82f6', display: 'grid', placeItems: 'center' }}><ShieldAlert size={15} /></span>
                   {updating ? '正在修改权限' : '修改角色权限'}
                 </span>
                 <ChevronRight size={16} color="#cbd5e1" />
               </button>
-              <div style={{ minHeight: '58px', borderBottom: '1px solid #f3f4f6', padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+              <div style={{ minHeight: '56px', borderBottom: '1px solid #f3f4f6', padding: '13px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#2c2c2c', fontSize: '14px', fontWeight: 700 }}>
                   <span style={{ width: '32px', height: '32px', borderRadius: '999px', background: '#fff7ed', color: '#f97316', display: 'grid', placeItems: 'center' }}><Clock size={15} /></span>
                   加入时间
                 </span>
                 <span style={{ color: '#a1a1aa', fontSize: '12px', fontWeight: 700 }}>{member.joined_at ? new Date(member.joined_at).toLocaleDateString('zh-CN') : '未记录'}</span>
               </div>
-              <button type="button" onClick={() => setMessage('移出家庭需要二次确认，正式上线前将接入完整流程。')} style={{ width: '100%', minHeight: '58px', border: 'none', background: '#ffffff', padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', textAlign: 'left', cursor: 'pointer' }}>
+              <button type="button" onClick={() => setMessage('移出家庭需要管理员二次确认。当前请先将角色改为只读，再通过帮助与反馈提交移出申请。')} style={{ width: '100%', minHeight: '56px', border: 'none', background: '#ffffff', padding: '13px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', textAlign: 'left', cursor: 'pointer' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#ef4444', fontSize: '14px', fontWeight: 700 }}>
                   <span style={{ width: '32px', height: '32px', borderRadius: '999px', background: '#fef2f2', color: '#ef4444', display: 'grid', placeItems: 'center' }}><UserMinus size={15} /></span>
                   移出家庭

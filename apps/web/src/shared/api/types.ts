@@ -54,11 +54,13 @@ export interface RecordSummary {
   cover_url: string | null;
   title: string | null;
   summary: string | null;
+  ai_summary?: string | null;
   event_time: string;
   tags: string[];
   creator_name: string;
   is_milestone: boolean;
   record_type: string;
+  status: 'draft' | 'published';
 }
 
 export interface RecordsListResponse {
@@ -95,7 +97,9 @@ export interface RecordDetail {
   location_text: string | null;
   visibility_scope: string;
   is_milestone: boolean;
+  ai_generated_title: string | null;
   ai_summary: string | null;
+  ai_status: string | null;
   status: string;
   created_at: string;
   updated_at: string;
@@ -172,6 +176,15 @@ export interface FamilyInviteResponse {
 export interface CreateAiJobResponse {
   list: AiJobDetail[];
 }
+
+export interface AiPreviewResponse {
+  suggested_title: string | null;
+  summary: string | null;
+  tags: string[];
+  provider: string;
+}
+
+export type AiJobType = 'record_title' | 'record_summary' | 'record_tags' | 'monthly_report';
 
 export interface AiJobDetail {
   job_no: string;

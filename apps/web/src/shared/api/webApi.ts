@@ -10,6 +10,8 @@ import type {
   LoginResponse,
   LocationsSearchResponse,
   AiJobDetail,
+  AiPreviewResponse,
+  AiJobType,
   MediaAccessUrlResponse,
   RecordDetail,
   RecordsListResponse,
@@ -62,6 +64,7 @@ export interface ListRecordsQuery {
   tag?: string;
   start_time?: string;
   end_time?: string;
+  status?: 'published' | 'draft';
 }
 
 export interface CreateRecordPayload {
@@ -202,7 +205,7 @@ export const webApi = {
     return response.data.data;
   },
 
-  async createAiJob(recordNo: string, payload: { job_types: Array<'record_summary'> }) {
+  async createAiJob(recordNo: string, payload: { job_types: AiJobType[] }) {
     const response = await http.post<ApiEnvelope<CreateAiJobResponse>>(`/records/${recordNo}/ai-jobs`, payload);
     return response.data.data;
   },
@@ -219,6 +222,11 @@ export const webApi = {
 
   async confirmUpload(payload: ConfirmMediaPayload) {
     const response = await http.post<ApiEnvelope<ConfirmMediaResponse>>('/media/confirm', payload);
+    return response.data.data;
+  },
+
+  async previewAi(payload: { title?: string; content_text?: string; tags?: string[] }) {
+    const response = await http.post<ApiEnvelope<AiPreviewResponse>>('/ai-jobs/preview', payload);
     return response.data.data;
   },
 

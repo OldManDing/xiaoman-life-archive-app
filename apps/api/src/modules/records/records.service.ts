@@ -105,6 +105,7 @@ export class RecordsService {
     const where = {
       childId: child.id,
       deletedAt: null,
+      ...(dto.status ? { status: dto.status === 'draft' ? RECORD_STATUS_DRAFT : RECORD_STATUS_PUBLISHED } : {}),
       ...(dto.record_type ? { recordType: dto.record_type as never } : {}),
       ...(dto.start_time || dto.end_time
         ? {
@@ -306,9 +307,11 @@ export class RecordsService {
     eventTime: Date;
     recordType: string;
     isMilestone: boolean;
+    aiSummary?: string | null;
     creator: { nickname: string };
     tags: Array<{ tagName: string }>;
     media: Array<{ objectKey: string; mediaNo: string; mediaType: string }>;
+    status: number;
   }) {
     const firstMedia = record.media[0];
     const cover = firstMedia ? await this.storageService.createAccessUrl(firstMedia.objectKey) : null;
@@ -320,11 +323,13 @@ export class RecordsService {
       cover_url: cover?.access_url ?? null,
       title: record.title,
       summary: record.contentText,
+      ai_summary: record.aiSummary ?? null,
       event_time: record.eventTime.toISOString(),
       tags: record.tags.map((item) => item.tagName),
       creator_name: record.creator.nickname,
       is_milestone: record.isMilestone,
       record_type: record.recordType,
+      status: statusToRecordLabel(record.status),
     };
   }
 
@@ -352,7 +357,9 @@ export class RecordsService {
       locationText: string | null;
       visibilityScope: string;
       isMilestone: boolean;
+      aiGeneratedTitle: string | null;
       aiSummary: string | null;
+      aiStatus: string | null;
       status: number;
       createdAt: Date;
       updatedAt: Date;
@@ -390,7 +397,9 @@ export class RecordsService {
       location_text: record.locationText,
       visibility_scope: record.visibilityScope,
       is_milestone: record.isMilestone,
+      ai_generated_title: record.aiGeneratedTitle,
       ai_summary: record.aiSummary,
+      ai_status: record.aiStatus,
       status: statusToRecordLabel(record.status),
       created_at: record.createdAt.toISOString(),
       updated_at: record.updatedAt.toISOString(),

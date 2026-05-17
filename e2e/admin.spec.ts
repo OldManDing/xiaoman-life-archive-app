@@ -78,7 +78,7 @@ test.describe('Admin critical journeys', () => {
     await page.getByRole('link', { name: '媒体库', exact: true }).click();
     await page.getByRole('button', { name: '查询' }).click();
 
-    const mediaRow = page.getByRole('row', { name: /m_demo_001/ });
+    const mediaRow = page.getByRole('row', { name: /第一次自己吃饭/ });
     await expect(mediaRow).toContainText('图片');
     await expect(mediaRow).toContainText('可用');
     await expect(mediaRow.getByRole('button', { name: '通过' })).toBeVisible();
@@ -116,18 +116,18 @@ test.describe('Admin critical journeys', () => {
 
     await page.getByRole('link', { name: '媒体库', exact: true }).click();
     await page.getByRole('button', { name: '查询' }).click();
-    let mediaRow = page.getByRole('row', { name: /m_demo_001/ });
+    let mediaRow = page.getByRole('row', { name: /第一次自己吃饭/ });
     await expect(mediaRow).toContainText('可用');
     acceptAdminActionDialogs(page, '自动化验证媒体异常按钮');
     await mediaRow.getByRole('button', { name: '异常' }).click();
-    mediaRow = page.getByRole('row', { name: /m_demo_001/ });
+    mediaRow = page.getByRole('row', { name: /第一次自己吃饭/ });
     await expect(mediaRow).toContainText('异常');
     acceptAdminActionDialogs(page, '自动化验证媒体下架按钮');
     await mediaRow.getByRole('button', { name: '下架' }).click();
-    mediaRow = page.getByRole('row', { name: /m_demo_001/ });
+    mediaRow = page.getByRole('row', { name: /第一次自己吃饭/ });
     await expect(mediaRow).toContainText('已下架');
     acceptAdminActionDialogs(page, '自动化验证媒体恢复可用按钮');
     await mediaRow.getByRole('button', { name: '通过' }).click();
-    await expect(page.getByRole('row', { name: /m_demo_001/ })).toContainText('可用');
+    await expect(page.getByRole('row', { name: /第一次自己吃饭/ })).toContainText('可用');
   });
 });

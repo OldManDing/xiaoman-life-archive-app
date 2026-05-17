@@ -4,6 +4,7 @@ import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { AuthenticatedUser } from '../../shared/types';
 import { UserJwtAuthGuard } from '../auth/guards/user-jwt-auth.guard';
 import { CreateAiJobDto } from './dto/create-ai-job.dto';
+import { PreviewAiDto } from './dto/preview-ai.dto';
 import { AiJobsService } from './ai-jobs.service';
 
 @Controller()
@@ -18,6 +19,11 @@ export class AiJobsController {
     @Body() dto: CreateAiJobDto,
   ) {
     return this.aiJobsService.create(user.id, recordNo, dto);
+  }
+
+  @Post('ai-jobs/preview')
+  preview(@CurrentUser() user: AuthenticatedUser, @Body() dto: PreviewAiDto) {
+    return this.aiJobsService.preview(user.id, dto);
   }
 
   @Get('ai-jobs/:job_no')

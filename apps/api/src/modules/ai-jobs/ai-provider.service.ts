@@ -3,7 +3,7 @@ import { AiJobType } from '@prisma/client';
 
 import { getAiProviderName } from '../../shared/env-config';
 
-type AiProviderOutput = {
+export type AiProviderOutput = {
   suggested_title?: string;
   summary?: string;
   tags?: string[];

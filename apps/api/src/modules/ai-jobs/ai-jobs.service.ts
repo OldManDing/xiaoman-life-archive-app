@@ -6,7 +6,9 @@ import { AccessControlService } from '../../shared/services/access-control.servi
 import { getAiProviderName } from '../../shared/env-config';
 import { generateBizNo } from '../../shared/utils';
 import { AiJobsQueue } from './ai-jobs.queue';
+import { AiProviderService } from './ai-provider.service';
 import { CreateAiJobDto } from './dto/create-ai-job.dto';
+import { PreviewAiDto } from './dto/preview-ai.dto';
 
 @Injectable()
 export class AiJobsService {
@@ -14,6 +16,7 @@ export class AiJobsService {
     private readonly prisma: PrismaService,
     private readonly accessControlService: AccessControlService,
     private readonly aiJobsQueue: AiJobsQueue,
+    private readonly aiProviderService: AiProviderService,
   ) {}
 
   async create(userId: bigint, recordNo: string, dto: CreateAiJobDto) {
@@ -106,6 +109,44 @@ export class AiJobsService {
       finished_at: job.finishedAt?.toISOString() ?? null,
       created_at: job.createdAt.toISOString(),
       updated_at: job.updatedAt.toISOString(),
+    };
+  }
+
+  async preview(_userId: bigint, dto: PreviewAiDto) {
+    const title = dto.title?.trim() ?? '';
+    const contentText = dto.content_text?.trim() ?? '';
+    const existingTags = dto.tags?.map((item) => item.trim()).filter(Boolean) ?? [];
+
+    if (!title && !contentText) {
+      throw new HttpException('请先输入标题或正文，再使用 AI 建议', HttpStatus.BAD_REQUEST);
+    }
+
+    const [titleOutput, summaryOutput, tagsOutput] = await Promise.all([
+      this.aiProviderService.run({
+        jobType: AiJobType.record_title,
+        title,
+        contentText,
+        existingTags,
+      }),
+      this.aiProviderService.run({
+        jobType: AiJobType.record_summary,
+        title,
+        contentText,
+        existingTags,
+      }),
+      this.aiProviderService.run({
+        jobType: AiJobType.record_tags,
+        title,
+        contentText,
+        existingTags,
+      }),
+    ]);
+
+    return {
+      suggested_title: titleOutput.suggested_title ?? null,
+      summary: summaryOutput.summary ?? null,
+      tags: tagsOutput.tags ?? [],
+      provider: getAiProviderName(),
     };
   }
 

@@ -77,7 +77,9 @@ export interface AdminChildItem {
 export interface AdminRecordItem {
   record_no: string;
   child_no: string;
+  child_name?: string | null;
   creator_user_no: string;
+  creator_name?: string | null;
   title: string | null;
   record_type: string;
   visibility_scope: string;
@@ -89,6 +91,7 @@ export interface AdminMediaItem {
   media_no: string;
   family_no: string;
   child_no: string | null;
+  child_name?: string | null;
   uploader_user_no: string;
   uploader_name?: string | null;
   media_type: string;

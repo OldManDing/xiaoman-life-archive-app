@@ -14,9 +14,9 @@ import { EmptyState, buttonRowStyle, rowStyle } from './shared';
 
 const profileCardStyle = {
   background: '#ffffff',
-  border: '1px solid #ebe6dc',
+  border: '1px solid #eef0f2',
   borderRadius: '24px',
-  boxShadow: '0 2px 10px rgba(41,37,36,0.035)',
+  boxShadow: '0 3px 12px rgba(15,23,42,0.035)',
   overflow: 'hidden',
 } as const;
 
@@ -54,14 +54,14 @@ const uploadAvatarImage = async (childNo: string, file: File) => {
 const ProfileAvatar = ({ src, label }: { src?: string | null; label: string }) => {
   const resolvedSrc = resolveStoredMediaUrl(src);
   if (resolvedSrc) {
-    return <img src={resolvedSrc} alt={label} style={{ width: '72px', height: '72px', borderRadius: '999px', objectFit: 'cover', border: '1px solid #e7e5e4', boxShadow: '0 4px 12px rgba(15,23,42,0.05)', flexShrink: 0 }} />;
+    return <img src={resolvedSrc} alt={label} style={{ width: '68px', height: '68px', borderRadius: '999px', objectFit: 'cover', border: '1px solid #e7e5e4', boxShadow: '0 5px 16px rgba(15,23,42,0.12)', flexShrink: 0 }} />;
   }
 
   return (
     <div
       style={{
-        width: '72px',
-        height: '72px',
+        width: '68px',
+        height: '68px',
         borderRadius: '999px',
         background: '#f5f5f4',
         border: '1px solid #e7e5e4',
@@ -69,7 +69,7 @@ const ProfileAvatar = ({ src, label }: { src?: string | null; label: string }) =
         placeItems: 'center',
         fontWeight: 700,
         color: '#44403c',
-        boxShadow: '0 4px 12px rgba(15,23,42,0.05)',
+        boxShadow: '0 5px 16px rgba(15,23,42,0.12)',
         flexShrink: 0,
       }}
     >
@@ -81,11 +81,11 @@ const ProfileAvatar = ({ src, label }: { src?: string | null; label: string }) =
 const SmallChildAvatar = ({ src, label }: { src?: string | null; label: string }) => {
   const resolvedSrc = resolveStoredMediaUrl(src);
   if (resolvedSrc) {
-    return <img src={resolvedSrc} alt={label} style={{ width: '42px', height: '42px', borderRadius: '999px', objectFit: 'cover', border: '1px solid #eee9df', flexShrink: 0 }} />;
+    return <img src={resolvedSrc} alt={label} style={{ width: '38px', height: '38px', borderRadius: '999px', objectFit: 'cover', border: '1px solid #eee9df', flexShrink: 0 }} />;
   }
 
   return (
-    <div style={{ width: '42px', height: '42px', borderRadius: '999px', border: '1px solid #eee9df', background: '#f5f5f4', display: 'grid', placeItems: 'center', color: '#57534e', fontWeight: 700, flexShrink: 0 }}>
+    <div style={{ width: '38px', height: '38px', borderRadius: '999px', border: '1px solid #eee9df', background: '#f5f5f4', display: 'grid', placeItems: 'center', color: '#57534e', fontWeight: 700, flexShrink: 0 }}>
       {label.slice(0, 1) || '宝'}
     </div>
   );
@@ -115,8 +115,8 @@ const ProfileListItem = ({
       border: 'none',
       borderBottom: '1px solid #f7f4ef',
       background: 'transparent',
-      minHeight: '72px',
-      padding: '17px 20px',
+      minHeight: '70px',
+      padding: '15px 16px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -127,12 +127,12 @@ const ProfileListItem = ({
     }}
   >
     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
-      <div style={{ width: '38px', height: '38px', borderRadius: '999px', background: '#fafaf9', border: '1px solid #eee9df', display: 'grid', placeItems: 'center', color: '#78716c', flexShrink: 0 }}>
-        <Icon size={18} strokeWidth={2} />
+      <div style={{ width: '36px', height: '36px', borderRadius: '999px', background: '#ffffff', border: '1px solid #eee9df', display: 'grid', placeItems: 'center', color: '#94a3b8', flexShrink: 0 }}>
+        <Icon size={19} strokeWidth={2} />
       </div>
       <div style={{ minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '16px', fontWeight: 600, color: '#44403c' }}>{title}</span>
+          <span style={{ fontSize: '16px', fontWeight: 500, color: '#44403c' }}>{title}</span>
           {badge ? <span style={{ fontSize: '11px', color: '#a8a29e', fontWeight: 700 }}>{badge}</span> : null}
         </div>
         {description ? <p style={{ ...helperTextStyle, marginTop: '3px', lineHeight: 1.5 }}>{description}</p> : null}
@@ -153,7 +153,8 @@ const settingsRowStyle = {
 
 const toggleButtonStyle = (enabled: boolean) =>
   ({
-    minWidth: '54px',
+    minWidth: '58px',
+    minHeight: '44px',
     border: 'none',
     borderRadius: '999px',
     padding: '4px',
@@ -179,32 +180,43 @@ const toMonthKey = (value: string | Date) => {
 export const ProfilePage = () => {
   const { user, logout, activeChild } = useAuth();
   const navigate = useNavigate();
+  const { data: draftRecords } = useAsyncData<RecordSummary[]>(
+    async () => {
+      if (!activeChild) return [];
+      const result = await webApi.listRecords({ child_no: activeChild.child_no, page: 1, page_size: 3, status: 'draft' });
+      return result.list;
+    },
+    [activeChild?.child_no],
+  );
+  const latestDraft = draftRecords?.[0] ?? null;
   return (
-    <div style={{ minHeight: '100dvh', background: '#f8f7f5', color: '#292524', overflowX: 'hidden' }}>
-      <section style={{ background: '#ffffff', padding: 'calc(58px + env(safe-area-inset-top)) 20px 30px', borderBottom: '1px solid #f2efe9', borderRadius: '0 0 28px 28px', boxShadow: '0 8px 22px rgba(41,37,36,0.035)' }}>
+    <div style={{ minHeight: '100dvh', background: '#f8f9fa', color: '#292524', overflowX: 'hidden' }}>
+      <section style={{ background: '#ffffff', padding: 'calc(54px + env(safe-area-inset-top)) 20px 30px', borderBottom: '1px solid #eef0f2', borderRadius: '0 0 30px 30px', boxShadow: '0 5px 16px rgba(15,23,42,0.06)' }}>
         <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-          <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', gap: '13px', alignItems: 'center', flex: 1, minWidth: 0 }}>
             <ProfileAvatar src={user?.avatar_url ?? activeChild?.avatar_url} label={user?.nickname ?? '我的头像'} />
-            <div style={{ display: 'grid', gap: '6px', minWidth: 0 }}>
+            <div style={{ display: 'grid', gap: '5px', minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                 <strong style={{ fontSize: '24px', color: '#292524', lineHeight: 1.1 }}>{user?.nickname ?? '未登录用户'}</strong>
-                <span style={{ fontSize: '11px', fontWeight: 700, color: '#b09040', padding: '3px 9px', borderRadius: '999px', border: '1px solid #e8e2d2', background: '#fcfaf5', letterSpacing: 0 }}>
+                <span style={{ fontSize: '12px', fontWeight: 800, color: '#d97706', padding: '3px 10px', borderRadius: '999px', border: '1px solid #f1d99b', background: '#fff7dc', letterSpacing: 0 }}>
                   {membershipTypeLabel(user?.membership_type)}
                 </span>
               </div>
-              <span style={{ fontSize: '14px', color: '#78716c', fontWeight: 500 }}>ID: {user?.user_no ?? '—'}</span>
+              <span style={{ fontSize: '15px', color: '#78716c', fontWeight: 500 }}>
+                {activeChild ? `正在记录 ${activeChild.name} 的成长` : '管理你的家庭档案'}
+              </span>
             </div>
           </div>
           <button
             type="button"
             style={{
               borderRadius: '999px',
-              border: '1px solid #e7e5e4',
+              border: '1px solid #edf0f3',
               background: '#ffffff',
               color: '#57534e',
-              fontSize: '13px',
+              fontSize: '15px',
               fontWeight: 600,
-              padding: '9px 15px',
+              padding: '10px 18px',
               cursor: 'pointer',
             }}
             onClick={() => navigate('/profile/account')}
@@ -214,28 +226,28 @@ export const ProfilePage = () => {
         </div>
       </section>
 
-      <section style={{ ...profileSectionStyle, marginTop: '22px' }}>
+      <section style={{ ...profileSectionStyle, marginTop: '16px' }}>
         <button
           type="button"
-          onClick={() => navigate('/timeline')}
-          style={{ ...profileCardStyle, width: '100%', minHeight: '76px', padding: '18px 20px', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left', cursor: 'pointer' }}
+          onClick={() => navigate(latestDraft ? `/record/${latestDraft.record_no}/edit` : '/record/create')}
+          style={{ ...profileCardStyle, width: '100%', minHeight: '66px', padding: '15px 16px', borderRadius: '22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left', cursor: 'pointer' }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '34px', height: '34px', borderRadius: '999px', background: '#fafaf9', border: '1px solid #e7e5e4', display: 'grid', placeItems: 'center', color: '#78716c' }}>
+            <div style={{ width: '32px', height: '32px', borderRadius: '999px', background: '#fafaf9', border: '1px solid #e7e5e4', display: 'grid', placeItems: 'center', color: '#78716c' }}>
               <FileBox size={16} />
             </div>
             <span style={{ fontSize: '14px', fontWeight: 600, color: '#57534e' }}>草稿箱</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#a8a29e' }}>
-            <span style={{ fontSize: '14px', fontWeight: 500 }}>待完善记录</span>
+            <span style={{ fontSize: '14px', fontWeight: 500 }}>{latestDraft ? `${draftRecords?.length ?? 1} 条待完善` : '暂无草稿'}</span>
             <ChevronRight size={16} strokeWidth={2.2} />
           </div>
         </button>
       </section>
 
-      <section style={{ ...profileSectionStyle, marginTop: '24px' }}>
-        <h2 style={{ margin: '0 0 12px 6px', fontSize: '15px', fontWeight: 700, color: '#a8a29e', letterSpacing: 0 }}>我的孩子</h2>
-        <div style={{ ...profileCardStyle, padding: '0', borderRadius: '24px' }}>
+      <section style={{ ...profileSectionStyle, marginTop: '22px' }}>
+        <h2 style={{ margin: '0 0 10px 4px', fontSize: '13px', fontWeight: 700, color: '#a8a29e', letterSpacing: 0 }}>我的孩子</h2>
+        <div style={{ ...profileCardStyle, padding: '0', borderRadius: '22px' }}>
           <button
             type="button"
             onClick={() => navigate('/family/child')}
@@ -244,8 +256,8 @@ export const ProfilePage = () => {
               border: 'none',
               borderBottom: '1px solid #f7f4ef',
               background: 'transparent',
-              minHeight: '78px',
-              padding: '18px 20px',
+              minHeight: '68px',
+              padding: '15px 16px',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
@@ -266,10 +278,10 @@ export const ProfilePage = () => {
           <button
             type="button"
             style={{
-              margin: '14px 18px 18px',
-              width: 'calc(100% - 36px)',
-              padding: '13px 16px',
-              borderRadius: '18px',
+              margin: '12px 16px 16px',
+              width: 'calc(100% - 32px)',
+              padding: '12px 16px',
+              borderRadius: '14px',
               border: '1px dashed #d6d3d1',
               background: '#fafaf9',
               color: '#78716c',
@@ -284,9 +296,9 @@ export const ProfilePage = () => {
         </div>
       </section>
 
-      <section style={{ ...profileSectionStyle, marginTop: '28px' }}>
-        <h2 style={{ margin: '0 0 12px 6px', fontSize: '15px', fontWeight: 700, color: '#a8a29e', letterSpacing: 0 }}>管理中心</h2>
-        <div style={{ ...profileCardStyle, borderRadius: '24px' }}>
+      <section style={{ ...profileSectionStyle, marginTop: '24px' }}>
+        <h2 style={{ margin: '0 0 10px 4px', fontSize: '13px', fontWeight: 700, color: '#a8a29e', letterSpacing: 0 }}>管理中心</h2>
+        <div style={{ ...profileCardStyle, borderRadius: '22px' }}>
           <ProfileListItem icon={BookHeart} title="月报与纪念册" onClick={() => navigate('/profile/reports')} />
           <ProfileListItem icon={DownloadCloud} title="导出与备份" onClick={() => navigate('/profile/export')} />
           <ProfileListItem icon={CreditCard} title="会员中心" onClick={() => navigate('/profile/membership')} />
@@ -296,9 +308,9 @@ export const ProfilePage = () => {
         </div>
       </section>
 
-      <section style={{ ...profileSectionStyle, marginTop: '28px', paddingBottom: '22px' }}>
-        <h2 style={{ margin: '0 0 12px 6px', fontSize: '15px', fontWeight: 700, color: '#a8a29e', letterSpacing: 0 }}>设置区</h2>
-        <div style={{ ...profileCardStyle, borderRadius: '24px' }}>
+      <section style={{ ...profileSectionStyle, marginTop: '24px', paddingBottom: '22px' }}>
+        <h2 style={{ margin: '0 0 10px 4px', fontSize: '13px', fontWeight: 700, color: '#a8a29e', letterSpacing: 0 }}>设置区</h2>
+        <div style={{ ...profileCardStyle, borderRadius: '22px' }}>
           <ProfileListItem icon={Lock} title="账号与安全" onClick={() => navigate('/profile/security')} />
           <ProfileListItem icon={Info} title="关于我们" onClick={() => navigate('/profile/about')} />
         </div>
@@ -306,11 +318,11 @@ export const ProfilePage = () => {
           type="button"
           style={{
             width: '100%',
-            marginTop: '28px',
+            marginTop: '22px',
             minHeight: '58px',
             padding: '14px 16px',
-            borderRadius: '24px',
-            border: '1px solid #f2efe9',
+            borderRadius: '22px',
+            border: '1px solid #eef0f2',
             background: '#ffffff',
             color: '#ef4444',
             fontSize: '15px',
@@ -414,7 +426,6 @@ export const AccountPage = () => {
               <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" disabled={avatarUploading} onChange={(event) => void onAvatarChange(event)} style={{ display: 'none' }} />
             </label>
           </div>
-          <p style={helperTextStyle}>用户编号：{user?.user_no ?? '—'}</p>
           <Field label="昵称">
             <input style={inputStyle} value={nickname} onChange={(event) => setNickname(event.target.value)} maxLength={64} />
           </Field>
@@ -508,17 +519,21 @@ export const ReportsPage = () => {
     },
     [activeChild?.child_no],
   );
-  const monthKey = toMonthKey(new Date());
+  const currentDate = new Date();
+  const reportDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
+  const reportYear = reportDate.getFullYear();
+  const reportMonth = reportDate.getMonth() + 1;
+  const monthKey = toMonthKey(reportDate);
   const monthlyRecords = (records ?? []).filter((item) => toMonthKey(item.event_time) === monthKey);
   const milestoneCount = monthlyRecords.filter((item) => item.is_milestone).length;
   const mediaRecords = monthlyRecords.filter((item) => item.cover_url && item.cover_media_type !== 'audio');
   const imageCount = mediaRecords.length;
   const textCount = monthlyRecords.filter((item) => item.record_type === 'text').length;
   const latest = monthlyRecords[0];
+  const monthlySummary = monthlyRecords.length
+    ? `这个月已经留下 ${monthlyRecords.length} 个成长瞬间。${milestoneCount ? `${milestoneCount} 个里程碑把关键变化标了出来，` : ''}${imageCount ? `${imageCount} 条影像让回忆有画面，` : ''}${textCount ? `${textCount} 条文字记录保留了当时的语气。` : '每一条记录都会进入孩子的长期档案。'}`
+    : '这个月还没有生成月报内容。先发布一条记录，年轮会自动把它放进本月成长回顾。';
 
-  const currentDate = new Date();
-  const currentYear = currentDate.getFullYear();
-  const currentMonth = currentDate.getMonth() + 1;
   const pastMonths = [1, 2, 3, 4].map((offset) => {
     const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - offset, 1);
     return { year: date.getFullYear(), month: date.getMonth() + 1 };
@@ -530,17 +545,23 @@ export const ReportsPage = () => {
       {error ? <Panel><EmptyState message={`月报加载失败：${error}`} /></Panel> : null}
       {!loading && !error ? (
         <>
-          <p style={{ margin: '0 0 -2px 2px', color: '#78716c', fontSize: '13px', fontWeight: 700 }}>
-            为 {activeChild?.name ?? '孩子'} 整理的
-          </p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '16px' }}>
+            <div>
+              <p style={{ margin: 0, color: '#57534e', fontSize: '14px', fontWeight: 700 }}>
+                为 {activeChild?.name ?? '孩子'} 整理的
+              </p>
+              <p style={{ margin: '5px 0 0', color: '#a8a29e', fontSize: '13px', fontWeight: 600 }}>专属时光记忆和可导出的家庭资产</p>
+            </div>
+            <SmallChildAvatar src={activeChild?.avatar_url} label={activeChild?.name ?? '孩子'} />
+          </div>
           <section
             style={{
-              borderRadius: '24px',
-              padding: '18px',
+              borderRadius: '28px',
+              padding: '22px',
               position: 'relative',
-              border: '1px solid #f0ede8',
+              border: '1px solid #eef0f2',
               background: '#ffffff',
-              boxShadow: '0 10px 26px rgba(41,37,36,0.05)',
+              boxShadow: '0 5px 18px rgba(15,23,42,0.045)',
               display: 'grid',
               gap: '16px',
             }}
@@ -548,8 +569,8 @@ export const ReportsPage = () => {
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 42px', gap: '14px', alignItems: 'start' }}>
               <div>
                 <span style={{ display: 'inline-flex', color: '#d97706', fontSize: '12px', fontWeight: 800, marginBottom: '8px' }}>最新月报</span>
-                <h2 style={{ margin: 0, color: '#292524', fontSize: '25px', fontWeight: 800, lineHeight: 1.18 }}>
-                  {currentYear}年{currentMonth}月
+                <h2 style={{ margin: 0, color: '#292524', fontSize: '25px', fontWeight: 800, lineHeight: 1.16 }}>
+                  {reportYear}年{reportMonth}月
                   <br />
                   成长月报
                 </h2>
@@ -564,23 +585,33 @@ export const ReportsPage = () => {
                 { label: '记录数量', value: monthlyRecords.length },
                 { label: '影像记录', value: imageCount },
               ].map((item) => (
-                <div key={item.label} style={{ borderRadius: '14px', background: '#fbfaf7', border: '1px solid #f3f0ea', padding: '12px', textAlign: 'center' }}>
+                <div key={item.label} style={{ borderRadius: '16px', background: '#fcfaf5', border: '1px solid #f5f1e6', padding: '12px', textAlign: 'center' }}>
                   <strong style={{ display: 'block', fontSize: '19px', color: '#292524', lineHeight: 1 }}>{item.value}</strong>
                   <span style={{ display: 'block', marginTop: '6px', color: '#a8a29e', fontSize: '11px', fontWeight: 800 }}>{item.label}</span>
                 </div>
               ))}
             </div>
 
-            <button type="button" style={{ ...primaryButtonStyle, width: '100%', minHeight: '44px', boxShadow: '0 8px 18px rgba(41,37,36,0.16)' }} onClick={() => latest && navigate(`/record/${latest.record_no}`)} disabled={!latest}>
-              查看月报
-            </button>
+            <div style={{ borderRadius: '18px', background: '#fcfaf5', border: '1px solid #f5f1e6', padding: '14px', display: 'grid', gap: '8px' }}>
+              <strong style={{ color: '#a16207', fontSize: '13px' }}>本月故事摘要</strong>
+              <p style={{ ...helperTextStyle, lineHeight: 1.8 }}>{monthlySummary}</p>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
+              <button type="button" style={{ ...primaryButtonStyle, width: '100%', minHeight: '44px', boxShadow: '0 8px 18px rgba(41,37,36,0.16)' }} onClick={() => latest ? navigate(`/record/${latest.record_no}`) : navigate('/record/create')}>
+                {latest ? '查看最近记录' : '去记录第一条'}
+              </button>
+              <button type="button" style={{ ...secondaryButtonStyle, width: '100%', minHeight: '44px', justifyContent: 'center' }} onClick={() => navigate('/profile/export')}>
+                导出月报摘要
+              </button>
+            </div>
 
             <div style={{ borderTop: '1px solid #f3f0ea', paddingTop: '12px', display: 'grid', gap: '8px' }}>
               <strong style={{ color: '#d97706', fontSize: '13px' }}>AI 月报摘要</strong>
               <p style={{ ...helperTextStyle, lineHeight: 1.75 }}>
                 {monthlyRecords.length
                   ? `本月共记录 ${monthlyRecords.length} 个成长瞬间，其中 ${milestoneCount} 个里程碑、${imageCount} 条影像记录、${textCount} 条文字记录。`
-                  : '本月还没有记录内容，月报会在添加记录后自动汇总。'}
+                  : '本月还没有记录内容，添加记录后会自动汇总为成长月报。'}
               </p>
               {latest ? (
                 <button type="button" style={{ ...secondaryButtonStyle, justifyContent: 'space-between', textAlign: 'left' }} onClick={() => navigate(`/record/${latest.record_no}`)}>
@@ -602,9 +633,9 @@ export const ReportsPage = () => {
                   key={`${item.year}-${item.month}`}
                   type="button"
                   style={{
-                    minHeight: '126px',
-                    borderRadius: '18px',
-                    border: '1px solid #f0ede8',
+                    minHeight: '138px',
+                    borderRadius: '22px',
+                    border: '1px solid #eef0f2',
                     background: index === pastMonths.length - 1 ? '#fbfaf7' : '#ffffff',
                     color: '#292524',
                     padding: '14px',
@@ -616,7 +647,7 @@ export const ReportsPage = () => {
                   onClick={() => navigate('/profile/export')}
                 >
                   <strong style={{ fontSize: '15px', lineHeight: 1.25 }}>{item.year}年<br />{item.month}月纪念册</strong>
-                  <span style={{ color: '#a8a29e', fontSize: '12px', fontWeight: 700 }}>导出 PDF</span>
+                  <span style={{ color: '#a8a29e', fontSize: '12px', fontWeight: 700 }}>查看 / 导出</span>
                 </button>
               ))}
             </div>
@@ -681,7 +712,7 @@ export const ExportBackupPage = () => {
   const exportText = [
     '年轮成长档案摘要',
     `生成时间：${new Date().toLocaleString('zh-CN', { hour12: false })}`,
-    `账号：${user?.nickname ?? '未登录用户'}（${user?.user_no ?? '—'}）`,
+    `账号：${user?.nickname ?? '未登录用户'}`,
     `孩子：${activeChild?.name ?? '未选择孩子'}`,
     `记录数量：${recordsList.length}`,
     `里程碑数量：${milestoneCount}`,
@@ -701,6 +732,15 @@ export const ExportBackupPage = () => {
     setMessage('档案摘要已生成下载文件');
   };
 
+  const copySummary = async () => {
+    try {
+      await navigator.clipboard.writeText(exportText);
+      setMessage('档案摘要已复制，可粘贴到家庭群或备忘录');
+    } catch {
+      setMessage('复制失败，请使用下载文件保存摘要');
+    }
+  };
+
   const exportOptions = [
     { value: 'all' as const, title: '全部数据（推荐）', description: '包含所有文字记录、高清图片和视频文件' },
     { value: 'media' as const, title: '仅图片和视频', description: '只导出媒体文件，适合节省空间' },
@@ -709,13 +749,26 @@ export const ExportBackupPage = () => {
 
   return (
     <PageShell title="导出与备份" backTo="/profile">
-      <Panel style={{ textAlign: 'center', padding: '28px 20px', borderRadius: '22px' }}>
-        <div style={{ width: '58px', height: '58px', borderRadius: '999px', background: '#fff4d6', color: '#d97706', display: 'grid', placeItems: 'center', margin: '0 auto 16px' }}>
-          <DownloadCloud size={25} strokeWidth={2.2} />
+      <Panel style={{ textAlign: 'center', padding: '26px 20px', borderRadius: '18px', boxShadow: '0 2px 8px rgba(41,37,36,0.03)' }}>
+        <div style={{ width: '54px', height: '54px', borderRadius: '999px', background: '#fff4d6', color: '#d97706', display: 'grid', placeItems: 'center', margin: '0 auto 15px' }}>
+          <DownloadCloud size={23} strokeWidth={2.2} />
         </div>
-        <h2 style={{ margin: 0, color: '#292524', fontSize: '18px', fontWeight: 800 }}>一键备份数字资产</h2>
-        <p style={{ ...helperTextStyle, margin: '10px auto 0', maxWidth: '280px', lineHeight: 1.65 }}>将您在应用中记录的所有照片、视频和文字日志打包下载，永久保存在您的私人设备中。</p>
+        <h2 style={{ margin: 0, color: '#292524', fontSize: '17px', fontWeight: 800 }}>一键备份数字资产</h2>
+        <p style={{ ...helperTextStyle, margin: '9px auto 0', maxWidth: '280px', lineHeight: 1.65 }}>将您在应用中记录的所有照片、视频和文字日志打包下载，永久保存在您的私人设备中。</p>
       </Panel>
+
+      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
+        {[
+          { label: '记录', value: recordsList.length },
+          { label: '里程碑', value: milestoneCount },
+          { label: '影像', value: mediaCount },
+        ].map((item) => (
+          <div key={item.label} style={{ borderRadius: '16px', border: '1px solid #eef0f2', background: '#ffffff', padding: '13px 10px', textAlign: 'center' }}>
+            <strong style={{ display: 'block', color: '#292524', fontSize: '18px', lineHeight: 1 }}>{item.value}</strong>
+            <span style={{ display: 'block', marginTop: '6px', color: '#a8a29e', fontSize: '11px', fontWeight: 800 }}>{item.label}</span>
+          </div>
+        ))}
+      </section>
 
       <section>
         <h2 style={{ margin: '0 0 14px', fontSize: '15px', fontWeight: 800, color: '#292524' }}>选择导出内容</h2>
@@ -729,22 +782,22 @@ export const ExportBackupPage = () => {
                 aria-pressed={selected}
                 onClick={() => setExportMode(item.value)}
                 style={{
-                  borderRadius: '18px',
-                  border: selected ? '1.5px solid #292524' : '1px solid #f0ede8',
+                  borderRadius: '16px',
+                  border: selected ? '1.5px solid #292524' : '1px solid #eef1f4',
                   background: '#ffffff',
-                  minHeight: '70px',
-                  padding: '14px 16px',
+                  minHeight: '68px',
+                  padding: '13px 15px',
                   display: 'grid',
-                  gridTemplateColumns: '40px minmax(0, 1fr) 22px',
+                  gridTemplateColumns: '36px minmax(0, 1fr) 22px',
                   gap: '12px',
                   alignItems: 'center',
                   textAlign: 'left',
                   cursor: 'pointer',
-                  boxShadow: selected ? '0 8px 22px rgba(41,37,36,0.08)' : '0 3px 12px rgba(41,37,36,0.025)',
+                  boxShadow: selected ? '0 5px 14px rgba(41,37,36,0.07)' : '0 1px 4px rgba(41,37,36,0.02)',
                 }}
               >
-                <span style={{ width: '40px', height: '40px', borderRadius: '999px', background: selected ? '#292524' : '#f8fafc', color: selected ? '#ffffff' : '#cbd5e1', display: 'grid', placeItems: 'center' }}>
-                  <FileBox size={19} />
+                <span style={{ width: '36px', height: '36px', borderRadius: '999px', background: selected ? '#292524' : '#f8fafc', color: selected ? '#ffffff' : '#cbd5e1', display: 'grid', placeItems: 'center' }}>
+                  <FileBox size={17} />
                 </span>
                 <span style={{ minWidth: 0 }}>
                   <strong style={{ display: 'block', color: '#292524', fontSize: '14px', fontWeight: 800 }}>{item.title}</strong>
@@ -761,9 +814,14 @@ export const ExportBackupPage = () => {
       {error ? <EmptyState message={`摘要整理失败：${error}`} /> : null}
 
       {message ? <p style={{ ...helperTextStyle, color: message.includes('失败') ? '#dc2626' : '#0f766e' }}>{message}</p> : null}
-      <button type="button" style={{ ...primaryButtonStyle, width: '100%', minHeight: '48px' }} onClick={downloadSummary} disabled={loading || Boolean(error)}>
-        开始打包导出
-      </button>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
+        <button type="button" style={{ ...primaryButtonStyle, width: '100%', minHeight: '46px', borderRadius: '18px' }} onClick={downloadSummary} disabled={loading || Boolean(error)}>
+          下载摘要
+        </button>
+        <button type="button" style={{ ...secondaryButtonStyle, width: '100%', minHeight: '46px', borderRadius: '18px', justifyContent: 'center' }} onClick={() => void copySummary()} disabled={loading || Boolean(error)}>
+          复制摘要
+        </button>
+      </div>
     </PageShell>
   );
 };
@@ -789,7 +847,7 @@ export const MembershipPage = () => {
 
   return (
     <PageShell title="会员中心" backTo="/profile">
-      <section style={{ borderRadius: '24px', border: '1px solid #292524', background: 'linear-gradient(135deg, #1f1f1f 0%, #0f0f0f 100%)', padding: '20px', minHeight: '150px', color: '#ffffff', display: 'grid', gap: '16px', boxShadow: '0 14px 30px rgba(15,15,15,0.22)', overflow: 'hidden', position: 'relative' }}>
+      <section style={{ borderRadius: '20px', border: '1px solid #292524', background: 'linear-gradient(135deg, #1f1f1f 0%, #0f0f0f 100%)', padding: '18px', minHeight: '142px', color: '#ffffff', display: 'grid', gap: '14px', boxShadow: '0 10px 22px rgba(15,15,15,0.18)', overflow: 'hidden', position: 'relative' }}>
         <div style={{ position: 'absolute', right: '-28px', top: '-28px', width: '120px', height: '120px', borderRadius: '999px', border: '24px solid rgba(255,255,255,0.04)' }} />
         <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center', minWidth: 0 }}>
@@ -799,20 +857,20 @@ export const MembershipPage = () => {
               <span style={{ display: 'block', marginTop: '5px', color: 'rgba(255,255,255,0.68)', fontSize: '12px', fontWeight: 700 }}>{membershipTypeLabel(user?.membership_type)}</span>
             </div>
           </div>
-          <span style={{ borderRadius: '999px', background: '#d97706', color: '#ffffff', padding: '6px 10px', fontSize: '11px', fontWeight: 900 }}>VIP PRO</span>
+          <span style={{ borderRadius: '999px', background: '#d97706', color: '#ffffff', padding: '6px 10px', fontSize: '10px', fontWeight: 900 }}>VIP PRO</span>
         </div>
         <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: '12px' }}>
           <p style={{ margin: 0, color: 'rgba(255,255,255,0.74)', fontSize: '12px', lineHeight: 1.6 }}>
             到期时间：{user?.membership_expire_at ? new Date(user.membership_expire_at).toLocaleDateString('zh-CN') : '长期有效'}
           </p>
-          <button type="button" style={{ ...primaryButtonStyle, minHeight: '32px', padding: '7px 12px', background: '#ffffff', color: '#292524', boxShadow: 'none', fontSize: '12px' }} onClick={() => void refreshMembership()} disabled={refreshing}>
-            {refreshing ? '刷新中' : '立即续费'}
+          <button type="button" style={{ ...primaryButtonStyle, minHeight: '44px', padding: '8px 12px', background: '#ffffff', color: '#292524', boxShadow: 'none', fontSize: '12px' }} onClick={() => void refreshMembership()} disabled={refreshing}>
+            {refreshing ? '刷新中' : '刷新会员信息'}
           </button>
         </div>
       </section>
 
       <section>
-        <h2 style={{ margin: '0 0 12px', fontSize: '15px', fontWeight: 800, color: '#292524' }}>您的专属特权</h2>
+        <h2 style={{ margin: '0 0 12px 2px', fontSize: '14px', fontWeight: 800, color: '#292524' }}>您的专属特权</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
           {[
             { icon: DownloadCloud, title: '高清画质下载', desc: '大容量媒体备份' },
@@ -822,9 +880,9 @@ export const MembershipPage = () => {
           ].map((item) => {
             const Icon = item.icon;
             return (
-              <div key={item.title} style={{ borderRadius: '16px', border: '1px solid #f0ede8', background: '#ffffff', padding: '15px', display: 'grid', gap: '10px' }}>
-                <div style={{ width: '32px', height: '32px', borderRadius: '999px', background: '#fff4d6', color: '#d97706', display: 'grid', placeItems: 'center' }}>
-                  <Icon size={16} />
+              <div key={item.title} style={{ borderRadius: '14px', border: '1px solid #eef1f4', background: '#ffffff', padding: '14px', display: 'grid', gap: '10px', boxShadow: '0 1px 4px rgba(41,37,36,0.02)' }}>
+                <div style={{ width: '30px', height: '30px', borderRadius: '999px', background: '#fff4d6', color: '#d97706', display: 'grid', placeItems: 'center' }}>
+                  <Icon size={15} />
                 </div>
                 <div>
                   <strong style={{ display: 'block', fontSize: '13px', color: '#292524' }}>{item.title}</strong>
@@ -836,13 +894,18 @@ export const MembershipPage = () => {
         </div>
       </section>
 
-      <Panel>
+      <Panel style={{ borderRadius: '18px', boxShadow: '0 2px 8px rgba(41,37,36,0.03)' }}>
         <div style={rowStyle}>
           <strong>成长纪念册</strong>
           <p style={{ ...helperTextStyle, lineHeight: 1.75 }}>作为高级会员，您每年可申领一本由专业排版生成的成长纪念册，将数字记忆变成可保存的家庭资产。</p>
           {message ? <p style={{ ...helperTextStyle, color: message.includes('失败') ? '#dc2626' : '#0f766e' }}>{message}</p> : null}
-          <button type="button" style={{ ...primaryButtonStyle, width: '100%', background: '#d97706', boxShadow: '0 8px 18px rgba(217,119,6,0.2)' }} onClick={() => void refreshMembership()} disabled={refreshing}>
-            免费申领本年度纪念册
+          <button
+            type="button"
+            style={{ ...primaryButtonStyle, width: '100%', borderRadius: '18px', background: '#d97706', boxShadow: '0 6px 14px rgba(217,119,6,0.18)' }}
+            onClick={() => setMessage('纪念册申领入口暂未接入，请通过帮助与反馈提交申请。')}
+            disabled={refreshing}
+          >
+            查看纪念册说明
           </button>
         </div>
       </Panel>
@@ -862,7 +925,7 @@ export const SecurityPage = () => {
 
   return (
     <PageShell title="账号与安全" backTo="/profile">
-      <Panel style={{ padding: 0, overflow: 'hidden' }}>
+      <Panel style={{ padding: 0, overflow: 'hidden', borderRadius: '18px', boxShadow: '0 2px 8px rgba(41,37,36,0.03)' }}>
         {rows.map((item, index) => {
           const Icon = item.icon;
           return (
@@ -872,11 +935,11 @@ export const SecurityPage = () => {
             onClick={item.onClick}
             style={{
               width: '100%',
-              minHeight: '66px',
+              minHeight: '62px',
               border: 'none',
               borderBottom: index === rows.length - 1 ? 'none' : '1px solid #f3f0ea',
               background: '#ffffff',
-              padding: '0 18px',
+              padding: '0 16px',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
@@ -886,7 +949,7 @@ export const SecurityPage = () => {
             }}
           >
             <span style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#57534e', fontSize: '14px', fontWeight: 700 }}>
-              <Icon size={18} color="#94a3b8" strokeWidth={2} />
+              <Icon size={17} color="#94a3b8" strokeWidth={2} />
               {item.title}
             </span>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#a8a29e', fontSize: '13px', fontWeight: 700 }}>
@@ -897,7 +960,7 @@ export const SecurityPage = () => {
           );
         })}
       </Panel>
-      <button type="button" onClick={() => window.alert('注销账号需要人工确认，正式上线前将接入完整注销流程。')} style={{ ...secondaryButtonStyle, width: '100%', color: '#ef4444', justifyContent: 'center', minHeight: '52px', marginTop: '10px' }}>
+      <button type="button" onClick={() => navigate('/profile/help?topic=account-delete')} style={{ ...secondaryButtonStyle, width: '100%', color: '#ef4444', justifyContent: 'center', minHeight: '48px', marginTop: '10px', borderRadius: '18px' }}>
         注销账号
       </button>
     </PageShell>
@@ -905,8 +968,10 @@ export const SecurityPage = () => {
 };
 
 export const HelpFeedbackPage = () => {
-  const [category, setCategory] = useState('使用问题');
-  const [content, setContent] = useState('');
+  const location = useLocation();
+  const accountDeleteTopic = new URLSearchParams(location.search).get('topic') === 'account-delete';
+  const [category, setCategory] = useState(accountDeleteTopic ? '数据异常' : '使用问题');
+  const [content, setContent] = useState(accountDeleteTopic ? '申请注销账号，请联系我完成身份确认和儿童信息处理。' : '');
   const [contact, setContact] = useState('');
   const [message, setMessage] = useState<string | null>(null);
 
@@ -932,7 +997,7 @@ export const HelpFeedbackPage = () => {
   };
 
   return (
-    <PageShell title="帮助与反馈" description="查看常见问题，并提交当前设备上的反馈记录。" backTo="/profile">
+    <PageShell title="帮助与反馈" description={accountDeleteTopic ? '账号注销需要人工确认，请提交申请后等待联系。' : '查看常见问题，并提交当前设备上的反馈记录。'} backTo="/profile">
       <Panel>
         <div style={rowStyle}>
           <strong>常见问题</strong>
@@ -994,7 +1059,7 @@ const legalSections = [
       '儿童姓名、生日、性别、成长记录、照片、家庭关系和其他可识别儿童身份的信息，均按敏感家庭资料保护。',
       '创建孩子档案、上传儿童影像、邀请家庭成员和管理档案内容，应由儿童监护人或获得监护人授权的家庭成员完成。',
       '儿童信息默认仅对档案所属家庭成员和必要授权运营角色可见；后台访问受角色权限、操作审计和最小权限原则约束。',
-      '监护人可以申请更正或删除儿童档案、成长记录和媒体内容；正式上线前应补齐儿童信息保护负责人和投诉渠道。',
+      '监护人可以申请更正或删除儿童档案、成长记录和媒体内容；如需处理儿童信息保护问题，可通过帮助与反馈提交申请。',
     ],
   },
 ];
@@ -1059,19 +1124,19 @@ export const AboutPage = () => {
       <Panel style={{ padding: 0, overflow: 'hidden' }}>
         <AboutMenuLink icon={Info} label="功能介绍" onClick={() => setMessage('年轮支持成长记录、家庭协作、时间轴、月报纪念册和本机导出。')} />
         <AboutMenuLink icon={FileText} label="用户服务协议" onClick={() => navigate('/profile/legal')} />
-        <AboutMenuLink icon={Shield} label="隐私权政策" onClick={() => navigate('/profile/legal')} />
-        <AboutMenuLink icon={Globe} label="官方网站" isLast onClick={() => setMessage('官方网站将在正式上线后开放。')} />
+        <AboutMenuLink icon={Shield} label="隐私政策" onClick={() => navigate('/profile/legal')} />
+        <AboutMenuLink icon={Globe} label="官方网站（待开放）" isLast onClick={() => setMessage('官方网站将在正式上线后开放。')} />
       </Panel>
 
       <Panel style={{ padding: 0, overflow: 'hidden' }}>
         <AboutMenuLink icon={Mail} label="联系我们" value="support@familyarchive.com" onClick={() => setMessage('可通过 support@familyarchive.com 联系我们。')} />
-        <AboutMenuLink icon={Star} label="去应用商店评分" isLast onClick={() => setMessage('App 版本上线后将开放应用商店评分入口。')} />
+        <AboutMenuLink icon={Star} label="应用商店评分（待开放）" isLast onClick={() => setMessage('App 版本上线后将开放应用商店评分入口。')} />
       </Panel>
 
       {message ? <p style={{ ...helperTextStyle, color: '#57534e', textAlign: 'center' }}>{message}</p> : null}
       <div style={{ textAlign: 'center', color: '#a1a1aa', fontSize: '10px', lineHeight: 1.7, paddingTop: '8px' }}>
-        <p style={{ margin: 0 }}>Figma Make Family App © 2026</p>
-        <p style={{ margin: 0 }}>Made with love for families everywhere.</p>
+        <p style={{ margin: 0 }}>年轮 © 2026</p>
+        <p style={{ margin: 0 }}>守护每个家庭的成长记录。</p>
       </div>
     </PageShell>
   );

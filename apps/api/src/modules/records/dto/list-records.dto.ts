@@ -1,4 +1,4 @@
-import { IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class ListRecordsDto {
   @IsString()
@@ -30,4 +30,8 @@ export class ListRecordsDto {
   @IsOptional()
   @IsString()
   end_time?: string;
+
+  @IsOptional()
+  @IsIn(['published', 'draft'])
+  status?: 'published' | 'draft';
 }

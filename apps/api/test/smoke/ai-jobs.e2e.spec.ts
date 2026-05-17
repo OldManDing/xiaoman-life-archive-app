@@ -118,6 +118,10 @@ describe('AI jobs async contract', () => {
     await app.init();
   });
 
+  beforeEach(() => {
+    enqueue.mockClear();
+  });
+
   afterAll(async () => {
     if (app) await app.close();
   });
@@ -142,5 +146,30 @@ describe('AI jobs async contract', () => {
     expect(enqueue).toHaveBeenCalledTimes(2);
     expect(enqueue).toHaveBeenNthCalledWith(1, BigInt(1));
     expect(enqueue).toHaveBeenNthCalledWith(2, BigInt(2));
+  });
+
+  it('returns ai preview without creating a job', async () => {
+    const token = await jwtService.signAsync(
+      { type: 'user', sub: user.id.toString(), user_no: user.userNo },
+      { secret: process.env.JWT_ACCESS_SECRET },
+    );
+
+    await request(app.getHttpServer())
+      .post('/api/v1/ai-jobs/preview')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: '第一次吃饭', content_text: '今天第一次自己吃饭', tags: ['成长'] })
+      .expect(201)
+      .expect((response) => {
+        expect(response.body.data).toEqual(
+          expect.objectContaining({
+            suggested_title: expect.any(String),
+            summary: expect.any(String),
+            tags: expect.arrayContaining(['成长']),
+            provider: 'mock',
+          }),
+        );
+      });
+
+    expect(enqueue).not.toHaveBeenCalled();
   });
 });

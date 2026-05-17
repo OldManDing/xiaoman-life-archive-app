@@ -43,22 +43,22 @@ const paddedSectionStyle: CSSProperties = {
 };
 
 const softCardStyle: CSSProperties = {
-  borderRadius: '22px',
+  borderRadius: '24px',
   background: '#ffffff',
-  border: '1px solid #f3f0ea',
-  boxShadow: '0 8px 22px rgba(41,37,36,0.04)',
+  border: '1px solid #eef0f2',
+  boxShadow: '0 3px 12px rgba(15,23,42,0.035)',
 };
 
 const iconButtonStyle: CSSProperties = {
-  width: '40px',
-  height: '40px',
+  width: '44px',
+  height: '44px',
   borderRadius: '999px',
   border: '1px solid #eee9df',
   background: '#ffffff',
   color: '#78716c',
   display: 'grid',
   placeItems: 'center',
-  boxShadow: '0 2px 8px rgba(15,23,42,0.04)',
+  boxShadow: '0 2px 8px rgba(15,23,42,0.035)',
   cursor: 'pointer',
 };
 
@@ -75,7 +75,9 @@ const smallMutedButtonStyle: CSSProperties = {
   color: '#a8a29e',
   display: 'inline-flex',
   alignItems: 'center',
+  minHeight: '44px',
   gap: '2px',
+  padding: '0 4px',
   fontSize: '13px',
   fontWeight: 600,
   cursor: 'pointer',
@@ -86,10 +88,11 @@ const chipStyle: CSSProperties = {
   alignItems: 'center',
   gap: '6px',
   borderRadius: '999px',
-  border: '1px solid #e7e5e4',
-  background: '#fafaf9',
+  border: '1px solid #edf0f3',
+  background: '#ffffff',
   color: '#57534e',
   padding: '7px 13px',
+  minHeight: '44px',
   fontSize: '13px',
   fontWeight: 600,
 };
@@ -158,10 +161,18 @@ export const HomePage = () => {
   const navigate = useNavigate();
   const { user, activeChild, children, setActiveChild, refreshChildren } = useAuth();
   const [promptIndex, setPromptIndex] = useState(0);
-  const { data: records, loading, error } = useAsyncData<RecordSummary[]>(
+  const { data: publishedRecordsData, loading, error } = useAsyncData<RecordSummary[]>(
     async () => {
       if (!activeChild) return [];
-      const result = await webApi.listRecords({ child_no: activeChild.child_no, page: 1, page_size: 5 });
+      const result = await webApi.listRecords({ child_no: activeChild.child_no, page: 1, page_size: 5, status: 'published' });
+      return result.list;
+    },
+    [activeChild?.child_no],
+  );
+  const { data: draftRecordsData } = useAsyncData<RecordSummary[]>(
+    async () => {
+      if (!activeChild) return [];
+      const result = await webApi.listRecords({ child_no: activeChild.child_no, page: 1, page_size: 3, status: 'draft' });
       return result.list;
     },
     [activeChild?.child_no],
@@ -179,10 +190,14 @@ export const HomePage = () => {
     }
   }, [activeChild, children, setActiveChild]);
 
-  const featuredMediaRecord = records?.find((record) => getRecordCoverUrl(record)) ?? null;
+  const draftRecords = draftRecordsData ?? [];
+  const publishedRecords = publishedRecordsData ?? [];
+  const latestDraft = draftRecords[0] ?? null;
+  const shouldShowStarterGuide = !activeChild || publishedRecords.length === 0;
+  const featuredMediaRecord = publishedRecords.find((record) => getRecordCoverUrl(record)) ?? null;
   const featuredMediaCoverUrl = featuredMediaRecord ? getRecordCoverUrl(featuredMediaRecord) : null;
-  const recentRecords = records?.slice(0, 2) ?? [];
-  const monthlyProgress = Math.min(100, (records?.length ?? 0) * 20);
+  const recentRecords = publishedRecords.slice(0, 2);
+  const monthlyProgress = Math.min(100, publishedRecords.length * 20);
   const todayPrompts = getTodayPrompts(activeChild?.name ?? '孩子');
   const todayPrompt = todayPrompts[promptIndex % todayPrompts.length];
   const onChildSwitcherClick = () => {
@@ -230,7 +245,7 @@ export const HomePage = () => {
         </div>
       </section>
 
-      <section style={{ ...paddedSectionStyle, display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '9px', marginTop: '18px' }}>
+      <section style={{ ...paddedSectionStyle, display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '11px', marginTop: '18px' }}>
         {[
           { label: '拍照记录', icon: Camera, to: '/record/create?type=mixed&focus=media' },
           { label: '视频记录', icon: Video, to: '/record/create?type=video&focus=media' },
@@ -242,12 +257,12 @@ export const HomePage = () => {
             <button
               key={item.label}
               type="button"
-              onClick={() => navigate(item.to)}
+            onClick={() => navigate(activeChild ? item.to : '/onboarding/child?mode=add')}
               disabled={!activeChild}
               style={{
-                minHeight: '66px',
-                borderRadius: '16px',
-                border: '1px solid #f4f1ea',
+                minHeight: '70px',
+                borderRadius: '18px',
+                border: '1px solid #eef0f2',
                 background: '#ffffff',
                 color: '#57534e',
                 display: 'grid',
@@ -256,10 +271,10 @@ export const HomePage = () => {
                 gap: '7px',
                 cursor: activeChild ? 'pointer' : 'not-allowed',
                 opacity: activeChild ? 1 : 0.55,
-                boxShadow: '0 6px 14px rgba(41,37,36,0.025)',
+                boxShadow: '0 3px 12px rgba(15,23,42,0.035)',
               }}
             >
-              <span style={{ width: '30px', height: '30px', borderRadius: '999px', background: '#fafaf9', display: 'grid', placeItems: 'center' }}>
+              <span style={{ width: '30px', height: '30px', borderRadius: '999px', background: '#fafafa', display: 'grid', placeItems: 'center' }}>
                 <Icon size={18} strokeWidth={1.8} />
               </span>
               <span style={{ fontSize: '11px', fontWeight: 700, whiteSpace: 'nowrap' }}>{item.label}</span>
@@ -268,8 +283,26 @@ export const HomePage = () => {
         })}
       </section>
 
+      <section style={{ ...paddedSectionStyle, marginTop: '18px' }}>
+        <div style={{ ...softCardStyle, borderRadius: '26px', padding: '18px', background: 'linear-gradient(135deg, #2f2923 0%, #7a5439 58%, #e8b66b 100%)', color: '#fff', border: 'none', position: 'relative', overflow: 'hidden', minHeight: '132px' }}>
+          <div style={{ position: 'absolute', right: '-28px', top: '-32px', width: '118px', height: '118px', borderRadius: '999px', background: 'rgba(255,255,255,0.13)' }} />
+          <div style={{ position: 'relative', zIndex: 1, display: 'grid', gap: '11px' }}>
+            <span style={{ fontSize: '12px', fontWeight: 800, color: 'rgba(255,255,255,0.72)', letterSpacing: '0.08em' }}>成长收藏进度</span>
+            <h2 style={{ margin: 0, fontSize: '21px', lineHeight: 1.28, fontWeight: 800 }}>
+              {activeChild ? `${activeChild.name} 已留下 ${publishedRecords.length} 个可回看的瞬间` : '先创建孩子档案，开始第一份家庭记忆'}
+            </h2>
+            <p style={{ margin: 0, color: 'rgba(255,255,255,0.78)', fontSize: '13px', lineHeight: 1.7 }}>
+              年轮不是待办工具，而是把照片、语音和一句话沉淀成以后能一起翻看的成长档案。
+            </p>
+            <div style={{ height: '8px', borderRadius: '999px', background: 'rgba(255,255,255,0.22)', overflow: 'hidden' }}>
+              <span style={{ display: 'block', width: `${monthlyProgress}%`, height: '100%', borderRadius: '999px', background: '#fff8dc' }} />
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section style={{ ...paddedSectionStyle, marginTop: '20px' }}>
-        <div style={{ ...softCardStyle, borderRadius: '22px', background: '#fcfaf5', borderColor: '#f5f1e6', padding: '17px 18px', minHeight: '138px', display: 'grid', alignContent: 'start' }}>
+        <div style={{ ...softCardStyle, borderRadius: '24px', background: '#fcfaf5', borderColor: '#f5f1e6', padding: '17px 18px', minHeight: '136px', display: 'grid', alignContent: 'start' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
               <Sparkles size={16} color="#d4af37" strokeWidth={2.2} />
@@ -282,7 +315,7 @@ export const HomePage = () => {
           <p style={{ margin: '0 0 14px', color: '#44403c', fontSize: '14px', lineHeight: 1.6, fontWeight: 600 }}>{todayPrompt}</p>
           <button
             type="button"
-            onClick={() => navigate('/record/create')}
+            onClick={() => navigate(activeChild ? '/record/create' : '/onboarding/child?mode=add')}
             style={{
               borderRadius: '999px',
               background: '#ffffff',
@@ -291,6 +324,7 @@ export const HomePage = () => {
               color: '#57534e',
               display: 'inline-flex',
               alignItems: 'center',
+              minHeight: '44px',
               gap: '7px',
               padding: '8px 16px',
               fontSize: '13px',
@@ -299,13 +333,75 @@ export const HomePage = () => {
             }}
           >
             <Edit3 size={14} strokeWidth={2} />
-            去记录
+            {activeChild ? '去记录' : '先创建档案'}
           </button>
         </div>
       </section>
 
+      {shouldShowStarterGuide ? (
+        <section style={{ ...paddedSectionStyle, marginTop: '20px' }}>
+          <div style={{ ...softCardStyle, padding: '18px', borderRadius: '24px', background: 'linear-gradient(180deg, #ffffff 0%, #fcfaf5 100%)', borderColor: '#f5f1e6', display: 'grid', gap: '14px' }}>
+            <div style={{ display: 'grid', gap: '5px' }}>
+              <span style={{ color: '#a16207', fontSize: '12px', fontWeight: 800 }}>新手引导</span>
+              <h2 style={{ margin: 0, color: '#292524', fontSize: '17px', fontWeight: 800 }}>先留下第一条成长档案</h2>
+              <p style={{ margin: 0, color: '#78716c', fontSize: '13px', lineHeight: 1.7 }}>年轮的主线不是浏览功能，而是完成“建档、记录、邀请家人”三个闭环。</p>
+            </div>
+            <div style={{ display: 'grid', gap: '9px' }}>
+              {[
+                { label: '创建孩子档案', done: Boolean(activeChild), action: '/onboarding/child?mode=add' },
+                { label: '发布第一条记录', done: publishedRecords.length > 0, action: '/record/create' },
+                { label: '邀请家人共写', done: false, action: '/family/invite' },
+              ].map((item, index) => (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={() => navigate(item.action)}
+                  style={{ width: '100%', minHeight: '46px', borderRadius: '16px', border: '1px solid #f1eee8', background: item.done ? '#f7fbf7' : '#ffffff', color: '#44403c', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', padding: '10px 12px', cursor: 'pointer', textAlign: 'left' }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                    <span style={{ width: '24px', height: '24px', borderRadius: '999px', background: item.done ? '#dcfce7' : '#f5f5f4', color: item.done ? '#166534' : '#78716c', display: 'grid', placeItems: 'center', fontSize: '12px', fontWeight: 800, flexShrink: 0 }}>{item.done ? '✓' : index + 1}</span>
+                    <span style={{ fontSize: '13px', fontWeight: 800 }}>{item.label}</span>
+                  </span>
+                  <ChevronRight size={15} color="#c7c1b8" strokeWidth={2.3} />
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
+
       <section style={{ ...paddedSectionStyle, marginTop: '26px' }}>
-        <div style={sectionHeaderStyle}>
+        {latestDraft ? (
+          <button
+            type="button"
+            onClick={() => navigate(`/record/${latestDraft.record_no}/edit`)}
+            style={{
+              ...softCardStyle,
+              width: '100%',
+              borderRadius: '22px',
+              padding: '15px 16px',
+              marginBottom: '18px',
+              background: '#fffdf7',
+              borderColor: '#f2e8c9',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '14px',
+              textAlign: 'left',
+              cursor: 'pointer',
+            }}
+          >
+            <span style={{ display: 'grid', gap: '5px', minWidth: 0 }}>
+              <span style={{ color: '#a16207', fontSize: '12px', fontWeight: 800 }}>草稿待完成</span>
+              <strong style={{ color: '#292524', fontSize: '14px', fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{latestDraft.title ?? '未命名草稿'}</strong>
+              <span style={{ color: '#78716c', fontSize: '12px', lineHeight: 1.5 }}>继续补完内容并发布，让这一刻回到时间轴。</span>
+            </span>
+            <span style={{ flexShrink: 0, width: '34px', height: '34px', borderRadius: '999px', background: '#292524', color: '#fff', display: 'grid', placeItems: 'center' }}>
+              <ChevronRight size={17} strokeWidth={2.4} />
+            </span>
+          </button>
+        ) : null}
+        <div style={{ ...sectionHeaderStyle, marginBottom: '12px' }}>
           <h2 style={{ margin: 0, fontSize: '17px', fontWeight: 600, color: '#292524' }}>最近更新</h2>
           <button type="button" onClick={() => navigate('/timeline')} style={smallMutedButtonStyle}>
             查看全部 <ChevronRight size={16} />
@@ -314,14 +410,14 @@ export const HomePage = () => {
         {loading ? <EmptyState message="正在加载最近记录…" /> : null}
         {error ? <EmptyState message={`加载失败：${error}`} /> : null}
         {!loading && !error && recentRecords.length ? (
-          <div style={{ display: 'grid', gap: '10px' }}>
+          <div style={{ display: 'grid', gap: '12px' }}>
             {recentRecords.map((record) => {
               const recordCoverUrl = getRecordCoverUrl(record);
               const mediaKind = getRecordMediaKind(record);
               return (
-                <button key={record.record_no} type="button" onClick={() => navigate(`/record/${record.record_no}`)} style={{ ...softCardStyle, padding: '16px', textAlign: 'left', cursor: 'pointer', display: 'flex', gap: '15px', alignItems: 'center' }}>
-                  <div style={{ width: '48px', flexShrink: 0, borderRight: '1px solid #f3f0ea', display: 'grid', justifyItems: 'center', paddingRight: '12px' }}>
-                    <span style={{ fontSize: '24px', fontWeight: 800, color: '#44403c', lineHeight: 1 }}>{formatDay(record.event_time)}</span>
+                <button key={record.record_no} type="button" onClick={() => navigate(`/record/${record.record_no}`)} style={{ ...softCardStyle, padding: '17px 16px', textAlign: 'left', cursor: 'pointer', display: 'flex', gap: '15px', alignItems: 'center', borderRadius: '22px' }}>
+                  <div style={{ width: '50px', flexShrink: 0, borderRight: '1px solid #f3f0ea', display: 'grid', justifyItems: 'center', paddingRight: '13px' }}>
+                    <span style={{ fontSize: '26px', fontWeight: 800, color: '#44403c', lineHeight: 1 }}>{formatDay(record.event_time)}</span>
                     <span style={{ marginTop: '6px', fontSize: '11px', color: '#a8a29e', fontWeight: 700, textTransform: 'uppercase' }}>{formatMonth(record.event_time)}</span>
                   </div>
                   <div style={{ flex: 1, minWidth: 0, display: 'grid', gap: '6px' }}>
@@ -341,10 +437,10 @@ export const HomePage = () => {
             })}
           </div>
         ) : null}
-        {!loading && !error && !recentRecords.length ? <EmptyState message="还没有成长记录，点击上方按钮创建第一条。" /> : null}
+        {!loading && !error && !recentRecords.length ? <EmptyState message={latestDraft ? '已有草稿待完成，发布后这里会出现最新记录。' : '还没有成长记录，点击上方按钮创建第一条。'} /> : null}
       </section>
 
-      <section style={{ ...paddedSectionStyle, marginTop: '36px' }}>
+      <section style={{ ...paddedSectionStyle, marginTop: '32px' }}>
         <div style={sectionHeaderStyle}>
           <h2 style={{ margin: 0, fontSize: '17px', fontWeight: 600, color: '#292524' }}>一年前的今天</h2>
           <span style={{ color: '#a8a29e', fontSize: '12px', fontWeight: 600 }}>{featuredMediaRecord ? new Date(featuredMediaRecord.event_time).toLocaleDateString('zh-CN') : '暂无影像'}</span>
@@ -353,7 +449,7 @@ export const HomePage = () => {
           <button
             type="button"
             onClick={() => navigate(`/record/${featuredMediaRecord.record_no}`)}
-            style={{ width: '100%', border: 'none', padding: 0, minHeight: '220px', borderRadius: '22px', overflow: 'hidden', position: 'relative', cursor: 'pointer', background: '#fafaf9', textAlign: 'left', boxShadow: '0 8px 20px rgba(41,37,36,0.08)' }}
+            style={{ width: '100%', border: 'none', padding: 0, minHeight: '192px', borderRadius: '24px', overflow: 'hidden', position: 'relative', cursor: 'pointer', background: '#fafaf9', textAlign: 'left', boxShadow: '0 4px 14px rgba(15,23,42,0.08)' }}
           >
             {getRecordMediaKind(featuredMediaRecord) === 'video' ? (
               <video src={featuredMediaCoverUrl} muted playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -373,15 +469,15 @@ export const HomePage = () => {
         )}
       </section>
 
-      <section style={{ ...paddedSectionStyle, marginTop: '36px' }}>
-        <div style={{ ...softCardStyle, background: '#fafaf9', padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+      <section style={{ ...paddedSectionStyle, marginTop: '28px' }}>
+        <div style={{ ...softCardStyle, background: '#ffffff', padding: '16px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             <div style={{ width: '42px', height: '42px', borderRadius: '999px', background: '#fff', border: '1px solid #eee9df', display: 'grid', placeItems: 'center', color: '#78716c', boxShadow: '0 2px 8px rgba(15,23,42,0.035)' }}>
               <Calendar size={18} />
             </div>
             <div>
               <strong style={{ display: 'block', fontSize: '14px', color: '#44403c' }}>本月档案进度</strong>
-              <span style={{ display: 'block', marginTop: '3px', fontSize: '12px', color: '#a8a29e' }}>已记录 {records?.length ?? 0} 个瞬间</span>
+              <span style={{ display: 'block', marginTop: '3px', fontSize: '12px', color: '#a8a29e' }}>已发布 {publishedRecords.length} 个瞬间{draftRecords.length ? `，${draftRecords.length} 个草稿待完成` : ''}</span>
             </div>
           </div>
           <div style={{ display: 'grid', justifyItems: 'end', gap: '5px' }}>
@@ -466,7 +562,7 @@ export const SearchPage = () => {
 
   return (
     <div style={appPageStyle}>
-      <header style={{ ...paddedSectionStyle, paddingTop: 'calc(18px + env(safe-area-inset-top))', paddingBottom: '18px', background: '#ffffff', borderBottom: '1px solid #f3f0ea', position: 'sticky', top: 0, zIndex: 3 }}>
+      <header style={{ ...paddedSectionStyle, paddingTop: 'calc(14px + env(safe-area-inset-top))', paddingBottom: '13px', background: '#ffffff', borderBottom: '1px solid #eef0f2', position: 'sticky', top: 0, zIndex: 3 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '32px minmax(0, 1fr) 44px', gap: '8px', alignItems: 'center' }}>
           <button
             type="button"
@@ -476,7 +572,7 @@ export const SearchPage = () => {
           >
             <ChevronLeft size={20} strokeWidth={2.3} />
           </button>
-          <label style={{ minWidth: 0, minHeight: '36px', borderRadius: '999px', background: '#f1f5f9', display: 'flex', alignItems: 'center', gap: '8px', padding: '0 12px', color: '#94a3b8' }}>
+          <label style={{ minWidth: 0, minHeight: '34px', borderRadius: '999px', background: '#f1f5f9', display: 'flex', alignItems: 'center', gap: '8px', padding: '0 12px', color: '#94a3b8' }}>
             <Search size={15} strokeWidth={2.2} />
             <input
               aria-label="搜索关键词"
@@ -503,7 +599,7 @@ export const SearchPage = () => {
         </div>
       </header>
 
-      <main style={{ ...paddedSectionStyle, paddingTop: '26px', display: 'grid', gap: '30px' }}>
+      <main style={{ ...paddedSectionStyle, paddingTop: '24px', display: 'grid', gap: '28px' }}>
         {query.trim() ? (
           <section style={{ display: 'grid', gap: '12px' }}>
             <h2 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#292524' }}>搜索结果</h2>
@@ -531,9 +627,9 @@ export const SearchPage = () => {
                   清空
                 </button>
               </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '9px' }}>
                 {searchHistory.map((item) => (
-                  <button key={item} type="button" onClick={() => setQuery(item)} style={{ ...chipStyle, minHeight: '34px', padding: '7px 13px', background: '#ffffff', borderColor: '#edf0f3', color: '#6b7280', fontSize: '12px' }}>
+                  <button key={item} type="button" onClick={() => setQuery(item)} style={{ ...chipStyle, minHeight: '32px', padding: '6px 12px', background: '#ffffff', borderColor: '#edf0f3', color: '#6b7280', fontSize: '12px' }}>
                     {item}
                   </button>
                 ))}
@@ -541,9 +637,9 @@ export const SearchPage = () => {
             </section>
             <section>
               <h2 style={{ margin: '0 0 14px', fontSize: '15px', fontWeight: 800, color: '#292524' }}>热门标签</h2>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '9px' }}>
                 {hotTags.map((item) => (
-                  <button key={item} type="button" onClick={() => setQuery(item)} style={{ ...chipStyle, minHeight: '34px', padding: '7px 13px', background: '#fff4d6', borderColor: '#ffe6a6', color: '#d97706', fontSize: '12px', fontWeight: 800 }}>
+                  <button key={item} type="button" onClick={() => setQuery(item)} style={{ ...chipStyle, minHeight: '32px', padding: '6px 12px', background: '#fff4d6', borderColor: '#ffe6a6', color: '#d97706', fontSize: '12px', fontWeight: 800 }}>
                     #{item}
                   </button>
                 ))}
@@ -572,11 +668,24 @@ export const TimelinePage = () => {
         child_no: activeChild.child_no,
         page,
         page_size: 20,
+        status: 'published',
         record_type: recordTypeFilter === 'all' ? undefined : recordTypeFilter,
         tag: tagFilter ?? undefined,
       });
     },
     [activeChild?.child_no, recordTypeFilter, tagFilter, page],
+  );
+  const { data: draftData } = useAsyncData(
+    async () => {
+      if (!activeChild) return null;
+      return webApi.listRecords({
+        child_no: activeChild.child_no,
+        page: 1,
+        page_size: 3,
+        status: 'draft',
+      });
+    },
+    [activeChild?.child_no],
   );
 
   const filters = [
@@ -590,6 +699,7 @@ export const TimelinePage = () => {
 
   const availableTags = Array.from(new Set(data?.list.flatMap((record) => record.tags) ?? []));
   const recordList = data?.list ?? [];
+  const latestDraft = draftData?.list[0] ?? null;
   const normalizedSearch = searchQuery.trim().toLowerCase();
   const visibleRecords = normalizedSearch
     ? recordList.filter((record) =>
@@ -612,16 +722,16 @@ export const TimelinePage = () => {
   }, []);
 
   return (
-    <div style={appPageStyle}>
-      <header style={{ ...paddedSectionStyle, paddingTop: 'calc(50px + env(safe-area-inset-top))', paddingBottom: '10px', position: 'sticky', top: 0, zIndex: 3, background: 'rgba(255,255,255,0.96)', backdropFilter: 'blur(16px)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
-          <h1 style={{ margin: 0, fontSize: '22px', fontWeight: 600, color: '#292524', lineHeight: 1.15 }}>时间轴</h1>
-          <div style={{ display: 'flex', gap: '10px' }}>
+    <div style={{ ...appPageStyle, background: '#ffffff' }}>
+      <header style={{ ...paddedSectionStyle, paddingTop: 'calc(28px + env(safe-area-inset-top))', paddingBottom: '10px', position: 'sticky', top: 0, zIndex: 3, background: 'rgba(255,255,255,0.94)', backdropFilter: 'blur(16px)', borderBottom: 'none' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+          <h1 style={{ margin: 0, fontSize: '22px', fontWeight: 800, color: '#292524', lineHeight: 1.1 }}>时间轴</h1>
+          <div style={{ display: 'flex', gap: '8px' }}>
             <button
               type="button"
               aria-label="搜索记录"
               aria-pressed={searchOpen}
-              style={{ ...iconButtonStyle, background: searchOpen ? '#292524' : iconButtonStyle.background, color: searchOpen ? '#ffffff' : iconButtonStyle.color }}
+              style={{ ...iconButtonStyle, width: '34px', height: '34px', background: searchOpen ? '#292524' : '#f8f9fa', color: searchOpen ? '#ffffff' : '#667085', boxShadow: 'none', borderColor: 'transparent' }}
               onClick={() => setSearchOpen((current) => !current)}
             >
               <Search size={16} strokeWidth={2.4} />
@@ -630,7 +740,7 @@ export const TimelinePage = () => {
               type="button"
               aria-label="筛选记录"
               aria-pressed={filterOpen}
-              style={{ ...iconButtonStyle, background: filterOpen || tagFilter ? '#292524' : iconButtonStyle.background, color: filterOpen || tagFilter ? '#ffffff' : iconButtonStyle.color }}
+              style={{ ...iconButtonStyle, width: '34px', height: '34px', background: filterOpen || tagFilter ? '#292524' : '#f8f9fa', color: filterOpen || tagFilter ? '#ffffff' : '#667085', boxShadow: 'none', borderColor: 'transparent' }}
               onClick={() => setFilterOpen((current) => !current)}
             >
               <SlidersHorizontal size={16} strokeWidth={2.4} />
@@ -659,16 +769,16 @@ export const TimelinePage = () => {
           </div>
         ) : null}
 
-        <div style={{ display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
           {filters.map((filter) => (
             <button
               key={filter.value}
               type="button"
               style={{
                 ...chipStyle,
-                minHeight: '34px',
-                padding: '7px 17px',
-                fontSize: '13px',
+                minHeight: '32px',
+                padding: '6px 16px',
+                fontSize: '12px',
                 flexShrink: 0,
                 cursor: 'pointer',
                 background: recordTypeFilter === filter.value ? '#292524' : '#fafaf9',
@@ -686,12 +796,41 @@ export const TimelinePage = () => {
         </div>
       </header>
 
-      <main style={{ ...paddedSectionStyle, paddingTop: '28px', display: 'grid', gap: '28px' }}>
+      <main style={{ ...paddedSectionStyle, paddingTop: '18px', display: 'grid', gap: '30px' }}>
+        {latestDraft ? (
+          <button
+            type="button"
+            onClick={() => navigate(`/record/${latestDraft.record_no}/edit`)}
+            style={{
+              ...softCardStyle,
+              width: '100%',
+              borderRadius: '22px',
+              padding: '15px 16px',
+              background: '#fffdf7',
+              borderColor: '#f2e8c9',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '14px',
+              textAlign: 'left',
+              cursor: 'pointer',
+            }}
+          >
+            <span style={{ display: 'grid', gap: '5px', minWidth: 0 }}>
+              <span style={{ color: '#a16207', fontSize: '12px', fontWeight: 800 }}>草稿待完成</span>
+              <strong style={{ color: '#292524', fontSize: '14px', fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{latestDraft.title ?? '未命名草稿'}</strong>
+              <span style={{ color: '#78716c', fontSize: '12px', lineHeight: 1.5 }}>时间轴只承载已发布记录，草稿可在这里继续编辑后发布。</span>
+            </span>
+            <span style={{ flexShrink: 0, width: '34px', height: '34px', borderRadius: '999px', background: '#292524', color: '#fff', display: 'grid', placeItems: 'center' }}>
+              <ChevronRight size={17} strokeWidth={2.4} />
+            </span>
+          </button>
+        ) : null}
         {filterOpen && availableTags.length ? (
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {availableTags.map((tag) => (
+            {availableTags.map((tag, index) => (
               <button
-                key={tag}
+                key={`${tag}-${index}`}
                 type="button"
                 style={{ ...chipStyle, padding: '6px 11px', fontSize: '12px', background: tagFilter === tag ? '#e7e5e4' : '#fafaf9', cursor: 'pointer' }}
                 onClick={() => {
@@ -726,19 +865,19 @@ export const TimelinePage = () => {
 
         {groupedRecords.map((group) => (
           <section key={group.month}>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '12px' }}>
-              <h2 style={{ margin: 0, fontSize: '19px', fontWeight: 700, color: '#292524' }}>{group.month}</h2>
-              <span style={{ color: '#a8a29e', fontSize: '13px', fontWeight: 600 }}>· {group.records.length}条记录</span>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '7px', marginBottom: '24px', paddingLeft: '2px' }}>
+              <h2 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#292524' }}>{group.month}</h2>
+              <span style={{ color: '#a8a29e', fontSize: '11px', fontWeight: 500 }}>· {group.records.length}条记录</span>
             </div>
-            <div style={{ display: 'grid', gap: '18px' }}>
+            <div style={{ display: 'grid', gap: '34px' }}>
               {group.records.map((record, index) => {
                 const isMilestone = record.record_type === 'milestone' || record.is_milestone;
                 const recordCoverUrl = getRecordCoverUrl(record);
                 const mediaKind = getRecordMediaKind(record);
                 return (
-                  <div key={record.record_no} style={{ display: 'flex', gap: '12px', position: 'relative' }}>
-                    <div style={{ width: '30px', flexShrink: 0, display: 'flex', justifyContent: 'center', position: 'relative' }}>
-                      <div style={{ position: 'absolute', top: '28px', bottom: index === group.records.length - 1 ? '18px' : '-18px', width: '1.5px', background: '#eee9df' }} />
+                  <div key={record.record_no} style={{ display: 'flex', gap: '10px', position: 'relative' }}>
+                    <div style={{ width: '26px', flexShrink: 0, display: 'flex', justifyContent: 'center', position: 'relative' }}>
+                      <div style={{ position: 'absolute', top: '25px', bottom: index === group.records.length - 1 ? '16px' : '-27px', width: '1.5px', background: '#eee9df' }} />
                       <div
                         style={{
                           width: isMilestone ? '14px' : '10px',
@@ -746,25 +885,31 @@ export const TimelinePage = () => {
                           borderRadius: '999px',
                           background: isMilestone ? '#f59e0b' : '#d6d3d1',
                           boxShadow: '0 0 0 4px #ffffff',
-                          marginTop: isMilestone ? '18px' : '20px',
+                          marginTop: isMilestone ? '16px' : '18px',
                           zIndex: 1,
                         }}
                       />
                     </div>
-                    <article style={{ ...softCardStyle, flex: 1, padding: '16px', borderColor: isMilestone ? '#f3e8d2' : '#eee9df', background: isMilestone ? 'linear-gradient(180deg, #faf8f5 0%, #ffffff 100%)' : '#ffffff', position: 'relative', overflow: 'hidden' }}>
-                      {isMilestone ? <div style={{ position: 'absolute', top: 0, right: 0, width: '92px', height: '92px', background: 'linear-gradient(225deg, rgba(251,191,36,0.2), transparent)', borderBottomLeftRadius: '30px' }} /> : null}
+                    <article style={{ ...softCardStyle, flex: 1, padding: '16px', borderRadius: '24px', borderColor: isMilestone ? '#f3e8d2' : '#eef0f2', background: isMilestone ? 'linear-gradient(180deg, #fcfaf5 0%, #ffffff 100%)' : '#ffffff', position: 'relative', overflow: 'hidden' }}>
+                      {isMilestone ? <div style={{ position: 'absolute', top: 0, right: 0, width: '78px', height: '78px', background: 'linear-gradient(225deg, rgba(251,191,36,0.18), transparent)', borderBottomLeftRadius: '26px' }} /> : null}
                       <div style={{ position: 'relative', zIndex: 1, display: 'grid', gap: '10px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '7px', color: isMilestone ? '#d97706' : '#78716c' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: isMilestone ? '#d97706' : '#a1a1aa', marginBottom: '-2px' }}>
                           {isMilestone ? <Star size={14} fill="currentColor" /> : <span style={{ width: '7px', height: '7px', borderRadius: '999px', background: '#d6d3d1' }} />}
-                          <span style={{ fontSize: '12px', fontWeight: 700 }}>{getRecordTypeLabel(record)}</span>
+                          <span style={{ fontSize: '10px', fontWeight: 800 }}>{getRecordTypeLabel(record)}</span>
                         </div>
-                        <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 700, color: '#292524' }}>{record.title ?? '未命名记录'}</h3>
-                        <p style={{ ...helperTextStyle, fontSize: '14px', lineHeight: 1.75 }}>{record.summary ?? '暂无正文'}</p>
+                        <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800, color: '#292524', lineHeight: 1.35 }}>{record.title ?? '未命名记录'}</h3>
+                        <p style={{ ...helperTextStyle, fontSize: '13px', lineHeight: 1.72, color: '#555555' }}>{record.summary ?? '暂无正文'}</p>
+                        {record.ai_summary ? (
+                          <div style={{ borderRadius: '12px', background: 'linear-gradient(90deg, #eef2ff 0%, #f8f9fa 100%)', border: '1px solid rgba(224,231,255,0.72)', color: '#666666', padding: '10px', display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                            <Sparkles size={14} color="#818cf8" strokeWidth={2.2} style={{ flexShrink: 0, marginTop: '2px' }} />
+                            <p style={{ margin: 0, fontSize: '11px', lineHeight: 1.65, fontWeight: 500 }}>{record.ai_summary}</p>
+                          </div>
+                        ) : null}
                         {recordCoverUrl && mediaKind === 'video' ? (
-                          <video src={recordCoverUrl} controls playsInline style={{ width: '100%', aspectRatio: '16 / 9', borderRadius: '16px', objectFit: 'cover', border: '1px solid #eee9df', background: '#292524' }} />
+                          <video src={recordCoverUrl} controls playsInline style={{ width: '100%', height: '160px', borderRadius: '16px', objectFit: 'cover', border: '1px solid #eee9df', background: '#292524' }} />
                         ) : null}
                         {recordCoverUrl && mediaKind !== 'video' && mediaKind !== 'audio' ? (
-                          <img src={recordCoverUrl} alt={record.title ?? '记录封面'} style={{ width: '100%', aspectRatio: '16 / 9', borderRadius: '16px', objectFit: 'cover', border: '1px solid #eee9df', background: '#fafaf9' }} />
+                          <img src={recordCoverUrl} alt={record.title ?? '记录封面'} style={{ width: '100%', height: '160px', borderRadius: '16px', objectFit: 'cover', border: '1px solid #eee9df', background: '#fafaf9' }} />
                         ) : null}
                         {mediaKind === 'audio' ? (
                           <div style={{ borderRadius: '999px', border: '1px solid #eee9df', background: '#fafaf9', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: '9px' }}>
@@ -781,15 +926,15 @@ export const TimelinePage = () => {
                         ) : null}
                         {record.tags.length ? (
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                            {record.tags.map((tag) => (
-                              <span key={tag} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#78716c', fontSize: '11px', padding: '4px 8px', borderRadius: '8px', border: '1px solid #e7e5e4', background: isMilestone ? '#ffffff' : '#fafaf9' }}>
-                                <Tag size={10} />
+                            {record.tags.map((tag, index) => (
+                              <span key={`${record.record_no}-${tag}-${index}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#a1a1aa', fontSize: '10px', padding: '3px 8px', borderRadius: '999px', border: '1px solid #f1f5f9', background: isMilestone ? '#ffffff' : '#f8fafc' }}>
+                                <Tag size={8} />
                                 {tag}
                               </span>
                             ))}
                           </div>
                         ) : null}
-                        <footer style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', paddingTop: '10px', borderTop: isMilestone ? '1px solid #f3e8d2' : '1px solid #f5f5f4' }}>
+                        <footer style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', paddingTop: '8px', borderTop: isMilestone ? '1px solid #f3e8d2' : '1px solid #f5f5f4' }}>
                           <div style={{ minWidth: 0, display: 'grid', gap: '6px' }}>
                             <span style={{ color: '#a8a29e', fontSize: '12px', fontWeight: 600 }}>{formatShortDate(record.event_time)}</span>
                             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: '#78716c', fontSize: '11px' }}>
@@ -797,27 +942,45 @@ export const TimelinePage = () => {
                               {record.creator_name}记录
                             </span>
                           </div>
-                          <button
-                            type="button"
-                            aria-label={`查看${record.title ?? '记录'}详情`}
-                            style={{
-                              border: 'none',
-                              background: 'transparent',
-                              color: '#a8a29e',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '3px',
-                              padding: '8px 0 8px 10px',
-                              fontSize: '12px',
-                              fontWeight: 700,
-                              cursor: 'pointer',
-                              flexShrink: 0,
-                            }}
-                            onClick={() => navigate(`/record/${record.record_no}`)}
-                          >
-                            查看
-                            <ChevronRight size={15} strokeWidth={2.3} />
-                          </button>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+                            <button
+                              type="button"
+                              aria-label={`编辑${record.title ?? '记录'}`}
+                              style={{
+                                border: 'none',
+                                background: '#fafaf9',
+                                color: '#78716c',
+                                borderRadius: '999px',
+                                padding: '8px 10px',
+                                fontSize: '12px',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                              }}
+                              onClick={() => navigate(`/record/${record.record_no}/edit`)}
+                            >
+                              编辑
+                            </button>
+                            <button
+                              type="button"
+                              aria-label={`查看${record.title ?? '记录'}详情`}
+                              style={{
+                                border: 'none',
+                                background: 'transparent',
+                                color: '#a8a29e',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '3px',
+                                padding: '8px 0 8px 4px',
+                                fontSize: '12px',
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                              }}
+                              onClick={() => navigate(`/record/${record.record_no}`)}
+                            >
+                              查看
+                              <ChevronRight size={15} strokeWidth={2.3} />
+                            </button>
+                          </div>
                         </footer>
                       </div>
                     </article>
@@ -828,7 +991,14 @@ export const TimelinePage = () => {
           </section>
         ))}
 
-        {activeChild && !loading && !error && !data?.list?.length ? <EmptyState message="当前孩子还没有记录。" /> : null}
+        {activeChild && !loading && !error && !data?.list?.length ? (
+          <div style={{ ...softCardStyle, padding: '20px', display: 'grid', gap: '12px', justifyItems: 'center' }}>
+            <EmptyState message="当前孩子还没有已发布记录。" />
+            <button type="button" onClick={() => navigate('/record/create')} style={{ ...chipStyle, background: '#292524', color: '#ffffff', borderColor: '#292524', cursor: 'pointer' }}>
+              去创建第一条记录
+            </button>
+          </div>
+        ) : null}
         {activeChild && !loading && !error && data?.list?.length && !visibleRecords.length ? <EmptyState message="没有找到匹配的记录，请换个关键词或清除筛选。" /> : null}
         {data ? (
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', paddingBottom: '20px' }}>

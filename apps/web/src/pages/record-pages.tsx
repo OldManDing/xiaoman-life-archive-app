@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
-import { BookOpen, Check, ChevronRight, Clock, Eye, FileAudio, Image, ImagePlus, MapPin, Mic, PlayCircle, Star, Tag, Video, X } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
+import { BookOpen, Check, ChevronRight, Clock, Eye, FileAudio, Image, ImagePlus, MapPin, Mic, PlayCircle, Sparkles, Star, Tag, Video, X } from 'lucide-react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { useAuth } from '../shared/AuthContext';
@@ -33,7 +33,7 @@ const metadataPanelStyle = {
 } as const;
 
 const metadataSelectStyle = {
-  minHeight: '40px',
+  minHeight: '44px',
   borderRadius: '999px',
   background: '#ffffff',
   border: '1px solid #eee9df',
@@ -46,7 +46,7 @@ const metadataIconSelectStyle = {
 } as const;
 
 const metadataPillStyle = {
-  minHeight: '40px',
+  minHeight: '44px',
   borderRadius: '999px',
   border: '1px solid #eee9df',
   background: '#fafaf9',
@@ -55,7 +55,7 @@ const metadataPillStyle = {
 
 const compactPillButtonStyle = {
   ...secondaryButtonStyle,
-  minHeight: '36px',
+  minHeight: '44px',
   padding: '8px 13px',
   borderRadius: '999px',
   fontSize: '12px',
@@ -63,7 +63,7 @@ const compactPillButtonStyle = {
 } as const;
 
 const selectedChipButtonStyle = {
-  minHeight: '34px',
+  minHeight: '44px',
   border: '1px solid #ded8cf',
   borderRadius: '999px',
   background: '#fffdf9',
@@ -158,6 +158,9 @@ const RecordForm = ({
   const [tagSelectValue, setTagSelectValue] = useState('');
   const [poiSuggestions, setPoiSuggestions] = useState<LocationSuggestion[]>([]);
   const [poiLoading, setPoiLoading] = useState(false);
+  const [aiPreviewLoading, setAiPreviewLoading] = useState(false);
+  const [aiPreviewSummary, setAiPreviewSummary] = useState<string | null>(null);
+  const [aiPreviewTags, setAiPreviewTags] = useState<string[]>([]);
   const [mediaNos, setMediaNos] = useState<string[]>(initialValue.media_nos);
   const [mediaPreviews, setMediaPreviews] = useState<MediaPreview[]>(initialValue.media_items);
   const mediaPreviewsRef = useRef<MediaPreview[]>(initialValue.media_items);
@@ -410,6 +413,36 @@ const RecordForm = ({
     setForm((current) => ({ ...current, tags: splitTags(current.tags).filter((item) => item !== tag).join(', ') }));
   };
 
+  const generateAiPreview = async () => {
+    if (!form.title.trim() && !form.content_text.trim()) {
+      setError('请先输入标题或正文，再使用 AI 建议');
+      contentInputRef.current?.focus();
+      return;
+    }
+
+    setAiPreviewLoading(true);
+    setError(null);
+    try {
+      const preview = await webApi.previewAi({
+        title: form.title.trim() || undefined,
+        content_text: form.content_text.trim() || undefined,
+        tags: selectedTags,
+      });
+      setForm((current) => ({
+        ...current,
+        title: current.title.trim() || preview.suggested_title || current.title,
+        tags: Array.from(new Set([...splitTags(current.tags), ...preview.tags])).join(', '),
+      }));
+      setAiPreviewSummary(preview.summary);
+      setAiPreviewTags(preview.tags);
+      setSelectorMessage('AI 已生成标题建议、摘要和标签，可继续编辑后发布。');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'AI 建议生成失败');
+    } finally {
+      setAiPreviewLoading(false);
+    }
+  };
+
   const filteredLocationOptions = locationOptions.filter((item) => item.includes(form.location_text.trim()) || form.location_text.trim().includes(item));
   const mergedLocationSuggestions: LocationSuggestion[] = [
     ...filteredLocationOptions.map((name, index) => ({
@@ -485,7 +518,7 @@ const RecordForm = ({
               form="record-form"
               style={{
                 ...primaryButtonStyle,
-                minHeight: '40px',
+                minHeight: '44px',
                 padding: '8px 18px',
                 fontSize: '14px',
                 cursor: submitting || uploading ? 'not-allowed' : 'pointer',
@@ -520,7 +553,8 @@ const RecordForm = ({
                 minWidth: 0,
                 border: 'none',
                 background: 'transparent',
-                padding: 0,
+                padding: '4px 0',
+                minHeight: '44px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
@@ -554,12 +588,56 @@ const RecordForm = ({
               type="button"
               aria-label="切换或查看孩子资料"
               onClick={switchChild}
-              style={{ border: 'none', background: 'transparent', color: '#a8a29e', display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', padding: 0, fontSize: '15px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
+              style={{ border: 'none', background: 'transparent', color: '#a8a29e', display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', padding: '4px 0', minHeight: '44px', fontSize: '15px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
             >
               切换孩子
               <ChevronRight size={17} strokeWidth={2.3} />
             </button>
           </div>
+
+          <section
+            aria-label="发布前必填项"
+            style={{
+              borderRadius: '18px',
+              background: '#fffdf7',
+              border: '1px solid #f2e8c9',
+              padding: '12px',
+              display: 'grid',
+              gap: '8px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+              <strong style={{ color: '#292524', fontSize: '13px' }}>发布前只需要补齐这 3 项</strong>
+              <span style={{ color: '#a16207', fontSize: '11px', fontWeight: 800 }}>其他信息可稍后补充</span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px' }}>
+            {[
+              { label: '标题', done: Boolean(form.title.trim()) },
+              { label: '正文', done: Boolean(form.content_text.trim()) },
+              { label: '时间', done: Boolean(form.event_time) },
+            ].map((item) => (
+              <span
+                key={item.label}
+                style={{
+                  minHeight: '34px',
+                  borderRadius: '999px',
+                  border: item.done ? '1px solid #d9eadf' : '1px solid #eee9df',
+                  background: item.done ? '#f2fbf5' : '#fafaf9',
+                  color: item.done ? '#166534' : '#78716c',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '5px',
+                  fontSize: '12px',
+                  fontWeight: 800,
+                }}
+              >
+                {item.done ? <Check size={13} strokeWidth={2.5} /> : null}
+                {item.label}
+              </span>
+            ))}
+            </div>
+          </section>
 
           {showMediaSection ? (
             <div style={{ minHeight: mediaPreviews.length ? '174px' : '120px', display: 'grid', alignContent: 'start', gap: '12px', position: 'relative' }}>
@@ -577,8 +655,8 @@ const RecordForm = ({
                 }}
               >
                 {!mediaPreviews.length ? (
-                  <span style={{ position: 'absolute', left: '22px', top: '18px', color: '#a8a29e', fontSize: '12px', letterSpacing: '0.16em', fontWeight: 700 }}>
-                    MEDIA
+                  <span style={{ position: 'absolute', left: '22px', top: '18px', color: '#a8a29e', fontSize: '12px', letterSpacing: '0.08em', fontWeight: 700 }}>
+                    影像与声音
                   </span>
                 ) : null}
                 {mediaPreviews.map((media) => (
@@ -756,6 +834,10 @@ const RecordForm = ({
           ) : null}
 
           <div style={{ display: 'grid', gap: '18px' }}>
+            <div style={{ display: 'grid', gap: '4px' }}>
+              <span style={{ color: '#292524', fontSize: '15px', fontWeight: 800 }}>写下这一刻</span>
+              <span style={{ color: '#78716c', fontSize: '12px', lineHeight: 1.55 }}>标题让以后容易找到，正文保留当时的细节。</span>
+            </div>
             <input
               ref={titleInputRef}
               className="record-title-input"
@@ -795,9 +877,84 @@ const RecordForm = ({
               value={form.content_text}
               onChange={(event) => setForm((current) => ({ ...current, content_text: event.target.value }))}
             />
+            <div style={{ borderRadius: '18px', background: '#f8f7ff', border: '1px solid #e9e6ff', padding: '12px', display: 'grid', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '9px' }}>
+                <span style={{ width: '28px', height: '28px', borderRadius: '999px', background: '#ffffff', color: '#6366f1', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                  <Sparkles size={15} strokeWidth={2.2} />
+                </span>
+                <div style={{ minWidth: 0 }}>
+                  <strong style={{ display: 'block', color: '#312e81', fontSize: '13px', marginBottom: '3px' }}>不知道怎么整理？</strong>
+                  <span style={{ color: '#6b7280', fontSize: '12px', lineHeight: 1.6 }}>先写几句话，AI 可以帮你生成标题、摘要和标签。</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                aria-label="AI 智能建议"
+                onClick={() => void generateAiPreview()}
+                disabled={aiPreviewLoading}
+                style={{
+                  minHeight: '44px',
+                  border: 'none',
+                  borderRadius: '999px',
+                  background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
+                  color: '#ffffff',
+                  padding: '8px 13px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  fontSize: '12px',
+                  fontWeight: 700,
+                  cursor: aiPreviewLoading ? 'not-allowed' : 'pointer',
+                  opacity: aiPreviewLoading ? 0.72 : 1,
+                  boxShadow: '0 8px 18px rgba(99,102,241,0.22)',
+                }}
+              >
+                <Sparkles size={14} strokeWidth={2.2} />
+                {aiPreviewLoading ? 'AI 生成中…' : '生成标题/摘要/标签'}
+              </button>
+            </div>
+            {aiPreviewSummary || aiPreviewTags.length ? (
+              <section
+                style={{
+                  borderRadius: '18px',
+                  background: '#f8f9fa',
+                  border: '1px solid #eef2ff',
+                  padding: '14px 14px 13px',
+                  display: 'grid',
+                  gap: '10px',
+                  position: 'relative',
+                  overflow: 'hidden',
+                }}
+              >
+                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: 'linear-gradient(180deg, #818cf8 0%, #c084fc 100%)' }} />
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingLeft: '2px' }}>
+                  <span style={{ width: '28px', height: '28px', borderRadius: '999px', background: '#eef2ff', color: '#6366f1', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                    <Sparkles size={15} strokeWidth={2.2} />
+                  </span>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <strong style={{ display: 'block', marginBottom: '4px', color: '#312e81', fontSize: '12px', fontWeight: 800 }}>AI 智能建议</strong>
+                    {aiPreviewSummary ? <p style={{ margin: 0, color: '#4a4a4a', fontSize: '13px', lineHeight: 1.7 }}>{aiPreviewSummary}</p> : null}
+                  </div>
+                </div>
+                {aiPreviewTags.length ? (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px', paddingLeft: '38px' }}>
+                    {aiPreviewTags.map((tag, index) => (
+                      <span key={`${tag}-${index}`} style={{ borderRadius: '999px', background: '#ffffff', border: '1px solid #e0e7ff', color: '#4f46e5', padding: '5px 9px', fontSize: '11px', fontWeight: 700 }}>
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+              </section>
+            ) : null}
           </div>
 
           <div style={{ display: 'grid', gap: '12px' }}>
+            <div style={{ display: 'grid', gap: '4px' }}>
+              <span style={{ color: '#292524', fontSize: '15px', fontWeight: 800 }}>可选增强</span>
+              <span style={{ color: '#78716c', fontSize: '12px', lineHeight: 1.55 }}>可见范围、地点、标签和里程碑用于后续检索与家庭协作。</span>
+            </div>
             <button
               type="button"
               aria-expanded={visibilityOpen}
@@ -870,7 +1027,7 @@ const RecordForm = ({
                   </span>
                   <Check size={18} strokeWidth={2.5} color="#a16207" />
                 </button>
-                <p style={{ ...helperTextStyle, lineHeight: 1.65 }}>当前版本仅开放家庭内共享，后续扩展私密记录时会在这里切换。</p>
+                <p style={{ ...helperTextStyle, lineHeight: 1.65 }}>当前记录默认仅对家庭成员可见，和家庭成员角色权限保持一致。</p>
               </div>
             ) : null}
 
@@ -897,7 +1054,7 @@ const RecordForm = ({
                   <MapPin size={14} strokeWidth={2.2} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#a8a29e', pointerEvents: 'none' }} />
                   <input
                     aria-label="搜索地点"
-                    style={{ ...inputStyle, ...metadataPillStyle, width: '100%', minHeight: '38px', borderRadius: '999px', background: '#fafaf9', padding: '7px 12px 7px 34px', fontSize: '13px', fontWeight: 700 }}
+                    style={{ ...inputStyle, ...metadataPillStyle, width: '100%', minHeight: '44px', borderRadius: '999px', background: '#fafaf9', padding: '8px 12px 8px 34px', fontSize: '13px', fontWeight: 700 }}
                     value={form.location_text}
                     onChange={(event) => setForm((current) => ({ ...current, location_text: event.target.value }))}
                     placeholder="添加地点"
@@ -912,7 +1069,7 @@ const RecordForm = ({
                       setTagSelectValue(event.target.value);
                       addSelectedTag(event.target.value);
                     }}
-                    selectStyle={{ ...metadataIconSelectStyle, ...metadataPillStyle, borderRadius: '999px', minHeight: '38px', paddingTop: '7px', paddingBottom: '7px', fontSize: '13px', fontWeight: 700 }}
+                    selectStyle={{ ...metadataIconSelectStyle, ...metadataPillStyle, borderRadius: '999px', minHeight: '44px', paddingTop: '8px', paddingBottom: '8px', fontSize: '13px', fontWeight: 700 }}
                   >
                     <option value="">添加标签</option>
                     {tagOptions.map((tag) => (
@@ -947,8 +1104,8 @@ const RecordForm = ({
               ) : null}
               {selectedTags.length ? (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  {selectedTags.map((tag) => (
-                    <button key={tag} type="button" onClick={() => removeSelectedTag(tag)} style={selectedChipButtonStyle}>
+                  {selectedTags.map((tag, index) => (
+                    <button key={`${tag}-${index}`} type="button" onClick={() => removeSelectedTag(tag)} style={selectedChipButtonStyle}>
                       #{tag}
                       <X size={12} strokeWidth={2.4} />
                     </button>
@@ -985,7 +1142,8 @@ const RecordForm = ({
               aria-pressed={form.record_type === 'milestone'}
               style={{
                 width: '48px',
-                height: '26px',
+                minHeight: '44px',
+                height: '44px',
                 border: 'none',
                 borderRadius: '999px',
                 background: form.record_type === 'milestone' ? '#a16207' : '#d6d3d1',
@@ -1001,7 +1159,7 @@ const RecordForm = ({
                   height: '22px',
                   borderRadius: '999px',
                   background: '#fff',
-                  transform: form.record_type === 'milestone' ? 'translateX(22px)' : 'translateX(0)',
+                  transform: form.record_type === 'milestone' ? 'translate(22px, 9px)' : 'translate(0, 9px)',
                   transition: 'transform 0.2s ease',
                   boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
                 }}
@@ -1019,7 +1177,7 @@ const RecordForm = ({
               type="button"
               style={{
                 ...secondaryButtonStyle,
-                minHeight: '42px',
+                minHeight: '44px',
                 padding: '10px 20px',
                 cursor: 'pointer',
               }}
@@ -1042,29 +1200,30 @@ export const CreateRecordPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { activeChild } = useAuth();
+  const [defaultEventTime] = useState(() => formatDateTimeLocal(new Date().toISOString()));
   const requestedType = searchParams.get('type');
   const requestedFocus = searchParams.get('focus');
   const initialRecordType = ['mixed', 'text', 'video', 'audio', 'milestone'].includes(requestedType ?? '') ? requestedType! : 'mixed';
   const initialFocus = requestedFocus === 'media' || requestedFocus === 'content' ? requestedFocus : null;
-  const defaultEventTime = formatDateTimeLocal(new Date().toISOString());
+  const initialValue = useMemo(() => ({
+    child_no: activeChild?.child_no ?? '',
+    record_type: initialRecordType,
+    title: '',
+    content_text: '',
+    media_nos: [],
+    media_items: [],
+    tags: '',
+    location_text: '',
+    visibility_scope: 'family',
+    event_time: defaultEventTime,
+    status: 'published',
+  }), [activeChild?.child_no, defaultEventTime, initialRecordType]);
 
   return (
     <RecordForm
       mode="create"
       initialFocus={initialFocus}
-      initialValue={{
-        child_no: activeChild?.child_no ?? '',
-        record_type: initialRecordType,
-        title: '',
-        content_text: '',
-        media_nos: [],
-        media_items: [],
-        tags: '',
-        location_text: '',
-        visibility_scope: 'family',
-        event_time: defaultEventTime,
-        status: 'published',
-      }}
+      initialValue={initialValue}
       onSubmit={async (value) => {
         const record = await webApi.createRecord(value);
         navigate(`/record/${record.record_no}`, { replace: true });
@@ -1085,6 +1244,7 @@ export const ViewRecordPage = () => {
   );
   const [aiJob, setAiJob] = useState<AiJobDetail | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
+  const [aiActionLabel, setAiActionLabel] = useState('AI 摘要');
   const [aiError, setAiError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -1117,15 +1277,20 @@ export const ViewRecordPage = () => {
     };
   }, [aiJob, params.record_no, setData]);
 
-  const onGenerateSummary = async () => {
+  const onGenerateAi = async (
+    jobType: 'record_title' | 'record_summary' | 'record_tags',
+    actionLabel: string,
+    fallbackError: string,
+  ) => {
     if (!data || !params.record_no) return;
     setAiLoading(true);
+    setAiActionLabel(actionLabel);
     setAiError(null);
     try {
-      const result = await webApi.createAiJob(params.record_no, { job_types: ['record_summary'] });
+      const result = await webApi.createAiJob(params.record_no, { job_types: [jobType] });
       setAiJob(result.list[0] ?? null);
     } catch (err) {
-      setAiError(err instanceof Error ? err.message : 'AI 摘要生成失败');
+      setAiError(err instanceof Error ? err.message : fallbackError);
     } finally {
       setAiLoading(false);
     }
@@ -1194,8 +1359,36 @@ export const ViewRecordPage = () => {
                 <h2 style={{ margin: 0, color: '#292524', fontSize: '23px', lineHeight: 1.28, fontWeight: 700 }}>{data.title ?? '未命名记录'}</h2>
                 <p style={{ margin: 0, color: '#57534e', fontSize: '15px', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{data.content_text ?? '暂无正文'}</p>
               </div>
+              <section style={{ borderRadius: '18px', background: '#f8f9fa', border: '1px solid #eef2ff', padding: '14px 14px 13px', display: 'grid', gap: '12px', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: 'linear-gradient(180deg, #818cf8 0%, #c084fc 100%)' }} />
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingLeft: '2px' }}>
+                  <span style={{ width: '28px', height: '28px', borderRadius: '999px', background: '#eef2ff', color: '#6366f1', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                    <Sparkles size={15} strokeWidth={2.2} />
+                  </span>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <strong style={{ display: 'block', marginBottom: '4px', color: '#312e81', fontSize: '12px', fontWeight: 800 }}>AI 智能提取</strong>
+                    <p style={{ margin: 0, color: '#4a4a4a', fontSize: '13px', lineHeight: 1.7 }}>
+                      {data.ai_summary ?? (aiJob?.status === 'pending' || aiJob?.status === 'processing' ? `${aiActionLabel}正在处理中，请稍候…` : '当前还没有 AI 摘要，可以点击下方按钮生成标题、摘要或标签。')}
+                    </p>
+                    {data.ai_status ? <p style={{ ...helperTextStyle, marginTop: '6px', color: '#6366f1' }}>AI 状态：{aiJobStatusLabel(data.ai_status)}</p> : null}
+                    {aiJob?.status === 'success' ? <p style={{ ...helperTextStyle, marginTop: '6px', color: '#0f766e' }}>{aiActionLabel}已生成并同步到记录详情。</p> : null}
+                    {aiJob?.status === 'failed' ? <p style={{ ...helperTextStyle, marginTop: '6px', color: '#dc2626' }}>AI 处理失败：{aiJob.error_message ?? '未知错误'}</p> : null}
+                    {aiError ? <p style={{ ...helperTextStyle, marginTop: '6px', color: '#dc2626' }}>{aiError}</p> : null}
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px' }}>
+                  <button style={{ ...secondaryButtonStyle, minHeight: '36px', justifyContent: 'center', borderRadius: '999px', minWidth: 0, paddingInline: '6px', fontSize: '12px', background: '#ffffff' }} onClick={() => void onGenerateAi('record_title', 'AI 标题', 'AI 标题生成失败')} disabled={aiLoading || aiJob?.status === 'pending' || aiJob?.status === 'processing'}>
+                    {aiLoading && aiActionLabel === 'AI 标题' ? '生成中…' : '标题'}
+                  </button>
+                  <button style={{ ...secondaryButtonStyle, minHeight: '36px', justifyContent: 'center', borderRadius: '999px', minWidth: 0, paddingInline: '6px', fontSize: '12px', background: '#ffffff' }} onClick={() => void onGenerateAi('record_summary', 'AI 摘要', 'AI 摘要生成失败')} disabled={aiLoading || aiJob?.status === 'pending' || aiJob?.status === 'processing'}>
+                    {aiLoading && aiActionLabel === 'AI 摘要' ? '生成中…' : '摘要'}
+                  </button>
+                  <button style={{ ...secondaryButtonStyle, minHeight: '36px', justifyContent: 'center', borderRadius: '999px', minWidth: 0, paddingInline: '6px', fontSize: '12px', background: '#ffffff' }} onClick={() => void onGenerateAi('record_tags', 'AI 标签', 'AI 标签生成失败')} disabled={aiLoading || aiJob?.status === 'pending' || aiJob?.status === 'processing'}>
+                    {aiLoading && aiActionLabel === 'AI 标签' ? '生成中…' : '标签'}
+                  </button>
+                </div>
+              </section>
               <div style={{ display: 'grid', gap: '8px' }}>
-                <p style={helperTextStyle}>记录编号：{data.record_no}</p>
                 <p style={helperTextStyle}>媒体数量：{data.media_list.length}</p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: '999px', background: '#fafaf9', border: '1px solid #ebe6dc', padding: '7px 10px', color: '#57534e', fontSize: '12px', fontWeight: 700 }}>
@@ -1213,8 +1406,8 @@ export const ViewRecordPage = () => {
                 </div>
                 {data.tags.length ? (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px' }}>
-                    {data.tags.map((tag) => (
-                      <span key={tag} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '8px', background: '#fffdf9', border: '1px solid #ebe6dc', padding: '5px 8px', color: '#78716c', fontSize: '11px', fontWeight: 700 }}>
+                    {data.tags.map((tag, index) => (
+                      <span key={`${data.record_no}-${tag}-${index}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '8px', background: '#fffdf9', border: '1px solid #ebe6dc', padding: '5px 8px', color: '#78716c', fontSize: '11px', fontWeight: 700 }}>
                         <Tag size={10} />
                         {tag}
                       </span>
@@ -1262,22 +1455,6 @@ export const ViewRecordPage = () => {
             </Panel>
           ) : null}
 
-          <Panel>
-            <div style={{ display: 'grid', gap: '10px' }}>
-              <strong>AI 摘要</strong>
-              <p style={helperTextStyle}>{data.ai_summary ?? '当前还没有 AI 生成的摘要。'}</p>
-              {aiJob?.status === 'pending' || aiJob?.status === 'processing' ? <p style={helperTextStyle}>AI 正在处理中，请稍候…</p> : null}
-              {aiJob?.status === 'success' ? <p style={{ ...helperTextStyle, color: '#0f766e' }}>AI 摘要已生成并同步到记录详情。</p> : null}
-              {aiJob ? <p style={helperTextStyle}>AI 任务状态：{aiJobStatusLabel(aiJob.status)}</p> : null}
-              {aiJob?.status === 'failed' ? <p style={{ ...helperTextStyle, color: '#dc2626' }}>AI 处理失败：{aiJob.error_message ?? '未知错误'}</p> : null}
-              {aiError ? <p style={{ ...helperTextStyle, color: '#dc2626' }}>{aiError}</p> : null}
-              {deleteError ? <p style={{ ...helperTextStyle, color: '#dc2626' }}>{deleteError}</p> : null}
-              <button style={{ ...secondaryButtonStyle, justifyContent: 'center' }} onClick={() => void onGenerateSummary()} disabled={aiLoading || aiJob?.status === 'pending' || aiJob?.status === 'processing'}>
-                {aiLoading || aiJob?.status === 'pending' || aiJob?.status === 'processing' ? 'AI 生成中…' : '生成 AI 摘要'}
-              </button>
-            </div>
-          </Panel>
-
           <div style={{ ...buttonRowStyle, paddingBottom: '10px' }}>
             <button style={primaryButtonStyle} onClick={() => navigate(`/record/${data.record_no}/edit`)}>
               编辑记录
@@ -1323,27 +1500,29 @@ export const EditRecordPage = () => {
     );
   }
 
+  const initialValue = useMemo(() => ({
+    child_no: data.child_no,
+    record_type: data.record_type,
+    title: data.title ?? '',
+    content_text: data.content_text ?? '',
+    media_nos: data.media_list.map((item) => item.media_no),
+    media_items: data.media_list.map((item) => ({
+      media_no: item.media_no,
+      preview_url: resolveMediaPreviewUrl(item.media_no, item.access_url) ?? item.access_url,
+      media_type: (item.media_type === 'audio' || item.media_type === 'video' ? item.media_type : 'image') as MediaType,
+      original_name: item.original_name,
+    })),
+    tags: data.tags.join(', '),
+    location_text: data.location_text ?? '',
+    visibility_scope: data.visibility_scope,
+    event_time: formatDateTimeLocal(data.event_time),
+    status: data.status,
+  }), [data]);
+
   return (
     <RecordForm
       mode="edit"
-      initialValue={{
-        child_no: data.child_no,
-        record_type: data.record_type,
-        title: data.title ?? '',
-        content_text: data.content_text ?? '',
-        media_nos: data.media_list.map((item) => item.media_no),
-        media_items: data.media_list.map((item) => ({
-          media_no: item.media_no,
-          preview_url: resolveMediaPreviewUrl(item.media_no, item.access_url) ?? item.access_url,
-          media_type: item.media_type === 'audio' || item.media_type === 'video' ? item.media_type : 'image',
-          original_name: item.original_name,
-        })),
-        tags: data.tags.join(', '),
-        location_text: data.location_text ?? '',
-        visibility_scope: data.visibility_scope,
-        event_time: formatDateTimeLocal(data.event_time),
-        status: data.status,
-      }}
+      initialValue={initialValue}
       onSubmit={async (value) => {
         if (!params.record_no) return;
         const record = await webApi.updateRecord(params.record_no, value);

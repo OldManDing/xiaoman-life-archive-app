@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type ReactNode } from 'react';
+import { useRef, useState, type FormEvent, type ReactNode } from 'react';
 
 import {
   adminApi,
@@ -129,6 +129,31 @@ const ListSummary = ({ total, label }: { total?: number; label: string }) => (
   </Panel>
 );
 
+const EntityTitle = ({ title, meta }: { title: ReactNode; meta?: ReactNode }) => (
+  <span style={{ display: 'grid', gap: '4px', minWidth: 0 }}>
+    <strong style={{ color: '#16211f', fontSize: '14px', fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</strong>
+    {meta ? <span style={{ color: '#66736f', fontSize: '12px', lineHeight: 1.4 }}>{meta}</span> : null}
+  </span>
+);
+
+const MediaReviewCell = ({ item }: { item: AdminMediaItem }) => {
+  const needsReview = item.status === 'uploading' || item.status === 'failed';
+  const isOrphan = !item.record_no;
+  const tone = needsReview || isOrphan ? 'warning' : 'success';
+
+  return (
+    <span style={{ display: 'grid', gap: '6px', minWidth: 0 }}>
+      <span style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+        <Badge tone={tone}>{needsReview ? '优先处理' : isOrphan ? '待关联' : '可归档'}</Badge>
+        <Badge tone={badgeToneForStatus(item.status)}>{mediaStatusLabel(item.status)}</Badge>
+      </span>
+      <span style={{ color: '#66736f', fontSize: '12px', lineHeight: 1.45 }}>
+        {isOrphan ? '未关联成长记录，建议先确认是否为孤立上传。' : `关联：${item.record_title ?? '未命名记录'}`}
+      </span>
+    </span>
+  );
+};
+
 const ActionButton = ({
   children,
   onClick,
@@ -193,6 +218,7 @@ const MiniTable = ({ columns, rows, emptyMessage }: { columns: string[]; rows: A
 };
 
 const useDetailState = <T,>() => {
+  const requestVersionRef = useRef(0);
   const [state, setState] = useState<{
     open: boolean;
     title: string;
@@ -209,16 +235,23 @@ const useDetailState = <T,>() => {
   });
 
   const openDetail = async (title: string, subtitle: string | undefined, loader: () => Promise<T>) => {
+    const requestVersion = requestVersionRef.current + 1;
+    requestVersionRef.current = requestVersion;
     setState({ open: true, title, subtitle, loading: true, error: null, data: null });
     try {
       const data = await loader();
+      if (requestVersionRef.current !== requestVersion) return;
       setState({ open: true, title, subtitle, loading: false, error: null, data });
     } catch (err) {
+      if (requestVersionRef.current !== requestVersion) return;
       setState({ open: true, title, subtitle, loading: false, error: getErrorMessage(err), data: null });
     }
   };
 
-  const closeDetail = () => setState((current) => ({ ...current, open: false }));
+  const closeDetail = () => {
+    requestVersionRef.current += 1;
+    setState((current) => ({ ...current, open: false, loading: false }));
+  };
 
   const updateDetail = (updater: (current: T) => T) => {
     setState((current) => (current.data ? { ...current, data: updater(current.data) } : current));
@@ -471,8 +504,7 @@ export const UsersPage = () => {
   };
 
   const rows = formatListRows(state.result?.list ?? [], (item) => [
-    item.user_no,
-    item.nickname,
+    <EntityTitle key={`${item.user_no}-profile`} title={item.nickname} meta={item.mobile} />,
     item.mobile,
     <Badge key={`${item.user_no}-membership`} tone="info">{membershipTypeLabel(item.membership_type)}</Badge>,
     <Badge key={`${item.user_no}-status`} tone={badgeToneForStatus(item.status)}>{userStatusLabel(item.status)}</Badge>,
@@ -492,7 +524,7 @@ export const UsersPage = () => {
       <ListSummary total={state.result?.total} label="用户运营概览" />
       {state.error ? <Panel><EmptyState message={`加载失败：${state.error}`} /></Panel> : null}
       {actionError ? <Panel><EmptyState message={`操作失败：${actionError}`} /></Panel> : null}
-      <TableShell columns={['用户编号', '昵称', '手机号', '会员', '状态', '最近登录', '创建时间', '操作']} rows={rows} emptyMessage="暂无用户数据，请先点击查询。" />
+      <TableShell columns={['用户', '手机号', '会员', '状态', '最近登录', '创建时间', '操作']} rows={rows} emptyMessage="暂无用户数据，请先点击查询。" />
       {state.result ? <PaginationPanel page={state.result.page} pageSize={state.result.page_size} total={state.result.total} hasMore={state.result.has_more} loading={state.loading} onPrevPage={state.onPrevPage} onNextPage={state.onNextPage} /> : null}
       <DetailDrawer open={detail.state.open} title={detail.state.title} subtitle={detail.state.subtitle} loading={detail.state.loading} error={detail.state.error} onClose={detail.closeDetail}>
         {detail.state.data ? <UserDetailContent data={detail.state.data} /> : null}
@@ -562,10 +594,8 @@ export const RecordsPage = () => {
   };
 
   const rows = formatListRows(state.result?.list ?? [], (item) => [
-    item.record_no,
-    item.child_no,
-    item.creator_user_no,
-    item.title,
+    <EntityTitle key={`${item.record_no}-title`} title={item.title ?? '未命名记录'} meta={`创建者：${item.creator_name ?? item.creator_user_no}`} />,
+    item.child_name ?? item.child_no,
     <Badge key={`${item.record_no}-type`} tone="info">{recordTypeLabel(item.record_type)}</Badge>,
     visibilityScopeLabel(item.visibility_scope),
     <Badge key={`${item.record_no}-status`} tone={badgeToneForStatus(item.status)}>{recordStatusLabel(item.status)}</Badge>,
@@ -584,7 +614,7 @@ export const RecordsPage = () => {
       <ListSummary total={state.result?.total} label="成长记录概览" />
       {state.error ? <Panel><EmptyState message={`加载失败：${state.error}`} /></Panel> : null}
       {actionError ? <Panel><EmptyState message={`操作失败：${actionError}`} /></Panel> : null}
-      <TableShell columns={['记录编号', '孩子编号', '创建者', '标题', '类型', '可见范围', '状态', '创建时间', '操作']} rows={rows} emptyMessage="暂无记录数据，请先点击查询。" />
+      <TableShell columns={['记录', '孩子', '类型', '可见范围', '状态', '创建时间', '操作']} rows={rows} emptyMessage="暂无记录数据，请先点击查询。" />
       {state.result ? <PaginationPanel page={state.result.page} pageSize={state.result.page_size} total={state.result.total} hasMore={state.result.has_more} loading={state.loading} onPrevPage={state.onPrevPage} onNextPage={state.onNextPage} /> : null}
       <DetailDrawer open={detail.state.open} title={detail.state.title} subtitle={detail.state.subtitle} loading={detail.state.loading} error={detail.state.error} onClose={detail.closeDetail}>
         {detail.state.data ? <RecordDetailContent data={detail.state.data} /> : null}
@@ -625,16 +655,12 @@ export const MediaPage = () => {
   };
 
   const rows = formatListRows(state.result?.list ?? [], (item) => [
-    <CompactText key={`${item.media_no}-no`} value={item.media_no} maxWidth={150} />,
-    item.family_no,
-    item.child_no,
-    <CompactText key={`${item.media_no}-record`} value={item.record_no ? `${item.record_title ?? '未命名'}（${item.record_no}）` : '未关联记录'} maxWidth={260} />,
-    <CompactText key={`${item.media_no}-uploader`} value={item.uploader_name ? `${item.uploader_name}（${item.uploader_user_no}）` : item.uploader_user_no} maxWidth={190} />,
+    <EntityTitle key={`${item.media_no}-file`} title={item.original_name ?? mediaTypeLabel(item.media_type)} meta={formatBytes(item.size_bytes)} />,
+    <MediaReviewCell key={`${item.media_no}-review`} item={item} />,
+    item.child_name ?? item.child_no ?? '未关联孩子',
+    <CompactText key={`${item.media_no}-uploader`} value={item.uploader_name ?? item.uploader_user_no} maxWidth={150} />,
     <Badge key={`${item.media_no}-type`} tone="info">{mediaTypeLabel(item.media_type)}</Badge>,
-    <Badge key={`${item.media_no}-status`} tone={badgeToneForStatus(item.status)}>{mediaStatusLabel(item.status)}</Badge>,
-    <CompactText key={`${item.media_no}-filename`} value={item.original_name} maxWidth={170} />,
     <CompactText key={`${item.media_no}-mime`} value={item.mime_type} maxWidth={130} />,
-    formatBytes(item.size_bytes),
     formatDateTime(item.created_at),
     <ActionGroup key={`${item.media_no}-actions`}>
       <ActionButton onClick={() => void detail.openDetail('媒体详情', item.media_no, () => adminApi.getMediaDetail(item.media_no))}>详情</ActionButton>
@@ -650,7 +676,7 @@ export const MediaPage = () => {
       <ListSummary total={state.result?.total} label="媒体库概览" />
       {state.error ? <Panel><EmptyState message={`加载失败：${state.error}`} /></Panel> : null}
       {actionError ? <Panel><EmptyState message={`操作失败：${actionError}`} /></Panel> : null}
-      <TableShell columns={['媒体编号', '家庭编号', '孩子编号', '关联记录', '上传者', '类型', '状态', '文件名', '文件类型', '大小', '创建时间', '操作']} rows={rows} emptyMessage="暂无媒体数据，请先点击查询。" />
+      <TableShell columns={['媒体', '处理建议', '孩子', '上传者', '类型', '文件类型', '创建时间', '操作']} rows={rows} emptyMessage="暂无媒体数据，请先点击查询。" />
       {state.result ? <PaginationPanel page={state.result.page} pageSize={state.result.page_size} total={state.result.total} hasMore={state.result.has_more} loading={state.loading} onPrevPage={state.onPrevPage} onNextPage={state.onNextPage} /> : null}
       <DetailDrawer open={detail.state.open} title={detail.state.title} subtitle={detail.state.subtitle} loading={detail.state.loading} error={detail.state.error} onClose={detail.closeDetail}>
         {detail.state.data ? <MediaDetailContent data={detail.state.data} /> : null}

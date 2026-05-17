@@ -102,8 +102,7 @@ export class StorageService {
     };
   }
 
-  private createMockImageDataUrl(objectKey: string) {
-    const label = objectKey.includes('orphan') ? '待审核照片' : '成长照片';
+  private createMockImageDataUrl(_objectKey: string) {
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="720" viewBox="0 0 960 720">
       <defs>
         <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
@@ -125,7 +124,6 @@ export class StorageService {
       <path d="M214 478 C242 410 370 410 398 478" fill="#c9a38d"/>
       <rect x="500" y="322" width="256" height="160" rx="42" fill="#ffffff" opacity="0.56"/>
       <path d="M552 438 L610 382 L656 428 L696 394 L730 438 Z" fill="#8bb99c"/>
-      <text x="480" y="620" text-anchor="middle" font-family="Microsoft YaHei, PingFang SC, sans-serif" font-size="42" font-weight="700" fill="#42544d">${label}</text>
     </svg>`;
 
     return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;

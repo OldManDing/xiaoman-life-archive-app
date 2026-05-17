@@ -148,7 +148,7 @@ test.describe('Visual review smoke', () => {
     await page.getByRole('link', { name: '媒体库', exact: true }).click();
     await page.getByRole('button', { name: '查询' }).click();
     await expect(page.getByRole('heading', { name: '媒体列表' })).toBeVisible();
-    await expect(page.getByRole('row', { name: /m_demo_001/ })).toBeVisible();
+    await expect(page.getByRole('row', { name: /第一次自己吃饭/ })).toBeVisible();
     await expectNoEnglishSeedCopy(page);
     await expectNoPageOverflow(page);
     await saveScreenshot(page, 'admin-media.png');

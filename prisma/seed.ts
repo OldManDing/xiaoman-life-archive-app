@@ -29,6 +29,10 @@ const SHARE_ACTIVE_STATUS = 1;
 const DEFAULT_ADMIN_PASSWORD = 'ChangeMe123!';
 const DEFAULT_DEMO_USER_PASSWORD = 'DemoUser123!';
 const DEMO_INVITE_CODE = 'demo-invite-001';
+const DEMO_PARENT_AVATAR_URL =
+  'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 80 80%22%3E%3Crect width=%2280%22 height=%2280%22 fill=%22%23986b55%22/%3E%3Ccircle cx=%2240%22 cy=%2230%22 r=%2217%22 fill=%22%23f0c7a7%22/%3E%3Cpath d=%22M10 80c8-24 52-24 60 0%22 fill=%22%23292524%22/%3E%3C/svg%3E';
+const DEMO_CHILD_AVATAR_URL =
+  'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 80 80%22%3E%3Crect width=%2280%22 height=%2280%22 fill=%22%23b8e0d4%22/%3E%3Ccircle cx=%2240%22 cy=%2231%22 r=%2218%22 fill=%22%23f2c5a2%22/%3E%3Cpath d=%22M12 80c7-27 49-27 56 0%22 fill=%22%23fff7ed%22/%3E%3Ccircle cx=%2259%22 cy=%2219%22 r=%226%22 fill=%22%23ef7f72%22/%3E%3C/svg%3E';
 
 function getSeedEnvironment(): string {
   return (process.env.APP_ENV ?? process.env.NODE_ENV ?? 'local').toLowerCase();
@@ -86,7 +90,7 @@ async function main() {
     where: { userNo: 'u_demo_parent_001' },
     update: {
       nickname: '小满妈妈',
-      avatarUrl: null,
+      avatarUrl: DEMO_PARENT_AVATAR_URL,
       mobile: '13800000000',
       email: 'parent@example.com',
       status: ACTIVE_STATUS,
@@ -96,7 +100,7 @@ async function main() {
     create: {
       userNo: 'u_demo_parent_001',
       nickname: '小满妈妈',
-      avatarUrl: null,
+      avatarUrl: DEMO_PARENT_AVATAR_URL,
       mobile: '13800000000',
       email: 'parent@example.com',
       status: ACTIVE_STATUS,
@@ -109,7 +113,7 @@ async function main() {
     where: { userNo: 'u_demo_viewer_001' },
     update: {
       nickname: '小满外婆',
-      avatarUrl: null,
+      avatarUrl: DEMO_PARENT_AVATAR_URL,
       mobile: '13900000000',
       email: 'viewer@example.com',
       status: ACTIVE_STATUS,
@@ -118,7 +122,7 @@ async function main() {
     create: {
       userNo: 'u_demo_viewer_001',
       nickname: '小满外婆',
-      avatarUrl: null,
+      avatarUrl: DEMO_PARENT_AVATAR_URL,
       mobile: '13900000000',
       email: 'viewer@example.com',
       status: ACTIVE_STATUS,
@@ -288,7 +292,7 @@ async function main() {
       familyId: family.id,
       ownerUserId: demoUser.id,
       name: '小满',
-      avatarUrl: null,
+      avatarUrl: DEMO_CHILD_AVATAR_URL,
       birthday: new Date('2025-01-01T00:00:00.000Z'),
       gender: ChildGender.female,
       birthPlace: '上海',
@@ -300,7 +304,7 @@ async function main() {
       familyId: family.id,
       ownerUserId: demoUser.id,
       name: '小满',
-      avatarUrl: null,
+      avatarUrl: DEMO_CHILD_AVATAR_URL,
       birthday: new Date('2025-01-01T00:00:00.000Z'),
       gender: ChildGender.female,
       birthPlace: '上海',
