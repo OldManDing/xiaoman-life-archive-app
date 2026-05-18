@@ -10,7 +10,8 @@ export const AppLayout = () => {
     { to: '/family', label: '家庭', icon: Users },
     { to: '/profile', label: '我的', icon: User },
   ];
-  const showBottomNav = navItems.some((item) => !item.featured && item.to === location.pathname);
+  const tabPaths = new Set(['/home', '/timeline', '/family', '/profile']);
+  const showBottomNav = tabPaths.has(location.pathname);
 
   return (
     <div

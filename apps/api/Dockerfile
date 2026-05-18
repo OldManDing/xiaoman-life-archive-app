@@ -1,4 +1,4 @@
-FROM node:20-alpine AS base
+FROM node:20-bookworm-slim AS base
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -13,9 +13,13 @@ RUN npm run prisma:generate && npm run build:api
 FROM base AS prod-deps
 RUN npm run prisma:generate && npm prune --omit=dev
 
-FROM node:20-alpine AS runner
+FROM node:20-bookworm-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates openssl \
+  && rm -rf /var/lib/apt/lists/*
 
 COPY --from=prod-deps --chown=node:node /app/package.json /app/package-lock.json ./
 COPY --from=prod-deps --chown=node:node /app/node_modules ./node_modules

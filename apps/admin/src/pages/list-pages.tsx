@@ -171,7 +171,7 @@ const ActionButton = ({
     disabled={disabled}
     style={{
       ...(tone === 'danger' ? secondaryButtonStyle : primaryButtonStyle),
-      minHeight: '36px',
+      minHeight: '44px',
       padding: '7px 10px',
       whiteSpace: 'nowrap',
       opacity: disabled ? 0.62 : 1,
@@ -183,15 +183,15 @@ const ActionButton = ({
 );
 
 const ActionGroup = ({ children }: { children: ReactNode }) => (
-  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'nowrap', minWidth: '224px' }}>{children}</div>
+  <div className="admin-action-group" style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'nowrap', minWidth: '224px' }}>{children}</div>
 );
 
 const MiniTable = ({ columns, rows, emptyMessage }: { columns: string[]; rows: Array<Array<ReactNode>>; emptyMessage: string }) => {
   if (!rows.length) return <EmptyState message={emptyMessage} />;
 
   return (
-    <div style={{ overflowX: 'auto' }}>
-      <table style={tableStyle}>
+    <div className="admin-table-scroll" style={{ overflowX: 'auto' }}>
+      <table className="admin-responsive-table admin-mini-table" style={tableStyle}>
         <thead>
           <tr>
             {columns.map((column) => (
@@ -205,7 +205,7 @@ const MiniTable = ({ columns, rows, emptyMessage }: { columns: string[]; rows: A
           {rows.map((row, rowIndex) => (
             <tr key={rowIndex}>
               {row.map((cell, cellIndex) => (
-                <td key={cellIndex} style={thTdStyle}>
+                <td key={cellIndex} data-label={columns[cellIndex]} style={thTdStyle}>
                   {cell ?? '—'}
                 </td>
               ))}

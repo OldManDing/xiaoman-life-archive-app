@@ -49,6 +49,7 @@ const topBarBackStyle = (variant: 'icon' | 'pill' | 'text'): CSSProperties => {
   if (variant === 'text') {
     return {
       minHeight: '44px',
+      minWidth: '44px',
       border: 'none',
       background: 'transparent',
       color: '#57534e',
@@ -391,11 +392,11 @@ export const AppSelect = ({
             padding: '7px',
           }}
         >
-          {options.map((option) => {
+          {options.map((option, index) => {
             const selected = option.value === selectedValue;
             return (
               <button
-                key={option.value}
+                key={`${option.value}-${index}`}
                 type="button"
                 role="option"
                 aria-selected={selected}
@@ -403,7 +404,7 @@ export const AppSelect = ({
                 onClick={() => emitChange(option.value)}
                 style={{
                   width: '100%',
-                  minHeight: '36px',
+                  minHeight: '44px',
                   border: 'none',
                   borderRadius: '13px',
                   background: selected ? '#f5f6f7' : 'transparent',
@@ -456,11 +457,11 @@ export const AppSegmentedControl = ({
       ...style,
     }}
   >
-    {options.map((option) => {
+    {options.map((option, index) => {
       const selected = option.value === value;
       return (
         <button
-          key={option.value}
+          key={`${option.value}-${index}`}
           type="button"
           role="radio"
           aria-checked={selected}
@@ -468,7 +469,7 @@ export const AppSegmentedControl = ({
           style={{
             flex: '1 1 0',
             minWidth: 0,
-            minHeight: '38px',
+            minHeight: '44px',
             border: 'none',
             borderRadius: '999px',
             background: selected ? '#292524' : 'transparent',

@@ -121,8 +121,9 @@ export const DetailDrawer = ({
   if (!open) return null;
 
   return (
-    <div style={overlayStyle} onClick={onClose} role="presentation">
+    <div className="admin-drawer-overlay" style={overlayStyle} onClick={onClose} role="presentation">
       <div
+        className="admin-detail-drawer"
         style={drawerStyle}
         role="dialog"
         aria-modal="true"
@@ -130,7 +131,7 @@ export const DetailDrawer = ({
         onClick={(event) => event.stopPropagation()}
       >
         <Panel>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'flex-start' }}>
+          <div className="admin-drawer-header" style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'flex-start' }}>
             <div style={{ display: 'grid', gap: '4px' }}>
               <h2 style={{ margin: 0, fontSize: '18px', color: '#123c37' }}>{title}</h2>
               {subtitle ? <p style={{ margin: 0, color: '#66736f', fontSize: '13px', lineHeight: 1.6 }}>{subtitle}</p> : null}
@@ -146,7 +147,7 @@ export const DetailDrawer = ({
                 padding: '8px 12px',
                 fontWeight: 700,
                 cursor: 'pointer',
-                minHeight: '40px',
+                minHeight: '44px',
               }}
             >
               关闭
@@ -172,7 +173,7 @@ export const DetailSection = ({ title, children }: { title: string; children: Re
 );
 
 export const DetailGrid = ({ items }: { items: Array<{ label: string; value: ReactNode }> }) => (
-  <dl style={labelValueGridStyle}>
+  <dl className="admin-detail-grid" style={labelValueGridStyle}>
     {items.map((item) => (
       <div key={item.label} style={itemStyle}>
         <dt style={labelStyle}>{item.label}</dt>

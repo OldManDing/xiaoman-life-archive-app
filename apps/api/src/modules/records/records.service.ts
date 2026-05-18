@@ -10,6 +10,8 @@ import { CreateRecordDto } from './dto/create-record.dto';
 import { ListRecordsDto } from './dto/list-records.dto';
 import { UpdateRecordDto } from './dto/update-record.dto';
 
+const uniqueTagNames = (tags: Array<{ tagName: string }>) => Array.from(new Set(tags.map((item) => item.tagName).filter(Boolean)));
+
 @Injectable()
 export class RecordsService {
   constructor(
@@ -325,7 +327,7 @@ export class RecordsService {
       summary: record.contentText,
       ai_summary: record.aiSummary ?? null,
       event_time: record.eventTime.toISOString(),
-      tags: record.tags.map((item) => item.tagName),
+      tags: uniqueTagNames(record.tags),
       creator_name: record.creator.nickname,
       is_milestone: record.isMilestone,
       record_type: record.recordType,
@@ -392,7 +394,7 @@ export class RecordsService {
       title: record.title,
       content_text: record.contentText,
       media_list: mediaList,
-      tags: record.tags.map((item) => item.tagName),
+      tags: uniqueTagNames(record.tags),
       event_time: record.eventTime.toISOString(),
       location_text: record.locationText,
       visibility_scope: record.visibilityScope,

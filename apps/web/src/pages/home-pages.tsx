@@ -563,16 +563,16 @@ export const SearchPage = () => {
   return (
     <div style={appPageStyle}>
       <header style={{ ...paddedSectionStyle, paddingTop: 'calc(14px + env(safe-area-inset-top))', paddingBottom: '13px', background: '#ffffff', borderBottom: '1px solid #eef0f2', position: 'sticky', top: 0, zIndex: 3 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '32px minmax(0, 1fr) 44px', gap: '8px', alignItems: 'center' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '44px minmax(0, 1fr) 44px', gap: '8px', alignItems: 'center' }}>
           <button
             type="button"
             aria-label="返回"
             onClick={() => navigate(-1)}
-            style={{ width: '32px', height: '40px', border: 'none', background: 'transparent', color: '#292524', display: 'grid', placeItems: 'center', cursor: 'pointer', padding: 0 }}
+            style={{ width: '44px', height: '44px', border: 'none', background: 'transparent', color: '#292524', display: 'grid', placeItems: 'center', cursor: 'pointer', padding: 0 }}
           >
             <ChevronLeft size={20} strokeWidth={2.3} />
           </button>
-          <label style={{ minWidth: 0, minHeight: '34px', borderRadius: '999px', background: '#f1f5f9', display: 'flex', alignItems: 'center', gap: '8px', padding: '0 12px', color: '#94a3b8' }}>
+          <label style={{ minWidth: 0, minHeight: '44px', borderRadius: '999px', background: '#f1f5f9', display: 'flex', alignItems: 'center', gap: '8px', padding: '0 12px', color: '#94a3b8' }}>
             <Search size={15} strokeWidth={2.2} />
             <input
               aria-label="搜索关键词"
@@ -587,13 +587,13 @@ export const SearchPage = () => {
                 type="button"
                 aria-label="清空搜索"
                 onClick={() => setQuery('')}
-                style={{ width: '24px', height: '24px', border: 'none', borderRadius: '999px', background: '#ffffff', color: '#94a3b8', display: 'grid', placeItems: 'center', cursor: 'pointer', padding: 0 }}
+                style={{ width: '44px', height: '44px', border: 'none', borderRadius: '999px', background: '#ffffff', color: '#94a3b8', display: 'grid', placeItems: 'center', cursor: 'pointer', padding: 0 }}
               >
                 <X size={13} strokeWidth={2.4} />
               </button>
             ) : null}
           </label>
-          <button type="button" onClick={() => navigate('/timeline')} style={{ border: 'none', background: 'transparent', color: '#292524', fontSize: '13px', fontWeight: 700, cursor: 'pointer', padding: 0 }}>
+          <button type="button" onClick={() => document.activeElement instanceof HTMLElement && document.activeElement.blur()} style={{ minWidth: '44px', minHeight: '44px', border: 'none', background: 'transparent', color: '#292524', fontSize: '13px', fontWeight: 700, cursor: 'pointer', padding: 0 }}>
             搜索
           </button>
         </div>
@@ -629,7 +629,7 @@ export const SearchPage = () => {
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '9px' }}>
                 {searchHistory.map((item) => (
-                  <button key={item} type="button" onClick={() => setQuery(item)} style={{ ...chipStyle, minHeight: '32px', padding: '6px 12px', background: '#ffffff', borderColor: '#edf0f3', color: '#6b7280', fontSize: '12px' }}>
+                  <button key={item} type="button" onClick={() => setQuery(item)} style={{ ...chipStyle, padding: '8px 12px', background: '#ffffff', borderColor: '#edf0f3', color: '#6b7280', fontSize: '12px' }}>
                     {item}
                   </button>
                 ))}
@@ -639,7 +639,7 @@ export const SearchPage = () => {
               <h2 style={{ margin: '0 0 14px', fontSize: '15px', fontWeight: 800, color: '#292524' }}>热门标签</h2>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '9px' }}>
                 {hotTags.map((item) => (
-                  <button key={item} type="button" onClick={() => setQuery(item)} style={{ ...chipStyle, minHeight: '32px', padding: '6px 12px', background: '#fff4d6', borderColor: '#ffe6a6', color: '#d97706', fontSize: '12px', fontWeight: 800 }}>
+                  <button key={item} type="button" onClick={() => setQuery(item)} style={{ ...chipStyle, padding: '8px 12px', background: '#fff4d6', borderColor: '#ffe6a6', color: '#d97706', fontSize: '12px', fontWeight: 800 }}>
                     #{item}
                   </button>
                 ))}
@@ -731,7 +731,7 @@ export const TimelinePage = () => {
               type="button"
               aria-label="搜索记录"
               aria-pressed={searchOpen}
-              style={{ ...iconButtonStyle, width: '34px', height: '34px', background: searchOpen ? '#292524' : '#f8f9fa', color: searchOpen ? '#ffffff' : '#667085', boxShadow: 'none', borderColor: 'transparent' }}
+              style={{ ...iconButtonStyle, width: '44px', height: '44px', background: searchOpen ? '#292524' : '#f8f9fa', color: searchOpen ? '#ffffff' : '#667085', boxShadow: 'none', borderColor: 'transparent' }}
               onClick={() => setSearchOpen((current) => !current)}
             >
               <Search size={16} strokeWidth={2.4} />
@@ -740,7 +740,7 @@ export const TimelinePage = () => {
               type="button"
               aria-label="筛选记录"
               aria-pressed={filterOpen}
-              style={{ ...iconButtonStyle, width: '34px', height: '34px', background: filterOpen || tagFilter ? '#292524' : '#f8f9fa', color: filterOpen || tagFilter ? '#ffffff' : '#667085', boxShadow: 'none', borderColor: 'transparent' }}
+              style={{ ...iconButtonStyle, width: '44px', height: '44px', background: filterOpen || tagFilter ? '#292524' : '#f8f9fa', color: filterOpen || tagFilter ? '#ffffff' : '#667085', boxShadow: 'none', borderColor: 'transparent' }}
               onClick={() => setFilterOpen((current) => !current)}
             >
               <SlidersHorizontal size={16} strokeWidth={2.4} />
@@ -769,15 +769,15 @@ export const TimelinePage = () => {
           </div>
         ) : null}
 
-        <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '8px' }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', paddingBottom: '8px' }}>
           {filters.map((filter) => (
             <button
               key={filter.value}
               type="button"
               style={{
                 ...chipStyle,
-                minHeight: '32px',
-                padding: '6px 16px',
+                minHeight: '44px',
+                padding: '8px 16px',
                 fontSize: '12px',
                 flexShrink: 0,
                 cursor: 'pointer',

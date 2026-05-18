@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
+
 import { App } from './App';
 import { clearAccessTokenMemory } from '../shared/authMemory';
 
@@ -63,9 +64,10 @@ describe('App', () => {
     expect(screen.getByText('管理员登录')).toBeInTheDocument();
   });
 
-  it('renders admin shell when authenticated', () => {
+  it('renders the redesigned login page', () => {
     renderWithRouter('/login');
-    expect(screen.getByText('进入管理后台')).toBeInTheDocument();
+    expect(screen.getByText('年轮运营中枢')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '进入管理后台' })).toBeInTheDocument();
   });
 
   it('logs in and loads the user list page', async () => {
@@ -99,16 +101,18 @@ describe('App', () => {
 
     renderWithRouter('/login');
 
-    fireEvent.change(screen.getByPlaceholderText('用户名'), { target: { value: 'admin' } });
-    fireEvent.change(screen.getByPlaceholderText('密码'), { target: { value: 'ChangeMe123!' } });
+    fireEvent.change(screen.getByPlaceholderText('请输入用户名'), { target: { value: 'admin' } });
+    fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
     fireEvent.click(screen.getByRole('button', { name: '进入管理后台' }));
 
     await waitFor(() => {
       expect(loginMock).toHaveBeenCalledWith({ username: 'admin', password: 'ChangeMe123!' });
     });
 
-    fireEvent.click(await screen.findByRole('link', { name: '用户运营' }));
-    fireEvent.click(await screen.findByRole('button', { name: '查询' }));
+    const usersLink = (await screen.findAllByRole('link')).find((link) => link.getAttribute('href') === '/users');
+    expect(usersLink).toBeTruthy();
+    fireEvent.click(usersLink!);
+    fireEvent.click(await screen.findByRole('button', { name: /查询/ }));
 
     await waitFor(() => {
       expect(listUsersMock).toHaveBeenCalledWith({ keyword: undefined, page: 1, page_size: 20 });

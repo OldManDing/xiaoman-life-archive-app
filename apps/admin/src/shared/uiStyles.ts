@@ -19,7 +19,7 @@ export const headingStyle: CSSProperties = {
 export const inputStyle: CSSProperties = {
   width: '100%',
   boxSizing: 'border-box',
-  minHeight: '42px',
+  minHeight: '44px',
   borderRadius: '10px',
   border: '1px solid #cbd5d1',
   padding: '10px 12px',
@@ -37,7 +37,7 @@ export const primaryButtonStyle: CSSProperties = {
   color: '#ffffff',
   fontWeight: 600,
   cursor: 'pointer',
-  minHeight: '40px',
+  minHeight: '44px',
 };
 
 export const secondaryButtonStyle: CSSProperties = {

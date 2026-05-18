@@ -1,9 +1,9 @@
 #!/usr/bin/env sh
 set -eu
 
-API_BASE_URL="${API_BASE_URL:-https://api.example.com}"
-APP_BASE_URL="${APP_BASE_URL:-https://app.example.com}"
-ADMIN_BASE_URL="${ADMIN_BASE_URL:-https://admin.example.com}"
+API_BASE_URL="${API_BASE_URL:-https://webapi.xmlga.top}"
+APP_BASE_URL="${APP_BASE_URL:-https://nianlun.xmlga.top}"
+ADMIN_BASE_URL="${ADMIN_BASE_URL:-https://nianlun.xmlga.top}"
 
 curl -fsS "$API_BASE_URL/api/v1/health" >/dev/null
 curl -fsSI "$APP_BASE_URL" >/dev/null

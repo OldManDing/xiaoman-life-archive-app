@@ -457,6 +457,11 @@ const RecordForm = ({
     })),
     ...poiSuggestions.filter((suggestion) => !filteredLocationOptions.includes(suggestion.name)),
   ].slice(0, 5);
+  const requiredItems = [
+    { label: '标题', done: Boolean(form.title.trim()) },
+    { label: '正文', done: Boolean(form.content_text.trim()) },
+    { label: '时间', done: Boolean(form.event_time) },
+  ];
   const showMediaSection = form.record_type !== 'text';
   const showPhotoVideoAction = showMediaSection && form.record_type !== 'audio';
   const showAudioAction = showMediaSection && form.record_type !== 'video';
@@ -610,12 +615,8 @@ const RecordForm = ({
               <strong style={{ color: '#292524', fontSize: '13px' }}>发布前只需要补齐这 3 项</strong>
               <span style={{ color: '#a16207', fontSize: '11px', fontWeight: 800 }}>其他信息可稍后补充</span>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px' }}>
-            {[
-              { label: '标题', done: Boolean(form.title.trim()) },
-              { label: '正文', done: Boolean(form.content_text.trim()) },
-              { label: '时间', done: Boolean(form.event_time) },
-            ].map((item) => (
+            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${requiredItems.length}, minmax(0, 1fr))`, gap: '8px' }}>
+            {requiredItems.map((item) => (
               <span
                 key={item.label}
                 style={{

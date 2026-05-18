@@ -57,8 +57,8 @@ export const TableShell = ({
       {!rows.length ? (
         <EmptyState message={emptyMessage} />
       ) : (
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ ...tableStyle, minWidth: tableMinWidth }}>
+        <div className="admin-table-scroll" style={{ overflowX: 'auto' }}>
+          <table className="admin-responsive-table" style={{ ...tableStyle, minWidth: tableMinWidth }}>
             <thead>
               <tr>
                 {columns.map((column, columnIndex) => (
@@ -72,7 +72,7 @@ export const TableShell = ({
               {rows.map((row, rowIndex) => (
                 <tr key={rowIndex}>
                   {row.map((cell, cellIndex) => (
-                    <td key={cellIndex} style={{ ...thTdStyle, ...(cellIndex === row.length - 1 ? stickyLastColumnStyle() : {}) }}>
+                    <td key={cellIndex} data-label={columns[cellIndex]} style={{ ...thTdStyle, ...(cellIndex === row.length - 1 ? stickyLastColumnStyle() : {}) }}>
                       {cell ?? '—'}
                     </td>
                   ))}
@@ -104,11 +104,11 @@ export const PaginationPanel = ({
   onNextPage: () => Promise<void>;
 }) => (
   <Panel>
-    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+    <div className="admin-pagination" style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
       <div style={{ color: '#66736f', fontSize: '14px', fontWeight: 600 }}>
         当前第 {page} 页 · 每页 {pageSize} 条 · 共 {total} 条
       </div>
-      <div style={{ display: 'flex', gap: '8px' }}>
+      <div className="admin-pagination-actions" style={{ display: 'flex', gap: '8px' }}>
         <button type="button" style={primaryButtonStyle} onClick={() => void onPrevPage()} disabled={loading || page <= 1}>
           上一页
         </button>

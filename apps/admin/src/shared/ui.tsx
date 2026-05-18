@@ -4,8 +4,8 @@ import { ChevronDown } from 'lucide-react';
 import { badgeStyle, cardStyle, headingStyle, inputStyle, mutedTextStyle } from './uiStyles';
 
 export const PageShell = ({ title, description, children }: { title: string; description?: string; children: ReactNode }) => (
-  <section style={{ display: 'grid', gap: '16px', width: '100%', minWidth: 0 }}>
-    <header style={{ display: 'grid', gap: '8px' }}>
+  <section className="admin-page-shell" style={{ display: 'grid', gap: '16px', width: '100%', minWidth: 0 }}>
+    <header className="admin-page-header" style={{ display: 'grid', gap: '8px' }}>
       <h1 style={headingStyle}>{title}</h1>
       {description ? <p style={mutedTextStyle}>{description}</p> : null}
     </header>
@@ -13,7 +13,7 @@ export const PageShell = ({ title, description, children }: { title: string; des
   </section>
 );
 
-export const Panel = ({ children }: { children: ReactNode }) => <div style={{ ...cardStyle, minWidth: 0, overflow: 'hidden' }}>{children}</div>;
+export const Panel = ({ children }: { children: ReactNode }) => <div className="admin-panel" style={{ ...cardStyle, minWidth: 0, overflow: 'hidden' }}>{children}</div>;
 
 export const EmptyState = ({ message }: { message: string }) => <p style={mutedTextStyle}>{message}</p>;
 
