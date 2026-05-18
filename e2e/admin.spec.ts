@@ -35,11 +35,12 @@ test.describe('Admin critical journeys', () => {
 
     await expect(page.getByText('系统管理员')).toBeVisible();
     await expect(page.getByText('超级管理员', { exact: true })).toBeVisible();
-    await expect(page.getByText('今日处置优先级')).toBeVisible();
-    await expect(page.getByText('运营路径')).toBeVisible();
-    await expect(page.getByText('AI 与系统状态')).toBeVisible();
-    await expect(page.getByText('成长记录与媒体素材合计，需要持续抽检。')).toBeVisible();
+    await expect(page.getByText('今日优先级')).toBeVisible();
+    await expect(page.getByRole('heading', { name: '运营判断' })).toBeVisible();
+    await expect(page.getByText('AI 任务健康')).toBeVisible();
+    await expect(page.getByText('成长记录与媒体素材合计，是内容抽检的主范围。')).toBeVisible();
     await expect(page.getByText('图片、音视频异常会直接影响档案观感。')).toBeVisible();
+    await expect(page.getByText('总览页只保留能辅助判断的状态，不重复侧边栏导航。')).toBeVisible();
     await expectNoEnglishSeedCopy(page);
   });
 
