@@ -28,7 +28,7 @@ export const AppLayout = () => {
         overflowX: 'hidden',
       }}
     >
-      <main style={{ flex: 1, overflow: 'auto', paddingBottom: showBottomNav ? 'calc(72px + env(safe-area-inset-bottom))' : 0 }}>
+      <main style={{ flex: 1, overflow: 'visible', paddingBottom: showBottomNav ? 'calc(72px + env(safe-area-inset-bottom))' : 0 }}>
         <Outlet />
       </main>
       {showBottomNav ? <nav

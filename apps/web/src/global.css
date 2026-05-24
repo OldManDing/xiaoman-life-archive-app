@@ -5,6 +5,8 @@
 html {
   -webkit-text-size-adjust: 100%;
   background: #faf8f5;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -12,6 +14,9 @@ body {
   min-width: 320px;
   background: #faf8f5;
   color: #292524;
+  scrollbar-width: none;
+  overscroll-behavior-y: contain;
+  -webkit-font-smoothing: antialiased;
   font-family:
     "PingFang SC",
     "Microsoft YaHei",
@@ -23,11 +28,23 @@ body {
     sans-serif;
 }
 
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
 button,
 input,
 select,
 textarea {
   font: inherit;
+}
+
+textarea {
+  resize: none;
 }
 
 button,
@@ -46,10 +63,20 @@ label {
 
 button {
   letter-spacing: 0;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    opacity 0.18s ease;
 }
 
 button:not(:disabled):active {
-  transform: translateY(1px);
+  transform: translateY(1px) scale(0.99);
+}
+
+button:not(:disabled):hover {
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
 }
 
 button:disabled {
@@ -60,6 +87,12 @@ button:disabled {
 select option {
   color: #292524;
   background: #fffdf9;
+}
+
+img,
+video,
+audio {
+  transition: filter 0.18s ease, transform 0.18s ease;
 }
 
 .record-title-input::placeholder {
@@ -81,4 +114,31 @@ select:focus-visible,
 textarea:focus-visible {
   outline: 3px solid rgba(41, 37, 36, 0.16);
   outline-offset: 2px;
+}
+
+@keyframes app-page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
 }

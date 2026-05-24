@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
+﻿import { useEffect, useMemo, useRef, useState, type ChangeEvent, type CSSProperties, type FormEvent } from 'react';
 import { BookOpen, Check, ChevronRight, Clock, Eye, FileAudio, Image, ImagePlus, MapPin, Mic, PlayCircle, Sparkles, Star, Tag, Video, X } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { useAuth } from '../shared/AuthContext';
@@ -7,9 +8,11 @@ import { webApi } from '../shared/api/webApi';
 import type { AiJobDetail, LocationSuggestion, RecordDetail } from '../shared/api/types';
 import { useAsyncData } from '../shared/hooks';
 import { aiJobStatusLabel, mediaTypeLabel, recordStatusLabel, recordTypeLabel, visibilityScopeLabel } from '../shared/labels';
-import { createPersistableMediaPreview, resolveMediaPreviewUrl, saveLocalMediaPreview } from '../shared/localMediaPreview';
+import { createPersistableMediaPreview, resolveMediaPreviewUrl, resolveStoredMediaUrl, saveLocalMediaPreview } from '../shared/localMediaPreview';
+import { getCurrentDeviceLocation } from '../shared/deviceLocation';
 import { AppSelect, AppTopBar, PageShell, Panel, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle } from '../shared/ui';
 import { EmptyState, buttonRowStyle, formSubmitSpacingStyle, formatDateTimeLocal, rowStyle } from './shared';
+import { referenceAssets } from './reference-ui';
 
 type MediaPreview = {
   media_no: string;
@@ -20,6 +23,8 @@ type MediaPreview = {
 };
 
 type MediaType = MediaPreview['media_type'];
+type NativeCaptureMode = 'photo' | 'video' | 'audio';
+type NativeCaptureStatus = 'preview' | 'recording' | 'saving';
 
 const tagOptions = ['生日纪念', '户外日常', '语言发育', '大动作发展', '睡前时光', '亲子陪伴', '第一次', '家庭日常'];
 
@@ -78,11 +83,115 @@ const selectedChipButtonStyle = {
   boxShadow: '0 4px 12px rgba(41,37,36,0.03)',
 } as const;
 
+const mediaActionCardStyle: CSSProperties = {
+  borderRadius: '20px',
+  border: '1px solid #eee5d8',
+  background: 'linear-gradient(180deg, #fffdf9 0%, #ffffff 84%)',
+  padding: '14px',
+  display: 'grid',
+  gap: '12px',
+  boxShadow: '0 10px 22px rgba(41,37,36,0.04)',
+};
+const mediaActionButtonStyle: CSSProperties = {
+  minHeight: '62px',
+  width: '100%',
+  borderRadius: '18px',
+  border: '1px solid #ece3d6',
+  background: '#ffffff',
+  color: '#292524',
+  padding: '11px',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '10px',
+  textAlign: 'left',
+  cursor: 'pointer',
+  boxShadow: '0 4px 14px rgba(41,37,36,0.035)',
+  transition: 'transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease',
+};
+
+const mediaActionIconStyle: CSSProperties = {
+  width: '34px',
+  height: '34px',
+  borderRadius: '13px',
+  background: 'linear-gradient(135deg, #f8f1e7 0%, #fff9ef 100%)',
+  color: '#6f4b2f',
+  display: 'grid',
+  placeItems: 'center',
+  flexShrink: 0,
+};
+
+const mediaActionLabelStyle: CSSProperties = {
+  fontSize: '14px',
+  fontWeight: 800,
+  letterSpacing: '-0.01em',
+};
+
+const mediaActionDescriptionStyle: CSSProperties = {
+  color: '#78716c',
+  fontSize: '12px',
+  lineHeight: 1.5,
+};
+
+const sectionEyebrowStyle: CSSProperties = {
+  color: '#8a8177',
+  fontSize: '11px',
+  fontWeight: 800,
+  letterSpacing: '0.12em',
+  textTransform: 'uppercase',
+};
+
+const MediaActionButton = ({
+  icon,
+  label,
+  description,
+  onClick,
+  disabled,
+  style,
+}: {
+  icon: ReactNode;
+  label: string;
+  description: string;
+  onClick: () => void;
+  disabled?: boolean;
+  style?: CSSProperties;
+}) => (
+  <button
+    type="button"
+    aria-label={label}
+    onClick={onClick}
+    disabled={disabled}
+    style={{
+      ...mediaActionButtonStyle,
+      opacity: disabled ? 0.65 : 1,
+      ...style,
+    }}
+  >
+    <span style={mediaActionIconStyle}>{icon}</span>
+    <span style={{ display: 'grid', gap: '3px', minWidth: 0 }}>
+      <span style={mediaActionLabelStyle}>{label}</span>
+      <span style={mediaActionDescriptionStyle}>{description}</span>
+    </span>
+  </button>
+);
+
+const isGeneratedSvgAvatar = (src?: string | null) => Boolean(src?.trim().startsWith('data:image/svg+xml'));
+
 const deriveMediaType = (file: File): MediaType | null => {
   if (file.type.startsWith('image/')) return 'image';
   if (file.type.startsWith('video/')) return 'video';
   if (file.type.startsWith('audio/')) return 'audio';
+  const lowerName = file.name.toLowerCase();
+  if (/\.(jpe?g|png|webp|heic|heif)$/.test(lowerName)) return 'image';
+  if (/\.(mp4|webm|mov|m4v|3gp|3gpp)$/.test(lowerName)) return 'video';
+  if (/\.(m4a|mp3|wav|webm|ogg|aac|amr|3gp|3gpp)$/.test(lowerName)) return 'audio';
   return null;
+};
+
+const recordingExtensionFromMime = (mimeType: string, mode: Exclude<NativeCaptureMode, 'photo'>) => {
+  if (/mp4|m4a/i.test(mimeType)) return mode === 'video' ? 'mp4' : 'm4a';
+  if (/ogg/i.test(mimeType)) return 'ogg';
+  if (/wav/i.test(mimeType)) return 'wav';
+  return 'webm';
 };
 
 const splitTags = (value: string) =>
@@ -158,6 +267,9 @@ const RecordForm = ({
   const [tagSelectValue, setTagSelectValue] = useState('');
   const [poiSuggestions, setPoiSuggestions] = useState<LocationSuggestion[]>([]);
   const [poiLoading, setPoiLoading] = useState(false);
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [nativeCaptureMode, setNativeCaptureMode] = useState<NativeCaptureMode | null>(null);
+  const [nativeCaptureStatus, setNativeCaptureStatus] = useState<NativeCaptureStatus>('preview');
   const [aiPreviewLoading, setAiPreviewLoading] = useState(false);
   const [aiPreviewSummary, setAiPreviewSummary] = useState<string | null>(null);
   const [aiPreviewTags, setAiPreviewTags] = useState<string[]>([]);
@@ -167,8 +279,20 @@ const RecordForm = ({
   const titleInputRef = useRef<HTMLInputElement | null>(null);
   const contentInputRef = useRef<HTMLTextAreaElement | null>(null);
   const timeInputRef = useRef<HTMLInputElement | null>(null);
+  const photoCaptureInputRef = useRef<HTMLInputElement | null>(null);
+  const videoCaptureInputRef = useRef<HTMLInputElement | null>(null);
+  const galleryInputRef = useRef<HTMLInputElement | null>(null);
+  const audioCaptureInputRef = useRef<HTMLInputElement | null>(null);
+  const audioLibraryInputRef = useRef<HTMLInputElement | null>(null);
+  const nativeCaptureVideoRef = useRef<HTMLVideoElement | null>(null);
+  const nativeCaptureStreamRef = useRef<MediaStream | null>(null);
+  const nativeCaptureRecorderRef = useRef<MediaRecorder | null>(null);
+  const nativeCaptureChunksRef = useRef<Blob[]>([]);
+  const nativeCaptureCancelledRef = useRef(false);
 
-  const currentChild = children.find((child) => child.child_no === form.child_no) ?? activeChild;
+  const currentChild = children.find((child) => child.child_no === form.child_no) ?? activeChild ?? children[0] ?? null;
+  const currentChildName = currentChild?.name?.trim() || '请选择孩子';
+  const currentChildAvatar = currentChild?.avatar_url && !isGeneratedSvgAvatar(currentChild.avatar_url) ? resolveStoredMediaUrl(currentChild.avatar_url) : null;
   const selectedTags = splitTags(form.tags);
 
   useEffect(() => {
@@ -221,7 +345,8 @@ const RecordForm = ({
       titleInputRef.current?.focus();
     }
     if (initialFocus === 'media') {
-      contentInputRef.current?.focus();
+      titleInputRef.current?.blur();
+      contentInputRef.current?.blur();
     }
   }, [initialFocus]);
 
@@ -232,6 +357,7 @@ const RecordForm = ({
           URL.revokeObjectURL(item.preview_url);
         }
       });
+      nativeCaptureStreamRef.current?.getTracks().forEach((track) => track.stop());
     };
   }, []);
 
@@ -252,13 +378,20 @@ const RecordForm = ({
     setSelectorMessage(`已切换为 ${nextChild.name}`);
   };
 
-  const onFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file || !form.child_no) return;
+  const triggerMediaInput = (input: HTMLInputElement | null) => {
+    if (uploading) return;
+    input?.click();
+  };
+
+  const uploadMediaFile = async (file: File) => {
+    if (!form.child_no) {
+      setError('发布前请选择孩子档案');
+      return;
+    }
+
     const mediaType = deriveMediaType(file);
     if (!mediaType) {
       setError('暂不支持该媒体格式，请选择图片、视频或语音文件。');
-      event.target.value = '';
       return;
     }
 
@@ -320,8 +453,159 @@ const RecordForm = ({
       setError(err instanceof Error ? err.message : '上传失败');
     } finally {
       setUploading(false);
-      event.target.value = '';
     }
+  };
+
+  const onFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    await uploadMediaFile(file);
+    event.target.value = '';
+  };
+
+  const resetNativeCapture = () => {
+    nativeCaptureStreamRef.current?.getTracks().forEach((track) => track.stop());
+    nativeCaptureStreamRef.current = null;
+    nativeCaptureRecorderRef.current = null;
+    nativeCaptureChunksRef.current = [];
+    if (nativeCaptureVideoRef.current) {
+      nativeCaptureVideoRef.current.srcObject = null;
+    }
+    setNativeCaptureStatus('preview');
+    setNativeCaptureMode(null);
+  };
+
+  const openNativeCapture = async (mode: NativeCaptureMode, fallbackInput: HTMLInputElement | null) => {
+    if (uploading) return;
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setError('当前设备暂不支持应用内采集，已切换为系统选择器。');
+      triggerMediaInput(fallbackInput);
+      return;
+    }
+
+    nativeCaptureCancelledRef.current = false;
+    setError(null);
+    setSelectorMessage(null);
+    setNativeCaptureMode(mode);
+    setNativeCaptureStatus('preview');
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia(
+        mode === 'audio'
+          ? { audio: true }
+          : {
+              video: { facingMode: { ideal: 'environment' } },
+              audio: mode === 'video',
+            },
+      );
+      nativeCaptureStreamRef.current = stream;
+      await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
+      if (nativeCaptureVideoRef.current && mode !== 'audio') {
+        nativeCaptureVideoRef.current.srcObject = stream;
+        await nativeCaptureVideoRef.current.play().catch(() => undefined);
+      }
+    } catch (captureError) {
+      resetNativeCapture();
+      setError(captureError instanceof Error ? `无法调用手机${mode === 'audio' ? '麦克风' : '摄像头'}：${captureError.message}` : '无法调用手机采集能力。');
+      triggerMediaInput(fallbackInput);
+    }
+  };
+
+  const saveNativePhoto = async () => {
+    const video = nativeCaptureVideoRef.current;
+    if (!video) return;
+    setNativeCaptureStatus('saving');
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.max(1, video.videoWidth || 1280);
+    canvas.height = Math.max(1, video.videoHeight || 720);
+    const context = canvas.getContext('2d');
+    if (!context) {
+      setError('当前设备无法生成照片预览。');
+      resetNativeCapture();
+      return;
+    }
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.9));
+    if (!blob) {
+      setError('拍照失败，请重试或从相册添加。');
+      resetNativeCapture();
+      return;
+    }
+    const file = new File([blob], `nianlun-photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
+    resetNativeCapture();
+    await uploadMediaFile(file);
+  };
+
+  const startNativeRecording = () => {
+    const stream = nativeCaptureStreamRef.current;
+    if (!stream || !nativeCaptureMode || nativeCaptureMode === 'photo') return;
+    if (typeof MediaRecorder === 'undefined') {
+      setError('当前设备暂不支持直接录制，请改用系统选择器上传。');
+      resetNativeCapture();
+      triggerMediaInput(nativeCaptureMode === 'video' ? videoCaptureInputRef.current : audioCaptureInputRef.current);
+      return;
+    }
+    const preferredTypes =
+      nativeCaptureMode === 'video'
+        ? ['video/mp4', 'video/webm;codecs=vp8,opus', 'video/webm']
+        : ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm'];
+    const mimeType = preferredTypes.find((type) => MediaRecorder.isTypeSupported(type));
+    let recorder: MediaRecorder;
+    try {
+      recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+    } catch (recordingError) {
+      setError(recordingError instanceof Error ? `无法开始录制：${recordingError.message}` : '无法开始录制，请改用系统选择器上传。');
+      resetNativeCapture();
+      triggerMediaInput(nativeCaptureMode === 'video' ? videoCaptureInputRef.current : audioCaptureInputRef.current);
+      return;
+    }
+    nativeCaptureChunksRef.current = [];
+    nativeCaptureRecorderRef.current = recorder;
+    recorder.ondataavailable = (event) => {
+      if (event.data.size > 0) nativeCaptureChunksRef.current.push(event.data);
+    };
+    recorder.onstop = () => {
+      void (async () => {
+        if (nativeCaptureCancelledRef.current) {
+          resetNativeCapture();
+          return;
+        }
+        const currentMode = nativeCaptureMode;
+        if (!currentMode) {
+          resetNativeCapture();
+          return;
+        }
+        setNativeCaptureStatus('saving');
+        const fallbackType = currentMode === 'video' ? 'video/webm' : 'audio/webm';
+        const blob = new Blob(nativeCaptureChunksRef.current, { type: recorder.mimeType || fallbackType });
+        if (blob.size === 0) {
+          setError('没有录到有效内容，请重新录制或改用系统选择器上传。');
+          resetNativeCapture();
+          return;
+        }
+        const extension = recordingExtensionFromMime(blob.type || fallbackType, currentMode);
+        const file = new File([blob], `nianlun-${currentMode}-${Date.now()}.${extension}`, { type: blob.type || fallbackType });
+        resetNativeCapture();
+        await uploadMediaFile(file);
+      })();
+    };
+    recorder.start();
+    setNativeCaptureStatus('recording');
+  };
+
+  const stopNativeRecording = () => {
+    const recorder = nativeCaptureRecorderRef.current;
+    if (recorder && recorder.state !== 'inactive') recorder.stop();
+  };
+
+  const cancelNativeCapture = () => {
+    nativeCaptureCancelledRef.current = true;
+    const recorder = nativeCaptureRecorderRef.current;
+    if (recorder && recorder.state !== 'inactive') {
+      recorder.stop();
+      return;
+    }
+    resetNativeCapture();
   };
 
   const removeMedia = (mediaNo: string) => {
@@ -465,9 +749,10 @@ const RecordForm = ({
   const showMediaSection = form.record_type !== 'text';
   const showPhotoVideoAction = showMediaSection && form.record_type !== 'audio';
   const showAudioAction = showMediaSection && form.record_type !== 'video';
-  const mediaActionCount = Number(showPhotoVideoAction) + Number(showAudioAction);
-  const photoVideoLabel = form.record_type === 'video' ? '拍摄/上传视频' : '添加照片/视频';
-  const photoVideoAccept = form.record_type === 'video' ? 'video/mp4,video/webm,video/quicktime' : 'image/jpeg,image/png,image/webp,image/heic,image/heif,video/mp4,video/webm,video/quicktime';
+  const photoVideoAccept =
+    form.record_type === 'video'
+      ? 'video/*,video/mp4,video/webm,video/quicktime,video/3gpp'
+      : 'image/*,video/*,image/jpeg,image/png,image/webp,image/heic,image/heif,video/mp4,video/webm,video/quicktime,video/3gpp';
   const mediaHint =
     form.record_type === 'video'
       ? '支持 MP4、WebM、MOV 视频'
@@ -475,23 +760,31 @@ const RecordForm = ({
         ? '支持 M4A、MP3、WAV、WebM、OGG 语音'
       : '支持 JPG、PNG、WebP、HEIC、MP4、WebM、M4A、MP3、WAV';
 
-  const useCurrentLocation = () => {
-    if (!navigator.geolocation) {
-      setSelectorMessage('当前浏览器不支持定位，可直接搜索或选择常用地点。');
-      return;
+  const useCurrentLocation = async () => {
+    setLocationLoading(true);
+    setError(null);
+    setSelectorMessage('正在请求手机定位…');
+    try {
+      const location = await getCurrentDeviceLocation();
+      const latitude = location.latitude.toFixed(5);
+      const longitude = location.longitude.toFixed(5);
+      const accuracyText = location.accuracy ? `，精度约 ${Math.round(location.accuracy)} 米` : '';
+      const nearby = await webApi.searchLocations({
+        keyword: '附近地点',
+        latitude: location.latitude,
+        longitude: location.longitude,
+      }).catch(() => null);
+      if (nearby?.list.length) {
+        setPoiSuggestions(nearby.list.slice(0, 5));
+      }
+      const nearestLocation = nearby?.list[0]?.name;
+      setForm((current) => ({ ...current, location_text: nearestLocation ?? `手机定位 · ${latitude}, ${longitude}` }));
+      setSelectorMessage(`已读取手机定位${accuracyText}${nearestLocation ? `，已优先填入「${nearestLocation}」。` : '，可继续补充具体地点名称。'}`);
+    } catch (error) {
+      setSelectorMessage(error instanceof Error ? error.message : '定位失败，请检查手机定位服务和应用定位权限。');
+    } finally {
+      setLocationLoading(false);
     }
-
-    setSelectorMessage('正在获取当前位置…');
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const latitude = position.coords.latitude.toFixed(5);
-        const longitude = position.coords.longitude.toFixed(5);
-        setForm((current) => ({ ...current, location_text: `当前位置（${latitude}, ${longitude}）` }));
-        setSelectorMessage('已写入当前位置，可按需要补充具体地点名称。');
-      },
-      () => setSelectorMessage('定位失败，请检查浏览器定位权限，或手动搜索地点。'),
-      { enableHighAccuracy: true, timeout: 8000 },
-    );
   };
 
   return (
@@ -524,10 +817,13 @@ const RecordForm = ({
               style={{
                 ...primaryButtonStyle,
                 minHeight: '44px',
-                padding: '8px 18px',
-                fontSize: '14px',
+                borderRadius: '14px',
+                background: 'linear-gradient(135deg, #2d241d 0%, #46362b 100%)',
+                padding: '10px 14px',
+                fontSize: '12px',
+                letterSpacing: '0.02em',
                 cursor: submitting || uploading ? 'not-allowed' : 'pointer',
-                boxShadow: '0 8px 18px rgba(41,37,36,0.18)',
+                boxShadow: '0 10px 24px rgba(41,37,36,0.18)',
                 opacity: submitting || uploading ? 0.72 : 1,
               }}
               disabled={submitting || uploading}
@@ -537,307 +833,246 @@ const RecordForm = ({
           }
         />
         <form id="record-form" onSubmit={handleSubmit} style={{ ...rowStyle, gap: '24px' }}>
-          <div
+          <section
             style={{
-              borderRadius: '20px',
-              minHeight: '74px',
-              padding: '14px',
-              background: '#fafaf9',
-              border: '1px solid #f2efe9',
               display: 'grid',
-              gridTemplateColumns: 'minmax(0, 1fr) auto',
-              alignItems: 'center',
-              gap: '16px',
-              boxShadow: '0 2px 8px rgba(41,37,36,0.015)',
+              gap: '14px',
             }}
           >
-            <button
-              type="button"
-              onClick={switchChild}
+            <div
               style={{
-                minWidth: 0,
-                border: 'none',
-                background: 'transparent',
-                padding: '4px 0',
-                minHeight: '44px',
-                display: 'flex',
+                borderRadius: '24px',
+                padding: '16px',
+                background: 'linear-gradient(135deg, #fff8ee 0%, #ffffff 72%)',
+                border: '1px solid #efe3d1',
+                display: 'grid',
+                gridTemplateColumns: 'minmax(0, 1fr) auto',
                 alignItems: 'center',
-                gap: '12px',
-                cursor: 'pointer',
-                textAlign: 'left',
+                gap: '16px',
+                boxShadow: '0 12px 28px rgba(41,37,36,0.045)',
               }}
             >
-              <div
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '999px',
-                  background: '#fff',
-                  border: '1px solid #e7e5e4',
-                  display: 'grid',
-                  placeItems: 'center',
-                  color: '#57534e',
-                  fontWeight: 700,
-                  boxShadow: '0 2px 6px rgba(15,23,42,0.03)',
-                  flexShrink: 0,
-                }}
+              <div style={{ display: 'grid', gap: '7px' }}>
+                <span style={sectionEyebrowStyle}>发布对象</span>
+                <button
+                  type="button"
+                  aria-label={`切换孩子：${currentChildName}`}
+                  onClick={switchChild}
+                  style={{
+                    minWidth: 0,
+                    border: 'none',
+                    background: 'transparent',
+                    padding: 0,
+                    minHeight: '44px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: '42px',
+                      height: '42px',
+                      borderRadius: '999px',
+                      background: currentChildAvatar ? '#ffffff' : '#fff8ee',
+                      border: '1px solid #e7ddcf',
+                      display: 'grid',
+                      placeItems: 'center',
+                      color: '#57534e',
+                      fontWeight: 700,
+                      boxShadow: '0 4px 10px rgba(15,23,42,0.04)',
+                      flexShrink: 0,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {currentChildAvatar ? <img src={currentChildAvatar} alt={currentChildName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (currentChild?.name?.slice(0, 1) ?? '宝')}
+                  </div>
+                  <div style={{ display: 'grid', gap: '2px', minWidth: 0 }}>
+                    <strong style={{ fontSize: '17px', color: '#292524', fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{currentChildName}</strong>
+                    <span style={{ fontSize: '12px', color: '#8a8177', lineHeight: 1.5 }}>发布后会进入家庭时间轴，后续仍可回来补标签和地点。</span>
+                  </div>
+                </button>
+              </div>
+              <button
+                type="button"
+                aria-label="切换或查看孩子资料"
+                onClick={switchChild}
+                style={{ border: '1px solid #eadfce', background: '#ffffff', color: '#6b6257', display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', padding: '0 14px', minHeight: '44px', borderRadius: '999px', fontSize: '13px', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: '0 4px 14px rgba(41,37,36,0.04)' }}
               >
-                {currentChild?.name?.slice(0, 1) ?? '宝'}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', minWidth: 0 }}>
-                <span style={{ fontSize: '15px', color: '#57534e', fontWeight: 500, flexShrink: 0 }}>记录给：</span>
-                <strong style={{ fontSize: '15px', color: '#292524', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{currentChild?.name ?? '请选择孩子'}</strong>
-              </div>
-            </button>
-            <button
-              type="button"
-              aria-label="切换或查看孩子资料"
-              onClick={switchChild}
-              style={{ border: 'none', background: 'transparent', color: '#a8a29e', display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', padding: '4px 0', minHeight: '44px', fontSize: '15px', fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}
-            >
-              切换孩子
-              <ChevronRight size={17} strokeWidth={2.3} />
-            </button>
-          </div>
+                切换孩子
+                <ChevronRight size={16} strokeWidth={2.3} />
+              </button>
+            </div>
 
-          <section
-            aria-label="发布前必填项"
-            style={{
-              borderRadius: '18px',
-              background: '#fffdf7',
-              border: '1px solid #f2e8c9',
-              padding: '12px',
-              display: 'grid',
-              gap: '8px',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-              <strong style={{ color: '#292524', fontSize: '13px' }}>发布前只需要补齐这 3 项</strong>
-              <span style={{ color: '#a16207', fontSize: '11px', fontWeight: 800 }}>其他信息可稍后补充</span>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: `repeat(${requiredItems.length}, minmax(0, 1fr))`, gap: '8px' }}>
-            {requiredItems.map((item) => (
-              <span
-                key={item.label}
-                style={{
-                  minHeight: '34px',
-                  borderRadius: '999px',
-                  border: item.done ? '1px solid #d9eadf' : '1px solid #eee9df',
-                  background: item.done ? '#f2fbf5' : '#fafaf9',
-                  color: item.done ? '#166534' : '#78716c',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '5px',
-                  fontSize: '12px',
-                  fontWeight: 800,
-                }}
-              >
-                {item.done ? <Check size={13} strokeWidth={2.5} /> : null}
-                {item.label}
-              </span>
-            ))}
-            </div>
+            <section
+              aria-label="发布前必填项"
+              style={{
+                borderRadius: '20px',
+                background: '#fffdf7',
+                border: '1px solid #f2e8c9',
+                padding: '12px',
+                display: 'grid',
+                gap: '8px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+                <strong style={{ color: '#292524', fontSize: '13px' }}>发布前只需要补齐这 3 项</strong>
+                <span style={{ color: '#a16207', fontSize: '11px', fontWeight: 800 }}>其他信息可稍后补充</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${requiredItems.length}, minmax(0, 1fr))`, gap: '8px' }}>
+              {requiredItems.map((item) => (
+                <span
+                  key={item.label}
+                  style={{
+                    minHeight: '36px',
+                    borderRadius: '999px',
+                    border: item.done ? '1px solid #d9eadf' : '1px solid #eee9df',
+                    background: item.done ? '#f2fbf5' : '#fafaf9',
+                    color: item.done ? '#166534' : '#78716c',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '5px',
+                    fontSize: '12px',
+                    fontWeight: 800,
+                  }}
+                >
+                  {item.done ? <Check size={13} strokeWidth={2.5} /> : null}
+                  {item.label}
+                </span>
+              ))}
+              </div>
+            </section>
           </section>
 
           {showMediaSection ? (
-            <div style={{ minHeight: mediaPreviews.length ? '174px' : '120px', display: 'grid', alignContent: 'start', gap: '12px', position: 'relative' }}>
-              <div
-                style={{
-                  display: 'flex',
-                  gap: mediaPreviews.length ? '12px' : 0,
-                  overflowX: 'auto',
-                  paddingBottom: mediaPreviews.length ? '4px' : 0,
-                  border: mediaPreviews.length ? 'none' : '1.5px dashed #d6d3d1',
-                  borderRadius: mediaPreviews.length ? 0 : '22px',
-                  minHeight: mediaPreviews.length ? undefined : '120px',
-                  position: 'relative',
-                  WebkitOverflowScrolling: 'touch',
-                }}
-              >
-                {!mediaPreviews.length ? (
-                  <span style={{ position: 'absolute', left: '22px', top: '18px', color: '#a8a29e', fontSize: '12px', letterSpacing: '0.08em', fontWeight: 700 }}>
-                    影像与声音
-                  </span>
-                ) : null}
-                {mediaPreviews.map((media) => (
-                  <div
-                    key={media.media_no}
-                    style={{
-                      position: 'relative',
-                      width: media.media_type === 'audio' ? '172px' : '156px',
-                      height: '156px',
-                      flex: '0 0 auto',
-                      borderRadius: '16px',
-                      overflow: 'hidden',
-                      border: '1px solid #e7e5e4',
-                      background: '#ffffff',
-                      boxShadow: '0 4px 14px rgba(15,23,42,0.05)',
-                    }}
-                  >
-                    {media.media_type === 'image' ? (
-                      <img
-                        src={media.preview_url}
-                        alt={media.original_name ?? '已上传照片'}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                      />
-                    ) : null}
-                    {media.media_type === 'video' ? (
-                      <video
-                        src={media.preview_url}
-                        controls
-                        muted
-                        playsInline
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', background: '#292524' }}
-                      />
-                    ) : null}
-                    {media.media_type === 'audio' ? (
-                      <div style={{ width: '100%', height: '100%', display: 'grid', alignContent: 'center', gap: '10px', padding: '14px', background: '#faf8f5' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '9px', color: '#57534e', fontSize: '13px', fontWeight: 700 }}>
-                          <PlayCircle size={19} strokeWidth={2.2} />
-                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{media.original_name ?? '语音记录'}</span>
-                        </div>
-                        <audio src={media.preview_url} controls style={{ width: '100%', height: '32px' }} />
-                      </div>
-                    ) : null}
-                    <button
-                      type="button"
-                      aria-label="移除媒体"
-                      onClick={() => removeMedia(media.media_no)}
-                      style={{
-                        position: 'absolute',
-                        top: '8px',
-                        right: '8px',
-                        width: '28px',
-                        height: '28px',
-                        borderRadius: '999px',
-                        border: '1px solid rgba(255,255,255,0.72)',
-                        background: 'rgba(41,37,36,0.74)',
-                        color: '#fff',
-                        display: 'grid',
-                        placeItems: 'center',
-                        cursor: 'pointer',
-                        padding: 0,
-                      }}
-                    >
-                      <X size={14} strokeWidth={2.4} />
-                    </button>
-                  </div>
-                ))}
-                {showPhotoVideoAction ? (
-                  <label
-                    style={{
-                      width: mediaPreviews.length ? '156px' : showAudioAction ? '50%' : '100%',
-                      height: mediaPreviews.length ? '156px' : '120px',
-                      flex: '0 0 auto',
-                      borderRadius: mediaPreviews.length ? '16px' : 0,
-                      border: mediaPreviews.length ? '1.5px dashed #d6d3d1' : 'none',
-                      background: mediaPreviews.length ? '#fafaf9' : 'transparent',
-                      display: 'grid',
-                      alignContent: 'center',
-                      justifyItems: 'center',
-                      gap: '10px',
-                      cursor: uploading ? 'not-allowed' : 'pointer',
-                      opacity: uploading ? 0.65 : 1,
-                    }}
-                  >
-                    <span
-                      style={{
-                        width: '48px',
-                        height: '48px',
-                        borderRadius: '999px',
-                        background: '#ffffff',
-                        border: '1px solid #e7e5e4',
-                        display: 'grid',
-                        placeItems: 'center',
-                        color: '#78716c',
-                        boxShadow: '0 2px 6px rgba(15,23,42,0.03)',
-                      }}
-                    >
-                      {form.record_type === 'video' ? <Video size={21} strokeWidth={2} /> : <ImagePlus size={21} strokeWidth={2} />}
-                    </span>
-                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#78716c', textAlign: 'center' }}>{uploading ? '上传中…' : photoVideoLabel}</span>
-                    <input
-                      type="file"
-                      accept={photoVideoAccept}
-                      capture={form.record_type === 'video' ? 'environment' : undefined}
-                      onChange={(event) => void onFileChange(event)}
-                      disabled={uploading}
-                      style={{ display: 'none' }}
-                    />
-                  </label>
-                ) : null}
-                {showAudioAction ? (
-                  <label
-                    style={{
-                      width: mediaPreviews.length ? (mediaActionCount > 1 ? '156px' : '172px') : showPhotoVideoAction ? '50%' : '100%',
-                      height: mediaPreviews.length ? '156px' : '120px',
-                      flex: '0 0 auto',
-                      borderRadius: mediaPreviews.length ? '16px' : 0,
-                      border: mediaPreviews.length ? '1.5px dashed #d6d3d1' : 'none',
-                      borderLeft: !mediaPreviews.length && showPhotoVideoAction ? '1px solid #e7e5e4' : undefined,
-                      background: mediaPreviews.length ? '#fafaf9' : 'transparent',
-                      display: 'grid',
-                      alignContent: 'center',
-                      justifyItems: 'center',
-                      gap: '10px',
-                      cursor: uploading ? 'not-allowed' : 'pointer',
-                      opacity: uploading ? 0.65 : 1,
-                    }}
-                  >
-                    <span
-                      style={{
-                        width: '48px',
-                        height: '48px',
-                        borderRadius: '999px',
-                        background: '#ffffff',
-                        border: '1px solid #e7e5e4',
-                        display: 'grid',
-                        placeItems: 'center',
-                        color: '#78716c',
-                        boxShadow: '0 2px 6px rgba(15,23,42,0.03)',
-                      }}
-                    >
-                      <Mic size={21} strokeWidth={2} />
-                    </span>
-                    <span style={{ fontSize: '13px', fontWeight: 700, color: '#78716c', textAlign: 'center' }}>{uploading ? '上传中…' : form.record_type === 'audio' ? '录制/上传语音' : '录制语音'}</span>
-                    <input
-                      type="file"
-                      accept="audio/mpeg,audio/mp4,audio/m4a,audio/x-m4a,audio/aac,audio/wav,audio/x-wav,audio/webm,audio/ogg"
-                      capture
-                      onChange={(event) => void onFileChange(event)}
-                      disabled={uploading}
-                      style={{ display: 'none' }}
-                    />
-                  </label>
-                ) : null}
+            <section style={{ display: 'grid', gap: '14px' }}>
+              <div style={{ display: 'grid', gap: '4px' }}>
+                <span style={sectionEyebrowStyle}>媒体采集</span>
+                <span style={{ color: '#292524', fontSize: '18px', fontWeight: 800, letterSpacing: '-0.02em' }}>影像与声音</span>
+                <span style={{ color: '#78716c', fontSize: '12px', lineHeight: 1.65 }}>现场拍摄、相册补传和语音留档分开处理，手势更直觉，录制路径也更像原生 App。</span>
               </div>
-              <span
-                style={{
-                  position: 'absolute',
-                  left: '2px',
-                  right: '2px',
-                  top: '164px',
-                  display: mediaPreviews.length ? 'block' : 'none',
-                  color: '#a8a29e',
-                  fontSize: '10px',
-                  lineHeight: 1.2,
-                  fontWeight: 600,
-                  textAlign: 'left',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                }}
-              >
-                {mediaHint}
-              </span>
-            </div>
+
+              {mediaPreviews.length ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
+                  {mediaPreviews.map((media) => (
+                    <div
+                      key={media.media_no}
+                      style={{
+                        position: 'relative',
+                        minHeight: '156px',
+                        borderRadius: '18px',
+                        overflow: 'hidden',
+                        border: '1px solid #e7e5e4',
+                        background: '#ffffff',
+                        boxShadow: '0 10px 24px rgba(15,23,42,0.06)',
+                      }}
+                    >
+                      {media.media_type === 'image' ? <img src={media.preview_url} alt={media.original_name ?? '已上传照片'} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /> : null}
+                      {media.media_type === 'video' ? <video src={media.preview_url} controls muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', background: '#292524' }} /> : null}
+                      {media.media_type === 'audio' ? (
+                        <div style={{ width: '100%', height: '100%', display: 'grid', alignContent: 'center', gap: '12px', padding: '16px', background: 'linear-gradient(180deg, #faf8f5 0%, #ffffff 100%)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '9px', color: '#57534e', fontSize: '13px', fontWeight: 700 }}>
+                            <PlayCircle size={19} strokeWidth={2.2} />
+                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{media.original_name ?? '语音记录'}</span>
+                          </div>
+                          <audio src={media.preview_url} controls style={{ width: '100%', height: '32px' }} />
+                        </div>
+                      ) : null}
+                      <button
+                        type="button"
+                        aria-label="移除媒体"
+                        onClick={() => removeMedia(media.media_no)}
+                        style={{
+                          position: 'absolute',
+                          top: '8px',
+                          right: '8px',
+                          width: '44px',
+                          height: '44px',
+                          borderRadius: '999px',
+                          border: '1px solid rgba(255,255,255,0.72)',
+                          background: 'rgba(41,37,36,0.72)',
+                          color: '#fff',
+                          display: 'grid',
+                          placeItems: 'center',
+                          cursor: 'pointer',
+                          padding: 0,
+                        }}
+                      >
+                        <X size={15} strokeWidth={2.4} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+
+              <div style={{ display: 'grid', gap: '12px' }}>
+                {showPhotoVideoAction ? (
+                  <section style={mediaActionCardStyle}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
+                      <div style={{ display: 'grid', gap: '5px' }}>
+                        <strong style={{ color: '#292524', fontSize: '15px', fontWeight: 800 }}>{form.record_type === 'video' ? '视频采集' : '图片 / 视频'}</strong>
+                        <span style={{ color: '#78716c', fontSize: '12px', lineHeight: 1.6 }}>
+                          {form.record_type === 'video' ? '可直接调用摄像头拍视频，也可以从手机相册导入。' : '既能现场拍，也能从相册快速补素材。'}
+                        </span>
+                      </div>
+                      <span style={{ width: '42px', height: '42px', borderRadius: '16px', background: '#f7f4ee', border: '1px solid #ece3d5', display: 'grid', placeItems: 'center', color: '#5b5348', flexShrink: 0 }}>
+                        {form.record_type === 'video' ? <Video size={18} strokeWidth={2.1} /> : <ImagePlus size={18} strokeWidth={2.1} />}
+                      </span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
+                      {form.record_type === 'video' ? (
+                        <>
+                          <MediaActionButton icon={<Video size={18} strokeWidth={2.2} />} label="拍摄视频" description="调用摄像头现场录制" onClick={() => void openNativeCapture('video', videoCaptureInputRef.current)} disabled={uploading} />
+                          <MediaActionButton icon={<ImagePlus size={18} strokeWidth={2.2} />} label="从相册选择" description="导入已有视频素材" onClick={() => triggerMediaInput(galleryInputRef.current)} disabled={uploading} />
+                        </>
+                      ) : (
+                        <>
+                          <MediaActionButton icon={<ImagePlus size={18} strokeWidth={2.2} />} label="拍照记录" description="调用相机拍下当下" onClick={() => void openNativeCapture('photo', photoCaptureInputRef.current)} disabled={uploading} />
+                          <MediaActionButton icon={<Video size={18} strokeWidth={2.2} />} label="拍摄视频" description="记录动作和声音" onClick={() => void openNativeCapture('video', videoCaptureInputRef.current)} disabled={uploading} />
+                          <MediaActionButton icon={<Image size={18} strokeWidth={2.2} />} label="从相册添加" description="一次选择已有照片或视频素材" onClick={() => triggerMediaInput(galleryInputRef.current)} disabled={uploading} style={{ gridColumn: '1 / -1' }} />
+                        </>
+                      )}
+                    </div>
+                  </section>
+                ) : null}
+
+                {showAudioAction ? (
+                  <section style={mediaActionCardStyle}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
+                      <div style={{ display: 'grid', gap: '5px' }}>
+                        <strong style={{ color: '#292524', fontSize: '15px', fontWeight: 800 }}>语音采集</strong>
+                        <span style={{ color: '#78716c', fontSize: '12px', lineHeight: 1.6 }}>录一段和上传已有音频分开，减少误触。</span>
+                      </div>
+                      <span style={{ width: '42px', height: '42px', borderRadius: '16px', background: '#f7f4ee', border: '1px solid #ece3d5', display: 'grid', placeItems: 'center', color: '#5b5348', flexShrink: 0 }}>
+                        <Mic size={18} strokeWidth={2.1} />
+                      </span>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
+                      <MediaActionButton icon={<Mic size={18} strokeWidth={2.2} />} label="录制语音" description="调用麦克风现场说一段" onClick={() => void openNativeCapture('audio', audioCaptureInputRef.current)} disabled={uploading} />
+                      <MediaActionButton icon={<FileAudio size={18} strokeWidth={2.2} />} label="上传语音" description="选择已有录音或音频" onClick={() => triggerMediaInput(audioLibraryInputRef.current)} disabled={uploading} />
+                    </div>
+                  </section>
+                ) : null}
+
+                <input ref={photoCaptureInputRef} aria-label="拍照记录" type="file" accept="image/*,image/jpeg,image/png,image/webp,image/heic,image/heif" capture="environment" onChange={(event) => void onFileChange(event)} disabled={uploading} style={{ display: 'none' }} />
+                <input ref={videoCaptureInputRef} aria-label="拍摄视频" type="file" accept="video/*,video/mp4,video/webm,video/quicktime,video/3gpp" capture="environment" onChange={(event) => void onFileChange(event)} disabled={uploading} style={{ display: 'none' }} />
+                <input ref={galleryInputRef} aria-label={form.record_type === 'video' ? '从相册选择视频' : '从相册添加'} type="file" accept={photoVideoAccept} onChange={(event) => void onFileChange(event)} disabled={uploading} style={{ display: 'none' }} />
+                <input ref={audioCaptureInputRef} aria-label="录制语音" type="file" accept="audio/*,audio/mpeg,audio/mp4,audio/m4a,audio/x-m4a,audio/aac,audio/wav,audio/x-wav,audio/webm,audio/ogg,audio/3gpp,audio/amr" capture onChange={(event) => void onFileChange(event)} disabled={uploading} style={{ display: 'none' }} />
+                <input ref={audioLibraryInputRef} aria-label="上传语音" type="file" accept="audio/*,audio/mpeg,audio/mp4,audio/m4a,audio/x-m4a,audio/aac,audio/wav,audio/x-wav,audio/webm,audio/ogg,audio/3gpp,audio/amr" onChange={(event) => void onFileChange(event)} disabled={uploading} style={{ display: 'none' }} />
+              </div>
+
+              <span style={{ color: '#a8a29e', fontSize: '11px', lineHeight: 1.45, fontWeight: 600 }}>{uploading ? '正在上传媒体…' : mediaHint}</span>
+            </section>
           ) : null}
 
-          <div style={{ display: 'grid', gap: '18px' }}>
+          <div style={{ display: 'grid', gap: '18px', borderRadius: '28px', border: '1px solid #efe4d4', background: 'linear-gradient(180deg, #fffdfa 0%, #ffffff 100%)', padding: '20px 18px', boxShadow: '0 16px 36px rgba(41,37,36,0.05)' }}>
             <div style={{ display: 'grid', gap: '4px' }}>
-              <span style={{ color: '#292524', fontSize: '15px', fontWeight: 800 }}>写下这一刻</span>
-              <span style={{ color: '#78716c', fontSize: '12px', lineHeight: 1.55 }}>标题让以后容易找到，正文保留当时的细节。</span>
+              <span style={sectionEyebrowStyle}>内容输入</span>
+              <span style={{ color: '#292524', fontSize: '18px', fontWeight: 800, letterSpacing: '-0.02em' }}>写下这一刻</span>
+              <span style={{ color: '#78716c', fontSize: '12px', lineHeight: 1.55 }}>标题让以后容易找到，正文保留当时的细节和情绪。</span>
             </div>
             <input
               ref={titleInputRef}
@@ -845,10 +1080,10 @@ const RecordForm = ({
               style={{
                 width: '100%',
                 border: 'none',
-                borderBottom: '1px solid #e7e5e4',
-                padding: '0 0 12px',
-                fontSize: '21px',
-                fontWeight: 600,
+                borderBottom: '1px solid #ece3d6',
+                padding: '0 0 14px',
+                fontSize: '18px',
+                fontWeight: 700,
                 color: '#292524',
                 outline: 'none',
                 background: 'transparent',
@@ -863,14 +1098,14 @@ const RecordForm = ({
               className="record-body-input"
               style={{
                 width: '100%',
-                minHeight: '190px',
+                minHeight: '184px',
                 border: 'none',
                 outline: 'none',
-                resize: 'vertical',
+                resize: 'none',
                 background: 'transparent',
                 padding: 0,
-                fontSize: '16px',
-                lineHeight: 1.8,
+                fontSize: '15px',
+                lineHeight: 1.9,
                 color: '#44403c',
                 boxSizing: 'border-box',
               }}
@@ -894,21 +1129,21 @@ const RecordForm = ({
                 onClick={() => void generateAiPreview()}
                 disabled={aiPreviewLoading}
                 style={{
-                  minHeight: '44px',
-                  border: 'none',
-                  borderRadius: '999px',
-                  background: 'linear-gradient(135deg, #6366f1 0%, #a855f7 100%)',
-                  color: '#ffffff',
-                  padding: '8px 13px',
+                  minHeight: '40px',
+                  border: '1px solid #e8dece',
+                  borderRadius: '14px',
+                  background: '#fffaf2',
+                  color: '#6f4b2f',
+                  padding: '10px 13px',
                   display: 'inline-flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '6px',
                   fontSize: '12px',
-                  fontWeight: 700,
+                  fontWeight: 800,
                   cursor: aiPreviewLoading ? 'not-allowed' : 'pointer',
                   opacity: aiPreviewLoading ? 0.72 : 1,
-                  boxShadow: '0 8px 18px rgba(99,102,241,0.22)',
+                  boxShadow: '0 8px 20px rgba(41,37,36,0.06)',
                 }}
               >
                 <Sparkles size={14} strokeWidth={2.2} />
@@ -1081,11 +1316,18 @@ const RecordForm = ({
                   </AppSelect>
                 </div>
               </div>
-              {form.location_text.trim() || poiLoading ? (
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  <button type="button" style={compactPillButtonStyle} onClick={useCurrentLocation}>
-                    定位当前
-                  </button>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  style={{ ...compactPillButtonStyle, opacity: locationLoading ? 0.72 : 1 }}
+                  onClick={() => void useCurrentLocation()}
+                  disabled={locationLoading}
+                >
+                  <MapPin size={13} strokeWidth={2.2} />
+                  {locationLoading ? '定位中…' : '手机定位'}
+                </button>
+                {form.location_text.trim() || poiLoading ? (
+                  <>
                   {mergedLocationSuggestions.map((location) => (
                     <button
                       key={location.id}
@@ -1101,8 +1343,9 @@ const RecordForm = ({
                     </button>
                   ))}
                   {poiLoading ? <span style={{ ...helperTextStyle, alignSelf: 'center' }}>搜索地点中…</span> : null}
-                </div>
-              ) : null}
+                  </>
+                ) : null}
+              </div>
               {selectedTags.length ? (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                   {selectedTags.map((tag, index) => (
@@ -1116,63 +1359,73 @@ const RecordForm = ({
             </section>
           </div>
 
-          <div style={{ marginTop: '8px', paddingTop: '20px', borderTop: '1px solid #e7e5e4', display: 'flex', justifyContent: 'space-between', gap: '16px', alignItems: 'flex-start' }}>
-            <div style={{ display: 'flex', gap: '14px', flex: 1 }}>
-              <div
-                style={{
-                  width: '44px',
-                  height: '44px',
-                  borderRadius: '999px',
-                  background: form.record_type === 'milestone' ? '#fef3c7' : '#fafaf9',
-                  border: form.record_type === 'milestone' ? '1px solid #fde68a' : '1px solid #e7e5e4',
-                  display: 'grid',
-                  placeItems: 'center',
-                  color: form.record_type === 'milestone' ? '#d97706' : '#78716c',
-                }}
-              >
-                <Star size={20} strokeWidth={2.4} fill={form.record_type === 'milestone' ? 'currentColor' : 'none'} />
-              </div>
-              <div style={{ display: 'grid', gap: '4px', flex: 1 }}>
-                <span style={{ fontSize: '16px', fontWeight: 600, color: '#292524' }}>标记为里程碑</span>
-                <span style={{ fontSize: '13px', lineHeight: 1.6, color: '#78716c' }}>点亮这颗星星，记录并高亮孩子成长过程中的重要里程碑时刻。</span>
-              </div>
-            </div>
-            <button
-              type="button"
-              aria-label="切换里程碑记录"
-              aria-pressed={form.record_type === 'milestone'}
+          <button
+            type="button"
+            aria-label="切换里程碑记录"
+            aria-pressed={form.record_type === 'milestone'}
+            style={{
+              width: '100%',
+              minHeight: '66px',
+              border: form.record_type === 'milestone' ? '1px solid #e7c66a' : '1px solid #efe7da',
+              borderRadius: '22px',
+              background: form.record_type === 'milestone' ? 'linear-gradient(135deg, #fff7d9 0%, #fffdf7 58%, #ffffff 100%)' : '#ffffff',
+              padding: '11px 12px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              textAlign: 'left',
+              cursor: 'pointer',
+              boxShadow: form.record_type === 'milestone' ? '0 12px 24px rgba(161,98,7,0.10)' : '0 4px 14px rgba(41,37,36,0.035)',
+            }}
+            onClick={() => setForm((current) => ({ ...current, record_type: current.record_type === 'milestone' ? 'mixed' : 'milestone' }))}
+          >
+            <span
               style={{
-                width: '48px',
-                minHeight: '44px',
-                height: '44px',
-                border: 'none',
+                width: '42px',
+                height: '42px',
+                borderRadius: '16px',
+                background: form.record_type === 'milestone' ? '#f9d56f' : '#f7f2ea',
+                display: 'grid',
+                placeItems: 'center',
+                color: form.record_type === 'milestone' ? '#78350f' : '#8a8177',
+                flexShrink: 0,
+                boxShadow: form.record_type === 'milestone' ? 'inset 0 -1px 0 rgba(120,53,15,0.14)' : 'none',
+              }}
+            >
+              <Star size={18} strokeWidth={2.3} fill={form.record_type === 'milestone' ? 'currentColor' : 'none'} />
+            </span>
+            <span style={{ display: 'grid', gap: '3px', minWidth: 0, flex: 1 }}>
+              <span style={{ fontSize: '14px', fontWeight: 850, color: '#292524' }}>里程碑</span>
+              <span style={{ fontSize: '12px', lineHeight: 1.45, color: '#78716c' }}>第一次、生日、入园等关键节点会被单独归档。</span>
+            </span>
+            <span
+              aria-hidden="true"
+              style={{
+                minWidth: '58px',
+                minHeight: '32px',
                 borderRadius: '999px',
-                background: form.record_type === 'milestone' ? '#a16207' : '#d6d3d1',
-                padding: '2px',
-                cursor: 'pointer',
+                background: form.record_type === 'milestone' ? '#78350f' : '#f4f0ea',
+                color: form.record_type === 'milestone' ? '#ffffff' : '#8a8177',
+                border: form.record_type === 'milestone' ? '1px solid #78350f' : '1px solid #e8dfd3',
+                padding: '7px 10px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '12px',
+                fontWeight: 850,
                 flexShrink: 0,
               }}
-              onClick={() => setForm((current) => ({ ...current, record_type: current.record_type === 'milestone' ? 'mixed' : 'milestone' }))}
             >
-              <div
-                style={{
-                  width: '22px',
-                  height: '22px',
-                  borderRadius: '999px',
-                  background: '#fff',
-                  transform: form.record_type === 'milestone' ? 'translate(22px, 9px)' : 'translate(0, 9px)',
-                  transition: 'transform 0.2s ease',
-                  boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
-                }}
-              />
-            </button>
-          </div>
+              {form.record_type === 'milestone' ? '已标记' : '标记'}
+            </span>
+          </button>
 
           {selectorMessage ? <p style={{ ...helperTextStyle, color: '#0f766e' }}>{selectorMessage}</p> : null}
           {mediaNos.length ? <p style={helperTextStyle}>已选择 {mediaNos.length} 个媒体，将随记录一起保存。</p> : null}
           {uploading ? <p style={helperTextStyle}>正在上传媒体…</p> : null}
           {error ? <p style={{ ...helperTextStyle, color: '#dc2626' }}>{error}</p> : null}
 
+          {mode === 'create' ? (
           <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center' }}>
             <button
               type="button"
@@ -1192,7 +1445,95 @@ const RecordForm = ({
               {pendingAction === 'draft' ? '保存中…' : '存为草稿'}
             </button>
           </div>
+          ) : null}
         </form>
+        {nativeCaptureMode ? (
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="手机采集"
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 50,
+              background: 'rgba(20, 16, 12, 0.58)',
+              display: 'grid',
+              placeItems: 'end center',
+              padding: '20px',
+              boxSizing: 'border-box',
+            }}
+          >
+            <section
+              style={{
+                width: '100%',
+                maxWidth: '390px',
+                borderRadius: '28px',
+                background: '#fffdf9',
+                padding: '18px',
+                display: 'grid',
+                gap: '14px',
+                boxShadow: '0 24px 56px rgba(15, 23, 42, 0.28)',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                <div style={{ display: 'grid', gap: '4px' }}>
+                  <strong style={{ color: '#292524', fontSize: '18px', fontWeight: 900 }}>
+                    {nativeCaptureMode === 'photo' ? '拍照记录' : nativeCaptureMode === 'video' ? '拍摄视频' : '录制语音'}
+                  </strong>
+                  <span style={{ color: '#78716c', fontSize: '12px', lineHeight: 1.5 }}>
+                    {nativeCaptureMode === 'audio' ? '正在调用手机麦克风，录好后会自动加入记录。' : '正在调用手机摄像头，采集完成后会自动加入记录。'}
+                  </span>
+                </div>
+                <button type="button" aria-label="关闭采集" onClick={cancelNativeCapture} style={{ ...secondaryButtonStyle, width: '44px', minHeight: '44px', padding: 0 }}>
+                  <X size={18} strokeWidth={2.4} />
+                </button>
+              </div>
+
+              {nativeCaptureMode === 'audio' ? (
+                <div style={{ minHeight: '150px', borderRadius: '24px', background: nativeCaptureStatus === 'recording' ? '#fff1f2' : '#f8f5ef', display: 'grid', placeItems: 'center', color: nativeCaptureStatus === 'recording' ? '#be123c' : '#5f4f3f', border: '1px solid #eee3d1' }}>
+                  <div style={{ display: 'grid', justifyItems: 'center', gap: '10px' }}>
+                    <Mic size={42} strokeWidth={2.2} />
+                    <span style={{ fontSize: '14px', fontWeight: 800 }}>{nativeCaptureStatus === 'recording' ? '录音中，点停止保存' : nativeCaptureStatus === 'saving' ? '正在保存语音…' : '准备录音'}</span>
+                  </div>
+                </div>
+              ) : (
+                <video
+                  ref={nativeCaptureVideoRef}
+                  muted
+                  playsInline
+                  autoPlay
+                  style={{ width: '100%', aspectRatio: '4 / 3', borderRadius: '24px', background: '#1c1917', objectFit: 'cover' }}
+                />
+              )}
+
+              <div style={{ display: 'grid', gridTemplateColumns: nativeCaptureMode === 'photo' ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
+                {nativeCaptureMode === 'photo' ? (
+                  <button type="button" onClick={() => void saveNativePhoto()} disabled={nativeCaptureStatus === 'saving'} style={{ ...primaryButtonStyle, minHeight: '50px' }}>
+                    {nativeCaptureStatus === 'saving' ? '保存中…' : '拍照并加入'}
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={nativeCaptureStatus === 'recording' ? stopNativeRecording : startNativeRecording}
+                      disabled={nativeCaptureStatus === 'saving'}
+                      style={{
+                        ...primaryButtonStyle,
+                        minHeight: '50px',
+                        background: nativeCaptureStatus === 'recording' ? '#be123c' : primaryButtonStyle.background,
+                      }}
+                    >
+                      {nativeCaptureStatus === 'recording' ? '停止并保存' : nativeCaptureStatus === 'saving' ? '保存中…' : '开始录制'}
+                    </button>
+                    <button type="button" onClick={cancelNativeCapture} disabled={nativeCaptureStatus === 'saving'} style={{ ...secondaryButtonStyle, minHeight: '50px' }}>
+                      取消
+                    </button>
+                  </>
+                )}
+              </div>
+            </section>
+          </div>
+        ) : null}
     </div>
   );
 };
@@ -1481,6 +1822,28 @@ export const EditRecordPage = () => {
     [params.record_no],
   );
 
+  const initialValue = useMemo(() => {
+    if (!data) return null;
+    return {
+      child_no: data.child_no,
+      record_type: data.record_type,
+      title: data.title ?? '',
+      content_text: data.content_text ?? '',
+      media_nos: data.media_list.map((item) => item.media_no),
+      media_items: data.media_list.map((item) => ({
+        media_no: item.media_no,
+        preview_url: resolveMediaPreviewUrl(item.media_no, item.access_url) ?? item.access_url,
+        media_type: (item.media_type === 'audio' || item.media_type === 'video' ? item.media_type : 'image') as MediaType,
+        original_name: item.original_name,
+      })),
+      tags: data.tags.join(', '),
+      location_text: data.location_text ?? '',
+      visibility_scope: data.visibility_scope,
+      event_time: formatDateTimeLocal(data.event_time),
+      status: data.status,
+    };
+  }, [data]);
+
   if (loading) {
     return (
       <PageShell title="编辑记录" description="正在加载记录详情。" backTo={params.record_no ? `/record/${params.record_no}` : '/timeline'}>
@@ -1491,7 +1854,7 @@ export const EditRecordPage = () => {
     );
   }
 
-  if (error || !data) {
+  if (error || !data || !initialValue) {
     return (
       <PageShell title="编辑记录" description="记录加载失败。" backTo="/timeline">
         <Panel>
@@ -1500,25 +1863,6 @@ export const EditRecordPage = () => {
       </PageShell>
     );
   }
-
-  const initialValue = useMemo(() => ({
-    child_no: data.child_no,
-    record_type: data.record_type,
-    title: data.title ?? '',
-    content_text: data.content_text ?? '',
-    media_nos: data.media_list.map((item) => item.media_no),
-    media_items: data.media_list.map((item) => ({
-      media_no: item.media_no,
-      preview_url: resolveMediaPreviewUrl(item.media_no, item.access_url) ?? item.access_url,
-      media_type: (item.media_type === 'audio' || item.media_type === 'video' ? item.media_type : 'image') as MediaType,
-      original_name: item.original_name,
-    })),
-    tags: data.tags.join(', '),
-    location_text: data.location_text ?? '',
-    visibility_scope: data.visibility_scope,
-    event_time: formatDateTimeLocal(data.event_time),
-    status: data.status,
-  }), [data]);
 
   return (
     <RecordForm

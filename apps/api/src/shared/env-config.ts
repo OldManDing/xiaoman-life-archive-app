@@ -7,6 +7,7 @@ const SMS_PROVIDER_VALUES = new Set(['mock', 'aliyun']);
 const STORAGE_PROVIDER_VALUES = new Set(['mock', 'minio', 's3', 'oss', 'cos', 'r2']);
 const AI_PROVIDER_VALUES = new Set(['mock', 'openai', 'openai-compatible']);
 const MAP_PROVIDER_VALUES = new Set(['mock', 'amap', 'disabled']);
+const NATIVE_APP_CORS_ORIGINS = ['https://localhost', 'capacitor://localhost', 'ionic://localhost'];
 
 export type AiProviderName = 'mock' | 'openai' | 'openai-compatible';
 export type MapProviderName = 'mock' | 'amap' | 'disabled';
@@ -119,7 +120,7 @@ export function resolveCorsOrigins(env: EnvSource = process.env): true | string[
     throw new Error('CORS_ORIGINS must contain at least one origin');
   }
 
-  return origins;
+  return Array.from(new Set([...origins, ...NATIVE_APP_CORS_ORIGINS]));
 }
 
 export function getJwtAccessSecret(env: EnvSource = process.env): string {

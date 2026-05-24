@@ -12,6 +12,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@capacitor/geolocation": "^7.1.8",
     "axios": "^1.6.0",
     "lucide-react": "^1.14.0",
     "react": "^18.2.0",

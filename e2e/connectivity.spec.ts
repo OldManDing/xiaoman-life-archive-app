@@ -1,23 +1,13 @@
-import { expect, test, type Dialog, type Page } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 import { adminBaseURL, expectNoEnglishSeedCopy, loginWeb, webBaseURL } from './helpers';
 
-const acceptDialogs = (page: Page, reason: string) => {
-  let handled = 0;
-  const handler = async (dialog: Dialog) => {
-    handled += 1;
-    if (dialog.type() === 'prompt') {
-      await dialog.accept(reason);
-    } else {
-      await dialog.accept();
-    }
-
-    if (handled >= 2) {
-      page.off('dialog', handler);
-    }
-  };
-
-  page.on('dialog', handler);
+const confirmAdminAction = async (page: Page, reason: string) => {
+  const dialog = page.getByRole('dialog', { name: /冻结用户|解冻用户|下架记录|恢复记录|通过媒体审核|标记媒体异常|下架媒体|重试 AI 任务|取消 AI 任务/ });
+  await expect(dialog).toBeVisible();
+  await dialog.getByLabel('操作原因').fill(reason);
+  await dialog.getByRole('button', { name: '确认执行' }).click();
+  await expect(dialog).toBeHidden();
 };
 
 const loginAdminDirectly = async (page: Page) => {
@@ -54,31 +44,28 @@ test.describe('Front and admin button/API connectivity', () => {
     await page.goto(`${webBaseURL}/profile/settings`);
     await page.getByRole('button', { name: '允许通过手机号搜索到我' }).click();
     await expect(page.getByText('设置已保存')).toBeVisible();
-    await page.getByRole('button', { name: '恢复默认设置' }).click();
-    await expect(page.getByText('本机设置已恢复默认')).toBeVisible();
 
     await page.goto(`${webBaseURL}/profile/export`);
     await page.getByRole('button', { name: /仅图片和视频/ }).click();
     await expect(page.getByRole('button', { name: /仅图片和视频/ })).toHaveAttribute('aria-pressed', 'true');
     const downloadPromise = page.waitForEvent('download');
-    await page.getByRole('button', { name: '下载摘要' }).click();
+    await page.getByRole('button', { name: '开始打包导出' }).click();
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toContain('档案摘要');
     await expect(page.getByText('档案摘要已生成下载文件')).toBeVisible();
-    await page.getByRole('button', { name: '复制摘要' }).click();
-    await expect(page.getByText('档案摘要已复制，可粘贴到家庭群或备忘录')).toBeVisible();
 
     await page.goto(`${webBaseURL}/profile/membership`);
     await page.getByRole('button', { name: '刷新会员信息' }).click();
     await expect(page.getByText('会员信息已刷新')).toBeVisible();
-    await page.getByRole('button', { name: '查看纪念册说明' }).click();
+    await page.getByRole('button', { name: '免费申领本年度纪念册' }).click();
     await expect(page.getByText('纪念册申领入口暂未接入')).toBeVisible();
 
     await page.goto(`${webBaseURL}/profile/security`);
     await page.getByRole('button', { name: '注销账号' }).click();
-    await expect(page).toHaveURL(/\/profile\/help\?topic=account-delete$/);
-    await expect(page.getByText('账号注销需要人工确认，请提交申请后等待联系。')).toBeVisible();
-    await expect(page.getByPlaceholder('请描述遇到的问题、页面位置和操作步骤')).toHaveValue('申请注销账号，请联系我完成身份确认和儿童信息处理。');
+    await expect(page).toHaveURL(/\/profile\/account-delete$/);
+    await expect(page.getByRole('heading', { name: '注销账号' })).toBeVisible();
+    await expect(page.getByPlaceholder('请输入当前登录密码')).toBeVisible();
+    await expect(page.getByPlaceholder(/确认注销/)).toBeVisible();
 
     await page.goto(`${webBaseURL}/profile/help`);
     await page.getByRole('button', { name: '保存反馈' }).click();
@@ -139,11 +126,11 @@ test.describe('Front and admin button/API connectivity', () => {
     await recordRow.getByRole('button', { name: '详情' }).click();
     await expect(page.getByRole('dialog', { name: '成长记录详情' })).toBeVisible();
     await page.getByRole('button', { name: '关闭' }).click();
-    acceptDialogs(page, '自动化验证记录下架按钮');
     await recordRow.getByRole('button', { name: '下架' }).click();
+    await confirmAdminAction(page, '自动化验证记录下架按钮');
     await expect(recordRow).toContainText('草稿');
-    acceptDialogs(page, '自动化验证记录恢复按钮');
     await recordRow.getByRole('button', { name: '恢复' }).click();
+    await confirmAdminAction(page, '自动化验证记录恢复按钮');
     await expect(recordRow).toContainText('已发布');
 
     await openAdminModule(page, '/media');
@@ -152,11 +139,11 @@ test.describe('Front and admin button/API connectivity', () => {
     await mediaRow.getByRole('button', { name: '详情' }).click();
     await expect(page.getByRole('dialog', { name: '媒体详情' })).toBeVisible();
     await page.getByRole('button', { name: '关闭' }).click();
-    acceptDialogs(page, '自动化验证媒体异常按钮');
     await mediaRow.getByRole('button', { name: '异常' }).click();
+    await confirmAdminAction(page, '自动化验证媒体异常按钮');
     await expect(mediaRow).toContainText('异常');
-    acceptDialogs(page, '自动化验证媒体通过按钮');
     await mediaRow.getByRole('button', { name: '通过' }).click();
+    await confirmAdminAction(page, '自动化验证媒体通过按钮');
     await expect(mediaRow).toContainText('可用');
 
     await openAdminModule(page, '/ai-jobs');

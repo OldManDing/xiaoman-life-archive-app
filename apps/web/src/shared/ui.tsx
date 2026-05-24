@@ -9,6 +9,7 @@ const pageShellStyle: CSSProperties = {
   minHeight: '100dvh',
   padding: '0 20px 28px',
   background: '#f8f9fa',
+  animation: 'app-page-enter 260ms cubic-bezier(0.22, 1, 0.36, 1) both',
 };
 
 const cardStyle: CSSProperties = {

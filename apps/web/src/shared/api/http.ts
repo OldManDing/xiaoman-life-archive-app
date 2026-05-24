@@ -4,6 +4,56 @@ import { clearAccessToken, getAccessToken, setAccessToken } from '../auth/tokenM
 
 type RetriableRequest = InternalAxiosRequestConfig & { _retry?: boolean };
 type ErrorEnvelope = { message?: unknown };
+type ApiRuntimeSnapshot = {
+  configuredBaseUrl?: string;
+  origin?: string;
+  isNativePlatform?: boolean;
+};
+
+const NATIVE_API_BASE_URL = 'https://webapi.xmlga.top/api/v1';
+
+type CapacitorWindow = Window & {
+  Capacitor?: {
+    isNativePlatform?: () => boolean;
+    getPlatform?: () => string;
+  };
+};
+
+const getRuntimeSnapshot = (): ApiRuntimeSnapshot => {
+  if (typeof window === 'undefined') {
+    return {};
+  }
+
+  const capacitorWindow = window as CapacitorWindow;
+  return {
+    configuredBaseUrl: import.meta.env.VITE_API_BASE_URL?.trim(),
+    origin: window.location.origin,
+    isNativePlatform: capacitorWindow.Capacitor?.isNativePlatform?.() ?? false,
+  };
+};
+
+const isAbsoluteHttpUrl = (value: string) => /^https?:\/\//i.test(value);
+
+const isNativeOrigin = (origin?: string) => origin === 'https://localhost' || origin === 'capacitor://localhost' || origin === 'ionic://localhost';
+
+export const resolveApiBaseUrl = (snapshot: ApiRuntimeSnapshot = getRuntimeSnapshot()) => {
+  const configuredBaseUrl = snapshot.configuredBaseUrl?.trim();
+  const isNativeRuntime = Boolean(snapshot.isNativePlatform) || isNativeOrigin(snapshot.origin);
+
+  if (isNativeRuntime) {
+    if (configuredBaseUrl && isAbsoluteHttpUrl(configuredBaseUrl) && !/https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(configuredBaseUrl)) {
+      return configuredBaseUrl;
+    }
+
+    return NATIVE_API_BASE_URL;
+  }
+
+  if (configuredBaseUrl) {
+    return configuredBaseUrl;
+  }
+
+  return '/api/v1';
+};
 
 const toUserFacingError = (error: AxiosError) => {
   const responseMessage = (error.response?.data as ErrorEnvelope | undefined)?.message;
@@ -23,13 +73,15 @@ const toUserFacingError = (error: AxiosError) => {
 };
 
 const http = axios.create({
-  baseURL: '/api/v1',
   withCredentials: true,
 });
 
 let refreshPromise: Promise<string | null> | null = null;
+const shouldSkipRefresh = (url?: string) =>
+  Boolean(url && ['/auth/login', '/auth/register', '/auth/send-code', '/auth/refresh'].some((path) => url.includes(path)));
 
 http.interceptors.request.use((config) => {
+  config.baseURL = resolveApiBaseUrl();
   const token = getAccessToken();
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -45,7 +97,7 @@ http.interceptors.response.use(
       return Promise.reject(toUserFacingError(error));
     }
 
-    if (originalRequest.url?.includes('/auth/refresh')) {
+    if (shouldSkipRefresh(originalRequest.url)) {
       clearAccessToken();
       return Promise.reject(toUserFacingError(error));
     }

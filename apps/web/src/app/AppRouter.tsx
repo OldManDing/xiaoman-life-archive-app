@@ -8,7 +8,7 @@ import {
   SearchPage, ViewRecordPage, EditRecordPage, FamilyPage, FamilyChildPage, 
   FamilyMembersPage, FamilyMemberDetailPage, FamilyInvitePage, ProfilePage, AccountPage, 
   SettingsPage, LegalPage, ReportsPage, ExportBackupPage, MembershipPage,
-  SecurityPage, HelpFeedbackPage, AboutPage, ErrorPage, OnboardingChildPage
+  SecurityPage, HelpFeedbackPage, AboutPage, AccountDeletionPage, ErrorPage, OnboardingChildPage
 } from '../pages/index';
 
 export const AppRouter = () => {
@@ -68,6 +68,7 @@ export const AppRouter = () => {
             <Route path="profile/export" element={<ExportBackupPage />} />
             <Route path="profile/membership" element={<MembershipPage />} />
             <Route path="profile/security" element={<SecurityPage />} />
+            <Route path="profile/account-delete" element={<AccountDeletionPage />} />
             <Route path="profile/help" element={<HelpFeedbackPage />} />
             <Route path="profile/settings" element={<SettingsPage />} />
             <Route path="profile/legal" element={<LegalPage />} />

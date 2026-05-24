@@ -25,7 +25,7 @@ describe('Auth session flow', () => {
     mobile: '13800000000',
     status: 1,
     createdAt: new Date('2026-04-21T00:00:00.000Z'),
-    deletedAt: null,
+    deletedAt: null as Date | null,
   };
 
   const sessions: Array<{ hash: string; revokedAt: Date | null; expiresAt: Date }> = [];
@@ -45,16 +45,63 @@ describe('Auth session flow', () => {
     family: { id: BigInt(100), familyNo: 'f_invite_001' },
   };
   const memberships: Array<{ familyId: bigint; userId: bigint; role: string; status: number; deletedAt: Date | null; joinedAt: Date | null }> = [];
+  const joinedFamilyMemberships = [
+    {
+      id: BigInt(77),
+      familyId: BigInt(100),
+      userId: user.id,
+      role: 'viewer',
+      status: 1,
+      deletedAt: null,
+      family: { id: BigInt(100), familyNo: 'f_joined_001', name: '共享家庭', deletedAt: null },
+    },
+  ];
+
+  const txRecordUpdateMany = jest.fn().mockResolvedValue({ count: 0 });
+  const txRecordMediaUpdateMany = jest.fn().mockResolvedValue({ count: 0 });
+  const txUserAuthAccountFindMany = jest.fn().mockResolvedValue([{ id: BigInt(11), authKey: 'parent_account' }]);
+  const txUserAuthAccountUpdate = jest.fn().mockResolvedValue({});
 
   const prismaMock = {
     $transaction: jest.fn(async (input: unknown) => {
       if (typeof input === 'function') {
         return input({
+          aiJob: {
+            updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+          },
+          child: {
+            updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+          },
+          family: {
+            updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+          },
+          record: {
+            updateMany: txRecordUpdateMany,
+          },
+          recordMedia: {
+            updateMany: txRecordMediaUpdateMany,
+          },
+          shareLink: {
+            updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+          },
           userAuthAccount: {
             create: jest.fn(),
+            findMany: txUserAuthAccountFindMany,
+            update: txUserAuthAccountUpdate,
           },
           user: {
-            update: jest.fn().mockResolvedValue(user),
+            update: jest.fn().mockImplementation(async ({ data }: { data: { nickname?: string; status?: number; deletedAt?: Date | null } }) => {
+              if (typeof data.nickname === 'string') {
+                user.nickname = data.nickname;
+              }
+              if (typeof data.status === 'number') {
+                user.status = data.status;
+              }
+              if (data.deletedAt !== undefined) {
+                user.deletedAt = data.deletedAt;
+              }
+              return user;
+            }),
             create: jest.fn().mockResolvedValue(user),
             findFirst: jest.fn().mockImplementation(async ({ where }: { where: { id?: bigint } }) => {
               if (where.id === user.id) return user;
@@ -69,6 +116,7 @@ describe('Auth session flow', () => {
               Object.assign(invite, data);
               return invite;
             }),
+            updateMany: jest.fn().mockResolvedValue({ count: 0 }),
           },
           familyMember: {
             upsert: jest.fn().mockImplementation(async ({ create, update, where }: { create: any; update: any; where: { familyId_userId: { familyId: bigint; userId: bigint } } }) => {
@@ -82,6 +130,10 @@ describe('Auth session flow', () => {
               memberships.push(created);
               return created;
             }),
+            updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+          },
+          userSession: {
+            updateMany: jest.fn().mockResolvedValue({ count: 1 }),
           },
         });
       }
@@ -89,17 +141,53 @@ describe('Auth session flow', () => {
       return input;
     }),
     userAuthAccount: {
-      findFirst: jest.fn().mockImplementation(async ({ where }: { where: { authKey: string } }) => {
+      findFirst: jest.fn().mockImplementation(async ({ where }: { where: { authKey?: string; userId?: bigint } }) => {
+        if (where.userId === user.id) return authAccount;
         return where.authKey === 'parent_account' ? authAccount : null;
       }),
+      findMany: jest.fn().mockResolvedValue([{ id: BigInt(11), authKey: 'parent_account' }]),
+      update: jest.fn().mockResolvedValue({}),
     },
     child: {
       count: jest.fn().mockResolvedValue(0),
     },
+    record: {
+      count: jest.fn().mockResolvedValue(1),
+      updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+    },
+    recordMedia: {
+      updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+    },
+    aiJob: {
+      updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+    },
+    shareLink: {
+      updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+    },
+    family: {
+      findMany: jest.fn().mockResolvedValue([]),
+      updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+    },
+    familyMember: {
+      findMany: jest.fn().mockResolvedValue(joinedFamilyMemberships),
+      updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+    },
+    memberInvite: {
+      updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+    },
+    auditLog: {
+      create: jest.fn().mockResolvedValue({ id: BigInt(1) }),
+    },
     user: {
-      update: jest.fn().mockImplementation(async ({ data }: { data: { nickname?: string } }) => {
+      update: jest.fn().mockImplementation(async ({ data }: { data: { nickname?: string; status?: number; deletedAt?: Date | null } }) => {
         if (typeof data.nickname === 'string') {
           user.nickname = data.nickname;
+        }
+        if (typeof data.status === 'number') {
+          user.status = data.status;
+        }
+        if (data.deletedAt !== undefined) {
+          user.deletedAt = data.deletedAt;
         }
         return user;
       }),
@@ -235,6 +323,100 @@ describe('Auth session flow', () => {
       .expect(200);
 
     expect(updateResponse.body.data.nickname).toBe('新昵称');
+  });
+
+  it('does not double count an owned family as a joined family during deletion check', async () => {
+    user.status = 1;
+    user.deletedAt = null;
+    prismaMock.family.findMany.mockResolvedValueOnce([
+      {
+        id: BigInt(100),
+        familyNo: 'f_joined_001',
+        name: '鍏变韩瀹跺涵',
+        deletedAt: null,
+        members: [{ userId: user.id, user: { deletedAt: null } }],
+      },
+    ]);
+
+    const accessToken = await jwtService.signAsync(
+      { type: 'user', sub: user.id.toString(), user_no: user.userNo },
+      { secret: process.env.JWT_ACCESS_SECRET },
+    );
+
+    const checkResponse = await request(app.getHttpServer())
+      .get('/api/v1/users/me/deletion-check')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+
+    expect(checkResponse.body.data.can_delete).toBe(true);
+    expect(checkResponse.body.data.summary.owned_family_count).toBe(1);
+    expect(checkResponse.body.data.summary.joined_family_count).toBe(0);
+  });
+
+  it('allows a non-owner member to delete the current account', async () => {
+    user.status = 1;
+    user.deletedAt = null;
+    authAccount.status = 1;
+    txRecordUpdateMany.mockClear();
+    txRecordMediaUpdateMany.mockClear();
+    txUserAuthAccountFindMany.mockClear();
+    txUserAuthAccountUpdate.mockClear();
+    txUserAuthAccountFindMany.mockResolvedValueOnce([{ id: BigInt(11), authKey: 'x'.repeat(128) }]);
+    prismaMock.auditLog.create.mockRejectedValueOnce(new Error('audit temporarily unavailable'));
+
+    const accessToken = await jwtService.signAsync(
+      { type: 'user', sub: user.id.toString(), user_no: user.userNo },
+      { secret: process.env.JWT_ACCESS_SECRET },
+    );
+
+    const checkResponse = await request(app.getHttpServer())
+      .get('/api/v1/users/me/deletion-check')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+
+    expect(checkResponse.body.data.can_delete).toBe(true);
+    expect(checkResponse.body.data.confirm_text).toBe('确认注销');
+
+    const deleteResponse = await request(app.getHttpServer())
+      .post('/api/v1/users/me/delete')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ password: 'Parent123!', confirm_text: '确认注销' })
+      .expect(200);
+
+    expect(deleteResponse.body.data.success).toBe(true);
+    expect(deleteResponse.headers['set-cookie']?.[0]).toContain('xiaoman_refresh_token=;');
+    expect(prismaMock.auditLog.create).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ action: 'user.account_deleted' }) }));
+    expect(user.status).toBe(0);
+    expect(user.deletedAt).toBeTruthy();
+    expect(txRecordMediaUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ uploaderUserId: user.id, deletedAt: null }),
+      }),
+    );
+    expect(txRecordUpdateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ creatorUserId: user.id, deletedAt: null }),
+      }),
+    );
+    const authUpdatePayload = txUserAuthAccountUpdate.mock.calls[0][0];
+    expect(authUpdatePayload.data.authKey).toMatch(/^deleted:[a-z0-9]+:11$/);
+    expect(authUpdatePayload.data.authKey.length).toBeLessThanOrEqual(128);
+
+    await request(app.getHttpServer())
+      .get('/api/v1/users/me')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(401);
+
+    prismaMock.userAuthAccount.findFirst.mockImplementationOnce(async () => null);
+    const reloginResponse = await request(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .send({ login_type: 'password', credential: 'parent_account', password: 'Parent123!' })
+      .expect(401);
+
+    expect(reloginResponse.body.message).toBe('账号或密码错误');
+
+    user.status = 1;
+    user.deletedAt = null;
   });
 
   it('rejects disabled users with an existing access token', async () => {

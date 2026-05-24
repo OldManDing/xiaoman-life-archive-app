@@ -91,6 +91,8 @@ export const resolveMediaPreviewUrl = (mediaNo: string | null | undefined, acces
 export const toLocalMediaReference = (mediaNo: string) => `local-media:${mediaNo}`;
 
 export const resolveStoredMediaUrl = (value: string | null | undefined) => {
-  if (!value?.startsWith('local-media:')) return value ?? null;
-  return getLocalMediaPreview(value.slice('local-media:'.length)) ?? null;
+  const normalizedValue = value?.trim();
+  if (!normalizedValue) return null;
+  if (!normalizedValue.startsWith('local-media:')) return normalizedValue;
+  return getLocalMediaPreview(normalizedValue.slice('local-media:'.length)) ?? null;
 };

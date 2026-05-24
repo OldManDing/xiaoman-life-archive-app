@@ -66,7 +66,8 @@ export const LoginPage = () => {
         });
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : mode === 'login' ? '登录失败，请稍后重试' : '注册失败，请稍后重试');
+      const message = err instanceof Error ? err.message : mode === 'login' ? '登录失败，请稍后重试' : '注册失败，请稍后重试';
+      setError(mode === 'login' && message === '状态不允许' ? '账号或密码错误' : message);
     } finally {
       setSubmitting(false);
     }
@@ -242,7 +243,7 @@ export const OnboardingChildPage = () => {
           <div style={{ display: 'grid' }}>
             <div style={{ padding: '16px', borderBottom: '1px solid #f3f4f6' }}>
             <Field label="宝宝小名">
-              <input style={{ ...inputStyle, border: 'none', padding: 0, minHeight: '24px' }} value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="请输入宝宝小名" />
+              <input style={{ ...inputStyle, border: 'none', padding: 0, minHeight: '44px' }} value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="请输入宝宝小名" />
             </Field>
             </div>
             <div style={{ padding: '16px', borderBottom: '1px solid #f3f4f6' }}>
@@ -280,7 +281,16 @@ export const OnboardingChildPage = () => {
             </div>
             <div style={{ padding: '16px', position: 'relative' }}>
             <Field label="出生日期">
-              <input style={{ ...inputStyle, border: 'none', padding: '0 28px 0 0', minHeight: '26px' }} type="date" value={form.birthday} onChange={(event) => setForm((current) => ({ ...current, birthday: event.target.value }))} />
+              <span style={{ position: 'relative', minHeight: '44px', paddingRight: '28px', display: 'flex', alignItems: 'center', color: form.birthday ? '#292524' : '#a1a1aa', fontSize: '14px', fontWeight: 600 }}>
+                <input
+                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
+                  type="date"
+                  aria-label="出生日期"
+                  value={form.birthday}
+                  onChange={(event) => setForm((current) => ({ ...current, birthday: event.target.value }))}
+                />
+                <span style={{ pointerEvents: 'none' }}>{form.birthday ? form.birthday.replace(/-/g, '/') : '年/月/日'}</span>
+              </span>
             </Field>
               <Calendar size={18} color="#cbd5e1" style={{ position: 'absolute', right: '16px', bottom: '20px', pointerEvents: 'none' }} />
             </div>

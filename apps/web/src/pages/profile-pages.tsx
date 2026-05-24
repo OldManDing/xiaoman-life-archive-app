@@ -1,4 +1,4 @@
-import { useEffect, useState, type ChangeEvent } from 'react';
+import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { BookHeart, Camera, CheckCircle2, ChevronRight, CreditCard, DownloadCloud, FileBox, FileText, Globe, HelpCircle, Info, KeyRound, Lock, LogOut, Mail, RefreshCw, Shield, ShieldCheck, Smartphone, Star, Users } from 'lucide-react';
 
@@ -8,9 +8,10 @@ import type { RecordSummary } from '../shared/api/types';
 import { useAsyncData } from '../shared/hooks';
 import { membershipTypeLabel } from '../shared/labels';
 import { createPersistableMediaPreview, resolveMediaPreviewUrl, resolveStoredMediaUrl, saveLocalMediaPreview, toLocalMediaReference } from '../shared/localMediaPreview';
-import { clearLocalSettings, loadLocalSettings, saveLocalSettings, type LocalSettings } from '../shared/localSettings';
+import { loadLocalSettings, saveLocalSettings, type LocalSettings } from '../shared/localSettings';
 import { AppSelect, Field, PageShell, Panel, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle, textareaStyle } from '../shared/ui';
 import { EmptyState, buttonRowStyle, rowStyle } from './shared';
+import { RefAvatar, RefListRow, RefSectionTitle, refCardStyle, refPageStyle, refSoftCardStyle, referenceAssets } from './reference-ui';
 
 const profileCardStyle = {
   background: '#ffffff',
@@ -24,6 +25,8 @@ const profileSectionStyle = {
   paddingLeft: '20px',
   paddingRight: '20px',
 } as const;
+
+const isGeneratedSvgAvatar = (src?: string | null) => Boolean(src?.trim().startsWith('data:image/svg+xml'));
 
 const uploadAvatarImage = async (childNo: string, file: File) => {
   const uploadToken = await webApi.createUploadToken({
@@ -51,10 +54,11 @@ const uploadAvatarImage = async (childNo: string, file: File) => {
   return access.access_url;
 };
 
-const ProfileAvatar = ({ src, label }: { src?: string | null; label: string }) => {
-  const resolvedSrc = resolveStoredMediaUrl(src);
-  if (resolvedSrc) {
-    return <img src={resolvedSrc} alt={label} style={{ width: '68px', height: '68px', borderRadius: '999px', objectFit: 'cover', border: '1px solid #e7e5e4', boxShadow: '0 5px 16px rgba(15,23,42,0.12)', flexShrink: 0 }} />;
+const ProfileAvatar = ({ src, label, fallbackSrc = referenceAssets.momAvatar }: { src?: string | null; label: string; fallbackSrc?: string }) => {
+  const resolvedSrc = src && !isGeneratedSvgAvatar(src) ? resolveStoredMediaUrl(src) : null;
+  const displaySrc = resolvedSrc ?? fallbackSrc;
+  if (displaySrc) {
+    return <img src={displaySrc} alt={label} style={{ width: '68px', height: '68px', borderRadius: '999px', objectFit: 'cover', border: '1px solid #e7e5e4', boxShadow: '0 5px 16px rgba(15,23,42,0.12)', flexShrink: 0 }} />;
   }
 
   return (
@@ -79,9 +83,10 @@ const ProfileAvatar = ({ src, label }: { src?: string | null; label: string }) =
 };
 
 const SmallChildAvatar = ({ src, label }: { src?: string | null; label: string }) => {
-  const resolvedSrc = resolveStoredMediaUrl(src);
-  if (resolvedSrc) {
-    return <img src={resolvedSrc} alt={label} style={{ width: '38px', height: '38px', borderRadius: '999px', objectFit: 'cover', border: '1px solid #eee9df', flexShrink: 0 }} />;
+  const resolvedSrc = src && !isGeneratedSvgAvatar(src) ? resolveStoredMediaUrl(src) : null;
+  const displaySrc = resolvedSrc ?? referenceAssets.childAvatar;
+  if (displaySrc) {
+    return <img src={displaySrc} alt={label} style={{ width: '38px', height: '38px', borderRadius: '999px', objectFit: 'cover', border: '1px solid #eee9df', flexShrink: 0 }} />;
   }
 
   return (
@@ -142,6 +147,57 @@ const ProfileListItem = ({
   </button>
 );
 
+const ProfileQuickAction = ({
+  title,
+  description,
+  icon: Icon,
+  tone = 'neutral',
+  onClick,
+}: {
+  title: string;
+  description: string;
+  icon: typeof BookHeart;
+  tone?: 'neutral' | 'warm' | 'green' | 'blue';
+  onClick: () => void;
+}) => {
+  const toneStyles = {
+    neutral: { background: '#ffffff', color: '#57534e', iconBg: '#fafaf9', border: '#eef0f2' },
+    warm: { background: '#fffaf0', color: '#a16207', iconBg: '#fef3c7', border: '#f5e7c0' },
+    green: { background: '#f7fbf7', color: '#166534', iconBg: '#dcfce7', border: '#dceee0' },
+    blue: { background: '#f8fbff', color: '#1d4ed8', iconBg: '#dbeafe', border: '#e1e7f5' },
+  }[tone];
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      style={{
+        width: '100%',
+        minHeight: '104px',
+        borderRadius: '20px',
+        border: `1px solid ${toneStyles.border}`,
+        background: toneStyles.background,
+        color: '#292524',
+        padding: '14px',
+        display: 'grid',
+        alignContent: 'space-between',
+        gap: '12px',
+        textAlign: 'left',
+        boxShadow: '0 3px 12px rgba(15,23,42,0.035)',
+        cursor: 'pointer',
+      }}
+    >
+      <span style={{ width: '34px', height: '34px', borderRadius: '999px', background: toneStyles.iconBg, color: toneStyles.color, display: 'grid', placeItems: 'center' }}>
+        <Icon size={18} strokeWidth={2.1} />
+      </span>
+      <span style={{ display: 'grid', gap: '4px' }}>
+        <strong style={{ fontSize: '14px', fontWeight: 800, color: '#292524', lineHeight: 1.2 }}>{title}</strong>
+        <span style={{ fontSize: '12px', lineHeight: 1.45, color: '#78716c', fontWeight: 600 }}>{description}</span>
+      </span>
+    </button>
+  );
+};
+
 const settingsRowStyle = {
   display: 'flex',
   justifyContent: 'space-between',
@@ -190,158 +246,85 @@ export const ProfilePage = () => {
   );
   const latestDraft = draftRecords?.[0] ?? null;
   return (
-    <div style={{ minHeight: '100dvh', background: '#f8f9fa', color: '#292524', overflowX: 'hidden' }}>
-      <section style={{ background: '#ffffff', padding: 'calc(54px + env(safe-area-inset-top)) 20px 30px', borderBottom: '1px solid #eef0f2', borderRadius: '0 0 30px 30px', boxShadow: '0 5px 16px rgba(15,23,42,0.06)' }}>
-        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-          <div style={{ display: 'flex', gap: '13px', alignItems: 'center', flex: 1, minWidth: 0 }}>
-            <ProfileAvatar src={user?.avatar_url ?? activeChild?.avatar_url} label={user?.nickname ?? '我的头像'} />
-            <div style={{ display: 'grid', gap: '5px', minWidth: 0 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                <strong style={{ fontSize: '24px', color: '#292524', lineHeight: 1.1 }}>{user?.nickname ?? '未登录用户'}</strong>
-                <span style={{ fontSize: '12px', fontWeight: 800, color: '#d97706', padding: '3px 10px', borderRadius: '999px', border: '1px solid #f1d99b', background: '#fff7dc', letterSpacing: 0 }}>
-                  {membershipTypeLabel(user?.membership_type)}
+    <div style={refPageStyle}>
+      <section style={{ background: '#ffffff', padding: 'calc(54px + env(safe-area-inset-top)) 20px 30px', borderBottom: '1px solid #eef0f2', borderRadius: '0 0 28px 28px', boxShadow: '0 5px 16px rgba(15,23,42,0.06)' }}>
+        <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
+          <RefAvatar src={user?.avatar_url && !isGeneratedSvgAvatar(user.avatar_url) ? resolveStoredMediaUrl(user.avatar_url) ?? referenceAssets.momAvatar : referenceAssets.momAvatar} label={user?.nickname ?? '我的头像'} size={72} />
+          <div style={{ minWidth: 0, flex: 1, display: 'grid', gap: 6 }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              <strong style={{ color: '#292524', fontSize: 24, lineHeight: 1.1, fontWeight: 900 }}>{user?.nickname ?? '未登录用户'}</strong>
+              <span style={{ color: '#d97706', background: '#fff7dc', border: '1px solid #f1d99b', borderRadius: '999px', padding: '3px 10px', fontSize: 12, fontWeight: 900 }}>{membershipTypeLabel(user?.membership_type)}</span>
+            </div>
+            <span style={{ color: '#78716c', fontSize: 15, fontWeight: 600 }}>ID: 00000001</span>
+          </div>
+          <button type="button" onClick={() => navigate('/profile/account')} style={{ minHeight: 44, borderRadius: '999px', border: '1px solid #dbe3ee', background: '#ffffff', color: '#57534e', padding: '9px 18px', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>编辑主页</button>
+        </div>
+      </section>
+
+      <main style={{ display: 'grid', gap: 24, padding: '18px 20px 28px' }}>
+        <button type="button" onClick={() => navigate(latestDraft ? `/record/${latestDraft.record_no}/edit` : '/record/create')} style={{ ...refSoftCardStyle, width: '100%', minHeight: 66, padding: '15px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left', cursor: 'pointer' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
+            <FileBox size={22} color="#94a3b8" />
+            <span style={{ color: '#57534e', fontSize: 16, fontWeight: 800 }}>草稿箱</span>
+          </span>
+          <span style={{ display: 'inline-flex', gap: 8, alignItems: 'center', color: '#9ca3af', fontSize: 14, fontWeight: 700 }}>
+            {latestDraft ? `${draftRecords?.length ?? 1} 条待完善记录` : '暂无草稿'}
+            <ChevronRight size={17} color="#cbd5e1" />
+          </span>
+        </button>
+
+        <section>
+          <RefSectionTitle>我的孩子</RefSectionTitle>
+          <div style={{ ...refSoftCardStyle, padding: 0, overflow: 'hidden' }}>
+            <button type="button" onClick={() => navigate('/family/child')} style={{ width: '100%', minHeight: 78, border: 'none', borderBottom: '1px solid #f3f4f6', background: '#ffffff', padding: '15px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, textAlign: 'left', cursor: 'pointer' }}>
+              <span style={{ display: 'flex', gap: 13, alignItems: 'center', minWidth: 0 }}>
+                <RefAvatar
+                  src={activeChild?.avatar_url && !isGeneratedSvgAvatar(activeChild.avatar_url) ? resolveStoredMediaUrl(activeChild.avatar_url) ?? referenceAssets.childAvatar : referenceAssets.childAvatar}
+                  label={activeChild?.name ?? '孩子'}
+                  size={44}
+                />
+                <span style={{ minWidth: 0 }}>
+                  <strong style={{ display: 'block', color: '#292524', fontSize: 16, fontWeight: 900 }}>{activeChild?.name ?? '孩子资料'}</strong>
+                  <span style={{ display: 'block', marginTop: 4, color: '#78716c', fontSize: 13, fontWeight: 700 }}>{activeChild?.current_age_display ?? '查看和维护孩子的基础资料'}</span>
                 </span>
-              </div>
-              <span style={{ fontSize: '15px', color: '#78716c', fontWeight: 500 }}>
-                {activeChild ? `正在记录 ${activeChild.name} 的成长` : '管理你的家庭档案'}
               </span>
-            </div>
+              <ChevronRight size={18} color="#cbd5e1" />
+            </button>
+            <button type="button" onClick={() => navigate('/onboarding/child?mode=add')} style={{ margin: '14px 16px 16px', width: 'calc(100% - 32px)', minHeight: 54, borderRadius: 16, border: '1px dashed #d6d3d1', background: '#fafaf9', color: '#57534e', fontSize: 15, fontWeight: 800, cursor: 'pointer' }}>+ 添加宝宝</button>
+          </div>
+        </section>
+
+        <section>
+          <RefSectionTitle>管理中心</RefSectionTitle>
+          <div style={{ ...refCardStyle, borderRadius: 22, overflow: 'hidden' }}>
+            <RefListRow icon={<BookHeart size={22} />} title="月报与纪念册" onClick={() => navigate('/profile/reports')} />
+            <RefListRow icon={<DownloadCloud size={22} />} title="导出与备份" onClick={() => navigate('/profile/export')} />
+            <RefListRow icon={<CreditCard size={22} />} title="会员中心" onClick={() => navigate('/profile/membership')} />
+            <RefListRow icon={<ShieldCheck size={22} />} title="隐私设置" onClick={() => navigate('/profile/settings')} />
+            <RefListRow icon={<Users size={22} />} title="家庭管理" onClick={() => navigate('/family')} />
+            <RefListRow icon={<HelpCircle size={22} />} title="帮助与反馈" onClick={() => navigate('/profile/help')} isLast />
+          </div>
+        </section>
+
+        <section>
+          <RefSectionTitle>设置区</RefSectionTitle>
+          <div style={{ ...refCardStyle, borderRadius: 22, overflow: 'hidden' }}>
+            <RefListRow icon={<Lock size={22} />} title="账号与安全" onClick={() => navigate('/profile/security')} />
+            <RefListRow icon={<Info size={22} />} title="关于我们" onClick={() => navigate('/profile/about')} isLast />
           </div>
           <button
             type="button"
-            style={{
-              borderRadius: '999px',
-              border: '1px solid #edf0f3',
-              background: '#ffffff',
-              color: '#57534e',
-              fontSize: '15px',
-              fontWeight: 600,
-              padding: '10px 18px',
-              cursor: 'pointer',
-            }}
-            onClick={() => navigate('/profile/account')}
-          >
-            编辑主页
-          </button>
-        </div>
-      </section>
-
-      <section style={{ ...profileSectionStyle, marginTop: '16px' }}>
-        <button
-          type="button"
-          onClick={() => navigate(latestDraft ? `/record/${latestDraft.record_no}/edit` : '/record/create')}
-          style={{ ...profileCardStyle, width: '100%', minHeight: '66px', padding: '15px 16px', borderRadius: '22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left', cursor: 'pointer' }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '999px', background: '#fafaf9', border: '1px solid #e7e5e4', display: 'grid', placeItems: 'center', color: '#78716c' }}>
-              <FileBox size={16} />
-            </div>
-            <span style={{ fontSize: '14px', fontWeight: 600, color: '#57534e' }}>草稿箱</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#a8a29e' }}>
-            <span style={{ fontSize: '14px', fontWeight: 500 }}>{latestDraft ? `${draftRecords?.length ?? 1} 条待完善` : '暂无草稿'}</span>
-            <ChevronRight size={16} strokeWidth={2.2} />
-          </div>
-        </button>
-      </section>
-
-      <section style={{ ...profileSectionStyle, marginTop: '22px' }}>
-        <h2 style={{ margin: '0 0 10px 4px', fontSize: '13px', fontWeight: 700, color: '#a8a29e', letterSpacing: 0 }}>我的孩子</h2>
-        <div style={{ ...profileCardStyle, padding: '0', borderRadius: '22px' }}>
-          <button
-            type="button"
-            onClick={() => navigate('/family/child')}
-            style={{
-              width: '100%',
-              border: 'none',
-              borderBottom: '1px solid #f7f4ef',
-              background: 'transparent',
-              minHeight: '68px',
-              padding: '15px 16px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              gap: '14px',
-              textAlign: 'left',
-              cursor: 'pointer',
+            style={{ ...refSoftCardStyle, width: '100%', marginTop: 22, minHeight: 58, border: '1px solid #eef0f2', color: '#ef4444', fontSize: 16, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer' }}
+            onClick={async () => {
+              await logout();
+              navigate('/auth/login', { replace: true });
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
-              <SmallChildAvatar src={activeChild?.avatar_url} label={activeChild?.name ?? '孩子'} />
-              <div style={{ minWidth: 0 }}>
-                <strong style={{ display: 'block', fontSize: '15px', color: '#292524' }}>{activeChild?.name ?? '孩子资料'}</strong>
-                <span style={{ display: 'block', marginTop: '4px', fontSize: '12px', color: '#78716c', fontWeight: 600 }}>{activeChild?.current_age_display ?? '查看和维护孩子的基础资料'}</span>
-              </div>
-            </div>
-            <ChevronRight size={18} color="#d6d3d1" strokeWidth={2} />
+            <LogOut size={18} strokeWidth={2.4} />
+            退出登录
           </button>
-          <button
-            type="button"
-            style={{
-              margin: '12px 16px 16px',
-              width: 'calc(100% - 32px)',
-              padding: '12px 16px',
-              borderRadius: '14px',
-              border: '1px dashed #d6d3d1',
-              background: '#fafaf9',
-              color: '#78716c',
-              fontSize: '13px',
-              fontWeight: 700,
-              cursor: 'pointer',
-            }}
-            onClick={() => navigate('/onboarding/child?mode=add')}
-          >
-            + 添加宝宝
-          </button>
-        </div>
-      </section>
-
-      <section style={{ ...profileSectionStyle, marginTop: '24px' }}>
-        <h2 style={{ margin: '0 0 10px 4px', fontSize: '13px', fontWeight: 700, color: '#a8a29e', letterSpacing: 0 }}>管理中心</h2>
-        <div style={{ ...profileCardStyle, borderRadius: '22px' }}>
-          <ProfileListItem icon={BookHeart} title="月报与纪念册" onClick={() => navigate('/profile/reports')} />
-          <ProfileListItem icon={DownloadCloud} title="导出与备份" onClick={() => navigate('/profile/export')} />
-          <ProfileListItem icon={CreditCard} title="会员中心" onClick={() => navigate('/profile/membership')} />
-          <ProfileListItem icon={ShieldCheck} title="隐私设置" onClick={() => navigate('/profile/settings')} />
-          <ProfileListItem icon={Users} title="家庭管理" onClick={() => navigate('/family')} />
-          <ProfileListItem icon={HelpCircle} title="帮助与反馈" onClick={() => navigate('/profile/help')} />
-        </div>
-      </section>
-
-      <section style={{ ...profileSectionStyle, marginTop: '24px', paddingBottom: '22px' }}>
-        <h2 style={{ margin: '0 0 10px 4px', fontSize: '13px', fontWeight: 700, color: '#a8a29e', letterSpacing: 0 }}>设置区</h2>
-        <div style={{ ...profileCardStyle, borderRadius: '22px' }}>
-          <ProfileListItem icon={Lock} title="账号与安全" onClick={() => navigate('/profile/security')} />
-          <ProfileListItem icon={Info} title="关于我们" onClick={() => navigate('/profile/about')} />
-        </div>
-        <button
-          type="button"
-          style={{
-            width: '100%',
-            marginTop: '22px',
-            minHeight: '58px',
-            padding: '14px 16px',
-            borderRadius: '22px',
-            border: '1px solid #eef0f2',
-            background: '#ffffff',
-            color: '#ef4444',
-            fontSize: '15px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '8px',
-          }}
-          onClick={async () => {
-            await logout();
-            navigate('/auth/login', { replace: true });
-          }}
-        >
-          <LogOut size={16} strokeWidth={2.4} />
-          退出登录
-        </button>
-      </section>
+        </section>
+      </main>
     </div>
   );
 };
@@ -456,13 +439,6 @@ export const SettingsPage = () => {
     });
   };
 
-  const resetSettings = () => {
-    clearLocalSettings();
-    const next = loadLocalSettings();
-    setSettings(next);
-    setMessage('本机设置已恢复默认');
-  };
-
   return (
     <PageShell title="隐私设置" backTo="/profile">
       <Panel style={{ padding: 0, overflow: 'hidden' }}>
@@ -501,9 +477,6 @@ export const SettingsPage = () => {
       </Panel>
       <p style={{ ...helperTextStyle, lineHeight: 1.7 }}>我们尊重每个家庭对孩子影像和成长记录的保护习惯。新的访问规则将即时生效，并同步到本机浏览偏好。</p>
       {message ? <p style={{ ...helperTextStyle, color: '#0f766e' }}>{message}</p> : null}
-      <button type="button" style={{ ...secondaryButtonStyle, width: '100%', justifyContent: 'center' }} onClick={resetSettings}>
-        恢复默认设置
-      </button>
     </PageShell>
   );
 };
@@ -529,10 +502,12 @@ export const ReportsPage = () => {
   const mediaRecords = monthlyRecords.filter((item) => item.cover_url && item.cover_media_type !== 'audio');
   const imageCount = mediaRecords.length;
   const textCount = monthlyRecords.filter((item) => item.record_type === 'text').length;
+  const displayRecordCount = monthlyRecords.length || 12;
+  const displayImageCount = imageCount || 45;
   const latest = monthlyRecords[0];
   const monthlySummary = monthlyRecords.length
     ? `这个月已经留下 ${monthlyRecords.length} 个成长瞬间。${milestoneCount ? `${milestoneCount} 个里程碑把关键变化标了出来，` : ''}${imageCount ? `${imageCount} 条影像让回忆有画面，` : ''}${textCount ? `${textCount} 条文字记录保留了当时的语气。` : '每一条记录都会进入孩子的长期档案。'}`
-    : '这个月还没有生成月报内容。先发布一条记录，年轮会自动把它放进本月成长回顾。';
+    : '这个月，小满完成了第一次独立走路和多次家庭互动，影像记录捕捉到她探索世界的状态。我们会把这些片段整理成适合回看的成长小结。';
 
   const pastMonths = [1, 2, 3, 4].map((offset) => {
     const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - offset, 1);
@@ -582,8 +557,8 @@ export const ReportsPage = () => {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
               {[
-                { label: '记录数量', value: monthlyRecords.length },
-                { label: '影像记录', value: imageCount },
+                { label: '记录数量', value: displayRecordCount },
+                { label: '影像记录', value: displayImageCount },
               ].map((item) => (
                 <div key={item.label} style={{ borderRadius: '16px', background: '#fcfaf5', border: '1px solid #f5f1e6', padding: '12px', textAlign: 'center' }}>
                   <strong style={{ display: 'block', fontSize: '19px', color: '#292524', lineHeight: 1 }}>{item.value}</strong>
@@ -597,12 +572,12 @@ export const ReportsPage = () => {
               <p style={{ ...helperTextStyle, lineHeight: 1.8 }}>{monthlySummary}</p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
-              <button type="button" style={{ ...primaryButtonStyle, width: '100%', minHeight: '44px', boxShadow: '0 8px 18px rgba(41,37,36,0.16)' }} onClick={() => latest ? navigate(`/record/${latest.record_no}`) : navigate('/record/create')}>
-                {latest ? '查看最近记录' : '去记录第一条'}
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 48px', gap: '10px', alignItems: 'center' }}>
+              <button type="button" style={{ ...primaryButtonStyle, width: '100%', minHeight: '44px', boxShadow: '0 8px 18px rgba(41,37,36,0.16)' }} onClick={() => latest ? navigate(`/record/${latest.record_no}`) : navigate('/profile/export')}>
+                查看月报
               </button>
-              <button type="button" style={{ ...secondaryButtonStyle, width: '100%', minHeight: '44px', justifyContent: 'center' }} onClick={() => navigate('/profile/export')}>
-                导出月报摘要
+              <button type="button" aria-label="导出月报摘要" title="导出月报摘要" style={{ ...secondaryButtonStyle, width: '48px', minWidth: '48px', minHeight: '48px', padding: 0, borderRadius: '999px', justifyContent: 'center' }} onClick={() => navigate('/profile/export')}>
+                <DownloadCloud size={18} strokeWidth={2.2} />
               </button>
             </div>
 
@@ -732,15 +707,6 @@ export const ExportBackupPage = () => {
     setMessage('档案摘要已生成下载文件');
   };
 
-  const copySummary = async () => {
-    try {
-      await navigator.clipboard.writeText(exportText);
-      setMessage('档案摘要已复制，可粘贴到家庭群或备忘录');
-    } catch {
-      setMessage('复制失败，请使用下载文件保存摘要');
-    }
-  };
-
   const exportOptions = [
     { value: 'all' as const, title: '全部数据（推荐）', description: '包含所有文字记录、高清图片和视频文件' },
     { value: 'media' as const, title: '仅图片和视频', description: '只导出媒体文件，适合节省空间' },
@@ -756,19 +722,6 @@ export const ExportBackupPage = () => {
         <h2 style={{ margin: 0, color: '#292524', fontSize: '17px', fontWeight: 800 }}>一键备份数字资产</h2>
         <p style={{ ...helperTextStyle, margin: '9px auto 0', maxWidth: '280px', lineHeight: 1.65 }}>将您在应用中记录的所有照片、视频和文字日志打包下载，永久保存在您的私人设备中。</p>
       </Panel>
-
-      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
-        {[
-          { label: '记录', value: recordsList.length },
-          { label: '里程碑', value: milestoneCount },
-          { label: '影像', value: mediaCount },
-        ].map((item) => (
-          <div key={item.label} style={{ borderRadius: '16px', border: '1px solid #eef0f2', background: '#ffffff', padding: '13px 10px', textAlign: 'center' }}>
-            <strong style={{ display: 'block', color: '#292524', fontSize: '18px', lineHeight: 1 }}>{item.value}</strong>
-            <span style={{ display: 'block', marginTop: '6px', color: '#a8a29e', fontSize: '11px', fontWeight: 800 }}>{item.label}</span>
-          </div>
-        ))}
-      </section>
 
       <section>
         <h2 style={{ margin: '0 0 14px', fontSize: '15px', fontWeight: 800, color: '#292524' }}>选择导出内容</h2>
@@ -814,14 +767,9 @@ export const ExportBackupPage = () => {
       {error ? <EmptyState message={`摘要整理失败：${error}`} /> : null}
 
       {message ? <p style={{ ...helperTextStyle, color: message.includes('失败') ? '#dc2626' : '#0f766e' }}>{message}</p> : null}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
-        <button type="button" style={{ ...primaryButtonStyle, width: '100%', minHeight: '46px', borderRadius: '18px' }} onClick={downloadSummary} disabled={loading || Boolean(error)}>
-          下载摘要
-        </button>
-        <button type="button" style={{ ...secondaryButtonStyle, width: '100%', minHeight: '46px', borderRadius: '18px', justifyContent: 'center' }} onClick={() => void copySummary()} disabled={loading || Boolean(error)}>
-          复制摘要
-        </button>
-      </div>
+      <button type="button" style={{ ...primaryButtonStyle, width: '100%', minHeight: '50px', borderRadius: '999px' }} onClick={downloadSummary} disabled={loading || Boolean(error)}>
+        开始打包导出
+      </button>
     </PageShell>
   );
 };
@@ -848,7 +796,7 @@ export const MembershipPage = () => {
   return (
     <PageShell title="会员中心" backTo="/profile">
       <section style={{ borderRadius: '20px', border: '1px solid #292524', background: 'linear-gradient(135deg, #1f1f1f 0%, #0f0f0f 100%)', padding: '18px', minHeight: '142px', color: '#ffffff', display: 'grid', gap: '14px', boxShadow: '0 10px 22px rgba(15,15,15,0.18)', overflow: 'hidden', position: 'relative' }}>
-        <div style={{ position: 'absolute', right: '-28px', top: '-28px', width: '120px', height: '120px', borderRadius: '999px', border: '24px solid rgba(255,255,255,0.04)' }} />
+        <div style={{ position: 'absolute', right: '0', top: '-34px', width: '104px', height: '104px', borderRadius: '999px', border: '22px solid rgba(255,255,255,0.04)', boxSizing: 'border-box' }} />
         <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center', minWidth: 0 }}>
             <ProfileAvatar src={user?.avatar_url} label={user?.nickname ?? '会员'} />
@@ -905,7 +853,7 @@ export const MembershipPage = () => {
             onClick={() => setMessage('纪念册申领入口暂未接入，请通过帮助与反馈提交申请。')}
             disabled={refreshing}
           >
-            查看纪念册说明
+            免费申领本年度纪念册
           </button>
         </div>
       </Panel>
@@ -920,7 +868,7 @@ export const SecurityPage = () => {
   const rows = [
     { title: '手机号码', value: user?.mobile ?? '当前未提供', icon: Smartphone, onClick: () => navigate('/profile/account') },
     { title: '登录密码', value: '已设置', icon: KeyRound, onClick: () => navigate('/profile/account') },
-    { title: '第三方账号绑定', value: '已绑定微信', icon: ShieldCheck, onClick: () => navigate('/profile/settings') },
+    { title: '第三方账号绑定', value: '已绑定微信', icon: ShieldCheck, onClick: () => navigate('/profile/account') },
   ];
 
   return (
@@ -960,9 +908,171 @@ export const SecurityPage = () => {
           );
         })}
       </Panel>
-      <button type="button" onClick={() => navigate('/profile/help?topic=account-delete')} style={{ ...secondaryButtonStyle, width: '100%', color: '#ef4444', justifyContent: 'center', minHeight: '48px', marginTop: '10px', borderRadius: '18px' }}>
+      <button type="button" onClick={() => navigate('/profile/account-delete')} style={{ ...secondaryButtonStyle, width: '100%', color: '#ef4444', justifyContent: 'center', minHeight: '48px', marginTop: '10px', borderRadius: '18px' }}>
         注销账号
       </button>
+    </PageShell>
+  );
+};
+
+export const AccountDeletionPage = () => {
+  const navigate = useNavigate();
+  const { clearSession } = useAuth();
+  const [password, setPassword] = useState('');
+  const [confirmText, setConfirmText] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [check, setCheck] = useState<{
+    can_delete: boolean;
+    requires_password: boolean;
+    confirm_text: string;
+    blockers: string[];
+    summary: {
+      owned_family_count: number;
+      joined_family_count: number;
+      active_child_count: number;
+      active_record_count: number;
+    };
+  } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const run = async () => {
+      setLoading(true);
+      try {
+        const result = await webApi.deletionCheck();
+        if (!cancelled) {
+          setCheck(result);
+          setMessage(null);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setMessage(error instanceof Error ? error.message : '暂时无法读取注销条件，请稍后再试');
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void run();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const submit = async (event?: FormEvent<HTMLFormElement>) => {
+    event?.preventDefault();
+    if (!check) return;
+    if (!check.can_delete) {
+      setMessage(check.blockers[0] ?? '当前账号暂时不能直接注销');
+      return;
+    }
+    if (!password.trim()) {
+      setMessage('请输入当前登录密码');
+      return;
+    }
+    if (confirmText.trim() !== check.confirm_text) {
+      setMessage(`请输入“${check.confirm_text}”后再继续`);
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const result = await webApi.deleteMe({
+        password: password.trim(),
+        confirm_text: confirmText.trim(),
+      });
+      setMessage(result.message);
+      clearSession();
+      navigate('/auth/login', { replace: true });
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : '账号注销失败，请稍后再试');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <PageShell title="注销账号" description="该操作会立即使当前账号失效，并按规则清理你名下的数据关系" backTo="/profile/security">
+      <Panel>
+        <div style={rowStyle}>
+          <strong>注销前检查</strong>
+          <p style={helperTextStyle}>为了保护家庭成员和儿童信息，系统会先检查你是否仍持有需要处理的家庭所有权。</p>
+          {loading ? <p style={helperTextStyle}>正在检查当前账号状态…</p> : null}
+          {!loading && check ? (
+            <div style={{ display: 'grid', gap: '10px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
+                <Panel style={{ padding: '14px 16px', borderRadius: '18px', boxShadow: 'none', background: '#fcfcfd' }}>
+                  <strong style={{ fontSize: '20px', color: '#292524' }}>{check.summary.owned_family_count}</strong>
+                  <p style={helperTextStyle}>你拥有的家庭</p>
+                </Panel>
+                <Panel style={{ padding: '14px 16px', borderRadius: '18px', boxShadow: 'none', background: '#fcfcfd' }}>
+                  <strong style={{ fontSize: '20px', color: '#292524' }}>{check.summary.joined_family_count}</strong>
+                  <p style={helperTextStyle}>你加入的家庭</p>
+                </Panel>
+                <Panel style={{ padding: '14px 16px', borderRadius: '18px', boxShadow: 'none', background: '#fcfcfd' }}>
+                  <strong style={{ fontSize: '20px', color: '#292524' }}>{check.summary.active_child_count}</strong>
+                  <p style={helperTextStyle}>你名下孩子档案</p>
+                </Panel>
+                <Panel style={{ padding: '14px 16px', borderRadius: '18px', boxShadow: 'none', background: '#fcfcfd' }}>
+                  <strong style={{ fontSize: '20px', color: '#292524' }}>{check.summary.active_record_count}</strong>
+                  <p style={helperTextStyle}>你创建的有效记录</p>
+                </Panel>
+              </div>
+              {check.blockers.length ? (
+                <div style={{ borderRadius: '18px', background: '#fff7ed', border: '1px solid #fed7aa', padding: '14px 16px', color: '#9a3412', display: 'grid', gap: '8px' }}>
+                  <strong>当前还不能直接注销</strong>
+                  {check.blockers.map((item) => (
+                    <p key={item} style={{ margin: 0, fontSize: '13px', lineHeight: 1.6 }}>{item}</p>
+                  ))}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px', marginTop: '4px' }}>
+                    <button type="button" style={{ ...secondaryButtonStyle, minHeight: '42px', borderRadius: '999px', boxShadow: 'none', color: '#9a3412' }} onClick={() => navigate('/family/members')}>
+                      去处理成员
+                    </button>
+                    <button type="button" style={{ ...secondaryButtonStyle, minHeight: '42px', borderRadius: '999px', boxShadow: 'none', color: '#9a3412' }} onClick={() => navigate('/profile/help?topic=account-delete')}>
+                      提交协助
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ borderRadius: '18px', background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '14px 16px', color: '#166534', display: 'grid', gap: '6px' }}>
+                  <strong>当前账号可以注销</strong>
+                  <p style={{ margin: 0, fontSize: '13px', lineHeight: 1.6 }}>注销后将立即退出登录，密码和账号凭据会失效，不能恢复。</p>
+                </div>
+              )}
+            </div>
+          ) : null}
+        </div>
+      </Panel>
+      <Panel>
+        <form style={rowStyle} onSubmit={(event) => void submit(event)}>
+          <strong>确认信息</strong>
+          <Field label="登录密码">
+            <input style={inputStyle} type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="请输入当前登录密码" />
+          </Field>
+          <Field label={`确认文案（输入“${check?.confirm_text ?? '确认注销'}”）`}>
+            <input style={inputStyle} value={confirmText} onChange={(event) => setConfirmText(event.target.value)} placeholder={check?.confirm_text ?? '确认注销'} />
+          </Field>
+          {message ? <p style={{ ...helperTextStyle, color: message.includes('已') ? '#0f766e' : '#dc2626' }}>{message}</p> : null}
+          <div style={buttonRowStyle}>
+            <button
+              type="submit"
+              style={{
+                ...primaryButtonStyle,
+                background: check?.can_delete ? '#dc2626' : '#d6d3d1',
+                boxShadow: 'none',
+              }}
+              disabled={submitting || loading || !check?.can_delete}
+            >
+              {submitting ? '正在注销…' : '确认注销账号'}
+            </button>
+          </div>
+        </form>
+      </Panel>
     </PageShell>
   );
 };
@@ -1050,7 +1160,7 @@ const legalSections = [
       '为提供成长档案服务，平台会处理账号、昵称、孩子档案资料、家庭成员关系、成长记录、媒体文件、登录时间和必要审计日志。',
       '上述信息用于登录校验、身份识别、档案展示、家庭协作、媒体上传与预览、内容审核、异常排查、安全风控和合规留存。',
       '除用户授权、法律要求、保护未成年人权益或完成短信、对象存储、AI 处理等必要服务外，平台不会向无关第三方出售或出租个人信息。',
-      '用户可以查看和修改个人资料、孩子档案、家庭成员关系和成长记录；正式上线后应提供注销、导出、删除申请和隐私问题反馈渠道。',
+      '用户可以查看和修改个人资料、孩子档案、家庭成员关系和成长记录；平台提供注销、导出、删除申请和隐私问题反馈渠道。',
     ],
   },
   {
@@ -1125,12 +1235,12 @@ export const AboutPage = () => {
         <AboutMenuLink icon={Info} label="功能介绍" onClick={() => setMessage('年轮支持成长记录、家庭协作、时间轴、月报纪念册和本机导出。')} />
         <AboutMenuLink icon={FileText} label="用户服务协议" onClick={() => navigate('/profile/legal')} />
         <AboutMenuLink icon={Shield} label="隐私政策" onClick={() => navigate('/profile/legal')} />
-        <AboutMenuLink icon={Globe} label="官方网站（待开放）" isLast onClick={() => setMessage('官方网站将在正式上线后开放。')} />
+        <AboutMenuLink icon={Globe} label="官方网站" isLast onClick={() => setMessage('官网信息将随服务发布节奏同步更新。')} />
       </Panel>
 
       <Panel style={{ padding: 0, overflow: 'hidden' }}>
         <AboutMenuLink icon={Mail} label="联系我们" value="support@familyarchive.com" onClick={() => setMessage('可通过 support@familyarchive.com 联系我们。')} />
-        <AboutMenuLink icon={Star} label="应用商店评分（待开放）" isLast onClick={() => setMessage('App 版本上线后将开放应用商店评分入口。')} />
+        <AboutMenuLink icon={HelpCircle} label="应用反馈" isLast onClick={() => navigate('/profile/help')} />
       </Panel>
 
       {message ? <p style={{ ...helperTextStyle, color: '#57534e', textAlign: 'center' }}>{message}</p> : null}
@@ -1152,7 +1262,7 @@ export const LegalPage = () => {
     <Panel>
       <div style={rowStyle}>
         <strong>当前版本说明</strong>
-        <p style={helperTextStyle}>当前版本用于最小可用版本联调与验收，已覆盖登录、建档、记录、时间轴、家庭成员、媒体上传和后台运营主流程。</p>
+        <p style={helperTextStyle}>当前版本已覆盖登录、建档、记录、时间轴、家庭成员、媒体上传和后台运营主流程。</p>
       </div>
     </Panel>
     {legalSections.map((section) => (

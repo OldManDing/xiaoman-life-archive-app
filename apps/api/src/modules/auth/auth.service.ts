@@ -68,6 +68,11 @@ export class AuthService {
       where: {
         authType: AuthType.password,
         authKey: credential,
+        status: USER_ACTIVE_STATUS,
+        user: {
+          status: USER_ACTIVE_STATUS,
+          deletedAt: null,
+        },
       },
       include: { user: true },
     });
@@ -122,7 +127,7 @@ export class AuthService {
       authAccount.user.status !== USER_ACTIVE_STATUS ||
       authAccount.user.deletedAt
     ) {
-      throw new UnauthorizedException('账号已停用');
+      throw new UnauthorizedException('账号或密码错误');
     }
 
     if (!authAccount.credentialHash) {

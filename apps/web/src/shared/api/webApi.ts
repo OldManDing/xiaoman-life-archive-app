@@ -9,6 +9,7 @@ import type {
   FamilyMembersResponse,
   LoginResponse,
   LocationsSearchResponse,
+  DeletionCheckResponse,
   AiJobDetail,
   AiPreviewResponse,
   AiJobType,
@@ -54,6 +55,11 @@ export interface UpdateChildPayload {
 export interface UpdateMePayload {
   nickname?: string;
   avatar_url?: string;
+}
+
+export interface DeleteMePayload {
+  password: string;
+  confirm_text: string;
 }
 
 export interface ListRecordsQuery {
@@ -155,6 +161,16 @@ export const webApi = {
 
   async updateMe(payload: UpdateMePayload) {
     const response = await http.patch<ApiEnvelope<UserProfile>>('/users/me', payload);
+    return response.data.data;
+  },
+
+  async deletionCheck() {
+    const response = await http.get<ApiEnvelope<DeletionCheckResponse>>('/users/me/deletion-check');
+    return response.data.data;
+  },
+
+  async deleteMe(payload: DeleteMePayload) {
+    const response = await http.post<ApiEnvelope<{ success: boolean; deleted_at: string; message: string }>>('/users/me/delete', payload);
     return response.data.data;
   },
 

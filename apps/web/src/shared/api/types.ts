@@ -14,6 +14,19 @@ export interface UserProfile {
   created_at?: string;
 }
 
+export interface DeletionCheckResponse {
+  can_delete: boolean;
+  requires_password: boolean;
+  confirm_text: string;
+  blockers: string[];
+  summary: {
+    owned_family_count: number;
+    joined_family_count: number;
+    active_child_count: number;
+    active_record_count: number;
+  };
+}
+
 export interface LoginResponse {
   access_token: string;
   expires_in: number;

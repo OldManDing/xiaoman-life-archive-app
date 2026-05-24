@@ -15,6 +15,7 @@ interface AuthContextValue {
   login: (payload: LoginPayload) => Promise<void>;
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
+  clearSession: () => void;
   setUserProfile: (profile: UserProfile) => void;
   setActiveChild: (child: ChildRecord | null) => void;
   refreshChildren: () => Promise<ChildRecord[]>;
@@ -22,6 +23,9 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+const pickDefaultChild = (children: ChildRecord[]) =>
+  children.find((child) => child.name?.trim()) ?? children[0] ?? null;
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [accessToken, setAccessTokenState] = useState<string | null>(getAccessToken());
@@ -49,10 +53,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     );
     setChildrenList(enrichedChildren);
     setActiveChildState((current) => {
-      if (current) {
+      if (current?.name?.trim()) {
         return enrichedChildren.find((item) => item.child_no === current.child_no) ?? current;
       }
-      return enrichedChildren[0] ?? null;
+      const refreshedCurrent = current ? enrichedChildren.find((item) => item.child_no === current.child_no) : null;
+      return refreshedCurrent?.name?.trim() ? refreshedCurrent : pickDefaultChild(enrichedChildren);
     });
     return enrichedChildren;
   }, []);
@@ -75,8 +80,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const bootstrap = useCallback(async () => {
     try {
-      const session = await webApi.refresh();
-      await hydrateAfterAuth(session);
+      const persistedToken = getAccessToken();
+      if (persistedToken) {
+        try {
+          const profile = await webApi.me();
+          setAccessToken(persistedToken);
+          setUser(profile);
+          const nextChildren = await refreshChildren();
+          setNeedsOnboarding(nextChildren.length === 0);
+        } catch {
+          const session = await webApi.refresh();
+          await hydrateAfterAuth(session);
+        }
+      } else {
+        const session = await webApi.refresh();
+        await hydrateAfterAuth(session);
+      }
     } catch {
       clearAccessToken();
       setAccessTokenState(null);
@@ -109,18 +128,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     [hydrateAfterAuth],
   );
 
+  const clearSession = useCallback(() => {
+    clearAccessToken();
+    setAccessTokenState(null);
+    setUser(null);
+    setNeedsOnboarding(false);
+    setChildrenList([]);
+    setActiveChildState(null);
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       await webApi.logout();
+    } catch {
+      // Local sign-out must still complete if the server session is already invalidated.
     } finally {
-      clearAccessToken();
-      setAccessTokenState(null);
-      setUser(null);
-      setNeedsOnboarding(false);
-      setChildrenList([]);
-      setActiveChildState(null);
+      clearSession();
     }
-  }, []);
+  }, [clearSession]);
 
   const setActiveChild = useCallback((child: ChildRecord | null) => {
     setActiveChildState(child);
@@ -148,6 +173,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       login,
       register,
       logout,
+      clearSession,
       setUserProfile,
       setActiveChild,
       refreshChildren,
@@ -162,6 +188,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       login,
       register,
       logout,
+      clearSession,
       needsOnboarding,
       refreshChildren,
       setUserProfile,

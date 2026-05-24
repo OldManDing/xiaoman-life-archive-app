@@ -186,7 +186,13 @@ describe('env-config', () => {
     expect(isSmsEnabled({ APP_ENV: 'prod' })).toBe(false);
     expect(isSmsEnabled({ APP_ENV: 'prod', SMS_ENABLED: 'true' })).toBe(true);
     expect(resolveCorsOrigins({ APP_ENV: 'local' })).toBe(true);
-    expect(resolveCorsOrigins({ APP_ENV: 'prod', CORS_ORIGINS: 'https://a.com, https://b.com' })).toEqual(['https://a.com', 'https://b.com']);
+    expect(resolveCorsOrigins({ APP_ENV: 'prod', CORS_ORIGINS: 'https://a.com, https://b.com' })).toEqual([
+      'https://a.com',
+      'https://b.com',
+      'https://localhost',
+      'capacitor://localhost',
+      'ionic://localhost',
+    ]);
     expect(getStorageProviderName({ APP_ENV: 'prod', STORAGE_PROVIDER: 'minio' })).toBe('minio');
     expect(getAiProviderName({ APP_ENV: 'prod', AI_PROVIDER: 'openai-compatible' })).toBe('openai-compatible');
   });

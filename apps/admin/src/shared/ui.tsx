@@ -4,7 +4,7 @@ import { ChevronDown } from 'lucide-react';
 import { badgeStyle, cardStyle, headingStyle, inputStyle, mutedTextStyle } from './uiStyles';
 
 export const PageShell = ({ title, description, children }: { title: string; description?: string; children: ReactNode }) => (
-  <section className="admin-page-shell" style={{ display: 'grid', gap: '16px', width: '100%', minWidth: 0 }}>
+  <section className="admin-page-shell" style={{ display: 'grid', gap: '12px', width: '100%', minWidth: 0 }}>
     <header className="admin-page-header" style={{ display: 'grid', gap: '8px' }}>
       <h1 style={headingStyle}>{title}</h1>
       {description ? <p style={mutedTextStyle}>{description}</p> : null}
@@ -15,7 +15,13 @@ export const PageShell = ({ title, description, children }: { title: string; des
 
 export const Panel = ({ children }: { children: ReactNode }) => <div className="admin-panel" style={{ ...cardStyle, minWidth: 0, overflow: 'hidden' }}>{children}</div>;
 
-export const EmptyState = ({ message }: { message: string }) => <p style={mutedTextStyle}>{message}</p>;
+export const EmptyState = ({ message, title = '暂无可处理数据', children }: { message: string; title?: string; children?: ReactNode }) => (
+  <div className="admin-empty-state">
+    <strong>{title}</strong>
+    <p style={mutedTextStyle}>{message}</p>
+    {children ? <div className="admin-empty-state-actions">{children}</div> : null}
+  </div>
+);
 
 const adminSelectStyle: CSSProperties = {
   ...inputStyle,

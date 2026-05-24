@@ -16,24 +16,26 @@ export const SearchPanel = ({
   setKeyword,
   loading,
   onSearch,
+  onClearSearch,
 }: {
   keyword: string;
   setKeyword: (value: string) => void;
   loading: boolean;
   onSearch: (event?: FormEvent) => Promise<void>;
+  onClearSearch: () => Promise<void>;
 }) => (
   <Panel>
-    <form onSubmit={onSearch} style={{ display: 'grid', gap: '12px' }}>
+    <form className="admin-search-form" onSubmit={onSearch} style={{ display: 'grid', gap: '12px' }}>
       <div>
         <strong style={{ display: 'block', color: '#16211f', marginBottom: '4px' }}>筛选条件</strong>
         <p style={mutedTextStyle}>输入用户、孩子、记录、媒体或任务相关关键字后查询。</p>
       </div>
-      <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+      <div className="admin-search-controls" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
         <input style={{ ...inputStyle, maxWidth: '360px' }} value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="输入关键字筛选" />
         <button type="submit" style={primaryButtonStyle} disabled={loading}>
           {loading ? '查询中…' : '查询'}
         </button>
-        <button type="button" style={secondaryButtonStyle} onClick={() => setKeyword('')} disabled={loading || !keyword}>
+        <button type="button" style={secondaryButtonStyle} onClick={() => void onClearSearch()} disabled={loading}>
           清空
         </button>
       </div>
@@ -45,24 +47,28 @@ export const TableShell = ({
   columns,
   rows,
   emptyMessage,
+  loading = false,
 }: {
   columns: string[];
   rows: Array<Array<ReactNode>>;
   emptyMessage: string;
+  loading?: boolean;
 }) => {
-  const tableMinWidth = `${Math.max(1120, columns.length * 132)}px`;
+  const tableMinWidth = `${Math.max(1180, columns.length * 146)}px`;
 
   return (
     <Panel>
       {!rows.length ? (
-        <EmptyState message={emptyMessage} />
+        <EmptyState title={loading ? '正在加载数据' : '暂无可处理数据'} message={loading ? '正在获取最新列表，加载完成后会自动显示。' : emptyMessage}>
+          <span>{loading ? '请稍候，不需要重复点击查询。' : '可清空筛选后重新查看。'}</span>
+        </EmptyState>
       ) : (
         <div className="admin-table-scroll" style={{ overflowX: 'auto' }}>
           <table className="admin-responsive-table" style={{ ...tableStyle, minWidth: tableMinWidth }}>
             <thead>
               <tr>
                 {columns.map((column, columnIndex) => (
-                  <th key={column} style={{ ...thTdStyle, color: '#66736f', fontSize: '13px', background: '#f6f8f7', ...(columnIndex === columns.length - 1 ? stickyLastColumnStyle(true) : {}) }}>
+                  <th key={column} data-column={column} style={{ ...thTdStyle, color: '#66736f', fontSize: '13px', background: '#f6f8f7', ...(columnIndex === columns.length - 1 ? stickyLastColumnStyle(true) : {}) }}>
                     {column}
                   </th>
                 ))}
@@ -72,7 +78,7 @@ export const TableShell = ({
               {rows.map((row, rowIndex) => (
                 <tr key={rowIndex}>
                   {row.map((cell, cellIndex) => (
-                    <td key={cellIndex} data-label={columns[cellIndex]} style={{ ...thTdStyle, ...(cellIndex === row.length - 1 ? stickyLastColumnStyle() : {}) }}>
+                    <td key={cellIndex} data-label={columns[cellIndex]} data-column={columns[cellIndex]} style={{ ...thTdStyle, ...(cellIndex === row.length - 1 ? stickyLastColumnStyle() : {}) }}>
                       {cell ?? '—'}
                     </td>
                   ))}
