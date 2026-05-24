@@ -2,6 +2,7 @@ import {
   getAiProviderName,
   getAppEnv,
   getAppPort,
+  getMapProviderName,
   getSmsProviderName,
   getStorageProviderName,
   isAdminBootstrapAllowed,
@@ -171,12 +172,43 @@ describe('env-config', () => {
     expect(() => getAiProviderName({ APP_ENV: 'production', AI_PROVIDER: 'mock' })).toThrow(
       'AI_PROVIDER=mock is not allowed outside local/test environments',
     );
+    expect(() => getMapProviderName({ APP_ENV: 'production', MAP_PROVIDER: 'mock' })).toThrow(
+      'MAP_PROVIDER=mock is not allowed outside local/test environments',
+    );
+  });
+
+  it('allows map to be explicitly disabled in strict environments', () => {
+    expect(
+      validateRuntimeConfig({
+        APP_ENV: 'production',
+        APP_PORT: '3000',
+        JWT_ACCESS_SECRET: 'prod_access_secret_that_is_long_enough_123',
+        JWT_REFRESH_SECRET: 'prod_refresh_secret_that_is_long_enough_456',
+        CORS_ORIGINS: 'https://app.example.com',
+        SMS_ENABLED: 'false',
+        STORAGE_PROVIDER: 'minio',
+        STORAGE_REGION: 'local',
+        STORAGE_BUCKET: 'bucket',
+        STORAGE_ENDPOINT: 'https://storage.example.com',
+        STORAGE_ACCESS_KEY: 'storage_access',
+        STORAGE_SECRET_KEY: 'storage_secret',
+        AI_PROVIDER: 'openai-compatible',
+        AI_API_KEY: 'ai_key',
+        AI_BASE_URL: 'https://ai.example.com/v1',
+        AI_MODEL: 'model',
+        MAP_PROVIDER: 'disabled',
+        DATABASE_URL: 'mysql://user:pass@db:3306/app',
+        REDIS_HOST: 'redis',
+        REDIS_PORT: '6379',
+      }),
+    ).toMatchObject({ MAP_PROVIDER: 'disabled' });
   });
 
   it('rejects invalid provider values', () => {
     expect(() => getSmsProviderName({ APP_ENV: 'local', SMS_PROVIDER: 'foo' })).toThrow('Invalid SMS_PROVIDER value: foo');
     expect(() => getStorageProviderName({ APP_ENV: 'local', STORAGE_PROVIDER: 'bar' })).toThrow('Invalid STORAGE_PROVIDER value: bar');
     expect(() => getAiProviderName({ APP_ENV: 'local', AI_PROVIDER: 'baz' })).toThrow('Invalid AI_PROVIDER value: baz');
+    expect(() => getMapProviderName({ APP_ENV: 'local', MAP_PROVIDER: 'qux' })).toThrow('Invalid MAP_PROVIDER value: qux');
   });
 
   it('resolves app env, port and cookie security flags consistently', () => {
@@ -195,5 +227,6 @@ describe('env-config', () => {
     ]);
     expect(getStorageProviderName({ APP_ENV: 'prod', STORAGE_PROVIDER: 'minio' })).toBe('minio');
     expect(getAiProviderName({ APP_ENV: 'prod', AI_PROVIDER: 'openai-compatible' })).toBe('openai-compatible');
+    expect(getMapProviderName({ APP_ENV: 'prod', MAP_PROVIDER: 'disabled' })).toBe('disabled');
   });
 });

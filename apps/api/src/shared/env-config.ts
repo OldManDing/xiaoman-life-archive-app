@@ -198,9 +198,6 @@ function validateStrictProviderConfig(env: EnvSource) {
   }
 
   const mapProvider = getMapProviderName(env);
-  if (mapProvider === 'disabled') {
-    throw new Error('MAP_PROVIDER=disabled is not allowed outside local/test environments');
-  }
   if (mapProvider === 'amap') {
     requireEnvValue(env, 'MAP_API_KEY');
   }

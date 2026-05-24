@@ -89,6 +89,13 @@ export class LocationsService {
       };
     }
 
+    if (provider === 'disabled') {
+      return {
+        provider,
+        list: [],
+      };
+    }
+
     return {
       provider,
       list: this.searchMock(dto),

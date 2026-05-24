@@ -63,4 +63,19 @@ describe('LocationsService', () => {
     expect(result.list[0].name).not.toMatch(/\d+\.\d+\s*,\s*\d+\.\d+/);
     expect(String(fetchMock.mock.calls[0][0])).toContain('/geocode/regeo');
   });
+
+  it('does not return mock locations when map search is disabled in production', async () => {
+    const fetchMock = jest.fn();
+    process.env = { ...originalEnv, APP_ENV: 'production', MAP_PROVIDER: 'disabled' };
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    const result = await new LocationsService().search({
+      keyword: '闄勮繎鍦扮偣',
+      latitude: 31.2304,
+      longitude: 121.4737,
+    });
+
+    expect(result).toEqual({ provider: 'disabled', list: [] });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 });
