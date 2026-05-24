@@ -262,6 +262,34 @@ describe('Admin RBAC and media contract', () => {
       .expect(201);
 
     expect(audioUploadResponse.body.data.object_key).toMatch(/\.m4a$/);
+
+    const recordedAudioUploadResponse = await request(app.getHttpServer())
+      .post('/api/v1/media/upload-token')
+      .set('Authorization', `Bearer ${userToken}`)
+      .send({
+        child_no: child.childNo,
+        file_name: 'native-recording.webm',
+        mime_type: 'audio/webm;codecs=opus',
+        size_bytes: 2048,
+        media_type: 'audio',
+      })
+      .expect(201);
+
+    expect(recordedAudioUploadResponse.body.data.object_key).toMatch(/\.webm$/);
+
+    const mobileVideoUploadResponse = await request(app.getHttpServer())
+      .post('/api/v1/media/upload-token')
+      .set('Authorization', `Bearer ${userToken}`)
+      .send({
+        child_no: child.childNo,
+        file_name: 'native-video.3gp',
+        mime_type: 'video/3gpp',
+        size_bytes: 2048,
+        media_type: 'video',
+      })
+      .expect(201);
+
+    expect(mobileVideoUploadResponse.body.data.object_key).toMatch(/\.3gp$/);
   });
 
   it('allows super admin to disable and re-enable a user with audit logging', async () => {

@@ -10,6 +10,27 @@ export const defaultLocalSettings: LocalSettings = {
   autoRefreshHome: true,
 };
 
+export interface UserPreferenceSnapshot {
+  allow_mobile_search?: boolean;
+  show_history_to_new_members?: boolean;
+}
+
+export const localSettingsToPreferences = (settings: LocalSettings) => ({
+  allow_mobile_search: !settings.hideMobileMask,
+  show_history_to_new_members: settings.autoRefreshHome,
+});
+
+export const preferencesToLocalSettings = (preferences: UserPreferenceSnapshot): LocalSettings => ({
+  hideMobileMask:
+    typeof preferences.allow_mobile_search === 'boolean'
+      ? !preferences.allow_mobile_search
+      : defaultLocalSettings.hideMobileMask,
+  autoRefreshHome:
+    typeof preferences.show_history_to_new_members === 'boolean'
+      ? preferences.show_history_to_new_members
+      : defaultLocalSettings.autoRefreshHome,
+});
+
 export const loadLocalSettings = (): LocalSettings => {
   if (typeof window === 'undefined') {
     return defaultLocalSettings;

@@ -75,6 +75,16 @@ export const LoginPage = () => {
 
   return (
     <PageShell title="登录注册" description={mode === 'login' ? '使用账号密码进入年轮。' : '使用邀请码创建账号并加入家庭。'}>
+      <section style={{ display: 'grid', justifyItems: 'center', gap: '10px', paddingTop: '4px' }} aria-label="年轮品牌">
+        <img
+          src="/brand/nianlun-logo-192.png"
+          alt="年轮"
+          width={84}
+          height={84}
+          style={{ borderRadius: '24px', boxShadow: '0 14px 30px rgba(115, 74, 41, 0.16)' }}
+        />
+        <p style={{ ...helperTextStyle, color: '#57534e', fontWeight: 700 }}>一家人的成长年轮，慢慢沉淀成档案。</p>
+      </section>
       <Panel>
         <form onSubmit={onSubmit} style={rowStyle}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>

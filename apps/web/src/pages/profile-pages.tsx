@@ -1,6 +1,6 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { BookHeart, Camera, CheckCircle2, ChevronRight, CreditCard, DownloadCloud, FileBox, FileText, Globe, HelpCircle, Info, KeyRound, Lock, LogOut, Mail, RefreshCw, Shield, ShieldCheck, Smartphone, Star, Users } from 'lucide-react';
+import { BookHeart, Camera, CheckCircle2, ChevronRight, CreditCard, DownloadCloud, FileBox, FileText, Globe, HelpCircle, Info, KeyRound, Lock, LogOut, Mail, RefreshCw, Shield, ShieldCheck, Smartphone, Users } from 'lucide-react';
 
 import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
@@ -8,7 +8,7 @@ import type { RecordSummary } from '../shared/api/types';
 import { useAsyncData } from '../shared/hooks';
 import { membershipTypeLabel } from '../shared/labels';
 import { createPersistableMediaPreview, resolveMediaPreviewUrl, resolveStoredMediaUrl, saveLocalMediaPreview, toLocalMediaReference } from '../shared/localMediaPreview';
-import { loadLocalSettings, saveLocalSettings, type LocalSettings } from '../shared/localSettings';
+import { loadLocalSettings, localSettingsToPreferences, preferencesToLocalSettings, saveLocalSettings, type LocalSettings } from '../shared/localSettings';
 import { AppSelect, Field, PageShell, Panel, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle, textareaStyle } from '../shared/ui';
 import { EmptyState, buttonRowStyle, rowStyle } from './shared';
 import { RefAvatar, RefListRow, RefSectionTitle, refCardStyle, refPageStyle, refSoftCardStyle, referenceAssets } from './reference-ui';
@@ -247,27 +247,27 @@ export const ProfilePage = () => {
   const latestDraft = draftRecords?.[0] ?? null;
   return (
     <div style={refPageStyle}>
-      <section style={{ background: '#ffffff', padding: 'calc(54px + env(safe-area-inset-top)) 20px 30px', borderBottom: '1px solid #eef0f2', borderRadius: '0 0 28px 28px', boxShadow: '0 5px 16px rgba(15,23,42,0.06)' }}>
+      <section style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.96) 0%, rgba(238,247,246,0.9) 58%, rgba(255,246,224,0.86) 100%)', padding: 'calc(54px + env(safe-area-inset-top)) 20px 30px', borderBottom: '1px solid rgba(126,145,170,0.2)', borderRadius: '0 0 32px 32px', boxShadow: '0 20px 42px rgba(25,35,55,0.12)' }}>
         <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
           <RefAvatar src={user?.avatar_url && !isGeneratedSvgAvatar(user.avatar_url) ? resolveStoredMediaUrl(user.avatar_url) ?? referenceAssets.momAvatar : referenceAssets.momAvatar} label={user?.nickname ?? '我的头像'} size={72} />
           <div style={{ minWidth: 0, flex: 1, display: 'grid', gap: 6 }}>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-              <strong style={{ color: '#292524', fontSize: 24, lineHeight: 1.1, fontWeight: 900 }}>{user?.nickname ?? '未登录用户'}</strong>
+              <strong style={{ color: '#172033', fontSize: 25, lineHeight: 1.1, fontWeight: 950 }}>{user?.nickname ?? '未登录用户'}</strong>
               <span style={{ color: '#d97706', background: '#fff7dc', border: '1px solid #f1d99b', borderRadius: '999px', padding: '3px 10px', fontSize: 12, fontWeight: 900 }}>{membershipTypeLabel(user?.membership_type)}</span>
             </div>
-            <span style={{ color: '#78716c', fontSize: 15, fontWeight: 600 }}>ID: 00000001</span>
+            <span style={{ color: '#5f6d7f', fontSize: 15, fontWeight: 700 }}>ID: 00000001</span>
           </div>
-          <button type="button" onClick={() => navigate('/profile/account')} style={{ minHeight: 44, borderRadius: '999px', border: '1px solid #dbe3ee', background: '#ffffff', color: '#57534e', padding: '9px 18px', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>编辑主页</button>
+          <button type="button" onClick={() => navigate('/profile/account')} style={{ minHeight: 44, borderRadius: '999px', border: '1px solid rgba(126,145,170,0.24)', background: 'rgba(255,255,255,0.86)', color: '#334155', padding: '9px 18px', fontSize: 15, fontWeight: 850, cursor: 'pointer', boxShadow: '0 10px 20px rgba(25,35,55,0.08)' }}>编辑主页</button>
         </div>
       </section>
 
       <main style={{ display: 'grid', gap: 24, padding: '18px 20px 28px' }}>
         <button type="button" onClick={() => navigate(latestDraft ? `/record/${latestDraft.record_no}/edit` : '/record/create')} style={{ ...refSoftCardStyle, width: '100%', minHeight: 66, padding: '15px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left', cursor: 'pointer' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
-            <FileBox size={22} color="#94a3b8" />
-            <span style={{ color: '#57534e', fontSize: 16, fontWeight: 800 }}>草稿箱</span>
+            <FileBox size={22} color="#2f66d8" />
+            <span style={{ color: '#172033', fontSize: 16, fontWeight: 900 }}>草稿箱</span>
           </span>
-          <span style={{ display: 'inline-flex', gap: 8, alignItems: 'center', color: '#9ca3af', fontSize: 14, fontWeight: 700 }}>
+          <span style={{ display: 'inline-flex', gap: 8, alignItems: 'center', color: '#687386', fontSize: 14, fontWeight: 750 }}>
             {latestDraft ? `${draftRecords?.length ?? 1} 条待完善记录` : '暂无草稿'}
             <ChevronRight size={17} color="#cbd5e1" />
           </span>
@@ -276,7 +276,7 @@ export const ProfilePage = () => {
         <section>
           <RefSectionTitle>我的孩子</RefSectionTitle>
           <div style={{ ...refSoftCardStyle, padding: 0, overflow: 'hidden' }}>
-            <button type="button" onClick={() => navigate('/family/child')} style={{ width: '100%', minHeight: 78, border: 'none', borderBottom: '1px solid #f3f4f6', background: '#ffffff', padding: '15px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, textAlign: 'left', cursor: 'pointer' }}>
+            <button type="button" onClick={() => navigate('/family/child')} style={{ width: '100%', minHeight: 78, border: 'none', borderBottom: '1px solid rgba(126,145,170,0.14)', background: 'rgba(255,255,255,0.76)', padding: '15px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, textAlign: 'left', cursor: 'pointer' }}>
               <span style={{ display: 'flex', gap: 13, alignItems: 'center', minWidth: 0 }}>
                 <RefAvatar
                   src={activeChild?.avatar_url && !isGeneratedSvgAvatar(activeChild.avatar_url) ? resolveStoredMediaUrl(activeChild.avatar_url) ?? referenceAssets.childAvatar : referenceAssets.childAvatar}
@@ -284,13 +284,13 @@ export const ProfilePage = () => {
                   size={44}
                 />
                 <span style={{ minWidth: 0 }}>
-                  <strong style={{ display: 'block', color: '#292524', fontSize: 16, fontWeight: 900 }}>{activeChild?.name ?? '孩子资料'}</strong>
-                  <span style={{ display: 'block', marginTop: 4, color: '#78716c', fontSize: 13, fontWeight: 700 }}>{activeChild?.current_age_display ?? '查看和维护孩子的基础资料'}</span>
+                  <strong style={{ display: 'block', color: '#172033', fontSize: 16, fontWeight: 900 }}>{activeChild?.name ?? '孩子资料'}</strong>
+                  <span style={{ display: 'block', marginTop: 4, color: '#687386', fontSize: 13, fontWeight: 700 }}>{activeChild?.current_age_display ?? '查看和维护孩子的基础资料'}</span>
                 </span>
               </span>
               <ChevronRight size={18} color="#cbd5e1" />
             </button>
-            <button type="button" onClick={() => navigate('/onboarding/child?mode=add')} style={{ margin: '14px 16px 16px', width: 'calc(100% - 32px)', minHeight: 54, borderRadius: 16, border: '1px dashed #d6d3d1', background: '#fafaf9', color: '#57534e', fontSize: 15, fontWeight: 800, cursor: 'pointer' }}>+ 添加宝宝</button>
+            <button type="button" onClick={() => navigate('/onboarding/child?mode=add')} style={{ margin: '14px 16px 16px', width: 'calc(100% - 32px)', minHeight: 54, borderRadius: 18, border: '1px dashed rgba(47,102,216,0.38)', background: '#f7fbff', color: '#2f66d8', fontSize: 15, fontWeight: 850, cursor: 'pointer' }}>+ 添加宝宝</button>
           </div>
         </section>
 
@@ -429,14 +429,45 @@ export const AccountPage = () => {
 export const SettingsPage = () => {
   const [settings, setSettings] = useState<LocalSettings>(() => loadLocalSettings());
   const [message, setMessage] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
 
-  const updateSetting = (key: keyof LocalSettings) => {
-    setSettings((current) => {
-      const next = { ...current, [key]: !current[key] };
-      saveLocalSettings(next);
-      setMessage('设置已保存');
-      return next;
-    });
+  useEffect(() => {
+    let active = true;
+    void webApi
+      .preferences()
+      .then((preferences) => {
+        if (!active) return;
+        const next = preferencesToLocalSettings(preferences);
+        setSettings(next);
+        saveLocalSettings(next);
+      })
+      .catch(() => {
+        if (active) setMessage('当前使用本机隐私设置，联网后可同步到账号。');
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const updateSetting = async (key: keyof LocalSettings) => {
+    const next = { ...settings, [key]: !settings[key] };
+    setSettings(next);
+    saveLocalSettings(next);
+    setSyncing(true);
+    setMessage('设置已保存在本机，正在同步账号。');
+
+    try {
+      const synced = await webApi.updatePreferences(localSettingsToPreferences(next));
+      const syncedSettings = preferencesToLocalSettings(synced);
+      setSettings(syncedSettings);
+      saveLocalSettings(syncedSettings);
+      setMessage('设置已同步到账号。');
+    } catch {
+      setMessage('设置已保存在本机，服务器同步稍后可重试。');
+    } finally {
+      setSyncing(false);
+    }
   };
 
   return (
@@ -468,14 +499,14 @@ export const SettingsPage = () => {
                 <Icon size={18} color="#94a3b8" />
                 <strong style={{ display: 'block', color: '#57534e', fontSize: '14px' }}>{item.title}</strong>
               </div>
-              <button type="button" aria-label={item.title} aria-pressed={enabled} style={toggleButtonStyle(enabled)} onClick={() => updateSetting(item.key)}>
+              <button type="button" aria-label={item.title} aria-pressed={enabled} style={toggleButtonStyle(enabled)} onClick={() => void updateSetting(item.key)} disabled={syncing}>
                 <span style={toggleKnobStyle} />
               </button>
             </div>
           );
         })}
       </Panel>
-      <p style={{ ...helperTextStyle, lineHeight: 1.7 }}>我们尊重每个家庭对孩子影像和成长记录的保护习惯。新的访问规则将即时生效，并同步到本机浏览偏好。</p>
+      <p style={{ ...helperTextStyle, lineHeight: 1.7 }}>我们尊重每个家庭对孩子影像和成长记录的保护习惯。新的访问规则会优先同步到账号，本机也会保留一份偏好用于离线和旧版本接口降级。</p>
       {message ? <p style={{ ...helperTextStyle, color: '#0f766e' }}>{message}</p> : null}
     </PageShell>
   );
@@ -777,6 +808,7 @@ export const ExportBackupPage = () => {
 export const MembershipPage = () => {
   const { user, setUserProfile } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
+  const [requestingBook, setRequestingBook] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
   const refreshMembership = async () => {
@@ -790,6 +822,22 @@ export const MembershipPage = () => {
       setMessage(err instanceof Error ? err.message : '会员信息刷新失败');
     } finally {
       setRefreshing(false);
+    }
+  };
+
+  const requestMembershipBook = async () => {
+    setRequestingBook(true);
+    setMessage(null);
+    try {
+      const result = await webApi.requestMembershipBook({
+        year: new Date().getFullYear(),
+        contact: user?.mobile ?? undefined,
+      });
+      setMessage(result.message);
+    } catch {
+      setMessage('申领暂时无法同步服务器，请通过帮助与反馈提交申请。');
+    } finally {
+      setRequestingBook(false);
     }
   };
 
@@ -850,10 +898,10 @@ export const MembershipPage = () => {
           <button
             type="button"
             style={{ ...primaryButtonStyle, width: '100%', borderRadius: '18px', background: '#d97706', boxShadow: '0 6px 14px rgba(217,119,6,0.18)' }}
-            onClick={() => setMessage('纪念册申领入口暂未接入，请通过帮助与反馈提交申请。')}
-            disabled={refreshing}
+            onClick={() => void requestMembershipBook()}
+            disabled={refreshing || requestingBook}
           >
-            免费申领本年度纪念册
+            {requestingBook ? '提交中…' : '免费申领本年度纪念册'}
           </button>
         </div>
       </Panel>
@@ -1084,26 +1132,43 @@ export const HelpFeedbackPage = () => {
   const [content, setContent] = useState(accountDeleteTopic ? '申请注销账号，请联系我完成身份确认和儿童信息处理。' : '');
   const [contact, setContact] = useState('');
   const [message, setMessage] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const submitFeedback = () => {
+  const submitFeedback = async () => {
     const normalized = content.trim();
     if (normalized.length < 6) {
       setMessage('请至少输入 6 个字，方便定位问题。');
       return;
     }
 
-    const item = { category, content: normalized, contact: contact.trim(), created_at: new Date().toISOString() };
-    let list: typeof item[] = [];
+    setSubmitting(true);
     try {
-      const raw = window.localStorage.getItem('xiaoman-web-feedback-list');
-      list = raw ? (JSON.parse(raw) as typeof item[]) : [];
+      const result = await webApi.submitFeedback({
+        category,
+        content: normalized,
+        contact: contact.trim() || undefined,
+        topic: accountDeleteTopic ? 'account-delete' : undefined,
+      });
+      setContent('');
+      setContact('');
+      setMessage(result.message);
+      return;
     } catch {
-      list = [];
+      const item = { category, content: normalized, contact: contact.trim(), created_at: new Date().toISOString(), sync_status: 'pending' };
+      let list: typeof item[] = [];
+      try {
+        const raw = window.localStorage.getItem('xiaoman-web-feedback-list');
+        list = raw ? (JSON.parse(raw) as typeof item[]) : [];
+      } catch {
+        list = [];
+      }
+      window.localStorage.setItem('xiaoman-web-feedback-list', JSON.stringify([item, ...list].slice(0, 20)));
+      setContent('');
+      setContact('');
+      setMessage('暂时无法同步服务器，已先保存在本机，请稍后再提交。');
+    } finally {
+      setSubmitting(false);
     }
-    window.localStorage.setItem('xiaoman-web-feedback-list', JSON.stringify([item, ...list].slice(0, 20)));
-    setContent('');
-    setContact('');
-    setMessage('反馈已保存在本机，感谢补充信息。');
   };
 
   return (
@@ -1132,10 +1197,10 @@ export const HelpFeedbackPage = () => {
           <Field label="联系方式">
             <input style={inputStyle} value={contact} onChange={(event) => setContact(event.target.value)} placeholder="手机号或微信，可选" />
           </Field>
-          {message ? <p style={{ ...helperTextStyle, color: message.includes('已保存') ? '#0f766e' : '#dc2626' }}>{message}</p> : null}
+          {message ? <p style={{ ...helperTextStyle, color: message.includes('无法') ? '#dc2626' : '#0f766e' }}>{message}</p> : null}
           <div style={buttonRowStyle}>
-            <button type="button" style={primaryButtonStyle} onClick={submitFeedback}>
-              保存反馈
+            <button type="button" style={primaryButtonStyle} onClick={() => void submitFeedback()} disabled={submitting}>
+              {submitting ? '提交中…' : '提交反馈'}
             </button>
           </div>
         </div>
@@ -1224,9 +1289,13 @@ export const AboutPage = () => {
   return (
     <PageShell title="关于我们" backTo="/profile">
       <section style={{ display: 'grid', justifyItems: 'center', padding: '18px 0 10px' }}>
-        <div style={{ width: '96px', height: '96px', borderRadius: '26px', background: 'linear-gradient(135deg, #2c2c2c 0%, #171717 100%)', color: '#fbbf24', display: 'grid', placeItems: 'center', boxShadow: '0 10px 22px rgba(15,15,15,0.16)', marginBottom: '16px' }}>
-          <Star size={40} fill="currentColor" strokeWidth={1.8} />
-        </div>
+        <img
+          src="/brand/nianlun-logo-192.png"
+          alt="年轮"
+          width={96}
+          height={96}
+          style={{ borderRadius: '26px', boxShadow: '0 12px 26px rgba(115, 74, 41, 0.16)', marginBottom: '16px' }}
+        />
         <h2 style={{ margin: 0, color: '#2c2c2c', fontSize: '20px', fontWeight: 800 }}>孩子的人生档案馆</h2>
         <p style={{ margin: '6px 0 0', color: '#a1a1aa', fontSize: '12px', fontWeight: 600 }}>Version 1.0.0 (Build 20260514)</p>
       </section>

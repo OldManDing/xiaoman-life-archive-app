@@ -12,8 +12,8 @@ export const referenceAssets = {
 
 export const refPageStyle: CSSProperties = {
   minHeight: '100dvh',
-  background: '#f6f7f8',
-  color: '#292524',
+  background: 'linear-gradient(180deg, #f4f8fc 0%, #fffaf1 48%, #f6f9fd 100%)',
+  color: '#172033',
   overflowX: 'hidden',
   animation: 'app-page-enter 260ms cubic-bezier(0.22, 1, 0.36, 1) both',
 };
@@ -25,22 +25,23 @@ export const refContentStyle: CSSProperties = {
 };
 
 export const refCardStyle: CSSProperties = {
-  borderRadius: '18px',
-  border: '1px solid #eef0f2',
-  background: '#ffffff',
-  boxShadow: '0 3px 12px rgba(15,23,42,0.045)',
+  borderRadius: '20px',
+  border: '1px solid rgba(126,145,170,0.22)',
+  background: 'rgba(255,255,255,0.92)',
+  boxShadow: '0 10px 26px rgba(25,35,55,0.07)',
+  backdropFilter: 'blur(14px)',
 };
 
 export const refSoftCardStyle: CSSProperties = {
   ...refCardStyle,
-  borderRadius: '24px',
+  borderRadius: '26px',
 };
 
 export const refPrimaryButtonStyle: CSSProperties = {
   minHeight: '46px',
   border: 'none',
   borderRadius: '999px',
-  background: '#292524',
+  background: 'linear-gradient(135deg, #17342f 0%, #22584f 100%)',
   color: '#ffffff',
   padding: '12px 18px',
   fontSize: '14px',
@@ -50,20 +51,21 @@ export const refPrimaryButtonStyle: CSSProperties = {
   justifyContent: 'center',
   gap: '8px',
   cursor: 'pointer',
-  boxShadow: '0 6px 14px rgba(41,37,36,0.16)',
+  boxShadow: '0 12px 24px rgba(23,52,47,0.22)',
+  transition: 'transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease',
 };
 
 export const refSecondaryButtonStyle: CSSProperties = {
   ...refPrimaryButtonStyle,
-  border: '1px solid #eef0f2',
-  background: '#ffffff',
-  color: '#57534e',
-  boxShadow: '0 2px 8px rgba(15,23,42,0.035)',
+  border: '1px solid rgba(126,145,170,0.24)',
+  background: 'rgba(255,255,255,0.92)',
+  color: '#334155',
+  boxShadow: '0 8px 18px rgba(25,35,55,0.07)',
 };
 
 export const refMutedTextStyle: CSSProperties = {
   margin: 0,
-  color: '#9ca3af',
+  color: '#687386',
   fontSize: '12px',
   lineHeight: 1.55,
   fontWeight: 600,
@@ -102,16 +104,16 @@ export const RefTopBar = ({
         zIndex: 4,
         height: '52px',
         padding: 'calc(6px + env(safe-area-inset-top)) 14px 0',
-        borderBottom: '1px solid #eef0f2',
-        background: 'rgba(255,255,255,0.96)',
-        backdropFilter: 'blur(16px)',
+        borderBottom: '1px solid rgba(126,145,170,0.18)',
+        background: 'rgba(248,251,255,0.82)',
+        backdropFilter: 'blur(22px)',
         display: 'grid',
         gridTemplateColumns: '52px minmax(0, 1fr) 52px',
         alignItems: 'center',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center' }}>{backNode}</div>
-      <h1 style={{ margin: 0, textAlign: 'center', color: '#292524', fontSize: '17px', fontWeight: 800, lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</h1>
+      <h1 style={{ margin: 0, textAlign: 'center', color: '#172033', fontSize: '17px', fontWeight: 850, lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</h1>
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>{action ?? <span />}</div>
     </header>
   );
@@ -149,8 +151,8 @@ export const RefAvatar = ({
       height: `${size}px`,
       borderRadius: radius,
       objectFit: 'cover',
-      border: '1px solid #eee9df',
-      boxShadow: '0 2px 8px rgba(15,23,42,0.08)',
+      border: '2px solid rgba(255,255,255,0.92)',
+      boxShadow: '0 8px 20px rgba(25,35,55,0.16)',
       flexShrink: 0,
       background: '#f5f5f4',
     }}
@@ -158,7 +160,7 @@ export const RefAvatar = ({
 );
 
 export const RefSectionTitle = ({ children, style }: { children: ReactNode; style?: CSSProperties }) => (
-  <h2 style={{ margin: '0 0 12px 2px', color: '#9ca3af', fontSize: '15px', fontWeight: 800, ...style }}>{children}</h2>
+  <h2 style={{ margin: '0 0 12px 2px', color: '#334155', fontSize: '15px', fontWeight: 900, ...style }}>{children}</h2>
 );
 
 export const RefListRow = ({
@@ -183,8 +185,8 @@ export const RefListRow = ({
       width: '100%',
       minHeight: '58px',
       border: 'none',
-      borderBottom: isLast ? 'none' : '1px solid #f3f4f6',
-      background: '#ffffff',
+      borderBottom: isLast ? 'none' : '1px solid rgba(126,145,170,0.14)',
+      background: 'rgba(255,255,255,0.76)',
       padding: '12px 16px',
       display: 'flex',
       alignItems: 'center',
@@ -192,11 +194,12 @@ export const RefListRow = ({
       gap: '12px',
       textAlign: 'left',
       cursor: onClick ? 'pointer' : 'default',
-      color: danger ? '#ef4444' : '#334155',
+      color: danger ? '#ef4444' : '#172033',
+      transition: 'background-color 0.18s ease, transform 0.18s ease',
     }}
   >
     <span style={{ display: 'flex', alignItems: 'center', gap: '13px', minWidth: 0 }}>
-      {icon ? <span style={{ width: '24px', color: danger ? '#ef4444' : '#94a3b8', display: 'grid', placeItems: 'center', flexShrink: 0 }}>{icon}</span> : null}
+      {icon ? <span style={{ width: '32px', height: '32px', borderRadius: '12px', background: danger ? '#fff1f2' : '#eef6ff', color: danger ? '#ef4444' : '#2f66d8', display: 'grid', placeItems: 'center', flexShrink: 0 }}>{icon}</span> : null}
       <span style={{ fontSize: '15px', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</span>
     </span>
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: danger ? '#ef4444' : '#9ca3af', fontSize: '12px', fontWeight: 700, flexShrink: 0 }}>
@@ -215,10 +218,10 @@ export const RefChip = ({ children, active }: { children: ReactNode; active?: bo
       display: 'inline-flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: active ? '#292524' : '#ffffff',
+      background: active ? 'linear-gradient(135deg, #17342f 0%, #22584f 100%)' : 'rgba(255,255,255,0.86)',
       color: active ? '#ffffff' : '#78716c',
-      border: active ? '1px solid #292524' : '1px solid #edf0f3',
-      boxShadow: active ? '0 5px 12px rgba(41,37,36,0.16)' : 'none',
+      border: active ? '1px solid #17342f' : '1px solid rgba(126,145,170,0.2)',
+      boxShadow: active ? '0 8px 18px rgba(23,52,47,0.18)' : '0 4px 12px rgba(25,35,55,0.04)',
       fontSize: '13px',
       fontWeight: 800,
       whiteSpace: 'nowrap',

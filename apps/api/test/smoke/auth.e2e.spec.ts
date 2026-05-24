@@ -176,6 +176,7 @@ describe('Auth session flow', () => {
       updateMany: jest.fn().mockResolvedValue({ count: 0 }),
     },
     auditLog: {
+      findFirst: jest.fn().mockResolvedValue(null),
       create: jest.fn().mockResolvedValue({ id: BigInt(1) }),
     },
     user: {
@@ -323,6 +324,97 @@ describe('Auth session flow', () => {
       .expect(200);
 
     expect(updateResponse.body.data.nickname).toBe('新昵称');
+  });
+
+  it('syncs user preferences through audit-backed account settings', async () => {
+    user.status = 1;
+    user.deletedAt = null;
+    prismaMock.auditLog.findFirst.mockResolvedValueOnce(null);
+    prismaMock.auditLog.create.mockClear();
+
+    const accessToken = await jwtService.signAsync(
+      { type: 'user', sub: user.id.toString(), user_no: user.userNo },
+      { secret: process.env.JWT_ACCESS_SECRET },
+    );
+
+    const defaultsResponse = await request(app.getHttpServer())
+      .get('/api/v1/users/me/preferences')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+
+    expect(defaultsResponse.body.data).toMatchObject({
+      allow_mobile_search: true,
+      show_history_to_new_members: true,
+      updated_at: null,
+    });
+
+    const updateResponse = await request(app.getHttpServer())
+      .put('/api/v1/users/me/preferences')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ allow_mobile_search: false, show_history_to_new_members: false })
+      .expect(200);
+
+    expect(updateResponse.body.data).toMatchObject({
+      allow_mobile_search: false,
+      show_history_to_new_members: false,
+    });
+    expect(prismaMock.auditLog.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          action: 'user.preferences_updated',
+          targetType: 'user',
+          metadata: expect.objectContaining({
+            allow_mobile_search: false,
+            show_history_to_new_members: false,
+          }),
+        }),
+      }),
+    );
+  });
+
+  it('submits feedback and membership book requests to audit logs', async () => {
+    user.status = 1;
+    user.deletedAt = null;
+    prismaMock.auditLog.create.mockClear();
+
+    const accessToken = await jwtService.signAsync(
+      { type: 'user', sub: user.id.toString(), user_no: user.userNo },
+      { secret: process.env.JWT_ACCESS_SECRET },
+    );
+
+    const feedbackResponse = await request(app.getHttpServer())
+      .post('/api/v1/users/me/feedback')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ category: 'usage', content: 'record create button is hard to find', contact: '13800000000' })
+      .expect(200);
+
+    expect(feedbackResponse.body.data.feedback_no).toMatch(/^fb_/);
+    expect(feedbackResponse.body.data.status).toBe('submitted');
+
+    const bookResponse = await request(app.getHttpServer())
+      .post('/api/v1/users/me/membership-book-requests')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ year: 2026, contact: '13800000000' })
+      .expect(200);
+
+    expect(bookResponse.body.data.request_no).toMatch(/^book_/);
+    expect(bookResponse.body.data.status).toBe('submitted');
+    expect(prismaMock.auditLog.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          action: 'user.feedback_submitted',
+          metadata: expect.objectContaining({ category: 'usage' }),
+        }),
+      }),
+    );
+    expect(prismaMock.auditLog.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          action: 'user.membership_book_requested',
+          metadata: expect.objectContaining({ year: 2026 }),
+        }),
+      }),
+    );
   });
 
   it('does not double count an owned family as a joined family during deletion check', async () => {

@@ -66,8 +66,11 @@ export const AdminLayout = () => {
     >
       <aside className="admin-sidebar" style={sidebarStyle}>
         <div className="admin-sidebar-brand">
-          <div style={{ fontSize: '13px', color: '#a7c3bd', fontWeight: 700, marginBottom: '6px' }}>年轮</div>
-          <div style={{ fontSize: '22px', fontWeight: 800, letterSpacing: 0 }}>管理后台</div>
+          <img src="/brand/nianlun-logo-64.png" alt="年轮" className="admin-brand-logo" width={44} height={44} />
+          <div>
+            <div style={{ fontSize: '13px', color: '#a7c3bd', fontWeight: 700, marginBottom: '6px' }}>年轮</div>
+            <div style={{ fontSize: '22px', fontWeight: 800, letterSpacing: 0 }}>管理后台</div>
+          </div>
         </div>
         <div className="admin-sidebar-user" style={{ border: '1px solid rgba(255,255,255,0.12)', borderRadius: '8px', padding: '12px', background: 'rgba(255,255,255,0.06)' }}>
           <div style={{ fontSize: '14px', fontWeight: 700 }}>{displayName ?? '未登录'}</div>

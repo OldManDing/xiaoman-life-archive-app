@@ -1,13 +1,27 @@
 import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { ActorType, AuthType, MembershipType } from '@prisma/client';
+import { ActorType, AuthType, MembershipType, Prisma } from '@prisma/client';
 import bcrypt from 'bcrypt';
 
 import { PrismaService } from '../../prisma/prisma.service';
 import { USER_ACTIVE_STATUS } from '../../shared/constants';
 import { AuditLogService } from '../../shared/services/audit-log.service';
-import { maskMobile } from '../../shared/utils';
+import { generateBizNo, maskMobile } from '../../shared/utils';
+import { CreateFeedbackDto } from './dto/create-feedback.dto';
+import { CreateMembershipBookRequestDto } from './dto/create-membership-book-request.dto';
 import { DeleteMeDto } from './dto/delete-me.dto';
+import { UpdatePreferencesDto } from './dto/update-preferences.dto';
 import { UpdateMeDto } from './dto/update-me.dto';
+
+const USER_PREFERENCES_ACTION = 'user.preferences_updated';
+const DEFAULT_USER_PREFERENCES = {
+  allow_mobile_search: true,
+  show_history_to_new_members: true,
+};
+
+type AuditRequestMeta = {
+  ip_address?: string | null;
+  user_agent?: string | null;
+};
 
 @Injectable()
 export class UsersService {
@@ -34,6 +48,113 @@ export class UsersService {
     });
 
     return this.toUserProfile(updated);
+  }
+
+  async preferences(userId: bigint) {
+    await this.findUserOrThrow(userId);
+    const latest = await this.prisma.auditLog.findFirst({
+      where: {
+        actorType: ActorType.user,
+        actorId: userId,
+        action: USER_PREFERENCES_ACTION,
+        targetType: 'user',
+        targetId: userId,
+      },
+      orderBy: { createdAt: 'desc' },
+      select: { metadata: true, createdAt: true },
+    });
+
+    return {
+      ...this.toUserPreferences(latest?.metadata),
+      updated_at: latest?.createdAt.toISOString() ?? null,
+    };
+  }
+
+  async updatePreferences(userId: bigint, dto: UpdatePreferencesDto, meta: AuditRequestMeta = {}) {
+    const current = await this.preferences(userId);
+    const next = {
+      allow_mobile_search: dto.allow_mobile_search ?? current.allow_mobile_search,
+      show_history_to_new_members: dto.show_history_to_new_members ?? current.show_history_to_new_members,
+    };
+
+    const updatedAt = new Date();
+    await this.auditLogService.create({
+      actor_type: ActorType.user,
+      actor_id: userId,
+      action: USER_PREFERENCES_ACTION,
+      target_type: 'user',
+      target_id: userId,
+      ip_address: meta.ip_address,
+      user_agent: meta.user_agent,
+      metadata: next,
+    });
+
+    return {
+      ...next,
+      updated_at: updatedAt.toISOString(),
+    };
+  }
+
+  async submitFeedback(userId: bigint, dto: CreateFeedbackDto, meta: AuditRequestMeta = {}) {
+    const user = await this.findUserOrThrow(userId);
+    const feedbackNo = generateBizNo('fb');
+    const createdAt = new Date();
+
+    await this.auditLogService.create({
+      actor_type: ActorType.user,
+      actor_id: user.id,
+      action: 'user.feedback_submitted',
+      target_type: 'feedback',
+      target_id: user.id,
+      ip_address: meta.ip_address,
+      user_agent: meta.user_agent,
+      metadata: {
+        feedback_no: feedbackNo,
+        category: dto.category,
+        content: dto.content,
+        contact: dto.contact || null,
+        topic: dto.topic || null,
+        user_no: user.userNo,
+      },
+    });
+
+    return {
+      feedback_no: feedbackNo,
+      status: 'submitted',
+      message: '反馈已提交，我们会在处理后联系你。',
+      created_at: createdAt.toISOString(),
+    };
+  }
+
+  async requestMembershipBook(userId: bigint, dto: CreateMembershipBookRequestDto, meta: AuditRequestMeta = {}) {
+    const user = await this.findUserOrThrow(userId);
+    const requestNo = generateBizNo('book');
+    const createdAt = new Date();
+
+    await this.auditLogService.create({
+      actor_type: ActorType.user,
+      actor_id: user.id,
+      action: 'user.membership_book_requested',
+      target_type: 'membership_book_request',
+      target_id: user.id,
+      ip_address: meta.ip_address,
+      user_agent: meta.user_agent,
+      metadata: {
+        request_no: requestNo,
+        year: dto.year ?? new Date().getFullYear(),
+        contact: dto.contact || null,
+        note: dto.note || null,
+        user_no: user.userNo,
+        membership_type: user.membershipType,
+      },
+    });
+
+    return {
+      request_no: requestNo,
+      status: 'submitted',
+      message: '纪念册申领已提交，我们会核对会员权益后联系你。',
+      created_at: createdAt.toISOString(),
+    };
   }
 
   async deletionCheck(userId: bigint) {
@@ -294,6 +415,24 @@ export class UsersService {
       activeChildCount,
       activeRecordCount,
       blockers,
+    };
+  }
+
+  private toUserPreferences(metadata?: Prisma.JsonValue | null) {
+    if (!metadata || typeof metadata !== 'object' || Array.isArray(metadata)) {
+      return DEFAULT_USER_PREFERENCES;
+    }
+
+    const value = metadata as Record<string, unknown>;
+    return {
+      allow_mobile_search:
+        typeof value.allow_mobile_search === 'boolean'
+          ? value.allow_mobile_search
+          : DEFAULT_USER_PREFERENCES.allow_mobile_search,
+      show_history_to_new_members:
+        typeof value.show_history_to_new_members === 'boolean'
+          ? value.show_history_to_new_members
+          : DEFAULT_USER_PREFERENCES.show_history_to_new_members,
     };
   }
 

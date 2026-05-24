@@ -1,5 +1,5 @@
-import { Body, Controller, Get, HttpCode, Patch, Post, Res, UseGuards } from '@nestjs/common';
-import { Response } from 'express';
+import { Body, Controller, Get, HttpCode, Patch, Post, Put, Req, Res, UseGuards } from '@nestjs/common';
+import { Request, Response } from 'express';
 
 import { REFRESH_TOKEN_COOKIE_NAME } from '../../shared/constants';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
@@ -7,7 +7,10 @@ import { isSecureCookieEnvironment } from '../../shared/env-config';
 import { AuthenticatedUser } from '../../shared/types';
 import { parseDurationToSeconds } from '../../shared/utils';
 import { UserJwtAuthGuard } from '../auth/guards/user-jwt-auth.guard';
+import { CreateFeedbackDto } from './dto/create-feedback.dto';
+import { CreateMembershipBookRequestDto } from './dto/create-membership-book-request.dto';
 import { DeleteMeDto } from './dto/delete-me.dto';
+import { UpdatePreferencesDto } from './dto/update-preferences.dto';
 import { UpdateMeDto } from './dto/update-me.dto';
 import { UsersService } from './users.service';
 
@@ -24,6 +27,28 @@ export class UsersController {
   @Patch('me')
   updateMe(@CurrentUser() user: AuthenticatedUser, @Body() dto: UpdateMeDto) {
     return this.usersService.updateMe(user.id, dto);
+  }
+
+  @Get('me/preferences')
+  preferences(@CurrentUser() user: AuthenticatedUser) {
+    return this.usersService.preferences(user.id);
+  }
+
+  @Put('me/preferences')
+  updatePreferences(@CurrentUser() user: AuthenticatedUser, @Body() dto: UpdatePreferencesDto, @Req() request: Request) {
+    return this.usersService.updatePreferences(user.id, dto, this.getAuditRequestMeta(request));
+  }
+
+  @Post('me/feedback')
+  @HttpCode(200)
+  submitFeedback(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateFeedbackDto, @Req() request: Request) {
+    return this.usersService.submitFeedback(user.id, dto, this.getAuditRequestMeta(request));
+  }
+
+  @Post('me/membership-book-requests')
+  @HttpCode(200)
+  requestMembershipBook(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateMembershipBookRequestDto, @Req() request: Request) {
+    return this.usersService.requestMembershipBook(user.id, dto, this.getAuditRequestMeta(request));
   }
 
   @Get('me/deletion-check')
@@ -55,6 +80,13 @@ export class UsersController {
       secure: isSecure,
       path: '/',
       maxAge,
+    };
+  }
+
+  private getAuditRequestMeta(request: Request) {
+    return {
+      ip_address: request.ip,
+      user_agent: request.get('user-agent') ?? null,
     };
   }
 }

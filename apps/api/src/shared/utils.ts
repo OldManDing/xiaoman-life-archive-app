@@ -98,7 +98,7 @@ export function normalizePageSize(pageSize?: number): number {
 }
 
 export function extFromMime(mimeType: string): string {
-  const normalized = mimeType.toLowerCase();
+  const normalized = mimeType.toLowerCase().split(';', 1)[0].trim();
   if (normalized === 'image/jpeg') return 'jpg';
   if (normalized === 'image/png') return 'png';
   if (normalized === 'image/webp') return 'webp';
@@ -107,11 +107,14 @@ export function extFromMime(mimeType: string): string {
   if (normalized === 'video/mp4') return 'mp4';
   if (normalized === 'video/webm') return 'webm';
   if (normalized === 'video/quicktime') return 'mov';
+  if (normalized === 'video/3gpp') return '3gp';
   if (normalized === 'audio/mpeg') return 'mp3';
   if (normalized === 'audio/mp4' || normalized === 'audio/m4a' || normalized === 'audio/x-m4a') return 'm4a';
   if (normalized === 'audio/aac') return 'aac';
   if (normalized === 'audio/wav' || normalized === 'audio/x-wav') return 'wav';
   if (normalized === 'audio/webm') return 'webm';
   if (normalized === 'audio/ogg') return 'ogg';
+  if (normalized === 'audio/3gpp') return '3gp';
+  if (normalized === 'audio/amr') return 'amr';
   return 'bin';
 }

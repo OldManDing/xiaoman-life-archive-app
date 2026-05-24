@@ -10,6 +10,8 @@ import { extFromMime, generateBizNo } from '../../shared/utils';
 import { ConfirmMediaDto } from './dto/confirm-media.dto';
 import { CreateUploadTokenDto } from './dto/create-upload-token.dto';
 
+const normalizeMimeType = (mimeType: string) => mimeType.toLowerCase().split(';', 1)[0].trim();
+
 @Injectable()
 export class MediaService {
   constructor(
@@ -20,7 +22,7 @@ export class MediaService {
 
   async createUploadToken(userId: bigint, dto: CreateUploadTokenDto) {
     const uploadPolicy = this.getUploadPolicy(dto.media_type);
-    const mimeType = dto.mime_type.toLowerCase();
+    const mimeType = normalizeMimeType(dto.mime_type);
 
     if (!uploadPolicy.mimeTypes.includes(mimeType)) {
       throw new BadRequestException(`${uploadPolicy.label}格式不支持`);
@@ -79,14 +81,14 @@ export class MediaService {
       return {
         label: '视频',
         maxBytes: Number(process.env.UPLOAD_VIDEO_MAX_BYTES ?? 200 * 1024 * 1024),
-        mimeTypes: ['video/mp4', 'video/webm', 'video/quicktime'],
+        mimeTypes: ['video/mp4', 'video/webm', 'video/quicktime', 'video/3gpp'],
       };
     }
 
     return {
       label: '音频',
       maxBytes: Number(process.env.UPLOAD_AUDIO_MAX_BYTES ?? 50 * 1024 * 1024),
-        mimeTypes: ['audio/mpeg', 'audio/mp4', 'audio/m4a', 'audio/x-m4a', 'audio/aac', 'audio/wav', 'audio/x-wav', 'audio/webm', 'audio/ogg'],
+      mimeTypes: ['audio/mpeg', 'audio/mp4', 'audio/m4a', 'audio/x-m4a', 'audio/aac', 'audio/wav', 'audio/x-wav', 'audio/webm', 'audio/ogg', 'audio/3gpp', 'audio/amr'],
     };
   }
 

@@ -27,6 +27,26 @@ export interface DeletionCheckResponse {
   };
 }
 
+export interface UserPreferencesResponse {
+  allow_mobile_search: boolean;
+  show_history_to_new_members: boolean;
+  updated_at: string | null;
+}
+
+export interface FeedbackResponse {
+  feedback_no: string;
+  status: 'submitted';
+  message: string;
+  created_at: string;
+}
+
+export interface MembershipBookRequestResponse {
+  request_no: string;
+  status: 'submitted';
+  message: string;
+  created_at: string;
+}
+
 export interface LoginResponse {
   access_token: string;
   expires_in: number;

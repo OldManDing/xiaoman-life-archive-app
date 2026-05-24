@@ -9,15 +9,18 @@ import type {
   FamilyMembersResponse,
   LoginResponse,
   LocationsSearchResponse,
+  FeedbackResponse,
   DeletionCheckResponse,
   AiJobDetail,
   AiPreviewResponse,
   AiJobType,
   MediaAccessUrlResponse,
+  MembershipBookRequestResponse,
   RecordDetail,
   RecordsListResponse,
   SendCodeResponse,
   UploadTokenResponse,
+  UserPreferencesResponse,
   UserProfile,
 } from './types';
 
@@ -60,6 +63,24 @@ export interface UpdateMePayload {
 export interface DeleteMePayload {
   password: string;
   confirm_text: string;
+}
+
+export interface UpdatePreferencesPayload {
+  allow_mobile_search?: boolean;
+  show_history_to_new_members?: boolean;
+}
+
+export interface SubmitFeedbackPayload {
+  category: string;
+  content: string;
+  contact?: string;
+  topic?: string;
+}
+
+export interface MembershipBookRequestPayload {
+  year?: number;
+  contact?: string;
+  note?: string;
 }
 
 export interface ListRecordsQuery {
@@ -171,6 +192,26 @@ export const webApi = {
 
   async deleteMe(payload: DeleteMePayload) {
     const response = await http.post<ApiEnvelope<{ success: boolean; deleted_at: string; message: string }>>('/users/me/delete', payload);
+    return response.data.data;
+  },
+
+  async preferences() {
+    const response = await http.get<ApiEnvelope<UserPreferencesResponse>>('/users/me/preferences');
+    return response.data.data;
+  },
+
+  async updatePreferences(payload: UpdatePreferencesPayload) {
+    const response = await http.put<ApiEnvelope<UserPreferencesResponse>>('/users/me/preferences', payload);
+    return response.data.data;
+  },
+
+  async submitFeedback(payload: SubmitFeedbackPayload) {
+    const response = await http.post<ApiEnvelope<FeedbackResponse>>('/users/me/feedback', payload);
+    return response.data.data;
+  },
+
+  async requestMembershipBook(payload: MembershipBookRequestPayload) {
+    const response = await http.post<ApiEnvelope<MembershipBookRequestResponse>>('/users/me/membership-book-requests', payload);
     return response.data.data;
   },
 

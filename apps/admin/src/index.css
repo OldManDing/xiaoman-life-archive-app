@@ -74,6 +74,25 @@ table {
   overflow: hidden;
 }
 
+.admin-login-logo {
+  align-self: start;
+  border-radius: 26px;
+  box-shadow: 0 18px 38px rgba(6, 24, 21, 0.22);
+}
+
+.admin-login-card-logo,
+.admin-brand-logo {
+  border-radius: 14px;
+  box-shadow: 0 10px 22px rgba(6, 24, 21, 0.14);
+  flex: 0 0 auto;
+}
+
+.admin-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .admin-login-hero::before {
   display: none;
 }
@@ -137,6 +156,10 @@ table {
 .admin-login-card-label {
   background: #eff6f2;
   color: #123c37;
+}
+
+.admin-login-card-logo {
+  margin-bottom: 14px;
 }
 
 .admin-login-card h2 {
@@ -489,6 +512,10 @@ table {
   align-items: start;
 }
 
+.admin-dashboard-hero-grid {
+  align-items: stretch;
+}
+
 .admin-dashboard-hero-card,
 .admin-dashboard-side-card,
 .admin-dashboard-radar-card,
@@ -505,10 +532,10 @@ table {
 .admin-dashboard-hero-card {
   position: relative;
   overflow: hidden;
-  padding: 18px;
+  padding: 24px;
   display: block;
   color: #f7f3eb;
-  min-height: 0;
+  min-height: 426px;
 }
 
 .admin-dashboard-hero-card::before,
@@ -545,7 +572,9 @@ table {
 
 .admin-dashboard-workbench {
   display: grid;
-  gap: 14px;
+  min-height: 100%;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: 20px;
 }
 
 .admin-dashboard-hero-status {
@@ -584,14 +613,14 @@ table {
 
 .admin-dashboard-hero-body {
   display: grid;
-  gap: 5px;
+  gap: 10px;
 }
 
 .admin-dashboard-hero-body h2 {
   margin: 0;
   max-width: none;
-  font-size: 26px;
-  line-height: 1.12;
+  font-size: 34px;
+  line-height: 1.06;
   letter-spacing: 0;
 }
 
@@ -599,25 +628,28 @@ table {
   margin: 0;
   max-width: 720px;
   color: rgba(255, 248, 240, 0.84);
-  font-size: 13px;
-  line-height: 1.55;
+  font-size: 15px;
+  line-height: 1.72;
 }
 
 .admin-dashboard-workbench-metrics {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
+  gap: 12px;
+  align-self: stretch;
 }
 
 .admin-dashboard-workbench-metric {
   min-width: 0;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 8px;
-  padding: 10px;
+  min-height: 138px;
+  padding: 15px 14px;
   color: #f8fbf8;
   text-decoration: none;
   display: grid;
-  gap: 4px;
+  align-content: space-between;
+  gap: 10px;
   background: rgba(255, 255, 255, 0.08);
 }
 
@@ -629,7 +661,7 @@ table {
 
 .admin-dashboard-workbench-metric strong {
   color: #ffffff;
-  font-size: 24px;
+  font-size: 34px;
   line-height: 1;
 }
 
@@ -637,7 +669,7 @@ table {
   margin: 0;
   color: rgba(255, 248, 240, 0.78);
   font-size: 12px;
-  line-height: 1.35;
+  line-height: 1.52;
 }
 
 .admin-dashboard-workbench-metric-success {
@@ -657,6 +689,7 @@ table {
   flex-wrap: nowrap;
   gap: 8px;
   justify-content: flex-start;
+  align-self: end;
 }
 
 .admin-dashboard-hero-actions a {
@@ -1324,9 +1357,9 @@ table {
 
   .admin-sidebar-brand {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     gap: 12px;
-    align-items: end;
+    align-items: center;
   }
 
   .admin-sidebar-user {
@@ -1370,13 +1403,18 @@ table {
     border-radius: 8px !important;
   }
 
+  .admin-dashboard-hero-card {
+    min-height: auto;
+  }
+
   .admin-dashboard-hero-grid,
   .admin-dashboard-core-grid {
     gap: 10px;
   }
 
   .admin-dashboard-workbench {
-    gap: 8px;
+    grid-template-rows: auto;
+    gap: 10px;
   }
 
   .admin-dashboard-hero-body {
@@ -1408,7 +1446,14 @@ table {
   .admin-dashboard-workbench-metric,
   .admin-dashboard-process-step,
   .admin-dashboard-metric-card {
+    min-height: auto;
     padding: 9px !important;
+  }
+
+  .admin-dashboard-workbench-metric {
+    min-height: 112px;
+    padding: 12px !important;
+    align-content: space-between;
   }
 
   .admin-dashboard-workbench-metric strong,

@@ -41,15 +41,15 @@ import {
 const padded: CSSProperties = { paddingLeft: 20, paddingRight: 20 };
 
 const iconButtonStyle: CSSProperties = {
-  width: 44,
-  height: 44,
+  width: 46,
+  height: 46,
   borderRadius: '999px',
-  border: '1px solid #eef0f2',
-  background: '#ffffff',
-  color: '#667085',
+  border: '1px solid rgba(126,145,170,0.24)',
+  background: 'rgba(255,255,255,0.9)',
+  color: '#334155',
   display: 'grid',
   placeItems: 'center',
-  boxShadow: '0 2px 8px rgba(15,23,42,0.035)',
+  boxShadow: '0 10px 20px rgba(25,35,55,0.08)',
   cursor: 'pointer',
 };
 
@@ -82,41 +82,60 @@ const prompts = (childName: string) => [
   '如果只能留下今天的一张照片，你会拍下哪个瞬间？可以先写文字，再补充照片。',
 ];
 
-const ActionTile = ({ icon, label, onClick, disabled }: { icon: ReactNode; label: string; onClick: () => void; disabled?: boolean }) => (
+const ActionTile = ({
+  icon,
+  label,
+  description,
+  onClick,
+  disabled,
+  accent = '#17342f',
+}: {
+  icon: ReactNode;
+  label: string;
+  description: string;
+  onClick: () => void;
+  disabled?: boolean;
+  accent?: string;
+}) => (
   <button
     type="button"
+    className="home-quick-action nl-pressable"
     onClick={onClick}
     disabled={disabled}
     style={{
-      minHeight: 66,
-      borderRadius: 18,
-      border: '1px solid #ece9e3',
-      background: 'rgba(255,255,255,0.96)',
-      color: '#57534e',
-      display: 'grid',
-      justifyItems: 'center',
-      alignContent: 'center',
-      gap: 6,
-      boxShadow: '0 8px 22px rgba(15,23,42,0.045)',
+      minHeight: 78,
+      borderRadius: 22,
+      border: '1px solid rgba(126,145,170,0.2)',
+      background: 'linear-gradient(145deg, rgba(255,255,255,0.96) 0%, rgba(248,252,255,0.86) 100%)',
+      color: '#334155',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 9,
+      padding: '10px 12px',
+      textAlign: 'left',
+      boxShadow: '0 14px 30px rgba(25,35,55,0.09)',
       cursor: disabled ? 'not-allowed' : 'pointer',
       transition: 'transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease',
     }}
   >
-    <span style={{ width: 30, height: 30, borderRadius: '999px', background: '#faf7f2', display: 'grid', placeItems: 'center' }}>{icon}</span>
-    <span style={{ fontSize: 11, fontWeight: 800, whiteSpace: 'nowrap' }}>{label}</span>
+    <span style={{ width: 36, height: 36, borderRadius: '15px', background: 'linear-gradient(135deg, #edf7f5 0%, #fff5df 100%)', color: accent, display: 'grid', placeItems: 'center', flexShrink: 0, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8)' }}>{icon}</span>
+    <span style={{ display: 'grid', gap: 3, minWidth: 0 }}>
+      <span style={{ fontSize: 13, fontWeight: 900, color: '#172033', whiteSpace: 'nowrap' }}>{label}</span>
+      <span style={{ fontSize: 10, lineHeight: 1.35, color: '#687386', fontWeight: 700 }}>{description}</span>
+    </span>
   </button>
 );
 
 const RecordSummaryCard = ({ record, onClick }: { record: RecordSummary; onClick: () => void }) => (
-  <button type="button" onClick={onClick} style={{ ...refSoftCardStyle, width: '100%', minHeight: 104, padding: '15px 16px', display: 'flex', gap: 15, alignItems: 'center', textAlign: 'left', cursor: 'pointer' }}>
-    <span style={{ width: 48, borderRight: '1px solid #f3f0ea', display: 'grid', justifyItems: 'center', flexShrink: 0, paddingRight: 12 }}>
-      <strong style={{ color: '#44403c', fontSize: 25, lineHeight: 1 }}>{formatDay(record.event_time)}</strong>
-      <span style={{ marginTop: 6, color: '#a8a29e', fontSize: 11, fontWeight: 800 }}>{formatMonth(record.event_time)}</span>
+  <button type="button" onClick={onClick} style={{ ...refSoftCardStyle, width: '100%', minHeight: 108, padding: '15px 16px', display: 'flex', gap: 15, alignItems: 'center', textAlign: 'left', cursor: 'pointer' }}>
+    <span style={{ width: 52, borderRight: '1px solid rgba(126,145,170,0.16)', display: 'grid', justifyItems: 'center', flexShrink: 0, paddingRight: 12 }}>
+      <strong style={{ color: '#172033', fontSize: 26, lineHeight: 1, fontWeight: 950 }}>{formatDay(record.event_time)}</strong>
+      <span style={{ marginTop: 6, color: '#687386', fontSize: 11, fontWeight: 850 }}>{formatMonth(record.event_time)}</span>
     </span>
     <span style={{ minWidth: 0, display: 'grid', gap: 6, flex: 1 }}>
-      <strong style={{ color: '#292524', fontSize: 14, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{record.title ?? '未命名记录'}</strong>
+      <strong style={{ color: '#172033', fontSize: 15, fontWeight: 900, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{record.title ?? '未命名记录'}</strong>
       <span style={{ ...refMutedTextStyle, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{record.summary ?? '这条记录还没有摘要。'}</span>
-      <span style={{ color: '#a8a29e', fontSize: 11, fontWeight: 700 }}>{record.tags?.length ? `${record.tags.length} 个标签` : record.creator_name}</span>
+      <span style={{ color: '#7b8494', fontSize: 11, fontWeight: 750 }}>{record.tags?.length ? `${record.tags.length} 个标签` : record.creator_name}</span>
     </span>
   </button>
 );
@@ -156,52 +175,168 @@ export const HomePage = () => {
 
   return (
     <div style={refPageStyle}>
-      <section style={{ ...padded, paddingTop: 'calc(22px + env(safe-area-inset-top))' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button type="button" aria-label={children.length > 1 ? '切换孩子档案' : activeChild ? '查看孩子档案' : '添加孩子档案'} onClick={switchChild} style={{ flex: 1, minWidth: 0, border: 'none', background: 'transparent', padding: 0, display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', cursor: 'pointer' }}>
-            <RefAvatar src={childAvatarFor(activeChild?.avatar_url)} label={childName} size={44} />
-            <span style={{ minWidth: 0 }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                <strong style={{ color: '#292524', fontSize: 20, fontWeight: 900, lineHeight: 1.12 }}>{childName}</strong>
-                <ChevronDown size={14} color="#9ca3af" />
+      <section style={{ ...padded, paddingTop: 'calc(20px + env(safe-area-inset-top))' }}>
+        <div
+          className="home-hero-card nl-card-enter"
+          style={{
+            position: 'relative',
+            overflow: 'hidden',
+            borderRadius: 32,
+            padding: 16,
+            minHeight: 252,
+            border: '1px solid rgba(126,145,170,0.2)',
+            background: 'linear-gradient(145deg, rgba(255,255,255,0.94) 0%, rgba(238,247,246,0.9) 46%, rgba(255,246,224,0.86) 100%)',
+            boxShadow: '0 28px 60px rgba(25,35,55,0.16)',
+          }}
+        >
+          <img
+            className="home-hero-photo"
+            src={referenceAssets.childPhoto}
+            alt=""
+            aria-hidden="true"
+            style={{
+              position: 'absolute',
+              right: -32,
+              top: 48,
+              width: 150,
+              height: 180,
+              objectFit: 'cover',
+              borderRadius: 36,
+              opacity: 0.22,
+              transform: 'rotate(4deg)',
+              boxShadow: '0 24px 42px rgba(25,35,55,0.2)',
+            }}
+          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, position: 'relative', zIndex: 1 }}>
+            <button
+              type="button"
+              aria-label={children.length > 1 ? '切换孩子档案' : activeChild ? '查看孩子档案' : '添加孩子档案'}
+              onClick={switchChild}
+              style={{
+                flex: 1,
+                minWidth: 0,
+                border: 'none',
+                background: 'transparent',
+                padding: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                textAlign: 'left',
+                cursor: 'pointer',
+              }}
+            >
+              <RefAvatar src={childAvatarFor(activeChild?.avatar_url)} label={childName} size={50} />
+              <span style={{ minWidth: 0 }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <strong style={{ color: '#172033', fontSize: 23, fontWeight: 950, lineHeight: 1.1 }}>{childName}</strong>
+                  <ChevronDown size={15} color="#64748b" />
+                </span>
+                <span style={{ display: 'block', marginTop: 4, color: '#5f6d7f', fontSize: 12, fontWeight: 800 }}>{activeChild?.current_age_display ?? user?.nickname ?? '家庭档案'}</span>
               </span>
-              <span style={{ display: 'block', marginTop: 3, color: '#78716c', fontSize: 12, fontWeight: 700 }}>{activeChild?.current_age_display ?? user?.nickname ?? '家庭档案'}</span>
-            </span>
-          </button>
-          <button type="button" aria-label="搜索记录" onClick={() => navigate('/search')} style={iconButtonStyle}>
-            <Search size={18} strokeWidth={2.2} />
-          </button>
+            </button>
+            <button type="button" aria-label="搜索记录" onClick={() => navigate('/search')} style={iconButtonStyle}>
+              <Search size={18} strokeWidth={2.2} />
+            </button>
+          </div>
+          <div style={{ position: 'relative', zIndex: 1, marginTop: 16, maxWidth: 270, display: 'grid', gap: 8 }}>
+            <span style={{ color: '#d97706', fontSize: 12, fontWeight: 950, letterSpacing: '0.12em' }}>TODAY MEMORY</span>
+            <h1 style={{ margin: 0, color: '#172033', fontSize: 28, lineHeight: 1.1, fontWeight: 950, letterSpacing: 0 }}>
+              把今天的小变化，收进年轮。
+            </h1>
+            <p style={{ margin: 0, color: '#475569', fontSize: 12, lineHeight: 1.58, fontWeight: 750 }}>
+              先留下一个画面、一句话或一段声音，系统会帮你整理成家庭时间轴。
+            </p>
+          </div>
+          <div style={{ position: 'relative', zIndex: 1, display: 'grid', gridTemplateColumns: 'minmax(0, 1.25fr) minmax(0, 1fr)', gap: 10, marginTop: 14 }}>
+            <button
+              type="button"
+              className="nl-pressable"
+              onClick={() => navigate(activeChild ? '/record/create?focus=media' : '/onboarding/child?mode=add')}
+              style={{
+                minHeight: 44,
+                border: 'none',
+                borderRadius: 18,
+                background: 'linear-gradient(135deg, #17342f 0%, #22584f 58%, #d97706 150%)',
+                color: '#ffffff',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                padding: '12px 13px',
+                fontSize: 14,
+                fontWeight: 900,
+                boxShadow: '0 16px 32px rgba(23,52,47,0.28)',
+                cursor: 'pointer',
+              }}
+            >
+              <Camera size={17} strokeWidth={2.4} />
+              记录此刻
+            </button>
+            <button
+              type="button"
+              className="nl-pressable"
+              onClick={() => navigate('/timeline')}
+              style={{
+                minHeight: 44,
+                border: '1px solid rgba(126,145,170,0.22)',
+                borderRadius: 18,
+                background: 'rgba(255,255,255,0.78)',
+                color: '#334155',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 5,
+                padding: '12px 10px',
+                fontSize: 13,
+                fontWeight: 850,
+                cursor: 'pointer',
+              }}
+            >
+              时间轴
+              <ChevronRight size={15} strokeWidth={2.4} />
+            </button>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, marginTop: 14, position: 'relative', zIndex: 1 }}>
+            <div style={{ borderRadius: 18, background: 'rgba(255,255,255,0.62)', border: '1px solid rgba(255,255,255,0.78)', padding: '10px 12px' }}>
+              <span style={{ display: 'block', color: '#687386', fontSize: 11, fontWeight: 850 }}>本月记录</span>
+              <strong style={{ display: 'block', marginTop: 4, color: '#17342f', fontSize: 24, lineHeight: 1, fontWeight: 950 }}>{records.length}</strong>
+            </div>
+            <div style={{ borderRadius: 18, background: 'rgba(255,255,255,0.62)', border: '1px solid rgba(255,255,255,0.78)', padding: '10px 12px' }}>
+              <span style={{ display: 'block', color: '#687386', fontSize: 11, fontWeight: 850 }}>档案进度</span>
+              <strong style={{ display: 'block', marginTop: 4, color: '#d97706', fontSize: 24, lineHeight: 1, fontWeight: 950 }}>{Math.min(100, records.length * 10)}%</strong>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section style={{ ...padded, display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: 10, marginTop: 14 }}>
-        <ActionTile icon={<Camera size={17} />} label="拍照记录" disabled={!activeChild} onClick={() => navigate(activeChild ? '/record/create?type=mixed&focus=media' : '/onboarding/child?mode=add')} />
-        <ActionTile icon={<Video size={17} />} label="视频记录" disabled={!activeChild} onClick={() => navigate(activeChild ? '/record/create?type=video&focus=media' : '/onboarding/child?mode=add')} />
-        <ActionTile icon={<Edit3 size={17} />} label="写一句话" disabled={!activeChild} onClick={() => navigate(activeChild ? '/record/create?type=text&focus=content' : '/onboarding/child?mode=add')} />
-        <ActionTile icon={<Star size={17} />} label="里程碑" disabled={!activeChild} onClick={() => navigate(activeChild ? '/record/create?type=milestone&focus=content' : '/onboarding/child?mode=add')} />
+      <section style={{ ...padded, display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12, marginTop: 16 }}>
+        <ActionTile icon={<Camera size={18} />} label="拍照记录" description="打开相机，先留住画面" disabled={!activeChild} onClick={() => navigate(activeChild ? '/record/create?type=mixed&focus=media' : '/onboarding/child?mode=add')} />
+        <ActionTile icon={<Video size={18} />} label="视频记录" description="记录动作和现场声音" accent="#2f66d8" disabled={!activeChild} onClick={() => navigate(activeChild ? '/record/create?type=video&focus=media' : '/onboarding/child?mode=add')} />
+        <ActionTile icon={<Edit3 size={18} />} label="写一句话" description="快速写下今天的细节" accent="#d97706" disabled={!activeChild} onClick={() => navigate(activeChild ? '/record/create?type=text&focus=content' : '/onboarding/child?mode=add')} />
+        <ActionTile icon={<Star size={18} />} label="里程碑" description="第一次和重要节点" accent="#a16207" disabled={!activeChild} onClick={() => navigate(activeChild ? '/record/create?type=milestone&focus=content' : '/onboarding/child?mode=add')} />
       </section>
 
       <main style={{ ...refContentStyle, paddingTop: 16 }}>
-        <section style={{ ...refSoftCardStyle, padding: '15px 16px', background: '#fffdf7', borderColor: '#f5f1e6' }}>
+        <section style={{ ...refSoftCardStyle, padding: '17px 18px', background: 'linear-gradient(135deg, rgba(255,250,238,0.96) 0%, rgba(255,255,255,0.94) 58%, rgba(239,247,255,0.9) 100%)', borderColor: 'rgba(217,119,6,0.18)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center', marginBottom: 9 }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, color: '#d97706', fontSize: 14, fontWeight: 900 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, color: '#d97706', fontSize: 14, fontWeight: 950 }}>
               <Sparkles size={15} />
               今日值得记录
             </span>
-            <button type="button" onClick={() => setPromptIndex((current) => current + 1)} style={{ border: 'none', background: 'transparent', color: '#a8a29e', fontSize: 12, fontWeight: 800, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 2 }}>
+            <button type="button" onClick={() => setPromptIndex((current) => current + 1)} style={{ border: 'none', background: 'rgba(255,255,255,0.68)', borderRadius: '999px', color: '#687386', fontSize: 12, fontWeight: 850, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 2, minHeight: 34, padding: '6px 10px' }}>
               换一条 <ChevronRight size={13} />
             </button>
           </div>
-          <p style={{ margin: '0 0 12px', color: '#292524', fontSize: 13, lineHeight: 1.65, fontWeight: 700 }}>{prompt}</p>
-          <button type="button" onClick={() => navigate(activeChild ? '/record/create' : '/onboarding/child?mode=add')} style={{ ...refSecondaryButtonStyle, minHeight: 38, padding: '8px 13px', fontSize: 12, width: '100%', justifyContent: 'flex-start' }}>
+          <p style={{ margin: '0 0 12px', color: '#172033', fontSize: 14, lineHeight: 1.72, fontWeight: 800 }}>{prompt}</p>
+          <button type="button" onClick={() => navigate(activeChild ? '/record/create' : '/onboarding/child?mode=add')} style={{ ...refSecondaryButtonStyle, minHeight: 42, padding: '9px 14px', fontSize: 13, width: '100%', justifyContent: 'flex-start' }}>
             <Edit3 size={14} /> 去记录
           </button>
         </section>
 
         <section>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <h2 style={{ margin: 0, color: '#292524', fontSize: 17, fontWeight: 900 }}>最近更新</h2>
-            <button type="button" onClick={() => navigate('/timeline')} style={{ border: 'none', background: 'transparent', color: '#a8a29e', fontSize: 12, fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 3, cursor: 'pointer' }}>
+            <h2 style={{ margin: 0, color: '#172033', fontSize: 18, fontWeight: 950 }}>最近更新</h2>
+            <button type="button" onClick={() => navigate('/timeline')} style={{ border: 'none', background: 'transparent', color: '#687386', fontSize: 12, fontWeight: 850, display: 'inline-flex', alignItems: 'center', gap: 3, cursor: 'pointer' }}>
               查看全部 <ChevronRight size={14} />
             </button>
           </div>
@@ -217,21 +352,22 @@ export const HomePage = () => {
 
         <section>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
-            <h2 style={{ margin: 0, color: '#292524', fontSize: 17, fontWeight: 900 }}>一年前的今天</h2>
-            <span style={{ color: '#a8a29e', fontSize: 11, fontWeight: 700 }}>2025/5/9</span>
+            <h2 style={{ margin: 0, color: '#172033', fontSize: 18, fontWeight: 950 }}>一年前的今天</h2>
+            <span style={{ color: '#687386', fontSize: 11, fontWeight: 800 }}>2025/5/9</span>
           </div>
           <button type="button" onClick={() => navigate(records[0] ? `/record/${records[0].record_no}` : '/record/create')} style={{ ...refSoftCardStyle, width: '100%', padding: 0, overflow: 'hidden', textAlign: 'left', cursor: 'pointer' }}>
-            <div style={{ position: 'relative', height: 146, background: '#e7e5e4' }}>
+            <div style={{ position: 'relative', height: 154, background: '#e7e5e4' }}>
               <img src={referenceAssets.parkPhoto} alt="第一次在草地上奔跑" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-              <span style={{ position: 'absolute', left: 14, bottom: 12, color: '#fff', fontSize: 13, fontWeight: 900, textShadow: '0 2px 8px rgba(0,0,0,0.35)' }}>第一次在草地上奔跑</span>
+              <span style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 35%, rgba(10,18,28,0.62) 100%)' }} />
+              <span style={{ position: 'absolute', left: 15, bottom: 13, color: '#fff', fontSize: 14, fontWeight: 950, textShadow: '0 2px 8px rgba(0,0,0,0.35)' }}>第一次在草地上奔跑</span>
             </div>
             <div style={{ padding: '14px 16px', display: 'grid', gap: 10 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#57534e', fontSize: 12, fontWeight: 800 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#334155', fontSize: 12, fontWeight: 850 }}>
                 <span>本月档案进度</span>
                 <span>{Math.min(100, records.length * 10)}%</span>
               </div>
-              <div style={{ height: 8, borderRadius: '999px', background: '#eef0f2', overflow: 'hidden' }}>
-                <span style={{ display: 'block', width: `${Math.min(100, records.length * 10)}%`, height: '100%', borderRadius: '999px', background: '#292524' }} />
+              <div style={{ height: 8, borderRadius: '999px', background: '#e7eef6', overflow: 'hidden' }}>
+                <span style={{ display: 'block', width: `${Math.min(100, records.length * 10)}%`, height: '100%', borderRadius: '999px', background: 'linear-gradient(90deg, #17342f 0%, #d97706 100%)' }} />
               </div>
             </div>
           </button>
@@ -353,21 +489,21 @@ export const TimelinePage = () => {
   }, []);
 
   return (
-    <div style={{ ...refPageStyle, background: '#ffffff' }}>
-      <header style={{ position: 'sticky', top: 0, zIndex: 4, background: 'rgba(255,255,255,0.96)', backdropFilter: 'blur(16px)', padding: 'calc(22px + env(safe-area-inset-top)) 20px 12px', borderBottom: searchOpen || filterOpen ? '1px solid #f1ece4' : '1px solid transparent', transition: 'border-color 0.18s ease' }}>
+    <div style={refPageStyle}>
+      <header style={{ position: 'sticky', top: 0, zIndex: 4, background: 'rgba(248,251,255,0.84)', backdropFilter: 'blur(22px)', padding: 'calc(22px + env(safe-area-inset-top)) 20px 12px', borderBottom: searchOpen || filterOpen ? '1px solid rgba(126,145,170,0.18)' : '1px solid transparent', transition: 'border-color 0.18s ease' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h1 style={{ margin: 0, color: '#292524', fontSize: 28, fontWeight: 900, lineHeight: 1.1 }}>时间轴</h1>
+          <h1 style={{ margin: 0, color: '#172033', fontSize: 29, fontWeight: 950, lineHeight: 1.1 }}>时间轴</h1>
           <div style={{ display: 'flex', gap: 10 }}>
-            <button type="button" aria-label="搜索记录" aria-pressed={searchOpen} onClick={() => setSearchOpen((current) => !current)} style={{ ...iconButtonStyle, background: searchOpen ? '#292524' : '#f8f9fa', color: searchOpen ? '#ffffff' : '#667085', borderColor: 'transparent', boxShadow: 'none' }}>
+            <button type="button" aria-label="搜索记录" aria-pressed={searchOpen} onClick={() => setSearchOpen((current) => !current)} style={{ ...iconButtonStyle, background: searchOpen ? 'linear-gradient(135deg, #17342f 0%, #22584f 100%)' : 'rgba(255,255,255,0.88)', color: searchOpen ? '#ffffff' : '#334155' }}>
               <Search size={18} />
             </button>
-            <button type="button" aria-label="筛选记录" aria-pressed={filterOpen} onClick={() => setFilterOpen((current) => !current)} style={{ ...iconButtonStyle, background: filterOpen || hasActiveFilter ? '#292524' : '#f8f9fa', color: filterOpen || hasActiveFilter ? '#ffffff' : '#667085', borderColor: 'transparent', boxShadow: 'none' }}>
+            <button type="button" aria-label="筛选记录" aria-pressed={filterOpen} onClick={() => setFilterOpen((current) => !current)} style={{ ...iconButtonStyle, background: filterOpen || hasActiveFilter ? 'linear-gradient(135deg, #17342f 0%, #22584f 100%)' : 'rgba(255,255,255,0.88)', color: filterOpen || hasActiveFilter ? '#ffffff' : '#334155' }}>
               <SlidersHorizontal size={18} />
             </button>
           </div>
         </div>
         {searchOpen ? (
-          <input aria-label="搜索关键词" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="搜索标题、正文、标签或记录人" style={{ width: '100%', minHeight: 42, borderRadius: 12, border: '1px solid #e7e5e4', background: '#fafaf9', padding: '0 12px', color: '#292524', outline: 'none', marginBottom: 12 }} />
+          <input aria-label="搜索关键词" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="搜索标题、正文、标签或记录人" style={{ width: '100%', minHeight: 46, borderRadius: 17, border: '1px solid rgba(126,145,170,0.24)', background: 'rgba(255,255,255,0.9)', padding: '0 14px', color: '#172033', outline: 'none', marginBottom: 12, boxShadow: '0 8px 18px rgba(25,35,55,0.06)' }} />
         ) : null}
         {hasActiveFilter && !filterOpen ? (
           <button
@@ -379,9 +515,9 @@ export const TimelinePage = () => {
             }}
             style={{
               minHeight: 34,
-              border: '1px solid #eee9df',
+              border: '1px solid rgba(217,119,6,0.2)',
               borderRadius: '999px',
-              background: '#fffaf2',
+              background: 'rgba(255,249,235,0.94)',
               color: '#7c4a03',
               padding: '6px 10px',
               display: 'inline-flex',
@@ -389,7 +525,7 @@ export const TimelinePage = () => {
               justifyContent: 'center',
               gap: 6,
               fontSize: 12,
-              fontWeight: 800,
+              fontWeight: 850,
               cursor: 'pointer',
             }}
           >
@@ -402,18 +538,18 @@ export const TimelinePage = () => {
         {filterOpen ? (
           <div
             style={{
-              borderRadius: 24,
-              border: '1px solid #eee9df',
-              background: '#fffdf9',
-              padding: 14,
+              borderRadius: 26,
+              border: '1px solid rgba(126,145,170,0.22)',
+              background: 'rgba(255,255,255,0.92)',
+              padding: 15,
               display: 'grid',
               gap: 14,
               marginBottom: 22,
-              boxShadow: '0 10px 24px rgba(41,37,36,0.055)',
+              boxShadow: '0 18px 36px rgba(25,35,55,0.1)',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-              <strong style={{ color: '#292524', fontSize: 14, fontWeight: 900 }}>筛选记录</strong>
+              <strong style={{ color: '#172033', fontSize: 14, fontWeight: 950 }}>筛选记录</strong>
               {hasActiveFilter ? (
                 <button
                   type="button"
@@ -440,15 +576,15 @@ export const TimelinePage = () => {
                       onClick={() => setRecordTypeFilter(filter.value)}
                       style={{
                         minHeight: 38,
-                        border: active ? '1px solid #292524' : '1px solid #eee9df',
+                        border: active ? '1px solid #17342f' : '1px solid rgba(126,145,170,0.22)',
                         borderRadius: '999px',
-                        background: active ? '#292524' : '#ffffff',
-                        color: active ? '#ffffff' : '#57534e',
+                        background: active ? 'linear-gradient(135deg, #17342f 0%, #22584f 100%)' : 'rgba(255,255,255,0.86)',
+                        color: active ? '#ffffff' : '#334155',
                         padding: '8px 12px',
                         fontSize: 12,
                         fontWeight: 850,
                         cursor: 'pointer',
-                        boxShadow: active ? '0 6px 14px rgba(41,37,36,0.14)' : '0 2px 8px rgba(41,37,36,0.025)',
+                        boxShadow: active ? '0 10px 20px rgba(23,52,47,0.2)' : '0 6px 14px rgba(25,35,55,0.04)',
                       }}
                     >
                       {filter.label}
@@ -491,8 +627,8 @@ export const TimelinePage = () => {
         {!loading && !error && grouped.map((group) => (
           <section key={group.month} style={{ marginBottom: 34 }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 18 }}>
-              <h2 style={{ margin: 0, color: '#111827', fontSize: 22, fontWeight: 900 }}>{group.month}</h2>
-              <span style={{ color: '#9ca3af', fontSize: 14, fontWeight: 700 }}>· {group.records.length}条记录</span>
+              <h2 style={{ margin: 0, color: '#172033', fontSize: 22, fontWeight: 950 }}>{group.month}</h2>
+              <span style={{ color: '#687386', fontSize: 14, fontWeight: 750 }}>· {group.records.length}条记录</span>
             </div>
             <div style={{ display: 'grid', gap: 26, position: 'relative' }}>
               <span aria-hidden="true" style={{ position: 'absolute', left: 14, top: 18, bottom: 18, width: 1, background: '#edf0f3' }} />
@@ -504,14 +640,14 @@ export const TimelinePage = () => {
                 return (
                   <div key={record.record_no} style={{ display: 'grid', gridTemplateColumns: '30px minmax(0, 1fr)', gap: 12, alignItems: 'start' }}>
                     <span style={{ width: isMilestone ? 15 : 11, height: isMilestone ? 15 : 11, borderRadius: '999px', background: isMilestone ? '#f59e0b' : '#d1d5db', boxShadow: '0 0 0 7px #ffffff', marginTop: 20, justifySelf: 'center', zIndex: 1 }} />
-                    <article style={{ ...refSoftCardStyle, borderRadius: 28, padding: 18, overflow: 'hidden', background: isMilestone ? '#fffdf8' : '#ffffff', borderColor: isMilestone ? '#f5e7c0' : '#eef0f2' }}>
+                    <article style={{ ...refSoftCardStyle, borderRadius: 28, padding: 18, overflow: 'hidden', background: isMilestone ? 'linear-gradient(140deg, rgba(255,249,235,0.94) 0%, rgba(255,255,255,0.94) 100%)' : 'rgba(255,255,255,0.92)', borderColor: isMilestone ? 'rgba(217,119,6,0.22)' : 'rgba(126,145,170,0.22)' }}>
                       <div style={{ display: 'grid', gap: 12 }}>
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: isMilestone ? '#d97706' : '#9ca3af', fontSize: 12, fontWeight: 900 }}>
                           {isMilestone ? <Star size={14} fill="currentColor" /> : <ImageIcon size={14} />}
                           {getRecordLabel(record)}
                         </span>
-                        <h3 style={{ margin: 0, color: '#111827', fontSize: 19, lineHeight: 1.35, fontWeight: 900 }}>{record.title ?? '未命名记录'}</h3>
-                        <p style={{ margin: 0, color: '#4b5563', fontSize: 15, lineHeight: 1.8, fontWeight: 600 }}>{record.summary ?? '这条记录还没有正文。'}</p>
+                        <h3 style={{ margin: 0, color: '#172033', fontSize: 19, lineHeight: 1.35, fontWeight: 950 }}>{record.title ?? '未命名记录'}</h3>
+                        <p style={{ margin: 0, color: '#475569', fontSize: 15, lineHeight: 1.8, fontWeight: 650 }}>{record.summary ?? '这条记录还没有正文。'}</p>
                         {record.ai_summary ? (
                           <div style={{ borderRadius: 18, background: '#f1f5ff', color: '#667085', padding: '13px 15px', display: 'flex', gap: 10, alignItems: 'flex-start' }}>
                             <Sparkles size={17} color="#818cf8" style={{ flexShrink: 0, marginTop: 2 }} />
@@ -520,7 +656,7 @@ export const TimelinePage = () => {
                         ) : null}
                         {mediaKind === 'audio' ? (
                           <div style={{ borderRadius: '999px', background: '#f8f9fa', padding: '10px 13px', display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <span style={{ width: 42, height: 42, borderRadius: '999px', background: '#292524', color: '#ffffff', display: 'grid', placeItems: 'center' }}><PlayCircle size={20} fill="currentColor" /></span>
+                            <span style={{ width: 42, height: 42, borderRadius: '999px', background: 'linear-gradient(135deg, #17342f 0%, #22584f 100%)', color: '#ffffff', display: 'grid', placeItems: 'center' }}><PlayCircle size={20} fill="currentColor" /></span>
                             <span style={{ flex: 1, height: 28, display: 'flex', alignItems: 'center', gap: 4 }}>
                               {[28, 12, 22, 34, 22, 16, 44, 36, 22, 28, 18, 30].map((height, waveIndex) => <span key={waveIndex} style={{ width: 5, height, borderRadius: '999px', background: '#a3a3a3' }} />)}
                             </span>
@@ -546,8 +682,8 @@ export const TimelinePage = () => {
                               ))}
                             </div>
                             <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                              <button type="button" onClick={() => navigate(`/record/${record.record_no}/edit`)} style={{ minHeight: 44, border: 'none', borderRadius: '999px', background: '#fafaf9', color: '#78716c', padding: '9px 14px', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>编辑</button>
-                              <button type="button" onClick={() => navigate(`/record/${record.record_no}`)} style={{ minHeight: 44, border: 'none', background: 'transparent', color: '#9ca3af', padding: '9px 6px', display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>查看 <ChevronRight size={14} /></button>
+                              <button type="button" onClick={() => navigate(`/record/${record.record_no}/edit`)} style={{ minHeight: 44, border: '1px solid rgba(126,145,170,0.2)', borderRadius: '999px', background: 'rgba(255,255,255,0.86)', color: '#334155', padding: '9px 14px', fontSize: 12, fontWeight: 850, cursor: 'pointer', boxShadow: '0 6px 14px rgba(25,35,55,0.05)' }}>编辑</button>
+                              <button type="button" onClick={() => navigate(`/record/${record.record_no}`)} style={{ minHeight: 44, border: 'none', background: 'transparent', color: '#687386', padding: '9px 6px', display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 12, fontWeight: 850, cursor: 'pointer' }}>查看 <ChevronRight size={14} /></button>
                             </div>
                           </div>
                         </footer>

@@ -58,7 +58,7 @@ test.describe('Front and admin button/API connectivity', () => {
     await page.getByRole('button', { name: '刷新会员信息' }).click();
     await expect(page.getByText('会员信息已刷新')).toBeVisible();
     await page.getByRole('button', { name: '免费申领本年度纪念册' }).click();
-    await expect(page.getByText('纪念册申领入口暂未接入')).toBeVisible();
+    await expect(page.getByText('纪念册申领已提交，我们会核对会员权益后联系你。')).toBeVisible();
 
     await page.goto(`${webBaseURL}/profile/security`);
     await page.getByRole('button', { name: '注销账号' }).click();
@@ -68,11 +68,11 @@ test.describe('Front and admin button/API connectivity', () => {
     await expect(page.getByPlaceholder(/确认注销/)).toBeVisible();
 
     await page.goto(`${webBaseURL}/profile/help`);
-    await page.getByRole('button', { name: '保存反馈' }).click();
+    await page.getByRole('button', { name: '提交反馈' }).click();
     await expect(page.getByText('请至少输入 6 个字，方便定位问题。')).toBeVisible();
     await page.getByPlaceholder('请描述遇到的问题、页面位置和操作步骤').fill('页面显示正常，按钮可点击，反馈记录用于验证保存流程。');
-    await page.getByRole('button', { name: '保存反馈' }).click();
-    await expect(page.getByText('反馈已保存在本机，感谢补充信息。')).toBeVisible();
+    await page.getByRole('button', { name: '提交反馈' }).click();
+    await expect(page.getByText('反馈已提交，我们会在处理后联系你。')).toBeVisible();
 
     await page.goto(`${webBaseURL}/profile/about`);
     await expect(page.getByText('年轮 © 2026')).toBeVisible();

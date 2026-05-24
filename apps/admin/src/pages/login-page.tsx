@@ -34,6 +34,7 @@ export const LoginPage = () => {
   return (
     <section className="admin-login-shell">
       <div className="admin-login-hero">
+        <img src="/brand/nianlun-logo-192.png" alt="年轮" className="admin-login-logo" width={92} height={92} />
         <span className="admin-login-kicker">年轮运营中枢</span>
         <h1>把家庭档案、内容审核和 AI 任务收进同一个工作台。</h1>
         <p>面向运营团队的管理后台，覆盖用户、孩子档案、成长记录、媒体素材、AI 任务与审计日志。</p>
@@ -46,6 +47,7 @@ export const LoginPage = () => {
 
       <form className="admin-login-card" onSubmit={onSubmit}>
         <div>
+          <img src="/brand/nianlun-logo-64.png" alt="" className="admin-login-card-logo" width={46} height={46} aria-hidden="true" />
           <span className="admin-login-card-label">Admin Access</span>
           <h2>管理员登录</h2>
           <p>请使用当前环境中已启用的管理员账号进入后台。</p>

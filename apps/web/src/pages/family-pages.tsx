@@ -115,22 +115,22 @@ export const FamilyPage = () => {
 
   return (
     <div style={refPageStyle}>
-      <header style={{ padding: 'calc(34px + env(safe-area-inset-top)) 20px 15px', background: '#f6f7f8' }}>
-        <h1 style={{ margin: 0, color: '#292524', fontSize: 24, fontWeight: 900 }}>家庭</h1>
+      <header style={{ padding: 'calc(34px + env(safe-area-inset-top)) 20px 15px', background: 'transparent' }}>
+        <h1 style={{ margin: 0, color: '#172033', fontSize: 26, fontWeight: 950 }}>家庭</h1>
       </header>
 
       <main style={{ display: 'grid', gap: 24, padding: '0 20px 28px' }}>
-        <section style={{ ...refSoftCardStyle, background: '#fffdf8', borderColor: '#f5f1e6', padding: 16, minHeight: 92 }}>
+        <section style={{ ...refSoftCardStyle, background: 'linear-gradient(145deg, rgba(255,255,255,0.96) 0%, rgba(238,247,246,0.9) 58%, rgba(255,246,224,0.86) 100%)', borderColor: 'rgba(126,145,170,0.2)', padding: 17, minHeight: 96 }}>
           {activeChild ? (
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 14, alignItems: 'center' }}>
               <div style={{ display: 'flex', gap: 13, alignItems: 'center', minWidth: 0 }}>
                 <RefAvatar src={resolveReferenceAvatar(activeChild.avatar_url, referenceAssets.childPhoto)} label={activeChildName} size={52} radius="16px" />
                 <div style={{ minWidth: 0 }}>
-                  <h2 style={{ margin: 0, color: '#292524', fontSize: 17, fontWeight: 900, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeChildName}的家庭</h2>
+                  <h2 style={{ margin: 0, color: '#172033', fontSize: 18, fontWeight: 950, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeChildName}的家庭</h2>
                   <p style={{ ...refMutedTextStyle, marginTop: 4 }}>已有 {membersLoading ? '…' : memberCount} 位家人加入记录</p>
                 </div>
               </div>
-              <Link to="/family/invite" aria-label="邀请成员" title="邀请成员" style={{ width: 44, height: 44, borderRadius: '999px', background: '#57534e', color: '#ffffff', display: 'grid', placeItems: 'center', textDecoration: 'none', flexShrink: 0, boxShadow: '0 8px 18px rgba(41,37,36,0.16)' }}>
+              <Link to="/family/invite" aria-label="邀请成员" title="邀请成员" style={{ width: 46, height: 46, borderRadius: '17px', background: 'linear-gradient(135deg, #17342f 0%, #22584f 100%)', color: '#ffffff', display: 'grid', placeItems: 'center', textDecoration: 'none', flexShrink: 0, boxShadow: '0 14px 28px rgba(23,52,47,0.22)' }}>
                 <UserPlus size={20} />
               </Link>
             </div>
@@ -139,17 +139,17 @@ export const FamilyPage = () => {
         </section>
 
         <section>
-          <RefSectionTitle style={{ color: '#292524', fontSize: 15 }}>家庭成员</RefSectionTitle>
+          <RefSectionTitle style={{ color: '#172033', fontSize: 16 }}>家庭成员</RefSectionTitle>
           <div style={{ ...refCardStyle, borderRadius: 20, overflow: 'hidden' }}>
             {recentMembers.length ? recentMembers.map((member, index) => {
               const memberName = getFamilyMemberDisplayName(member);
               return (
-              <button key={member.user_no} type="button" onClick={() => navigate(`/family/members/${member.user_no}`)} style={{ width: '100%', minHeight: 68, border: 'none', borderBottom: index === recentMembers.length - 1 ? 'none' : '1px solid #f3f4f6', background: '#ffffff', padding: '13px 15px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, textAlign: 'left', cursor: 'pointer' }}>
+              <button key={member.user_no} type="button" onClick={() => navigate(`/family/members/${member.user_no}`)} style={{ width: '100%', minHeight: 68, border: 'none', borderBottom: index === recentMembers.length - 1 ? 'none' : '1px solid rgba(126,145,170,0.14)', background: 'rgba(255,255,255,0.76)', padding: '13px 15px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, textAlign: 'left', cursor: 'pointer' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
                   <FamilyAvatar label={memberName} size={42} fallbackSrc={index === 0 ? referenceAssets.momAvatar : undefined} />
                   <span style={{ minWidth: 0 }}>
                     <span style={{ display: 'flex', gap: 7, alignItems: 'center', minWidth: 0 }}>
-                      <strong style={{ color: '#292524', fontSize: 14, fontWeight: 900, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{memberName}</strong>
+                      <strong style={{ color: '#172033', fontSize: 14, fontWeight: 900, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{memberName}</strong>
                       <span style={{ color: member.role === 'owner' ? '#d97706' : member.role === 'editor' ? '#2563eb' : '#78716c', background: member.role === 'owner' ? '#fef3c7' : member.role === 'editor' ? '#eff6ff' : '#f5f5f4', borderRadius: 5, padding: '2px 6px', fontSize: 9, fontWeight: 900 }}>{familyRoleLabel(member.role)}</span>
                     </span>
                     <span style={{ display: 'block', marginTop: 4, color: '#9ca3af', fontSize: 11, fontWeight: 700 }}>{member.status === 1 ? '已加入家庭记录' : familyMemberStatusLabel(member.status)}</span>
@@ -168,7 +168,7 @@ export const FamilyPage = () => {
         </section>
 
         <section>
-          <RefSectionTitle style={{ color: '#292524', fontSize: 15 }}>最近家庭动态</RefSectionTitle>
+          <RefSectionTitle style={{ color: '#172033', fontSize: 16 }}>最近家庭动态</RefSectionTitle>
           {recordsLoading ? <EmptyState message="正在加载家庭动态…" /> : null}
           {recordsError ? <EmptyState message={`家庭动态加载失败：${recordsError}`} /> : null}
           {!recordsLoading && !recordsError && recentFamilyRecords.length ? (
@@ -212,11 +212,11 @@ export const FamilyPage = () => {
           {!recordsLoading && !recordsError && !recentFamilyRecords.length ? <EmptyState message="还没有可展示的家庭动态。" /> : null}
         </section>
 
-        <section style={{ ...refSoftCardStyle, background: '#fffdf8', borderColor: '#f5f1e6', padding: 18, position: 'relative', overflow: 'hidden' }}>
+        <section style={{ ...refSoftCardStyle, background: 'linear-gradient(135deg, rgba(255,249,235,0.94) 0%, rgba(255,255,255,0.9) 100%)', borderColor: 'rgba(217,119,6,0.16)', padding: 18, position: 'relative', overflow: 'hidden' }}>
           <Heart size={76} strokeWidth={1.2} style={{ position: 'absolute', right: -12, bottom: -16, color: '#f2efe9' }} />
           <div style={{ position: 'relative', display: 'grid', gap: 8 }}>
-            <h2 style={{ margin: 0, color: '#292524', fontSize: 15, fontWeight: 900 }}>家人寄语</h2>
-            <p style={{ margin: 0, color: '#57534e', fontSize: 13, lineHeight: 1.75, fontWeight: 600 }}>“宝贝，愿你慢慢长大，全家人都会陪你，把这一段时光一件一件收好。”</p>
+            <h2 style={{ margin: 0, color: '#172033', fontSize: 15, fontWeight: 950 }}>家人寄语</h2>
+            <p style={{ margin: 0, color: '#334155', fontSize: 13, lineHeight: 1.75, fontWeight: 650 }}>“宝贝，愿你慢慢长大，全家人都会陪你，把这一段时光一件一件收好。”</p>
           </div>
         </section>
       </main>

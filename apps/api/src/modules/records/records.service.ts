@@ -11,6 +11,14 @@ import { ListRecordsDto } from './dto/list-records.dto';
 import { UpdateRecordDto } from './dto/update-record.dto';
 
 const uniqueTagNames = (tags: Array<{ tagName: string }>) => Array.from(new Set(tags.map((item) => item.tagName).filter(Boolean)));
+const coordinateLocationPattern = /^(?:手机定位|当前位置)?\s*(?:[·:：-]\s*)?[-+]?\d{1,2}(?:\.\d{3,})?\s*,\s*[-+]?\d{1,3}(?:\.\d{3,})?$/;
+
+const normalizeRecordLocationText = (value?: string | null) => {
+  if (value === undefined) return undefined;
+  const text = value?.trim() ?? '';
+  if (!text) return null;
+  return coordinateLocationPattern.test(text) ? '当前位置附近' : text;
+};
 
 @Injectable()
 export class RecordsService {
@@ -63,7 +71,7 @@ export class RecordsService {
           title: dto.title,
           contentText: dto.content_text,
           eventTime: dto.event_time ? new Date(dto.event_time) : new Date(),
-          locationText: dto.location_text,
+          locationText: normalizeRecordLocationText(dto.location_text),
           visibilityScope: VisibilityScope.family,
           isMilestone: dto.is_milestone ?? false,
           status: dto.status === 'draft' ? RECORD_STATUS_DRAFT : RECORD_STATUS_PUBLISHED,
@@ -209,7 +217,7 @@ export class RecordsService {
           title: dto.title,
           contentText: dto.content_text,
           eventTime: dto.event_time ? new Date(dto.event_time) : undefined,
-          locationText: dto.location_text,
+          locationText: dto.location_text === undefined ? undefined : normalizeRecordLocationText(dto.location_text),
           visibilityScope: dto.visibility_scope ? VisibilityScope.family : undefined,
           isMilestone: dto.is_milestone,
           status: dto.status ? (dto.status === 'draft' ? RECORD_STATUS_DRAFT : RECORD_STATUS_PUBLISHED) : undefined,
@@ -396,7 +404,7 @@ export class RecordsService {
       media_list: mediaList,
       tags: uniqueTagNames(record.tags),
       event_time: record.eventTime.toISOString(),
-      location_text: record.locationText,
+      location_text: normalizeRecordLocationText(record.locationText) ?? null,
       visibility_scope: record.visibilityScope,
       is_milestone: record.isMilestone,
       ai_generated_title: record.aiGeneratedTitle,

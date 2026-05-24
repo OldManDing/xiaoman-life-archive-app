@@ -72,6 +72,27 @@ describe('Locations smoke', () => {
     });
   });
 
+  it('returns a localized current-location address instead of coordinates in mock mode', async () => {
+    const token = await jwtService.signAsync(
+      { type: 'user', sub: user.id.toString(), user_no: user.userNo },
+      { secret: process.env.JWT_ACCESS_SECRET },
+    );
+
+    const response = await request(app.getHttpServer())
+      .get('/api/v1/locations/search')
+      .query({ keyword: '附近地点', latitude: 31.2304, longitude: 121.4737 })
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    const [currentLocation] = response.body.data.list;
+    expect(currentLocation).toMatchObject({
+      name: '上海市黄浦区人民广场附近',
+      address: '上海市黄浦区人民广场附近',
+      source: 'mock-regeo',
+    });
+    expect(currentLocation.name).not.toMatch(/\d+\.\d+\s*,\s*\d+\.\d+/);
+  });
+
   it('requires login before searching locations', async () => {
     await request(app.getHttpServer()).get('/api/v1/locations/search').query({ keyword: '公园' }).expect(401);
   });
