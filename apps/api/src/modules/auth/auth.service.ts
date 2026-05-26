@@ -16,7 +16,7 @@ import { SmsCodeService } from '../../shared/services/sms-code.service';
 import { SmsService } from '../../shared/services/sms/sms.service';
 import { generateBizNo, hashToken, parseDurationToSeconds } from '../../shared/utils';
 import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
+import { getRegisterInviteCode, getRegisterPasswordConfirm, RegisterDto } from './dto/register.dto';
 
 type AcceptableInvite =
   | {
@@ -96,7 +96,10 @@ export class AuthService {
   }
 
   async register(dto: RegisterDto) {
-    if (dto.password !== dto.password_confirm) {
+    const passwordConfirm = getRegisterPasswordConfirm(dto);
+    const inviteCode = getRegisterInviteCode(dto);
+
+    if (dto.password !== passwordConfirm) {
       throw new BadRequestException('两次输入的密码不一致');
     }
 
@@ -112,7 +115,7 @@ export class AuthService {
       throw new BadRequestException('账号已存在，请直接登录');
     }
 
-    const result = await this.createPasswordAccountWithInvite(credential, dto.password, dto.invite_code.trim());
+    const result = await this.createPasswordAccountWithInvite(credential, dto.password, inviteCode.trim());
     return this.issueSessionResponse(result);
   }
 

@@ -9,7 +9,9 @@ const fieldLabels: Record<string, string> = {
   credential: '账号',
   password: '密码',
   password_confirm: '确认密码',
+  passwordConfirm: '确认密码',
   invite_code: '邀请码',
+  inviteCode: '邀请码',
   login_type: '登录方式',
   mobile: '手机号',
   nickname: '昵称',
@@ -32,12 +34,12 @@ const formatValidationReason = (field: string, constraint: string, rawReason: st
     return '密码需为 8 到 72 位';
   }
 
-  if (field === 'password_confirm') {
+  if (field === 'password_confirm' || field === 'passwordConfirm') {
     if (constraint === 'isString') return '确认密码不能为空';
     return '确认密码需为 8 到 72 位';
   }
 
-  if (field === 'invite_code') {
+  if (field === 'invite_code' || field === 'inviteCode') {
     if (constraint === 'isString') return '邀请码不能为空';
     return '邀请码需为 6 到 128 位';
   }

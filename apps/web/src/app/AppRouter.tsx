@@ -1,4 +1,7 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { App as CapacitorApp } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../shared/AuthContext';
 import { PublicLayout } from '../layouts/PublicLayout';
 import { AppLayout } from '../layouts/AppLayout';
@@ -10,6 +13,53 @@ import {
   SettingsPage, LegalPage, ReportsPage, ExportBackupPage, MembershipPage,
   SecurityPage, HelpFeedbackPage, AboutPage, AccountDeletionPage, ErrorPage, OnboardingChildPage
 } from '../pages/index';
+
+const authRoutes = new Set(['/auth/login', '/splash', '/onboarding/child']);
+const tabRoutes = new Set(['/home', '/timeline', '/family', '/profile']);
+
+const NativeBackButtonHandler = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return undefined;
+
+    let active = true;
+    let removeListener: (() => void) | undefined;
+
+    void CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+      if (location.pathname === '/legal') {
+        navigate('/auth/login');
+        return;
+      }
+
+      if (location.pathname === '/profile/legal') {
+        navigate('/profile');
+        return;
+      }
+
+      if (canGoBack && !authRoutes.has(location.pathname) && !tabRoutes.has(location.pathname)) {
+        navigate(-1);
+        return;
+      }
+
+      void CapacitorApp.exitApp();
+    }).then((handle) => {
+      if (!active) {
+        void handle.remove();
+        return;
+      }
+      removeListener = () => void handle.remove();
+    });
+
+    return () => {
+      active = false;
+      removeListener?.();
+    };
+  }, [location.pathname, navigate]);
+
+  return null;
+};
 
 export const AppRouter = () => {
   const { isBootstrapping, isAuthenticated, needsOnboarding } = useAuth();
@@ -34,6 +84,7 @@ export const AppRouter = () => {
 
   return (
     <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
+      <NativeBackButtonHandler />
       <Routes>
         <Route element={<PublicLayout />}>
           <Route path="/splash" element={<SplashPage />} />

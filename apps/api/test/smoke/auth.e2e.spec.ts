@@ -378,6 +378,34 @@ describe('Auth session flow', () => {
     });
   });
 
+  it('accepts camelCase registration fields from mobile clients', async () => {
+    registrationInvite.status = 1;
+    registrationInvite.acceptedAt = null;
+    registrationInvite.acceptedByUserId = null;
+    memberships.length = 0;
+    createdFamilies.length = 0;
+
+    const registerResponse = await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .send({
+        credential: 'fresh_parent_camel',
+        password: 'Parent123!',
+        passwordConfirm: 'Parent123!',
+        inviteCode: 'NL-REG001-REG002',
+      })
+      .expect(200);
+
+    expect(registerResponse.body.data.access_token).toBeTruthy();
+    expect(registrationInvite.status).toBe(2);
+    expect(registrationInvite.acceptedByUserId).toBe(user.id);
+    expect(memberships[0]).toMatchObject({
+      familyId: createdFamilies[0].id,
+      userId: user.id,
+      role: 'owner',
+      status: 1,
+    });
+  });
+
   it('returns a field-level registration validation error instead of a generic failure only', async () => {
     const registerResponse = await request(app.getHttpServer())
       .post('/api/v1/auth/register')
