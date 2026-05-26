@@ -55,6 +55,7 @@ describe('App Shell', () => {
   });
 
   it('shows bootstrap loading state before auth resolves', () => {
+    window.history.pushState({}, '', '/home');
     refreshMock.mockReturnValue(new Promise(() => undefined));
     render(<App />);
     expect(screen.getByText('正在进入年轮…')).toBeDefined();
@@ -124,7 +125,7 @@ describe('App Shell', () => {
     fireEvent.change(screen.getByPlaceholderText('请输入账号'), { target: { value: 'new_parent' } });
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'Parent123!' } });
     fireEvent.change(screen.getByPlaceholderText('请再次输入密码'), { target: { value: 'Parent123!' } });
-    fireEvent.change(screen.getByPlaceholderText('请输入家庭邀请码'), { target: { value: 'NL-REG001-REG002' } });
+    fireEvent.change(screen.getByPlaceholderText('请输入邀请码'), { target: { value: 'NL-REG001-REG002' } });
     fireEvent.click(screen.getByRole('checkbox'));
     fireEvent.click(screen.getByRole('button', { name: '查看完整协议与隐私政策' }));
 
@@ -135,7 +136,7 @@ describe('App Shell', () => {
     expect((screen.getByPlaceholderText('请输入账号') as HTMLInputElement).value).toBe('new_parent');
     expect((screen.getByPlaceholderText('请输入密码') as HTMLInputElement).value).toBe('Parent123!');
     expect((screen.getByPlaceholderText('请再次输入密码') as HTMLInputElement).value).toBe('Parent123!');
-    expect((screen.getByPlaceholderText('请输入家庭邀请码') as HTMLInputElement).value).toBe('NL-REG001-REG002');
+    expect((screen.getByPlaceholderText('请输入邀请码') as HTMLInputElement).value).toBe('NL-REG001-REG002');
     expect((screen.getByRole('checkbox') as HTMLInputElement).checked).toBe(true);
   });
 
@@ -182,7 +183,7 @@ describe('App Shell', () => {
     fireEvent.change(screen.getByPlaceholderText('请输入账号'), { target: { value: 'new_parent' } });
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'Parent123!' } });
     fireEvent.change(screen.getByPlaceholderText('请再次输入密码'), { target: { value: 'Parent123!' } });
-    fireEvent.change(screen.getByPlaceholderText('请输入家庭邀请码'), { target: { value: 'join-family-001' } });
+    fireEvent.change(screen.getByPlaceholderText('请输入邀请码'), { target: { value: 'join-family-001' } });
     fireEvent.click(screen.getByRole('checkbox'));
     fireEvent.click(screen.getByRole('button', { name: '注册并进入' }));
 
@@ -205,7 +206,7 @@ describe('App Shell', () => {
     fireEvent.change(screen.getByPlaceholderText('请输入账号'), { target: { value: 'new_parent' } });
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: '123456' } });
     fireEvent.change(screen.getByPlaceholderText('请再次输入密码'), { target: { value: '123456' } });
-    fireEvent.change(screen.getByPlaceholderText('请输入家庭邀请码'), { target: { value: 'NL-ABC123-DEF456' } });
+    fireEvent.change(screen.getByPlaceholderText('请输入邀请码'), { target: { value: 'NL-ABC123-DEF456' } });
     fireEvent.click(screen.getByRole('checkbox'));
     fireEvent.click(screen.getByRole('button', { name: '注册并进入' }));
 
@@ -223,7 +224,7 @@ describe('App Shell', () => {
     fireEvent.change(screen.getByPlaceholderText('请输入账号'), { target: { value: 'new_parent' } });
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'Parent123!' } });
     fireEvent.change(screen.getByPlaceholderText('请再次输入密码'), { target: { value: 'Parent123!' } });
-    fireEvent.change(screen.getByPlaceholderText('请输入家庭邀请码'), { target: { value: 'NL-REG001-REG002' } });
+    fireEvent.change(screen.getByPlaceholderText('请输入邀请码'), { target: { value: 'NL-REG001-REG002' } });
     fireEvent.click(screen.getByRole('checkbox'));
     fireEvent.click(screen.getByRole('button', { name: '注册并进入' }));
 

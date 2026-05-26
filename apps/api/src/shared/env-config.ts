@@ -120,7 +120,34 @@ export function resolveCorsOrigins(env: EnvSource = process.env): true | string[
     throw new Error('CORS_ORIGINS must contain at least one origin');
   }
 
+  if (isStrictEnvironment(env)) {
+    validateStrictCorsOrigins(origins);
+  }
+
   return Array.from(new Set([...origins, ...NATIVE_APP_CORS_ORIGINS]));
+}
+
+function validateStrictCorsOrigins(origins: string[]) {
+  for (const origin of origins) {
+    if (origin === '*' || origin.toLowerCase() === 'null') {
+      throw new Error('CORS_ORIGINS cannot include wildcard or null origins outside local/test environments');
+    }
+
+    if (NATIVE_APP_CORS_ORIGINS.includes(origin)) {
+      continue;
+    }
+
+    let parsed: URL;
+    try {
+      parsed = new URL(origin);
+    } catch {
+      throw new Error(`Invalid CORS origin: ${origin}`);
+    }
+
+    if (parsed.protocol !== 'https:') {
+      throw new Error('CORS_ORIGINS must use https origins outside local/test environments');
+    }
+  }
 }
 
 export function getJwtAccessSecret(env: EnvSource = process.env): string {

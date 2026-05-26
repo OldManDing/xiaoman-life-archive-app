@@ -440,6 +440,20 @@ describe('Auth session flow', () => {
     expect(updateResponse.body.data.nickname).toBe('新昵称');
   });
 
+  it('rejects admin-scoped tokens on user endpoints', async () => {
+    user.status = 1;
+    user.deletedAt = null;
+    const accessToken = await jwtService.signAsync(
+      { type: 'admin', sub: user.id.toString(), username: 'shadow_admin', role: 'super_admin' },
+      { secret: process.env.JWT_ACCESS_SECRET },
+    );
+
+    await request(app.getHttpServer())
+      .get('/api/v1/users/me')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(401);
+  });
+
   it('syncs user preferences through audit-backed account settings', async () => {
     user.status = 1;
     user.deletedAt = null;

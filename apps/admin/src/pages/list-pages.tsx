@@ -457,12 +457,21 @@ const UserDetailContent = ({
   data,
   canResetPassword,
   onResetPassword,
+  feedbackMessage,
+  feedbackError,
 }: {
   data: AdminUserDetail;
   canResetPassword: boolean;
   onResetPassword: () => void;
+  feedbackMessage?: string | null;
+  feedbackError?: string | null;
 }) => (
   <>
+    {feedbackMessage || feedbackError ? (
+      <DetailSection title="操作反馈">
+        <EmptyState title={feedbackError ? '操作失败' : '操作完成'} message={feedbackError ?? feedbackMessage ?? ''} />
+      </DetailSection>
+    ) : null}
     <DetailSection title="基础资料">
       <DetailGrid
         items={[
@@ -788,6 +797,8 @@ export const UsersPage = () => {
             data={detail.state.data}
             canResetPassword={canResetPassword}
             onResetPassword={() => void onResetPassword(detail.state.data!)}
+            feedbackMessage={actionMessage}
+            feedbackError={actionError}
           />
         ) : null}
       </DetailDrawer>

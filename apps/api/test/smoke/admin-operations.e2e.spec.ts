@@ -388,6 +388,18 @@ describe('Admin operations contract', () => {
     });
   });
 
+  it('rejects user-scoped tokens on admin endpoints', async () => {
+    const token = await jwtService.signAsync(
+      { type: 'user', sub: adminSuper.id.toString(), user_no: 'u_shadow_admin_id' },
+      { secret: process.env.JWT_ACCESS_SECRET },
+    );
+
+    await request(app.getHttpServer())
+      .get('/api/v1/admin/dashboard')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(401);
+  });
+
   it('returns admin detail endpoints for users children records media and AI jobs', async () => {
     const token = await adminToken();
 

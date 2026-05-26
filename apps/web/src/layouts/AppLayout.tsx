@@ -3,6 +3,7 @@ import { Clock, Home, Plus, User, Users } from 'lucide-react';
 
 export const AppLayout = () => {
   const location = useLocation();
+  const bottomNavHeight = 'calc(90px + env(safe-area-inset-bottom))';
   const navItems = [
     { to: '/home', label: '首页', icon: Home },
     { to: '/timeline', label: '时间轴', icon: Clock },
@@ -28,7 +29,15 @@ export const AppLayout = () => {
         overflowX: 'hidden',
       }}
     >
-      <main style={{ flex: 1, overflow: 'visible', paddingBottom: showBottomNav ? 'calc(86px + env(safe-area-inset-bottom))' : 0 }}>
+      <main
+        style={{
+          flex: 1,
+          overflow: showBottomNav ? 'auto' : 'visible',
+          minHeight: 0,
+          maxHeight: showBottomNav ? `calc(100dvh - ${bottomNavHeight})` : undefined,
+          paddingBottom: showBottomNav ? '18px' : 0,
+        }}
+      >
         <Outlet />
       </main>
       {showBottomNav ? <nav
@@ -38,11 +47,11 @@ export const AppLayout = () => {
           left: '50%',
           bottom: 0,
           transform: 'translateX(-50%)',
-          width: 'calc(100% - 18px)',
-          maxWidth: '412px',
-          minHeight: '74px',
+          width: '100%',
+          maxWidth: '430px',
+          minHeight: bottomNavHeight,
           border: '1px solid rgba(126,145,170,0.2)',
-          borderRadius: '30px 30px 22px 22px',
+          borderRadius: '28px 28px 0 0',
           background: 'linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(249,252,255,0.86) 100%)',
           backdropFilter: 'blur(24px)',
           display: 'flex',
@@ -50,7 +59,7 @@ export const AppLayout = () => {
           alignItems: 'flex-start',
           zIndex: 10,
           marginTop: 'auto',
-          padding: '8px 8px calc(10px + env(safe-area-inset-bottom))',
+          padding: '8px 14px calc(10px + env(safe-area-inset-bottom))',
           boxShadow: '0 -18px 44px rgba(25,35,55,0.14), inset 0 1px 0 rgba(255,255,255,0.8)',
           boxSizing: 'border-box',
         }}

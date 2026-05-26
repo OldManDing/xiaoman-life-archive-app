@@ -18,8 +18,19 @@ export class UserJwtStrategy extends PassportStrategy(Strategy, 'user-jwt') {
   }
 
   async validate(payload: UserJwtPayload) {
+    if (payload.type !== 'user') {
+      throw new UnauthorizedException('用户登录状态无效');
+    }
+
+    let userId: bigint;
+    try {
+      userId = BigInt(payload.sub);
+    } catch {
+      throw new UnauthorizedException('用户登录状态无效');
+    }
+
     const user = await this.prisma.user.findFirst({
-      where: { id: BigInt(payload.sub), status: USER_ACTIVE_STATUS, deletedAt: null },
+      where: { id: userId, status: USER_ACTIVE_STATUS, deletedAt: null },
     });
 
     if (!user) {

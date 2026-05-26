@@ -18,8 +18,19 @@ export class AdminJwtStrategy extends PassportStrategy(Strategy, 'admin-jwt') {
   }
 
   async validate(payload: AdminJwtPayload) {
+    if (payload.type !== 'admin') {
+      throw new UnauthorizedException('后台登录状态无效');
+    }
+
+    let adminId: bigint;
+    try {
+      adminId = BigInt(payload.sub);
+    } catch {
+      throw new UnauthorizedException('后台登录状态无效');
+    }
+
     const admin = await this.prisma.adminUser.findFirst({
-      where: { id: BigInt(payload.sub), status: ADMIN_ACTIVE_STATUS, deletedAt: null },
+      where: { id: adminId, status: ADMIN_ACTIVE_STATUS, deletedAt: null },
     });
 
     if (!admin) {

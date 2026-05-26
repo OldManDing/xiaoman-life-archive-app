@@ -27,6 +27,11 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 const pickDefaultChild = (children: ChildRecord[]) =>
   children.find((child) => child.name?.trim()) ?? children[0] ?? null;
 
+const shouldSkipAnonymousRefresh = () => {
+  if (typeof window === 'undefined') return false;
+  return ['/auth/login', '/legal', '/splash'].includes(window.location.pathname);
+};
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [accessToken, setAccessTokenState] = useState<string | null>(getAccessToken());
   const [isBootstrapping, setIsBootstrapping] = useState(true);
@@ -92,6 +97,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const session = await webApi.refresh();
           await hydrateAfterAuth(session);
         }
+      } else if (shouldSkipAnonymousRefresh()) {
+        clearAccessToken();
+        setAccessTokenState(null);
+        setUser(null);
+        setNeedsOnboarding(false);
+        setChildrenList([]);
+        setActiveChildState(null);
       } else {
         const session = await webApi.refresh();
         await hydrateAfterAuth(session);

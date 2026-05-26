@@ -125,6 +125,18 @@ describe('env-config', () => {
     ).toThrow('CORS_ORIGINS is required outside local/test environments');
   });
 
+  it('rejects unsafe cors origins in strict environments', () => {
+    expect(() => resolveCorsOrigins({ APP_ENV: 'production', CORS_ORIGINS: '*' })).toThrow(
+      'CORS_ORIGINS cannot include wildcard or null origins outside local/test environments',
+    );
+    expect(() => resolveCorsOrigins({ APP_ENV: 'production', CORS_ORIGINS: 'null' })).toThrow(
+      'CORS_ORIGINS cannot include wildcard or null origins outside local/test environments',
+    );
+    expect(() => resolveCorsOrigins({ APP_ENV: 'production', CORS_ORIGINS: 'http://app.example.com' })).toThrow(
+      'CORS_ORIGINS must use https origins outside local/test environments',
+    );
+  });
+
   it('requires ai provider to be explicitly configured in strict environments', () => {
     expect(() =>
       validateRuntimeConfig({

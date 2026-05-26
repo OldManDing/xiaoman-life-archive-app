@@ -321,7 +321,7 @@ export const LoginPage = () => {
                   style={inputStyle}
                   value={form.invite_code}
                   onChange={(event) => updateFormField('invite_code', event.target.value)}
-                  placeholder="请输入家庭邀请码"
+                  placeholder="请输入邀请码"
                   autoComplete="one-time-code"
                 />
               </Field>

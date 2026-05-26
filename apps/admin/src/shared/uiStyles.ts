@@ -60,8 +60,9 @@ export const thTdStyle: CSSProperties = {
   fontSize: '13px',
   verticalAlign: 'top',
   color: '#263532',
-  minWidth: '104px',
-  whiteSpace: 'nowrap',
+  minWidth: 0,
+  whiteSpace: 'normal',
+  overflowWrap: 'anywhere',
 };
 
 export const mutedTextStyle: CSSProperties = {

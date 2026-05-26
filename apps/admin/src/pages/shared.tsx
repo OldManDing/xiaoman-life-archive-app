@@ -1,15 +1,7 @@
-import type { CSSProperties, FormEvent, ReactNode } from 'react';
+import type { FormEvent, ReactNode } from 'react';
 
 import { EmptyState, Panel } from '../shared/ui';
 import { inputStyle, mutedTextStyle, primaryButtonStyle, secondaryButtonStyle, tableStyle, thTdStyle } from '../shared/uiStyles';
-
-const stickyLastColumnStyle = (isHeader = false): CSSProperties => ({
-  position: 'sticky',
-  right: 0,
-  zIndex: isHeader ? 2 : 1,
-  background: isHeader ? '#f6f8f7' : '#ffffff',
-  boxShadow: '-10px 0 14px rgba(15, 23, 42, 0.06)',
-});
 
 export const SearchPanel = ({
   keyword,
@@ -57,22 +49,19 @@ export const TableShell = ({
   rows: Array<Array<ReactNode>>;
   emptyMessage: string;
   loading?: boolean;
-}) => {
-  const tableMinWidth = `${Math.max(1180, columns.length * 146)}px`;
-
-  return (
+}) => (
     <Panel>
       {!rows.length ? (
         <EmptyState title={loading ? '正在加载数据' : '暂无可处理数据'} message={loading ? '正在获取最新列表，加载完成后会自动显示。' : emptyMessage}>
           <span>{loading ? '请稍候，不需要重复点击查询。' : '可清空筛选后重新查看。'}</span>
         </EmptyState>
       ) : (
-        <div className="admin-table-scroll" style={{ overflowX: 'auto' }}>
-          <table className="admin-responsive-table" style={{ ...tableStyle, minWidth: tableMinWidth }}>
+        <div className="admin-table-scroll">
+          <table className="admin-responsive-table" style={{ ...tableStyle, tableLayout: 'fixed' }}>
             <thead>
               <tr>
-                {columns.map((column, columnIndex) => (
-                  <th key={column} data-column={column} style={{ ...thTdStyle, color: '#66736f', fontSize: '13px', background: '#f6f8f7', ...(columnIndex === columns.length - 1 ? stickyLastColumnStyle(true) : {}) }}>
+                {columns.map((column) => (
+                  <th key={column} data-column={column} style={{ ...thTdStyle, color: '#66736f', fontSize: '13px', background: '#f6f8f7' }}>
                     {column}
                   </th>
                 ))}
@@ -82,7 +71,7 @@ export const TableShell = ({
               {rows.map((row, rowIndex) => (
                 <tr key={rowIndex}>
                   {row.map((cell, cellIndex) => (
-                    <td key={cellIndex} data-label={columns[cellIndex]} data-column={columns[cellIndex]} style={{ ...thTdStyle, ...(cellIndex === row.length - 1 ? stickyLastColumnStyle() : {}) }}>
+                    <td key={cellIndex} data-label={columns[cellIndex]} data-column={columns[cellIndex]} style={thTdStyle}>
                       {cell ?? '—'}
                     </td>
                   ))}
@@ -93,8 +82,7 @@ export const TableShell = ({
         </div>
       )}
     </Panel>
-  );
-};
+);
 
 export const PaginationPanel = ({
   page,

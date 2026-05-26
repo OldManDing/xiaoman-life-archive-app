@@ -1,8 +1,79 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type APIRequestContext } from '@playwright/test';
 
 import { expectNoEnglishSeedCopy, expectNoUnfinishedCopy, loginWeb, webBaseURL } from './helpers';
 
+const apiBaseURL = process.env.E2E_API_BASE_URL ?? `http://127.0.0.1:${process.env.E2E_API_PORT ?? 3001}/api/v1`;
+
+async function createRegistrationInviteCode(request: APIRequestContext) {
+  const loginResponse = await request.post(`${apiBaseURL}/admin/auth/login`, {
+    data: { username: 'admin', password: 'ChangeMe123!' },
+  });
+  expect(loginResponse.ok()).toBe(true);
+  const loginBody = await loginResponse.json();
+  const accessToken = loginBody.data.access_token as string;
+
+  const inviteResponse = await request.post(`${apiBaseURL}/admin/invites`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    data: { expires_in_hours: 2 },
+  });
+  expect(inviteResponse.ok()).toBe(true);
+  const inviteBody = await inviteResponse.json();
+  return inviteBody.data.invite_code as string;
+}
+
 test.describe('App critical journeys', () => {
+  test('anonymous login page stays quiet and tab pages reserve bottom navigation space', async ({ browser }) => {
+    const context = await browser.newContext({ viewport: { width: 390, height: 844 } });
+    const page = await context.newPage();
+    const consoleErrors: string[] = [];
+    const failedApiRequests: Array<{ status: number; url: string }> = [];
+
+    page.on('console', (message) => {
+      if (message.type() === 'error') consoleErrors.push(message.text());
+    });
+    page.on('response', (response) => {
+      if (response.url().includes('/api/')) failedApiRequests.push({ status: response.status(), url: response.url() });
+    });
+
+    await page.goto(`${webBaseURL}/auth/login`);
+    await expect(page.getByRole('button', { name: '进入年轮' })).toBeVisible();
+
+    expect(consoleErrors).toEqual([]);
+    expect(failedApiRequests.filter((request) => request.status >= 400)).toEqual([]);
+
+    await page.getByPlaceholder('请输入账号').fill('xiaoman_parent');
+    await page.getByPlaceholder('请输入密码').fill('DemoUser123!');
+    await page.getByRole('checkbox', { name: '我已阅读并同意《用户协议》和《隐私政策》' }).check();
+    await page.getByRole('button', { name: '进入年轮' }).click();
+    await expect(page).toHaveURL(/\/home$/);
+
+    for (const route of ['/home', '/family', '/profile']) {
+      await page.goto(`${webBaseURL}${route}`);
+      await expect(page.getByRole('navigation', { name: '主导航' })).toBeVisible();
+      const layout = await page.evaluate(() => {
+        const main = document.querySelector('.app-layout > main');
+        const nav = document.querySelector('nav[aria-label="主导航"]');
+        const mainRect = main?.getBoundingClientRect();
+        const navRect = nav?.getBoundingClientRect();
+
+        return {
+          mainBottom: mainRect?.bottom ?? 0,
+          navTop: navRect?.top ?? 0,
+          navHeight: navRect?.height ?? 0,
+          mainOverflowY: main ? getComputedStyle(main).overflowY : '',
+          overflowX: document.documentElement.scrollWidth > window.innerWidth + 2,
+        };
+      });
+
+      expect(layout.overflowX).toBe(false);
+      expect(layout.mainOverflowY).toBe('auto');
+      expect(layout.navHeight).toBeGreaterThanOrEqual(74);
+      expect(layout.mainBottom).toBeLessThanOrEqual(layout.navTop + 1);
+    }
+
+    await context.close();
+  });
+
   test('logs in with password and renders localized home data', async ({ page }) => {
     await page.goto(`${webBaseURL}/auth/login`);
     await expect(page.getByRole('button', { name: '进入年轮' })).toBeDisabled();
@@ -19,6 +90,57 @@ test.describe('App critical journeys', () => {
     await expect(page.getByText('一年前的今天')).toBeVisible();
     await expectNoEnglishSeedCopy(page);
     await expectNoUnfinishedCopy(page);
+  });
+
+  test('preserves auth form input after viewing legal policy in browser', async ({ page }) => {
+    await page.goto(`${webBaseURL}/auth/login`);
+    await page.getByPlaceholder('请输入账号').fill('legal_return_parent');
+    await page.getByPlaceholder('请输入密码').fill('DemoUser123!');
+    await page.getByRole('checkbox', { name: '我已阅读并同意《用户协议》和《隐私政策》' }).check();
+
+    await page.getByRole('button', { name: '查看完整协议与隐私政策' }).click();
+    await expect(page).toHaveURL(/\/legal$/);
+    await expect(page.getByRole('heading', { name: '关于与协议' })).toBeVisible();
+    await page.getByLabel('返回').click();
+
+    await expect(page).toHaveURL(/\/auth\/login$/);
+    await expect(page.getByPlaceholder('请输入账号')).toHaveValue('legal_return_parent');
+    await expect(page.getByPlaceholder('请输入密码')).toHaveValue('DemoUser123!');
+    await expect(page.getByRole('checkbox', { name: '我已阅读并同意《用户协议》和《隐私政策》' })).toBeChecked();
+  });
+
+  test('deleted account cannot log in again and shows password error', async ({ page, request }) => {
+    const inviteCode = await createRegistrationInviteCode(request);
+    const credential = `delete_accept_${Date.now().toString(36)}`;
+    const password = 'DeleteUser123!';
+
+    await page.goto(`${webBaseURL}/auth/login`);
+    await page.getByRole('button', { name: '注册' }).click();
+    await page.getByPlaceholder('请输入账号').fill(credential);
+    await page.getByPlaceholder('请输入密码').fill(password);
+    await page.getByPlaceholder('请再次输入密码').fill(password);
+    await page.getByPlaceholder('请输入邀请码').fill(inviteCode);
+    await page.getByRole('checkbox', { name: '我已阅读并同意《用户协议》和《隐私政策》' }).check();
+    await page.getByRole('button', { name: '注册并进入' }).click();
+
+    await expect(page).toHaveURL(/\/onboarding\/child$/);
+    await page.getByLabel('宝宝小名').fill('注销验收宝宝');
+    await page.getByLabel('出生日期').fill('2025-01-01');
+    await page.getByRole('button', { name: '完成创建' }).click();
+    await expect(page).toHaveURL(/\/home$/);
+
+    await page.goto(`${webBaseURL}/profile/account-delete`);
+    await expect(page.getByText('当前账号可以注销')).toBeVisible();
+    await page.getByPlaceholder('请输入当前登录密码').fill(password);
+    await page.getByPlaceholder('确认注销').fill('确认注销');
+    await page.getByRole('button', { name: '确认注销账号' }).click();
+
+    await expect(page).toHaveURL(/\/auth\/login$/);
+    await page.getByPlaceholder('请输入账号').fill(credential);
+    await page.getByPlaceholder('请输入密码').fill(password);
+    await page.getByRole('checkbox', { name: '我已阅读并同意《用户协议》和《隐私政策》' }).check();
+    await page.getByRole('button', { name: '进入年轮' }).click();
+    await expect(page.getByText('账号或密码错误')).toBeVisible();
   });
 
   test('record creation exposes native-style media, location, and milestone controls', async ({ page }) => {
