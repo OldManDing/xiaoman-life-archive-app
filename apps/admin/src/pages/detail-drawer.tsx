@@ -18,6 +18,8 @@ const drawerStyle: CSSProperties = {
   background: '#f5f8f7',
   padding: '18px',
   display: 'grid',
+  alignContent: 'start',
+  gridAutoRows: 'max-content',
   gap: '14px',
 };
 

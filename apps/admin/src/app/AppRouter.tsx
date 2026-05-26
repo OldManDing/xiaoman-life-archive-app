@@ -9,6 +9,7 @@ import {
   AuditLogsPage,
   ChildrenPage,
   DashboardPage,
+  InvitesPage,
   LoginPage,
   MediaPage,
   RecordsPage,
@@ -29,6 +30,7 @@ export const AppRouter = () => {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/users" element={<UsersPage />} />
+          <Route path="/invites" element={<InvitesPage />} />
           <Route path="/children" element={<ChildrenPage />} />
           <Route path="/records" element={<RecordsPage />} />
           <Route path="/media" element={<MediaPage />} />

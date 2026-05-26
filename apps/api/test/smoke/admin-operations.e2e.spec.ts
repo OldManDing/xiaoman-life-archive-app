@@ -40,6 +40,17 @@ describe('Admin operations contract', () => {
     deletedAt: null,
   };
 
+  const userAuthAccount = {
+    id: BigInt(2),
+    userId: user.id,
+    authType: 'password',
+    authKey: '13800000000',
+    credentialHash: 'old-password-hash',
+    status: 1,
+    createdAt: now,
+    updatedAt: now,
+  };
+
   const family = {
     id: BigInt(10),
     familyNo: 'f_001',
@@ -155,8 +166,27 @@ describe('Admin operations contract', () => {
     createdAt: now,
   };
 
+  const registrationInvite = {
+    id: BigInt(60),
+    inviteNo: 'reg_inv_001',
+    tokenHash: 'token_hash',
+    inviteeMobile: null as string | null,
+    createdByAdminId: adminSuper.id,
+    acceptedByUserId: null as bigint | null,
+    status: 1,
+    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    acceptedAt: null as Date | null,
+    createdAt: now,
+    updatedAt: now,
+    createdByAdmin: adminSuper,
+    acceptedByUser: null,
+  };
+
+  let createdRegistrationInvite = { ...registrationInvite, id: BigInt(61), inviteNo: 'reg_inv_created_001' };
+
   const userWithRelations = {
     ...user,
+    authAccounts: [userAuthAccount],
     ownedChildren: [child],
     familyMemberships: [familyMember],
   };
@@ -207,6 +237,15 @@ describe('Admin operations contract', () => {
         return null;
       }),
     },
+    userAuthAccount: {
+      update: jest.fn().mockImplementation(async ({ data }: any) => {
+        Object.assign(userAuthAccount, data, { updatedAt: new Date() });
+        return { ...userAuthAccount };
+      }),
+    },
+    userSession: {
+      updateMany: jest.fn().mockResolvedValue({ count: 2 }),
+    },
     child: {
       count: jest.fn().mockResolvedValue(1),
       findFirst: jest.fn().mockResolvedValue(childWithRelations),
@@ -248,6 +287,31 @@ describe('Admin operations contract', () => {
       findMany: jest.fn().mockResolvedValue([auditLog]),
       create: jest.fn(),
     },
+    registrationInvite: {
+      count: jest.fn().mockResolvedValue(1),
+      findMany: jest.fn().mockResolvedValue([registrationInvite]),
+      findFirst: jest.fn().mockImplementation(async ({ where }: any) => {
+        if (where.inviteNo === registrationInvite.inviteNo) return registrationInvite;
+        return null;
+      }),
+      create: jest.fn().mockImplementation(async ({ data }: any) => {
+        createdRegistrationInvite = {
+          ...registrationInvite,
+          ...data,
+          id: BigInt(61),
+          inviteNo: data.inviteNo,
+          createdAt: now,
+          updatedAt: now,
+          createdByAdmin: adminSuper,
+          acceptedByUser: null,
+        };
+        return createdRegistrationInvite;
+      }),
+      update: jest.fn().mockImplementation(async ({ data }: any) => {
+        Object.assign(registrationInvite, data);
+        return { ...registrationInvite };
+      }),
+    },
     $queryRaw: jest.fn().mockResolvedValue([{ ok: 1 }]),
     $transaction: jest.fn(async (input: unknown): Promise<unknown> => {
       if (Array.isArray(input)) return Promise.all(input);
@@ -287,6 +351,10 @@ describe('Admin operations contract', () => {
     aiJob.status = 'failed';
     aiJob.errorMessage = 'timeout';
     aiJob.retryCount = 1;
+    registrationInvite.status = 1;
+    registrationInvite.acceptedAt = null;
+    registrationInvite.acceptedByUserId = null;
+    userAuthAccount.credentialHash = 'old-password-hash';
   });
 
   const adminToken = async () =>
@@ -328,6 +396,7 @@ describe('Admin operations contract', () => {
       .set('Authorization', `Bearer ${token}`)
       .expect(200)
       .expect((response) => {
+        expect(response.body.data.auth_accounts[0]).toMatchObject({ auth_type: 'password', auth_key: '13800000000' });
         expect(response.body.data.children[0]).toMatchObject({ child_no: child.childNo });
         expect(response.body.data.families[0]).toMatchObject({ family_no: family.familyNo });
       });
@@ -429,6 +498,94 @@ describe('Admin operations contract', () => {
         }),
       }),
     );
+  });
+
+  it('resets a user password and revokes active sessions', async () => {
+    const token = await adminToken();
+
+    await request(app.getHttpServer())
+      .patch(`/api/v1/admin/users/${user.userNo}/password`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ new_password: 'NewPass123!', password_confirm: 'NewPass123!', reason: 'user verified by support' })
+      .expect(200)
+      .expect((response) => {
+        expect(response.body.data).toMatchObject({
+          user_no: user.userNo,
+          auth_key: userAuthAccount.authKey,
+          revoked_sessions: 2,
+          changed: true,
+        });
+      });
+
+    expect(userAuthAccount.credentialHash).not.toBe('old-password-hash');
+    expect(prismaMock.userSession.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ userId: user.id, revokedAt: null }),
+      }),
+    );
+    expect(prismaMock.auditLog.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          action: 'admin_reset_user_password',
+          metadata: expect.objectContaining({
+            user_no: user.userNo,
+            auth_key: userAuthAccount.authKey,
+            revoked_sessions: 2,
+            reason: 'user verified by support',
+          }),
+        }),
+      }),
+    );
+  });
+
+  it('lists creates and revokes registration invite codes', async () => {
+    const token = await adminToken();
+
+    await request(app.getHttpServer())
+      .get('/api/v1/admin/invites')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200)
+      .expect((response) => {
+        expect(response.body.data.list[0]).toMatchObject({
+          invite_no: registrationInvite.inviteNo,
+          status: 'pending',
+          created_by_username: adminSuper.username,
+        });
+        expect(response.body.data.list[0].invite_code).toBeUndefined();
+      });
+
+    await request(app.getHttpServer())
+      .post('/api/v1/admin/invites')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ mobile: '13900000000', expires_in_hours: 24 })
+      .expect(201)
+      .expect((response) => {
+        expect(response.body.data.invite_code).toMatch(/^NL-[0-9A-F]{6}-[0-9A-F]{6}$/);
+        expect(response.body.data.invitee_mobile).toBe('13900000000');
+      });
+
+    expect(prismaMock.registrationInvite.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          inviteNo: expect.stringMatching(/^reg_invite_/),
+          inviteeMobile: '13900000000',
+          createdByAdminId: adminSuper.id,
+          status: 1,
+        }),
+      }),
+    );
+
+    await request(app.getHttpServer())
+      .post(`/api/v1/admin/invites/${registrationInvite.inviteNo}/revoke`)
+      .set('Authorization', `Bearer ${token}`)
+      .expect(201)
+      .expect((response) => {
+        expect(response.body.data).toMatchObject({
+          invite_no: registrationInvite.inviteNo,
+          status: 'revoked',
+          changed: true,
+        });
+      });
   });
 
   it('retries and cancels AI jobs with state checks and queue handoff', async () => {

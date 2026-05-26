@@ -40,9 +40,9 @@ test.describe('Admin critical journeys', () => {
     await expectNoEnglishSeedCopy(page);
   });
 
-  test('queries users and opens detail drawer', async ({ page }) => {
+  test('queries accounts and opens login detail drawer', async ({ page }) => {
     await loginAdmin(page);
-    await page.getByRole('link', { name: '用户运营', exact: true }).click();
+    await page.getByRole('link', { name: '账号管理', exact: true }).click();
     await page.getByRole('button', { name: '查询' }).click();
 
     const parentRow = page.getByRole('row', { name: /小满妈妈/ });
@@ -50,10 +50,26 @@ test.describe('Admin critical journeys', () => {
     await expect(parentRow).toContainText('正常');
     await parentRow.getByRole('button', { name: '详情' }).click();
 
-    await expect(page.getByRole('dialog', { name: '用户详情' })).toBeVisible();
-    await expect(page.getByText('基础资料')).toBeVisible();
-    await expect(page.getByText('关联孩子')).toBeVisible();
+    const detailDialog = page.getByRole('dialog', { name: '用户详情' });
+    await expect(detailDialog).toBeVisible();
+    await expect(detailDialog.getByText('基础资料')).toBeVisible();
+    await expect(detailDialog.getByRole('heading', { name: '登录信息' })).toBeVisible();
+    await expect(detailDialog.getByText('账号密码')).toBeVisible();
+    await expect(detailDialog.getByRole('button', { name: '重置密码' })).toBeVisible();
+    await expect(detailDialog.getByText('关联孩子')).toBeVisible();
     await expectNoEnglishSeedCopy(page);
+  });
+
+  test('generates a registration invite code from admin', async ({ page }) => {
+    await loginAdmin(page);
+    await page.getByRole('link', { name: '邀请码', exact: true }).click();
+
+    await expect(page.getByRole('heading', { name: '邀请码管理' })).toBeVisible();
+    await page.getByRole('button', { name: '生成邀请码' }).click();
+
+    await expect(page.getByText('本次生成的邀请码')).toBeVisible();
+    await expect(page.getByText(/^NL-[0-9A-F]{6}-[0-9A-F]{6}$/)).toBeVisible();
+    await expect(page.getByRole('button', { name: '复制邀请码' })).toBeVisible();
   });
 
   test('filters audit logs and opens audit detail drawer', async ({ page }) => {
@@ -88,7 +104,7 @@ test.describe('Admin critical journeys', () => {
   test('admin inline action buttons update and restore seeded data', async ({ page }) => {
     await loginAdmin(page);
 
-    await page.getByRole('link', { name: '用户运营', exact: true }).click();
+    await page.getByRole('link', { name: '账号管理', exact: true }).click();
     await page.getByRole('button', { name: '查询' }).click();
     let parentRow = page.getByRole('row', { name: /小满妈妈/ });
     await expect(parentRow).toContainText('正常');

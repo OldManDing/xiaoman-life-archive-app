@@ -10,6 +10,7 @@ import { AppModule } from '../../src/app.module';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { ApiExceptionFilter } from '../../src/shared/api-exception.filter';
 import { ApiResponseInterceptor } from '../../src/shared/api-response.interceptor';
+import { createAppValidationPipe } from '../../src/shared/validation-pipe';
 
 describe('Auth session flow', () => {
   let app: INestApplication;
@@ -44,7 +45,21 @@ describe('Auth session flow', () => {
     inviteeUserId: null as bigint | null,
     family: { id: BigInt(100), familyNo: 'f_invite_001' },
   };
+  const registrationInvite = {
+    id: BigInt(20),
+    inviteNo: 'reg_inv_001',
+    tokenHash: hashToken('NL-REG001-REG002'),
+    inviteeMobile: null as string | null,
+    createdByAdminId: BigInt(12),
+    acceptedByUserId: null as bigint | null,
+    status: 1,
+    expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+    acceptedAt: null as Date | null,
+    createdAt: new Date('2026-04-21T00:00:00.000Z'),
+    updatedAt: new Date('2026-04-21T00:00:00.000Z'),
+  };
   const memberships: Array<{ familyId: bigint; userId: bigint; role: string; status: number; deletedAt: Date | null; joinedAt: Date | null }> = [];
+  const createdFamilies: Array<{ id: bigint; familyNo: string; ownerUserId: bigint; name: string; status: number }> = [];
   const joinedFamilyMemberships = [
     {
       id: BigInt(77),
@@ -73,6 +88,11 @@ describe('Auth session flow', () => {
             updateMany: jest.fn().mockResolvedValue({ count: 0 }),
           },
           family: {
+            create: jest.fn().mockImplementation(async ({ data }: { data: { familyNo: string; ownerUserId: bigint; name: string; status: number } }) => {
+              const created = { id: BigInt(800 + createdFamilies.length), ...data };
+              createdFamilies.push(created);
+              return created;
+            }),
             updateMany: jest.fn().mockResolvedValue({ count: 0 }),
           },
           record: {
@@ -118,7 +138,21 @@ describe('Auth session flow', () => {
             }),
             updateMany: jest.fn().mockResolvedValue({ count: 0 }),
           },
+          registrationInvite: {
+            findFirst: jest.fn().mockImplementation(async ({ where }: { where: { tokenHash?: string } }) => {
+              return where.tokenHash === registrationInvite.tokenHash ? registrationInvite : null;
+            }),
+            update: jest.fn().mockImplementation(async ({ data }: { data: Partial<typeof registrationInvite> }) => {
+              Object.assign(registrationInvite, data);
+              return registrationInvite;
+            }),
+          },
           familyMember: {
+            create: jest.fn().mockImplementation(async ({ data }: { data: any }) => {
+              const created = { ...data, deletedAt: null };
+              memberships.push(created);
+              return created;
+            }),
             upsert: jest.fn().mockImplementation(async ({ create, update, where }: { create: any; update: any; where: { familyId_userId: { familyId: bigint; userId: bigint } } }) => {
               const existing = memberships.find((item) => item.familyId === where.familyId_userId.familyId && item.userId === where.familyId_userId.userId);
               if (existing) {
@@ -242,6 +276,7 @@ describe('Auth session flow', () => {
     app = moduleRef.createNestApplication();
     jwtService = moduleRef.get(JwtService);
     app.setGlobalPrefix('api/v1');
+    app.useGlobalPipes(createAppValidationPipe());
     app.useGlobalFilters(new ApiExceptionFilter());
     app.useGlobalInterceptors(new ApiResponseInterceptor());
     await app.init();
@@ -307,6 +342,57 @@ describe('Auth session flow', () => {
       userId: user.id,
       role: 'viewer',
       status: 1,
+    });
+  });
+
+  it('registers a password account with an admin registration invite and creates an owned family', async () => {
+    registrationInvite.status = 1;
+    registrationInvite.acceptedAt = null;
+    registrationInvite.acceptedByUserId = null;
+    memberships.length = 0;
+    createdFamilies.length = 0;
+
+    const registerResponse = await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .send({
+        credential: 'fresh_parent',
+        password: 'Parent123!',
+        password_confirm: 'Parent123!',
+        invite_code: 'NL-REG001-REG002',
+      })
+      .expect(200);
+
+    expect(registerResponse.body.data.access_token).toBeTruthy();
+    expect(registrationInvite.status).toBe(2);
+    expect(registrationInvite.acceptedByUserId).toBe(user.id);
+    expect(createdFamilies[0]).toMatchObject({
+      ownerUserId: user.id,
+      name: '测试用户的家庭',
+      status: 1,
+    });
+    expect(memberships[0]).toMatchObject({
+      familyId: createdFamilies[0].id,
+      userId: user.id,
+      role: 'owner',
+      status: 1,
+    });
+  });
+
+  it('returns a field-level registration validation error instead of a generic failure only', async () => {
+    const registerResponse = await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .send({
+        credential: 'new_parent',
+        password: '1234567',
+        password_confirm: '1234567',
+        invite_code: 'NL-REG001-REG002',
+      })
+      .expect(400);
+
+    expect(registerResponse.body.message).toBe('参数校验失败');
+    expect(registerResponse.body.data.fields).toContainEqual({
+      field: 'password',
+      reason: '密码需为 8 到 72 位',
     });
   });
 

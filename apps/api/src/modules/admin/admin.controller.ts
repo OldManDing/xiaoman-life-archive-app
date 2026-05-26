@@ -7,8 +7,10 @@ import { AuthenticatedAdmin } from '../../shared/types';
 import { AdminAiJobActionDto } from './dto/admin-ai-job-action.dto';
 import { AdminRoles } from './decorators/admin-roles.decorator';
 import { AdminAuditLogListDto } from './dto/admin-audit-log-list.dto';
+import { AdminCreateInviteDto } from './dto/admin-create-invite.dto';
 import { AdminListDto } from './dto/admin-list.dto';
 import { AdminLoginDto } from './dto/admin-login.dto';
+import { AdminResetUserPasswordDto } from './dto/admin-reset-user-password.dto';
 import { AdminUpdateMediaStatusDto } from './dto/admin-update-media-status.dto';
 import { AdminUpdateRecordStatusDto } from './dto/admin-update-record-status.dto';
 import { AdminUpdateUserStatusDto } from './dto/admin-update-user-status.dto';
@@ -43,6 +45,27 @@ export class AdminController {
 
   @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
   @AdminRoles(AdminRole.super_admin, AdminRole.operator, AdminRole.viewer)
+  @Get('invites')
+  invites(@CurrentUser() admin: AuthenticatedAdmin, @Query() dto: AdminListDto, @Req() request: Request) {
+    return this.adminService.listInvites(admin, dto, request);
+  }
+
+  @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
+  @AdminRoles(AdminRole.super_admin, AdminRole.operator)
+  @Post('invites')
+  createInvite(@CurrentUser() admin: AuthenticatedAdmin, @Body() dto: AdminCreateInviteDto, @Req() request: Request) {
+    return this.adminService.createInvite(admin, dto, request);
+  }
+
+  @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
+  @AdminRoles(AdminRole.super_admin, AdminRole.operator)
+  @Post('invites/:invite_no/revoke')
+  revokeInvite(@CurrentUser() admin: AuthenticatedAdmin, @Param('invite_no') inviteNo: string, @Req() request: Request) {
+    return this.adminService.revokeInvite(admin, inviteNo, request);
+  }
+
+  @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
+  @AdminRoles(AdminRole.super_admin, AdminRole.operator, AdminRole.viewer)
   @Get('users/:user_no')
   userDetail(@CurrentUser() admin: AuthenticatedAdmin, @Param('user_no') userNo: string, @Req() request: Request) {
     return this.adminService.userDetail(admin, userNo, request);
@@ -58,6 +81,18 @@ export class AdminController {
     @Req() request: Request,
   ) {
     return this.adminService.updateUserStatus(admin, userNo, dto, request);
+  }
+
+  @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
+  @AdminRoles(AdminRole.super_admin)
+  @Patch('users/:user_no/password')
+  resetUserPassword(
+    @CurrentUser() admin: AuthenticatedAdmin,
+    @Param('user_no') userNo: string,
+    @Body() dto: AdminResetUserPasswordDto,
+    @Req() request: Request,
+  ) {
+    return this.adminService.resetUserPassword(admin, userNo, dto, request);
   }
 
   @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)

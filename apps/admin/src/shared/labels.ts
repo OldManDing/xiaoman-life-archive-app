@@ -25,6 +25,22 @@ export const userStatusLabel = (value: string | null | undefined) =>
     disabled: '已冻结',
   });
 
+export const inviteStatusLabel = (value: string | null | undefined) =>
+  fallbackLabel(value, {
+    pending: '待使用',
+    accepted: '已使用',
+    revoked: '已撤销',
+    expired: '已过期',
+  });
+
+export const authTypeLabel = (value: string | null | undefined) =>
+  fallbackLabel(value, {
+    password: '账号密码',
+    mobile: '手机号',
+    email: '邮箱',
+    wechat: '微信',
+  });
+
 export const familyRoleLabel = (value: string | null | undefined) =>
   fallbackLabel(value, {
     owner: '家庭拥有者',
@@ -129,6 +145,10 @@ export const auditActionLabel = (value: string | null | undefined) =>
     admin_view_media_detail: '查看媒体详情',
     admin_view_ai_job_detail: '查看 AI 任务详情',
     admin_list_users: '查询用户',
+    admin_list_registration_invites: '查询注册邀请码',
+    admin_create_registration_invite: '生成注册邀请码',
+    admin_revoke_registration_invite: '撤销注册邀请码',
+    admin_reset_user_password: '重置用户密码',
     admin_list_children: '查询孩子档案',
     admin_list_records: '查询记录',
     admin_list_media: '查询媒体',
@@ -157,4 +177,5 @@ export const auditTargetTypeLabel = (value: string | null | undefined) =>
     media: '媒体',
     ai_job: 'AI 任务',
     audit_log: '审计日志',
+    registration_invite: '注册邀请码',
   });

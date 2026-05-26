@@ -3,7 +3,12 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { clearAccessToken, getAccessToken, setAccessToken } from '../auth/tokenMemory';
 
 type RetriableRequest = InternalAxiosRequestConfig & { _retry?: boolean };
-type ErrorEnvelope = { message?: unknown };
+type ErrorEnvelope = {
+  message?: unknown;
+  data?: {
+    fields?: Array<{ field?: unknown; reason?: unknown }>;
+  } | null;
+};
 type ApiRuntimeSnapshot = {
   configuredBaseUrl?: string;
   origin?: string;
@@ -36,6 +41,42 @@ const isAbsoluteHttpUrl = (value: string) => /^https?:\/\//i.test(value);
 
 const isNativeOrigin = (origin?: string) => origin === 'https://localhost' || origin === 'capacitor://localhost' || origin === 'ionic://localhost';
 
+const validationReasonMap: Array<[RegExp, string]> = [
+  [/credential must be longer than or equal to 3 characters/i, '账号至少需要 3 位'],
+  [/credential must be shorter than or equal to 64 characters/i, '账号不能超过 64 位'],
+  [/credential must match/i, '账号不能包含空格'],
+  [/password must be longer than or equal to 8 characters/i, '密码需为 8 到 72 位'],
+  [/password must be shorter than or equal to 72 characters/i, '密码需为 8 到 72 位'],
+  [/password_confirm must be longer than or equal to 8 characters/i, '确认密码需为 8 到 72 位'],
+  [/password_confirm must be shorter than or equal to 72 characters/i, '确认密码需为 8 到 72 位'],
+  [/invite_code must be longer than or equal to 6 characters/i, '邀请码需为 6 到 128 位'],
+  [/invite_code must be shorter than or equal to 128 characters/i, '邀请码需为 6 到 128 位'],
+];
+
+const normalizeValidationReason = (reason: string) => {
+  const normalized = reason.trim();
+  const mapped = validationReasonMap.find(([pattern]) => pattern.test(normalized));
+  return mapped?.[1] ?? normalized;
+};
+
+export const extractApiErrorMessage = (responseData: unknown) => {
+  const data = responseData as ErrorEnvelope | undefined;
+  const fieldReason = data?.data?.fields
+    ?.map((field) => (typeof field.reason === 'string' ? normalizeValidationReason(field.reason) : null))
+    .find((reason): reason is string => Boolean(reason));
+  const responseMessage = data?.message;
+
+  if (fieldReason && responseMessage === '参数校验失败') {
+    return fieldReason;
+  }
+
+  if (typeof responseMessage === 'string' && responseMessage.trim()) {
+    return responseMessage;
+  }
+
+  return fieldReason ?? null;
+};
+
 export const resolveApiBaseUrl = (snapshot: ApiRuntimeSnapshot = getRuntimeSnapshot()) => {
   const configuredBaseUrl = snapshot.configuredBaseUrl?.trim();
   const isNativeRuntime = Boolean(snapshot.isNativePlatform) || isNativeOrigin(snapshot.origin);
@@ -56,8 +97,8 @@ export const resolveApiBaseUrl = (snapshot: ApiRuntimeSnapshot = getRuntimeSnaps
 };
 
 const toUserFacingError = (error: AxiosError) => {
-  const responseMessage = (error.response?.data as ErrorEnvelope | undefined)?.message;
-  if (typeof responseMessage === 'string' && responseMessage.trim()) {
+  const responseMessage = extractApiErrorMessage(error.response?.data);
+  if (responseMessage) {
     return new Error(responseMessage);
   }
 

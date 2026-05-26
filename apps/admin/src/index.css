@@ -316,6 +316,47 @@ table {
   min-width: 0;
 }
 
+.admin-search-controls button,
+.admin-invite-result button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+}
+
+.admin-invite-result {
+  border: 1px solid #b8e2c8;
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+  background: #edf8f2;
+}
+
+.admin-invite-result span {
+  display: block;
+  color: #48615b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.admin-invite-result strong {
+  display: block;
+  margin-top: 5px;
+  color: #0f3d35;
+  font-size: 24px;
+  letter-spacing: 0.04em;
+}
+
+.admin-invite-result p {
+  margin: 5px 0 0;
+  color: #586963;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
 .admin-list-summary-pill {
   min-width: 112px;
   border: 1px solid #dae3df;
@@ -468,6 +509,7 @@ table {
   font-weight: 800;
 }
 
+.admin-modal-field input,
 .admin-modal-field textarea {
   min-height: 92px;
   resize: none;
@@ -476,6 +518,11 @@ table {
   padding: 10px 12px;
   color: #1f2933;
   background: #ffffff;
+}
+
+.admin-modal-field input {
+  min-height: 42px;
+  resize: initial;
 }
 
 .admin-modal-error {
@@ -1598,6 +1645,16 @@ table {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     min-width: 0 !important;
     width: 100%;
+  }
+
+  .admin-search-controls {
+    grid-template-columns: 1fr !important;
+  }
+
+  .admin-invite-result {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: stretch;
   }
 
   .admin-action-group button,

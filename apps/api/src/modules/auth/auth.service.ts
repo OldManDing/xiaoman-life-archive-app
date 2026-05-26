@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
-import { AuthType, MembershipType, Prisma } from '@prisma/client';
+import { AuthType, FamilyMemberRole, MembershipType, Prisma } from '@prisma/client';
 import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
 import { randomUUID } from 'node:crypto';
 import * as bcrypt from 'bcrypt';
@@ -17,6 +17,16 @@ import { SmsService } from '../../shared/services/sms/sms.service';
 import { generateBizNo, hashToken, parseDurationToSeconds } from '../../shared/utils';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+
+type AcceptableInvite =
+  | {
+      kind: 'family';
+      invite: Prisma.MemberInviteGetPayload<{ include: { family: true } }>;
+    }
+  | {
+      kind: 'registration';
+      invite: Prisma.RegistrationInviteGetPayload<{}>;
+    };
 
 @Injectable()
 export class AuthService {
@@ -153,7 +163,7 @@ export class AuthService {
     const passwordHash = await bcrypt.hash(password, 10);
 
     return this.prisma.$transaction(async (tx) => {
-      await this.ensureInviteCanBeAccepted(tx, inviteCode);
+      const invite = await this.ensureInviteCanBeAccepted(tx, inviteCode);
 
       const user = await tx.user.create({
         data: {
@@ -177,7 +187,7 @@ export class AuthService {
         },
       });
 
-      await this.acceptInviteInTransaction(tx, user.id, inviteCode);
+      await this.acceptInviteInTransaction(tx, user.id, invite);
 
       return user;
     });
@@ -355,21 +365,32 @@ export class AuthService {
     });
   }
 
-  private async ensureInviteCanBeAccepted(tx: Prisma.TransactionClient, inviteCode: string) {
-    const invite = await tx.memberInvite.findFirst({
+  private async ensureInviteCanBeAccepted(tx: Prisma.TransactionClient, inviteCode: string): Promise<AcceptableInvite> {
+    const familyInvite = await tx.memberInvite.findFirst({
       where: { tokenHash: hashToken(inviteCode) },
       include: { family: true },
     });
 
-    if (!invite || invite.status !== MEMBER_INVITE_STATUS_PENDING || invite.expiresAt <= new Date()) {
+    if (familyInvite) {
+      if (familyInvite.status !== MEMBER_INVITE_STATUS_PENDING || familyInvite.expiresAt <= new Date()) {
+        throw new BadRequestException('邀请码不存在或已失效');
+      }
+
+      return { kind: 'family', invite: familyInvite };
+    }
+
+    const registrationInvite = await tx.registrationInvite.findFirst({
+      where: { tokenHash: hashToken(inviteCode) },
+    });
+
+    if (!registrationInvite || registrationInvite.status !== MEMBER_INVITE_STATUS_PENDING || registrationInvite.expiresAt <= new Date()) {
       throw new BadRequestException('邀请码不存在或已失效');
     }
 
-    return invite;
+    return { kind: 'registration', invite: registrationInvite };
   }
 
-  private async acceptInviteInTransaction(tx: Prisma.TransactionClient, userId: bigint, inviteCode: string) {
-    const invite = await this.ensureInviteCanBeAccepted(tx, inviteCode);
+  private async acceptInviteInTransaction(tx: Prisma.TransactionClient, userId: bigint, acceptableInvite: AcceptableInvite) {
     const user = await tx.user.findFirst({
       where: { id: userId, deletedAt: null },
     });
@@ -378,11 +399,44 @@ export class AuthService {
       throw new UnauthorizedException('用户不存在');
     }
 
-    if (invite.inviteeMobile && user.mobile !== invite.inviteeMobile) {
+    if (acceptableInvite.invite.inviteeMobile && user.mobile !== acceptableInvite.invite.inviteeMobile) {
       throw new ForbiddenException('该邀请码绑定了指定手机号，请联系邀请人重新生成不绑定手机号的邀请码');
     }
 
     const now = new Date();
+    if (acceptableInvite.kind === 'registration') {
+      const family = await tx.family.create({
+        data: {
+          familyNo: generateBizNo('family'),
+          ownerUserId: userId,
+          name: `${user.nickname}的家庭`,
+          status: USER_ACTIVE_STATUS,
+        },
+      });
+
+      await tx.familyMember.create({
+        data: {
+          familyId: family.id,
+          userId,
+          role: FamilyMemberRole.owner,
+          status: FAMILY_MEMBER_ACTIVE_STATUS,
+          joinedAt: now,
+        },
+      });
+
+      await tx.registrationInvite.update({
+        where: { id: acceptableInvite.invite.id },
+        data: {
+          status: MEMBER_INVITE_STATUS_ACCEPTED,
+          acceptedByUserId: userId,
+          acceptedAt: now,
+        },
+      });
+
+      return;
+    }
+
+    const invite = acceptableInvite.invite;
     await tx.familyMember.upsert({
       where: {
         familyId_userId: {

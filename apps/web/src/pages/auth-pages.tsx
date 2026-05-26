@@ -8,6 +8,115 @@ import { createPersistableMediaPreview } from '../shared/localMediaPreview';
 import { Field, PageShell, Panel, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle } from '../shared/ui';
 import { rowStyle } from './shared';
 
+type AuthMode = 'login' | 'register';
+type AuthFormState = {
+  credential: string;
+  password: string;
+  password_confirm: string;
+  invite_code: string;
+};
+
+type LoginFormDraft = {
+  mode: AuthMode;
+  form: AuthFormState;
+  acceptedAgreement: boolean;
+};
+
+const emptyAuthForm: AuthFormState = {
+  credential: '',
+  password: '',
+  password_confirm: '',
+  invite_code: '',
+};
+
+const loginFormDraftStorageKey = 'nianlun.auth.loginFormDraft.v1';
+
+const createEmptyLoginFormDraft = (): LoginFormDraft => ({
+  mode: 'login',
+  form: { ...emptyAuthForm },
+  acceptedAgreement: false,
+});
+
+const normalizeLoginFormDraft = (value: unknown): LoginFormDraft | null => {
+  if (!value || typeof value !== 'object') return null;
+
+  const candidate = value as Partial<LoginFormDraft>;
+  if (candidate.mode !== 'login' && candidate.mode !== 'register') return null;
+  if (!candidate.form || typeof candidate.form !== 'object') return null;
+
+  const form = candidate.form as Partial<Record<keyof AuthFormState, unknown>>;
+  return {
+    mode: candidate.mode,
+    form: {
+      credential: typeof form.credential === 'string' ? form.credential : '',
+      password: typeof form.password === 'string' ? form.password : '',
+      password_confirm: typeof form.password_confirm === 'string' ? form.password_confirm : '',
+      invite_code: typeof form.invite_code === 'string' ? form.invite_code : '',
+    },
+    acceptedAgreement: candidate.acceptedAgreement === true,
+  };
+};
+
+let loginFormDraft: LoginFormDraft = createEmptyLoginFormDraft();
+
+const readLoginFormDraft = () => {
+  if (typeof window === 'undefined') return loginFormDraft;
+
+  try {
+    const stored = window.sessionStorage.getItem(loginFormDraftStorageKey);
+    if (!stored) return loginFormDraft;
+
+    const draft = normalizeLoginFormDraft(JSON.parse(stored));
+    if (!draft) return loginFormDraft;
+
+    loginFormDraft = draft;
+    return loginFormDraft;
+  } catch {
+    return loginFormDraft;
+  }
+};
+
+const saveLoginFormDraft = (draft: LoginFormDraft) => {
+  loginFormDraft = draft;
+  if (typeof window === 'undefined') return;
+
+  try {
+    window.sessionStorage.setItem(loginFormDraftStorageKey, JSON.stringify(draft));
+  } catch {
+    // sessionStorage can be unavailable in restricted WebViews; in-memory draft still works.
+  }
+};
+
+export const clearLoginFormDraft = () => {
+  loginFormDraft = createEmptyLoginFormDraft();
+  if (typeof window === 'undefined') return;
+
+  try {
+    window.sessionStorage.removeItem(loginFormDraftStorageKey);
+  } catch {
+    // Ignore storage errors during cleanup.
+  }
+};
+
+const validateCredential = (credential: string) => {
+  const normalized = credential.trim();
+  if (normalized.length < 3) return '账号至少需要 3 位';
+  if (normalized.length > 64) return '账号不能超过 64 位';
+  if (/\s/.test(normalized)) return '账号不能包含空格';
+  return null;
+};
+
+const validatePassword = (password: string, label = '密码') => {
+  if (password.length < 8 || password.length > 72) return `${label}需为 8 到 72 位`;
+  return null;
+};
+
+const validateInviteCode = (inviteCode: string) => {
+  const normalized = inviteCode.trim();
+  if (normalized.length < 6 || normalized.length > 128) return '邀请码需为 6 到 128 位';
+  return null;
+};
+
 export const SplashPage = () => (
   <PageShell title="正在进入年轮" description="系统正在检查登录状态，并会自动前往合适的页面。">
     <Panel>
@@ -19,9 +128,10 @@ export const SplashPage = () => (
 export const LoginPage = () => {
   const navigate = useNavigate();
   const { login, register, isAuthenticated, needsOnboarding } = useAuth();
-  const [mode, setMode] = useState<'login' | 'register'>('login');
-  const [form, setForm] = useState({ credential: '', password: '', password_confirm: '', invite_code: '' });
-  const [acceptedAgreement, setAcceptedAgreement] = useState(false);
+  const [initialDraft] = useState(readLoginFormDraft);
+  const [mode, setMode] = useState<AuthMode>(initialDraft.mode);
+  const [form, setForm] = useState<AuthFormState>({ ...initialDraft.form });
+  const [acceptedAgreement, setAcceptedAgreement] = useState(initialDraft.acceptedAgreement);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const canSubmit =
@@ -36,6 +146,14 @@ export const LoginPage = () => {
     }
   }, [isAuthenticated, navigate, needsOnboarding]);
 
+  useEffect(() => {
+    saveLoginFormDraft({
+      mode,
+      form: { ...form },
+      acceptedAgreement,
+    });
+  }, [acceptedAgreement, form, mode]);
+
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (!acceptedAgreement) {
@@ -46,15 +164,40 @@ export const LoginPage = () => {
     setSubmitting(true);
     setError(null);
     try {
+      const credentialError = validateCredential(form.credential);
+      if (credentialError) {
+        setError(credentialError);
+        return;
+      }
+
+      const passwordError = validatePassword(form.password);
+      if (passwordError) {
+        setError(passwordError);
+        return;
+      }
+
       if (mode === 'login') {
         await login({
           login_type: 'password',
           credential: form.credential.trim(),
           password: form.password,
         });
+        clearLoginFormDraft();
       } else {
+        const passwordConfirmError = validatePassword(form.password_confirm, '确认密码');
+        if (passwordConfirmError) {
+          setError(passwordConfirmError);
+          return;
+        }
+
         if (form.password !== form.password_confirm) {
           setError('两次输入的密码不一致');
+          return;
+        }
+
+        const inviteCodeError = validateInviteCode(form.invite_code);
+        if (inviteCodeError) {
+          setError(inviteCodeError);
           return;
         }
 
@@ -64,6 +207,7 @@ export const LoginPage = () => {
           password_confirm: form.password_confirm,
           invite_code: form.invite_code.trim(),
         });
+        clearLoginFormDraft();
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : mode === 'login' ? '登录失败，请稍后重试' : '注册失败，请稍后重试';

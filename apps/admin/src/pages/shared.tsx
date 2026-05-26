@@ -17,21 +17,25 @@ export const SearchPanel = ({
   loading,
   onSearch,
   onClearSearch,
+  description = '输入用户、孩子、记录、媒体或任务相关关键字后查询。',
+  placeholder = '输入关键字筛选',
 }: {
   keyword: string;
   setKeyword: (value: string) => void;
   loading: boolean;
   onSearch: (event?: FormEvent) => Promise<void>;
   onClearSearch: () => Promise<void>;
+  description?: string;
+  placeholder?: string;
 }) => (
   <Panel>
     <form className="admin-search-form" onSubmit={onSearch} style={{ display: 'grid', gap: '12px' }}>
       <div>
         <strong style={{ display: 'block', color: '#16211f', marginBottom: '4px' }}>筛选条件</strong>
-        <p style={mutedTextStyle}>输入用户、孩子、记录、媒体或任务相关关键字后查询。</p>
+        <p style={mutedTextStyle}>{description}</p>
       </div>
       <div className="admin-search-controls" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-        <input style={{ ...inputStyle, maxWidth: '360px' }} value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="输入关键字筛选" />
+        <input style={{ ...inputStyle, maxWidth: '360px' }} value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder={placeholder} />
         <button type="submit" style={primaryButtonStyle} disabled={loading}>
           {loading ? '查询中…' : '查询'}
         </button>

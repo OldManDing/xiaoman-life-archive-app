@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { AlertTriangle, ArchiveX, Ban, CheckCircle2, Eye, RotateCcw, Snowflake } from 'lucide-react';
+import { AlertTriangle, ArchiveX, Ban, CheckCircle2, Eye, LockKeyhole, RotateCcw, Snowflake } from 'lucide-react';
 
 import {
   adminApi,
@@ -22,6 +22,7 @@ import {
   auditActionLabel,
   auditActorTypeLabel,
   auditTargetTypeLabel,
+  authTypeLabel,
   childStatusLabel,
   familyRoleLabel,
   genderLabel,
@@ -35,6 +36,7 @@ import {
 } from '../shared/labels';
 import { AdminSelect, Badge, EmptyState, PageShell, Panel } from '../shared/ui';
 import { inputStyle, mutedTextStyle, primaryButtonStyle, secondaryButtonStyle, tableStyle, thTdStyle } from '../shared/uiStyles';
+import { useAdminAuth } from '../shared/useAdminAuth';
 import { DetailDrawer, DetailGrid, DetailList, DetailSection, JsonBlock, MediaPreview } from './detail-drawer';
 import { formatListRows, useAdminListPage } from './list-page-state';
 import { PaginationPanel, SearchPanel, TableShell } from './shared';
@@ -64,6 +66,9 @@ const auditActionFilterOptions = [
   'admin_view_media_detail',
   'admin_view_ai_job_detail',
   'admin_list_users',
+  'admin_list_registration_invites',
+  'admin_create_registration_invite',
+  'admin_revoke_registration_invite',
   'admin_list_children',
   'admin_list_records',
   'admin_list_media',
@@ -71,6 +76,7 @@ const auditActionFilterOptions = [
   'admin_list_audit_logs',
   'admin_disable_user',
   'admin_activate_user',
+  'admin_reset_user_password',
   'admin_unpublish_record',
   'admin_restore_record',
   'admin_approve_media',
@@ -80,7 +86,7 @@ const auditActionFilterOptions = [
   'admin_cancel_ai_job',
 ];
 
-const auditTargetTypeFilterOptions = ['list', 'admin_user', 'user', 'child', 'record', 'media', 'ai_job', 'audit_log'];
+const auditTargetTypeFilterOptions = ['list', 'admin_user', 'user', 'registration_invite', 'child', 'record', 'media', 'ai_job', 'audit_log'];
 
 const toIsoDateTime = (value: string) => (value ? new Date(value).toISOString() : undefined);
 const formatDateTime = (value: string | null | undefined) => (value ? new Date(value).toLocaleString('zh-CN', { hour12: false }) : '—');
@@ -261,6 +267,118 @@ const useOperationReasonDialog = () => {
   return { requestOperationReason, reasonDialog };
 };
 
+type ResetPasswordRequest = {
+  new_password: string;
+  password_confirm: string;
+  reason: string;
+};
+
+const useResetPasswordDialog = () => {
+  const resolverRef = useRef<((value: ResetPasswordRequest | null) => void) | null>(null);
+  const [dialog, setDialog] = useState<{
+    user: Pick<AdminUserItem, 'user_no' | 'nickname' | 'mobile'>;
+    newPassword: string;
+    passwordConfirm: string;
+    reason: string;
+    error: string | null;
+  } | null>(null);
+
+  const requestResetPassword = (user: Pick<AdminUserItem, 'user_no' | 'nickname' | 'mobile'>) =>
+    new Promise<ResetPasswordRequest | null>((resolve) => {
+      resolverRef.current?.(null);
+      resolverRef.current = resolve;
+      setDialog({ user, newPassword: '', passwordConfirm: '', reason: '', error: null });
+    });
+
+  const closeDialog = (value: ResetPasswordRequest | null) => {
+    resolverRef.current?.(value);
+    resolverRef.current = null;
+    setDialog(null);
+  };
+
+  useEffect(() => () => resolverRef.current?.(null), []);
+
+  const resetPasswordDialog = dialog ? (
+    <div className="admin-modal-overlay" role="presentation">
+      <section className="admin-modal" role="dialog" aria-modal="true" aria-labelledby="admin-reset-password-title">
+        <div className="admin-modal-header">
+          <div>
+            <span>账号安全操作</span>
+            <h2 id="admin-reset-password-title">重置登录密码</h2>
+            <p style={{ margin: '6px 0 0', color: '#66736f', fontSize: '13px', lineHeight: 1.5 }}>
+              {dialog.user.nickname}（{dialog.user.mobile ?? dialog.user.user_no}）
+            </p>
+          </div>
+          <button type="button" className="admin-modal-close" onClick={() => closeDialog(null)} aria-label="关闭重置密码弹窗">
+            ×
+          </button>
+        </div>
+        <label className="admin-modal-field">
+          新密码
+          <input
+            type="password"
+            value={dialog.newPassword}
+            onChange={(event) => setDialog((current) => (current ? { ...current, newPassword: event.target.value, error: null } : current))}
+            placeholder="8 到 72 位，交给用户下次登录使用"
+            autoComplete="new-password"
+            autoFocus
+          />
+        </label>
+        <label className="admin-modal-field">
+          确认新密码
+          <input
+            type="password"
+            value={dialog.passwordConfirm}
+            onChange={(event) => setDialog((current) => (current ? { ...current, passwordConfirm: event.target.value, error: null } : current))}
+            placeholder="再次输入新密码"
+            autoComplete="new-password"
+          />
+        </label>
+        <label className="admin-modal-field">
+          操作原因
+          <textarea
+            value={dialog.reason}
+            onChange={(event) => setDialog((current) => (current ? { ...current, reason: event.target.value, error: null } : current))}
+            placeholder="例如：用户本人申请重置，客服已核验身份"
+          />
+        </label>
+        {dialog.error ? <p className="admin-modal-error">{dialog.error}</p> : null}
+        <div className="admin-modal-actions">
+          <button type="button" style={secondaryButtonStyle} onClick={() => closeDialog(null)}>
+            取消
+          </button>
+          <button
+            type="button"
+            style={primaryButtonStyle}
+            onClick={() => {
+              const newPassword = dialog.newPassword;
+              const passwordConfirm = dialog.passwordConfirm;
+              const reason = dialog.reason.trim();
+              if (newPassword.length < 8 || newPassword.length > 72) {
+                setDialog((current) => (current ? { ...current, error: '新密码长度必须为 8 到 72 位' } : current));
+                return;
+              }
+              if (newPassword !== passwordConfirm) {
+                setDialog((current) => (current ? { ...current, error: '两次输入的密码不一致' } : current));
+                return;
+              }
+              if (!reason) {
+                setDialog((current) => (current ? { ...current, error: '请填写操作原因' } : current));
+                return;
+              }
+              closeDialog({ new_password: newPassword, password_confirm: passwordConfirm, reason });
+            }}
+          >
+            确认重置
+          </button>
+        </div>
+      </section>
+    </div>
+  ) : null;
+
+  return { requestResetPassword, resetPasswordDialog };
+};
+
 const MiniTable = ({ columns, rows, emptyMessage }: { columns: string[]; rows: Array<Array<ReactNode>>; emptyMessage: string }) => {
   if (!rows.length) return <EmptyState message={emptyMessage} />;
 
@@ -335,7 +453,15 @@ const useDetailState = <T,>() => {
   return { state, openDetail, closeDetail, updateDetail };
 };
 
-const UserDetailContent = ({ data }: { data: AdminUserDetail }) => (
+const UserDetailContent = ({
+  data,
+  canResetPassword,
+  onResetPassword,
+}: {
+  data: AdminUserDetail;
+  canResetPassword: boolean;
+  onResetPassword: () => void;
+}) => (
   <>
     <DetailSection title="基础资料">
       <DetailGrid
@@ -352,6 +478,26 @@ const UserDetailContent = ({ data }: { data: AdminUserDetail }) => (
           { label: '更新时间', value: formatDateTime(data.updated_at) },
         ]}
       />
+    </DetailSection>
+    <DetailSection title="登录信息">
+      <MiniTable
+        columns={['登录方式', '登录账号', '状态', '创建时间', '更新时间']}
+        rows={data.auth_accounts.map((item) => [
+          authTypeLabel(item.auth_type),
+          item.auth_key,
+          userStatusLabel(item.status),
+          formatDateTime(item.created_at),
+          formatDateTime(item.updated_at),
+        ])}
+        emptyMessage="暂无登录凭据。"
+      />
+      {canResetPassword ? (
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <ActionButton icon={<LockKeyhole size={15} />} onClick={onResetPassword} tone="warning">
+            重置密码
+          </ActionButton>
+        </div>
+      ) : null}
     </DetailSection>
     <DetailSection title="关联孩子">
       <MiniTable
@@ -549,9 +695,13 @@ const AuditLogDetailContent = ({ data }: { data: AdminAuditLogItem }) => (
 export const UsersPage = () => {
   const state = useAdminListPage<AdminUserItem>(adminApi.listUsers);
   const detail = useDetailState<AdminUserDetail>();
+  const { admin } = useAdminAuth();
   const { requestOperationReason, reasonDialog } = useOperationReasonDialog();
+  const { requestResetPassword, resetPasswordDialog } = useResetPasswordDialog();
   const [updatingUserNo, setUpdatingUserNo] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
+  const canResetPassword = admin?.role === 'super_admin';
 
   const onToggleStatus = async (user: AdminUserItem) => {
     const nextStatus = user.status === 'active' ? 'disabled' : 'active';
@@ -560,6 +710,7 @@ export const UsersPage = () => {
     if (!reason) return;
 
     setActionError(null);
+    setActionMessage(null);
     setUpdatingUserNo(user.user_no);
     try {
       const updated = await adminApi.updateUserStatus(user.user_no, { status: nextStatus, reason });
@@ -572,6 +723,23 @@ export const UsersPage = () => {
           : current,
       );
       detail.updateDetail((current) => (current.user_no === updated.user_no ? { ...current, status: updated.status } : current));
+    } catch (err) {
+      setActionError(getErrorMessage(err));
+    } finally {
+      setUpdatingUserNo(null);
+    }
+  };
+
+  const onResetPassword = async (user: Pick<AdminUserItem, 'user_no' | 'nickname' | 'mobile'>) => {
+    const payload = await requestResetPassword(user);
+    if (!payload) return;
+
+    setActionError(null);
+    setActionMessage(null);
+    setUpdatingUserNo(user.user_no);
+    try {
+      const result = await adminApi.resetUserPassword(user.user_no, payload);
+      setActionMessage(`已重置 ${user.nickname} 的登录密码，并撤销 ${result.revoked_sessions} 个登录会话。`);
     } catch (err) {
       setActionError(getErrorMessage(err));
     } finally {
@@ -594,24 +762,37 @@ export const UsersPage = () => {
       <ActionButton icon={item.status === 'active' ? <Snowflake size={15} /> : <CheckCircle2 size={15} />} onClick={() => void onToggleStatus(item)} disabled={updatingUserNo === item.user_no} tone={item.status === 'active' ? 'danger' : 'success'}>
         {updatingUserNo === item.user_no ? '处理中…' : item.status === 'active' ? '冻结' : '解冻'}
       </ActionButton>
+      {canResetPassword ? (
+        <ActionButton icon={<LockKeyhole size={15} />} onClick={() => void onResetPassword(item)} disabled={updatingUserNo === item.user_no} tone="warning">
+          重置密码
+        </ActionButton>
+      ) : null}
     </ActionGroup>,
   ]);
 
   return (
-    <PageShell title="用户列表" description="按关键字查询用户，并查看最近登录情况。">
+    <PageShell title="账号管理" description="按关键字查询用户账号，处理冻结、解冻、登录信息核查和密码重置。">
       <SearchPanel {...state} />
-      <ListSummary total={state.result?.total} label="用户运营概览" description="默认展示用户列表，先看账号状态，再决定是否进入详情、冻结或解冻。">
+      <ListSummary total={state.result?.total} label="账号状态概览" description="默认展示用户列表，先看账号状态，再决定是否进入详情、冻结、解冻或重置登录密码。">
         <SummaryStat label="正常" value={activeUsers} tone="success" />
         <SummaryStat label="已冻结" value={disabledUsers} tone={disabledUsers > 0 ? 'danger' : 'neutral'} />
       </ListSummary>
       {state.error ? <Panel><EmptyState message={`加载失败：${state.error}`} /></Panel> : null}
       {actionError ? <Panel><EmptyState message={`操作失败：${actionError}`} /></Panel> : null}
+      {actionMessage ? <Panel><EmptyState title="操作完成" message={actionMessage} /></Panel> : null}
       <TableShell columns={['用户', '手机号', '会员', '状态', '最近登录', '创建时间', '操作']} rows={rows} emptyMessage="暂无匹配用户。可输入手机号、昵称或清空筛选后重新查询。" loading={state.loading} />
       {state.result ? <PaginationPanel page={state.result.page} pageSize={state.result.page_size} total={state.result.total} hasMore={state.result.has_more} loading={state.loading} onPrevPage={state.onPrevPage} onNextPage={state.onNextPage} /> : null}
       <DetailDrawer open={detail.state.open} title={detail.state.title} subtitle={detail.state.subtitle} loading={detail.state.loading} error={detail.state.error} onClose={detail.closeDetail}>
-        {detail.state.data ? <UserDetailContent data={detail.state.data} /> : null}
+        {detail.state.data ? (
+          <UserDetailContent
+            data={detail.state.data}
+            canResetPassword={canResetPassword}
+            onResetPassword={() => void onResetPassword(detail.state.data!)}
+          />
+        ) : null}
       </DetailDrawer>
       {reasonDialog}
+      {resetPasswordDialog}
     </PageShell>
   );
 };

@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
-import { ActorType, AdminRole, AiJobStatus, Prisma } from '@prisma/client';
+import { ActorType, AdminRole, AiJobStatus, AuthType, Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { Request } from 'express';
 
@@ -21,21 +21,27 @@ import {
   MEDIA_STATUS_READY,
   MEDIA_STATUS_REMOVED,
   MEDIA_STATUS_UPLOADING,
+  MEMBER_INVITE_STATUS_ACCEPTED,
+  MEMBER_INVITE_STATUS_PENDING,
+  MEMBER_INVITE_STATUS_REVOKED,
   RECORD_STATUS_DRAFT,
   RECORD_STATUS_PUBLISHED,
   USER_ACTIVE_STATUS,
 } from '../../shared/constants';
-import { normalizePage, normalizePageSize, statusToChildLabel, statusToRecordLabel, toDateOnly } from '../../shared/utils';
+import { generateBizNo, generateSecureToken, hashToken, normalizePage, normalizePageSize, statusToChildLabel, statusToRecordLabel, toDateOnly } from '../../shared/utils';
 import { AdminAiJobActionDto } from './dto/admin-ai-job-action.dto';
+import { AdminCreateInviteDto } from './dto/admin-create-invite.dto';
 import { AdminListDto } from './dto/admin-list.dto';
 import { AdminAuditLogListDto } from './dto/admin-audit-log-list.dto';
 import { AdminLoginDto } from './dto/admin-login.dto';
+import { AdminResetUserPasswordDto } from './dto/admin-reset-user-password.dto';
 import { AdminUpdateMediaStatusDto } from './dto/admin-update-media-status.dto';
 import { AdminUpdateRecordStatusDto } from './dto/admin-update-record-status.dto';
 import { AdminUpdateUserStatusDto } from './dto/admin-update-user-status.dto';
 
 const USER_DISABLED_STATUS = 2;
 const DEFAULT_ACCESS_TOKEN_EXPIRES_IN = '2h';
+const DEFAULT_REGISTRATION_INVITE_EXPIRES_IN_HOURS = 168;
 
 const statusToUserLabel = (status: number): 'active' | 'disabled' => (status === USER_ACTIVE_STATUS ? 'active' : 'disabled');
 const statusToMediaLabel = (status: number): 'uploading' | 'ready' | 'failed' | 'removed' => {
@@ -50,6 +56,15 @@ const mediaStatusToNumber = (status: AdminUpdateMediaStatusDto['status']) => {
   if (status === 'removed') return MEDIA_STATUS_REMOVED;
   return MEDIA_STATUS_FAILED;
 };
+
+const statusToInviteLabel = (status: number, expiresAt: Date): 'pending' | 'accepted' | 'revoked' | 'expired' => {
+  if (status === MEMBER_INVITE_STATUS_ACCEPTED) return 'accepted';
+  if (status === MEMBER_INVITE_STATUS_REVOKED) return 'revoked';
+  if (expiresAt <= new Date()) return 'expired';
+  return 'pending';
+};
+
+const createRegistrationInviteToken = () => `NL-${generateSecureToken(3).toUpperCase()}-${generateSecureToken(3).toUpperCase()}`;
 
 @Injectable()
 export class AdminService {
@@ -152,6 +167,153 @@ export class AdminService {
     };
   }
 
+  async listInvites(admin: AuthenticatedAdmin, dto: AdminListDto, request: Request) {
+    const page = normalizePage(dto.page);
+    const pageSize = normalizePageSize(dto.page_size);
+    const where: Prisma.RegistrationInviteWhereInput = dto.keyword
+      ? {
+          OR: [
+            { inviteNo: { contains: dto.keyword } },
+            { inviteeMobile: { contains: dto.keyword } },
+            { acceptedByUser: { is: { OR: [{ userNo: { contains: dto.keyword } }, { nickname: { contains: dto.keyword } }, { mobile: { contains: dto.keyword } }] } } },
+            { createdByAdmin: { is: { OR: [{ username: { contains: dto.keyword } }, { displayName: { contains: dto.keyword } }] } } },
+          ],
+        }
+      : {};
+
+    const [total, list] = await this.prisma.$transaction([
+      this.prisma.registrationInvite.count({ where }),
+      this.prisma.registrationInvite.findMany({
+        where,
+        include: { createdByAdmin: true, acceptedByUser: true },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+    ]);
+
+    await this.logListAudit(admin, 'admin_list_registration_invites', request);
+    return {
+      list: list.map((item) => ({
+        invite_no: item.inviteNo,
+        invitee_mobile: item.inviteeMobile,
+        status: statusToInviteLabel(item.status, item.expiresAt),
+        created_by_username: item.createdByAdmin.username,
+        created_by_name: item.createdByAdmin.displayName,
+        accepted_by_user_no: item.acceptedByUser?.userNo ?? null,
+        accepted_by_name: item.acceptedByUser?.nickname ?? null,
+        expires_at: item.expiresAt.toISOString(),
+        accepted_at: item.acceptedAt?.toISOString() ?? null,
+        created_at: item.createdAt.toISOString(),
+      })),
+      page,
+      page_size: pageSize,
+      total,
+      has_more: page * pageSize < total,
+    };
+  }
+
+  async createInvite(admin: AuthenticatedAdmin, dto: AdminCreateInviteDto, request: Request) {
+    if (dto.mobile) {
+      const existing = await this.prisma.registrationInvite.findFirst({
+        where: {
+          inviteeMobile: dto.mobile,
+          status: MEMBER_INVITE_STATUS_PENDING,
+          expiresAt: { gt: new Date() },
+        },
+      });
+
+      if (existing) {
+        throw new BadRequestException('该手机号已有未使用的邀请码');
+      }
+    }
+
+    const inviteToken = createRegistrationInviteToken();
+    const expiresInHours = dto.expires_in_hours ?? DEFAULT_REGISTRATION_INVITE_EXPIRES_IN_HOURS;
+    const invite = await this.prisma.registrationInvite.create({
+      data: {
+        inviteNo: generateBizNo('reg_invite'),
+        tokenHash: hashToken(inviteToken),
+        inviteeMobile: dto.mobile ?? null,
+        createdByAdminId: admin.id,
+        status: MEMBER_INVITE_STATUS_PENDING,
+        expiresAt: new Date(Date.now() + expiresInHours * 60 * 60 * 1000),
+      },
+    });
+
+    await this.auditLogService.create({
+      actor_type: ActorType.admin,
+      actor_id: admin.id,
+      action: 'admin_create_registration_invite',
+      target_type: 'registration_invite',
+      target_id: invite.id,
+      ip_address: request.ip,
+      user_agent: request.headers['user-agent'] ?? null,
+      metadata: {
+        invite_no: invite.inviteNo,
+        invitee_mobile: invite.inviteeMobile,
+        expires_at: invite.expiresAt.toISOString(),
+      },
+    });
+
+    return {
+      invite_no: invite.inviteNo,
+      invite_code: inviteToken,
+      invitee_mobile: invite.inviteeMobile,
+      status: statusToInviteLabel(invite.status, invite.expiresAt),
+      expires_at: invite.expiresAt.toISOString(),
+      created_at: invite.createdAt.toISOString(),
+    };
+  }
+
+  async revokeInvite(admin: AuthenticatedAdmin, inviteNo: string, request: Request) {
+    const invite = await this.prisma.registrationInvite.findFirst({
+      where: { inviteNo },
+    });
+
+    if (!invite) {
+      throw new NotFoundException('邀请码不存在');
+    }
+
+    if (invite.status === MEMBER_INVITE_STATUS_ACCEPTED) {
+      throw new BadRequestException('已使用的邀请码不能撤销');
+    }
+
+    if (invite.status === MEMBER_INVITE_STATUS_REVOKED) {
+      return {
+        invite_no: invite.inviteNo,
+        status: statusToInviteLabel(invite.status, invite.expiresAt),
+        changed: false,
+      };
+    }
+
+    const updated = await this.prisma.registrationInvite.update({
+      where: { id: invite.id },
+      data: { status: MEMBER_INVITE_STATUS_REVOKED },
+    });
+
+    await this.auditLogService.create({
+      actor_type: ActorType.admin,
+      actor_id: admin.id,
+      action: 'admin_revoke_registration_invite',
+      target_type: 'registration_invite',
+      target_id: updated.id,
+      ip_address: request.ip,
+      user_agent: request.headers['user-agent'] ?? null,
+      metadata: {
+        invite_no: updated.inviteNo,
+        before_status: statusToInviteLabel(invite.status, invite.expiresAt),
+        after_status: statusToInviteLabel(updated.status, updated.expiresAt),
+      },
+    });
+
+    return {
+      invite_no: updated.inviteNo,
+      status: statusToInviteLabel(updated.status, updated.expiresAt),
+      changed: true,
+    };
+  }
+
   async updateUserStatus(admin: AuthenticatedAdmin, userNo: string, dto: AdminUpdateUserStatusDto, request: Request) {
     const user = await this.prisma.user.findFirst({
       where: {
@@ -198,6 +360,74 @@ export class AdminService {
       user_no: updated.userNo,
       status: statusToUserLabel(nextStatus),
       changed: true,
+    };
+  }
+
+  async resetUserPassword(admin: AuthenticatedAdmin, userNo: string, dto: AdminResetUserPasswordDto, request: Request) {
+    if (dto.new_password !== dto.password_confirm) {
+      throw new BadRequestException('两次输入的密码不一致');
+    }
+
+    const user = await this.prisma.user.findFirst({
+      where: {
+        userNo,
+        deletedAt: null,
+      },
+      include: {
+        authAccounts: {
+          where: { authType: AuthType.password },
+          orderBy: { createdAt: 'desc' },
+        },
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('用户不存在');
+    }
+
+    const passwordAccount = user.authAccounts[0];
+    if (!passwordAccount) {
+      throw new BadRequestException('该用户没有账号密码登录凭据');
+    }
+
+    const passwordHash = await bcrypt.hash(dto.new_password, 10);
+    const now = new Date();
+    const [, revokedSessions] = await this.prisma.$transaction([
+      this.prisma.userAuthAccount.update({
+        where: { id: passwordAccount.id },
+        data: { credentialHash: passwordHash },
+      }),
+      this.prisma.userSession.updateMany({
+        where: {
+          userId: user.id,
+          revokedAt: null,
+        },
+        data: { revokedAt: now },
+      }),
+    ]);
+
+    await this.auditLogService.create({
+      actor_type: ActorType.admin,
+      actor_id: admin.id,
+      action: 'admin_reset_user_password',
+      target_type: 'user',
+      target_id: user.id,
+      ip_address: request.ip,
+      user_agent: request.headers['user-agent'] ?? null,
+      metadata: {
+        user_no: user.userNo,
+        auth_key: passwordAccount.authKey,
+        revoked_sessions: revokedSessions.count,
+        reason: dto.reason,
+      },
+    });
+
+    return {
+      user_no: user.userNo,
+      auth_key: passwordAccount.authKey,
+      revoked_sessions: revokedSessions.count,
+      changed: true,
+      reset_at: now.toISOString(),
     };
   }
 
@@ -478,6 +708,9 @@ export class AdminService {
           include: { family: true },
           orderBy: { createdAt: 'desc' },
         },
+        authAccounts: {
+          orderBy: { createdAt: 'desc' },
+        },
       },
     });
 
@@ -499,6 +732,13 @@ export class AdminService {
       last_login_at: user.lastLoginAt?.toISOString() ?? null,
       created_at: user.createdAt.toISOString(),
       updated_at: user.updatedAt.toISOString(),
+      auth_accounts: user.authAccounts.map((account) => ({
+        auth_type: account.authType,
+        auth_key: account.authKey,
+        status: account.status === USER_ACTIVE_STATUS ? 'active' : 'disabled',
+        created_at: account.createdAt.toISOString(),
+        updated_at: account.updatedAt.toISOString(),
+      })),
       children: user.ownedChildren.map((child) => ({
         child_no: child.childNo,
         name: child.name,

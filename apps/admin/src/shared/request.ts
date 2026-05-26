@@ -63,6 +63,42 @@ export interface AdminUserStatusUpdateResponse {
   changed: boolean;
 }
 
+export interface AdminUserPasswordResetResponse {
+  user_no: string;
+  auth_key: string;
+  revoked_sessions: number;
+  changed: boolean;
+  reset_at: string;
+}
+
+export interface AdminInviteItem {
+  invite_no: string;
+  invitee_mobile: string | null;
+  status: 'pending' | 'accepted' | 'revoked' | 'expired';
+  created_by_username: string;
+  created_by_name: string;
+  accepted_by_user_no: string | null;
+  accepted_by_name: string | null;
+  expires_at: string;
+  accepted_at: string | null;
+  created_at: string;
+}
+
+export interface AdminInviteCreateResponse {
+  invite_no: string;
+  invite_code: string;
+  invitee_mobile: string | null;
+  status: AdminInviteItem['status'];
+  expires_at: string;
+  created_at: string;
+}
+
+export interface AdminInviteRevokeResponse {
+  invite_no: string;
+  status: AdminInviteItem['status'];
+  changed: boolean;
+}
+
 export interface AdminChildItem {
   child_no: string;
   family_no: string;
@@ -132,6 +168,13 @@ export interface AdminUserDetail extends AdminUserItem {
   email: string | null;
   membership_expire_at: string | null;
   updated_at: string;
+  auth_accounts: Array<{
+    auth_type: string;
+    auth_key: string;
+    status: 'active' | 'disabled';
+    created_at: string;
+    updated_at: string;
+  }>;
   children: Array<{
     child_no: string;
     name: string;
@@ -275,8 +318,28 @@ export const adminApi = {
     return unwrap(response);
   },
 
+  async listInvites(params: { keyword?: string; page?: number; page_size?: number }) {
+    const response = await request.get<ApiEnvelope<AdminListResponse<AdminInviteItem>>>('/admin/invites', { params });
+    return unwrap(response);
+  },
+
+  async createInvite(payload: { mobile?: string; expires_in_hours?: number }) {
+    const response = await request.post<ApiEnvelope<AdminInviteCreateResponse>>('/admin/invites', payload);
+    return unwrap(response);
+  },
+
+  async revokeInvite(inviteNo: string) {
+    const response = await request.post<ApiEnvelope<AdminInviteRevokeResponse>>(`/admin/invites/${inviteNo}/revoke`);
+    return unwrap(response);
+  },
+
   async updateUserStatus(userNo: string, payload: { status: 'active' | 'disabled'; reason?: string }) {
     const response = await request.patch<ApiEnvelope<AdminUserStatusUpdateResponse>>(`/admin/users/${userNo}/status`, payload);
+    return unwrap(response);
+  },
+
+  async resetUserPassword(userNo: string, payload: { new_password: string; password_confirm: string; reason: string }) {
+    const response = await request.patch<ApiEnvelope<AdminUserPasswordResetResponse>>(`/admin/users/${userNo}/password`, payload);
     return unwrap(response);
   },
 

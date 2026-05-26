@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { resolveApiBaseUrl } from './http';
+import { extractApiErrorMessage, resolveApiBaseUrl } from './http';
 
 describe('resolveApiBaseUrl', () => {
   it('uses the configured absolute API url on native when provided', () => {
@@ -37,5 +37,29 @@ describe('resolveApiBaseUrl', () => {
         origin: 'http://127.0.0.1:5176',
       }),
     ).toBe('/api/v1');
+  });
+});
+
+describe('extractApiErrorMessage', () => {
+  it('shows field-level registration validation details instead of generic validation text', () => {
+    expect(
+      extractApiErrorMessage({
+        message: '参数校验失败',
+        data: {
+          fields: [{ field: 'password', reason: '密码需为 8 到 72 位' }],
+        },
+      }),
+    ).toBe('密码需为 8 到 72 位');
+  });
+
+  it('maps older class-validator text to Chinese when the backend still returns raw reasons', () => {
+    expect(
+      extractApiErrorMessage({
+        message: '参数校验失败',
+        data: {
+          fields: [{ field: 'unknown', reason: 'invite_code must be longer than or equal to 6 characters' }],
+        },
+      }),
+    ).toBe('邀请码需为 6 到 128 位');
   });
 });

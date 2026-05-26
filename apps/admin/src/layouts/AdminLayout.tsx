@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { BarChart3, Bot, Database, FileText, Image, LogOut, ShieldCheck, UsersRound, type LucideIcon } from 'lucide-react';
+import { BarChart3, Bot, Database, FileText, Image, KeyRound, LogOut, ShieldCheck, UsersRound, type LucideIcon } from 'lucide-react';
 
 import { useAdminAuth } from '../shared/useAdminAuth';
 import { adminRoleLabel } from '../shared/labels';
@@ -8,7 +8,8 @@ import { secondaryButtonStyle } from '../shared/uiStyles';
 
 const navItems: Array<{ to: string; label: string; icon: LucideIcon }> = [
   { to: '/dashboard', label: '总览', icon: BarChart3 },
-  { to: '/users', label: '用户运营', icon: UsersRound },
+  { to: '/users', label: '账号管理', icon: UsersRound },
+  { to: '/invites', label: '邀请码', icon: KeyRound },
   { to: '/children', label: '孩子档案', icon: Database },
   { to: '/records', label: '成长记录', icon: FileText },
   { to: '/media', label: '媒体库', icon: Image },

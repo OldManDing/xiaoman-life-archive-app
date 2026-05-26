@@ -123,6 +123,7 @@ model User {
   uploadedMedia         RecordMedia[]      @relation("MediaUploader")
   sentInvites           MemberInvite[]     @relation("InviteSender")
   acceptedInvites       MemberInvite[]     @relation("InviteAccepter")
+  acceptedRegistrationInvites RegistrationInvite[] @relation("RegistrationInviteAccepter")
   createdShareLinks     ShareLink[]        @relation("ShareCreator")
   requestedAiJobs       AiJob[]            @relation("AiJobRequester")
   sessions              UserSession[]
@@ -428,8 +429,32 @@ model AdminUser {
   updatedAt     DateTime  @updatedAt @map("updated_at")
   deletedAt     DateTime? @map("deleted_at")
 
+  createdRegistrationInvites RegistrationInvite[] @relation("RegistrationInviteCreator")
+
   @@index([status], map: "idx_status")
   @@map("admin_users")
+}
+
+model RegistrationInvite {
+  id               BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  inviteNo         String    @unique(map: "uk_registration_invite_no") @map("invite_no") @db.VarChar(32)
+  tokenHash        String    @unique(map: "uk_registration_token_hash") @map("token_hash") @db.VarChar(128)
+  inviteeMobile    String?   @map("invitee_mobile") @db.VarChar(32)
+  createdByAdminId BigInt    @map("created_by_admin_id") @db.UnsignedBigInt
+  acceptedByUserId BigInt?   @map("accepted_by_user_id") @db.UnsignedBigInt
+  status           Int       @default(1) @db.TinyInt
+  expiresAt        DateTime  @map("expires_at")
+  acceptedAt       DateTime? @map("accepted_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  createdByAdmin AdminUser @relation("RegistrationInviteCreator", fields: [createdByAdminId], references: [id])
+  acceptedByUser User?     @relation("RegistrationInviteAccepter", fields: [acceptedByUserId], references: [id])
+
+  @@index([status, expiresAt], map: "idx_status_expires_at")
+  @@index([createdByAdminId], map: "idx_created_by_admin_id")
+  @@index([acceptedByUserId], map: "idx_accepted_by_user_id")
+  @@map("registration_invites")
 }
 
 model AuditLog {
