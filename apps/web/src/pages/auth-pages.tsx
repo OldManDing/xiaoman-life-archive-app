@@ -117,6 +117,12 @@ const validateInviteCode = (inviteCode: string) => {
   return null;
 };
 
+const normalizeAuthErrorMessage = (mode: AuthMode, message: string) => {
+  if (mode === 'login' && message === '状态不允许') return '账号或密码错误';
+  if (mode === 'register' && message === '参数校验失败') return '请检查账号、密码、确认密码和邀请码是否完整';
+  return message;
+};
+
 export const SplashPage = () => (
   <PageShell title="正在进入年轮" description="系统正在检查登录状态，并会自动前往合适的页面。">
     <Panel>
@@ -139,6 +145,38 @@ export const LoginPage = () => {
     form.credential.trim().length > 0 &&
     form.password.length > 0 &&
     (mode === 'login' || (form.password_confirm.length > 0 && form.invite_code.trim().length > 0));
+
+  const persistDraft = (nextMode: AuthMode, nextForm: AuthFormState, nextAcceptedAgreement: boolean) => {
+    saveLoginFormDraft({
+      mode: nextMode,
+      form: { ...nextForm },
+      acceptedAgreement: nextAcceptedAgreement,
+    });
+  };
+
+  const updateMode = (nextMode: AuthMode) => {
+    setMode(nextMode);
+    persistDraft(nextMode, form, acceptedAgreement);
+    setError(null);
+  };
+
+  const updateFormField = (field: keyof AuthFormState, value: string) => {
+    setForm((current) => {
+      const nextForm = { ...current, [field]: value };
+      persistDraft(mode, nextForm, acceptedAgreement);
+      return nextForm;
+    });
+  };
+
+  const updateAcceptedAgreement = (checked: boolean) => {
+    setAcceptedAgreement(checked);
+    persistDraft(mode, form, checked);
+  };
+
+  const openLegalPage = () => {
+    persistDraft(mode, form, acceptedAgreement);
+    navigate('/legal');
+  };
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -211,7 +249,7 @@ export const LoginPage = () => {
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : mode === 'login' ? '登录失败，请稍后重试' : '注册失败，请稍后重试';
-      setError(mode === 'login' && message === '状态不允许' ? '账号或密码错误' : message);
+      setError(normalizeAuthErrorMessage(mode, message));
     } finally {
       setSubmitting(false);
     }
@@ -235,20 +273,14 @@ export const LoginPage = () => {
             <button
               type="button"
               style={mode === 'login' ? primaryButtonStyle : secondaryButtonStyle}
-              onClick={() => {
-                setMode('login');
-                setError(null);
-              }}
+              onClick={() => updateMode('login')}
             >
               登录
             </button>
             <button
               type="button"
               style={mode === 'register' ? primaryButtonStyle : secondaryButtonStyle}
-              onClick={() => {
-                setMode('register');
-                setError(null);
-              }}
+              onClick={() => updateMode('register')}
             >
               注册
             </button>
@@ -257,7 +289,7 @@ export const LoginPage = () => {
             <input
               style={inputStyle}
               value={form.credential}
-              onChange={(event) => setForm((current) => ({ ...current, credential: event.target.value }))}
+              onChange={(event) => updateFormField('credential', event.target.value)}
               placeholder="请输入账号"
               autoComplete="username"
             />
@@ -267,7 +299,7 @@ export const LoginPage = () => {
               style={inputStyle}
               type="password"
               value={form.password}
-              onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
+              onChange={(event) => updateFormField('password', event.target.value)}
               placeholder="请输入密码"
               autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
             />
@@ -279,7 +311,7 @@ export const LoginPage = () => {
                   style={inputStyle}
                   type="password"
                   value={form.password_confirm}
-                  onChange={(event) => setForm((current) => ({ ...current, password_confirm: event.target.value }))}
+                  onChange={(event) => updateFormField('password_confirm', event.target.value)}
                   placeholder="请再次输入密码"
                   autoComplete="new-password"
                 />
@@ -288,7 +320,7 @@ export const LoginPage = () => {
                 <input
                   style={inputStyle}
                   value={form.invite_code}
-                  onChange={(event) => setForm((current) => ({ ...current, invite_code: event.target.value }))}
+                  onChange={(event) => updateFormField('invite_code', event.target.value)}
                   placeholder="请输入家庭邀请码"
                   autoComplete="one-time-code"
                 />
@@ -299,7 +331,7 @@ export const LoginPage = () => {
             <input
               type="checkbox"
               checked={acceptedAgreement}
-              onChange={(event) => setAcceptedAgreement(event.target.checked)}
+              onChange={(event) => updateAcceptedAgreement(event.target.checked)}
               style={{ marginTop: '4px' }}
             />
             <span>
@@ -307,7 +339,7 @@ export const LoginPage = () => {
             </span>
           </label>
           {error ? <p style={{ ...helperTextStyle, color: '#dc2626' }}>{error}</p> : null}
-          <button type="button" style={{ ...secondaryButtonStyle, justifyContent: 'center' }} onClick={() => navigate('/legal')}>
+          <button type="button" style={{ ...secondaryButtonStyle, justifyContent: 'center' }} onClick={openLegalPage}>
             查看完整协议与隐私政策
           </button>
           <button type="submit" style={primaryButtonStyle} disabled={submitting || !canSubmit}>

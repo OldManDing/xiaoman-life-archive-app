@@ -70,6 +70,10 @@ export const extractApiErrorMessage = (responseData: unknown) => {
     return fieldReason;
   }
 
+  if (responseMessage === '参数校验失败') {
+    return '请检查表单信息是否完整';
+  }
+
   if (typeof responseMessage === 'string' && responseMessage.trim()) {
     return responseMessage;
   }

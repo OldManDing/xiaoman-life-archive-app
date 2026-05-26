@@ -62,4 +62,13 @@ describe('extractApiErrorMessage', () => {
       }),
     ).toBe('邀请码需为 6 到 128 位');
   });
+
+  it('does not surface generic validation text when no field detail is provided', () => {
+    expect(
+      extractApiErrorMessage({
+        message: '参数校验失败',
+        data: null,
+      }),
+    ).toBe('请检查表单信息是否完整');
+  });
 });

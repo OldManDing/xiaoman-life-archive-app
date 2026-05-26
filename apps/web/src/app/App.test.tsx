@@ -115,6 +115,30 @@ describe('App Shell', () => {
     expect((screen.getByRole('checkbox') as HTMLInputElement).checked).toBe(true);
   });
 
+  it('preserves registration form input after viewing legal content', async () => {
+    refreshMock.mockRejectedValue(new Error('unauthorized'));
+
+    render(<App />);
+
+    fireEvent.click(await screen.findByRole('button', { name: '注册' }));
+    fireEvent.change(screen.getByPlaceholderText('请输入账号'), { target: { value: 'new_parent' } });
+    fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'Parent123!' } });
+    fireEvent.change(screen.getByPlaceholderText('请再次输入密码'), { target: { value: 'Parent123!' } });
+    fireEvent.change(screen.getByPlaceholderText('请输入家庭邀请码'), { target: { value: 'NL-REG001-REG002' } });
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('button', { name: '查看完整协议与隐私政策' }));
+
+    expect(await screen.findByText('关于与协议')).toBeDefined();
+    fireEvent.click(screen.getByLabelText('返回'));
+
+    expect(await screen.findByText('登录注册')).toBeDefined();
+    expect((screen.getByPlaceholderText('请输入账号') as HTMLInputElement).value).toBe('new_parent');
+    expect((screen.getByPlaceholderText('请输入密码') as HTMLInputElement).value).toBe('Parent123!');
+    expect((screen.getByPlaceholderText('请再次输入密码') as HTMLInputElement).value).toBe('Parent123!');
+    expect((screen.getByPlaceholderText('请输入家庭邀请码') as HTMLInputElement).value).toBe('NL-REG001-REG002');
+    expect((screen.getByRole('checkbox') as HTMLInputElement).checked).toBe(true);
+  });
+
   it('restores login form input from session storage after a webview reload', async () => {
     refreshMock.mockRejectedValue(new Error('unauthorized'));
     window.sessionStorage.setItem(
@@ -187,6 +211,23 @@ describe('App Shell', () => {
 
     expect(await screen.findByText('密码需为 8 到 72 位')).toBeDefined();
     expect(registerMock).not.toHaveBeenCalled();
+  });
+
+  it('shows a usable registration message when the backend returns generic validation text', async () => {
+    refreshMock.mockRejectedValue(new Error('unauthorized'));
+    registerMock.mockRejectedValue(new Error('参数校验失败'));
+
+    render(<App />);
+
+    fireEvent.click(await screen.findByRole('button', { name: '注册' }));
+    fireEvent.change(screen.getByPlaceholderText('请输入账号'), { target: { value: 'new_parent' } });
+    fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'Parent123!' } });
+    fireEvent.change(screen.getByPlaceholderText('请再次输入密码'), { target: { value: 'Parent123!' } });
+    fireEvent.change(screen.getByPlaceholderText('请输入家庭邀请码'), { target: { value: 'NL-REG001-REG002' } });
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('button', { name: '注册并进入' }));
+
+    expect(await screen.findByText('请检查账号、密码、确认密码和邀请码是否完整')).toBeDefined();
   });
 
   it('creates a child during onboarding', async () => {
