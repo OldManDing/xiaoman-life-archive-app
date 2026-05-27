@@ -1,8 +1,10 @@
 import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { Request } from 'express';
 
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
 import { Public } from '../../shared/decorators/public.decorator';
+import { getAuthRateLimitMaxAttempts, getAuthRateLimitWindowMs } from '../../shared/env-config';
 import { AuthenticatedAdmin } from '../../shared/types';
 import { AdminAiJobActionDto } from './dto/admin-ai-job-action.dto';
 import { AdminRoles } from './decorators/admin-roles.decorator';
@@ -24,6 +26,13 @@ export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
   @Public()
+  @Throttle({
+    default: {
+      limit: () => getAuthRateLimitMaxAttempts(),
+      ttl: () => getAuthRateLimitWindowMs(),
+    },
+  })
+  @UseGuards(ThrottlerGuard)
   @Post('auth/login')
   login(@Body() dto: AdminLoginDto, @Req() request: Request) {
     return this.adminService.login(dto, request);

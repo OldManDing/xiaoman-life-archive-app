@@ -22,6 +22,12 @@ type LoginFormDraft = {
   acceptedAgreement: boolean;
 };
 
+type PersistedLoginFormDraft = {
+  mode: AuthMode;
+  form: Pick<AuthFormState, 'credential' | 'invite_code'>;
+  acceptedAgreement: boolean;
+};
+
 const emptyAuthForm: AuthFormState = {
   credential: '',
   password: '',
@@ -37,10 +43,10 @@ const createEmptyLoginFormDraft = (): LoginFormDraft => ({
   acceptedAgreement: false,
 });
 
-const normalizeLoginFormDraft = (value: unknown): LoginFormDraft | null => {
+const normalizePersistedLoginFormDraft = (value: unknown): LoginFormDraft | null => {
   if (!value || typeof value !== 'object') return null;
 
-  const candidate = value as Partial<LoginFormDraft>;
+  const candidate = value as Partial<PersistedLoginFormDraft>;
   if (candidate.mode !== 'login' && candidate.mode !== 'register') return null;
   if (!candidate.form || typeof candidate.form !== 'object') return null;
 
@@ -49,8 +55,8 @@ const normalizeLoginFormDraft = (value: unknown): LoginFormDraft | null => {
     mode: candidate.mode,
     form: {
       credential: typeof form.credential === 'string' ? form.credential : '',
-      password: typeof form.password === 'string' ? form.password : '',
-      password_confirm: typeof form.password_confirm === 'string' ? form.password_confirm : '',
+      password: '',
+      password_confirm: '',
       invite_code: typeof form.invite_code === 'string' ? form.invite_code : '',
     },
     acceptedAgreement: candidate.acceptedAgreement === true,
@@ -58,18 +64,40 @@ const normalizeLoginFormDraft = (value: unknown): LoginFormDraft | null => {
 };
 
 let loginFormDraft: LoginFormDraft = createEmptyLoginFormDraft();
+let hasVolatileLoginFormDraft = false;
+
+const savePersistedLoginFormDraft = (draft: LoginFormDraft) => {
+  if (typeof window === 'undefined') return;
+
+  const persistedDraft: PersistedLoginFormDraft = {
+    mode: draft.mode,
+    form: {
+      credential: draft.form.credential,
+      invite_code: draft.form.invite_code,
+    },
+    acceptedAgreement: draft.acceptedAgreement,
+  };
+
+  try {
+    window.sessionStorage.setItem(loginFormDraftStorageKey, JSON.stringify(persistedDraft));
+  } catch {
+    // sessionStorage can be unavailable in restricted WebViews; in-memory draft still works.
+  }
+};
 
 const readLoginFormDraft = () => {
+  if (hasVolatileLoginFormDraft) return loginFormDraft;
   if (typeof window === 'undefined') return loginFormDraft;
 
   try {
     const stored = window.sessionStorage.getItem(loginFormDraftStorageKey);
     if (!stored) return loginFormDraft;
 
-    const draft = normalizeLoginFormDraft(JSON.parse(stored));
+    const draft = normalizePersistedLoginFormDraft(JSON.parse(stored));
     if (!draft) return loginFormDraft;
 
     loginFormDraft = draft;
+    savePersistedLoginFormDraft(draft);
     return loginFormDraft;
   } catch {
     return loginFormDraft;
@@ -78,17 +106,13 @@ const readLoginFormDraft = () => {
 
 const saveLoginFormDraft = (draft: LoginFormDraft) => {
   loginFormDraft = draft;
-  if (typeof window === 'undefined') return;
-
-  try {
-    window.sessionStorage.setItem(loginFormDraftStorageKey, JSON.stringify(draft));
-  } catch {
-    // sessionStorage can be unavailable in restricted WebViews; in-memory draft still works.
-  }
+  hasVolatileLoginFormDraft = true;
+  savePersistedLoginFormDraft(draft);
 };
 
 export const clearLoginFormDraft = () => {
   loginFormDraft = createEmptyLoginFormDraft();
+  hasVolatileLoginFormDraft = false;
   if (typeof window === 'undefined') return;
 
   try {

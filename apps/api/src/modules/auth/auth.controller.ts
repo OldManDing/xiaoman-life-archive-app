@@ -1,9 +1,10 @@
 import { Body, Controller, HttpCode, Post, Req, Res, UnauthorizedException, UseGuards } from '@nestjs/common';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { Request, Response } from 'express';
 
 import { REFRESH_TOKEN_COOKIE_NAME } from '../../shared/constants';
 import { Public } from '../../shared/decorators/public.decorator';
-import { isSecureCookieEnvironment } from '../../shared/env-config';
+import { getAuthRateLimitMaxAttempts, getAuthRateLimitWindowMs, isSecureCookieEnvironment } from '../../shared/env-config';
 import { parseDurationToSeconds } from '../../shared/utils';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -12,7 +13,13 @@ import { UserJwtAuthGuard } from './guards/user-jwt-auth.guard';
 import { AuthService } from './auth.service';
 
 @Controller('auth')
-@UseGuards(UserJwtAuthGuard)
+@Throttle({
+  default: {
+    limit: () => getAuthRateLimitMaxAttempts(),
+    ttl: () => getAuthRateLimitWindowMs(),
+  },
+})
+@UseGuards(ThrottlerGuard, UserJwtAuthGuard)
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 

@@ -107,6 +107,8 @@ test.describe('App critical journeys', () => {
     await expect(page.getByPlaceholder('请输入账号')).toHaveValue('legal_return_parent');
     await expect(page.getByPlaceholder('请输入密码')).toHaveValue('DemoUser123!');
     await expect(page.getByRole('checkbox', { name: '我已阅读并同意《用户协议》和《隐私政策》' })).toBeChecked();
+    const storedDraft = await page.evaluate(() => window.sessionStorage.getItem('nianlun.auth.loginFormDraft.v1') ?? '');
+    expect(storedDraft).not.toContain('DemoUser123!');
   });
 
   test('deleted account cannot log in again and shows password error', async ({ page, request }) => {

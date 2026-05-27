@@ -13,14 +13,15 @@ describe('tokenMemory', () => {
     clearAccessToken();
   });
 
-  it('persists the access token to localStorage', () => {
+  it('keeps the access token in memory only', () => {
     setAccessToken('token-123');
 
     expect(getAccessToken()).toBe('token-123');
-    expect(window.localStorage.getItem('nianlun:access-token')).toBe('token-123');
+    expect(window.localStorage.getItem('nianlun:access-token')).toBeNull();
   });
 
-  it('removes the persisted token when cleared', () => {
+  it('removes tokens persisted by an older version when cleared', () => {
+    window.localStorage.setItem('nianlun:access-token', 'legacy-token');
     setAccessToken('token-123');
 
     clearAccessToken();

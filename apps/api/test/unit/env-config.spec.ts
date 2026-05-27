@@ -1,5 +1,7 @@
 import {
   getAiProviderName,
+  getAuthRateLimitMaxAttempts,
+  getAuthRateLimitWindowMs,
   getAppEnv,
   getAppPort,
   getMapProviderName,
@@ -226,6 +228,9 @@ describe('env-config', () => {
   it('resolves app env, port and cookie security flags consistently', () => {
     expect(getAppEnv({ APP_ENV: 'prod' })).toBe('prod');
     expect(getAppPort({ APP_PORT: '4100' })).toBe(4100);
+    expect(getAuthRateLimitWindowMs({ AUTH_RATE_LIMIT_WINDOW_MS: '30000' })).toBe(30000);
+    expect(getAuthRateLimitMaxAttempts({ APP_ENV: 'local' })).toBe(1000);
+    expect(getAuthRateLimitMaxAttempts({ APP_ENV: 'prod' })).toBe(10);
     expect(isSecureCookieEnvironment({ APP_ENV: 'prod' })).toBe(true);
     expect(isSmsEnabled({ APP_ENV: 'prod' })).toBe(false);
     expect(isSmsEnabled({ APP_ENV: 'prod', SMS_ENABLED: 'true' })).toBe(true);
@@ -240,5 +245,36 @@ describe('env-config', () => {
     expect(getStorageProviderName({ APP_ENV: 'prod', STORAGE_PROVIDER: 'minio' })).toBe('minio');
     expect(getAiProviderName({ APP_ENV: 'prod', AI_PROVIDER: 'openai-compatible' })).toBe('openai-compatible');
     expect(getMapProviderName({ APP_ENV: 'prod', MAP_PROVIDER: 'disabled' })).toBe('disabled');
+  });
+
+  it('rejects unsafe authentication rate-limit configuration', () => {
+    expect(() => getAuthRateLimitWindowMs({ AUTH_RATE_LIMIT_WINDOW_MS: '0' })).toThrow(
+      'Invalid AUTH_RATE_LIMIT_WINDOW_MS value: 0',
+    );
+    expect(() =>
+      validateRuntimeConfig({
+        APP_ENV: 'production',
+        APP_PORT: '3000',
+        JWT_ACCESS_SECRET: 'prod_access_secret_that_is_long_enough_123',
+        JWT_REFRESH_SECRET: 'prod_refresh_secret_that_is_long_enough_456',
+        AUTH_RATE_LIMIT_MAX_ATTEMPTS: '100',
+        CORS_ORIGINS: 'https://app.example.com',
+        SMS_ENABLED: 'false',
+        STORAGE_PROVIDER: 'minio',
+        STORAGE_REGION: 'local',
+        STORAGE_BUCKET: 'bucket',
+        STORAGE_ENDPOINT: 'https://storage.example.com',
+        STORAGE_ACCESS_KEY: 'storage_access',
+        STORAGE_SECRET_KEY: 'storage_secret',
+        AI_PROVIDER: 'openai-compatible',
+        AI_API_KEY: 'ai_key',
+        AI_BASE_URL: 'https://ai.example.com/v1',
+        AI_MODEL: 'model',
+        MAP_PROVIDER: 'disabled',
+        DATABASE_URL: 'mysql://user:pass@db:3306/app',
+        REDIS_HOST: 'redis',
+        REDIS_PORT: '6379',
+      }),
+    ).toThrow('AUTH_RATE_LIMIT_MAX_ATTEMPTS cannot exceed 30 outside local/test environments');
   });
 });

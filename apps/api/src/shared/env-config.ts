@@ -8,6 +8,9 @@ const STORAGE_PROVIDER_VALUES = new Set(['mock', 'minio', 's3', 'oss', 'cos', 'r
 const AI_PROVIDER_VALUES = new Set(['mock', 'openai', 'openai-compatible']);
 const MAP_PROVIDER_VALUES = new Set(['mock', 'amap', 'disabled']);
 const NATIVE_APP_CORS_ORIGINS = ['https://localhost', 'capacitor://localhost', 'ionic://localhost'];
+const DEFAULT_AUTH_RATE_LIMIT_WINDOW_MS = 60_000;
+const DEFAULT_AUTH_RATE_LIMIT_MAX_ATTEMPTS = 10;
+const RELAXED_AUTH_RATE_LIMIT_MAX_ATTEMPTS = 1_000;
 
 export type AiProviderName = 'mock' | 'openai' | 'openai-compatible';
 export type MapProviderName = 'mock' | 'amap' | 'disabled';
@@ -99,6 +102,32 @@ export function getAppPort(env: EnvSource = process.env): number {
   }
 
   return port;
+}
+
+function readPositiveInteger(env: EnvSource, name: string, fallback: number): number {
+  const configured = readEnvValue(env, name);
+  if (!configured) return fallback;
+
+  const value = Number(configured);
+  if (!Number.isInteger(value) || value <= 0) {
+    throw new Error(`Invalid ${name} value: ${configured}`);
+  }
+
+  return value;
+}
+
+export function getAuthRateLimitWindowMs(env: EnvSource = process.env): number {
+  return readPositiveInteger(env, 'AUTH_RATE_LIMIT_WINDOW_MS', DEFAULT_AUTH_RATE_LIMIT_WINDOW_MS);
+}
+
+export function getAuthRateLimitMaxAttempts(env: EnvSource = process.env): number {
+  const fallback = isStrictEnvironment(env) ? DEFAULT_AUTH_RATE_LIMIT_MAX_ATTEMPTS : RELAXED_AUTH_RATE_LIMIT_MAX_ATTEMPTS;
+  const attempts = readPositiveInteger(env, 'AUTH_RATE_LIMIT_MAX_ATTEMPTS', fallback);
+  if (isStrictEnvironment(env) && attempts > 30) {
+    throw new Error('AUTH_RATE_LIMIT_MAX_ATTEMPTS cannot exceed 30 outside local/test environments');
+  }
+
+  return attempts;
 }
 
 export function resolveCorsOrigins(env: EnvSource = process.env): true | string[] {
@@ -249,6 +278,8 @@ export function validateRuntimeConfig(config: Record<string, unknown>): Record<s
   const refreshSecret = getJwtRefreshSecret(config);
 
   getAppPort(config);
+  getAuthRateLimitWindowMs(config);
+  getAuthRateLimitMaxAttempts(config);
   resolveCorsOrigins(config);
   if (isSmsEnabled(config)) {
     getSmsProviderName(config);

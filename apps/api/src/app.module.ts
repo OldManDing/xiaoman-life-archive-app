@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
+import { ThrottlerModule } from '@nestjs/throttler';
 
 import { AdminModule } from './modules/admin/admin.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -13,7 +14,7 @@ import { RecordsModule } from './modules/records/records.module';
 import { UsersModule } from './modules/users/users.module';
 import { AiJobsModule } from './modules/ai-jobs/ai-jobs.module';
 import { PrismaModule } from './prisma/prisma.module';
-import { validateRuntimeConfig } from './shared/env-config';
+import { getAuthRateLimitMaxAttempts, getAuthRateLimitWindowMs, validateRuntimeConfig } from './shared/env-config';
 import { SharedModule } from './shared/shared.module';
 
 @Module({
@@ -23,6 +24,12 @@ import { SharedModule } from './shared/shared.module';
       envFilePath: ['../../.env', '../../.env.local'],
       validate: validateRuntimeConfig,
     }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: () => getAuthRateLimitWindowMs(),
+        limit: () => getAuthRateLimitMaxAttempts(),
+      },
+    ]),
     JwtModule.register({}),
     PrismaModule,
     SharedModule,

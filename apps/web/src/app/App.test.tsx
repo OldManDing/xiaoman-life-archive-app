@@ -140,7 +140,7 @@ describe('App Shell', () => {
     expect((screen.getByRole('checkbox') as HTMLInputElement).checked).toBe(true);
   });
 
-  it('restores login form input from session storage after a webview reload', async () => {
+  it('restores non-sensitive auth draft fields but removes passwords persisted by older versions', async () => {
     refreshMock.mockRejectedValue(new Error('unauthorized'));
     window.sessionStorage.setItem(
       'nianlun.auth.loginFormDraft.v1',
@@ -159,8 +159,9 @@ describe('App Shell', () => {
     render(<App />);
 
     expect((await screen.findByPlaceholderText('请输入账号') as HTMLInputElement).value).toBe('cached_parent');
-    expect((screen.getByPlaceholderText('请输入密码') as HTMLInputElement).value).toBe('Parent123!');
+    expect((screen.getByPlaceholderText('请输入密码') as HTMLInputElement).value).toBe('');
     expect((screen.getByRole('checkbox') as HTMLInputElement).checked).toBe(true);
+    expect(window.sessionStorage.getItem('nianlun.auth.loginFormDraft.v1')).not.toContain('Parent123!');
   });
 
   it('registers with password and invite code after agreement is accepted', async () => {
