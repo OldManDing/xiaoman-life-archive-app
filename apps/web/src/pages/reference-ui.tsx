@@ -12,7 +12,7 @@ export const referenceAssets = {
 
 export const refPageStyle: CSSProperties = {
   minHeight: '100dvh',
-  background: 'linear-gradient(180deg, #f4f8fc 0%, #fffaf1 48%, #f6f9fd 100%)',
+      background: '#f4f8fc',
   color: '#172033',
   overflowX: 'hidden',
   animation: 'app-page-enter 260ms cubic-bezier(0.22, 1, 0.36, 1) both',
@@ -41,7 +41,7 @@ export const refPrimaryButtonStyle: CSSProperties = {
   minHeight: '46px',
   border: 'none',
   borderRadius: '999px',
-  background: 'linear-gradient(135deg, #17342f 0%, #22584f 100%)',
+                background: '#17342f',
   color: '#ffffff',
   padding: '12px 18px',
   fontSize: '14px',
@@ -218,7 +218,7 @@ export const RefChip = ({ children, active }: { children: ReactNode; active?: bo
       display: 'inline-flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: active ? 'linear-gradient(135deg, #17342f 0%, #22584f 100%)' : 'rgba(255,255,255,0.86)',
+                    background: active ? '#17342f' : 'rgba(255,255,255,0.86)',
       color: active ? '#ffffff' : '#78716c',
       border: active ? '1px solid #17342f' : '1px solid rgba(126,145,170,0.2)',
       boxShadow: active ? '0 8px 18px rgba(23,52,47,0.18)' : '0 4px 12px rgba(25,35,55,0.04)',

@@ -59,8 +59,8 @@ export default function TimelinePage() {
                 <div className="w-3.5 h-3.5 rounded-full bg-amber-500 ring-[3.5px] ring-white z-10 mt-[18px]" />
               </div>
               <div className="flex-1">
-                <div className="bg-gradient-to-b from-[#FAF8F5] to-white border border-[#F2EFE9] rounded-[20px] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.02)] relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-amber-100/50 to-transparent rounded-bl-3xl pointer-events-none" />
+                <div className="bg-[#FAF8F5] border border-[#F2EFE9] rounded-[20px] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.02)] relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-amber-100/50 rounded-bl-3xl pointer-events-none" />
                   
                   {/* 类型/徽标 */}
                   <div className="flex items-center gap-1.5 mb-2.5 text-amber-600 relative z-10">
@@ -276,8 +276,8 @@ export default function TimelinePage() {
                 <div className="w-3.5 h-3.5 rounded-full bg-amber-500 ring-[3.5px] ring-white z-10 mt-[18px]" />
               </div>
               <div className="flex-1">
-                <div className="bg-gradient-to-b from-[#FAF8F5] to-white border border-[#F2EFE9] rounded-[20px] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.02)] relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-amber-100/50 to-transparent rounded-bl-3xl pointer-events-none" />
+                <div className="bg-[#FAF8F5] border border-[#F2EFE9] rounded-[20px] p-4 shadow-[0_2px_12px_rgba(0,0,0,0.02)] relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-amber-100/50 rounded-bl-3xl pointer-events-none" />
                   
                   {/* 类型/徽标 */}
                   <div className="flex items-center gap-1.5 mb-2.5 text-amber-600 relative z-10">

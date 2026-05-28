@@ -107,7 +107,7 @@ const ActionTile = ({
       minHeight: 78,
       borderRadius: 22,
       border: '1px solid rgba(126,145,170,0.2)',
-      background: 'linear-gradient(145deg, rgba(255,255,255,0.96) 0%, rgba(248,252,255,0.86) 100%)',
+    background: 'rgba(255,255,255,0.96)',
       color: '#334155',
       display: 'flex',
       alignItems: 'center',
@@ -119,7 +119,7 @@ const ActionTile = ({
       transition: 'transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease',
     }}
   >
-    <span style={{ width: 36, height: 36, borderRadius: '15px', background: 'linear-gradient(135deg, #edf7f5 0%, #fff5df 100%)', color: accent, display: 'grid', placeItems: 'center', flexShrink: 0, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8)' }}>{icon}</span>
+      <span style={{ width: 36, height: 36, borderRadius: '15px', background: '#edf7f5', color: accent, display: 'grid', placeItems: 'center', flexShrink: 0, boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8)' }}>{icon}</span>
     <span style={{ display: 'grid', gap: 3, minWidth: 0 }}>
       <span style={{ fontSize: 13, fontWeight: 900, color: '#172033', whiteSpace: 'nowrap' }}>{label}</span>
       <span style={{ fontSize: 10, lineHeight: 1.35, color: '#687386', fontWeight: 700 }}>{description}</span>
@@ -186,7 +186,7 @@ export const HomePage = () => {
             padding: 16,
             minHeight: 252,
             border: '1px solid rgba(126,145,170,0.2)',
-            background: 'linear-gradient(145deg, rgba(255,255,255,0.94) 0%, rgba(238,247,246,0.9) 46%, rgba(255,246,224,0.86) 100%)',
+              background: 'rgba(255,255,255,0.94)',
             boxShadow: '0 28px 60px rgba(25,35,55,0.16)',
           }}
         >
@@ -257,7 +257,7 @@ export const HomePage = () => {
                 minHeight: 44,
                 border: 'none',
                 borderRadius: 18,
-                background: 'linear-gradient(135deg, #17342f 0%, #22584f 58%, #d97706 150%)',
+                background: '#17342f',
                 color: '#ffffff',
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -318,7 +318,7 @@ export const HomePage = () => {
       </section>
 
       <main style={{ ...refContentStyle, paddingTop: 16 }}>
-        <section style={{ ...refSoftCardStyle, padding: '17px 18px', background: 'linear-gradient(135deg, rgba(255,250,238,0.96) 0%, rgba(255,255,255,0.94) 58%, rgba(239,247,255,0.9) 100%)', borderColor: 'rgba(217,119,6,0.18)' }}>
+              <section style={{ ...refSoftCardStyle, padding: '17px 18px', background: 'rgba(255,250,238,0.96)', borderColor: 'rgba(217,119,6,0.18)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center', marginBottom: 9 }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7, color: '#d97706', fontSize: 14, fontWeight: 950 }}>
               <Sparkles size={15} />
@@ -359,7 +359,7 @@ export const HomePage = () => {
           <button type="button" onClick={() => navigate(records[0] ? `/record/${records[0].record_no}` : '/record/create')} style={{ ...refSoftCardStyle, width: '100%', padding: 0, overflow: 'hidden', textAlign: 'left', cursor: 'pointer' }}>
             <div style={{ position: 'relative', height: 154, background: '#e7e5e4' }}>
               <img src={referenceAssets.parkPhoto} alt="第一次在草地上奔跑" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-              <span style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, transparent 35%, rgba(10,18,28,0.62) 100%)' }} />
+                        <span style={{ position: 'absolute', inset: 0, background: 'rgba(10,18,28,0.42)' }} />
               <span style={{ position: 'absolute', left: 15, bottom: 13, color: '#fff', fontSize: 14, fontWeight: 950, textShadow: '0 2px 8px rgba(0,0,0,0.35)' }}>第一次在草地上奔跑</span>
             </div>
             <div style={{ padding: '14px 16px', display: 'grid', gap: 10 }}>
@@ -368,7 +368,7 @@ export const HomePage = () => {
                 <span>{Math.min(100, records.length * 10)}%</span>
               </div>
               <div style={{ height: 8, borderRadius: '999px', background: '#e7eef6', overflow: 'hidden' }}>
-                <span style={{ display: 'block', width: `${Math.min(100, records.length * 10)}%`, height: '100%', borderRadius: '999px', background: 'linear-gradient(90deg, #17342f 0%, #d97706 100%)' }} />
+                    <span style={{ display: 'block', width: `${Math.min(100, records.length * 10)}%`, height: '100%', borderRadius: '999px', background: '#17342f' }} />
               </div>
             </div>
           </button>
@@ -599,10 +599,10 @@ export const TimelinePage = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h1 style={{ margin: 0, color: '#172033', fontSize: 29, fontWeight: 950, lineHeight: 1.1 }}>时间轴</h1>
           <div style={{ display: 'flex', gap: 10 }}>
-            <button type="button" aria-label="搜索记录" aria-pressed={searchOpen} onClick={() => setSearchOpen((current) => !current)} style={{ ...iconButtonStyle, background: searchOpen ? 'linear-gradient(135deg, #17342f 0%, #22584f 100%)' : 'rgba(255,255,255,0.88)', color: searchOpen ? '#ffffff' : '#334155' }}>
+            <button type="button" aria-label="搜索记录" aria-pressed={searchOpen} onClick={() => setSearchOpen((current) => !current)} style={{ ...iconButtonStyle, background: searchOpen ? '#17342f' : 'rgba(255,255,255,0.88)', color: searchOpen ? '#ffffff' : '#334155' }}>
               <Search size={18} />
             </button>
-            <button type="button" aria-label="筛选记录" aria-pressed={filterOpen} onClick={() => setFilterOpen((current) => !current)} style={{ ...iconButtonStyle, background: filterOpen || hasActiveFilter ? 'linear-gradient(135deg, #17342f 0%, #22584f 100%)' : 'rgba(255,255,255,0.88)', color: filterOpen || hasActiveFilter ? '#ffffff' : '#334155' }}>
+            <button type="button" aria-label="筛选记录" aria-pressed={filterOpen} onClick={() => setFilterOpen((current) => !current)} style={{ ...iconButtonStyle, background: filterOpen || hasActiveFilter ? '#17342f' : 'rgba(255,255,255,0.88)', color: filterOpen || hasActiveFilter ? '#ffffff' : '#334155' }}>
               <SlidersHorizontal size={18} />
             </button>
           </div>
@@ -683,7 +683,7 @@ export const TimelinePage = () => {
                         minHeight: 38,
                         border: active ? '1px solid #17342f' : '1px solid rgba(126,145,170,0.22)',
                         borderRadius: '999px',
-                        background: active ? 'linear-gradient(135deg, #17342f 0%, #22584f 100%)' : 'rgba(255,255,255,0.86)',
+          background: active ? '#17342f' : 'rgba(255,255,255,0.86)',
                         color: active ? '#ffffff' : '#334155',
                         padding: '8px 12px',
                         fontSize: 12,
@@ -745,7 +745,7 @@ export const TimelinePage = () => {
                 return (
                   <div key={record.record_no} style={{ display: 'grid', gridTemplateColumns: '30px minmax(0, 1fr)', gap: 12, alignItems: 'start' }}>
                     <span style={{ width: isMilestone ? 15 : 11, height: isMilestone ? 15 : 11, borderRadius: '999px', background: isMilestone ? '#f59e0b' : '#d1d5db', boxShadow: '0 0 0 7px #ffffff', marginTop: 20, justifySelf: 'center', zIndex: 1 }} />
-                    <article style={{ ...refSoftCardStyle, borderRadius: 28, padding: 18, overflow: 'hidden', background: isMilestone ? 'linear-gradient(140deg, rgba(255,249,235,0.94) 0%, rgba(255,255,255,0.94) 100%)' : 'rgba(255,255,255,0.92)', borderColor: isMilestone ? 'rgba(217,119,6,0.22)' : 'rgba(126,145,170,0.22)' }}>
+      <article style={{ ...refSoftCardStyle, borderRadius: 28, padding: 18, overflow: 'hidden', background: isMilestone ? 'rgba(255,249,235,0.94)' : 'rgba(255,255,255,0.92)', borderColor: isMilestone ? 'rgba(217,119,6,0.22)' : 'rgba(126,145,170,0.22)' }}>
                       <div style={{ display: 'grid', gap: 12 }}>
                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: isMilestone ? '#d97706' : '#9ca3af', fontSize: 12, fontWeight: 900 }}>
                           {isMilestone ? <Star size={14} fill="currentColor" /> : <ImageIcon size={14} />}
@@ -761,7 +761,7 @@ export const TimelinePage = () => {
                         ) : null}
                         {mediaKind === 'audio' ? (
                           <div style={{ borderRadius: '999px', background: '#f8f9fa', padding: '10px 13px', display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <span style={{ width: 42, height: 42, borderRadius: '999px', background: 'linear-gradient(135deg, #17342f 0%, #22584f 100%)', color: '#ffffff', display: 'grid', placeItems: 'center' }}><PlayCircle size={20} fill="currentColor" /></span>
+              <span style={{ width: 42, height: 42, borderRadius: '999px', background: '#17342f', color: '#ffffff', display: 'grid', placeItems: 'center' }}><PlayCircle size={20} fill="currentColor" /></span>
                             <span style={{ flex: 1, height: 28, display: 'flex', alignItems: 'center', gap: 4 }}>
                               {[28, 12, 22, 34, 22, 16, 44, 36, 22, 28, 18, 30].map((height, waveIndex) => <span key={waveIndex} style={{ width: 5, height, borderRadius: '999px', background: '#a3a3a3' }} />)}
                             </span>

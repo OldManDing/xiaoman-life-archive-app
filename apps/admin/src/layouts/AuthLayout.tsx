@@ -8,8 +8,7 @@ export const AuthLayout = () => {
         minHeight: '100vh',
         display: 'grid',
         placeItems: 'center',
-        background:
-          'radial-gradient(circle at 15% 18%, rgba(214, 168, 109, 0.34), transparent 28%), radial-gradient(circle at 85% 10%, rgba(18, 60, 55, 0.26), transparent 34%), linear-gradient(135deg, #f8f3ea 0%, #e7eee9 52%, #d6e2dc 100%)',
+        background: '#eef2f1',
         padding: '24px',
         position: 'relative',
         overflow: 'hidden',

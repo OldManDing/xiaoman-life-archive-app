@@ -86,7 +86,7 @@ const selectedChipButtonStyle = {
 const mediaActionCardStyle: CSSProperties = {
   borderRadius: '24px',
   border: '1px solid rgba(126,145,170,0.22)',
-  background: 'linear-gradient(145deg, rgba(255,255,255,0.96) 0%, rgba(239,247,255,0.86) 100%)',
+  background: 'rgba(255,255,255,0.96)',
   padding: '15px',
   display: 'grid',
   gap: '12px',
@@ -113,7 +113,7 @@ const mediaActionIconStyle: CSSProperties = {
   width: '34px',
   height: '34px',
   borderRadius: '14px',
-  background: 'linear-gradient(135deg, #edf7f5 0%, #fff5df 100%)',
+  background: '#edf7f5',
   color: '#17342f',
   display: 'grid',
   placeItems: 'center',
@@ -862,7 +862,7 @@ const RecordForm = ({
     <div
       style={{
         minHeight: '100dvh',
-        background: 'linear-gradient(180deg, #f4f8fc 0%, #fffaf1 54%, #f6f9fd 100%)',
+        background: '#f4f8fc',
         color: '#172033',
         padding: '0 20px calc(118px + env(safe-area-inset-bottom))',
         boxSizing: 'border-box',
@@ -889,7 +889,7 @@ const RecordForm = ({
                 ...primaryButtonStyle,
                 minHeight: '44px',
                 borderRadius: '16px',
-                background: 'linear-gradient(135deg, #17342f 0%, #22584f 100%)',
+                background: '#17342f',
                 padding: '10px 14px',
                 fontSize: '12px',
                 letterSpacing: '0.02em',
@@ -914,7 +914,7 @@ const RecordForm = ({
               style={{
                 borderRadius: '28px',
                 padding: '17px',
-                background: 'linear-gradient(145deg, rgba(255,255,255,0.96) 0%, rgba(238,247,246,0.9) 56%, rgba(255,246,224,0.86) 100%)',
+                background: 'rgba(255,255,255,0.96)',
                 border: '1px solid rgba(126,145,170,0.2)',
                 display: 'grid',
                 gridTemplateColumns: 'minmax(0, 1fr) auto',
@@ -1000,7 +1000,7 @@ const RecordForm = ({
                     height: '100%',
                     width: `${completionPercent}%`,
                     borderRadius: '999px',
-                    background: 'linear-gradient(90deg, #17342f 0%, #d97706 100%)',
+                    background: '#17342f',
                   }}
                 />
               </div>
@@ -1056,7 +1056,7 @@ const RecordForm = ({
                       {media.media_type === 'image' ? <img src={media.preview_url} alt={media.original_name ?? '已上传照片'} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /> : null}
                       {media.media_type === 'video' ? <video src={media.preview_url} controls muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', background: '#292524' }} /> : null}
                       {media.media_type === 'audio' ? (
-                        <div style={{ width: '100%', height: '100%', display: 'grid', alignContent: 'center', gap: '12px', padding: '16px', background: 'linear-gradient(180deg, #faf8f5 0%, #ffffff 100%)' }}>
+                        <div style={{ width: '100%', height: '100%', display: 'grid', alignContent: 'center', gap: '12px', padding: '16px', background: '#faf8f5' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '9px', color: '#57534e', fontSize: '13px', fontWeight: 700 }}>
                             <PlayCircle size={19} strokeWidth={2.2} />
                             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{media.original_name ?? '语音记录'}</span>
@@ -1151,7 +1151,7 @@ const RecordForm = ({
             </section>
           ) : null}
 
-          <div style={{ display: 'grid', gap: '18px', borderRadius: '28px', border: '1px solid #efe4d4', background: 'linear-gradient(180deg, #fffdfa 0%, #ffffff 100%)', padding: '20px 18px', boxShadow: '0 16px 36px rgba(41,37,36,0.05)' }}>
+          <div style={{ display: 'grid', gap: '18px', borderRadius: '28px', border: '1px solid #efe4d4', background: '#fffdfa', padding: '20px 18px', boxShadow: '0 16px 36px rgba(41,37,36,0.05)' }}>
             <div style={{ display: 'grid', gap: '4px' }}>
               <span style={sectionEyebrowStyle}>内容输入</span>
               <span style={{ color: '#292524', fontSize: '18px', fontWeight: 800, letterSpacing: '-0.02em' }}>写下这一刻</span>
@@ -1246,7 +1246,7 @@ const RecordForm = ({
                   overflow: 'hidden',
                 }}
               >
-                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: 'linear-gradient(180deg, #818cf8 0%, #c084fc 100%)' }} />
+                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: '#818cf8' }} />
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingLeft: '2px' }}>
                   <span style={{ width: '28px', height: '28px', borderRadius: '999px', background: '#eef2ff', color: '#6366f1', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
                     <Sparkles size={15} strokeWidth={2.2} />
@@ -1467,7 +1467,7 @@ const RecordForm = ({
               minHeight: '66px',
               border: form.record_type === 'milestone' ? '1px solid #e7c66a' : '1px solid #efe7da',
               borderRadius: '22px',
-              background: form.record_type === 'milestone' ? 'linear-gradient(135deg, #fff7d9 0%, #fffdf7 58%, #ffffff 100%)' : '#ffffff',
+              background: form.record_type === 'milestone' ? '#fff7d9' : '#ffffff',
               padding: '11px 12px',
               display: 'flex',
               alignItems: 'center',
@@ -1537,7 +1537,7 @@ const RecordForm = ({
             transform: 'translateX(-50%)',
             padding: '12px 20px calc(14px + env(safe-area-inset-bottom))',
             boxSizing: 'border-box',
-            background: 'linear-gradient(180deg, rgba(248,251,255,0) 0%, rgba(248,251,255,0.92) 28%, rgba(255,250,241,0.98) 100%)',
+            background: 'rgba(248,251,255,0.96)',
             backdropFilter: 'blur(18px)',
           }}
         >
@@ -1564,7 +1564,7 @@ const RecordForm = ({
                   height: '100%',
                   width: `${completionPercent}%`,
                   borderRadius: '999px',
-                  background: completionPercent === 100 ? 'linear-gradient(90deg, #166534 0%, #22c55e 100%)' : 'linear-gradient(90deg, #17342f 0%, #d97706 100%)',
+                  background: completionPercent === 100 ? '#166534' : '#17342f',
                 }}
               />
             </div>
@@ -1599,7 +1599,7 @@ const RecordForm = ({
                   ...primaryButtonStyle,
                   minHeight: '50px',
                   borderRadius: '18px',
-                  background: completionPercent === 100 ? 'linear-gradient(135deg, #17342f 0%, #22584f 58%, #d97706 150%)' : primaryButtonStyle.background,
+                  background: completionPercent === 100 ? '#17342f' : primaryButtonStyle.background,
                   padding: '12px 14px',
                   fontSize: '14px',
                   fontWeight: 900,
@@ -1870,7 +1870,7 @@ export const ViewRecordPage = () => {
                 <p style={{ margin: 0, color: '#57534e', fontSize: '15px', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{data.content_text ?? '暂无正文'}</p>
               </div>
               <section style={{ borderRadius: '18px', background: '#f8f9fa', border: '1px solid #eef2ff', padding: '14px 14px 13px', display: 'grid', gap: '12px', position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: 'linear-gradient(180deg, #818cf8 0%, #c084fc 100%)' }} />
+                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: '#818cf8' }} />
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingLeft: '2px' }}>
                   <span style={{ width: '28px', height: '28px', borderRadius: '999px', background: '#eef2ff', color: '#6366f1', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
                     <Sparkles size={15} strokeWidth={2.2} />

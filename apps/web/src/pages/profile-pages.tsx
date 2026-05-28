@@ -272,7 +272,7 @@ export const ProfilePage = () => {
   const latestDraft = draftRecords?.[0] ?? null;
   return (
     <div style={refPageStyle}>
-      <section style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.96) 0%, rgba(238,247,246,0.9) 58%, rgba(255,246,224,0.86) 100%)', padding: 'calc(54px + env(safe-area-inset-top)) 20px 30px', borderBottom: '1px solid rgba(126,145,170,0.2)', borderRadius: '0 0 32px 32px', boxShadow: '0 20px 42px rgba(25,35,55,0.12)' }}>
+      <section style={{ background: 'rgba(255,255,255,0.96)', padding: 'calc(54px + env(safe-area-inset-top)) 20px 30px', borderBottom: '1px solid rgba(126,145,170,0.2)', borderRadius: '0 0 32px 32px', boxShadow: '0 20px 42px rgba(25,35,55,0.12)' }}>
         <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
           <RefAvatar src={user?.avatar_url && !isGeneratedSvgAvatar(user.avatar_url) ? resolveStoredMediaUrl(user.avatar_url) ?? referenceAssets.momAvatar : referenceAssets.momAvatar} label={user?.nickname ?? '我的头像'} size={72} />
           <div style={{ minWidth: 0, flex: 1, display: 'grid', gap: 6 }}>
@@ -996,7 +996,7 @@ export const MembershipPage = () => {
 
   return (
     <PageShell title="会员中心" backTo="/profile">
-      <section style={{ borderRadius: '20px', border: '1px solid #292524', background: 'linear-gradient(135deg, #1f1f1f 0%, #0f0f0f 100%)', padding: '18px', minHeight: '142px', color: '#ffffff', display: 'grid', gap: '14px', boxShadow: '0 10px 22px rgba(15,15,15,0.18)', overflow: 'hidden', position: 'relative' }}>
+          <section style={{ borderRadius: '20px', border: '1px solid #292524', background: '#1f1f1f', padding: '18px', minHeight: '142px', color: '#ffffff', display: 'grid', gap: '14px', boxShadow: '0 10px 22px rgba(15,15,15,0.18)', overflow: 'hidden', position: 'relative' }}>
         <div style={{ position: 'absolute', right: '0', top: '-34px', width: '104px', height: '104px', borderRadius: '999px', border: '22px solid rgba(255,255,255,0.04)', boxSizing: 'border-box' }} />
         <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center', minWidth: 0 }}>

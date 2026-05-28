@@ -49,12 +49,14 @@ table {
 }
 
 .admin-layout {
-  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
   overflow: hidden;
 }
 
 .admin-sidebar {
-  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
   min-height: 0;
   overflow: hidden;
 }
@@ -67,7 +69,8 @@ table {
 }
 
 .admin-main {
-  height: 100vh;
+  height: 100dvh;
+  max-height: 100dvh;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -94,7 +97,7 @@ table {
   align-content: end;
   gap: 18px;
   color: #f8fbf8;
-  background: linear-gradient(145deg, rgba(18, 60, 55, 0.96), rgba(25, 83, 74, 0.9));
+  background: #123c37;
   position: relative;
   overflow: hidden;
 }
@@ -624,15 +627,15 @@ table {
 }
 
 .admin-dashboard-hero-success {
-  background: linear-gradient(135deg, #102f2b 0%, #1d4b43 100%);
+  background: #102f2b;
 }
 
 .admin-dashboard-hero-warning {
-  background: linear-gradient(135deg, #553811 0%, #28524b 100%);
+  background: #553811;
 }
 
 .admin-dashboard-hero-danger {
-  background: linear-gradient(135deg, #5b2220 0%, #2f4b43 100%);
+  background: #5b2220;
 }
 
 .admin-dashboard-workbench,
@@ -1063,19 +1066,19 @@ table {
 }
 
 .admin-dashboard-radar-bar-neutral {
-  background: linear-gradient(90deg, #3a6f68 0%, #86b4a2 100%);
+  background: #3a6f68;
 }
 
 .admin-dashboard-radar-bar-success {
-  background: linear-gradient(90deg, #14784f 0%, #6ed29b 100%);
+  background: #14784f;
 }
 
 .admin-dashboard-radar-bar-warning {
-  background: linear-gradient(90deg, #b16a15 0%, #f2bc63 100%);
+  background: #b16a15;
 }
 
 .admin-dashboard-radar-bar-danger {
-  background: linear-gradient(90deg, #b13c32 0%, #f29185 100%);
+  background: #b13c32;
 }
 
 .admin-dashboard-ai-card {
@@ -1187,7 +1190,7 @@ table {
   border: 1px solid #e8ddd0;
   border-radius: 8px;
   padding: 14px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.88) 0%, rgba(250, 246, 239, 0.98) 100%);
+  background: #fffaf3;
   display: grid;
   gap: 14px;
 }
@@ -1241,17 +1244,17 @@ table {
 .admin-dashboard-chart-stack-records,
 .admin-dashboard-chart-dot-records,
 .admin-dashboard-chart-bar-success {
-  background: linear-gradient(90deg, #167e55 0%, #6dd39e 100%);
+  background: #167e55;
 }
 
 .admin-dashboard-chart-stack-media,
 .admin-dashboard-chart-dot-media,
 .admin-dashboard-chart-bar-warning {
-  background: linear-gradient(90deg, #c07a1d 0%, #f5be67 100%);
+  background: #c07a1d;
 }
 
 .admin-dashboard-chart-bar-danger {
-  background: linear-gradient(90deg, #b63f34 0%, #f09387 100%);
+  background: #b63f34;
 }
 
 .admin-dashboard-chart-legend {
@@ -1324,10 +1327,28 @@ table {
   flex-wrap: wrap;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 900px) and (min-width: 761px) {
+  .admin-main {
+    padding: 22px !important;
+  }
+
+  .admin-dashboard-hero-grid,
+  .admin-dashboard-core-grid,
+  .admin-dashboard-charts-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .admin-dashboard-metrics-grid,
+  .admin-dashboard-process-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 760px) {
   .admin-layout {
     grid-template-columns: 1fr !important;
     height: auto !important;
+    max-height: none !important;
     min-height: 100vh !important;
     overflow: visible !important;
   }
@@ -1335,6 +1356,7 @@ table {
   .admin-sidebar {
     position: static !important;
     height: auto !important;
+    max-height: none !important;
     min-height: auto !important;
     max-width: 100vw;
     overflow: hidden;
@@ -1345,6 +1367,7 @@ table {
 
   .admin-main {
     height: auto !important;
+    max-height: none !important;
     overflow: visible !important;
     padding: 18px !important;
   }

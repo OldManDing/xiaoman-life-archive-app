@@ -125,19 +125,8 @@ export class StorageService {
 
   private createMockImageDataUrl(_objectKey: string) {
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="720" viewBox="0 0 960 720">
-      <defs>
-        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#f7efe4"/>
-          <stop offset="0.52" stop-color="#eaf4ef"/>
-          <stop offset="1" stop-color="#e9eef8"/>
-        </linearGradient>
-        <linearGradient id="sun" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#f8c66c"/>
-          <stop offset="1" stop-color="#e58f5c"/>
-        </linearGradient>
-      </defs>
-      <rect width="960" height="720" fill="url(#bg)"/>
-      <circle cx="736" cy="168" r="72" fill="url(#sun)" opacity="0.86"/>
+      <rect width="960" height="720" fill="#f7efe4"/>
+      <circle cx="736" cy="168" r="72" fill="#f8c66c" opacity="0.86"/>
       <path d="M0 540 C180 430 300 520 460 430 C610 348 760 394 960 292 L960 720 L0 720 Z" fill="#d9e9dd"/>
       <path d="M0 600 C190 520 330 610 520 505 C650 432 800 472 960 392 L960 720 L0 720 Z" fill="#b9d6c2"/>
       <rect x="166" y="244" width="278" height="286" rx="56" fill="#ffffff" opacity="0.68"/>

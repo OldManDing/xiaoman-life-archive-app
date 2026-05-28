@@ -120,7 +120,7 @@ export const FamilyPage = () => {
       </header>
 
       <main style={{ display: 'grid', gap: 24, padding: '0 20px 28px' }}>
-        <section style={{ ...refSoftCardStyle, background: 'linear-gradient(145deg, rgba(255,255,255,0.96) 0%, rgba(238,247,246,0.9) 58%, rgba(255,246,224,0.86) 100%)', borderColor: 'rgba(126,145,170,0.2)', padding: 17, minHeight: 96 }}>
+      <section style={{ ...refSoftCardStyle, background: 'rgba(255,255,255,0.96)', borderColor: 'rgba(126,145,170,0.2)', padding: 17, minHeight: 96 }}>
           {activeChild ? (
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 14, alignItems: 'center' }}>
               <div style={{ display: 'flex', gap: 13, alignItems: 'center', minWidth: 0 }}>
@@ -130,7 +130,7 @@ export const FamilyPage = () => {
                   <p style={{ ...refMutedTextStyle, marginTop: 4 }}>已有 {membersLoading ? '…' : memberCount} 位家人加入记录</p>
                 </div>
               </div>
-              <Link to="/family/invite" aria-label="邀请成员" title="邀请成员" style={{ width: 46, height: 46, borderRadius: '17px', background: 'linear-gradient(135deg, #17342f 0%, #22584f 100%)', color: '#ffffff', display: 'grid', placeItems: 'center', textDecoration: 'none', flexShrink: 0, boxShadow: '0 14px 28px rgba(23,52,47,0.22)' }}>
+          <Link to="/family/invite" aria-label="邀请成员" title="邀请成员" style={{ width: 46, height: 46, borderRadius: '17px', background: '#17342f', color: '#ffffff', display: 'grid', placeItems: 'center', textDecoration: 'none', flexShrink: 0, boxShadow: '0 14px 28px rgba(23,52,47,0.22)' }}>
                 <UserPlus size={20} />
               </Link>
             </div>
@@ -212,7 +212,7 @@ export const FamilyPage = () => {
           {!recordsLoading && !recordsError && !recentFamilyRecords.length ? <EmptyState message="还没有可展示的家庭动态。" /> : null}
         </section>
 
-        <section style={{ ...refSoftCardStyle, background: 'linear-gradient(135deg, rgba(255,249,235,0.94) 0%, rgba(255,255,255,0.9) 100%)', borderColor: 'rgba(217,119,6,0.16)', padding: 18, position: 'relative', overflow: 'hidden' }}>
+      <section style={{ ...refSoftCardStyle, background: 'rgba(255,249,235,0.94)', borderColor: 'rgba(217,119,6,0.16)', padding: 18, position: 'relative', overflow: 'hidden' }}>
           <Heart size={76} strokeWidth={1.2} style={{ position: 'absolute', right: -12, bottom: -16, color: '#f2efe9' }} />
           <div style={{ position: 'relative', display: 'grid', gap: 8 }}>
             <h2 style={{ margin: 0, color: '#172033', fontSize: 15, fontWeight: 950 }}>家人寄语</h2>

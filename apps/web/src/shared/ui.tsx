@@ -8,7 +8,7 @@ const pageShellStyle: CSSProperties = {
   gap: '18px',
   minHeight: '100dvh',
   padding: '0 20px 28px',
-  background: 'linear-gradient(180deg, #f4f8fc 0%, #fffaf1 54%, #f6f9fd 100%)',
+  background: '#f4f8fc',
   animation: 'app-page-enter 260ms cubic-bezier(0.22, 1, 0.36, 1) both',
 };
 
@@ -475,7 +475,7 @@ export const AppSegmentedControl = ({
             minHeight: '44px',
             border: 'none',
             borderRadius: '999px',
-            background: selected ? 'linear-gradient(135deg, #17342f 0%, #22584f 100%)' : 'transparent',
+            background: selected ? '#17342f' : 'transparent',
             color: selected ? '#ffffff' : '#334155',
             fontSize: options.length > 4 ? '12px' : '13px',
             fontWeight: 700,
@@ -502,7 +502,7 @@ export const primaryButtonStyle: CSSProperties = {
   border: 'none',
   borderRadius: '999px',
   padding: '12px 18px',
-  background: 'linear-gradient(135deg, #17342f 0%, #22584f 100%)',
+  background: '#17342f',
   color: '#ffffff',
   fontSize: '14px',
   fontWeight: 700,

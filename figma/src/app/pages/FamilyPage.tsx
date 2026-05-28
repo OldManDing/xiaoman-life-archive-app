@@ -17,7 +17,7 @@ export default function FamilyPage() {
       <main className="flex-1 flex flex-col gap-8 px-5 pt-2">
         
         {/* 家庭概览与邀请 */}
-        <section className="bg-gradient-to-br from-stone-50 to-stone-100/50 rounded-[20px] p-5 border border-stone-100/80 shadow-[0_2px_12px_rgba(0,0,0,0.015)] relative overflow-hidden">
+        <section className="bg-stone-50 rounded-[20px] p-5 border border-stone-100/80 shadow-[0_2px_12px_rgba(0,0,0,0.015)] relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-stone-100/40 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
           
           <div className="flex items-start justify-between mb-2">

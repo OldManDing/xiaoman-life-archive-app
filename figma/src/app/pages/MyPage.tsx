@@ -38,7 +38,7 @@ export default function MyPage() {
             <div className="flex flex-col justify-center flex-1">
               <div className="flex items-center gap-2 mb-1">
                 <h1 className="text-[20px] font-bold text-stone-800 tracking-wide">妈妈</h1>
-                <span className="px-2 py-0.5 bg-gradient-to-r from-[#F2EFE9] to-[#FAF8F5] border border-[#E8E2D2] text-[#B09040] text-[10px] font-bold rounded-md shadow-sm tracking-widest uppercase">
+                <span className="px-2 py-0.5 bg-[#F2EFE9] border border-[#E8E2D2] text-[#B09040] text-[10px] font-bold rounded-md shadow-sm tracking-widest uppercase">
                   高级会员
                 </span>
               </div>

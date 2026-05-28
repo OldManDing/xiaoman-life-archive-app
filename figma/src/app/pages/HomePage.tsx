@@ -160,7 +160,7 @@ export default function HomePage() {
                alt="一年前的今天"
                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" 
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-stone-900/70 via-stone-900/20 to-transparent flex flex-col justify-end p-5">
+            <div className="absolute inset-0 bg-stone-900/45 flex flex-col justify-end p-5">
                <span className="text-white text-[16px] font-medium mb-1.5 tracking-wide">第一次在沙滩上奔跑</span>
                <span className="text-white/90 text-[12px] flex items-center gap-1.5">
                  <MapPin size={12} strokeWidth={2.5} />
