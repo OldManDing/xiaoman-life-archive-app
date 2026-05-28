@@ -7,10 +7,12 @@ import { AppModule } from '../../src/app.module';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { ApiExceptionFilter } from '../../src/shared/api-exception.filter';
 import { ApiResponseInterceptor } from '../../src/shared/api-response.interceptor';
+import { StorageService } from '../../src/shared/services/storage.service';
 
 describe('Admin RBAC and media contract', () => {
   let app: INestApplication;
   let jwtService: JwtService;
+  let storageService: StorageService;
 
   const adminViewer = {
     id: BigInt(11),
@@ -143,6 +145,7 @@ describe('Admin RBAC and media contract', () => {
 
     app = moduleRef.createNestApplication();
     jwtService = moduleRef.get(JwtService);
+    storageService = moduleRef.get(StorageService);
     app.setGlobalPrefix('api/v1');
     app.useGlobalFilters(new ApiExceptionFilter());
     app.useGlobalInterceptors(new ApiResponseInterceptor());
@@ -199,97 +202,127 @@ describe('Admin RBAC and media contract', () => {
 
     expect(auditResponse.body.data.list[0]).toMatchObject({ action: 'admin_login' });
 
-    const uploadResponse = await request(app.getHttpServer())
+    const uploadCases = [
+      { file_name: 'photo.jpg', mime_type: 'image/jpeg', media_type: 'image', ext: 'jpg' },
+      { file_name: 'album.png', mime_type: 'image/png', media_type: 'image', ext: 'png' },
+      { file_name: 'memory.webp', mime_type: 'image/webp', media_type: 'image', ext: 'webp' },
+      { file_name: 'iphone-photo.heic', mime_type: 'image/heic', media_type: 'image', ext: 'heic' },
+      { file_name: 'ios-library-image.heic', mime_type: '', media_type: 'image', ext: 'heic' },
+      { file_name: 'first-step.mp4', mime_type: 'video/mp4', media_type: 'video', ext: 'mp4' },
+      { file_name: 'browser-video.webm', mime_type: 'video/webm', media_type: 'video', ext: 'webm' },
+      { file_name: 'album-video.mov', mime_type: 'video/quicktime', media_type: 'video', ext: 'mov' },
+      { file_name: 'ios-library-video.mov', mime_type: 'application/octet-stream', media_type: 'video', ext: 'mov' },
+      { file_name: 'native-video.3gp', mime_type: 'video/3gpp', media_type: 'video', ext: '3gp' },
+      { file_name: 'ios-voice-note.m4a', mime_type: '', media_type: 'audio', ext: 'm4a' },
+      { file_name: 'voice.m4a', mime_type: 'audio/x-m4a', media_type: 'audio', ext: 'm4a' },
+      { file_name: 'story.mp3', mime_type: 'audio/mpeg', media_type: 'audio', ext: 'mp3' },
+      { file_name: 'voice-note.wav', mime_type: 'audio/wav', media_type: 'audio', ext: 'wav' },
+      { file_name: 'native-recording.webm', mime_type: 'audio/webm;codecs=opus', media_type: 'audio', ext: 'webm' },
+    ] as const;
+
+    for (const item of uploadCases) {
+      const response = await request(app.getHttpServer())
+        .post('/api/v1/media/upload-token')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({
+          child_no: child.childNo,
+          file_name: item.file_name,
+          mime_type: item.mime_type,
+          size_bytes: 2048,
+          media_type: item.media_type,
+        })
+        .expect(201);
+
+      expect(response.body.data).toMatchObject({
+        media_no: expect.any(String),
+        expires_in: expect.any(Number),
+        expire_at: expect.any(String),
+      });
+      expect(response.body.data.object_key).toMatch(new RegExp(`\\.${item.ext}$`));
+    }
+
+    await request(app.getHttpServer())
       .post('/api/v1/media/upload-token')
       .set('Authorization', `Bearer ${userToken}`)
       .send({
         child_no: child.childNo,
-        file_name: 'photo.jpg',
-        mime_type: 'image/jpeg',
-        size_bytes: 1024,
+        file_name: 'not-a-photo.pdf',
+        mime_type: 'application/pdf',
+        size_bytes: 2048,
         media_type: 'image',
       })
-      .expect(201);
+      .expect(400)
+      .expect((response) => {
+        expect(response.body.message).toContain('图片格式不支持');
+      });
 
-    expect(uploadResponse.body.data).toMatchObject({
-      media_no: expect.any(String),
-      expires_in: expect.any(Number),
-      expire_at: expect.any(String),
-    });
-
-    const videoUploadResponse = await request(app.getHttpServer())
+    await request(app.getHttpServer())
       .post('/api/v1/media/upload-token')
       .set('Authorization', `Bearer ${userToken}`)
       .send({
         child_no: child.childNo,
-        file_name: 'first-step.mp4',
-        mime_type: 'video/mp4',
-        size_bytes: 2048,
-        media_type: 'video',
-      })
-      .expect(201);
-
-    expect(videoUploadResponse.body.data).toMatchObject({
-      media_no: expect.any(String),
-      expires_in: expect.any(Number),
-      expire_at: expect.any(String),
-    });
-
-    const heicUploadResponse = await request(app.getHttpServer())
-      .post('/api/v1/media/upload-token')
-      .set('Authorization', `Bearer ${userToken}`)
-      .send({
-        child_no: child.childNo,
-        file_name: 'iphone-photo.heic',
-        mime_type: 'image/heic',
+        file_name: 'unknown-device-file',
+        mime_type: '',
         size_bytes: 2048,
         media_type: 'image',
       })
-      .expect(201);
+      .expect(400)
+      .expect((response) => {
+        expect(response.body.message).toContain('图片格式不支持');
+      });
+  });
 
-    expect(heicUploadResponse.body.data.object_key).toMatch(/\.heic$/);
+  it('requires the uploaded storage object before media confirmation', async () => {
+    const userToken = await jwtService.signAsync(
+      { type: 'user', sub: user.id.toString(), user_no: user.userNo },
+      { secret: process.env.JWT_ACCESS_SECRET },
+    );
+    const objectExistsSpy = jest.spyOn(storageService, 'objectExists');
+    prismaMock.recordMedia.update.mockClear();
 
-    const audioUploadResponse = await request(app.getHttpServer())
-      .post('/api/v1/media/upload-token')
-      .set('Authorization', `Bearer ${userToken}`)
-      .send({
-        child_no: child.childNo,
-        file_name: 'voice.m4a',
-        mime_type: 'audio/x-m4a',
-        size_bytes: 2048,
-        media_type: 'audio',
-      })
-      .expect(201);
+    try {
+      objectExistsSpy.mockResolvedValueOnce(false);
+      prismaMock.recordMedia.findFirst.mockResolvedValueOnce({ ...media, status: 1 });
 
-    expect(audioUploadResponse.body.data.object_key).toMatch(/\.m4a$/);
+      await request(app.getHttpServer())
+        .post('/api/v1/media/confirm')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({ media_no: media.mediaNo, width: 100, height: 100 })
+        .expect(400)
+        .expect((response) => {
+          expect(response.body.message).toContain('媒体文件尚未上传完成');
+        });
 
-    const recordedAudioUploadResponse = await request(app.getHttpServer())
-      .post('/api/v1/media/upload-token')
-      .set('Authorization', `Bearer ${userToken}`)
-      .send({
-        child_no: child.childNo,
-        file_name: 'native-recording.webm',
-        mime_type: 'audio/webm;codecs=opus',
-        size_bytes: 2048,
-        media_type: 'audio',
-      })
-      .expect(201);
+      expect(prismaMock.recordMedia.update).not.toHaveBeenCalled();
 
-    expect(recordedAudioUploadResponse.body.data.object_key).toMatch(/\.webm$/);
+      objectExistsSpy.mockResolvedValueOnce(true);
+      prismaMock.recordMedia.findFirst.mockResolvedValueOnce({ ...media, status: 1 });
 
-    const mobileVideoUploadResponse = await request(app.getHttpServer())
-      .post('/api/v1/media/upload-token')
-      .set('Authorization', `Bearer ${userToken}`)
-      .send({
-        child_no: child.childNo,
-        file_name: 'native-video.3gp',
-        mime_type: 'video/3gpp',
-        size_bytes: 2048,
-        media_type: 'video',
-      })
-      .expect(201);
+      const response = await request(app.getHttpServer())
+        .post('/api/v1/media/confirm')
+        .set('Authorization', `Bearer ${userToken}`)
+        .send({ media_no: media.mediaNo, width: 100, height: 100 })
+        .expect(201);
 
-    expect(mobileVideoUploadResponse.body.data.object_key).toMatch(/\.3gp$/);
+      expect(response.body.data).toMatchObject({
+        media_no: media.mediaNo,
+        status: 'ready',
+        width: 100,
+        height: 100,
+      });
+      expect(prismaMock.recordMedia.update).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { id: media.id },
+          data: expect.objectContaining({
+            width: 100,
+            height: 100,
+            status: 2,
+          }),
+        }),
+      );
+    } finally {
+      objectExistsSpy.mockRestore();
+    }
   });
 
   it('allows super admin to disable and re-enable a user with audit logging', async () => {

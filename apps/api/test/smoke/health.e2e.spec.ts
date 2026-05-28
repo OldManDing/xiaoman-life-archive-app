@@ -10,6 +10,11 @@ import { applySecurityHeaders } from '../../src/shared/security-headers';
 
 describe('Health smoke', () => {
   let app: INestApplication;
+  const previousAppEnv = process.env.APP_ENV;
+  const previousStorageProvider = process.env.STORAGE_PROVIDER;
+  const previousAiProvider = process.env.AI_PROVIDER;
+  const previousMapProvider = process.env.MAP_PROVIDER;
+  const previousMapApiKey = process.env.MAP_API_KEY;
 
   beforeAll(async () => {
     const moduleRef = await Test.createTestingModule({
@@ -30,6 +35,32 @@ describe('Health smoke', () => {
   });
 
   afterAll(async () => {
+    if (previousAppEnv === undefined) {
+      delete process.env.APP_ENV;
+    } else {
+      process.env.APP_ENV = previousAppEnv;
+    }
+    if (previousStorageProvider === undefined) {
+      delete process.env.STORAGE_PROVIDER;
+    } else {
+      process.env.STORAGE_PROVIDER = previousStorageProvider;
+    }
+    if (previousAiProvider === undefined) {
+      delete process.env.AI_PROVIDER;
+    } else {
+      process.env.AI_PROVIDER = previousAiProvider;
+    }
+    if (previousMapProvider === undefined) {
+      delete process.env.MAP_PROVIDER;
+    } else {
+      process.env.MAP_PROVIDER = previousMapProvider;
+    }
+    if (previousMapApiKey === undefined) {
+      delete process.env.MAP_API_KEY;
+    } else {
+      process.env.MAP_API_KEY = previousMapApiKey;
+    }
+
     if (app) await app.close();
   });
 
@@ -60,5 +91,17 @@ describe('Health smoke', () => {
     expect(response.headers['x-frame-options']).toBe('DENY');
     expect(response.headers['referrer-policy']).toBe('no-referrer');
     expect(response.headers['permissions-policy']).toBe('camera=(), microphone=(), geolocation=()');
+  });
+
+  it('adds HSTS when the API runs in a secure-cookie environment', async () => {
+    process.env.APP_ENV = 'production';
+    process.env.STORAGE_PROVIDER = 'minio';
+    process.env.AI_PROVIDER = 'openai-compatible';
+    process.env.MAP_PROVIDER = 'amap';
+    process.env.MAP_API_KEY = 'test-map-key';
+
+    const response = await request(app.getHttpServer()).get('/api/v1/health').expect(200);
+
+    expect(response.headers['strict-transport-security']).toBe('max-age=15552000; includeSubDomains');
   });
 });

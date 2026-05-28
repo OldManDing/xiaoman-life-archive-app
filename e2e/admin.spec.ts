@@ -1,9 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
 
-import { adminBaseURL, expectNoEnglishSeedCopy, loginAdmin } from './helpers';
+import { adminBaseURL, apiBaseURL, expectNoEnglishSeedCopy, loginAdmin } from './helpers';
 
 const confirmAdminAction = async (page: Page, reason: string) => {
-  const dialog = page.getByRole('dialog', { name: /冻结用户|解冻用户|下架记录|恢复记录|通过媒体审核|标记媒体异常|下架媒体/ });
+  const dialog = page.getByRole('dialog', { name: /冻结用户|解冻用户|下架记录|恢复记录|通过媒体审核|标记媒体异常|下架媒体|受理客服反馈|解决客服反馈|关闭客服反馈|受理档案交付申请|完成档案交付申请|驳回档案交付申请/ });
   await expect(dialog).toBeVisible();
   await dialog.getByLabel('操作原因').fill(reason);
   await dialog.getByRole('button', { name: '确认执行' }).click();
@@ -85,6 +85,88 @@ test.describe('Admin critical journeys', () => {
     await expect(page.getByRole('dialog', { name: '审计日志详情' })).toBeVisible();
     await expect(page.getByText('审计详情')).toBeVisible();
     await expect(page.getByText('客户端标识')).toBeVisible();
+  });
+
+  test('processes support tickets from the admin queue', async ({ page }) => {
+    const loginResponse = await page.request.post(`${apiBaseURL}/api/v1/auth/login`, {
+      data: { login_type: 'password', credential: 'xiaoman_parent', password: 'DemoUser123!' },
+    });
+    expect(loginResponse.ok()).toBeTruthy();
+    const loginJson = await loginResponse.json();
+
+    const feedbackResponse = await page.request.post(`${apiBaseURL}/api/v1/users/me/feedback`, {
+      headers: { Authorization: `Bearer ${loginJson.data.access_token}` },
+      data: {
+        category: '数据异常',
+        content: 'E2E 提交儿童信息处理反馈，请客服协助核验。',
+        contact: '13800000000',
+        topic: 'account-delete',
+      },
+    });
+    expect(feedbackResponse.ok()).toBeTruthy();
+    const feedbackJson = await feedbackResponse.json();
+    const ticketNo = feedbackJson.data.ticket_no as string;
+
+    await loginAdmin(page);
+    await page.getByRole('link', { name: '客服反馈', exact: true }).click();
+
+    await expect(page.getByRole('heading', { name: '客服反馈' })).toBeVisible();
+    const ticketRow = page.getByRole('row', { name: new RegExp(ticketNo) });
+    await expect(ticketRow).toContainText('儿童安全');
+    await expect(ticketRow).toContainText('待处理');
+    await ticketRow.getByRole('button', { name: '受理' }).click();
+    await confirmAdminAction(page, '自动化验证客服反馈受理');
+    await expect(ticketRow).toContainText('处理中');
+    await expectNoEnglishSeedCopy(page);
+  });
+
+  test('processes archive handoff requests from the admin queue', async ({ page }) => {
+    const loginResponse = await page.request.post(`${apiBaseURL}/api/v1/auth/login`, {
+      data: { login_type: 'password', credential: 'xiaoman_parent', password: 'DemoUser123!' },
+    });
+    expect(loginResponse.ok()).toBeTruthy();
+    const loginJson = await loginResponse.json();
+
+    const exportResponse = await page.request.post(`${apiBaseURL}/api/v1/users/me/archive-export-requests`, {
+      headers: { Authorization: `Bearer ${loginJson.data.access_token}` },
+      data: {
+        child_no: 'c_demo_xiaoman_001',
+        export_type: 'all',
+        purpose: 'adult_handoff',
+        note: 'E2E 创建成年移交申请',
+      },
+    });
+    expect(exportResponse.ok()).toBeTruthy();
+    const exportJson = await exportResponse.json();
+    const requestNo = exportJson.data.request_no as string;
+
+    await loginAdmin(page);
+    await page.getByRole('link', { name: '档案交付', exact: true }).click();
+
+    await expect(page.getByRole('heading', { name: '档案交付申请' })).toBeVisible();
+    const requestRow = page.getByRole('row', { name: new RegExp(requestNo) });
+    await expect(requestRow).toContainText('成年移交');
+    await expect(requestRow).toContainText('待处理');
+    await requestRow.getByRole('button', { name: '受理' }).click();
+    await confirmAdminAction(page, '自动化验证档案交付受理');
+    await expect(requestRow).toContainText('处理中');
+    await expectNoEnglishSeedCopy(page);
+  });
+
+  test('shows system operations readiness for config statistics and backup recovery', async ({ page }) => {
+    await loginAdmin(page);
+    await page.getByRole('link', { name: '系统运维', exact: true }).click();
+
+    await expect(page.getByRole('heading', { name: '系统运维' })).toBeVisible();
+    await expect(page.getByText('运行配置')).toBeVisible();
+    await expect(page.getByText('备份恢复与告警值班')).toBeVisible();
+    await expect(page.getByText('告警联系人', { exact: true })).toBeVisible();
+    await expect(page.getByText('运营动作')).toBeVisible();
+    await expect(page.getByText('家庭与档案')).toBeVisible();
+    await expect(page.getByText('成长资产')).toBeVisible();
+    await expect(page.getByRole('row', { name: /对象存储/ })).toBeVisible();
+    await expect(page.getByRole('row', { name: /备份保留周期/ })).toBeVisible();
+    await expectNoEnglishSeedCopy(page);
   });
 
   test('media library exposes localized review actions', async ({ page }) => {

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Patch, Post, Put, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Patch, Post, Put, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { Request, Response } from 'express';
 
 import { REFRESH_TOKEN_COOKIE_NAME } from '../../shared/constants';
@@ -7,9 +7,12 @@ import { isSecureCookieEnvironment } from '../../shared/env-config';
 import { AuthenticatedUser } from '../../shared/types';
 import { parseDurationToSeconds } from '../../shared/utils';
 import { UserJwtAuthGuard } from '../auth/guards/user-jwt-auth.guard';
+import { ArchiveExportSummaryDto } from './dto/archive-export-summary.dto';
+import { CreateArchiveExportRequestDto } from './dto/create-archive-export-request.dto';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { CreateMembershipBookRequestDto } from './dto/create-membership-book-request.dto';
 import { DeleteMeDto } from './dto/delete-me.dto';
+import { ListArchiveExportRequestsDto } from './dto/list-archive-export-requests.dto';
 import { UpdatePreferencesDto } from './dto/update-preferences.dto';
 import { UpdateMeDto } from './dto/update-me.dto';
 import { UsersService } from './users.service';
@@ -49,6 +52,22 @@ export class UsersController {
   @HttpCode(200)
   requestMembershipBook(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateMembershipBookRequestDto, @Req() request: Request) {
     return this.usersService.requestMembershipBook(user.id, dto, this.getAuditRequestMeta(request));
+  }
+
+  @Post('me/archive-export-requests')
+  @HttpCode(200)
+  requestArchiveExport(@CurrentUser() user: AuthenticatedUser, @Body() dto: CreateArchiveExportRequestDto, @Req() request: Request) {
+    return this.usersService.requestArchiveExport(user.id, dto, this.getAuditRequestMeta(request));
+  }
+
+  @Get('me/archive-export-requests')
+  listArchiveExportRequests(@CurrentUser() user: AuthenticatedUser, @Query() dto: ListArchiveExportRequestsDto) {
+    return this.usersService.listArchiveExportRequests(user.id, dto);
+  }
+
+  @Get('me/archive-export-summary')
+  archiveExportSummary(@CurrentUser() user: AuthenticatedUser, @Query() dto: ArchiveExportSummaryDto, @Req() request: Request) {
+    return this.usersService.archiveExportSummary(user.id, dto, this.getAuditRequestMeta(request));
   }
 
   @Get('me/deletion-check')

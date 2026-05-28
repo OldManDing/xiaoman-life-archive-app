@@ -48,11 +48,13 @@ test.describe('Front and admin button/API connectivity', () => {
     await page.goto(`${webBaseURL}/profile/export`);
     await page.getByRole('button', { name: /仅图片和视频/ }).click();
     await expect(page.getByRole('button', { name: /仅图片和视频/ })).toHaveAttribute('aria-pressed', 'true');
-    const downloadPromise = page.waitForEvent('download');
-    await page.getByRole('button', { name: '开始打包导出' }).click();
-    const download = await downloadPromise;
-    expect(download.suggestedFilename()).toContain('档案摘要');
-    await expect(page.getByText('档案摘要已生成下载文件')).toBeVisible();
+    const summaryDownloadPromise = page.waitForEvent('download');
+    await page.getByRole('button', { name: '下载审计留痕摘要' }).click();
+    const summaryDownload = await summaryDownloadPromise;
+    expect(summaryDownload.suggestedFilename()).toContain('档案摘要');
+    await expect(page.getByText(/档案摘要已生成：\d+ 条记录、\d+ 个媒体，并已写入审计日志。/)).toBeVisible();
+    await page.getByRole('button', { name: '提交打包申请' }).click();
+    await expect(page.getByText(/档案打包申请已提交/)).toBeVisible();
 
     await page.goto(`${webBaseURL}/profile/membership`);
     await page.getByRole('button', { name: '刷新会员信息' }).click();
@@ -72,12 +74,12 @@ test.describe('Front and admin button/API connectivity', () => {
     await expect(page.getByText('请至少输入 6 个字，方便定位问题。')).toBeVisible();
     await page.getByPlaceholder('请描述遇到的问题、页面位置和操作步骤').fill('页面显示正常，按钮可点击，反馈记录用于验证保存流程。');
     await page.getByRole('button', { name: '提交反馈' }).click();
-    await expect(page.getByText('反馈已提交，我们会在处理后联系你。')).toBeVisible();
+    await expect(page.getByText('反馈已提交，客服会在处理后联系你。')).toBeVisible();
 
     await page.goto(`${webBaseURL}/profile/about`);
     await expect(page.getByText('年轮 © 2026')).toBeVisible();
     await page.getByRole('button', { name: '功能介绍' }).click();
-    await expect(page.getByText('年轮支持成长记录、家庭协作、时间轴、月报纪念册和本机导出。')).toBeVisible();
+    await expect(page.getByText('年轮支持成长记录、家庭协作、时间轴、月报纪念册、档案交付和审计留痕导出。')).toBeVisible();
     await page.getByRole('button', { name: '用户服务协议' }).click();
     await expect(page).toHaveURL(/\/profile\/legal$/);
     await expect(page.getByText('儿童信息保护摘要')).toBeVisible();

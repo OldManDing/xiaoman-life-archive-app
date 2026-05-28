@@ -2,6 +2,7 @@ import { expect, type Page } from '@playwright/test';
 
 export const webBaseURL = process.env.E2E_WEB_BASE_URL ?? `http://127.0.0.1:${process.env.E2E_WEB_PORT ?? 5176}`;
 export const adminBaseURL = process.env.E2E_ADMIN_BASE_URL ?? `http://127.0.0.1:${process.env.E2E_ADMIN_PORT ?? 5177}`;
+export const apiBaseURL = process.env.E2E_API_BASE_URL ?? `http://127.0.0.1:${process.env.E2E_API_PORT ?? 3001}`;
 
 export async function loginWeb(page: Page) {
   await page.goto(`${webBaseURL}/auth/login`);

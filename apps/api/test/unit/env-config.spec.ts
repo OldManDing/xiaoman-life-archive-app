@@ -1,9 +1,14 @@
 import {
   getAiProviderName,
+  getAlertContactChannel,
+  getAlertContactName,
   getAuthRateLimitMaxAttempts,
   getAuthRateLimitWindowMs,
   getAppEnv,
   getAppPort,
+  getBackupRestoreDrillAt,
+  getBackupRetentionDays,
+  getBackupRunbookUrl,
   getMapProviderName,
   getSmsProviderName,
   getStorageProviderName,
@@ -191,8 +196,8 @@ describe('env-config', () => {
     );
   });
 
-  it('allows map to be explicitly disabled in strict environments', () => {
-    expect(
+  it('rejects disabled map provider in strict environments', () => {
+    expect(() =>
       validateRuntimeConfig({
         APP_ENV: 'production',
         APP_PORT: '3000',
@@ -214,8 +219,13 @@ describe('env-config', () => {
         DATABASE_URL: 'mysql://user:pass@db:3306/app',
         REDIS_HOST: 'redis',
         REDIS_PORT: '6379',
+        BACKUP_RETENTION_DAYS: '180',
+        BACKUP_RUNBOOK_URL: 'https://ops.example.com/backup',
+        BACKUP_RESTORE_DRILL_AT: '2026-05-27T00:00:00.000Z',
+        ALERT_CONTACT_NAME: '值班运营',
+        ALERT_CONTACT_CHANNEL: 'ops@example.com',
       }),
-    ).toMatchObject({ MAP_PROVIDER: 'disabled' });
+    ).toThrow('MAP_PROVIDER=disabled is not allowed outside local/test environments');
   });
 
   it('rejects invalid provider values', () => {
@@ -244,7 +254,12 @@ describe('env-config', () => {
     ]);
     expect(getStorageProviderName({ APP_ENV: 'prod', STORAGE_PROVIDER: 'minio' })).toBe('minio');
     expect(getAiProviderName({ APP_ENV: 'prod', AI_PROVIDER: 'openai-compatible' })).toBe('openai-compatible');
-    expect(getMapProviderName({ APP_ENV: 'prod', MAP_PROVIDER: 'disabled' })).toBe('disabled');
+    expect(getMapProviderName({ APP_ENV: 'prod', MAP_PROVIDER: 'amap' })).toBe('amap');
+    expect(getBackupRetentionDays({ BACKUP_RETENTION_DAYS: '60' })).toBe(60);
+    expect(getBackupRunbookUrl({ BACKUP_RUNBOOK_URL: 'https://ops.example.com/backup' })).toBe('https://ops.example.com/backup');
+    expect(getBackupRestoreDrillAt({ BACKUP_RESTORE_DRILL_AT: '2026-05-27T00:00:00.000Z' })).toBe('2026-05-27T00:00:00.000Z');
+    expect(getAlertContactName({ ALERT_CONTACT_NAME: '值班运营' })).toBe('值班运营');
+    expect(getAlertContactChannel({ ALERT_CONTACT_CHANNEL: 'ops@example.com' })).toBe('ops@example.com');
   });
 
   it('rejects unsafe authentication rate-limit configuration', () => {
@@ -270,11 +285,76 @@ describe('env-config', () => {
         AI_API_KEY: 'ai_key',
         AI_BASE_URL: 'https://ai.example.com/v1',
         AI_MODEL: 'model',
-        MAP_PROVIDER: 'disabled',
+        MAP_PROVIDER: 'amap',
+        MAP_API_KEY: 'map_key',
         DATABASE_URL: 'mysql://user:pass@db:3306/app',
         REDIS_HOST: 'redis',
         REDIS_PORT: '6379',
+        BACKUP_RETENTION_DAYS: '180',
+        BACKUP_RUNBOOK_URL: 'https://ops.example.com/backup',
+        BACKUP_RESTORE_DRILL_AT: '2026-05-27T00:00:00.000Z',
       }),
     ).toThrow('AUTH_RATE_LIMIT_MAX_ATTEMPTS cannot exceed 30 outside local/test environments');
+  });
+
+  it('requires backup recovery evidence in strict environments', () => {
+    expect(() =>
+      validateRuntimeConfig({
+        APP_ENV: 'production',
+        APP_PORT: '3000',
+        JWT_ACCESS_SECRET: 'prod_access_secret_that_is_long_enough_123',
+        JWT_REFRESH_SECRET: 'prod_refresh_secret_that_is_long_enough_456',
+        CORS_ORIGINS: 'https://app.example.com',
+        SMS_ENABLED: 'false',
+        STORAGE_PROVIDER: 'minio',
+        STORAGE_REGION: 'local',
+        STORAGE_BUCKET: 'bucket',
+        STORAGE_ENDPOINT: 'https://storage.example.com',
+        STORAGE_ACCESS_KEY: 'storage_access',
+        STORAGE_SECRET_KEY: 'storage_secret',
+        AI_PROVIDER: 'openai-compatible',
+        AI_API_KEY: 'ai_key',
+        AI_BASE_URL: 'https://ai.example.com/v1',
+        AI_MODEL: 'model',
+        MAP_PROVIDER: 'amap',
+        MAP_API_KEY: 'map_key',
+        DATABASE_URL: 'mysql://user:pass@db:3306/app',
+        REDIS_HOST: 'redis',
+        REDIS_PORT: '6379',
+        BACKUP_RETENTION_DAYS: '180',
+        BACKUP_RESTORE_DRILL_AT: '2026-05-27T00:00:00.000Z',
+      }),
+    ).toThrow('Missing required environment variable: BACKUP_RUNBOOK_URL');
+
+    expect(() => getBackupRetentionDays({ BACKUP_RETENTION_DAYS: '0' })).toThrow('Invalid BACKUP_RETENTION_DAYS value: 0');
+    expect(() => getBackupRestoreDrillAt({ BACKUP_RESTORE_DRILL_AT: 'not-a-date' })).toThrow('Invalid BACKUP_RESTORE_DRILL_AT value: not-a-date');
+    expect(() =>
+      validateRuntimeConfig({
+        APP_ENV: 'production',
+        APP_PORT: '3000',
+        JWT_ACCESS_SECRET: 'prod_access_secret_that_is_long_enough_123',
+        JWT_REFRESH_SECRET: 'prod_refresh_secret_that_is_long_enough_456',
+        CORS_ORIGINS: 'https://app.example.com',
+        SMS_ENABLED: 'false',
+        STORAGE_PROVIDER: 'minio',
+        STORAGE_REGION: 'local',
+        STORAGE_BUCKET: 'bucket',
+        STORAGE_ENDPOINT: 'https://storage.example.com',
+        STORAGE_ACCESS_KEY: 'storage_access',
+        STORAGE_SECRET_KEY: 'storage_secret',
+        AI_PROVIDER: 'openai-compatible',
+        AI_API_KEY: 'ai_key',
+        AI_BASE_URL: 'https://ai.example.com/v1',
+        AI_MODEL: 'model',
+        MAP_PROVIDER: 'amap',
+        MAP_API_KEY: 'map_key',
+        DATABASE_URL: 'mysql://user:pass@db:3306/app',
+        REDIS_HOST: 'redis',
+        REDIS_PORT: '6379',
+        BACKUP_RETENTION_DAYS: '180',
+        BACKUP_RUNBOOK_URL: 'https://ops.example.com/backup',
+        BACKUP_RESTORE_DRILL_AT: '2026-05-27T00:00:00.000Z',
+      }),
+    ).toThrow('Missing required environment variable: ALERT_CONTACT_NAME');
   });
 });

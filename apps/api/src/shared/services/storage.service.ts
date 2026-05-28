@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 import { getStorageProviderName } from '../env-config';
@@ -100,6 +100,27 @@ export class StorageService {
       expires_in: this.expiresIn,
       expire_at: new Date(Date.now() + this.expiresIn * 1000).toISOString(),
     };
+  }
+
+  async objectExists(objectKey: string) {
+    if (!this.s3Client) return true;
+
+    try {
+      await this.s3Client.send(
+        new HeadObjectCommand({
+          Bucket: this.bucket,
+          Key: objectKey,
+        }),
+      );
+      return true;
+    } catch (error) {
+      const statusCode = (error as { $metadata?: { httpStatusCode?: number } })?.$metadata?.httpStatusCode;
+      const errorName = (error as { name?: string })?.name;
+      if (statusCode === 404 || errorName === 'NotFound' || errorName === 'NoSuchKey') {
+        return false;
+      }
+      throw error;
+    }
   }
 
   private createMockImageDataUrl(_objectKey: string) {

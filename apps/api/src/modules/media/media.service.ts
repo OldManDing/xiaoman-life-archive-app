@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, ForbiddenException, Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { FamilyMemberRole, MediaType } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
@@ -11,6 +11,38 @@ import { ConfirmMediaDto } from './dto/confirm-media.dto';
 import { CreateUploadTokenDto } from './dto/create-upload-token.dto';
 
 const normalizeMimeType = (mimeType: string) => mimeType.toLowerCase().split(';', 1)[0].trim();
+const GENERIC_UPLOAD_MIME_TYPES = new Set(['application/octet-stream', 'binary/octet-stream']);
+const MIME_TYPE_BY_EXTENSION: Record<string, string> = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+  heic: 'image/heic',
+  heif: 'image/heif',
+  mp4: 'video/mp4',
+  webm: 'video/webm',
+  mov: 'video/quicktime',
+  '3gp': 'video/3gpp',
+  m4a: 'audio/x-m4a',
+  mp3: 'audio/mpeg',
+  aac: 'audio/aac',
+  wav: 'audio/wav',
+  ogg: 'audio/ogg',
+  amr: 'audio/amr',
+};
+
+const inferMimeTypeFromFileName = (fileName: string) => {
+  const normalized = fileName.trim().toLowerCase().split(/[?#]/, 1)[0];
+  const match = /\.([a-z0-9]+)$/.exec(normalized);
+  if (!match) return null;
+  return MIME_TYPE_BY_EXTENSION[match[1]] ?? null;
+};
+
+const resolveUploadMimeType = (dto: Pick<CreateUploadTokenDto, 'file_name' | 'mime_type'>) => {
+  const mimeType = normalizeMimeType(dto.mime_type || '');
+  if (mimeType && !GENERIC_UPLOAD_MIME_TYPES.has(mimeType)) return mimeType;
+  return inferMimeTypeFromFileName(dto.file_name) ?? mimeType;
+};
 
 @Injectable()
 export class MediaService {
@@ -22,7 +54,7 @@ export class MediaService {
 
   async createUploadToken(userId: bigint, dto: CreateUploadTokenDto) {
     const uploadPolicy = this.getUploadPolicy(dto.media_type);
-    const mimeType = normalizeMimeType(dto.mime_type);
+    const mimeType = resolveUploadMimeType(dto);
 
     if (!uploadPolicy.mimeTypes.includes(mimeType)) {
       throw new BadRequestException(`${uploadPolicy.label}格式不支持`);
@@ -100,6 +132,17 @@ export class MediaService {
 
     if (media.status !== MEDIA_STATUS_UPLOADING) {
       throw new ConflictException('媒体状态不允许确认');
+    }
+
+    let uploaded = false;
+    try {
+      uploaded = await this.storageService.objectExists(media.objectKey);
+    } catch (_error) {
+      throw new ServiceUnavailableException('媒体存储暂时不可用，请稍后重试');
+    }
+
+    if (!uploaded) {
+      throw new BadRequestException('媒体文件尚未上传完成，请上传成功后再确认');
     }
 
     const updated = await this.prisma.recordMedia.update({

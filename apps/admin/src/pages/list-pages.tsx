@@ -1,17 +1,21 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { AlertTriangle, ArchiveX, Ban, CheckCircle2, Eye, LockKeyhole, RotateCcw, Snowflake } from 'lucide-react';
+import { AlertTriangle, ArchiveX, Ban, CheckCircle2, ClipboardCheck, Crown, Eye, LockKeyhole, RotateCcw, Snowflake, XCircle } from 'lucide-react';
 
 import {
   adminApi,
   type AdminAiJobDetail,
   type AdminAiJobItem,
+  type AdminArchiveExportRequestItem,
   type AdminAuditLogItem,
   type AdminChildDetail,
   type AdminChildItem,
+  type AdminFamilyDetail,
+  type AdminFamilyItem,
   type AdminMediaDetail,
   type AdminMediaItem,
   type AdminRecordDetail,
   type AdminRecordItem,
+  type AdminSupportTicketItem,
   type AdminUserDetail,
   type AdminUserItem,
 } from '../shared/request';
@@ -19,11 +23,15 @@ import {
   aiJobStatusLabel,
   aiJobTypeLabel,
   aiProviderLabel,
+  archiveExportPurposeLabel,
+  archiveExportStatusLabel,
+  archiveExportTypeLabel,
   auditActionLabel,
   auditActorTypeLabel,
   auditTargetTypeLabel,
   authTypeLabel,
   childStatusLabel,
+  familyStatusLabel,
   familyRoleLabel,
   genderLabel,
   mediaStatusLabel,
@@ -31,6 +39,8 @@ import {
   membershipTypeLabel,
   recordStatusLabel,
   recordTypeLabel,
+  supportTicketPriorityLabel,
+  supportTicketStatusLabel,
   userStatusLabel,
   visibilityScopeLabel,
 } from '../shared/labels';
@@ -42,9 +52,9 @@ import { formatListRows, useAdminListPage } from './list-page-state';
 import { PaginationPanel, SearchPanel, TableShell } from './shared';
 
 const badgeToneForStatus = (value: string) => {
-  if (['active', 'normal', 'published', 'success', 'ready'].includes(value)) return 'success' as const;
-  if (['disabled', 'failed', 'cancelled', 'removed'].includes(value)) return 'danger' as const;
-  if (['draft', 'pending', 'processing', 'uploading'].includes(value)) return 'warning' as const;
+  if (['active', 'normal', 'published', 'success', 'ready', 'completed', 'resolved'].includes(value)) return 'success' as const;
+  if (['disabled', 'failed', 'cancelled', 'removed', 'rejected', 'child_safety', 'deleted'].includes(value)) return 'danger' as const;
+  if (['draft', 'pending', 'processing', 'uploading', 'submitted'].includes(value)) return 'warning' as const;
   return 'neutral' as const;
 };
 
@@ -60,12 +70,14 @@ const formatBytes = (value: number | null | undefined) => {
 const auditActionFilterOptions = [
   'admin_login',
   'admin_view_dashboard',
+  'admin_view_family_detail',
   'admin_view_user_detail',
   'admin_view_child_detail',
   'admin_view_record_detail',
   'admin_view_media_detail',
   'admin_view_ai_job_detail',
   'admin_list_users',
+  'admin_list_families',
   'admin_list_registration_invites',
   'admin_create_registration_invite',
   'admin_revoke_registration_invite',
@@ -73,7 +85,13 @@ const auditActionFilterOptions = [
   'admin_list_records',
   'admin_list_media',
   'admin_list_ai_jobs',
+  'admin_list_content_risks',
+  'admin_list_support_tickets',
+  'admin_list_archive_export_requests',
+  'admin_list_system_configs',
   'admin_list_audit_logs',
+  'admin_update_system_config',
+  'admin_update_user_membership',
   'admin_disable_user',
   'admin_activate_user',
   'admin_reset_user_password',
@@ -84,9 +102,18 @@ const auditActionFilterOptions = [
   'admin_remove_media',
   'admin_retry_ai_job',
   'admin_cancel_ai_job',
+  'admin_support_ticket_start_processing',
+  'admin_support_ticket_resolve',
+  'admin_support_ticket_close',
+  'admin_archive_export_start_processing',
+  'admin_archive_export_complete',
+  'admin_archive_export_reject',
+  'user.archive_export_requested',
+  'user.adult_handoff_requested',
+  'user.feedback_submitted',
 ];
 
-const auditTargetTypeFilterOptions = ['list', 'admin_user', 'user', 'registration_invite', 'child', 'record', 'media', 'ai_job', 'audit_log'];
+const auditTargetTypeFilterOptions = ['list', 'admin_user', 'user', 'family', 'registration_invite', 'child', 'record', 'media', 'ai_job', 'content_risk', 'support_ticket', 'archive_export_request', 'system_config', 'audit_log'];
 
 const toIsoDateTime = (value: string) => (value ? new Date(value).toISOString() : undefined);
 const formatDateTime = (value: string | null | undefined) => (value ? new Date(value).toLocaleString('zh-CN', { hour12: false }) : '—');
@@ -198,6 +225,19 @@ type AuditFilterOverride = {
   targetType?: string;
   startTime?: string;
   endTime?: string;
+};
+
+type ArchiveExportRequestFilterOverride = {
+  keyword?: string;
+  purpose?: string;
+  status?: string;
+};
+
+type SupportTicketFilterOverride = {
+  keyword?: string;
+  category?: string;
+  status?: string;
+  priority?: string;
 };
 
 const useOperationReasonDialog = () => {
@@ -379,6 +419,127 @@ const useResetPasswordDialog = () => {
   return { requestResetPassword, resetPasswordDialog };
 };
 
+type MembershipUpdateRequest = {
+  membership_type: 'free' | 'family_member' | 'ai_plus';
+  membership_expire_at: string | null;
+  reason: string;
+};
+
+const toDateInputValue = (value: string | null | undefined) => (value ? value.slice(0, 10) : '');
+
+const useMembershipDialog = () => {
+  const resolverRef = useRef<((value: MembershipUpdateRequest | null) => void) | null>(null);
+  const [dialog, setDialog] = useState<{
+    user: Pick<AdminUserItem, 'user_no' | 'nickname' | 'mobile' | 'membership_type'> & { membership_expire_at?: string | null };
+    membershipType: MembershipUpdateRequest['membership_type'];
+    expireDate: string;
+    reason: string;
+    error: string | null;
+  } | null>(null);
+
+  const requestMembershipUpdate = (user: Pick<AdminUserItem, 'user_no' | 'nickname' | 'mobile' | 'membership_type'> & { membership_expire_at?: string | null }) =>
+    new Promise<MembershipUpdateRequest | null>((resolve) => {
+      resolverRef.current?.(null);
+      resolverRef.current = resolve;
+      setDialog({
+        user,
+        membershipType: user.membership_type === 'family_member' || user.membership_type === 'ai_plus' ? user.membership_type : 'free',
+        expireDate: toDateInputValue(user.membership_expire_at),
+        reason: '',
+        error: null,
+      });
+    });
+
+  const closeDialog = (value: MembershipUpdateRequest | null) => {
+    resolverRef.current?.(value);
+    resolverRef.current = null;
+    setDialog(null);
+  };
+
+  useEffect(() => () => resolverRef.current?.(null), []);
+
+  const membershipDialog = dialog ? (
+    <div className="admin-modal-overlay" role="presentation">
+      <section className="admin-modal" role="dialog" aria-modal="true" aria-labelledby="admin-membership-title">
+        <div className="admin-modal-header">
+          <div>
+            <span>套餐权益操作</span>
+            <h2 id="admin-membership-title">调整用户套餐权益</h2>
+            <p style={{ margin: '6px 0 0', color: '#66736f', fontSize: '13px', lineHeight: 1.5 }}>
+              {dialog.user.nickname}（{dialog.user.mobile ?? dialog.user.user_no}）
+            </p>
+          </div>
+          <button type="button" className="admin-modal-close" onClick={() => closeDialog(null)} aria-label="关闭套餐权益弹窗">
+            ×
+          </button>
+        </div>
+        <label className="admin-modal-field">
+          权益类型
+          <AdminSelect
+            value={dialog.membershipType}
+            onChange={(event) =>
+              setDialog((current) =>
+                current ? { ...current, membershipType: event.target.value as MembershipUpdateRequest['membership_type'], error: null } : current,
+              )
+            }
+          >
+            <option value="free">基础会员</option>
+            <option value="family_member">家庭会员</option>
+            <option value="ai_plus">AI 增强会员</option>
+          </AdminSelect>
+        </label>
+        <label className="admin-modal-field">
+          到期日期
+          <input
+            type="date"
+            value={dialog.expireDate}
+            disabled={dialog.membershipType === 'free'}
+            onChange={(event) => setDialog((current) => (current ? { ...current, expireDate: event.target.value, error: null } : current))}
+          />
+        </label>
+        <label className="admin-modal-field">
+          操作原因
+          <textarea
+            value={dialog.reason}
+            onChange={(event) => setDialog((current) => (current ? { ...current, reason: event.target.value, error: null } : current))}
+            placeholder="例如：年付套餐开通、客服补偿、退款后回收权益"
+          />
+        </label>
+        {dialog.error ? <p className="admin-modal-error">{dialog.error}</p> : null}
+        <div className="admin-modal-actions">
+          <button type="button" style={secondaryButtonStyle} onClick={() => closeDialog(null)}>
+            取消
+          </button>
+          <button
+            type="button"
+            style={primaryButtonStyle}
+            onClick={() => {
+              const reason = dialog.reason.trim();
+              if (dialog.membershipType !== 'free' && !dialog.expireDate) {
+                setDialog((current) => (current ? { ...current, error: '付费权益必须填写到期日期' } : current));
+                return;
+              }
+              if (!reason) {
+                setDialog((current) => (current ? { ...current, error: '请填写操作原因' } : current));
+                return;
+              }
+              closeDialog({
+                membership_type: dialog.membershipType,
+                membership_expire_at: dialog.membershipType === 'free' ? null : `${dialog.expireDate}T23:59:59.000Z`,
+                reason,
+              });
+            }}
+          >
+            确认调整
+          </button>
+        </div>
+      </section>
+    </div>
+  ) : null;
+
+  return { requestMembershipUpdate, membershipDialog };
+};
+
 const MiniTable = ({ columns, rows, emptyMessage }: { columns: string[]; rows: Array<Array<ReactNode>>; emptyMessage: string }) => {
   if (!rows.length) return <EmptyState message={emptyMessage} />;
 
@@ -456,13 +617,17 @@ const useDetailState = <T,>() => {
 const UserDetailContent = ({
   data,
   canResetPassword,
+  canUpdateMembership,
   onResetPassword,
+  onUpdateMembership,
   feedbackMessage,
   feedbackError,
 }: {
   data: AdminUserDetail;
   canResetPassword: boolean;
+  canUpdateMembership: boolean;
   onResetPassword: () => void;
+  onUpdateMembership: () => void;
   feedbackMessage?: string | null;
   feedbackError?: string | null;
 }) => (
@@ -487,6 +652,13 @@ const UserDetailContent = ({
           { label: '更新时间', value: formatDateTime(data.updated_at) },
         ]}
       />
+      {canUpdateMembership ? (
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <ActionButton icon={<Crown size={15} />} onClick={onUpdateMembership} tone="success">
+            调整权益
+          </ActionButton>
+        </div>
+      ) : null}
     </DetailSection>
     <DetailSection title="登录信息">
       <MiniTable
@@ -520,6 +692,72 @@ const UserDetailContent = ({
         columns={['家庭编号', '家庭名称', '角色', '状态', '加入时间']}
         rows={data.families.map((item) => [item.family_no, item.family_name, familyRoleLabel(item.role), userStatusLabel(item.status), formatDateTime(item.joined_at)])}
         emptyMessage="暂无关联家庭。"
+      />
+    </DetailSection>
+  </>
+);
+
+const FamilyDetailContent = ({ data }: { data: AdminFamilyDetail }) => (
+  <>
+    <DetailSection title="家庭概览">
+      <DetailGrid
+        items={[
+          { label: '家庭编号', value: data.family_no },
+          { label: '家庭名称', value: data.family_name },
+          { label: '拥有者', value: `${data.owner_name}（${data.owner_user_no}）` },
+          { label: '拥有者手机号', value: data.owner_mobile },
+          { label: '状态', value: <Badge tone={badgeToneForStatus(data.status)}>{familyStatusLabel(data.status)}</Badge> },
+          { label: '成员数', value: data.members_count },
+          { label: '孩子档案数', value: data.children_count },
+          { label: '成长记录数', value: data.records_count },
+          { label: '媒体数', value: data.media_count },
+          { label: '档案交付申请', value: data.archive_export_requests_count },
+          { label: '创建时间', value: formatDateTime(data.created_at) },
+          { label: '更新时间', value: formatDateTime(data.updated_at) },
+        ]}
+      />
+    </DetailSection>
+    <DetailSection title="家庭成员">
+      <MiniTable
+        columns={['用户编号', '昵称', '手机号', '角色', '状态', '加入时间']}
+        rows={data.members.map((item) => [item.user_no, item.nickname, item.mobile, familyRoleLabel(item.role), userStatusLabel(item.status), formatDateTime(item.joined_at)])}
+        emptyMessage="暂无家庭成员。"
+      />
+    </DetailSection>
+    <DetailSection title="孩子档案">
+      <MiniTable
+        columns={['孩子编号', '姓名', '生日', '性别', '状态']}
+        rows={data.children.map((item) => [item.child_no, item.name, formatDateOnly(item.birthday), genderLabel(item.gender), childStatusLabel(item.status)])}
+        emptyMessage="暂无孩子档案。"
+      />
+    </DetailSection>
+    <DetailSection title="最近成长记录">
+      <MiniTable
+        columns={['记录编号', '孩子', '标题', '类型', '状态', '创建者', '发生时间']}
+        rows={data.recent_records.map((item) => [
+          item.record_no,
+          `${item.child_name}（${item.child_no}）`,
+          item.title,
+          recordTypeLabel(item.record_type),
+          recordStatusLabel(item.status),
+          item.creator_name,
+          formatDateTime(item.event_time),
+        ])}
+        emptyMessage="暂无成长记录。"
+      />
+    </DetailSection>
+    <DetailSection title="档案交付申请">
+      <MiniTable
+        columns={['申请编号', '孩子', '申请人', '类型', '状态', '提交时间']}
+        rows={data.archive_export_requests.map((item) => [
+          item.request_no,
+          `${item.child_name}（${item.child_no}）`,
+          `${item.user_name}（${item.user_no}）`,
+          archiveExportPurposeLabel(item.purpose),
+          archiveExportStatusLabel(item.status),
+          formatDateTime(item.created_at),
+        ])}
+        emptyMessage="暂无档案交付申请。"
       />
     </DetailSection>
   </>
@@ -701,16 +939,108 @@ const AuditLogDetailContent = ({ data }: { data: AdminAuditLogItem }) => (
   </>
 );
 
+const SupportTicketDetailContent = ({ data }: { data: AdminSupportTicketItem }) => (
+  <>
+    <DetailSection title="反馈信息">
+      <DetailGrid
+        items={[
+          { label: '反馈编号', value: data.ticket_no },
+          { label: '问题类型', value: data.category },
+          { label: '处理状态', value: supportTicketStatusLabel(data.status) },
+          { label: '优先级', value: supportTicketPriorityLabel(data.priority) },
+          { label: '提交时间', value: formatDateTime(data.created_at) },
+          { label: '更新时间', value: formatDateTime(data.updated_at) },
+        ]}
+      />
+    </DetailSection>
+    <DetailSection title="提交人">
+      <DetailGrid
+        items={[
+          { label: '用户编号', value: data.user_no },
+          { label: '用户昵称', value: data.user_name },
+          { label: '用户手机', value: data.user_mobile },
+          { label: '联系方式', value: data.contact },
+          { label: '主题', value: data.topic },
+        ]}
+      />
+    </DetailSection>
+    <DetailSection title="反馈内容">
+      <DetailList items={[{ label: '用户描述', value: data.content }]} />
+    </DetailSection>
+    <DetailSection title="处理记录">
+      <DetailList
+        items={[
+          { label: '处理人', value: data.assigned_admin_name },
+          { label: '处理时间', value: formatDateTime(data.handled_at) },
+          { label: '处理备注', value: data.handle_note },
+        ]}
+      />
+    </DetailSection>
+  </>
+);
+
+const ArchiveExportRequestDetailContent = ({ data }: { data: AdminArchiveExportRequestItem }) => (
+  <>
+    <DetailSection title="申请信息">
+      <DetailGrid
+        items={[
+          { label: '申请编号', value: data.request_no },
+          { label: '申请类型', value: archiveExportPurposeLabel(data.purpose) },
+          { label: '导出范围', value: archiveExportTypeLabel(data.export_type) },
+          { label: '处理状态', value: archiveExportStatusLabel(data.status) },
+          { label: '提交时间', value: formatDateTime(data.created_at) },
+          { label: '更新时间', value: formatDateTime(data.updated_at) },
+        ]}
+      />
+    </DetailSection>
+    <DetailSection title="档案归属">
+      <DetailGrid
+        items={[
+          { label: '孩子档案', value: `${data.child_name}（${data.child_no}）` },
+          { label: '家庭编号', value: data.family_no },
+          { label: '家庭名称', value: data.family_name },
+          { label: '申请人', value: `${data.user_name}（${data.user_no}）` },
+          { label: '申请人手机', value: data.user_mobile },
+          { label: '联系信息', value: data.contact },
+        ]}
+      />
+    </DetailSection>
+    <DetailSection title="资产快照">
+      <DetailGrid
+        items={[
+          { label: '记录数', value: data.record_count },
+          { label: '媒体数', value: data.media_count },
+          { label: '里程碑数', value: data.milestone_count },
+          { label: '最早记录', value: formatDateTime(data.first_record_time) },
+          { label: '最新记录', value: formatDateTime(data.latest_record_time) },
+        ]}
+      />
+    </DetailSection>
+    <DetailSection title="处理备注">
+      <DetailList
+        items={[
+          { label: '用户备注', value: data.note },
+          { label: '处理人', value: data.processed_by_name },
+          { label: '处理时间', value: formatDateTime(data.processed_at) },
+          { label: '运营备注', value: data.process_note },
+        ]}
+      />
+    </DetailSection>
+  </>
+);
+
 export const UsersPage = () => {
   const state = useAdminListPage<AdminUserItem>(adminApi.listUsers);
   const detail = useDetailState<AdminUserDetail>();
   const { admin } = useAdminAuth();
   const { requestOperationReason, reasonDialog } = useOperationReasonDialog();
   const { requestResetPassword, resetPasswordDialog } = useResetPasswordDialog();
+  const { requestMembershipUpdate, membershipDialog } = useMembershipDialog();
   const [updatingUserNo, setUpdatingUserNo] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const canResetPassword = admin?.role === 'super_admin';
+  const canUpdateMembership = admin?.role === 'super_admin' || admin?.role === 'operator';
 
   const onToggleStatus = async (user: AdminUserItem) => {
     const nextStatus = user.status === 'active' ? 'disabled' : 'active';
@@ -756,6 +1086,36 @@ export const UsersPage = () => {
     }
   };
 
+  const onUpdateMembership = async (user: Pick<AdminUserItem, 'user_no' | 'nickname' | 'mobile' | 'membership_type'> & { membership_expire_at?: string | null }) => {
+    const payload = await requestMembershipUpdate(user);
+    if (!payload) return;
+
+    setActionError(null);
+    setActionMessage(null);
+    setUpdatingUserNo(user.user_no);
+    try {
+      const updated = await adminApi.updateUserMembership(user.user_no, payload);
+      state.updateResult((current) =>
+        current
+          ? {
+              ...current,
+              list: current.list.map((item) => (item.user_no === updated.user_no ? { ...item, membership_type: updated.membership_type } : item)),
+            }
+          : current,
+      );
+      detail.updateDetail((current) =>
+        current.user_no === updated.user_no
+          ? { ...current, membership_type: updated.membership_type, membership_expire_at: updated.membership_expire_at }
+          : current,
+      );
+      setActionMessage(`已将 ${user.nickname} 的套餐权益调整为 ${membershipTypeLabel(updated.membership_type)}。`);
+    } catch (err) {
+      setActionError(getErrorMessage(err));
+    } finally {
+      setUpdatingUserNo(null);
+    }
+  };
+
   const currentUsers = state.result?.list ?? [];
   const activeUsers = currentUsers.filter((item) => item.status === 'active').length;
   const disabledUsers = currentUsers.filter((item) => item.status === 'disabled').length;
@@ -774,6 +1134,11 @@ export const UsersPage = () => {
       {canResetPassword ? (
         <ActionButton icon={<LockKeyhole size={15} />} onClick={() => void onResetPassword(item)} disabled={updatingUserNo === item.user_no} tone="warning">
           重置密码
+        </ActionButton>
+      ) : null}
+      {canUpdateMembership ? (
+        <ActionButton icon={<Crown size={15} />} onClick={() => void onUpdateMembership(item)} disabled={updatingUserNo === item.user_no} tone="success">
+          调整权益
         </ActionButton>
       ) : null}
     </ActionGroup>,
@@ -796,7 +1161,9 @@ export const UsersPage = () => {
           <UserDetailContent
             data={detail.state.data}
             canResetPassword={canResetPassword}
+            canUpdateMembership={canUpdateMembership}
             onResetPassword={() => void onResetPassword(detail.state.data!)}
+            onUpdateMembership={() => void onUpdateMembership(detail.state.data!)}
             feedbackMessage={actionMessage}
             feedbackError={actionError}
           />
@@ -804,6 +1171,46 @@ export const UsersPage = () => {
       </DetailDrawer>
       {reasonDialog}
       {resetPasswordDialog}
+      {membershipDialog}
+    </PageShell>
+  );
+};
+
+export const FamiliesPage = () => {
+  const state = useAdminListPage<AdminFamilyItem>(adminApi.listFamilies);
+  const detail = useDetailState<AdminFamilyDetail>();
+  const currentFamilies = state.result?.list ?? [];
+  const activeFamilies = currentFamilies.filter((item) => item.status === 'active').length;
+  const totalChildren = currentFamilies.reduce((sum, item) => sum + item.children_count, 0);
+  const totalRecords = currentFamilies.reduce((sum, item) => sum + item.records_count, 0);
+  const rows = formatListRows(currentFamilies, (item) => [
+    <EntityTitle key={`${item.family_no}-profile`} title={item.family_name ?? item.family_no} meta={item.family_no} />,
+    <EntityTitle key={`${item.family_no}-owner`} title={item.owner_name} meta={item.owner_mobile ?? item.owner_user_no} />,
+    <span key={`${item.family_no}-assets`} style={{ display: 'grid', gap: '4px' }}>
+      <span>{item.children_count} 个孩子 / {item.members_count} 位成员</span>
+      <span style={{ color: '#66736f', fontSize: '12px' }}>{item.records_count} 条记录 / {item.media_count} 个媒体</span>
+    </span>,
+    item.archive_export_requests_count,
+    <Badge key={`${item.family_no}-status`} tone={badgeToneForStatus(item.status)}>{familyStatusLabel(item.status)}</Badge>,
+    formatDateTime(item.created_at),
+    <ActionButton key={`${item.family_no}-detail`} icon={<Eye size={15} />} onClick={() => void detail.openDetail('家庭详情', item.family_no, () => adminApi.getFamilyDetail(item.family_no))}>详情</ActionButton>,
+  ]);
+
+  return (
+    <PageShell title="家庭管理" description="按家庭维度查看成员、孩子档案、成长资产和档案交付申请，方便运营处理家庭协作与长期托管问题。">
+      <SearchPanel {...state} description="输入家庭编号、家庭名称、拥有者昵称或手机号后查询。" placeholder="家庭编号 / 家庭名称 / 拥有者" />
+      <ListSummary total={state.result?.total} label="家庭资产概览" description="家庭是孩子档案、成员协作、媒体资产和交付申请的归属中心；运营先按家庭定位，再进入详情核查成员和记录。">
+        <SummaryStat label="当前页家庭" value={currentFamilies.length} />
+        <SummaryStat label="状态正常" value={activeFamilies} tone="success" />
+        <SummaryStat label="孩子档案" value={totalChildren} />
+        <SummaryStat label="成长记录" value={totalRecords} />
+      </ListSummary>
+      {state.error ? <Panel><EmptyState message={`加载失败：${state.error}`} /></Panel> : null}
+      <TableShell columns={['家庭', '拥有者', '资产规模', '交付申请', '状态', '创建时间', '操作']} rows={rows} emptyMessage="暂无匹配家庭。可按家庭编号、家庭名称或拥有者重新查询。" loading={state.loading} />
+      {state.result ? <PaginationPanel page={state.result.page} pageSize={state.result.page_size} total={state.result.total} hasMore={state.result.has_more} loading={state.loading} onPrevPage={state.onPrevPage} onNextPage={state.onNextPage} /> : null}
+      <DetailDrawer open={detail.state.open} title={detail.state.title} subtitle={detail.state.subtitle} loading={detail.state.loading} error={detail.state.error} onClose={detail.closeDetail}>
+        {detail.state.data ? <FamilyDetailContent data={detail.state.data} /> : null}
+      </DetailDrawer>
     </PageShell>
   );
 };
@@ -1065,6 +1472,347 @@ export const AIJobsPage = () => {
       {state.result ? <PaginationPanel page={state.result.page} pageSize={state.result.page_size} total={state.result.total} hasMore={state.result.has_more} loading={state.loading} onPrevPage={state.onPrevPage} onNextPage={state.onNextPage} /> : null}
       <DetailDrawer open={detail.state.open} title={detail.state.title} subtitle={detail.state.subtitle} loading={detail.state.loading} error={detail.state.error} onClose={detail.closeDetail}>
         {detail.state.data ? <AiJobDetailContent data={detail.state.data} /> : null}
+      </DetailDrawer>
+      {reasonDialog}
+    </PageShell>
+  );
+};
+
+export const SupportTicketsPage = () => {
+  const detail = useDetailState<AdminSupportTicketItem>();
+  const { admin } = useAdminAuth();
+  const { requestOperationReason, reasonDialog } = useOperationReasonDialog();
+  const [keyword, setKeyword] = useState('');
+  const [category, setCategory] = useState('');
+  const [status, setStatus] = useState('');
+  const [priority, setPriority] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [updatingTicketNo, setUpdatingTicketNo] = useState<string | null>(null);
+  const [result, setResult] = useState<{ list: AdminSupportTicketItem[]; page: number; page_size: number; total: number; has_more: boolean } | null>(null);
+  const autoLoadedRef = useRef(false);
+
+  const load = useCallback(async (nextPage = page, nextPageSize = pageSize, event?: FormEvent, override?: SupportTicketFilterOverride) => {
+    event?.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      const activeKeyword = override?.keyword ?? keyword;
+      const activeCategory = override?.category ?? category;
+      const activeStatus = override?.status ?? status;
+      const activePriority = override?.priority ?? priority;
+      const next = await adminApi.listSupportTickets({
+        keyword: activeKeyword || undefined,
+        category: activeCategory || undefined,
+        status: activeStatus || undefined,
+        priority: activePriority || undefined,
+        page: nextPage,
+        page_size: nextPageSize,
+      });
+      setResult(next);
+      setPage(next.page);
+      setPageSize(next.page_size);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  }, [category, keyword, page, pageSize, priority, status]);
+
+  const clearFilters = async () => {
+    setKeyword('');
+    setCategory('');
+    setStatus('');
+    setPriority('');
+    await load(1, pageSize, undefined, { keyword: '', category: '', status: '', priority: '' });
+  };
+
+  useEffect(() => {
+    if (autoLoadedRef.current) return;
+    autoLoadedRef.current = true;
+    const timer = window.setTimeout(() => {
+      void load(1, pageSize);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [load, pageSize]);
+
+  const updateStatus = async (item: AdminSupportTicketItem, nextStatus: 'processing' | 'resolved' | 'closed') => {
+    const actionName = nextStatus === 'processing' ? '受理客服反馈' : nextStatus === 'resolved' ? '解决客服反馈' : '关闭客服反馈';
+    const reason = await requestOperationReason(actionName);
+    if (!reason) return;
+
+    setActionError(null);
+    setUpdatingTicketNo(item.ticket_no);
+    try {
+      const updated = await adminApi.updateSupportTicketStatus(item.ticket_no, { status: nextStatus, note: reason });
+      setResult((current) =>
+        current
+          ? {
+              ...current,
+              list: current.list.map((currentItem) => (currentItem.ticket_no === updated.ticket_no ? updated : currentItem)),
+            }
+          : current,
+      );
+      if (detail.state.data?.ticket_no === updated.ticket_no) {
+        detail.updateDetail(() => updated);
+      }
+    } catch (err) {
+      setActionError(getErrorMessage(err));
+    } finally {
+      setUpdatingTicketNo(null);
+    }
+  };
+
+  const currentTickets = result?.list ?? [];
+  const submittedCount = currentTickets.filter((item) => item.status === 'submitted').length;
+  const processingCount = currentTickets.filter((item) => item.status === 'processing').length;
+  const childSafetyCount = currentTickets.filter((item) => item.priority === 'child_safety').length;
+  const canUpdateStatus = admin?.role === 'super_admin' || admin?.role === 'operator';
+  const rows = formatListRows(currentTickets, (item) => [
+    <EntityTitle key={`${item.ticket_no}-title`} title={item.ticket_no} meta={item.category} />,
+    <EntityTitle key={`${item.ticket_no}-user`} title={item.user_name} meta={item.user_mobile ?? item.user_no} />,
+    <CompactText key={`${item.ticket_no}-content`} value={item.content} maxWidth={260} />,
+    <Badge key={`${item.ticket_no}-priority`} tone={badgeToneForStatus(item.priority)}>{supportTicketPriorityLabel(item.priority)}</Badge>,
+    <Badge key={`${item.ticket_no}-status`} tone={badgeToneForStatus(item.status)}>{supportTicketStatusLabel(item.status)}</Badge>,
+    formatDateTime(item.created_at),
+    <ActionGroup key={`${item.ticket_no}-actions`}>
+      <ActionButton icon={<Eye size={15} />} onClick={() => void detail.openDetail('客服反馈详情', item.ticket_no, async () => item)}>详情</ActionButton>
+      {canUpdateStatus && item.status === 'submitted' ? (
+        <ActionButton tone="warning" icon={<ClipboardCheck size={15} />} disabled={updatingTicketNo === item.ticket_no} onClick={() => void updateStatus(item, 'processing')}>
+          受理
+        </ActionButton>
+      ) : null}
+      {canUpdateStatus && (item.status === 'submitted' || item.status === 'processing') ? (
+        <ActionButton tone="success" icon={<CheckCircle2 size={15} />} disabled={updatingTicketNo === item.ticket_no} onClick={() => void updateStatus(item, 'resolved')}>
+          解决
+        </ActionButton>
+      ) : null}
+      {canUpdateStatus && item.status !== 'closed' ? (
+        <ActionButton tone="danger" icon={<XCircle size={15} />} disabled={updatingTicketNo === item.ticket_no} onClick={() => void updateStatus(item, 'closed')}>
+          关闭
+        </ActionButton>
+      ) : null}
+    </ActionGroup>,
+  ]);
+
+  return (
+    <PageShell title="客服反馈" description="集中处理用户在帮助与反馈提交的问题、账号注销和儿童信息保护诉求，避免客服事项只散落在审计日志中。">
+      <Panel>
+        <form className="admin-audit-filter-form" onSubmit={(event) => void load(1, pageSize, event)} style={{ display: 'grid', gap: '12px' }}>
+          <div>
+            <strong style={{ display: 'block', color: '#16211f', marginBottom: '4px' }}>筛选条件</strong>
+            <p style={mutedTextStyle}>支持按反馈编号、提交人、联系方式、问题内容、类型、优先级和处理状态筛选。</p>
+          </div>
+          <div className="admin-audit-filter-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
+            <input style={inputStyle} value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="编号 / 用户 / 内容" />
+            <input style={inputStyle} value={category} onChange={(event) => setCategory(event.target.value)} placeholder="问题类型" />
+            <AdminSelect value={priority} onChange={(event) => setPriority(event.target.value)}>
+              <option value="">全部优先级</option>
+              <option value="child_safety">儿童安全</option>
+              <option value="urgent">紧急</option>
+              <option value="normal">普通</option>
+            </AdminSelect>
+            <AdminSelect value={status} onChange={(event) => setStatus(event.target.value)}>
+              <option value="">全部状态</option>
+              <option value="submitted">待处理</option>
+              <option value="processing">处理中</option>
+              <option value="resolved">已解决</option>
+              <option value="closed">已关闭</option>
+            </AdminSelect>
+          </div>
+          <div className="admin-audit-filter-actions" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <button type="submit" style={primaryButtonStyle} disabled={loading}>
+              {loading ? '查询中…' : '查询'}
+            </button>
+            <button type="button" style={secondaryButtonStyle} disabled={loading} onClick={() => void clearFilters()}>
+              清空
+            </button>
+          </div>
+        </form>
+      </Panel>
+      <ListSummary total={result?.total} label="客服反馈概览" description="儿童安全和待处理反馈优先进入值班视野；每次状态推进都会写入审计日志。">
+        <SummaryStat label="待处理" value={submittedCount} tone={submittedCount > 0 ? 'warning' : 'neutral'} />
+        <SummaryStat label="处理中" value={processingCount} tone={processingCount > 0 ? 'warning' : 'neutral'} />
+        <SummaryStat label="儿童安全" value={childSafetyCount} tone={childSafetyCount > 0 ? 'danger' : 'neutral'} />
+      </ListSummary>
+      {actionError ? <Panel><EmptyState message={`操作失败：${actionError}`} /></Panel> : null}
+      {error ? <Panel><EmptyState message={`加载失败：${error}`} /></Panel> : null}
+      <TableShell columns={['反馈编号', '提交人', '反馈内容', '优先级', '状态', '提交时间', '操作']} rows={rows} emptyMessage="暂无客服反馈。用户可在 App 的帮助与反馈页提交问题。" loading={loading} />
+      {result ? <PaginationPanel page={result.page} pageSize={result.page_size} total={result.total} hasMore={result.has_more} loading={loading} onPrevPage={async () => { if (!loading && page > 1) await load(page - 1, pageSize); }} onNextPage={async () => { if (!loading && result.has_more) await load(page + 1, pageSize); }} /> : null}
+      <DetailDrawer open={detail.state.open} title={detail.state.title} subtitle={detail.state.subtitle} loading={detail.state.loading} error={detail.state.error} onClose={detail.closeDetail}>
+        {detail.state.data ? <SupportTicketDetailContent data={detail.state.data} /> : null}
+      </DetailDrawer>
+      {reasonDialog}
+    </PageShell>
+  );
+};
+
+export const ArchiveExportRequestsPage = () => {
+  const detail = useDetailState<AdminArchiveExportRequestItem>();
+  const { admin } = useAdminAuth();
+  const { requestOperationReason, reasonDialog } = useOperationReasonDialog();
+  const [keyword, setKeyword] = useState('');
+  const [purpose, setPurpose] = useState('');
+  const [status, setStatus] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [updatingRequestNo, setUpdatingRequestNo] = useState<string | null>(null);
+  const [result, setResult] = useState<{ list: AdminArchiveExportRequestItem[]; page: number; page_size: number; total: number; has_more: boolean } | null>(null);
+  const autoLoadedRef = useRef(false);
+
+  const load = useCallback(async (nextPage = page, nextPageSize = pageSize, event?: FormEvent, override?: ArchiveExportRequestFilterOverride) => {
+    event?.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      const activeKeyword = override?.keyword ?? keyword;
+      const activePurpose = override?.purpose ?? purpose;
+      const activeStatus = override?.status ?? status;
+      const next = await adminApi.listArchiveExportRequests({
+        keyword: activeKeyword || undefined,
+        purpose: activePurpose || undefined,
+        status: activeStatus || undefined,
+        page: nextPage,
+        page_size: nextPageSize,
+      });
+      setResult(next);
+      setPage(next.page);
+      setPageSize(next.page_size);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  }, [keyword, page, pageSize, purpose, status]);
+
+  const clearFilters = async () => {
+    setKeyword('');
+    setPurpose('');
+    setStatus('');
+    await load(1, pageSize, undefined, { keyword: '', purpose: '', status: '' });
+  };
+
+  useEffect(() => {
+    if (autoLoadedRef.current) return;
+    autoLoadedRef.current = true;
+    const timer = window.setTimeout(() => {
+      void load(1, pageSize);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [load, pageSize]);
+
+  const updateStatus = async (item: AdminArchiveExportRequestItem, nextStatus: 'processing' | 'completed' | 'rejected') => {
+    const actionName = nextStatus === 'processing' ? '受理档案交付申请' : nextStatus === 'completed' ? '完成档案交付申请' : '驳回档案交付申请';
+    const reason = await requestOperationReason(actionName);
+    if (!reason) return;
+
+    setActionError(null);
+    setUpdatingRequestNo(item.request_no);
+    try {
+      const updated = await adminApi.updateArchiveExportRequestStatus(item.request_no, { status: nextStatus, note: reason });
+      setResult((current) =>
+        current
+          ? {
+              ...current,
+              list: current.list.map((currentItem) => (currentItem.request_no === updated.request_no ? updated : currentItem)),
+            }
+          : current,
+      );
+      if (detail.state.data?.request_no === updated.request_no) {
+        detail.updateDetail(() => updated);
+      }
+    } catch (err) {
+      setActionError(getErrorMessage(err));
+    } finally {
+      setUpdatingRequestNo(null);
+    }
+  };
+
+  const currentRequests = result?.list ?? [];
+  const submittedCount = currentRequests.filter((item) => item.status === 'submitted').length;
+  const processingCount = currentRequests.filter((item) => item.status === 'processing').length;
+  const handoffCount = currentRequests.filter((item) => item.purpose === 'adult_handoff').length;
+  const canUpdateStatus = admin?.role === 'super_admin' || admin?.role === 'operator';
+  const rows = formatListRows(currentRequests, (item) => [
+    <EntityTitle key={`${item.request_no}-title`} title={item.request_no} meta={archiveExportPurposeLabel(item.purpose)} />,
+    <EntityTitle key={`${item.request_no}-child`} title={item.child_name} meta={item.child_no} />,
+    <EntityTitle key={`${item.request_no}-user`} title={item.user_name} meta={item.user_mobile ?? item.user_no} />,
+    <span key={`${item.request_no}-snapshot`} style={{ display: 'grid', gap: '4px', color: '#4b5a56', fontSize: '12px', fontWeight: 700 }}>
+      <span>{archiveExportTypeLabel(item.export_type)}</span>
+      <span>{item.record_count} 条记录 · {item.media_count} 个媒体 · {item.milestone_count} 个里程碑</span>
+    </span>,
+    <Badge key={`${item.request_no}-status`} tone={badgeToneForStatus(item.status)}>{archiveExportStatusLabel(item.status)}</Badge>,
+    formatDateTime(item.created_at),
+    <ActionGroup key={`${item.request_no}-actions`}>
+      <ActionButton icon={<Eye size={15} />} onClick={() => void detail.openDetail('档案交付申请详情', item.request_no, async () => item)}>详情</ActionButton>
+      {canUpdateStatus && item.status === 'submitted' ? (
+        <ActionButton tone="warning" icon={<ClipboardCheck size={15} />} disabled={updatingRequestNo === item.request_no} onClick={() => void updateStatus(item, 'processing')}>
+          受理
+        </ActionButton>
+      ) : null}
+      {canUpdateStatus && (item.status === 'submitted' || item.status === 'processing') ? (
+        <>
+          <ActionButton tone="success" icon={<CheckCircle2 size={15} />} disabled={updatingRequestNo === item.request_no} onClick={() => void updateStatus(item, 'completed')}>
+            完成
+          </ActionButton>
+          <ActionButton tone="danger" icon={<XCircle size={15} />} disabled={updatingRequestNo === item.request_no} onClick={() => void updateStatus(item, 'rejected')}>
+            驳回
+          </ActionButton>
+        </>
+      ) : null}
+    </ActionGroup>,
+  ]);
+
+  return (
+    <PageShell title="档案交付申请" description="集中处理用户发起的云端档案打包和成年移交准备，避免长期资产交付只停留在审计日志里。">
+      <Panel>
+        <form className="admin-audit-filter-form" onSubmit={(event) => void load(1, pageSize, event)} style={{ display: 'grid', gap: '12px' }}>
+          <div>
+            <strong style={{ display: 'block', color: '#16211f', marginBottom: '4px' }}>筛选条件</strong>
+            <p style={mutedTextStyle}>支持按申请编号、孩子、家庭、申请人、联系方式、申请类型和处理状态筛选。</p>
+          </div>
+          <div className="admin-audit-filter-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
+            <input style={inputStyle} value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="申请编号 / 孩子 / 申请人" />
+            <AdminSelect value={purpose} onChange={(event) => setPurpose(event.target.value)}>
+              <option value="">全部类型</option>
+              <option value="backup">档案打包</option>
+              <option value="adult_handoff">成年移交</option>
+            </AdminSelect>
+            <AdminSelect value={status} onChange={(event) => setStatus(event.target.value)}>
+              <option value="">全部状态</option>
+              <option value="submitted">待处理</option>
+              <option value="processing">处理中</option>
+              <option value="completed">已完成</option>
+              <option value="rejected">已驳回</option>
+            </AdminSelect>
+          </div>
+          <div className="admin-audit-filter-actions" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <button type="submit" style={primaryButtonStyle} disabled={loading}>
+              {loading ? '查询中…' : '查询'}
+            </button>
+            <button type="button" style={secondaryButtonStyle} disabled={loading} onClick={() => void clearFilters()}>
+              清空
+            </button>
+          </div>
+        </form>
+      </Panel>
+      <ListSummary total={result?.total} label="交付申请概览" description="优先处理成年移交和待处理申请；每次状态推进都会写入审计，方便复盘责任链。">
+        <SummaryStat label="待处理" value={submittedCount} tone={submittedCount > 0 ? 'warning' : 'neutral'} />
+        <SummaryStat label="处理中" value={processingCount} tone={processingCount > 0 ? 'warning' : 'neutral'} />
+        <SummaryStat label="成年移交" value={handoffCount} tone={handoffCount > 0 ? 'danger' : 'neutral'} />
+      </ListSummary>
+      {actionError ? <Panel><EmptyState message={`操作失败：${actionError}`} /></Panel> : null}
+      {error ? <Panel><EmptyState message={`加载失败：${error}`} /></Panel> : null}
+      <TableShell columns={['申请编号', '孩子档案', '申请人', '资产快照', '状态', '提交时间', '操作']} rows={rows} emptyMessage="暂无档案交付申请。可清空筛选，或提醒用户在导出与备份页提交云端打包申请。" loading={loading} />
+      {result ? <PaginationPanel page={result.page} pageSize={result.page_size} total={result.total} hasMore={result.has_more} loading={loading} onPrevPage={async () => { if (!loading && page > 1) await load(page - 1, pageSize); }} onNextPage={async () => { if (!loading && result.has_more) await load(page + 1, pageSize); }} /> : null}
+      <DetailDrawer open={detail.state.open} title={detail.state.title} subtitle={detail.state.subtitle} loading={detail.state.loading} error={detail.state.error} onClose={detail.closeDetail}>
+        {detail.state.data ? <ArchiveExportRequestDetailContent data={detail.state.data} /> : null}
       </DetailDrawer>
       {reasonDialog}
     </PageShell>

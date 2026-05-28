@@ -7,6 +7,7 @@ import {
   ChevronRight,
   Edit3,
   Image as ImageIcon,
+  MapPin,
   Mic,
   PlayCircle,
   Search,
@@ -162,7 +163,7 @@ export const HomePage = () => {
   }, [activeChild, children, setActiveChild]);
 
   const records = recordData ?? [];
-  const childName = activeChild?.name ?? '小满';
+  const childName = activeChild?.name?.trim() || '孩子';
   const prompt = prompts(childName)[promptIndex % prompts(childName).length];
   const switchChild = () => {
     if (children.length > 1 && activeChild) {
@@ -377,22 +378,66 @@ export const HomePage = () => {
   );
 };
 
+const searchHistoryKey = 'nianlun.search.history.v1';
+const readSearchHistory = () => {
+  if (typeof window === 'undefined') return [];
+
+  try {
+    const raw = window.localStorage.getItem(searchHistoryKey);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string' && item.trim().length > 0).slice(0, 8) : [];
+  } catch {
+    return [];
+  }
+};
+
+const writeSearchHistory = (history: string[]) => {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(searchHistoryKey, JSON.stringify(history.slice(0, 8)));
+};
+
+const uniqueSearchValues = (values: Array<string | null | undefined>) =>
+  Array.from(new Set(values.map((value) => value?.trim()).filter((value): value is string => Boolean(value))));
+
 export const SearchPage = () => {
   const { activeChild } = useAuth();
   const navigate = useNavigate();
   const [keyword, setKeyword] = useState('');
-  const { data } = useAsyncData<RecordSummary[]>(
+  const [history, setHistory] = useState<string[]>(() => readSearchHistory());
+  const normalizedKeyword = keyword.trim();
+  const { data, loading, error } = useAsyncData<RecordSummary[]>(
     async () => {
       if (!activeChild) return [];
-      const result = await webApi.listRecords({ child_no: activeChild.child_no, page: 1, page_size: 20, status: 'published' });
+      const result = await webApi.listRecords({
+        child_no: activeChild.child_no,
+        page: 1,
+        page_size: 50,
+        status: 'published',
+        keyword: normalizedKeyword || undefined,
+      });
       return result.list;
     },
-    [activeChild?.child_no],
+    [activeChild?.child_no, normalizedKeyword],
   );
   const records = data ?? [];
-  const filtered = keyword.trim()
-    ? records.filter((record) => [record.title, record.summary, ...(record.tags ?? [])].filter(Boolean).some((value) => String(value).includes(keyword.trim())))
-    : [];
+  const hotTags = Array.from(new Set(records.flatMap((record) => record.tags ?? []))).slice(0, 8);
+  const resultTags = uniqueSearchValues(records.flatMap((record) => record.tags ?? [])).slice(0, 8);
+  const resultLocations = uniqueSearchValues(records.map((record) => record.location_text)).slice(0, 8);
+  const commitSearch = (value: string) => {
+    const next = value.trim();
+    if (!next) return;
+    setKeyword(next);
+    setHistory((current) => {
+      const updated = [next, ...current.filter((item) => item !== next)].slice(0, 8);
+      writeSearchHistory(updated);
+      return updated;
+    });
+  };
+  const clearSearch = () => {
+    setKeyword('');
+    setHistory([]);
+    writeSearchHistory([]);
+  };
 
   return (
     <div style={{ ...refPageStyle, background: '#ffffff' }}>
@@ -402,38 +447,98 @@ export const SearchPage = () => {
         </button>
         <label style={{ height: 44, borderRadius: '999px', background: '#f1f5f9', display: 'flex', alignItems: 'center', gap: 7, padding: '0 12px', color: '#94a3b8' }}>
           <Search size={15} />
-          <input aria-label="搜索关键词" value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="搜索时间、地点、标签或内容..." style={{ width: '100%', minHeight: 44, border: 'none', outline: 'none', background: 'transparent', color: '#292524', fontSize: 12, fontWeight: 700 }} />
+          <input
+            aria-label="搜索关键词"
+            value={keyword}
+            onChange={(event) => setKeyword(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') commitSearch(keyword);
+            }}
+            placeholder="搜索时间、地点、标签或内容..."
+            style={{ width: '100%', minHeight: 44, border: 'none', outline: 'none', background: 'transparent', color: '#292524', fontSize: 12, fontWeight: 700 }}
+          />
         </label>
-        <button type="button" onClick={() => setKeyword(keyword.trim())} style={{ minWidth: 44, minHeight: 44, border: 'none', background: 'transparent', color: '#292524', fontSize: 12, fontWeight: 900, cursor: 'pointer' }}>搜索</button>
+        <button type="button" onClick={() => commitSearch(keyword)} style={{ minWidth: 44, minHeight: 44, border: 'none', background: 'transparent', color: '#292524', fontSize: 12, fontWeight: 900, cursor: 'pointer' }}>搜索</button>
       </header>
       <main style={{ ...refContentStyle, paddingTop: 24 }}>
         <section>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <h2 style={{ margin: 0, color: '#292524', fontSize: 14, fontWeight: 900 }}>搜索历史</h2>
-            <button type="button" onClick={() => setKeyword('')} style={{ minWidth: 44, minHeight: 44, border: 'none', background: 'transparent', color: '#a8a29e', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>清空</button>
+            <button type="button" onClick={clearSearch} style={{ minWidth: 44, minHeight: 44, border: 'none', background: 'transparent', color: '#a8a29e', fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>清空</button>
           </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-            {['第一次走路', '生日', '游乐园', '满月'].map((item) => (
-              <button key={item} type="button" onClick={() => setKeyword(item)} style={{ minHeight: 44, border: 'none', background: 'transparent', padding: 0, cursor: 'pointer' }}>
-                <RefChip>{item}</RefChip>
-              </button>
-            ))}
-          </div>
+          {history.length ? (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+              {history.map((item) => (
+                <button key={item} type="button" onClick={() => commitSearch(item)} style={{ minHeight: 44, border: 'none', background: 'transparent', padding: 0, cursor: 'pointer' }}>
+                  <RefChip>{item}</RefChip>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p style={{ ...refMutedTextStyle, margin: 0 }}>最近搜索会保存在本机，方便下次回看同一批成长记录。</p>
+          )}
         </section>
         <section>
           <h2 style={{ margin: '0 0 12px', color: '#292524', fontSize: 14, fontWeight: 900 }}>热门标签</h2>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-            {['#第一次', '#生日快乐', '#户外游', '#情绪瞬间', '#会走路了'].map((item) => (
-              <button key={item} type="button" onClick={() => setKeyword(item.replace('#', ''))} style={{ minHeight: 44, border: 'none', background: 'transparent', padding: 0, cursor: 'pointer' }}>
-                <span style={{ display: 'inline-flex', minHeight: 44, borderRadius: '999px', padding: '10px 14px', alignItems: 'center', color: '#d97706', background: '#fef3c7', fontSize: 12, fontWeight: 900 }}>{item}</span>
-              </button>
-            ))}
-          </div>
+          {hotTags.length ? (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+              {hotTags.map((item) => (
+                <button key={item} type="button" onClick={() => commitSearch(item)} style={{ minHeight: 44, border: 'none', background: 'transparent', padding: 0, cursor: 'pointer' }}>
+                  <span style={{ display: 'inline-flex', minHeight: 44, borderRadius: '999px', padding: '10px 14px', alignItems: 'center', color: '#d97706', background: '#fef3c7', fontSize: 12, fontWeight: 900 }}>#{item}</span>
+                </button>
+              ))}
+            </div>
+          ) : (
+            <p style={{ ...refMutedTextStyle, margin: 0 }}>{loading ? '正在整理常用标签…' : '有记录标签后会自动出现在这里。'}</p>
+          )}
         </section>
-        {keyword.trim() ? (
+        {normalizedKeyword ? (
           <section style={{ display: 'grid', gap: 10 }}>
-            {filtered.map((record) => <RecordSummaryCard key={record.record_no} record={record} onClick={() => navigate(`/record/${record.record_no}`)} />)}
-            {!filtered.length ? <EmptyState message="没有找到匹配的记录。" /> : null}
+            <h2 style={{ margin: '0 0 2px', color: '#292524', fontSize: 14, fontWeight: 900 }}>搜索结果</h2>
+            {loading ? <EmptyState message="正在查找匹配的成长记录…" /> : null}
+            {error ? <EmptyState message={`搜索失败：${error}`} /> : null}
+            {!loading && !error && records.length ? (
+              <>
+                <div style={{ display: 'grid', gap: 8 }}>
+                  <h3 style={{ margin: 0, color: '#57534e', fontSize: 12, fontWeight: 900 }}>标签结果</h3>
+                  {resultTags.length ? (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                      {resultTags.map((item) => (
+                        <button key={item} type="button" onClick={() => commitSearch(item)} style={{ minHeight: 44, border: 'none', background: 'transparent', padding: 0, cursor: 'pointer' }}>
+                          <span style={{ display: 'inline-flex', minHeight: 44, borderRadius: '999px', padding: '10px 14px', alignItems: 'center', color: '#22584f', background: '#e9f5f2', fontSize: 12, fontWeight: 900 }}>#{item}</span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p style={{ ...refMutedTextStyle, margin: 0 }}>这批记录还没有可继续回看的标签。</p>
+                  )}
+                </div>
+
+                <div style={{ display: 'grid', gap: 8 }}>
+                  <h3 style={{ margin: 0, color: '#57534e', fontSize: 12, fontWeight: 900 }}>地点结果</h3>
+                  {resultLocations.length ? (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                      {resultLocations.map((item) => (
+                        <button key={item} type="button" onClick={() => commitSearch(item)} style={{ minHeight: 44, border: 'none', background: 'transparent', padding: 0, cursor: 'pointer' }}>
+                          <span style={{ display: 'inline-flex', minHeight: 44, borderRadius: '999px', padding: '10px 14px', alignItems: 'center', gap: 6, color: '#b45309', background: '#fff7ed', fontSize: 12, fontWeight: 900 }}>
+                            <MapPin size={13} />
+                            {item}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p style={{ ...refMutedTextStyle, margin: 0 }}>这批记录还没有地点信息。</p>
+                  )}
+                </div>
+
+                <div style={{ display: 'grid', gap: 10 }}>
+                  <h3 style={{ margin: 0, color: '#57534e', fontSize: 12, fontWeight: 900 }}>匹配记录</h3>
+                  {records.map((record) => <RecordSummaryCard key={record.record_no} record={record} onClick={() => navigate(`/record/${record.record_no}`)} />)}
+                </div>
+              </>
+            ) : null}
+            {!loading && !error && !records.length ? <EmptyState message="没有找到匹配的记录，可以换一个标题、地点或标签继续搜索。" /> : null}
           </section>
         ) : null}
       </main>

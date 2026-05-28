@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { BarChart3, Bot, Database, FileText, Image, KeyRound, LogOut, ShieldCheck, UsersRound, type LucideIcon } from 'lucide-react';
+import { Archive, BarChart3, Bot, Database, FileText, House, Image, KeyRound, LogOut, MessageSquareText, ServerCog, Settings2, ShieldAlert, ShieldCheck, UsersRound, type LucideIcon } from 'lucide-react';
 
 import { useAdminAuth } from '../shared/useAdminAuth';
 import { adminRoleLabel } from '../shared/labels';
@@ -9,11 +9,17 @@ import { secondaryButtonStyle } from '../shared/uiStyles';
 const navItems: Array<{ to: string; label: string; icon: LucideIcon }> = [
   { to: '/dashboard', label: '总览', icon: BarChart3 },
   { to: '/users', label: '账号管理', icon: UsersRound },
+  { to: '/families', label: '家庭管理', icon: House },
   { to: '/invites', label: '邀请码', icon: KeyRound },
   { to: '/children', label: '孩子档案', icon: Database },
   { to: '/records', label: '成长记录', icon: FileText },
   { to: '/media', label: '媒体库', icon: Image },
   { to: '/ai-jobs', label: 'AI 任务', icon: Bot },
+  { to: '/content-risks', label: '内容风险', icon: ShieldAlert },
+  { to: '/support-tickets', label: '客服反馈', icon: MessageSquareText },
+  { to: '/archive-export-requests', label: '档案交付', icon: Archive },
+  { to: '/ops-readiness', label: '系统运维', icon: ServerCog },
+  { to: '/system-config', label: '系统配置', icon: Settings2 },
 ];
 
 const sidebarStyle: CSSProperties = {

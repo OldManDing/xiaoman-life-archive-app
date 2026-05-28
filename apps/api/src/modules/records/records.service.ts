@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { FamilyMemberRole, RecordTagSource, VisibilityScope } from '@prisma/client';
+import { FamilyMemberRole, Prisma, RecordTagSource, VisibilityScope } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
 import { MEDIA_STATUS_READY, RECORD_STATUS_DRAFT, RECORD_STATUS_PUBLISHED } from '../../shared/constants';
@@ -18,6 +18,40 @@ const normalizeRecordLocationText = (value?: string | null) => {
   const text = value?.trim() ?? '';
   if (!text) return null;
   return coordinateLocationPattern.test(text) ? '当前位置附近' : text;
+};
+
+const keywordEventTimeRange = (keyword: string) => {
+  const normalized = keyword
+    .trim()
+    .replace(/[年月/.]/g, '-')
+    .replace(/日$/, '')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+  const match = /^(\d{4})(?:-(\d{1,2}))?(?:-(\d{1,2}))?$/.exec(normalized);
+
+  if (!match) return null;
+
+  const year = Number(match[1]);
+  const month = match[2] ? Number(match[2]) : null;
+  const day = match[3] ? Number(match[3]) : null;
+
+  if (month !== null && (month < 1 || month > 12)) return null;
+  if (day !== null && (day < 1 || day > 31)) return null;
+
+  if (month === null) {
+    return { gte: new Date(Date.UTC(year, 0, 1)), lt: new Date(Date.UTC(year + 1, 0, 1)) };
+  }
+
+  if (day === null) {
+    return { gte: new Date(Date.UTC(year, month - 1, 1)), lt: new Date(Date.UTC(year, month, 1)) };
+  }
+
+  const start = new Date(Date.UTC(year, month - 1, day));
+  if (start.getUTCFullYear() !== year || start.getUTCMonth() !== month - 1 || start.getUTCDate() !== day) {
+    return null;
+  }
+
+  return { gte: start, lt: new Date(Date.UTC(year, month - 1, day + 1)) };
 };
 
 @Injectable()
@@ -112,7 +146,9 @@ export class RecordsService {
     const page = normalizePage(dto.page);
     const pageSize = normalizePageSize(dto.page_size);
 
-    const where = {
+    const keyword = dto.keyword?.trim();
+    const keywordTimeRange = keyword ? keywordEventTimeRange(keyword) : null;
+    const where: Prisma.RecordWhereInput = {
       childId: child.id,
       deletedAt: null,
       ...(dto.status ? { status: dto.status === 'draft' ? RECORD_STATUS_DRAFT : RECORD_STATUS_PUBLISHED } : {}),
@@ -123,6 +159,19 @@ export class RecordsService {
               ...(dto.start_time ? { gte: new Date(dto.start_time) } : {}),
               ...(dto.end_time ? { lte: new Date(dto.end_time) } : {}),
             },
+          }
+        : {}),
+      ...(keyword
+        ? {
+            OR: [
+              { title: { contains: keyword } },
+              { contentText: { contains: keyword } },
+              { aiSummary: { contains: keyword } },
+              { locationText: { contains: keyword } },
+              { creator: { nickname: { contains: keyword } } },
+              { tags: { some: { tagName: { contains: keyword } } } },
+              ...(keywordTimeRange ? [{ eventTime: keywordTimeRange }] : []),
+            ],
           }
         : {}),
       ...(dto.tag
@@ -315,6 +364,7 @@ export class RecordsService {
     title: string | null;
     contentText: string | null;
     eventTime: Date;
+    locationText: string | null;
     recordType: string;
     isMilestone: boolean;
     aiSummary?: string | null;
@@ -335,6 +385,7 @@ export class RecordsService {
       summary: record.contentText,
       ai_summary: record.aiSummary ?? null,
       event_time: record.eventTime.toISOString(),
+      location_text: record.locationText,
       tags: uniqueTagNames(record.tags),
       creator_name: record.creator.nickname,
       is_milestone: record.isMilestone,

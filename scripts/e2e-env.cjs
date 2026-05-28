@@ -1,4 +1,38 @@
-const localDatabaseUrl = 'mysql://xiaoman:password@localhost:3307/xiaoman_archive';
+const { existsSync, readFileSync } = require('node:fs');
+const { join } = require('node:path');
+
+const defaultDatabaseUrl = 'mysql://xiaoman:password@localhost:3307/xiaoman_archive';
+
+function readLocalEnv() {
+  const envPath = join(process.cwd(), '.env.local');
+
+  if (!existsSync(envPath)) {
+    return {};
+  }
+
+  return readFileSync(envPath, 'utf8')
+    .split(/\r?\n/)
+    .reduce((env, line) => {
+      const trimmed = line.trim();
+      const separatorIndex = trimmed.indexOf('=');
+
+      if (!trimmed || trimmed.startsWith('#') || separatorIndex === -1) {
+        return env;
+      }
+
+      const key = trimmed.slice(0, separatorIndex).trim();
+      const rawValue = trimmed.slice(separatorIndex + 1).trim();
+      const value =
+        (rawValue.startsWith('"') && rawValue.endsWith('"')) || (rawValue.startsWith("'") && rawValue.endsWith("'"))
+          ? rawValue.slice(1, -1)
+          : rawValue;
+
+      return { ...env, [key]: value };
+    }, {});
+}
+
+const localEnv = readLocalEnv();
+const localDatabaseUrl = localEnv.DATABASE_URL ?? defaultDatabaseUrl;
 
 const apiPort = process.env.E2E_API_PORT ?? '3001';
 const webPort = process.env.E2E_WEB_PORT ?? '5176';

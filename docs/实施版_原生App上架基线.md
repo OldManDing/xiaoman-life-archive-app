@@ -47,8 +47,8 @@ npm run sync:mobile
 - 帮助、后台、隐私承载域名：`https://nianlun.xmlga.top`
 - AI 生产模板：
   - `AI_PROVIDER=openai-compatible`
-  - `AI_BASE_URL=https://ark.cn-beijing.volces.com/api/coding/v3`
-  - `AI_MODEL=gml5.1`
+  - `AI_BASE_URL=<已验证兼容 /chat/completions 的 API 根地址>`
+  - `AI_MODEL=<真实可访问的模型或 endpoint id>`
 
 ## 6. 提审前必须再做
 

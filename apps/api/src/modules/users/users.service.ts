@@ -1,14 +1,23 @@
 import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { ActorType, AuthType, MembershipType, Prisma } from '@prisma/client';
+import { ActorType, ArchiveExportRequestStatus, AuthType, MembershipType, Prisma, SupportTicketPriority, SupportTicketStatus } from '@prisma/client';
 import bcrypt from 'bcrypt';
 
 import { PrismaService } from '../../prisma/prisma.service';
-import { USER_ACTIVE_STATUS } from '../../shared/constants';
+import {
+  FAMILY_MEMBER_ACTIVE_STATUS,
+  MEDIA_STATUS_READY,
+  RECORD_STATUS_PUBLISHED,
+  USER_ACTIVE_STATUS,
+} from '../../shared/constants';
+import { AccessControlService } from '../../shared/services/access-control.service';
 import { AuditLogService } from '../../shared/services/audit-log.service';
 import { generateBizNo, maskMobile } from '../../shared/utils';
+import { ArchiveExportSummaryDto } from './dto/archive-export-summary.dto';
+import { CreateArchiveExportRequestDto } from './dto/create-archive-export-request.dto';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { CreateMembershipBookRequestDto } from './dto/create-membership-book-request.dto';
 import { DeleteMeDto } from './dto/delete-me.dto';
+import { ListArchiveExportRequestsDto } from './dto/list-archive-export-requests.dto';
 import { UpdatePreferencesDto } from './dto/update-preferences.dto';
 import { UpdateMeDto } from './dto/update-me.dto';
 
@@ -23,12 +32,32 @@ type AuditRequestMeta = {
   user_agent?: string | null;
 };
 
+type UserArchiveExportRequestWithChild = Prisma.ArchiveExportRequestGetPayload<{
+  include: {
+    child: true;
+  };
+}>;
+
+const formatArchiveDateTime = (value: Date | null | undefined) => (value ? value.toISOString().replace('T', ' ').slice(0, 19) : '—');
+
+const formatArchiveBytes = (value: bigint | number | null | undefined) => {
+  if (value === null || value === undefined) return '—';
+  const size = Number(value);
+  if (!Number.isFinite(size)) return '—';
+  if (size < 1024) return `${size} B`;
+  if (size < 1024 * 1024) return `${(size / 1024).toFixed(1)} KB`;
+  return `${(size / 1024 / 1024).toFixed(1)} MB`;
+};
+
+const safeArchiveFileName = (value: string) => value.replace(/[\\/:*?"<>|]/g, '_').slice(0, 80);
+
 @Injectable()
 export class UsersService {
   private readonly logger = new Logger(UsersService.name);
 
   constructor(
     private readonly prisma: PrismaService,
+    private readonly accessControlService: AccessControlService,
     private readonly auditLogService: AuditLogService,
   ) {}
 
@@ -97,32 +126,46 @@ export class UsersService {
 
   async submitFeedback(userId: bigint, dto: CreateFeedbackDto, meta: AuditRequestMeta = {}) {
     const user = await this.findUserOrThrow(userId);
-    const feedbackNo = generateBizNo('fb');
-    const createdAt = new Date();
+    const ticketNo = generateBizNo('fb');
+    const created = await this.prisma.supportTicket.create({
+      data: {
+        ticketNo,
+        userId: user.id,
+        category: dto.category,
+        topic: dto.topic || null,
+        content: dto.content,
+        contact: dto.contact || null,
+        status: SupportTicketStatus.submitted,
+        priority: this.resolveSupportTicketPriority(dto),
+      },
+    });
 
     await this.auditLogService.create({
       actor_type: ActorType.user,
       actor_id: user.id,
       action: 'user.feedback_submitted',
-      target_type: 'feedback',
-      target_id: user.id,
+      target_type: 'support_ticket',
+      target_id: created.id,
       ip_address: meta.ip_address,
       user_agent: meta.user_agent,
       metadata: {
-        feedback_no: feedbackNo,
+        feedback_no: ticketNo,
+        ticket_no: ticketNo,
         category: dto.category,
         content: dto.content,
         contact: dto.contact || null,
         topic: dto.topic || null,
         user_no: user.userNo,
+        priority: created.priority,
       },
     });
 
     return {
-      feedback_no: feedbackNo,
+      feedback_no: ticketNo,
+      ticket_no: ticketNo,
       status: 'submitted',
-      message: '反馈已提交，我们会在处理后联系你。',
-      created_at: createdAt.toISOString(),
+      message: '反馈已提交，客服会在处理后联系你。',
+      created_at: created.createdAt.toISOString(),
     };
   }
 
@@ -154,6 +197,257 @@ export class UsersService {
       status: 'submitted',
       message: '纪念册申领已提交，我们会核对会员权益后联系你。',
       created_at: createdAt.toISOString(),
+    };
+  }
+
+  async requestArchiveExport(userId: bigint, dto: CreateArchiveExportRequestDto, meta: AuditRequestMeta = {}) {
+    const user = await this.findUserOrThrow(userId);
+    const { child } = await this.accessControlService.ensureChildOwner(userId, dto.child_no);
+
+    const exportType = dto.export_type ?? 'all';
+    const purpose = dto.purpose ?? 'backup';
+    const requestNo = generateBizNo(purpose === 'adult_handoff' ? 'handoff' : 'export');
+    const recordWhere = {
+      childId: child.id,
+      deletedAt: null,
+      status: RECORD_STATUS_PUBLISHED,
+    };
+    const mediaWhere = {
+      childId: child.id,
+      deletedAt: null,
+      status: MEDIA_STATUS_READY,
+    };
+    const [recordCount, milestoneCount, mediaCount, firstRecord, latestRecord] = await Promise.all([
+      this.prisma.record.count({ where: recordWhere }),
+      this.prisma.record.count({ where: { ...recordWhere, isMilestone: true } }),
+      this.prisma.recordMedia.count({ where: mediaWhere }),
+      this.prisma.record.findFirst({
+        where: recordWhere,
+        orderBy: { eventTime: 'asc' },
+        select: { eventTime: true },
+      }),
+      this.prisma.record.findFirst({
+        where: recordWhere,
+        orderBy: { eventTime: 'desc' },
+        select: { eventTime: true },
+      }),
+    ]);
+    const created = await this.prisma.archiveExportRequest.create({
+      data: {
+        requestNo,
+        userId: user.id,
+        familyId: child.familyId,
+        childId: child.id,
+        exportType,
+        purpose,
+        status: ArchiveExportRequestStatus.submitted,
+        contact: dto.contact || null,
+        note: dto.note || null,
+        recordCount,
+        milestoneCount,
+        mediaCount,
+        firstRecordTime: firstRecord?.eventTime ?? null,
+        latestRecordTime: latestRecord?.eventTime ?? null,
+      },
+    });
+
+    await this.auditLogService.create({
+      actor_type: ActorType.user,
+      actor_id: user.id,
+      action: purpose === 'adult_handoff' ? 'user.adult_handoff_requested' : 'user.archive_export_requested',
+      target_type: 'archive_export_request',
+      target_id: created.id,
+      ip_address: meta.ip_address,
+      user_agent: meta.user_agent,
+      metadata: {
+        request_no: requestNo,
+        user_no: user.userNo,
+        child_no: child.childNo,
+        child_name: child.name,
+        family_no: child.family.familyNo,
+        export_type: exportType,
+        purpose,
+        contact: dto.contact || null,
+        note: dto.note || null,
+        snapshot: {
+          record_count: recordCount,
+          milestone_count: milestoneCount,
+          media_count: mediaCount,
+          first_record_time: firstRecord?.eventTime.toISOString() ?? null,
+          latest_record_time: latestRecord?.eventTime.toISOString() ?? null,
+        },
+      },
+    });
+
+    return {
+      request_no: requestNo,
+      status: created.status,
+      message:
+        purpose === 'adult_handoff'
+          ? '成年移交准备申请已提交，运营会按档案完整性和身份核验流程协助处理。'
+          : '档案打包申请已提交，运营可在审计日志中追踪处理。你也可以先下载本机摘要。',
+      created_at: created.createdAt.toISOString(),
+      summary: {
+        child_no: child.childNo,
+        child_name: child.name,
+        export_type: exportType,
+        purpose,
+        record_count: recordCount,
+        milestone_count: milestoneCount,
+        media_count: mediaCount,
+        first_record_time: firstRecord?.eventTime.toISOString() ?? null,
+        latest_record_time: latestRecord?.eventTime.toISOString() ?? null,
+      },
+    };
+  }
+
+  async listArchiveExportRequests(userId: bigint, dto: ListArchiveExportRequestsDto) {
+    await this.findUserOrThrow(userId);
+
+    let childId: bigint | undefined;
+    if (dto.child_no) {
+      const child = await this.prisma.child.findFirst({
+        where: {
+          childNo: dto.child_no,
+          deletedAt: null,
+          family: {
+            deletedAt: null,
+            members: {
+              some: {
+                userId,
+                status: FAMILY_MEMBER_ACTIVE_STATUS,
+                deletedAt: null,
+              },
+            },
+          },
+        },
+        select: { id: true },
+      });
+
+      if (!child) {
+        return { list: [] };
+      }
+
+      childId = child.id;
+    }
+
+    const list = await this.prisma.archiveExportRequest.findMany({
+      where: {
+        userId,
+        ...(childId ? { childId } : {}),
+      },
+      include: { child: true },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    });
+
+    return {
+      list: list.map((item) => this.toArchiveExportRequestItem(item)),
+    };
+  }
+
+  async archiveExportSummary(userId: bigint, dto: ArchiveExportSummaryDto, meta: AuditRequestMeta = {}) {
+    const user = await this.findUserOrThrow(userId);
+    const { child } = await this.accessControlService.ensureChildOwner(userId, dto.child_no);
+    const records = await this.prisma.record.findMany({
+      where: {
+        childId: child.id,
+        deletedAt: null,
+        status: RECORD_STATUS_PUBLISHED,
+      },
+      include: {
+        creator: true,
+        tags: true,
+        media: {
+          where: {
+            deletedAt: null,
+            status: MEDIA_STATUS_READY,
+          },
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+      orderBy: { eventTime: 'asc' },
+    });
+    const generatedAt = new Date();
+    const mediaList = records.flatMap((record) => record.media);
+    const milestoneCount = records.filter((record) => record.isMilestone).length;
+    const lines = [
+      '年轮成长档案摘要',
+      `生成时间：${formatArchiveDateTime(generatedAt)}`,
+      `账号：${user.nickname}（${user.userNo}）`,
+      `孩子：${child.name}（${child.childNo}）`,
+      `家庭：${child.family.name}（${child.family.familyNo}）`,
+      `记录数量：${records.length}`,
+      `里程碑数量：${milestoneCount}`,
+      `媒体数量：${mediaList.length}`,
+      `最早记录：${formatArchiveDateTime(records[0]?.eventTime)}`,
+      `最新记录：${formatArchiveDateTime(records[records.length - 1]?.eventTime)}`,
+      '',
+      '一、记录清单',
+      records.length ? '' : '暂无已发布记录。',
+    ];
+
+    for (const [index, record] of records.entries()) {
+      const tags = record.tags.map((item) => item.tagName).join('、') || '无';
+      lines.push(
+        `${index + 1}. ${record.title || record.aiGeneratedTitle || '未命名记录'}`,
+        `   时间：${formatArchiveDateTime(record.eventTime)}`,
+        `   记录人：${record.creator.nickname}`,
+        `   地点：${record.locationText || '未填写'}`,
+        `   标签：${tags}`,
+        `   里程碑：${record.isMilestone ? '是' : '否'}`,
+        `   摘要：${record.aiSummary || '未生成'}`,
+        `   正文：${(record.contentText || '未填写').replace(/\s+/g, ' ').trim()}`,
+        '',
+      );
+    }
+
+    lines.push('二、媒体清单', mediaList.length ? '' : '暂无可用媒体。');
+    for (const [index, media] of mediaList.entries()) {
+      lines.push(
+        `${index + 1}. ${media.originalName || media.mediaNo}`,
+        `   媒体编号：${media.mediaNo}`,
+        `   类型：${media.mediaType}`,
+        `   MIME：${media.mimeType || '未知'}`,
+        `   大小：${formatArchiveBytes(media.sizeBytes)}`,
+        `   上传时间：${formatArchiveDateTime(media.createdAt)}`,
+        '',
+      );
+    }
+
+    lines.push('三、交付说明', '本摘要由服务端按当前账号权限生成，并已写入审计日志。高清媒体和完整云端打包仍以正式交付申请处理结果为准。');
+
+    await this.auditLogService.create({
+      actor_type: ActorType.user,
+      actor_id: user.id,
+      action: 'user.archive_summary_downloaded',
+      target_type: 'child',
+      target_id: child.id,
+      ip_address: meta.ip_address,
+      user_agent: meta.user_agent,
+      metadata: {
+        child_no: child.childNo,
+        family_no: child.family.familyNo,
+        record_count: records.length,
+        milestone_count: milestoneCount,
+        media_count: mediaList.length,
+      },
+    });
+
+    return {
+      file_name: `年轮-${safeArchiveFileName(child.name)}-档案摘要-${generatedAt.toISOString().slice(0, 10)}.txt`,
+      mime_type: 'text/plain;charset=utf-8',
+      generated_at: generatedAt.toISOString(),
+      summary: {
+        child_no: child.childNo,
+        child_name: child.name,
+        record_count: records.length,
+        milestone_count: milestoneCount,
+        media_count: mediaList.length,
+        first_record_time: records[0]?.eventTime.toISOString() ?? null,
+        latest_record_time: records[records.length - 1]?.eventTime.toISOString() ?? null,
+      },
+      content: `${lines.join('\n')}\n`,
     };
   }
 
@@ -433,6 +727,39 @@ export class UsersService {
         typeof value.show_history_to_new_members === 'boolean'
           ? value.show_history_to_new_members
           : DEFAULT_USER_PREFERENCES.show_history_to_new_members,
+    };
+  }
+
+  private resolveSupportTicketPriority(dto: CreateFeedbackDto) {
+    const text = `${dto.category} ${dto.topic ?? ''} ${dto.content}`.toLowerCase();
+    if (dto.topic === 'account-delete' || /儿童|未成年|隐私|安全|注销|删除|泄露/.test(text)) {
+      return SupportTicketPriority.child_safety;
+    }
+
+    if (/数据异常|无法登录|导出|付款|崩溃|丢失/.test(text)) {
+      return SupportTicketPriority.urgent;
+    }
+
+    return SupportTicketPriority.normal;
+  }
+
+  private toArchiveExportRequestItem(item: UserArchiveExportRequestWithChild) {
+    return {
+      request_no: item.requestNo,
+      child_no: item.child.childNo,
+      child_name: item.child.name,
+      export_type: item.exportType,
+      purpose: item.purpose,
+      status: item.status,
+      record_count: item.recordCount,
+      milestone_count: item.milestoneCount,
+      media_count: item.mediaCount,
+      first_record_time: item.firstRecordTime?.toISOString() ?? null,
+      latest_record_time: item.latestRecordTime?.toISOString() ?? null,
+      processed_at: item.processedAt?.toISOString() ?? null,
+      process_note: item.processNote,
+      created_at: item.createdAt.toISOString(),
+      updated_at: item.updatedAt.toISOString(),
     };
   }
 

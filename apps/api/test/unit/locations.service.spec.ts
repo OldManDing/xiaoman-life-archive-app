@@ -64,18 +64,62 @@ describe('LocationsService', () => {
     expect(String(fetchMock.mock.calls[0][0])).toContain('/geocode/regeo');
   });
 
-  it('does not return mock locations when map search is disabled in production', async () => {
+  it('rejects disabled map search in production', async () => {
     const fetchMock = jest.fn();
     process.env = { ...originalEnv, APP_ENV: 'production', MAP_PROVIDER: 'disabled' };
     global.fetch = fetchMock as unknown as typeof fetch;
 
-    const result = await new LocationsService().search({
-      keyword: '闄勮繎鍦扮偣',
-      latitude: 31.2304,
-      longitude: 121.4737,
-    });
+    await expect(
+      new LocationsService().search({
+        keyword: '附近地点',
+        latitude: 31.2304,
+        longitude: 121.4737,
+      }),
+    ).rejects.toThrow('MAP_PROVIDER=disabled is not allowed outside local/test environments');
 
-    expect(result).toEqual({ provider: 'disabled', list: [] });
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('does not let reverse geocoding mask a failed production POI search', async () => {
+    const fetchMock = jest
+      .fn()
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          status: '1',
+          regeocode: {
+            formatted_address: '上海市黄浦区人民广场',
+            addressComponent: {
+              city: [],
+              district: '黄浦区',
+            },
+          },
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          status: '0',
+          info: 'INVALID_USER_KEY',
+          pois: [],
+        }),
+      });
+    process.env = {
+      ...originalEnv,
+      APP_ENV: 'production',
+      MAP_PROVIDER: 'amap',
+      MAP_API_KEY: 'invalid-map-key',
+    };
+    global.fetch = fetchMock as unknown as typeof fetch;
+
+    await expect(
+      new LocationsService().search({
+        keyword: '公园',
+        latitude: 31.2304,
+        longitude: 121.4737,
+      }),
+    ).rejects.toThrow('地图服务返回异常：INVALID_USER_KEY');
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
   });
 });

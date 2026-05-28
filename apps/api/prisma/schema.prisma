@@ -99,6 +99,37 @@ enum AdminRole {
   viewer
 }
 
+enum ArchiveExportRequestType {
+  all
+  media
+  text
+}
+
+enum ArchiveExportRequestPurpose {
+  backup
+  adult_handoff
+}
+
+enum ArchiveExportRequestStatus {
+  submitted
+  processing
+  completed
+  rejected
+}
+
+enum SupportTicketStatus {
+  submitted
+  processing
+  resolved
+  closed
+}
+
+enum SupportTicketPriority {
+  normal
+  urgent
+  child_safety
+}
+
 model User {
   id                 BigInt         @id @default(autoincrement()) @db.UnsignedBigInt
   userNo             String         @unique(map: "uk_user_no") @map("user_no") @db.VarChar(32)
@@ -126,6 +157,8 @@ model User {
   acceptedRegistrationInvites RegistrationInvite[] @relation("RegistrationInviteAccepter")
   createdShareLinks     ShareLink[]        @relation("ShareCreator")
   requestedAiJobs       AiJob[]            @relation("AiJobRequester")
+  archiveExportRequests ArchiveExportRequest[] @relation("ArchiveExportRequester")
+  supportTickets        SupportTicket[]    @relation("SupportTicketReporter")
   sessions              UserSession[]
 
   @@index([mobile], map: "idx_mobile")
@@ -201,6 +234,7 @@ model Family {
   invites      MemberInvite[]
   shareLinks   ShareLink[]
   aiJobs       AiJob[]
+  archiveExportRequests ArchiveExportRequest[]
 
   @@index([ownerUserId], map: "idx_owner_user_id")
   @@map("families")
@@ -249,6 +283,7 @@ model Child {
   owner   User     @relation("ChildOwner", fields: [ownerUserId], references: [id])
   records Record[]
   media    RecordMedia[]
+  archiveExportRequests ArchiveExportRequest[]
 
   @@index([familyId], map: "idx_family_id")
   @@index([ownerUserId], map: "idx_owner_user_id")
@@ -430,9 +465,31 @@ model AdminUser {
   deletedAt     DateTime? @map("deleted_at")
 
   createdRegistrationInvites RegistrationInvite[] @relation("RegistrationInviteCreator")
+  processedArchiveExportRequests ArchiveExportRequest[] @relation("ArchiveExportProcessor")
+  assignedSupportTickets SupportTicket[] @relation("SupportTicketAssignee")
+  updatedSystemConfigs SystemConfig[] @relation("SystemConfigUpdater")
 
   @@index([status], map: "idx_status")
   @@map("admin_users")
+}
+
+model SystemConfig {
+  id               BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  configKey        String    @unique(map: "uk_system_config_key") @map("config_key") @db.VarChar(64)
+  category         String    @db.VarChar(32)
+  label            String    @db.VarChar(64)
+  value            String    @db.Text
+  valueType        String    @map("value_type") @db.VarChar(24)
+  description      String    @db.VarChar(255)
+  updatedByAdminId BigInt?   @map("updated_by_admin_id") @db.UnsignedBigInt
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+
+  updatedByAdmin AdminUser? @relation("SystemConfigUpdater", fields: [updatedByAdminId], references: [id])
+
+  @@index([category], map: "idx_category")
+  @@index([updatedByAdminId], map: "idx_updated_by_admin_id")
+  @@map("system_configs")
 }
 
 model RegistrationInvite {
@@ -455,6 +512,67 @@ model RegistrationInvite {
   @@index([createdByAdminId], map: "idx_created_by_admin_id")
   @@index([acceptedByUserId], map: "idx_accepted_by_user_id")
   @@map("registration_invites")
+}
+
+model ArchiveExportRequest {
+  id                 BigInt                     @id @default(autoincrement()) @db.UnsignedBigInt
+  requestNo          String                     @unique(map: "uk_archive_export_request_no") @map("request_no") @db.VarChar(32)
+  userId             BigInt                     @map("user_id") @db.UnsignedBigInt
+  familyId           BigInt                     @map("family_id") @db.UnsignedBigInt
+  childId            BigInt                     @map("child_id") @db.UnsignedBigInt
+  exportType         ArchiveExportRequestType   @map("export_type")
+  purpose            ArchiveExportRequestPurpose
+  status             ArchiveExportRequestStatus @default(submitted)
+  contact            String?                    @db.VarChar(128)
+  note               String?                    @db.VarChar(500)
+  recordCount        Int                        @default(0) @map("record_count")
+  milestoneCount     Int                        @default(0) @map("milestone_count")
+  mediaCount         Int                        @default(0) @map("media_count")
+  firstRecordTime    DateTime?                  @map("first_record_time")
+  latestRecordTime   DateTime?                  @map("latest_record_time")
+  processedByAdminId BigInt?                    @map("processed_by_admin_id") @db.UnsignedBigInt
+  processedAt        DateTime?                  @map("processed_at")
+  processNote        String?                    @map("process_note") @db.VarChar(500)
+  createdAt          DateTime                   @default(now()) @map("created_at")
+  updatedAt          DateTime                   @updatedAt @map("updated_at")
+
+  user             User       @relation("ArchiveExportRequester", fields: [userId], references: [id])
+  family           Family     @relation(fields: [familyId], references: [id])
+  child            Child      @relation(fields: [childId], references: [id])
+  processedByAdmin AdminUser? @relation("ArchiveExportProcessor", fields: [processedByAdminId], references: [id])
+
+  @@index([userId], map: "idx_user_id")
+  @@index([familyId], map: "idx_family_id")
+  @@index([childId], map: "idx_child_id")
+  @@index([purpose, status, createdAt], map: "idx_purpose_status_created_at")
+  @@index([status, createdAt], map: "idx_status_created_at")
+  @@map("archive_export_requests")
+}
+
+model SupportTicket {
+  id              BigInt                @id @default(autoincrement()) @db.UnsignedBigInt
+  ticketNo        String                @unique(map: "uk_support_ticket_no") @map("ticket_no") @db.VarChar(32)
+  userId          BigInt                @map("user_id") @db.UnsignedBigInt
+  category        String                @db.VarChar(64)
+  topic           String?               @db.VarChar(64)
+  content         String                @db.Text
+  contact         String?               @db.VarChar(128)
+  status          SupportTicketStatus   @default(submitted)
+  priority        SupportTicketPriority @default(normal)
+  assignedAdminId BigInt?               @map("assigned_admin_id") @db.UnsignedBigInt
+  handledAt       DateTime?             @map("handled_at")
+  handleNote      String?               @map("handle_note") @db.VarChar(500)
+  createdAt       DateTime              @default(now()) @map("created_at")
+  updatedAt       DateTime              @updatedAt @map("updated_at")
+
+  user          User       @relation("SupportTicketReporter", fields: [userId], references: [id])
+  assignedAdmin AdminUser? @relation("SupportTicketAssignee", fields: [assignedAdminId], references: [id])
+
+  @@index([userId], map: "idx_user_id")
+  @@index([assignedAdminId], map: "idx_assigned_admin_id")
+  @@index([status, createdAt], map: "idx_status_created_at")
+  @@index([priority, status, createdAt], map: "idx_priority_status_created_at")
+  @@map("support_tickets")
 }
 
 model AuditLog {

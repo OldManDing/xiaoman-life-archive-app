@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadGatewayException, Injectable } from '@nestjs/common';
 import { AiJobType } from '@prisma/client';
 
 import { getAiProviderName } from '../../shared/env-config';
@@ -7,6 +7,10 @@ export type AiProviderOutput = {
   suggested_title?: string;
   summary?: string;
   tags?: string[];
+};
+
+type OpenAiCompatibleResponse = {
+  choices?: Array<{ message?: { content?: string } }>;
 };
 
 @Injectable()
@@ -56,7 +60,7 @@ export class AiProviderService {
     const model = process.env.AI_MODEL;
 
     if (!apiKey || !baseUrl || !model) {
-      throw new Error('AI 服务配置缺失');
+      throw new BadGatewayException('AI 服务配置缺失，请检查 AI_API_KEY、AI_BASE_URL 和 AI_MODEL');
     }
 
     const timeoutMs = Number(process.env.AI_TIMEOUT_MS ?? 30000);
@@ -94,22 +98,27 @@ export class AiProviderService {
         signal: controller.signal,
       });
 
+      const responseText = await response.text();
       if (!response.ok) {
-        throw new Error(`AI 服务调用失败：HTTP ${response.status}`);
+        const detail = this.extractProviderError(responseText, apiKey);
+        throw new BadGatewayException(`AI 服务调用失败：HTTP ${response.status}${detail ? `，${detail}` : ''}`);
       }
 
-      const payload = (await response.json()) as {
-        choices?: Array<{ message?: { content?: string } }>;
-      };
+      let payload: OpenAiCompatibleResponse;
+      try {
+        payload = JSON.parse(responseText) as OpenAiCompatibleResponse;
+      } catch {
+        throw new BadGatewayException('AI 服务返回格式异常');
+      }
       const content = payload.choices?.[0]?.message?.content;
       if (!content) {
-        throw new Error('AI 服务未返回内容');
+        throw new BadGatewayException('AI 服务未返回内容');
       }
 
       return this.normalizeProviderOutput(this.parseJsonContent(content));
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new Error('AI 服务调用超时');
+        throw new BadGatewayException('AI 服务调用超时');
       }
       throw error;
     } finally {
@@ -139,10 +148,33 @@ export class AiProviderService {
     } catch {
       const match = content.match(/\{[\s\S]*\}/);
       if (!match) {
-        throw new Error('AI provider response is not valid JSON');
+        throw new BadGatewayException('AI 服务返回内容不是有效 JSON');
       }
 
-      return JSON.parse(match[0]);
+      try {
+        return JSON.parse(match[0]);
+      } catch {
+        throw new BadGatewayException('AI 服务返回内容不是有效 JSON');
+      }
+    }
+  }
+
+  private extractProviderError(responseText: string, apiKey: string): string {
+    const sanitize = (value: string) => value.replaceAll(apiKey, '<redacted>').slice(0, 240);
+    try {
+      const parsed = JSON.parse(responseText) as {
+        error?: {
+          code?: string;
+          message?: string;
+          type?: string;
+        };
+        message?: string;
+      };
+      const error = parsed.error;
+      const detail = [error?.code, error?.message || parsed.message || error?.type].filter(Boolean).join('：');
+      return detail ? sanitize(detail) : '';
+    } catch {
+      return sanitize(responseText.trim());
     }
   }
 }

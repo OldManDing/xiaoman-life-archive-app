@@ -71,6 +71,48 @@ describe('Auth session flow', () => {
       family: { id: BigInt(100), familyNo: 'f_joined_001', name: '共享家庭', deletedAt: null },
     },
   ];
+  const exportChild = {
+    id: BigInt(30),
+    childNo: 'c_001',
+    familyId: BigInt(100),
+    name: '小满',
+    family: { id: BigInt(100), familyNo: 'f_joined_001', name: '共享家庭', deletedAt: null },
+  };
+  const archiveExportRequests: Array<{
+    id: bigint;
+    requestNo: string;
+    userId: bigint;
+    familyId: bigint;
+    childId: bigint;
+    exportType: string;
+    purpose: string;
+    status: string;
+    contact: string | null;
+    note: string | null;
+    recordCount: number;
+    milestoneCount: number;
+    mediaCount: number;
+    firstRecordTime: Date | null;
+    latestRecordTime: Date | null;
+    processedAt: Date | null;
+    processNote: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+  }> = [];
+  const supportTickets: Array<{
+    id: bigint;
+    ticketNo: string;
+    userId: bigint;
+    category: string;
+    topic: string | null;
+    content: string;
+    contact: string | null;
+    status: string;
+    priority: string;
+    createdAt: Date;
+    updatedAt: Date;
+  }> = [];
+  let exportRequesterRole: 'owner' | 'viewer' = 'owner';
 
   const txRecordUpdateMany = jest.fn().mockResolvedValue({ count: 0 });
   const txRecordMediaUpdateMany = jest.fn().mockResolvedValue({ count: 0 });
@@ -184,13 +226,100 @@ describe('Auth session flow', () => {
     },
     child: {
       count: jest.fn().mockResolvedValue(0),
+      findFirst: jest.fn().mockImplementation(async ({ where }: { where: { childNo?: string } }) => {
+        return where.childNo === exportChild.childNo ? exportChild : null;
+      }),
     },
     record: {
       count: jest.fn().mockResolvedValue(1),
+      findFirst: jest.fn().mockResolvedValue({ eventTime: new Date('2026-05-01T08:00:00.000Z') }),
+      findMany: jest.fn().mockResolvedValue([
+        {
+          id: BigInt(90),
+          recordNo: 'r_001',
+          title: '第一次独立骑车',
+          contentText: '今天自己骑了一小段，回来一直说还想再试一次。',
+          eventTime: new Date('2026-05-01T08:00:00.000Z'),
+          locationText: '小区花园',
+          isMilestone: true,
+          aiGeneratedTitle: null,
+          aiSummary: '孩子完成一次新的运动尝试。',
+          creator: user,
+          tags: [{ tagName: '运动' }, { tagName: '里程碑' }],
+          media: [
+            {
+              id: BigInt(91),
+              mediaNo: 'm_001',
+              mediaType: 'image',
+              originalName: 'bike.jpg',
+              mimeType: 'image/jpeg',
+              sizeBytes: BigInt(2048),
+              createdAt: new Date('2026-05-01T08:05:00.000Z'),
+            },
+          ],
+        },
+      ]),
       updateMany: jest.fn().mockResolvedValue({ count: 0 }),
     },
     recordMedia: {
+      count: jest.fn().mockResolvedValue(2),
       updateMany: jest.fn().mockResolvedValue({ count: 0 }),
+    },
+    archiveExportRequest: {
+      create: jest.fn().mockImplementation(async ({ data }: { data: any }) => {
+        const now = new Date('2026-05-27T08:00:00.000Z');
+        const created = {
+          id: BigInt(300 + archiveExportRequests.length),
+          requestNo: data.requestNo,
+          userId: data.userId,
+          familyId: data.familyId,
+          childId: data.childId,
+          exportType: data.exportType,
+          purpose: data.purpose,
+          status: data.status,
+          contact: data.contact,
+          note: data.note,
+          recordCount: data.recordCount,
+          milestoneCount: data.milestoneCount,
+          mediaCount: data.mediaCount,
+          firstRecordTime: data.firstRecordTime,
+          latestRecordTime: data.latestRecordTime,
+          processedAt: null,
+          processNote: null,
+          createdAt: now,
+          updatedAt: now,
+        };
+        archiveExportRequests.push(created);
+        return created;
+      }),
+      findMany: jest.fn().mockImplementation(async ({ where }: { where: { userId?: bigint; childId?: bigint } }) =>
+        archiveExportRequests
+          .filter((item) => (where.userId ? item.userId === where.userId : true))
+          .filter((item) => (where.childId ? item.childId === where.childId : true))
+          .map((item) => ({ ...item, child: exportChild }))
+          .reverse()
+          .slice(0, 10),
+      ),
+    },
+    supportTicket: {
+      create: jest.fn().mockImplementation(async ({ data }: { data: any }) => {
+        const now = new Date('2026-05-27T08:00:00.000Z');
+        const created = {
+          id: BigInt(500 + supportTickets.length),
+          ticketNo: data.ticketNo,
+          userId: data.userId,
+          category: data.category,
+          topic: data.topic,
+          content: data.content,
+          contact: data.contact,
+          status: data.status,
+          priority: data.priority,
+          createdAt: now,
+          updatedAt: now,
+        };
+        supportTickets.push(created);
+        return created;
+      }),
     },
     aiJob: {
       updateMany: jest.fn().mockResolvedValue({ count: 0 }),
@@ -203,6 +332,18 @@ describe('Auth session flow', () => {
       updateMany: jest.fn().mockResolvedValue({ count: 0 }),
     },
     familyMember: {
+      findFirst: jest.fn().mockImplementation(async ({ where }: { where: { familyId?: bigint; userId?: bigint } }) =>
+        where.familyId === exportChild.familyId && where.userId === user.id
+          ? {
+              id: BigInt(78),
+              familyId: exportChild.familyId,
+              userId: user.id,
+              role: exportRequesterRole,
+              status: 1,
+              deletedAt: null,
+            }
+          : null,
+      ),
       findMany: jest.fn().mockResolvedValue(joinedFamilyMemberships),
       updateMany: jest.fn().mockResolvedValue({ count: 1 }),
     },
@@ -500,9 +641,12 @@ describe('Auth session flow', () => {
     );
   });
 
-  it('submits feedback and membership book requests to audit logs', async () => {
+  it('submits feedback, membership book and archive export requests to audit logs', async () => {
     user.status = 1;
     user.deletedAt = null;
+    exportRequesterRole = 'owner';
+    archiveExportRequests.length = 0;
+    supportTickets.length = 0;
     prismaMock.auditLog.create.mockClear();
 
     const accessToken = await jwtService.signAsync(
@@ -517,7 +661,13 @@ describe('Auth session flow', () => {
       .expect(200);
 
     expect(feedbackResponse.body.data.feedback_no).toMatch(/^fb_/);
+    expect(feedbackResponse.body.data.ticket_no).toBe(feedbackResponse.body.data.feedback_no);
     expect(feedbackResponse.body.data.status).toBe('submitted');
+    expect(supportTickets[0]).toMatchObject({
+      category: 'usage',
+      status: 'submitted',
+      priority: 'normal',
+    });
 
     const bookResponse = await request(app.getHttpServer())
       .post('/api/v1/users/me/membership-book-requests')
@@ -527,11 +677,30 @@ describe('Auth session flow', () => {
 
     expect(bookResponse.body.data.request_no).toMatch(/^book_/);
     expect(bookResponse.body.data.status).toBe('submitted');
+
+    const exportResponse = await request(app.getHttpServer())
+      .post('/api/v1/users/me/archive-export-requests')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ child_no: exportChild.childNo, export_type: 'all', purpose: 'adult_handoff' })
+      .expect(200);
+
+    expect(exportResponse.body.data.request_no).toMatch(/^handoff_/);
+    expect(exportResponse.body.data.status).toBe('submitted');
+    expect(exportResponse.body.data.summary).toMatchObject({
+      child_no: exportChild.childNo,
+      export_type: 'all',
+      purpose: 'adult_handoff',
+      record_count: 1,
+      milestone_count: 1,
+      media_count: 2,
+    });
     expect(prismaMock.auditLog.create).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
           action: 'user.feedback_submitted',
-          metadata: expect.objectContaining({ category: 'usage' }),
+          targetType: 'support_ticket',
+          targetId: supportTickets[0].id,
+          metadata: expect.objectContaining({ category: 'usage', ticket_no: supportTickets[0].ticketNo }),
         }),
       }),
     );
@@ -543,6 +712,163 @@ describe('Auth session flow', () => {
         }),
       }),
     );
+    expect(prismaMock.auditLog.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          action: 'user.adult_handoff_requested',
+          targetType: 'archive_export_request',
+          targetId: archiveExportRequests[0].id,
+          metadata: expect.objectContaining({
+            request_no: expect.stringMatching(/^handoff_/),
+            child_no: exportChild.childNo,
+            export_type: 'all',
+            purpose: 'adult_handoff',
+            snapshot: expect.objectContaining({
+              record_count: 1,
+              media_count: 2,
+              milestone_count: 1,
+            }),
+          }),
+        }),
+      }),
+    );
+
+    const backupResponse = await request(app.getHttpServer())
+      .post('/api/v1/users/me/archive-export-requests')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ child_no: exportChild.childNo })
+      .expect(200);
+
+    expect(backupResponse.body.data.request_no).toMatch(/^export_/);
+    expect(backupResponse.body.data.summary).toMatchObject({
+      child_no: exportChild.childNo,
+      export_type: 'all',
+      purpose: 'backup',
+    });
+    expect(prismaMock.auditLog.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          action: 'user.archive_export_requested',
+          targetType: 'archive_export_request',
+          targetId: archiveExportRequests[1].id,
+          metadata: expect.objectContaining({
+            request_no: expect.stringMatching(/^export_/),
+            child_no: exportChild.childNo,
+            export_type: 'all',
+            purpose: 'backup',
+          }),
+        }),
+      }),
+    );
+
+    const listResponse = await request(app.getHttpServer())
+      .get(`/api/v1/users/me/archive-export-requests?child_no=${exportChild.childNo}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+
+    expect(listResponse.body.data.list).toHaveLength(2);
+    expect(listResponse.body.data.list[0]).toMatchObject({
+      request_no: backupResponse.body.data.request_no,
+      child_no: exportChild.childNo,
+      child_name: exportChild.name,
+      purpose: 'backup',
+      status: 'submitted',
+      record_count: 1,
+      media_count: 2,
+    });
+    expect(listResponse.body.data.list[1]).toMatchObject({
+      request_no: exportResponse.body.data.request_no,
+      purpose: 'adult_handoff',
+      status: 'submitted',
+    });
+  });
+
+  it('downloads a server-generated archive summary and writes audit evidence', async () => {
+    user.status = 1;
+    user.deletedAt = null;
+    exportRequesterRole = 'owner';
+    prismaMock.auditLog.create.mockClear();
+
+    const accessToken = await jwtService.signAsync(
+      { type: 'user', sub: user.id.toString(), user_no: user.userNo },
+      { secret: process.env.JWT_ACCESS_SECRET },
+    );
+
+    const response = await request(app.getHttpServer())
+      .get(`/api/v1/users/me/archive-export-summary?child_no=${exportChild.childNo}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+
+    expect(response.body.data).toMatchObject({
+      file_name: expect.stringMatching(/^年轮-小满-档案摘要-/),
+      mime_type: 'text/plain;charset=utf-8',
+      summary: {
+        child_no: exportChild.childNo,
+        child_name: exportChild.name,
+        record_count: 1,
+        milestone_count: 1,
+        media_count: 1,
+      },
+    });
+    expect(response.body.data.content).toContain('第一次独立骑车');
+    expect(response.body.data.content).toContain('bike.jpg');
+    expect(prismaMock.auditLog.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          action: 'user.archive_summary_downloaded',
+          targetType: 'child',
+          targetId: exportChild.id,
+          metadata: expect.objectContaining({
+            child_no: exportChild.childNo,
+            record_count: 1,
+            media_count: 1,
+          }),
+        }),
+      }),
+    );
+  });
+
+  it('rejects archive export requests for inaccessible children', async () => {
+    user.status = 1;
+    user.deletedAt = null;
+    exportRequesterRole = 'owner';
+    prismaMock.auditLog.create.mockClear();
+
+    const accessToken = await jwtService.signAsync(
+      { type: 'user', sub: user.id.toString(), user_no: user.userNo },
+      { secret: process.env.JWT_ACCESS_SECRET },
+    );
+
+    await request(app.getHttpServer())
+      .post('/api/v1/users/me/archive-export-requests')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ child_no: 'c_inaccessible', export_type: 'all', purpose: 'backup' })
+      .expect(404);
+
+    expect(prismaMock.auditLog.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects archive export requests from non-owner family members', async () => {
+    user.status = 1;
+    user.deletedAt = null;
+    exportRequesterRole = 'viewer';
+    prismaMock.auditLog.create.mockClear();
+    prismaMock.archiveExportRequest.create.mockClear();
+
+    const accessToken = await jwtService.signAsync(
+      { type: 'user', sub: user.id.toString(), user_no: user.userNo },
+      { secret: process.env.JWT_ACCESS_SECRET },
+    );
+
+    await request(app.getHttpServer())
+      .post('/api/v1/users/me/archive-export-requests')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ child_no: exportChild.childNo, export_type: 'all', purpose: 'backup' })
+      .expect(403);
+
+    expect(prismaMock.archiveExportRequest.create).not.toHaveBeenCalled();
+    expect(prismaMock.auditLog.create).not.toHaveBeenCalled();
+    exportRequesterRole = 'owner';
   });
 
   it('does not double count an owned family as a joined family during deletion check', async () => {

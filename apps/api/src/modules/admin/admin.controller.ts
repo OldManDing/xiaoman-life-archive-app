@@ -7,6 +7,8 @@ import { Public } from '../../shared/decorators/public.decorator';
 import { getAuthRateLimitMaxAttempts, getAuthRateLimitWindowMs } from '../../shared/env-config';
 import { AuthenticatedAdmin } from '../../shared/types';
 import { AdminAiJobActionDto } from './dto/admin-ai-job-action.dto';
+import { AdminArchiveExportRequestListDto } from './dto/admin-archive-export-request-list.dto';
+import { AdminContentRiskListDto } from './dto/admin-content-risk-list.dto';
 import { AdminRoles } from './decorators/admin-roles.decorator';
 import { AdminAuditLogListDto } from './dto/admin-audit-log-list.dto';
 import { AdminCreateInviteDto } from './dto/admin-create-invite.dto';
@@ -14,7 +16,12 @@ import { AdminListDto } from './dto/admin-list.dto';
 import { AdminLoginDto } from './dto/admin-login.dto';
 import { AdminResetUserPasswordDto } from './dto/admin-reset-user-password.dto';
 import { AdminUpdateMediaStatusDto } from './dto/admin-update-media-status.dto';
+import { AdminUpdateArchiveExportRequestStatusDto } from './dto/admin-update-archive-export-request-status.dto';
+import { AdminUpdateSystemConfigDto } from './dto/admin-update-system-config.dto';
+import { AdminUpdateUserMembershipDto } from './dto/admin-update-user-membership.dto';
 import { AdminUpdateRecordStatusDto } from './dto/admin-update-record-status.dto';
+import { AdminSupportTicketListDto } from './dto/admin-support-ticket-list.dto';
+import { AdminUpdateSupportTicketStatusDto } from './dto/admin-update-support-ticket-status.dto';
 import { AdminUpdateUserStatusDto } from './dto/admin-update-user-status.dto';
 import { AdminJwtAuthGuard } from './guards/admin-jwt-auth.guard';
 import { AdminRoleGuard } from './guards/admin-role.guard';
@@ -47,9 +54,49 @@ export class AdminController {
 
   @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
   @AdminRoles(AdminRole.super_admin, AdminRole.operator, AdminRole.viewer)
+  @Get('ops-readiness')
+  opsReadiness(@CurrentUser() admin: AuthenticatedAdmin, @Req() request: Request) {
+    return this.adminService.opsReadiness(admin, request);
+  }
+
+  @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
+  @AdminRoles(AdminRole.super_admin, AdminRole.operator, AdminRole.viewer)
+  @Get('system-configs')
+  systemConfigs(@CurrentUser() admin: AuthenticatedAdmin, @Req() request: Request) {
+    return this.adminService.listSystemConfigs(admin, request);
+  }
+
+  @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
+  @AdminRoles(AdminRole.super_admin, AdminRole.operator)
+  @Patch('system-configs/:config_key')
+  updateSystemConfig(
+    @CurrentUser() admin: AuthenticatedAdmin,
+    @Param('config_key') configKey: string,
+    @Body() dto: AdminUpdateSystemConfigDto,
+    @Req() request: Request,
+  ) {
+    return this.adminService.updateSystemConfig(admin, configKey, dto, request);
+  }
+
+  @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
+  @AdminRoles(AdminRole.super_admin, AdminRole.operator, AdminRole.viewer)
   @Get('users')
   users(@CurrentUser() admin: AuthenticatedAdmin, @Query() dto: AdminListDto, @Req() request: Request) {
     return this.adminService.listUsers(admin, dto, request);
+  }
+
+  @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
+  @AdminRoles(AdminRole.super_admin, AdminRole.operator, AdminRole.viewer)
+  @Get('families')
+  families(@CurrentUser() admin: AuthenticatedAdmin, @Query() dto: AdminListDto, @Req() request: Request) {
+    return this.adminService.listFamilies(admin, dto, request);
+  }
+
+  @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
+  @AdminRoles(AdminRole.super_admin, AdminRole.operator, AdminRole.viewer)
+  @Get('families/:family_no')
+  familyDetail(@CurrentUser() admin: AuthenticatedAdmin, @Param('family_no') familyNo: string, @Req() request: Request) {
+    return this.adminService.familyDetail(admin, familyNo, request);
   }
 
   @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
@@ -90,6 +137,18 @@ export class AdminController {
     @Req() request: Request,
   ) {
     return this.adminService.updateUserStatus(admin, userNo, dto, request);
+  }
+
+  @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
+  @AdminRoles(AdminRole.super_admin, AdminRole.operator)
+  @Patch('users/:user_no/membership')
+  updateUserMembership(
+    @CurrentUser() admin: AuthenticatedAdmin,
+    @Param('user_no') userNo: string,
+    @Body() dto: AdminUpdateUserMembershipDto,
+    @Req() request: Request,
+  ) {
+    return this.adminService.updateUserMembership(admin, userNo, dto, request);
   }
 
   @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
@@ -206,6 +265,51 @@ export class AdminController {
     @Req() request: Request,
   ) {
     return this.adminService.cancelAiJob(admin, jobNo, dto, request);
+  }
+
+  @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
+  @AdminRoles(AdminRole.super_admin, AdminRole.operator, AdminRole.viewer)
+  @Get('content-risks')
+  contentRisks(@CurrentUser() admin: AuthenticatedAdmin, @Query() dto: AdminContentRiskListDto, @Req() request: Request) {
+    return this.adminService.listContentRisks(admin, dto, request);
+  }
+
+  @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
+  @AdminRoles(AdminRole.super_admin, AdminRole.operator, AdminRole.viewer)
+  @Get('support-tickets')
+  supportTickets(@CurrentUser() admin: AuthenticatedAdmin, @Query() dto: AdminSupportTicketListDto, @Req() request: Request) {
+    return this.adminService.listSupportTickets(admin, dto, request);
+  }
+
+  @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
+  @AdminRoles(AdminRole.super_admin, AdminRole.operator)
+  @Patch('support-tickets/:ticket_no/status')
+  updateSupportTicketStatus(
+    @CurrentUser() admin: AuthenticatedAdmin,
+    @Param('ticket_no') ticketNo: string,
+    @Body() dto: AdminUpdateSupportTicketStatusDto,
+    @Req() request: Request,
+  ) {
+    return this.adminService.updateSupportTicketStatus(admin, ticketNo, dto, request);
+  }
+
+  @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
+  @AdminRoles(AdminRole.super_admin, AdminRole.operator, AdminRole.viewer)
+  @Get('archive-export-requests')
+  archiveExportRequests(@CurrentUser() admin: AuthenticatedAdmin, @Query() dto: AdminArchiveExportRequestListDto, @Req() request: Request) {
+    return this.adminService.listArchiveExportRequests(admin, dto, request);
+  }
+
+  @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
+  @AdminRoles(AdminRole.super_admin, AdminRole.operator)
+  @Patch('archive-export-requests/:request_no/status')
+  updateArchiveExportRequestStatus(
+    @CurrentUser() admin: AuthenticatedAdmin,
+    @Param('request_no') requestNo: string,
+    @Body() dto: AdminUpdateArchiveExportRequestStatusDto,
+    @Req() request: Request,
+  ) {
+    return this.adminService.updateArchiveExportRequestStatus(admin, requestNo, dto, request);
   }
 
   @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)

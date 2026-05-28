@@ -287,6 +287,7 @@ const RecordForm = ({
   const [tagSelectValue, setTagSelectValue] = useState('');
   const [poiSuggestions, setPoiSuggestions] = useState<LocationSuggestion[]>([]);
   const [poiLoading, setPoiLoading] = useState(false);
+  const [poiSearchFailed, setPoiSearchFailed] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
   const [nativeCaptureMode, setNativeCaptureMode] = useState<NativeCaptureMode | null>(null);
   const [nativeCaptureStatus, setNativeCaptureStatus] = useState<NativeCaptureStatus>('preview');
@@ -360,22 +361,26 @@ const RecordForm = ({
     if (keyword.length < 2) {
       setPoiSuggestions([]);
       setPoiLoading(false);
+      setPoiSearchFailed(false);
       return;
     }
 
     let cancelled = false;
     setPoiLoading(true);
+    setPoiSearchFailed(false);
     const timer = window.setTimeout(() => {
       void webApi
         .searchLocations({ keyword })
         .then((result) => {
           if (!cancelled) {
             setPoiSuggestions(result.list);
+            setPoiSearchFailed(false);
           }
         })
         .catch(() => {
           if (!cancelled) {
             setPoiSuggestions([]);
+            setPoiSearchFailed(true);
             setSelectorMessage('地点搜索暂时不可用，可继续手动填写或选择常用地点。');
           }
         })
@@ -795,6 +800,13 @@ const RecordForm = ({
     })),
     ...poiSuggestions.filter((suggestion) => !filteredLocationOptions.includes(suggestion.name)),
   ].slice(0, 5);
+  const manualLocationText = normalizeLocationText(form.location_text);
+  const hasManualLocationSuggestion =
+    manualLocationText.length >= 2 &&
+    !mergedLocationSuggestions.some((location) => {
+      const locationText = formatLocationText(location);
+      return locationText === manualLocationText || location.name.trim() === manualLocationText;
+    });
   const requiredItems = [
     { label: '标题', done: Boolean(form.title.trim()) },
     { label: '正文', done: Boolean(form.content_text.trim()) },
@@ -1399,6 +1411,22 @@ const RecordForm = ({
                 </button>
                 {form.location_text.trim() || poiLoading ? (
                   <>
+                  {hasManualLocationSuggestion ? (
+                    <button
+                      type="button"
+                      style={compactPillButtonStyle}
+                      onClick={() => {
+                        setForm((current) => ({ ...current, location_text: manualLocationText }));
+                        setSelectorMessage(
+                          poiSearchFailed
+                            ? `已使用手动填写的地点「${manualLocationText}」，地图恢复后可再搜索更精确地址。`
+                            : `已使用手动填写的地点「${manualLocationText}」。`,
+                        );
+                      }}
+                    >
+                      使用手动地点：{manualLocationText}
+                    </button>
+                  ) : null}
                   {mergedLocationSuggestions.map((location) => (
                     <button
                       key={location.id}

@@ -36,6 +36,7 @@ test.describe('App critical journeys', () => {
     });
 
     await page.goto(`${webBaseURL}/auth/login`);
+    await expect(page.locator('meta[name="viewport"]')).toHaveAttribute('content', /viewport-fit=cover/);
     await expect(page.getByRole('button', { name: '进入年轮' })).toBeVisible();
 
     expect(consoleErrors).toEqual([]);
@@ -314,6 +315,18 @@ test.describe('App critical journeys', () => {
     await expect(page.getByRole('heading', { name: '搜索历史' })).toBeVisible();
     await page.getByLabel('搜索关键词').fill('谢谢');
     await expect(page.getByText('学会说谢谢').first()).toBeVisible();
+    await expect(page.getByRole('heading', { name: '标签结果' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: '地点结果' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: '匹配记录' })).toBeVisible();
+    const tagResults = page.getByRole('heading', { name: '标签结果' }).locator('..');
+    const locationResults = page.getByRole('heading', { name: '地点结果' }).locator('..');
+    await expect(tagResults.getByRole('button', { name: '#语言' })).toBeVisible();
+    await expect(locationResults.getByRole('button', { name: /客厅/ })).toBeVisible();
+    await page.getByRole('button', { name: '搜索' }).click();
+    await expect(page.getByRole('button', { name: '谢谢', exact: true })).toBeVisible();
+    await tagResults.getByRole('button', { name: '#语言' }).click();
+    await expect(page.getByLabel('搜索关键词')).toHaveValue('语言');
+    await expect(page.getByText('学会说谢谢').first()).toBeVisible();
 
     await page.goto(`${webBaseURL}/record/create`);
     await expect(page.getByLabel('发生时间 *')).toBeVisible();
@@ -343,6 +356,8 @@ test.describe('App critical journeys', () => {
     await loginWeb(page);
     await page.getByRole('link', { name: '我的' }).click();
     await expect(page.getByText(/u_demo_parent_001|用户编号/)).toHaveCount(0);
+    await expect(page.getByText('当前档案：小满')).toBeVisible();
+    await expect(page.getByText('ID: 00000001')).toHaveCount(0);
 
     await expect(page.getByText('月报与纪念册')).toBeVisible();
     await expect(page.getByText('导出与备份')).toBeVisible();
@@ -354,6 +369,16 @@ test.describe('App critical journeys', () => {
     await expect(page.getByText('关于我们')).toBeVisible();
     await expectNoUnfinishedCopy(page);
 
+    await page.getByRole('button', { name: /关于我们/ }).click();
+    await expect(page).toHaveURL(/\/profile\/about$/);
+    await expect(page.getByRole('heading', { name: 'nianlun' })).toBeVisible();
+    await expect(page.getByText('版本 1.0.0（构建 20260514）')).toBeVisible();
+    await expect(page.getByRole('button', { name: /服务说明/ })).toBeVisible();
+    await page.getByRole('button', { name: /服务说明/ }).click();
+    await expect(page.getByText('当前版本已覆盖成长记录、家庭协作、时间轴回看、档案导出和运营后台管理。')).toBeVisible();
+    await expect(page.getByText(/孩子的人生档案馆|官网信息将随服务发布节奏同步更新/)).toHaveCount(0);
+
+    await page.goto(`${webBaseURL}/profile`);
     await page.getByRole('button', { name: /月报与纪念册/ }).click();
     await expect(page).toHaveURL(/\/profile\/reports$/);
     await expect(page.getByRole('heading', { name: '月报与纪念册' })).toBeVisible();
@@ -362,8 +387,18 @@ test.describe('App critical journeys', () => {
 
     await page.goto(`${webBaseURL}/profile/export`);
     await expect(page.getByRole('heading', { name: '导出与备份' })).toBeVisible();
-    await expect(page.getByRole('button', { name: '开始打包导出' })).toBeVisible();
+    await expect(page.getByRole('button', { name: '下载审计留痕摘要' })).toBeVisible();
     await expect(page.getByText('选择导出内容')).toBeVisible();
+    await expect(page.getByText('长期交付留痕')).toBeVisible();
+    await expect(page.getByText('当前账号为家庭管理员，可发起正式导出与交付申请。')).toBeVisible();
+    await expect(page.getByRole('button', { name: '提交打包申请' })).toBeEnabled();
+    await expect(page.getByRole('button', { name: '成年移交准备' })).toBeEnabled();
+    await page.getByRole('button', { name: '提交打包申请' }).click();
+    await expect(page.getByText(/档案打包申请已提交/)).toBeVisible();
+    await expect(page.getByText(/当前快照：\d+ 条记录、\d+ 个媒体、\d+ 个里程碑。/)).toBeVisible();
+    await expect(page.getByText('最近申请')).toBeVisible();
+    await expect(page.getByText('档案打包 · 全部数据').first()).toBeVisible();
+    await expect(page.getByText('待处理').first()).toBeVisible();
 
     await page.goto(`${webBaseURL}/profile/membership`);
     await expect(page.getByRole('heading', { name: '会员中心' })).toBeVisible();
@@ -377,5 +412,20 @@ test.describe('App critical journeys', () => {
     await expect(page.getByRole('button', { name: '注销账号' })).toBeVisible();
     await page.getByRole('button', { name: '注销账号' }).click();
     await expect(page).toHaveURL(/\/profile\/account-delete$/);
+  });
+
+  test('limits archive export actions to the family administrator', async ({ page }) => {
+    await page.goto(`${webBaseURL}/auth/login`);
+    await page.getByPlaceholder('请输入账号').fill('xiaoman_viewer');
+    await page.getByPlaceholder('请输入密码').fill('DemoUser123!');
+    await page.getByRole('checkbox', { name: '我已阅读并同意《用户协议》和《隐私政策》' }).check();
+    await page.getByRole('button', { name: '进入年轮' }).click();
+    await expect(page).toHaveURL(/\/home$/);
+
+    await page.goto(`${webBaseURL}/profile/export`);
+    await expect(page.getByText('为保护家庭档案，首版仅家庭管理员可导出或发起交付申请。')).toBeVisible();
+    await expect(page.getByRole('button', { name: '提交打包申请' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: '成年移交准备' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: '下载审计留痕摘要' })).toBeDisabled();
   });
 });

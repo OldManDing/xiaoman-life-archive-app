@@ -35,6 +35,7 @@ export interface UserPreferencesResponse {
 
 export interface FeedbackResponse {
   feedback_no: string;
+  ticket_no?: string;
   status: 'submitted';
   message: string;
   created_at: string;
@@ -45,6 +46,62 @@ export interface MembershipBookRequestResponse {
   status: 'submitted';
   message: string;
   created_at: string;
+}
+
+export interface ArchiveExportRequestResponse {
+  request_no: string;
+  status: 'submitted';
+  message: string;
+  created_at: string;
+  summary: {
+    child_no: string;
+    child_name: string;
+    export_type: 'all' | 'media' | 'text';
+    purpose: 'backup' | 'adult_handoff';
+    record_count: number;
+    milestone_count: number;
+    media_count: number;
+    first_record_time: string | null;
+    latest_record_time: string | null;
+  };
+}
+
+export interface ArchiveExportRequestItem {
+  request_no: string;
+  child_no: string;
+  child_name: string;
+  export_type: 'all' | 'media' | 'text';
+  purpose: 'backup' | 'adult_handoff';
+  status: 'submitted' | 'processing' | 'completed' | 'rejected';
+  record_count: number;
+  milestone_count: number;
+  media_count: number;
+  first_record_time: string | null;
+  latest_record_time: string | null;
+  processed_at: string | null;
+  process_note: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ArchiveExportRequestsListResponse {
+  list: ArchiveExportRequestItem[];
+}
+
+export interface ArchiveExportSummaryResponse {
+  file_name: string;
+  mime_type: string;
+  generated_at: string;
+  summary: {
+    child_no: string;
+    child_name: string;
+    record_count: number;
+    milestone_count: number;
+    media_count: number;
+    first_record_time: string | null;
+    latest_record_time: string | null;
+  };
+  content: string;
 }
 
 export interface LoginResponse {
@@ -89,6 +146,7 @@ export interface RecordSummary {
   summary: string | null;
   ai_summary?: string | null;
   event_time: string;
+  location_text: string | null;
   tags: string[];
   creator_name: string;
   is_milestone: boolean;

@@ -1,0 +1,64 @@
+{
+  "status": "passed",
+  "checkedAt": "2026-05-28T10:56:47.037Z",
+  "api": "https://webapi.xmlga.top/api/v1/health",
+  "app": "https://nianlun.xmlga.top",
+  "admin": "https://nianlun.xmlga.top",
+  "providers": {
+    "sms": "disabled",
+    "storage": "minio",
+    "ai": "openai-compatible",
+    "map": "amap"
+  },
+  "checks": [
+    {
+      "name": "aiPreview",
+      "status": "passed",
+      "attempts": 1,
+      "data": {
+        "provider": "openai-compatible",
+        "hasSuggestedTitle": true,
+        "hasSummary": true,
+        "tagCount": 3
+      }
+    },
+    {
+      "name": "poi",
+      "status": "passed",
+      "attempts": 1,
+      "data": {
+        "keyword": "公园",
+        "count": 11,
+        "poiCount": 10,
+        "sources": [
+          "amap-regeo",
+          "amap"
+        ],
+        "sample": [
+          {
+            "name": "人民公园",
+            "city": "上海市",
+            "district": "黄浦区",
+            "source": "amap"
+          },
+          {
+            "name": "辅德里公园",
+            "city": "上海市",
+            "district": "静安区",
+            "source": "amap"
+          },
+          {
+            "name": "静安雕塑公园",
+            "city": "上海市",
+            "district": "静安区",
+            "source": "amap"
+          }
+        ]
+      }
+    }
+  ],
+  "failures": [],
+  "blockedRequirements": [],
+  "blockedRequirementDetails": [],
+  "nextActions": []
+}

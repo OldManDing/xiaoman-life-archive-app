@@ -11,6 +11,7 @@ const defaults: Record<string, string> = {
   UPLOAD_IMAGE_MAX_BYTES: '10485760',
   AI_PROVIDER: 'mock',
   AI_DAILY_LIMIT_PER_USER: '20',
+  LIVE_READINESS_REPORT_PATH: '0',
 };
 
 for (const [key, value] of Object.entries(defaults)) {

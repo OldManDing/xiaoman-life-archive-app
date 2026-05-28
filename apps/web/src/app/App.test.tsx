@@ -13,6 +13,9 @@ vi.mock('../shared/api/webApi', () => ({
     login: vi.fn(),
     register: vi.fn(),
     updateMe: vi.fn(),
+    requestArchiveExport: vi.fn(),
+    listArchiveExportRequests: vi.fn(),
+    archiveExportSummary: vi.fn(),
     createChild: vi.fn(),
     createRecord: vi.fn(),
     listRecords: vi.fn(),
@@ -23,6 +26,7 @@ vi.mock('../shared/api/webApi', () => ({
     createUploadToken: vi.fn(),
     confirmUpload: vi.fn(),
     mediaAccessUrl: vi.fn(),
+    searchLocations: vi.fn(),
     me: vi.fn(),
     detailChild: vi.fn(),
   },
@@ -36,6 +40,11 @@ const loginMock = vi.mocked(webApi.login);
 const registerMock = vi.mocked(webApi.register);
 const createChildMock = vi.mocked(webApi.createChild);
 const logoutMock = vi.mocked(webApi.logout);
+const detailChildMock = vi.mocked(webApi.detailChild);
+const listRecordsMock = vi.mocked(webApi.listRecords);
+const createRecordMock = vi.mocked(webApi.createRecord);
+const detailRecordMock = vi.mocked(webApi.detailRecord);
+const searchLocationsMock = vi.mocked(webApi.searchLocations);
 
 describe('App Shell', () => {
   beforeEach(() => {
@@ -46,6 +55,11 @@ describe('App Shell', () => {
     registerMock.mockReset();
     createChildMock.mockReset();
     logoutMock.mockReset();
+    detailChildMock.mockReset();
+    listRecordsMock.mockReset();
+    createRecordMock.mockReset();
+    detailRecordMock.mockReset();
+    searchLocationsMock.mockReset();
     window.history.pushState({}, '', '/auth/login');
   });
 
@@ -337,5 +351,287 @@ describe('App Shell', () => {
     await waitFor(() => {
       expect(screen.getByText('今日值得记录')).toBeDefined();
     });
+  });
+
+  it('keeps manual location available when map provider search fails', async () => {
+    window.history.pushState({}, '', '/record/create?type=text');
+    refreshMock.mockResolvedValue({
+      access_token: 'token-123',
+      expires_in: 7200,
+      user: {
+        user_no: 'u_001',
+        nickname: '测试用户',
+        avatar_url: null,
+        membership_type: 'free',
+      },
+      need_create_child: false,
+    });
+    listChildrenMock.mockResolvedValue([
+      {
+        child_no: 'c_001',
+        family_no: 'f_001',
+        owner_user_no: 'u_001',
+        name: '小满',
+        avatar_url: null,
+        birthday: '2025-01-01',
+        gender: 'female',
+        birth_place: '上海',
+        remark: null,
+        current_age_display: '1岁2月',
+        status: 'normal',
+        created_at: '2026-04-21T00:00:00.000Z',
+        updated_at: '2026-04-21T00:00:00.000Z',
+      },
+    ]);
+    detailChildMock.mockResolvedValue({
+      child_no: 'c_001',
+      family_no: 'f_001',
+      owner_user_no: 'u_001',
+      name: '小满',
+      avatar_url: null,
+      birthday: '2025-01-01',
+      gender: 'female',
+      birth_place: '上海',
+      remark: null,
+      current_age_display: '1岁2月',
+      status: 'normal',
+      created_at: '2026-04-21T00:00:00.000Z',
+      updated_at: '2026-04-21T00:00:00.000Z',
+    });
+    const createdRecord = {
+      record_no: 'r_manual_location',
+      child_no: 'c_001',
+      creator_user_no: 'u_001',
+      creator_name: '测试用户',
+      record_type: 'text',
+      title: '今天去新的营地',
+      content_text: '我们在营地玩了很久。',
+      media_list: [],
+      tags: [],
+      event_time: '2026-05-28T10:00:00.000Z',
+      location_text: '迪士尼营地',
+      visibility_scope: 'family',
+      is_milestone: false,
+      ai_generated_title: null,
+      ai_summary: null,
+      ai_status: null,
+      status: 'published',
+      created_at: '2026-05-28T10:00:00.000Z',
+      updated_at: '2026-05-28T10:00:00.000Z',
+    };
+    searchLocationsMock.mockRejectedValue(new Error('地图服务返回异常：INVALID_USER_KEY'));
+    createRecordMock.mockResolvedValue(createdRecord);
+    detailRecordMock.mockResolvedValue(createdRecord);
+
+    render(<App />);
+
+    fireEvent.change(await screen.findByPlaceholderText('给这一刻起个名字'), {
+      target: { value: '今天去新的营地' },
+    });
+    fireEvent.change(screen.getByPlaceholderText('在想什么呢？记录一下这一刻发生的故事…'), {
+      target: { value: '我们在营地玩了很久。' },
+    });
+    fireEvent.change(screen.getByLabelText('搜索地点'), {
+      target: { value: '迪士尼营地' },
+    });
+
+    expect(await screen.findByText('地点搜索暂时不可用，可继续手动填写或选择常用地点。')).toBeDefined();
+    fireEvent.click(await screen.findByRole('button', { name: '使用手动地点：迪士尼营地' }));
+    expect(screen.getByText('已使用手动填写的地点「迪士尼营地」，地图恢复后可再搜索更精确地址。')).toBeDefined();
+
+    fireEvent.click(screen.getByRole('button', { name: '发布' }));
+
+    await waitFor(() => {
+      expect(createRecordMock).toHaveBeenCalledWith(expect.objectContaining({
+        child_no: 'c_001',
+        record_type: 'text',
+        title: '今天去新的营地',
+        content_text: '我们在营地玩了很久。',
+        location_text: '迪士尼营地',
+        status: 'published',
+      }));
+    });
+  });
+
+  it('uses neutral home prompts when the child profile has no display name', async () => {
+    window.history.pushState({}, '', '/home');
+    refreshMock.mockResolvedValue({
+      access_token: 'token-123',
+      expires_in: 7200,
+      user: {
+        user_no: 'u_no_child',
+        nickname: '测试用户',
+        avatar_url: null,
+        membership_type: 'free',
+      },
+      need_create_child: false,
+    });
+    const blankNameChild = {
+      child_no: 'c_blank',
+      family_no: 'f_001',
+      owner_user_no: 'u_no_child',
+      name: '   ',
+      avatar_url: null,
+      birthday: '2025-01-01',
+      gender: 'female',
+      birth_place: '上海',
+      remark: null,
+      current_age_display: '1岁2月',
+      status: 'normal',
+      created_at: '2026-04-21T00:00:00.000Z',
+      updated_at: '2026-04-21T00:00:00.000Z',
+    };
+    listChildrenMock.mockResolvedValue([blankNameChild]);
+    detailChildMock.mockResolvedValue(blankNameChild);
+    listRecordsMock.mockResolvedValue({
+      list: [],
+      page: 1,
+      page_size: 5,
+      total: 0,
+      has_more: false,
+    });
+
+    render(<App />);
+
+    expect(await screen.findByText('孩子最近最喜欢的一件玩具是什么？它有什么特别的故事吗？')).toBeDefined();
+    expect(screen.queryByText('小满最近最喜欢的一件玩具是什么？它有什么特别的故事吗？')).toBeNull();
+  });
+
+  it('uses real profile context and nianlun branding without placeholder copy', async () => {
+    window.history.pushState({}, '', '/profile');
+    refreshMock.mockResolvedValue({
+      access_token: 'token-123',
+      expires_in: 7200,
+      user: {
+        user_no: 'u_001',
+        nickname: '测试用户',
+        avatar_url: null,
+        membership_type: 'free',
+      },
+      need_create_child: false,
+    });
+    listChildrenMock.mockResolvedValue([
+      {
+        child_no: 'c_001',
+        family_no: 'f_001',
+        owner_user_no: 'u_001',
+        name: '小满',
+        avatar_url: null,
+        birthday: '2025-01-01',
+        gender: 'female',
+        birth_place: '上海',
+        remark: null,
+        current_age_display: '1岁2月',
+        status: 'normal',
+        created_at: '2026-04-21T00:00:00.000Z',
+        updated_at: '2026-04-21T00:00:00.000Z',
+      },
+    ]);
+    detailChildMock.mockResolvedValue({
+      child_no: 'c_001',
+      family_no: 'f_001',
+      owner_user_no: 'u_001',
+      name: '小满',
+      avatar_url: null,
+      birthday: '2025-01-01',
+      gender: 'female',
+      birth_place: '上海',
+      remark: null,
+      current_age_display: '1岁2月',
+      status: 'normal',
+      created_at: '2026-04-21T00:00:00.000Z',
+      updated_at: '2026-04-21T00:00:00.000Z',
+    });
+    listRecordsMock.mockResolvedValue({
+      list: [],
+      page: 1,
+      page_size: 3,
+      total: 0,
+      has_more: false,
+    });
+
+    render(<App />);
+
+    expect(await screen.findByText('当前档案：小满')).toBeDefined();
+    expect(screen.queryByText('ID: 00000001')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /关于我们/ }));
+
+    expect(await screen.findByRole('heading', { name: 'nianlun' })).toBeDefined();
+    expect(screen.getByText('版本 1.0.0（构建 20260514）')).toBeDefined();
+    expect(screen.queryByRole('heading', { name: '孩子的人生档案馆' })).toBeNull();
+    expect(screen.queryByText(/familyarchive\.com/)).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /服务说明/ }));
+
+    expect(screen.getByText('当前版本已覆盖成长记录、家庭协作、时间轴回看、档案导出和运营后台管理。')).toBeDefined();
+    expect(screen.queryByText(/官网信息将随服务发布节奏同步更新/)).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: /联系我们/ }));
+
+    expect(await screen.findByRole('heading', { name: '帮助与反馈' })).toBeDefined();
+    expect(screen.queryByText(/familyarchive\.com/)).toBeNull();
+  });
+
+  it('keeps monthly report empty state based on real records only', async () => {
+    window.history.pushState({}, '', '/profile/reports');
+    refreshMock.mockResolvedValue({
+      access_token: 'token-123',
+      expires_in: 7200,
+      user: {
+        user_no: 'u_001',
+        nickname: '测试用户',
+        avatar_url: null,
+        membership_type: 'free',
+      },
+      need_create_child: false,
+    });
+    listChildrenMock.mockResolvedValue([
+      {
+        child_no: 'c_001',
+        family_no: 'f_001',
+        owner_user_no: 'u_001',
+        name: '小满',
+        avatar_url: null,
+        birthday: '2025-01-01',
+        gender: 'female',
+        birth_place: '上海',
+        remark: null,
+        current_age_display: '1岁2月',
+        status: 'normal',
+        created_at: '2026-04-21T00:00:00.000Z',
+        updated_at: '2026-04-21T00:00:00.000Z',
+      },
+    ]);
+    detailChildMock.mockResolvedValue({
+      child_no: 'c_001',
+      family_no: 'f_001',
+      owner_user_no: 'u_001',
+      name: '小满',
+      avatar_url: null,
+      birthday: '2025-01-01',
+      gender: 'female',
+      birth_place: '上海',
+      remark: null,
+      current_age_display: '1岁2月',
+      status: 'normal',
+      created_at: '2026-04-21T00:00:00.000Z',
+      updated_at: '2026-04-21T00:00:00.000Z',
+    });
+    listRecordsMock.mockResolvedValue({
+      list: [],
+      page: 1,
+      page_size: 100,
+      total: 0,
+      has_more: false,
+    });
+
+    render(<App />);
+
+    expect(await screen.findByRole('heading', { name: '月报与纪念册' })).toBeDefined();
+    expect(screen.getByText('这个月还没有可生成月报的真实记录。发布第一条记录后，这里会按实际内容整理故事摘要、里程碑和影像回顾。')).toBeDefined();
+    expect(screen.getByText('记录本月第一条')).toBeDefined();
+    expect(screen.queryByText(/小满完成了第一次独立走路/)).toBeNull();
+    expect(screen.getAllByText('0').length).toBeGreaterThanOrEqual(2);
   });
 });

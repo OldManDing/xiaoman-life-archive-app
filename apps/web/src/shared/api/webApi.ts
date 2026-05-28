@@ -11,6 +11,9 @@ import type {
   LocationsSearchResponse,
   FeedbackResponse,
   DeletionCheckResponse,
+  ArchiveExportRequestResponse,
+  ArchiveExportRequestsListResponse,
+  ArchiveExportSummaryResponse,
   AiJobDetail,
   AiPreviewResponse,
   AiJobType,
@@ -83,10 +86,19 @@ export interface MembershipBookRequestPayload {
   note?: string;
 }
 
+export interface ArchiveExportRequestPayload {
+  child_no: string;
+  export_type?: 'all' | 'media' | 'text';
+  purpose?: 'backup' | 'adult_handoff';
+  contact?: string;
+  note?: string;
+}
+
 export interface ListRecordsQuery {
   child_no: string;
   page?: number;
   page_size?: number;
+  keyword?: string;
   record_type?: string;
   tag?: string;
   start_time?: string;
@@ -212,6 +224,21 @@ export const webApi = {
 
   async requestMembershipBook(payload: MembershipBookRequestPayload) {
     const response = await http.post<ApiEnvelope<MembershipBookRequestResponse>>('/users/me/membership-book-requests', payload);
+    return response.data.data;
+  },
+
+  async requestArchiveExport(payload: ArchiveExportRequestPayload) {
+    const response = await http.post<ApiEnvelope<ArchiveExportRequestResponse>>('/users/me/archive-export-requests', payload);
+    return response.data.data;
+  },
+
+  async listArchiveExportRequests(params?: { child_no?: string }) {
+    const response = await http.get<ApiEnvelope<ArchiveExportRequestsListResponse>>('/users/me/archive-export-requests', { params });
+    return response.data.data;
+  },
+
+  async archiveExportSummary(params: { child_no: string }) {
+    const response = await http.get<ApiEnvelope<ArchiveExportSummaryResponse>>('/users/me/archive-export-summary', { params });
     return response.data.data;
   },
 

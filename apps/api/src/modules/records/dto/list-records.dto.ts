@@ -1,4 +1,4 @@
-import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsIn, IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
 
 export class ListRecordsDto {
   @IsString()
@@ -14,6 +14,11 @@ export class ListRecordsDto {
   @Min(1)
   @Max(100)
   page_size?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(80)
+  keyword?: string;
 
   @IsOptional()
   @IsString()

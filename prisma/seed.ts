@@ -13,6 +13,8 @@ import {
   RecordTagSource,
   RecordType,
   ShareTargetType,
+  SupportTicketPriority,
+  SupportTicketStatus,
   VisibilityScope,
 } from '@prisma/client';
 import bcrypt from 'bcrypt';
@@ -611,6 +613,32 @@ async function main() {
       retryCount: 0,
       startedAt: yesterday,
       finishedAt: yesterday,
+    },
+  });
+
+  await prisma.supportTicket.upsert({
+    where: { ticketNo: 'fb_demo_001' },
+    update: {
+      userId: demoUser.id,
+      category: '数据异常',
+      topic: 'account-delete',
+      content: '演示用户申请注销账号，并确认孩子档案和媒体资料的后续处理方式。',
+      contact: '13800000000',
+      status: SupportTicketStatus.submitted,
+      priority: SupportTicketPriority.child_safety,
+      assignedAdminId: null,
+      handledAt: null,
+      handleNote: null,
+    },
+    create: {
+      ticketNo: 'fb_demo_001',
+      userId: demoUser.id,
+      category: '数据异常',
+      topic: 'account-delete',
+      content: '演示用户申请注销账号，并确认孩子档案和媒体资料的后续处理方式。',
+      contact: '13800000000',
+      status: SupportTicketStatus.submitted,
+      priority: SupportTicketPriority.child_safety,
     },
   });
 

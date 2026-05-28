@@ -173,7 +173,6 @@ export class LocationsService {
       });
       return currentLocation ? [currentLocation, ...pois.filter((poi) => poi.name !== currentLocation.name)] : pois;
     } catch (error) {
-      if (currentLocation) return [currentLocation];
       if (!isStrictEnvironment()) return this.searchMock(dto);
       if (error instanceof BadGatewayException) throw error;
       throw new BadGatewayException('地图服务暂时不可用');

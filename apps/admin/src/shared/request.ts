@@ -46,6 +46,21 @@ export interface AdminUserItem {
   created_at: string;
 }
 
+export interface AdminFamilyItem {
+  family_no: string;
+  family_name: string | null;
+  owner_user_no: string;
+  owner_name: string;
+  owner_mobile: string | null;
+  status: 'active' | 'disabled' | 'deleted';
+  members_count: number;
+  children_count: number;
+  records_count: number;
+  media_count: number;
+  archive_export_requests_count: number;
+  created_at: string;
+}
+
 export interface AdminDashboardResponse {
   totals: {
     users: number;
@@ -55,6 +70,113 @@ export interface AdminDashboardResponse {
   };
   ai_job_status_distribution: Array<{ status: string; count: number }>;
   recent_audit_logs: AdminAuditLogItem[];
+}
+
+export interface AdminOpsReadinessResponse {
+  generated_at: string;
+  environment: {
+    app_env: string;
+    node_env: string | null;
+    app_port: number;
+    secure_cookie: boolean;
+    admin_bootstrap_enabled: boolean;
+    cors_origins: string[];
+  };
+  providers: Array<{
+    key: string;
+    label: string;
+    value: string;
+    status: 'ready' | 'warning' | 'blocked';
+    helper: string;
+  }>;
+  data_statistics: {
+    users: number;
+    families: number;
+    children: number;
+    records: number;
+    media: number;
+    audit_logs: number;
+    archive_export_requests: number;
+    support_tickets: number;
+    pending_archive_export_requests: number;
+    open_support_tickets: number;
+    content_risks: number;
+    media_exceptions: number;
+    failed_media: number;
+    failed_ai_jobs: number;
+  };
+  backup_recovery: {
+    status: 'ready' | 'warning' | 'blocked';
+    checks: Array<{
+      key: string;
+      label: string;
+      value: string;
+      status: 'ready' | 'warning' | 'blocked';
+      helper: string;
+    }>;
+  };
+  release_gates: {
+    status: 'ready' | 'warning' | 'blocked';
+    report: {
+      path: string;
+      status: 'passed' | 'conditional_pass' | 'failed' | 'missing' | 'invalid' | 'stale';
+      checked_at: string | null;
+      age_hours: number | null;
+      providers: Record<string, string> | null;
+      checks: Array<{
+        name: string;
+        status: 'passed' | 'failed';
+        error?: string;
+      }>;
+      failures: Array<{
+        name: string;
+        error: string;
+      }>;
+      blocked_requirements: string[];
+      blocked_requirement_details: Array<{
+        requirement: string;
+        severity: 'P0' | 'P1' | 'P2';
+        owner: string;
+        evidence: string;
+        next_action: string;
+      }>;
+      next_actions: string[];
+    };
+    checks: Array<{
+      key: string;
+      label: string;
+      value: string;
+      status: 'ready' | 'warning' | 'blocked';
+      helper: string;
+    }>;
+  };
+  action_items: Array<{
+    priority: string;
+    label: string;
+    helper: string;
+    to: string;
+  }>;
+}
+
+export interface AdminSystemConfigItem {
+  config_key: string;
+  category: 'backup_recovery' | 'alerting';
+  label: string;
+  value: string;
+  value_type: 'number' | 'url' | 'datetime' | 'text';
+  description: string;
+  source: 'admin' | 'environment';
+  updated_by_name: string | null;
+  updated_at: string | null;
+}
+
+export interface AdminSystemConfigResponse {
+  list: AdminSystemConfigItem[];
+  total: number;
+}
+
+export interface AdminSystemConfigUpdateResponse extends AdminSystemConfigItem {
+  changed: boolean;
 }
 
 export interface AdminUserStatusUpdateResponse {
@@ -69,6 +191,13 @@ export interface AdminUserPasswordResetResponse {
   revoked_sessions: number;
   changed: boolean;
   reset_at: string;
+}
+
+export interface AdminUserMembershipUpdateResponse {
+  user_no: string;
+  membership_type: 'free' | 'family_member' | 'ai_plus';
+  membership_expire_at: string | null;
+  changed: boolean;
 }
 
 export interface AdminInviteItem {
@@ -164,6 +293,67 @@ export interface AdminAuditLogItem {
   created_at: string;
 }
 
+export interface AdminArchiveExportRequestItem {
+  request_no: string;
+  user_no: string;
+  user_name: string;
+  user_mobile: string | null;
+  family_no: string;
+  family_name: string | null;
+  child_no: string;
+  child_name: string;
+  export_type: 'all' | 'media' | 'text';
+  purpose: 'backup' | 'adult_handoff';
+  status: 'submitted' | 'processing' | 'completed' | 'rejected';
+  contact: string | null;
+  note: string | null;
+  record_count: number;
+  milestone_count: number;
+  media_count: number;
+  first_record_time: string | null;
+  latest_record_time: string | null;
+  processed_by_name: string | null;
+  processed_at: string | null;
+  process_note: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AdminSupportTicketItem {
+  ticket_no: string;
+  user_no: string;
+  user_name: string;
+  user_mobile: string | null;
+  category: string;
+  topic: string | null;
+  content: string;
+  contact: string | null;
+  status: 'submitted' | 'processing' | 'resolved' | 'closed';
+  priority: 'normal' | 'urgent' | 'child_safety';
+  assigned_admin_name: string | null;
+  handled_at: string | null;
+  handle_note: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AdminContentRiskItem {
+  risk_no: string;
+  category: 'content_safety' | 'media_exception' | 'child_safety' | 'ai_exception';
+  severity: 'p0' | 'p1' | 'p2';
+  status: 'open' | 'processing' | 'resolved';
+  title: string;
+  subject_no: string | null;
+  subject_name: string | null;
+  source_type: 'record' | 'media' | 'support_ticket' | 'ai_job';
+  source_no: string;
+  source_status: string;
+  reason: string;
+  action_label: string;
+  action_to: string;
+  created_at: string;
+}
+
 export interface AdminUserDetail extends AdminUserItem {
   email: string | null;
   membership_expire_at: string | null;
@@ -188,6 +378,45 @@ export interface AdminUserDetail extends AdminUserItem {
     role: string;
     status: string;
     joined_at: string | null;
+  }>;
+}
+
+export interface AdminFamilyDetail extends AdminFamilyItem {
+  updated_at: string;
+  members: Array<{
+    user_no: string;
+    nickname: string;
+    mobile: string | null;
+    role: string;
+    status: 'active' | 'disabled';
+    joined_at: string | null;
+  }>;
+  children: Array<{
+    child_no: string;
+    name: string;
+    birthday: string | null;
+    gender: string;
+    status: string;
+  }>;
+  recent_records: Array<{
+    record_no: string;
+    child_no: string;
+    child_name: string;
+    title: string | null;
+    record_type: string;
+    status: string;
+    creator_name: string;
+    event_time: string;
+  }>;
+  archive_export_requests: Array<{
+    request_no: string;
+    child_no: string;
+    child_name: string;
+    user_no: string;
+    user_name: string;
+    purpose: 'backup' | 'adult_handoff';
+    status: 'submitted' | 'processing' | 'completed' | 'rejected';
+    created_at: string;
   }>;
 }
 
@@ -267,6 +496,8 @@ export interface AdminStatusActionResponse {
   record_no?: string;
   media_no?: string;
   job_no?: string;
+  request_no?: string;
+  ticket_no?: string;
   status: string;
   retry_count?: number;
   changed: boolean;
@@ -313,8 +544,33 @@ export const adminApi = {
     return unwrap(response);
   },
 
+  async opsReadiness() {
+    const response = await request.get<ApiEnvelope<AdminOpsReadinessResponse>>('/admin/ops-readiness');
+    return unwrap(response);
+  },
+
+  async listSystemConfigs() {
+    const response = await request.get<ApiEnvelope<AdminSystemConfigResponse>>('/admin/system-configs');
+    return unwrap(response);
+  },
+
+  async updateSystemConfig(configKey: string, payload: { value: string; reason: string }) {
+    const response = await request.patch<ApiEnvelope<AdminSystemConfigUpdateResponse>>(`/admin/system-configs/${configKey}`, payload);
+    return unwrap(response);
+  },
+
   async listUsers(params: { keyword?: string; page?: number; page_size?: number }) {
     const response = await request.get<ApiEnvelope<AdminListResponse<AdminUserItem>>>('/admin/users', { params });
+    return unwrap(response);
+  },
+
+  async listFamilies(params: { keyword?: string; page?: number; page_size?: number }) {
+    const response = await request.get<ApiEnvelope<AdminListResponse<AdminFamilyItem>>>('/admin/families', { params });
+    return unwrap(response);
+  },
+
+  async getFamilyDetail(familyNo: string) {
+    const response = await request.get<ApiEnvelope<AdminFamilyDetail>>(`/admin/families/${familyNo}`);
     return unwrap(response);
   },
 
@@ -340,6 +596,11 @@ export const adminApi = {
 
   async resetUserPassword(userNo: string, payload: { new_password: string; password_confirm: string; reason: string }) {
     const response = await request.patch<ApiEnvelope<AdminUserPasswordResetResponse>>(`/admin/users/${userNo}/password`, payload);
+    return unwrap(response);
+  },
+
+  async updateUserMembership(userNo: string, payload: { membership_type: 'free' | 'family_member' | 'ai_plus'; membership_expire_at?: string | null; reason: string }) {
+    const response = await request.patch<ApiEnvelope<AdminUserMembershipUpdateResponse>>(`/admin/users/${userNo}/membership`, payload);
     return unwrap(response);
   },
 
@@ -393,6 +654,11 @@ export const adminApi = {
     return unwrap(response);
   },
 
+  async listContentRisks(params: { keyword?: string; page?: number; page_size?: number; category?: string; severity?: string; status?: string }) {
+    const response = await request.get<ApiEnvelope<AdminListResponse<AdminContentRiskItem>>>('/admin/content-risks', { params });
+    return unwrap(response);
+  },
+
   async getAiJobDetail(jobNo: string) {
     const response = await request.get<ApiEnvelope<AdminAiJobDetail>>(`/admin/ai-jobs/${jobNo}`);
     return unwrap(response);
@@ -405,6 +671,26 @@ export const adminApi = {
 
   async cancelAiJob(jobNo: string, payload: { reason?: string }) {
     const response = await request.post<ApiEnvelope<AdminStatusActionResponse>>(`/admin/ai-jobs/${jobNo}/cancel`, payload);
+    return unwrap(response);
+  },
+
+  async listSupportTickets(params: { keyword?: string; page?: number; page_size?: number; status?: string; priority?: string; category?: string }) {
+    const response = await request.get<ApiEnvelope<AdminListResponse<AdminSupportTicketItem>>>('/admin/support-tickets', { params });
+    return unwrap(response);
+  },
+
+  async updateSupportTicketStatus(ticketNo: string, payload: { status: 'processing' | 'resolved' | 'closed'; note?: string }) {
+    const response = await request.patch<ApiEnvelope<AdminSupportTicketItem & { changed: boolean }>>(`/admin/support-tickets/${ticketNo}/status`, payload);
+    return unwrap(response);
+  },
+
+  async listArchiveExportRequests(params: { keyword?: string; page?: number; page_size?: number; status?: string; purpose?: string }) {
+    const response = await request.get<ApiEnvelope<AdminListResponse<AdminArchiveExportRequestItem>>>('/admin/archive-export-requests', { params });
+    return unwrap(response);
+  },
+
+  async updateArchiveExportRequestStatus(requestNo: string, payload: { status: 'processing' | 'completed' | 'rejected'; note?: string }) {
+    const response = await request.patch<ApiEnvelope<AdminArchiveExportRequestItem & { changed: boolean }>>(`/admin/archive-export-requests/${requestNo}/status`, payload);
     return unwrap(response);
   },
 

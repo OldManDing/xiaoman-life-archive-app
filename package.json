@@ -25,6 +25,8 @@
     "coverage:baseline": "npm run test:coverage -w apps/api && npm run test:coverage -w apps/web && npm run test:coverage -w apps/admin",
     "verify:production-template": "node scripts/verify-production-config.cjs --template .env.example",
     "verify:production-env": "node scripts/verify-production-config.cjs --env .env.production",
+    "verify:security-baseline": "node scripts/verify-security-baseline.cjs",
+    "verify:live-readiness": "node scripts/verify-live-readiness.cjs",
     "sync:mobile": "npm run sync -w apps/mobile",
     "mobile:add:android": "npm run add:android -w apps/mobile",
     "mobile:add:ios": "npm run add:ios -w apps/mobile",

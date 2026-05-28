@@ -4,7 +4,7 @@ import { BookHeart, Camera, CheckCircle2, ChevronRight, CreditCard, DownloadClou
 
 import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
-import type { RecordSummary } from '../shared/api/types';
+import type { ArchiveExportRequestItem, RecordSummary } from '../shared/api/types';
 import { useAsyncData } from '../shared/hooks';
 import { membershipTypeLabel } from '../shared/labels';
 import { createPersistableMediaPreview, resolveMediaPreviewUrl, resolveStoredMediaUrl, saveLocalMediaPreview, toLocalMediaReference } from '../shared/localMediaPreview';
@@ -233,6 +233,31 @@ const toMonthKey = (value: string | Date) => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 };
 
+const archiveExportPurposeText = (value: ArchiveExportRequestItem['purpose']) =>
+  value === 'adult_handoff' ? '成年移交' : '档案打包';
+
+const archiveExportTypeText = (value: ArchiveExportRequestItem['export_type']) => {
+  if (value === 'media') return '仅媒体';
+  if (value === 'text') return '仅文字';
+  return '全部数据';
+};
+
+const archiveExportStatusText = (value: ArchiveExportRequestItem['status']) => {
+  if (value === 'processing') return '处理中';
+  if (value === 'completed') return '已完成';
+  if (value === 'rejected') return '已驳回';
+  return '待处理';
+};
+
+const archiveExportStatusColor = (value: ArchiveExportRequestItem['status']) => {
+  if (value === 'completed') return '#0f766e';
+  if (value === 'rejected') return '#dc2626';
+  if (value === 'processing') return '#b45309';
+  return '#4b5563';
+};
+
+const formatProfileDateTime = (value: string | null) => (value ? new Date(value).toLocaleString('zh-CN', { hour12: false }) : '—');
+
 export const ProfilePage = () => {
   const { user, logout, activeChild } = useAuth();
   const navigate = useNavigate();
@@ -255,7 +280,7 @@ export const ProfilePage = () => {
               <strong style={{ color: '#172033', fontSize: 25, lineHeight: 1.1, fontWeight: 950 }}>{user?.nickname ?? '未登录用户'}</strong>
               <span style={{ color: '#d97706', background: '#fff7dc', border: '1px solid #f1d99b', borderRadius: '999px', padding: '3px 10px', fontSize: 12, fontWeight: 900 }}>{membershipTypeLabel(user?.membership_type)}</span>
             </div>
-            <span style={{ color: '#5f6d7f', fontSize: 15, fontWeight: 700 }}>ID: 00000001</span>
+            <span style={{ color: '#5f6d7f', fontSize: 15, fontWeight: 700 }}>当前档案：{activeChild?.name ?? '未选择孩子'}</span>
           </div>
           <button type="button" onClick={() => navigate('/profile/account')} style={{ minHeight: 44, borderRadius: '999px', border: '1px solid rgba(126,145,170,0.24)', background: 'rgba(255,255,255,0.86)', color: '#334155', padding: '9px 18px', fontSize: 15, fontWeight: 850, cursor: 'pointer', boxShadow: '0 10px 20px rgba(25,35,55,0.08)' }}>编辑主页</button>
         </div>
@@ -533,12 +558,11 @@ export const ReportsPage = () => {
   const mediaRecords = monthlyRecords.filter((item) => item.cover_url && item.cover_media_type !== 'audio');
   const imageCount = mediaRecords.length;
   const textCount = monthlyRecords.filter((item) => item.record_type === 'text').length;
-  const displayRecordCount = monthlyRecords.length || 12;
-  const displayImageCount = imageCount || 45;
+  const hasMonthlyRecords = monthlyRecords.length > 0;
   const latest = monthlyRecords[0];
   const monthlySummary = monthlyRecords.length
     ? `这个月已经留下 ${monthlyRecords.length} 个成长瞬间。${milestoneCount ? `${milestoneCount} 个里程碑把关键变化标了出来，` : ''}${imageCount ? `${imageCount} 条影像让回忆有画面，` : ''}${textCount ? `${textCount} 条文字记录保留了当时的语气。` : '每一条记录都会进入孩子的长期档案。'}`
-    : '这个月，小满完成了第一次独立走路和多次家庭互动，影像记录捕捉到她探索世界的状态。我们会把这些片段整理成适合回看的成长小结。';
+    : '这个月还没有可生成月报的真实记录。发布第一条记录后，这里会按实际内容整理故事摘要、里程碑和影像回顾。';
 
   const pastMonths = [1, 2, 3, 4].map((offset) => {
     const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - offset, 1);
@@ -588,8 +612,8 @@ export const ReportsPage = () => {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
               {[
-                { label: '记录数量', value: displayRecordCount },
-                { label: '影像记录', value: displayImageCount },
+                { label: '记录数量', value: monthlyRecords.length },
+                { label: '影像记录', value: imageCount },
               ].map((item) => (
                 <div key={item.label} style={{ borderRadius: '16px', background: '#fcfaf5', border: '1px solid #f5f1e6', padding: '12px', textAlign: 'center' }}>
                   <strong style={{ display: 'block', fontSize: '19px', color: '#292524', lineHeight: 1 }}>{item.value}</strong>
@@ -604,8 +628,8 @@ export const ReportsPage = () => {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 48px', gap: '10px', alignItems: 'center' }}>
-              <button type="button" style={{ ...primaryButtonStyle, width: '100%', minHeight: '44px', boxShadow: '0 8px 18px rgba(41,37,36,0.16)' }} onClick={() => latest ? navigate(`/record/${latest.record_no}`) : navigate('/profile/export')}>
-                查看月报
+              <button type="button" style={{ ...primaryButtonStyle, width: '100%', minHeight: '44px', boxShadow: '0 8px 18px rgba(41,37,36,0.16)' }} onClick={() => latest ? navigate(`/record/${latest.record_no}`) : navigate('/record/create')}>
+                {hasMonthlyRecords ? '查看月报' : '记录本月第一条'}
               </button>
               <button type="button" aria-label="导出月报摘要" title="导出月报摘要" style={{ ...secondaryButtonStyle, width: '48px', minWidth: '48px', minHeight: '48px', padding: 0, borderRadius: '999px', justifyContent: 'center' }} onClick={() => navigate('/profile/export')}>
                 <DownloadCloud size={18} strokeWidth={2.2} />
@@ -617,7 +641,7 @@ export const ReportsPage = () => {
               <p style={{ ...helperTextStyle, lineHeight: 1.75 }}>
                 {monthlyRecords.length
                   ? `本月共记录 ${monthlyRecords.length} 个成长瞬间，其中 ${milestoneCount} 个里程碑、${imageCount} 条影像记录、${textCount} 条文字记录。`
-                  : '本月还没有记录内容，添加记录后会自动汇总为成长月报。'}
+                  : '本月还没有真实记录，添加记录后会自动汇总为成长月报。'}
               </p>
               {latest ? (
                 <button type="button" style={{ ...secondaryButtonStyle, justifyContent: 'space-between', textAlign: 'left' }} onClick={() => navigate(`/record/${latest.record_no}`)}>
@@ -704,6 +728,8 @@ export const ExportBackupPage = () => {
   const { user, activeChild } = useAuth();
   const [message, setMessage] = useState<string | null>(null);
   const [exportMode, setExportMode] = useState<'all' | 'media' | 'text'>('all');
+  const [submittingArchiveRequest, setSubmittingArchiveRequest] = useState<'backup' | 'adult_handoff' | null>(null);
+  const [downloadingSummary, setDownloadingSummary] = useState(false);
   const { data: records, loading, error } = useAsyncData<RecordSummary[]>(
     async () => {
       if (!activeChild) return [];
@@ -712,30 +738,92 @@ export const ExportBackupPage = () => {
     },
     [activeChild?.child_no],
   );
+  const {
+    data: archiveRequests,
+    loading: archiveRequestsLoading,
+    error: archiveRequestsError,
+    setData: setArchiveRequests,
+  } = useAsyncData<ArchiveExportRequestItem[]>(
+    async () => {
+      if (!activeChild) return [];
+      const result = await webApi.listArchiveExportRequests({ child_no: activeChild.child_no });
+      return result.list;
+    },
+    [activeChild?.child_no],
+  );
   const recordsList = records ?? [];
+  const archiveRequestsList = archiveRequests ?? [];
+  const canExportArchive = Boolean(activeChild && user && activeChild.owner_user_no === user.user_no);
   const milestoneCount = recordsList.filter((item) => item.is_milestone).length;
   const mediaCount = recordsList.filter((item) => item.cover_url).length;
-  const exportText = [
-    '年轮成长档案摘要',
-    `生成时间：${new Date().toLocaleString('zh-CN', { hour12: false })}`,
-    `账号：${user?.nickname ?? '未登录用户'}`,
-    `孩子：${activeChild?.name ?? '未选择孩子'}`,
-    `记录数量：${recordsList.length}`,
-    `里程碑数量：${milestoneCount}`,
-    `影像记录数量：${mediaCount}`,
-    '',
-    ...recordsList.slice(0, 30).map((item, index) => `${index + 1}. ${item.title ?? '未命名记录'}｜${new Date(item.event_time).toLocaleString('zh-CN', { hour12: false })}｜${item.tags.join('、') || '无标签'}`),
-  ].join('\n');
 
-  const downloadSummary = () => {
-    const blob = new Blob([exportText], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = `年轮-${activeChild?.name ?? '孩子'}-档案摘要.txt`;
-    anchor.click();
-    URL.revokeObjectURL(url);
-    setMessage('档案摘要已生成下载文件');
+  const downloadSummary = async () => {
+    if (!activeChild) {
+      setMessage('请先选择孩子档案后再下载摘要');
+      return;
+    }
+
+    setDownloadingSummary(true);
+    setMessage(null);
+    try {
+      const result = await webApi.archiveExportSummary({ child_no: activeChild.child_no });
+      const blob = new Blob([result.content], { type: result.mime_type });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = result.file_name;
+      anchor.click();
+      URL.revokeObjectURL(url);
+      setMessage(`档案摘要已生成：${result.summary.record_count} 条记录、${result.summary.media_count} 个媒体，并已写入审计日志。`);
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : '档案摘要生成失败，请稍后再试');
+    } finally {
+      setDownloadingSummary(false);
+    }
+  };
+
+  const submitArchiveRequest = async (purpose: 'backup' | 'adult_handoff') => {
+    if (!activeChild) {
+      setMessage('请先选择孩子档案后再提交导出申请');
+      return;
+    }
+
+    setSubmittingArchiveRequest(purpose);
+    setMessage(null);
+    try {
+      const result = await webApi.requestArchiveExport({
+        child_no: activeChild.child_no,
+        export_type: purpose === 'adult_handoff' ? 'all' : exportMode,
+        purpose,
+        note:
+          purpose === 'adult_handoff'
+            ? '用户从导出与备份页发起成年移交准备'
+            : '用户从导出与备份页发起云端档案打包',
+      });
+      const nextRequest: ArchiveExportRequestItem = {
+        request_no: result.request_no,
+        child_no: result.summary.child_no,
+        child_name: result.summary.child_name,
+        export_type: result.summary.export_type,
+        purpose: result.summary.purpose,
+        status: result.status,
+        record_count: result.summary.record_count,
+        milestone_count: result.summary.milestone_count,
+        media_count: result.summary.media_count,
+        first_record_time: result.summary.first_record_time,
+        latest_record_time: result.summary.latest_record_time,
+        processed_at: null,
+        process_note: null,
+        created_at: result.created_at,
+        updated_at: result.created_at,
+      };
+      setArchiveRequests((current) => [nextRequest, ...(current ?? []).filter((item) => item.request_no !== nextRequest.request_no)].slice(0, 10));
+      setMessage(`${result.message} 当前快照：${result.summary.record_count} 条记录、${result.summary.media_count} 个媒体、${result.summary.milestone_count} 个里程碑。`);
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : '导出申请提交失败，请稍后再试');
+    } finally {
+      setSubmittingArchiveRequest(null);
+    }
   };
 
   const exportOptions = [
@@ -743,6 +831,7 @@ export const ExportBackupPage = () => {
     { value: 'media' as const, title: '仅图片和视频', description: '只导出媒体文件，适合节省空间' },
     { value: 'text' as const, title: '仅文字记录', description: '导出为 TXT/PDF 格式的纯文字日记' },
   ];
+  const archiveRequestDisabled = !canExportArchive || Boolean(submittingArchiveRequest);
 
   return (
     <PageShell title="导出与备份" backTo="/profile">
@@ -797,9 +886,73 @@ export const ExportBackupPage = () => {
       {loading ? <EmptyState message="正在整理档案摘要…" /> : null}
       {error ? <EmptyState message={`摘要整理失败：${error}`} /> : null}
 
+      <Panel style={{ display: 'grid', gap: '12px', borderRadius: '18px', boxShadow: '0 2px 8px rgba(41,37,36,0.03)' }}>
+        <div style={{ display: 'grid', gap: '6px' }}>
+          <strong style={{ color: '#292524', fontSize: '15px' }}>长期交付留痕</strong>
+          <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.65 }}>
+            需要云端完整打包或为孩子成年后的档案移交做准备时，先提交申请并写入后台审计，运营可按身份核验和档案完整性流程继续处理。
+          </p>
+          <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.65, color: canExportArchive ? '#0f766e' : '#b45309' }}>
+            {canExportArchive ? '当前账号为家庭管理员，可发起正式导出与交付申请。' : '为保护家庭档案，首版仅家庭管理员可导出或发起交付申请。'}
+          </p>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(132px, 1fr))', gap: '10px' }}>
+          <button
+            type="button"
+            style={{ ...secondaryButtonStyle, minHeight: '46px', borderRadius: '999px', justifyContent: 'center' }}
+            onClick={() => void submitArchiveRequest('backup')}
+            disabled={archiveRequestDisabled}
+          >
+            {submittingArchiveRequest === 'backup' ? '提交中…' : '提交打包申请'}
+          </button>
+          <button
+            type="button"
+            style={{ ...secondaryButtonStyle, minHeight: '46px', borderRadius: '999px', justifyContent: 'center' }}
+            onClick={() => void submitArchiveRequest('adult_handoff')}
+            disabled={archiveRequestDisabled}
+          >
+            {submittingArchiveRequest === 'adult_handoff' ? '提交中…' : '成年移交准备'}
+          </button>
+        </div>
+        <div style={{ display: 'grid', gap: '10px', paddingTop: '2px' }}>
+          <strong style={{ color: '#292524', fontSize: '14px' }}>最近申请</strong>
+          {archiveRequestsLoading ? <p style={{ ...helperTextStyle, margin: 0 }}>正在读取最近交付申请…</p> : null}
+          {archiveRequestsError ? <p style={{ ...helperTextStyle, margin: 0, color: '#dc2626' }}>最近申请读取失败：{archiveRequestsError}</p> : null}
+          {!archiveRequestsLoading && !archiveRequestsError && archiveRequestsList.length === 0 ? (
+            <p style={{ ...helperTextStyle, margin: 0 }}>暂无交付申请。提交后可在这里查看处理状态。</p>
+          ) : null}
+          {archiveRequestsList.map((item) => (
+            <div
+              key={item.request_no}
+              style={{
+                border: '1px solid #eef0f2',
+                borderRadius: '16px',
+                padding: '12px',
+                display: 'grid',
+                gap: '8px',
+                background: '#ffffff',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'center' }}>
+                <strong style={{ color: '#292524', fontSize: '14px', lineHeight: 1.35 }}>
+                  {archiveExportPurposeText(item.purpose)} · {archiveExportTypeText(item.export_type)}
+                </strong>
+                <span style={{ color: archiveExportStatusColor(item.status), fontSize: '12px', fontWeight: 800, whiteSpace: 'nowrap' }}>
+                  {archiveExportStatusText(item.status)}
+                </span>
+              </div>
+              <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.6 }}>
+                {item.record_count} 条记录、{item.media_count} 个媒体、{item.milestone_count} 个里程碑 · {formatProfileDateTime(item.created_at)}
+              </p>
+              {item.process_note ? <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.6 }}>处理备注：{item.process_note}</p> : null}
+            </div>
+          ))}
+        </div>
+      </Panel>
+
       {message ? <p style={{ ...helperTextStyle, color: message.includes('失败') ? '#dc2626' : '#0f766e' }}>{message}</p> : null}
-      <button type="button" style={{ ...primaryButtonStyle, width: '100%', minHeight: '50px', borderRadius: '999px' }} onClick={downloadSummary} disabled={loading || Boolean(error)}>
-        开始打包导出
+      <button type="button" style={{ ...primaryButtonStyle, width: '100%', minHeight: '50px', borderRadius: '999px' }} onClick={() => void downloadSummary()} disabled={loading || downloadingSummary || Boolean(error) || !canExportArchive}>
+        {downloadingSummary ? '正在生成摘要…' : '下载审计留痕摘要'}
       </button>
     </PageShell>
   );
@@ -1296,19 +1449,19 @@ export const AboutPage = () => {
           height={96}
           style={{ borderRadius: '26px', boxShadow: '0 12px 26px rgba(115, 74, 41, 0.16)', marginBottom: '16px' }}
         />
-        <h2 style={{ margin: 0, color: '#2c2c2c', fontSize: '20px', fontWeight: 800 }}>孩子的人生档案馆</h2>
-        <p style={{ margin: '6px 0 0', color: '#a1a1aa', fontSize: '12px', fontWeight: 600 }}>Version 1.0.0 (Build 20260514)</p>
+        <h2 style={{ margin: 0, color: '#2c2c2c', fontSize: '20px', fontWeight: 800 }}>nianlun</h2>
+        <p style={{ margin: '6px 0 0', color: '#a1a1aa', fontSize: '12px', fontWeight: 600 }}>版本 1.0.0（构建 20260514）</p>
       </section>
 
       <Panel style={{ padding: 0, overflow: 'hidden' }}>
-        <AboutMenuLink icon={Info} label="功能介绍" onClick={() => setMessage('年轮支持成长记录、家庭协作、时间轴、月报纪念册和本机导出。')} />
+        <AboutMenuLink icon={Info} label="功能介绍" onClick={() => setMessage('年轮支持成长记录、家庭协作、时间轴、月报纪念册、档案交付和审计留痕导出。')} />
         <AboutMenuLink icon={FileText} label="用户服务协议" onClick={() => navigate('/profile/legal')} />
         <AboutMenuLink icon={Shield} label="隐私政策" onClick={() => navigate('/profile/legal')} />
-        <AboutMenuLink icon={Globe} label="官方网站" isLast onClick={() => setMessage('官网信息将随服务发布节奏同步更新。')} />
+        <AboutMenuLink icon={Globe} label="服务说明" isLast onClick={() => setMessage('当前版本已覆盖成长记录、家庭协作、时间轴回看、档案导出和运营后台管理。')} />
       </Panel>
 
       <Panel style={{ padding: 0, overflow: 'hidden' }}>
-        <AboutMenuLink icon={Mail} label="联系我们" value="support@familyarchive.com" onClick={() => setMessage('可通过 support@familyarchive.com 联系我们。')} />
+        <AboutMenuLink icon={Mail} label="联系我们" value="帮助与反馈" onClick={() => navigate('/profile/help')} />
         <AboutMenuLink icon={HelpCircle} label="应用反馈" isLast onClick={() => navigate('/profile/help')} />
       </Panel>
 

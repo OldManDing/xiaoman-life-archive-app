@@ -11,6 +11,7 @@ const NATIVE_APP_CORS_ORIGINS = ['https://localhost', 'capacitor://localhost', '
 const DEFAULT_AUTH_RATE_LIMIT_WINDOW_MS = 60_000;
 const DEFAULT_AUTH_RATE_LIMIT_MAX_ATTEMPTS = 10;
 const RELAXED_AUTH_RATE_LIMIT_MAX_ATTEMPTS = 1_000;
+const DEFAULT_BACKUP_RETENTION_DAYS = 30;
 
 export type AiProviderName = 'mock' | 'openai' | 'openai-compatible';
 export type MapProviderName = 'mock' | 'amap' | 'disabled';
@@ -130,6 +131,34 @@ export function getAuthRateLimitMaxAttempts(env: EnvSource = process.env): numbe
   return attempts;
 }
 
+export function getBackupRetentionDays(env: EnvSource = process.env): number {
+  return readPositiveInteger(env, 'BACKUP_RETENTION_DAYS', DEFAULT_BACKUP_RETENTION_DAYS);
+}
+
+export function getBackupRunbookUrl(env: EnvSource = process.env): string | null {
+  return readEnvValue(env, 'BACKUP_RUNBOOK_URL') ?? null;
+}
+
+export function getBackupRestoreDrillAt(env: EnvSource = process.env): string | null {
+  const configured = readEnvValue(env, 'BACKUP_RESTORE_DRILL_AT');
+  if (!configured) return null;
+
+  const timestamp = Date.parse(configured);
+  if (Number.isNaN(timestamp)) {
+    throw new Error(`Invalid BACKUP_RESTORE_DRILL_AT value: ${configured}`);
+  }
+
+  return new Date(timestamp).toISOString();
+}
+
+export function getAlertContactName(env: EnvSource = process.env): string | null {
+  return readEnvValue(env, 'ALERT_CONTACT_NAME') ?? null;
+}
+
+export function getAlertContactChannel(env: EnvSource = process.env): string | null {
+  return readEnvValue(env, 'ALERT_CONTACT_CHANNEL') ?? null;
+}
+
 export function resolveCorsOrigins(env: EnvSource = process.env): true | string[] {
   const configured = readEnvValue(env, 'CORS_ORIGINS');
   if (!configured) {
@@ -217,10 +246,16 @@ export function getAiProviderName(env: EnvSource = process.env): AiProviderName 
 }
 
 export function getMapProviderName(env: EnvSource = process.env): MapProviderName {
-  return resolveProviderValue(env, 'MAP_PROVIDER', MAP_PROVIDER_VALUES, {
+  const provider = resolveProviderValue(env, 'MAP_PROVIDER', MAP_PROVIDER_VALUES, {
     relaxedDefault: 'mock',
     allowMockInStrict: false,
   }) as MapProviderName;
+
+  if (isStrictEnvironment(env) && provider === 'disabled') {
+    throw new Error('MAP_PROVIDER=disabled is not allowed outside local/test environments');
+  }
+
+  return provider;
 }
 
 function requireEnvValues(env: EnvSource, names: string[]) {
@@ -257,6 +292,15 @@ function validateStrictProviderConfig(env: EnvSource) {
   if (mapProvider === 'amap') {
     requireEnvValue(env, 'MAP_API_KEY');
   }
+}
+
+function validateStrictOperationsConfig(env: EnvSource) {
+  getBackupRetentionDays(env);
+  requireEnvValue(env, 'BACKUP_RUNBOOK_URL');
+  requireEnvValue(env, 'BACKUP_RESTORE_DRILL_AT');
+  getBackupRestoreDrillAt(env);
+  requireEnvValue(env, 'ALERT_CONTACT_NAME');
+  requireEnvValue(env, 'ALERT_CONTACT_CHANNEL');
 }
 
 function validateStrictJwtSecrets(accessSecret: string, refreshSecret: string) {
@@ -304,6 +348,8 @@ export function validateRuntimeConfig(config: Record<string, unknown>): Record<s
     if (isAdminBootstrapAllowed(config) && getAdminInitialPassword(config) === DEFAULT_ADMIN_PASSWORD) {
       throw new Error('ADMIN_INITIAL_PASSWORD cannot use the default value when admin bootstrap is enabled outside local/test environments');
     }
+
+    validateStrictOperationsConfig(config);
   }
 
   return config;
