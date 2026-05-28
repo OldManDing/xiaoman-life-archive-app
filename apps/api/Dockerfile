@@ -1,6 +1,10 @@
 FROM node:20-bookworm-slim AS base
 WORKDIR /app
 
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends ca-certificates openssl \
+  && rm -rf /var/lib/apt/lists/*
+
 COPY package.json package-lock.json ./
 COPY apps/api/package.json ./apps/api/package.json
 RUN npm ci
@@ -16,10 +20,6 @@ RUN npm run prisma:generate && npm prune --omit=dev
 FROM node:20-bookworm-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
-
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends ca-certificates openssl \
-  && rm -rf /var/lib/apt/lists/*
 
 COPY --from=prod-deps --chown=node:node /app/package.json /app/package-lock.json ./
 COPY --from=prod-deps --chown=node:node /app/node_modules ./node_modules
