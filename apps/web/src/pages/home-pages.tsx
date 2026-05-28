@@ -337,7 +337,7 @@ export const HomePage = () => {
         <section>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <h2 style={{ margin: 0, color: '#172033', fontSize: 18, fontWeight: 950 }}>最近更新</h2>
-            <button type="button" onClick={() => navigate('/timeline')} style={{ border: 'none', background: 'transparent', color: '#687386', fontSize: 12, fontWeight: 850, display: 'inline-flex', alignItems: 'center', gap: 3, cursor: 'pointer' }}>
+            <button type="button" onClick={() => navigate('/timeline')} style={{ minHeight: 34, border: 'none', background: 'transparent', color: '#687386', fontSize: 12, fontWeight: 850, display: 'inline-flex', alignItems: 'center', gap: 3, cursor: 'pointer' }}>
               查看全部 <ChevronRight size={14} />
             </button>
           </div>

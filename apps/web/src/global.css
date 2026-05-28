@@ -66,6 +66,14 @@ textarea {
   font: inherit;
 }
 
+input[type="checkbox"],
+input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  accent-color: var(--nl-primary);
+}
+
 textarea {
   resize: none;
 }
