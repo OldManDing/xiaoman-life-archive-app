@@ -23,15 +23,15 @@ const navItems: Array<{ to: string; label: string; icon: LucideIcon }> = [
 ];
 
 const sidebarStyle: CSSProperties = {
-  position: 'sticky',
-  top: 0,
-  minHeight: '100vh',
+  height: '100vh',
+  minHeight: 0,
   background: '#102f2b',
   color: '#eff7f5',
   padding: '22px 16px',
   display: 'grid',
   gridTemplateRows: 'auto auto 1fr auto',
   gap: '22px',
+  overflow: 'hidden',
 };
 
 const navLinkStyle = ({ isActive }: { isActive: boolean }): CSSProperties => ({
@@ -66,9 +66,11 @@ export const AdminLayout = () => {
       className="admin-layout"
       style={{
         minHeight: '100vh',
+        height: '100vh',
         display: 'grid',
         gridTemplateColumns: '248px minmax(0, 1fr)',
         background: '#f3f6f4',
+        overflow: 'hidden',
       }}
     >
       <aside className="admin-sidebar" style={sidebarStyle}>
@@ -108,7 +110,7 @@ export const AdminLayout = () => {
           </button>
         </div>
       </aside>
-      <main className="admin-main" style={{ padding: '28px', minWidth: 0 }}>
+      <main className="admin-main" style={{ padding: '28px', minWidth: 0, height: '100vh', overflowY: 'auto', overscrollBehavior: 'contain' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '16px', alignItems: 'center', marginBottom: '22px', flexWrap: 'wrap' }}>
           <div>
             <div style={{ fontSize: '13px', color: '#66736f', fontWeight: 700 }}>当前工作台</div>

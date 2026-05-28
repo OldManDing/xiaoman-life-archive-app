@@ -40,6 +40,41 @@ test.describe('Admin critical journeys', () => {
     await expectNoEnglishSeedCopy(page);
   });
 
+  test('keeps desktop sidebar separate from main content scrolling', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 760 });
+    await loginAdmin(page);
+
+    const scrollState = await page.evaluate(async () => {
+      const sidebar = document.querySelector<HTMLElement>('.admin-sidebar');
+      const main = document.querySelector<HTMLElement>('.admin-main');
+
+      if (!sidebar || !main) {
+        throw new Error('Admin layout elements were not found');
+      }
+
+      const beforeSidebarTop = sidebar.getBoundingClientRect().top;
+      const targetScrollTop = Math.min(720, main.scrollHeight - main.clientHeight);
+      main.scrollTop = targetScrollTop;
+
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      });
+
+      return {
+        beforeSidebarTop,
+        sidebarTop: sidebar.getBoundingClientRect().top,
+        mainScrollTop: main.scrollTop,
+        windowScrollY: window.scrollY,
+        pageExtraScroll: document.documentElement.scrollHeight - window.innerHeight,
+      };
+    });
+
+    expect(scrollState.mainScrollTop).toBeGreaterThan(0);
+    expect(Math.abs(scrollState.sidebarTop - scrollState.beforeSidebarTop)).toBeLessThanOrEqual(1);
+    expect(scrollState.windowScrollY).toBe(0);
+    expect(scrollState.pageExtraScroll).toBeLessThanOrEqual(2);
+  });
+
   test('queries accounts and opens login detail drawer', async ({ page }) => {
     await loginAdmin(page);
     await page.getByRole('link', { name: '账号管理', exact: true }).click();
