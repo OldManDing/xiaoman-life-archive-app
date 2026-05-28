@@ -20,3 +20,5 @@ visual-*.png
 app-home-mobile.png
 artifacts/visual-review/final-*.png
 artifacts/debug/
+artifacts/deploy/
+artifacts/trace-debug/

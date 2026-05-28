@@ -1,0 +1,29 @@
+# Keep server release archives focused on runtime source and deploy config.
+# `git archive` honors these rules and avoids shipping local evidence,
+# screenshots, tests, prototype code, and verification helpers to production.
+artifacts/ export-ignore
+docs/ export-ignore
+e2e/ export-ignore
+figma/ export-ignore
+figma2/ export-ignore
+iamges2/ export-ignore
+images/ export-ignore
+apps/mobile/ export-ignore
+scripts/ export-ignore
+.github/ export-ignore
+.learnings/ export-ignore
+playwright.config.ts export-ignore
+*.log export-ignore
+*.err.log export-ignore
+.env.example export-ignore
+.env.local.example export-ignore
+apps/*/.env.example export-ignore
+**/coverage/ export-ignore
+**/src/test/ export-ignore
+**/jest.config.js export-ignore
+**/vitest.config.ts export-ignore
+**/tsconfig.spec.json export-ignore
+**/*.test.ts export-ignore
+**/*.test.tsx export-ignore
+**/*.spec.ts export-ignore
+**/*.spec.tsx export-ignore
