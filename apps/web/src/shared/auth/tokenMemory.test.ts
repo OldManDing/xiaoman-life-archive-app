@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
-import { clearAccessToken, getAccessToken, setAccessToken } from './tokenMemory';
+import { clearAccessToken, getAccessToken, hasStoredSessionHint, setAccessToken } from './tokenMemory';
 
 describe('tokenMemory', () => {
   beforeEach(() => {
@@ -18,6 +18,18 @@ describe('tokenMemory', () => {
 
     expect(getAccessToken()).toBe('token-123');
     expect(window.localStorage.getItem('nianlun:access-token')).toBeNull();
+  });
+
+  it('persists only a non-sensitive session hint so app restart can attempt refresh', () => {
+    setAccessToken('token-123');
+
+    expect(hasStoredSessionHint()).toBe(true);
+    expect(window.localStorage.getItem('nianlun:session-hint')).toBe('1');
+
+    clearAccessToken();
+
+    expect(hasStoredSessionHint()).toBe(false);
+    expect(window.localStorage.getItem('nianlun:session-hint')).toBeNull();
   });
 
   it('removes tokens persisted by an older version when cleared', () => {

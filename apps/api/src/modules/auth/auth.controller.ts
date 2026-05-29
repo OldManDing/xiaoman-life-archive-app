@@ -4,8 +4,8 @@ import { Request, Response } from 'express';
 
 import { REFRESH_TOKEN_COOKIE_NAME } from '../../shared/constants';
 import { Public } from '../../shared/decorators/public.decorator';
-import { getAuthRateLimitMaxAttempts, getAuthRateLimitWindowMs, isSecureCookieEnvironment } from '../../shared/env-config';
-import { parseDurationToSeconds } from '../../shared/utils';
+import { getRefreshCookieOptions } from '../../shared/auth-cookie';
+import { getAuthRateLimitMaxAttempts, getAuthRateLimitWindowMs } from '../../shared/env-config';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { SendCodeDto } from './dto/send-code.dto';
@@ -74,7 +74,7 @@ export class AuthController {
   async logout(@Req() request: Request, @Res({ passthrough: true }) response: Response) {
     const refreshToken = this.getRefreshTokenFromRequest(request);
     await this.authService.logout(refreshToken);
-    const cookieOptions = this.getRefreshCookieOptions();
+    const cookieOptions = getRefreshCookieOptions();
     response.clearCookie(REFRESH_TOKEN_COOKIE_NAME, {
       httpOnly: cookieOptions.httpOnly,
       sameSite: cookieOptions.sameSite,
@@ -104,19 +104,6 @@ export class AuthController {
   }
 
   private setRefreshCookie(response: Response, refreshToken: string) {
-    response.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, this.getRefreshCookieOptions());
-  }
-
-  private getRefreshCookieOptions() {
-    const maxAge = parseDurationToSeconds(process.env.JWT_REFRESH_EXPIRES_IN ?? '30d') * 1000;
-    const isSecure = isSecureCookieEnvironment();
-
-    return {
-      httpOnly: true,
-      sameSite: 'lax' as const,
-      secure: isSecure,
-      path: '/',
-      maxAge,
-    };
+    response.cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken, getRefreshCookieOptions());
   }
 }

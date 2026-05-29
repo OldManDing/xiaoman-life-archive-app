@@ -25,6 +25,7 @@ html {
   background: #f3f6fb;
   scrollbar-width: none;
   scroll-behavior: smooth;
+  scroll-padding-bottom: 180px;
 }
 
 body {
@@ -35,6 +36,7 @@ body {
   scrollbar-width: none;
   overflow-x: hidden;
   overscroll-behavior-y: contain;
+  scroll-padding-bottom: 180px;
   -webkit-font-smoothing: antialiased;
   font-family:
     "PingFang SC",
@@ -64,6 +66,16 @@ input,
 select,
 textarea {
   font: inherit;
+}
+
+button,
+[role="button"],
+a,
+input,
+select,
+textarea {
+  scroll-margin-top: 24px;
+  scroll-margin-bottom: 180px;
 }
 
 input[type="checkbox"],

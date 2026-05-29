@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
-import { clearAccessToken, getAccessToken, setAccessToken as persistAccessToken } from './auth/tokenMemory';
+import { clearAccessToken, getAccessToken, hasStoredSessionHint, setAccessToken as persistAccessToken } from './auth/tokenMemory';
 import type { ChildRecord, UserProfile } from './api/types';
 import { webApi, type LoginPayload, type RegisterPayload } from './api/webApi';
 
@@ -29,7 +29,9 @@ const pickDefaultChild = (children: ChildRecord[]) =>
 
 const shouldSkipAnonymousRefresh = () => {
   if (typeof window === 'undefined') return false;
-  return ['/auth/login', '/legal', '/splash'].includes(window.location.pathname);
+  if (window.location.pathname === '/legal') return true;
+  if (window.location.pathname === '/auth/login') return !hasStoredSessionHint();
+  return false;
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {

@@ -26,7 +26,7 @@ export const AppLayout = () => {
         background: '#f4f8fc',
         color: '#172033',
         position: 'relative',
-        overflowX: 'hidden',
+        overflowX: 'clip',
       }}
     >
       <main
@@ -35,7 +35,9 @@ export const AppLayout = () => {
           overflow: showBottomNav ? 'auto' : 'visible',
           minHeight: 0,
           maxHeight: showBottomNav ? `calc(100dvh - ${bottomNavHeight})` : undefined,
-          paddingBottom: showBottomNav ? '18px' : 0,
+          paddingBottom: showBottomNav ? '36px' : 0,
+          scrollPaddingTop: '24px',
+          scrollPaddingBottom: showBottomNav ? '96px' : '24px',
         }}
       >
         <Outlet />
@@ -56,7 +58,7 @@ export const AppLayout = () => {
           backdropFilter: 'blur(24px)',
           display: 'flex',
           justifyContent: 'space-around',
-          alignItems: 'flex-start',
+          alignItems: 'center',
           zIndex: 10,
           marginTop: 'auto',
           padding: '8px 14px calc(10px + env(safe-area-inset-bottom))',
@@ -109,9 +111,9 @@ export const AppLayout = () => {
                     className="app-bottom-nav-icon"
                     style={{
                       width: item.featured ? '54px' : '30px',
-                      height: item.featured ? '54px' : '30px',
-                      marginTop: item.featured ? '-26px' : 0,
-                      borderRadius: item.featured ? '20px' : '999px',
+                      height: item.featured ? '46px' : '30px',
+                      marginTop: 0,
+                      borderRadius: item.featured ? '17px' : '999px',
                       display: 'grid',
                       placeItems: 'center',
                       background: item.featured ? '#17342f' : 'transparent',

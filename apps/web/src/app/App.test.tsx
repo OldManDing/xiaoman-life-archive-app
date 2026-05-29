@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { App } from './App';
 import { clearLoginFormDraft } from '../pages/auth-pages';
+import { clearAccessToken } from '../shared/auth/tokenMemory';
 
 vi.mock('../shared/api/webApi', () => ({
   webApi: {
@@ -48,6 +49,7 @@ const searchLocationsMock = vi.mocked(webApi.searchLocations);
 
 describe('App Shell', () => {
   beforeEach(() => {
+    clearAccessToken();
     clearLoginFormDraft();
     refreshMock.mockReset();
     listChildrenMock.mockReset();
@@ -64,6 +66,7 @@ describe('App Shell', () => {
   });
 
   afterEach(() => {
+    clearAccessToken();
     clearLoginFormDraft();
     vi.clearAllMocks();
   });
@@ -176,6 +179,52 @@ describe('App Shell', () => {
     expect((screen.getByPlaceholderText('请输入密码') as HTMLInputElement).value).toBe('');
     expect((screen.getByRole('checkbox') as HTMLInputElement).checked).toBe(true);
     expect(window.sessionStorage.getItem('nianlun.auth.loginFormDraft.v1')).not.toContain('Parent123!');
+  });
+
+  it('uses the app session hint to refresh on the login route after restart', async () => {
+    window.localStorage.setItem('nianlun:session-hint', '1');
+    refreshMock.mockResolvedValue({
+      access_token: 'token-restored',
+      expires_in: 7200,
+      user: {
+        user_no: 'u_restored',
+        nickname: '恢复用户',
+        avatar_url: null,
+        membership_type: 'free',
+      },
+      need_create_child: false,
+    });
+    const child = {
+      child_no: 'c_restored',
+      family_no: 'f_001',
+      owner_user_no: 'u_restored',
+      name: '小满',
+      avatar_url: null,
+      birthday: '2025-01-01',
+      gender: 'female',
+      birth_place: '上海',
+      remark: null,
+      current_age_display: '1岁2月',
+      status: 'normal',
+      created_at: '2026-04-21T00:00:00.000Z',
+      updated_at: '2026-04-21T00:00:00.000Z',
+    };
+    listChildrenMock.mockResolvedValue([child]);
+    detailChildMock.mockResolvedValue(child);
+    listRecordsMock.mockResolvedValue({
+      list: [],
+      page: 1,
+      page_size: 5,
+      total: 0,
+      has_more: false,
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(refreshMock).toHaveBeenCalled();
+    });
+    expect(await screen.findByText('今日值得记录')).toBeDefined();
   });
 
   it('registers with password and invite code after agreement is accepted', async () => {
@@ -294,6 +343,7 @@ describe('App Shell', () => {
   });
 
   it('renders authenticated shell after refresh succeeds', async () => {
+    window.history.pushState({}, '', '/home');
     refreshMock.mockResolvedValue({
       access_token: 'token-123',
       expires_in: 7200,

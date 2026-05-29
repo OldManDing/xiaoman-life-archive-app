@@ -3,9 +3,8 @@ import { Request, Response } from 'express';
 
 import { REFRESH_TOKEN_COOKIE_NAME } from '../../shared/constants';
 import { CurrentUser } from '../../shared/decorators/current-user.decorator';
-import { isSecureCookieEnvironment } from '../../shared/env-config';
+import { getRefreshCookieOptions } from '../../shared/auth-cookie';
 import { AuthenticatedUser } from '../../shared/types';
-import { parseDurationToSeconds } from '../../shared/utils';
 import { UserJwtAuthGuard } from '../auth/guards/user-jwt-auth.guard';
 import { ArchiveExportSummaryDto } from './dto/archive-export-summary.dto';
 import { CreateArchiveExportRequestDto } from './dto/create-archive-export-request.dto';
@@ -79,7 +78,7 @@ export class UsersController {
   @HttpCode(200)
   async deleteMe(@CurrentUser() user: AuthenticatedUser, @Body() dto: DeleteMeDto, @Res({ passthrough: true }) response: Response) {
     const result = await this.usersService.deleteMe(user.id, dto);
-    const cookieOptions = this.getRefreshCookieOptions();
+    const cookieOptions = getRefreshCookieOptions();
     response.clearCookie(REFRESH_TOKEN_COOKIE_NAME, {
       httpOnly: cookieOptions.httpOnly,
       sameSite: cookieOptions.sameSite,
@@ -87,19 +86,6 @@ export class UsersController {
       path: cookieOptions.path,
     });
     return result;
-  }
-
-  private getRefreshCookieOptions() {
-    const maxAge = parseDurationToSeconds(process.env.JWT_REFRESH_EXPIRES_IN ?? '30d') * 1000;
-    const isSecure = isSecureCookieEnvironment();
-
-    return {
-      httpOnly: true,
-      sameSite: 'lax' as const,
-      secure: isSecure,
-      path: '/',
-      maxAge,
-    };
   }
 
   private getAuditRequestMeta(request: Request) {

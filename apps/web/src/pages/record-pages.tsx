@@ -1,5 +1,7 @@
 ﻿import { useEffect, useMemo, useRef, useState, type ChangeEvent, type CSSProperties, type FormEvent } from 'react';
 import { BookOpen, Check, ChevronRight, Clock, Eye, FileAudio, Image, ImagePlus, MapPin, Mic, PlayCircle, Sparkles, Star, Tag, Video, X } from 'lucide-react';
+import { Camera, CameraResultType, CameraSource, type GalleryPhoto, type Photo } from '@capacitor/camera';
+import { Capacitor } from '@capacitor/core';
 import type { ReactNode } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
@@ -23,8 +25,7 @@ type MediaPreview = {
 };
 
 type MediaType = MediaPreview['media_type'];
-type NativeCaptureMode = 'photo' | 'video' | 'audio';
-type NativeCaptureStatus = 'preview' | 'recording' | 'saving';
+type NativeImageAsset = Pick<Photo | GalleryPhoto, 'webPath' | 'format'>;
 
 const tagOptions = ['生日纪念', '户外日常', '语言发育', '大动作发展', '睡前时光', '亲子陪伴', '第一次', '家庭日常'];
 
@@ -123,7 +124,7 @@ const mediaActionIconStyle: CSSProperties = {
 const mediaActionLabelStyle: CSSProperties = {
   fontSize: '14px',
   fontWeight: 800,
-  letterSpacing: '-0.01em',
+  letterSpacing: 0,
 };
 
 const mediaActionDescriptionStyle: CSSProperties = {
@@ -189,12 +190,46 @@ const deriveMediaType = (file: File): MediaType | null => {
 
 const normalizeMimeType = (mimeType?: string) => mimeType?.toLowerCase().split(';', 1)[0].trim() ?? '';
 
-const recordingExtensionFromMime = (mimeType: string, mode: Exclude<NativeCaptureMode, 'photo'>) => {
-  const normalized = normalizeMimeType(mimeType);
-  if (/mp4|m4a/i.test(normalized)) return mode === 'video' ? 'mp4' : 'm4a';
-  if (/ogg/i.test(normalized)) return 'ogg';
-  if (/wav/i.test(normalized)) return 'wav';
-  return 'webm';
+const isNativeAppRuntime = () => {
+  try {
+    return Capacitor.isNativePlatform();
+  } catch {
+    return false;
+  }
+};
+
+const normalizeImageExtension = (format?: string, mimeType?: string) => {
+  const normalizedMime = normalizeMimeType(mimeType);
+  if (normalizedMime.includes('png')) return 'png';
+  if (normalizedMime.includes('webp')) return 'webp';
+  if (normalizedMime.includes('heic')) return 'heic';
+  if (normalizedMime.includes('heif')) return 'heif';
+  const normalizedFormat = format?.toLowerCase().replace(/^\./, '').trim();
+  if (normalizedFormat === 'jpg') return 'jpg';
+  if (normalizedFormat && ['jpeg', 'png', 'webp', 'heic', 'heif'].includes(normalizedFormat)) return normalizedFormat;
+  return 'jpeg';
+};
+
+const nativeImageToFile = async (asset: NativeImageAsset, prefix: 'camera' | 'gallery') => {
+  if (!asset.webPath) {
+    throw new Error('系统没有返回可读取的图片地址，请重试或改用相册选择。');
+  }
+
+  const response = await fetch(asset.webPath);
+  if (!response.ok) {
+    throw new Error('读取系统图片失败，请重试或改用相册选择。');
+  }
+
+  const blob = await response.blob();
+  const normalizedType = normalizeMimeType(blob.type);
+  const extension = normalizeImageExtension(asset.format, normalizedType);
+  const mimeType = normalizedType || `image/${extension === 'jpg' ? 'jpeg' : extension}`;
+  return new File([blob], `nianlun-${prefix}-${Date.now()}.${extension}`, { type: mimeType });
+};
+
+const isNativePickerCancelled = (err: unknown) => {
+  const message = err instanceof Error ? err.message : String(err ?? '');
+  return /cancel|cancelled|canceled|user cancelled|no image/i.test(message);
 };
 
 const formatLocationText = (location: LocationSuggestion) => {
@@ -289,8 +324,6 @@ const RecordForm = ({
   const [poiLoading, setPoiLoading] = useState(false);
   const [poiSearchFailed, setPoiSearchFailed] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
-  const [nativeCaptureMode, setNativeCaptureMode] = useState<NativeCaptureMode | null>(null);
-  const [nativeCaptureStatus, setNativeCaptureStatus] = useState<NativeCaptureStatus>('preview');
   const [aiPreviewLoading, setAiPreviewLoading] = useState(false);
   const [aiPreviewSummary, setAiPreviewSummary] = useState<string | null>(null);
   const [aiPreviewTags, setAiPreviewTags] = useState<string[]>([]);
@@ -306,11 +339,6 @@ const RecordForm = ({
   const audioCaptureInputRef = useRef<HTMLInputElement | null>(null);
   const audioLibraryInputRef = useRef<HTMLInputElement | null>(null);
   const selectedChildNoRef = useRef('');
-  const nativeCaptureVideoRef = useRef<HTMLVideoElement | null>(null);
-  const nativeCaptureStreamRef = useRef<MediaStream | null>(null);
-  const nativeCaptureRecorderRef = useRef<MediaRecorder | null>(null);
-  const nativeCaptureChunksRef = useRef<Blob[]>([]);
-  const nativeCaptureCancelledRef = useRef(false);
 
   const currentChild = children.find((child) => child.child_no === form.child_no) ?? activeChild ?? children[0] ?? null;
   const currentChildName = currentChild?.name?.trim() || '请选择孩子';
@@ -397,7 +425,7 @@ const RecordForm = ({
 
   useEffect(() => {
     if (initialFocus === 'content') {
-      titleInputRef.current?.focus();
+      titleInputRef.current?.focus({ preventScroll: true });
     }
     if (initialFocus === 'media') {
       titleInputRef.current?.blur();
@@ -412,7 +440,6 @@ const RecordForm = ({
           URL.revokeObjectURL(item.preview_url);
         }
       });
-      nativeCaptureStreamRef.current?.getTracks().forEach((track) => track.stop());
     };
   }, []);
 
@@ -433,9 +460,12 @@ const RecordForm = ({
     setSelectorMessage(`已切换为 ${nextChild.name}`);
   };
 
-  const triggerMediaInput = (input: HTMLInputElement | null) => {
-    if (uploading) return;
-    input?.click();
+  const triggerMediaInput = (input: HTMLInputElement | null, message?: string) => {
+    if (uploading || !input) return;
+    setError(null);
+    setSelectorMessage(message ?? null);
+    input.value = '';
+    input.click();
   };
 
   const uploadMediaFile = async (file: File) => {
@@ -513,156 +543,88 @@ const RecordForm = ({
   };
 
   const onFileChange = async (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    await uploadMediaFile(file);
+    const files = Array.from(event.target.files ?? []);
+    if (!files.length) return;
+    for (const file of files) {
+      await uploadMediaFile(file);
+    }
     event.target.value = '';
   };
 
-  const resetNativeCapture = () => {
-    nativeCaptureStreamRef.current?.getTracks().forEach((track) => track.stop());
-    nativeCaptureStreamRef.current = null;
-    nativeCaptureRecorderRef.current = null;
-    nativeCaptureChunksRef.current = [];
-    if (nativeCaptureVideoRef.current) {
-      nativeCaptureVideoRef.current.srcObject = null;
-    }
-    setNativeCaptureStatus('preview');
-    setNativeCaptureMode(null);
-  };
-
-  const openNativeCapture = async (mode: NativeCaptureMode, fallbackInput: HTMLInputElement | null) => {
-    if (uploading) return;
-    if (!navigator.mediaDevices?.getUserMedia) {
-      setError('当前设备暂不支持应用内采集，已切换为系统选择器。');
-      triggerMediaInput(fallbackInput);
-      return;
-    }
-
-    nativeCaptureCancelledRef.current = false;
-    setError(null);
-    setSelectorMessage(null);
-    setNativeCaptureMode(mode);
-    setNativeCaptureStatus('preview');
-
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia(
-        mode === 'audio'
-          ? { audio: true }
-          : {
-              video: { facingMode: { ideal: 'environment' } },
-              audio: mode === 'video',
-            },
-      );
-      nativeCaptureStreamRef.current = stream;
-      await new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()));
-      if (nativeCaptureVideoRef.current && mode !== 'audio') {
-        nativeCaptureVideoRef.current.srcObject = stream;
-        await nativeCaptureVideoRef.current.play().catch(() => undefined);
-      }
-    } catch (captureError) {
-      resetNativeCapture();
-      setError(captureError instanceof Error ? `无法调用手机${mode === 'audio' ? '麦克风' : '摄像头'}：${captureError.message}` : '无法调用手机采集能力。');
-      triggerMediaInput(fallbackInput);
-    }
-  };
-
-  const saveNativePhoto = async () => {
-    const video = nativeCaptureVideoRef.current;
-    if (!video) return;
-    setNativeCaptureStatus('saving');
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.max(1, video.videoWidth || 1280);
-    canvas.height = Math.max(1, video.videoHeight || 720);
-    const context = canvas.getContext('2d');
-    if (!context) {
-      setError('当前设备无法生成照片预览。');
-      resetNativeCapture();
-      return;
-    }
-    context.drawImage(video, 0, 0, canvas.width, canvas.height);
-    const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.9));
-    if (!blob) {
-      setError('拍照失败，请重试或从相册添加。');
-      resetNativeCapture();
-      return;
-    }
-    const file = new File([blob], `nianlun-photo-${Date.now()}.jpg`, { type: 'image/jpeg' });
-    resetNativeCapture();
+  const uploadNativeImage = async (asset: NativeImageAsset, prefix: 'camera' | 'gallery') => {
+    const file = await nativeImageToFile(asset, prefix);
     await uploadMediaFile(file);
   };
 
-  const startNativeRecording = () => {
-    const stream = nativeCaptureStreamRef.current;
-    if (!stream || !nativeCaptureMode || nativeCaptureMode === 'photo') return;
-    if (typeof MediaRecorder === 'undefined') {
-      setError('当前设备暂不支持直接录制，请改用系统选择器上传。');
-      resetNativeCapture();
-      triggerMediaInput(nativeCaptureMode === 'video' ? videoCaptureInputRef.current : audioCaptureInputRef.current);
+  const openNativePhotoCapture = async () => {
+    if (!isNativeAppRuntime()) {
+      triggerMediaInput(photoCaptureInputRef.current, '请在系统相机中拍照，保存后会自动加入记录。');
       return;
     }
-    const preferredTypes =
-      nativeCaptureMode === 'video'
-        ? ['video/mp4', 'video/webm;codecs=vp8,opus', 'video/webm']
-        : ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm'];
-    const mimeType = preferredTypes.find((type) => MediaRecorder.isTypeSupported(type));
-    let recorder: MediaRecorder;
+
+    if (uploading) return;
+
+    setError(null);
+    setSelectorMessage('正在打开系统相机…');
     try {
-      recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
-    } catch (recordingError) {
-      setError(recordingError instanceof Error ? `无法开始录制：${recordingError.message}` : '无法开始录制，请改用系统选择器上传。');
-      resetNativeCapture();
-      triggerMediaInput(nativeCaptureMode === 'video' ? videoCaptureInputRef.current : audioCaptureInputRef.current);
-      return;
+      const photo = await Camera.getPhoto({
+        quality: 86,
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Camera,
+        saveToGallery: false,
+        allowEditing: false,
+        correctOrientation: true,
+        presentationStyle: 'fullscreen',
+        promptLabelHeader: '拍照记录',
+        promptLabelCancel: '取消',
+        promptLabelPicture: '打开相机',
+        promptLabelPhoto: '从相册选择',
+      });
+      await uploadNativeImage(photo, 'camera');
+      setSelectorMessage('已从系统相机加入照片。');
+    } catch (err) {
+      if (isNativePickerCancelled(err)) {
+        setSelectorMessage(null);
+        return;
+      }
+      setError(err instanceof Error ? `无法打开系统相机：${err.message}` : '无法打开系统相机，请检查相机权限后重试。');
+      setSelectorMessage('也可以从相册选择已有照片。');
     }
-    nativeCaptureChunksRef.current = [];
-    nativeCaptureRecorderRef.current = recorder;
-    recorder.ondataavailable = (event) => {
-      if (event.data.size > 0) nativeCaptureChunksRef.current.push(event.data);
-    };
-    recorder.onstop = () => {
-      void (async () => {
-        if (nativeCaptureCancelledRef.current) {
-          resetNativeCapture();
-          return;
-        }
-        const currentMode = nativeCaptureMode;
-        if (!currentMode) {
-          resetNativeCapture();
-          return;
-        }
-        setNativeCaptureStatus('saving');
-        const fallbackType = currentMode === 'video' ? 'video/webm' : 'audio/webm';
-        const recordedType = normalizeMimeType(recorder.mimeType || fallbackType) || fallbackType;
-        const blob = new Blob(nativeCaptureChunksRef.current, { type: recordedType });
-        if (blob.size === 0) {
-          setError('没有录到有效内容，请重新录制或改用系统选择器上传。');
-          resetNativeCapture();
-          return;
-        }
-        const extension = recordingExtensionFromMime(recordedType, currentMode);
-        const file = new File([blob], `nianlun-${currentMode}-${Date.now()}.${extension}`, { type: recordedType });
-        resetNativeCapture();
-        await uploadMediaFile(file);
-      })();
-    };
-    recorder.start();
-    setNativeCaptureStatus('recording');
   };
 
-  const stopNativeRecording = () => {
-    const recorder = nativeCaptureRecorderRef.current;
-    if (recorder && recorder.state !== 'inactive') recorder.stop();
-  };
-
-  const cancelNativeCapture = () => {
-    nativeCaptureCancelledRef.current = true;
-    const recorder = nativeCaptureRecorderRef.current;
-    if (recorder && recorder.state !== 'inactive') {
-      recorder.stop();
+  const openNativeGalleryImages = async () => {
+    if (!isNativeAppRuntime()) {
+      triggerMediaInput(galleryInputRef.current, '请从相册选择照片或视频素材。');
       return;
     }
-    resetNativeCapture();
+
+    if (uploading) return;
+
+    setError(null);
+    setSelectorMessage('正在打开系统相册…');
+    try {
+      const result = await Camera.pickImages({
+        quality: 86,
+        limit: 20,
+        correctOrientation: true,
+        presentationStyle: 'fullscreen',
+      });
+      if (!result.photos.length) {
+        setSelectorMessage(null);
+        return;
+      }
+      for (const photo of result.photos) {
+        await uploadNativeImage(photo, 'gallery');
+      }
+      setSelectorMessage(`已从系统相册加入 ${result.photos.length} 张照片。`);
+    } catch (err) {
+      if (isNativePickerCancelled(err)) {
+        setSelectorMessage(null);
+        return;
+      }
+      setError(err instanceof Error ? `无法打开系统相册：${err.message}` : '无法打开系统相册，请检查照片权限后重试。');
+      setSelectorMessage('如果需要添加视频，请使用“拍摄视频”或系统文件选择入口。');
+    }
   };
 
   const removeMedia = (mediaNo: string) => {
@@ -864,7 +826,7 @@ const RecordForm = ({
         minHeight: '100dvh',
         background: '#f4f8fc',
         color: '#172033',
-        padding: '0 20px calc(118px + env(safe-area-inset-bottom))',
+        padding: '0 20px calc(40px + env(safe-area-inset-bottom))',
         boxSizing: 'border-box',
       }}
     >
@@ -880,7 +842,7 @@ const RecordForm = ({
             navigate(-1);
           }}
           background="rgba(248, 251, 255, 0.84)"
-          style={{ margin: '0 -20px 20px', padding: 'calc(28px + env(safe-area-inset-top)) 20px 18px' }}
+          style={{ position: 'relative', top: 'auto', margin: '0 -20px 20px', padding: 'calc(28px + env(safe-area-inset-top)) 20px 18px' }}
           action={
             <button
               type="submit"
@@ -1033,7 +995,6 @@ const RecordForm = ({
           {showMediaSection ? (
             <section style={{ display: 'grid', gap: '14px' }}>
               <div style={{ display: 'grid', gap: '4px' }}>
-                <span style={sectionEyebrowStyle}>媒体采集</span>
                 <span style={{ color: '#172033', fontSize: '19px', fontWeight: 950, letterSpacing: 0 }}>影像与声音</span>
                 <span style={{ color: '#687386', fontSize: '12px', lineHeight: 1.65, fontWeight: 650 }}>把今天最有质感的一帧、一句话、一段声音留下来。</span>
               </div>
@@ -1098,7 +1059,7 @@ const RecordForm = ({
                       <div style={{ display: 'grid', gap: '5px' }}>
                         <strong style={{ color: '#292524', fontSize: '15px', fontWeight: 800 }}>{form.record_type === 'video' ? '视频采集' : '图片 / 视频'}</strong>
                         <span style={{ color: '#78716c', fontSize: '12px', lineHeight: 1.6 }}>
-                          {form.record_type === 'video' ? '可直接调用摄像头拍视频，也可以从手机相册导入。' : '既能现场拍，也能从相册快速补素材。'}
+                          {form.record_type === 'video' ? '直接打开系统相机录制视频，也可以从手机相册导入。' : '原生相机拍照和系统相册导入分开处理，避免局部预览异常。'}
                         </span>
                       </div>
                       <span style={{ width: '42px', height: '42px', borderRadius: '16px', background: '#f7f4ee', border: '1px solid #ece3d5', display: 'grid', placeItems: 'center', color: '#5b5348', flexShrink: 0 }}>
@@ -1108,14 +1069,14 @@ const RecordForm = ({
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
                       {form.record_type === 'video' ? (
                         <>
-                          <MediaActionButton icon={<Video size={18} strokeWidth={2.2} />} label="拍摄视频" description="调用摄像头现场录制" onClick={() => void openNativeCapture('video', videoCaptureInputRef.current)} disabled={uploading} />
-                          <MediaActionButton icon={<ImagePlus size={18} strokeWidth={2.2} />} label="从相册选择" description="导入已有视频素材" onClick={() => triggerMediaInput(galleryInputRef.current)} disabled={uploading} />
+                          <MediaActionButton icon={<Video size={18} strokeWidth={2.2} />} label="拍摄视频" description="打开系统相机录制" onClick={() => triggerMediaInput(videoCaptureInputRef.current, '请在系统相机中完成拍摄，保存后会自动加入记录。')} disabled={uploading} />
+                          <MediaActionButton icon={<ImagePlus size={18} strokeWidth={2.2} />} label="从相册选择" description="导入已有视频素材" onClick={() => triggerMediaInput(galleryInputRef.current, '请从相册选择视频素材。')} disabled={uploading} />
                         </>
                       ) : (
                         <>
-                          <MediaActionButton icon={<ImagePlus size={18} strokeWidth={2.2} />} label="拍照记录" description="调用相机拍下当下" onClick={() => void openNativeCapture('photo', photoCaptureInputRef.current)} disabled={uploading} />
-                          <MediaActionButton icon={<Video size={18} strokeWidth={2.2} />} label="拍摄视频" description="记录动作和声音" onClick={() => void openNativeCapture('video', videoCaptureInputRef.current)} disabled={uploading} />
-                          <MediaActionButton icon={<Image size={18} strokeWidth={2.2} />} label="从相册添加" description="一次选择已有照片或视频素材" onClick={() => triggerMediaInput(galleryInputRef.current)} disabled={uploading} style={{ gridColumn: '1 / -1' }} />
+                          <MediaActionButton icon={<ImagePlus size={18} strokeWidth={2.2} />} label="拍照记录" description="打开原生相机拍照" onClick={() => void openNativePhotoCapture()} disabled={uploading} />
+                          <MediaActionButton icon={<Video size={18} strokeWidth={2.2} />} label="拍摄视频" description="打开系统相机录像" onClick={() => triggerMediaInput(videoCaptureInputRef.current, '请在系统相机中完成拍摄，保存后会自动加入记录。')} disabled={uploading} />
+                          <MediaActionButton icon={<Image size={18} strokeWidth={2.2} />} label="从相册添加" description="原生相册多选照片" onClick={() => void openNativeGalleryImages()} disabled={uploading} style={{ gridColumn: '1 / -1' }} />
                         </>
                       )}
                     </div>
@@ -1127,22 +1088,22 @@ const RecordForm = ({
                     <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
                       <div style={{ display: 'grid', gap: '5px' }}>
                         <strong style={{ color: '#292524', fontSize: '15px', fontWeight: 800 }}>语音采集</strong>
-                        <span style={{ color: '#78716c', fontSize: '12px', lineHeight: 1.6 }}>录一段和上传已有音频分开，减少误触。</span>
+                        <span style={{ color: '#78716c', fontSize: '12px', lineHeight: 1.6 }}>录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。</span>
                       </div>
                       <span style={{ width: '42px', height: '42px', borderRadius: '16px', background: '#f7f4ee', border: '1px solid #ece3d5', display: 'grid', placeItems: 'center', color: '#5b5348', flexShrink: 0 }}>
                         <Mic size={18} strokeWidth={2.1} />
                       </span>
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
-                      <MediaActionButton icon={<Mic size={18} strokeWidth={2.2} />} label="录制语音" description="调用麦克风现场说一段" onClick={() => void openNativeCapture('audio', audioCaptureInputRef.current)} disabled={uploading} />
-                      <MediaActionButton icon={<FileAudio size={18} strokeWidth={2.2} />} label="上传语音" description="选择已有录音或音频" onClick={() => triggerMediaInput(audioLibraryInputRef.current)} disabled={uploading} />
+                      <MediaActionButton icon={<Mic size={18} strokeWidth={2.2} />} label="录制语音" description="打开系统录音入口" onClick={() => triggerMediaInput(audioCaptureInputRef.current, '请使用系统录音入口录制，保存后会自动加入记录。')} disabled={uploading} />
+                      <MediaActionButton icon={<FileAudio size={18} strokeWidth={2.2} />} label="上传语音" description="选择已有录音或音频" onClick={() => triggerMediaInput(audioLibraryInputRef.current, '请选择已有录音或音频文件。')} disabled={uploading} />
                     </div>
                   </section>
                 ) : null}
 
                 <input ref={photoCaptureInputRef} aria-label="拍照记录" type="file" accept="image/*,image/jpeg,image/png,image/webp,image/heic,image/heif" capture="environment" onChange={(event) => void onFileChange(event)} disabled={uploading} style={{ display: 'none' }} />
                 <input ref={videoCaptureInputRef} aria-label="拍摄视频" type="file" accept="video/*,video/mp4,video/webm,video/quicktime,video/3gpp" capture="environment" onChange={(event) => void onFileChange(event)} disabled={uploading} style={{ display: 'none' }} />
-                <input ref={galleryInputRef} aria-label={form.record_type === 'video' ? '从相册选择视频' : '从相册添加'} type="file" accept={photoVideoAccept} onChange={(event) => void onFileChange(event)} disabled={uploading} style={{ display: 'none' }} />
+                <input ref={galleryInputRef} aria-label={form.record_type === 'video' ? '从相册选择视频' : '从相册添加'} type="file" accept={photoVideoAccept} multiple onChange={(event) => void onFileChange(event)} disabled={uploading} style={{ display: 'none' }} />
                 <input ref={audioCaptureInputRef} aria-label="录制语音" type="file" accept="audio/*,audio/mpeg,audio/mp4,audio/m4a,audio/x-m4a,audio/aac,audio/wav,audio/x-wav,audio/webm,audio/ogg,audio/3gpp,audio/amr" capture onChange={(event) => void onFileChange(event)} disabled={uploading} style={{ display: 'none' }} />
                 <input ref={audioLibraryInputRef} aria-label="上传语音" type="file" accept="audio/*,audio/mpeg,audio/mp4,audio/m4a,audio/x-m4a,audio/aac,audio/wav,audio/x-wav,audio/webm,audio/ogg,audio/3gpp,audio/amr" onChange={(event) => void onFileChange(event)} disabled={uploading} style={{ display: 'none' }} />
               </div>
@@ -1153,8 +1114,7 @@ const RecordForm = ({
 
           <div style={{ display: 'grid', gap: '18px', borderRadius: '28px', border: '1px solid #efe4d4', background: '#fffdfa', padding: '20px 18px', boxShadow: '0 16px 36px rgba(41,37,36,0.05)' }}>
             <div style={{ display: 'grid', gap: '4px' }}>
-              <span style={sectionEyebrowStyle}>内容输入</span>
-              <span style={{ color: '#292524', fontSize: '18px', fontWeight: 800, letterSpacing: '-0.02em' }}>写下这一刻</span>
+              <span style={{ color: '#292524', fontSize: '18px', fontWeight: 800, letterSpacing: 0 }}>写下这一刻</span>
               <span style={{ color: '#78716c', fontSize: '12px', lineHeight: 1.55 }}>标题让以后容易找到，正文保留当时的细节和情绪。</span>
             </div>
             <input
@@ -1271,7 +1231,7 @@ const RecordForm = ({
 
           <div style={{ display: 'grid', gap: '12px' }}>
             <div style={{ display: 'grid', gap: '4px' }}>
-              <span style={{ color: '#292524', fontSize: '15px', fontWeight: 800 }}>可选增强</span>
+              <span style={{ color: '#292524', fontSize: '15px', fontWeight: 800 }}>补充信息</span>
               <span style={{ color: '#78716c', fontSize: '12px', lineHeight: 1.55 }}>可见范围、地点、标签和里程碑用于后续检索与家庭协作。</span>
             </div>
             <button
@@ -1529,16 +1489,12 @@ const RecordForm = ({
         <div
           className="record-floating-actions"
           style={{
-            position: 'fixed',
-            left: '50%',
-            bottom: 0,
-            zIndex: 20,
-            width: 'min(430px, 100%)',
-            transform: 'translateX(-50%)',
-            padding: '12px 20px calc(14px + env(safe-area-inset-bottom))',
+            position: 'relative',
+            zIndex: 1,
+            width: '100%',
+            padding: '16px 0 0',
             boxSizing: 'border-box',
-            background: 'rgba(248,251,255,0.96)',
-            backdropFilter: 'blur(18px)',
+            background: 'transparent',
           }}
         >
           <div
@@ -1608,99 +1564,12 @@ const RecordForm = ({
                 }}
                 disabled={submitting || uploading}
               >
-                {pendingAction === 'publish' ? (mode === 'create' ? '发布中…' : '保存中…') : mode === 'create' ? '发布记录' : '保存修改'}
+                {pendingAction === 'publish' ? (mode === 'create' ? '发布中…' : '保存中…') : mode === 'create' ? '完成发布' : '更新记录'}
                 <ChevronRight size={16} strokeWidth={2.5} />
               </button>
             </div>
           </div>
         </div>
-        ) : null}
-        {nativeCaptureMode ? (
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-label="手机采集"
-            style={{
-              position: 'fixed',
-              inset: 0,
-              zIndex: 50,
-              background: 'rgba(20, 16, 12, 0.58)',
-              display: 'grid',
-              placeItems: 'end center',
-              padding: '20px',
-              boxSizing: 'border-box',
-            }}
-          >
-            <section
-              style={{
-                width: '100%',
-                maxWidth: '390px',
-                borderRadius: '28px',
-                background: '#fffdf9',
-                padding: '18px',
-                display: 'grid',
-                gap: '14px',
-                boxShadow: '0 24px 56px rgba(15, 23, 42, 0.28)',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-                <div style={{ display: 'grid', gap: '4px' }}>
-                  <strong style={{ color: '#292524', fontSize: '18px', fontWeight: 900 }}>
-                    {nativeCaptureMode === 'photo' ? '拍照记录' : nativeCaptureMode === 'video' ? '拍摄视频' : '录制语音'}
-                  </strong>
-                  <span style={{ color: '#78716c', fontSize: '12px', lineHeight: 1.5 }}>
-                    {nativeCaptureMode === 'audio' ? '正在调用手机麦克风，录好后会自动加入记录。' : '正在调用手机摄像头，采集完成后会自动加入记录。'}
-                  </span>
-                </div>
-                <button type="button" aria-label="关闭采集" onClick={cancelNativeCapture} style={{ ...secondaryButtonStyle, width: '44px', minHeight: '44px', padding: 0 }}>
-                  <X size={18} strokeWidth={2.4} />
-                </button>
-              </div>
-
-              {nativeCaptureMode === 'audio' ? (
-                <div style={{ minHeight: '150px', borderRadius: '24px', background: nativeCaptureStatus === 'recording' ? '#fff1f2' : '#f8f5ef', display: 'grid', placeItems: 'center', color: nativeCaptureStatus === 'recording' ? '#be123c' : '#5f4f3f', border: '1px solid #eee3d1' }}>
-                  <div style={{ display: 'grid', justifyItems: 'center', gap: '10px' }}>
-                    <Mic size={42} strokeWidth={2.2} />
-                    <span style={{ fontSize: '14px', fontWeight: 800 }}>{nativeCaptureStatus === 'recording' ? '录音中，点停止保存' : nativeCaptureStatus === 'saving' ? '正在保存语音…' : '准备录音'}</span>
-                  </div>
-                </div>
-              ) : (
-                <video
-                  ref={nativeCaptureVideoRef}
-                  muted
-                  playsInline
-                  autoPlay
-                  style={{ width: '100%', aspectRatio: '4 / 3', borderRadius: '24px', background: '#1c1917', objectFit: 'cover' }}
-                />
-              )}
-
-              <div style={{ display: 'grid', gridTemplateColumns: nativeCaptureMode === 'photo' ? '1fr' : 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
-                {nativeCaptureMode === 'photo' ? (
-                  <button type="button" onClick={() => void saveNativePhoto()} disabled={nativeCaptureStatus === 'saving'} style={{ ...primaryButtonStyle, minHeight: '50px' }}>
-                    {nativeCaptureStatus === 'saving' ? '保存中…' : '拍照并加入'}
-                  </button>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      onClick={nativeCaptureStatus === 'recording' ? stopNativeRecording : startNativeRecording}
-                      disabled={nativeCaptureStatus === 'saving'}
-                      style={{
-                        ...primaryButtonStyle,
-                        minHeight: '50px',
-                        background: nativeCaptureStatus === 'recording' ? '#be123c' : primaryButtonStyle.background,
-                      }}
-                    >
-                      {nativeCaptureStatus === 'recording' ? '停止并保存' : nativeCaptureStatus === 'saving' ? '保存中…' : '开始录制'}
-                    </button>
-                    <button type="button" onClick={cancelNativeCapture} disabled={nativeCaptureStatus === 'saving'} style={{ ...secondaryButtonStyle, minHeight: '50px' }}>
-                      取消
-                    </button>
-                  </>
-                )}
-              </div>
-            </section>
-          </div>
         ) : null}
     </div>
   );

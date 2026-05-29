@@ -3,6 +3,10 @@ import { expect, test, type APIRequestContext } from '@playwright/test';
 import { expectNoEnglishSeedCopy, expectNoUnfinishedCopy, loginWeb, webBaseURL } from './helpers';
 
 const apiBaseURL = process.env.E2E_API_BASE_URL ?? `http://127.0.0.1:${process.env.E2E_API_PORT ?? 3001}/api/v1`;
+const tinyPng = Buffer.from(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=',
+  'base64',
+);
 
 async function createRegistrationInviteCode(request: APIRequestContext) {
   const loginResponse = await request.post(`${apiBaseURL}/admin/auth/login`, {
@@ -85,7 +89,7 @@ test.describe('App critical journeys', () => {
     await page.getByRole('button', { name: '进入年轮' }).click();
 
     await expect(page).toHaveURL(/\/home$/);
-    await expect(page.getByText('小满', { exact: true })).toBeVisible();
+    await expect(page.getByText('小满', { exact: true }).first()).toBeVisible();
     await expect(page.getByText('今日值得记录')).toBeVisible();
     await expect(page.getByText('最近更新')).toBeVisible();
     await expect(page.getByText('一年前的今天')).toBeVisible();
@@ -153,6 +157,9 @@ test.describe('App critical journeys', () => {
     await expect(page).toHaveURL(/\/record\/create$/);
     await expect(page.getByRole('heading', { name: '记录时光' })).toBeVisible();
     await expect(page.getByText('影像与声音')).toBeVisible();
+    await expect(page.getByText('媒体采集')).toHaveCount(0);
+    await expect(page.getByText('内容输入')).toHaveCount(0);
+    await expect(page.getByText('补充信息')).toBeVisible();
     await expect(page.getByRole('button', { name: '拍照记录' })).toBeVisible();
     await expect(page.getByRole('button', { name: '拍摄视频' })).toBeVisible();
     await expect(page.getByRole('button', { name: '从相册添加' })).toBeVisible();
@@ -163,6 +170,38 @@ test.describe('App critical journeys', () => {
     await expect(page.getByPlaceholder('给这一刻起个名字')).toBeVisible();
     await expect(page.getByLabel('发生时间 *')).toBeVisible();
     await expect(page.getByText(/待接入|准备中|规划中/)).toHaveCount(0);
+  });
+
+  test('native capture buttons open the system file chooser instead of an in-page capture dialog', async ({ page }) => {
+    await loginWeb(page);
+
+    await page.goto(`${webBaseURL}/record/create?type=mixed&focus=media`);
+    await expect(page.locator('input[aria-label="拍照记录"]')).toHaveAttribute('capture', 'environment');
+    await expect(page.locator('input[aria-label="从相册添加"]')).toHaveAttribute('multiple', '');
+    const photoChooserPromise = page.waitForEvent('filechooser');
+    await page.getByRole('button', { name: '拍照记录' }).click();
+    const photoChooser = await photoChooserPromise;
+    await photoChooser.setFiles({ name: 'camera-photo.png', mimeType: 'image/png', buffer: tinyPng });
+    await expect(page.getByText('已选择 1 个媒体，将随记录一起保存。')).toBeVisible();
+    await expect(page.getByRole('dialog', { name: '手机采集' })).toHaveCount(0);
+
+    await page.goto(`${webBaseURL}/record/create?type=video&focus=media`);
+    await expect(page.locator('input[aria-label="拍摄视频"]')).toHaveAttribute('capture', 'environment');
+    const videoChooserPromise = page.waitForEvent('filechooser');
+    await page.getByRole('button', { name: '拍摄视频' }).click();
+    const videoChooser = await videoChooserPromise;
+    await videoChooser.setFiles({ name: 'camera-video.mp4', mimeType: 'video/mp4', buffer: Buffer.from([0, 0, 0, 0]) });
+    await expect(page.getByText('已选择 1 个媒体，将随记录一起保存。')).toBeVisible();
+    await expect(page.getByRole('dialog', { name: '手机采集' })).toHaveCount(0);
+
+    await page.goto(`${webBaseURL}/record/create?type=audio&focus=media`);
+    await expect(page.locator('input[aria-label="录制语音"]')).toHaveAttribute('capture', '');
+    const audioChooserPromise = page.waitForEvent('filechooser');
+    await page.getByRole('button', { name: '录制语音' }).click();
+    const audioChooser = await audioChooserPromise;
+    await audioChooser.setFiles({ name: 'voice.wav', mimeType: 'audio/wav', buffer: Buffer.from([82, 73, 70, 70]) });
+    await expect(page.getByText('已选择 1 个媒体，将随记录一起保存。')).toBeVisible();
+    await expect(page.getByRole('dialog', { name: '手机采集' })).toHaveCount(0);
   });
 
   test('home quick actions open matching record modes', async ({ page }) => {
@@ -216,7 +255,7 @@ test.describe('App critical journeys', () => {
     await page.getByRole('button', { name: '发布', exact: true }).click();
     await expect(page.getByText('发布前请填写标题')).toBeVisible();
 
-    await page.getByPlaceholder('给这一刻起个名字').fill('文字记录自动化校验');
+    await page.getByPlaceholder('给这一刻起个名字').fill('文字记录校验');
     await page.getByRole('button', { name: '发布', exact: true }).click();
     await expect(page.getByText('发布前请填写正文')).toBeVisible();
 
