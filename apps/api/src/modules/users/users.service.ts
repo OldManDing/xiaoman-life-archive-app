@@ -9,8 +9,10 @@ import {
   RECORD_STATUS_PUBLISHED,
   USER_ACTIVE_STATUS,
 } from '../../shared/constants';
+import { parseMediaReference } from '../../shared/media-reference';
 import { AccessControlService } from '../../shared/services/access-control.service';
 import { AuditLogService } from '../../shared/services/audit-log.service';
+import { StorageService } from '../../shared/services/storage.service';
 import { generateBizNo, maskMobile } from '../../shared/utils';
 import { ArchiveExportSummaryDto } from './dto/archive-export-summary.dto';
 import { CreateArchiveExportRequestDto } from './dto/create-archive-export-request.dto';
@@ -59,6 +61,7 @@ export class UsersService {
     private readonly prisma: PrismaService,
     private readonly accessControlService: AccessControlService,
     private readonly auditLogService: AuditLogService,
+    private readonly storageService: StorageService,
   ) {}
 
   async me(userId: bigint) {
@@ -763,7 +766,29 @@ export class UsersService {
     };
   }
 
-  private toUserProfile(user: {
+  private async resolveAvatarUrl(userId: bigint, avatarUrl: string | null) {
+    const mediaNo = parseMediaReference(avatarUrl);
+    if (!mediaNo) return avatarUrl;
+
+    const media = await this.prisma.recordMedia.findFirst({
+      where: {
+        mediaNo,
+        uploaderUserId: userId,
+        status: MEDIA_STATUS_READY,
+      },
+      select: { objectKey: true },
+    });
+    if (!media) return null;
+
+    try {
+      return (await this.storageService.createAccessUrl(media.objectKey)).access_url;
+    } catch {
+      return null;
+    }
+  }
+
+  private async toUserProfile(user: {
+    id: bigint;
     userNo: string;
     nickname: string;
     avatarUrl: string | null;
@@ -775,7 +800,7 @@ export class UsersService {
     return {
       user_no: user.userNo,
       nickname: user.nickname,
-      avatar_url: user.avatarUrl,
+      avatar_url: await this.resolveAvatarUrl(user.id, user.avatarUrl),
       mobile: maskMobile(user.mobile),
       membership_type: user.membershipType,
       membership_expire_at: user.membershipExpireAt?.toISOString() ?? null,

@@ -15,6 +15,7 @@ import { getCurrentDeviceLocation } from '../shared/deviceLocation';
 import { AppSelect, AppTopBar, PageShell, Panel, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle } from '../shared/ui';
 import { EmptyState, buttonRowStyle, formSubmitSpacingStyle, formatDateTimeLocal, rowStyle } from './shared';
 import { referenceAssets } from './reference-ui';
+import { deriveMediaType, normalizeMimeType, resolveFileMimeType, withResolvedFileMimeType } from '../shared/mediaFiles';
 
 type MediaPreview = {
   media_no: string;
@@ -177,19 +178,6 @@ const MediaActionButton = ({
 
 const isGeneratedSvgAvatar = (src?: string | null) => Boolean(src?.trim().startsWith('data:image/svg+xml'));
 
-const deriveMediaType = (file: File): MediaType | null => {
-  if (file.type.startsWith('image/')) return 'image';
-  if (file.type.startsWith('video/')) return 'video';
-  if (file.type.startsWith('audio/')) return 'audio';
-  const lowerName = file.name.toLowerCase();
-  if (/\.(jpe?g|png|webp|heic|heif)$/.test(lowerName)) return 'image';
-  if (/\.(mp4|webm|mov|m4v|3gp|3gpp)$/.test(lowerName)) return 'video';
-  if (/\.(m4a|mp3|wav|webm|ogg|aac|amr|3gp|3gpp)$/.test(lowerName)) return 'audio';
-  return null;
-};
-
-const normalizeMimeType = (mimeType?: string) => mimeType?.toLowerCase().split(';', 1)[0].trim() ?? '';
-
 const isNativeAppRuntime = () => {
   try {
     return Capacitor.isNativePlatform();
@@ -315,7 +303,6 @@ const RecordForm = ({
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [pendingAction, setPendingAction] = useState<'publish' | 'draft' | null>(null);
-  const [showFloatingActions, setShowFloatingActions] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [selectorMessage, setSelectorMessage] = useState<string | null>(null);
   const [visibilityOpen, setVisibilityOpen] = useState(false);
@@ -376,13 +363,6 @@ const RecordForm = ({
   useEffect(() => {
     mediaPreviewsRef.current = mediaPreviews;
   }, [mediaPreviews]);
-
-  useEffect(() => {
-    const syncFloatingActions = () => setShowFloatingActions(window.scrollY > 320);
-    syncFloatingActions();
-    window.addEventListener('scroll', syncFloatingActions, { passive: true });
-    return () => window.removeEventListener('scroll', syncFloatingActions);
-  }, []);
 
   useEffect(() => {
     const keyword = form.location_text.trim();
@@ -475,29 +455,30 @@ const RecordForm = ({
       return;
     }
 
-    const mediaType = deriveMediaType(file);
+    const mediaType = deriveMediaType(file) as MediaType | null;
     if (!mediaType) {
       setError('暂不支持该媒体格式，请选择图片、视频或语音文件。');
       return;
     }
 
+    const uploadFile = withResolvedFileMimeType(file);
     setUploading(true);
     setError(null);
-    const previewUrl = URL.createObjectURL(file);
+    const previewUrl = URL.createObjectURL(uploadFile);
     let previewSource = previewUrl;
     let shouldRevokePreview = true;
     try {
       const uploadToken = await webApi.createUploadToken({
         child_no: childNo,
-        file_name: file.name,
-        mime_type: normalizeMimeType(file.type) || file.type,
-        size_bytes: file.size,
+        file_name: uploadFile.name,
+        mime_type: resolveFileMimeType(uploadFile) || uploadFile.type,
+        size_bytes: uploadFile.size,
         media_type: mediaType,
       });
 
       if (uploadToken.mock_upload) {
         try {
-          previewSource = await createPersistableMediaPreview(file);
+          previewSource = await createPersistableMediaPreview(uploadFile);
           shouldRevokePreview = false;
           saveLocalMediaPreview(uploadToken.media_no, previewSource);
           URL.revokeObjectURL(previewUrl);
@@ -507,11 +488,14 @@ const RecordForm = ({
       }
 
       if (!uploadToken.mock_upload) {
-        await fetch(uploadToken.upload_url, {
+        const uploadResponse = await fetch(uploadToken.upload_url, {
           method: uploadToken.method,
           headers: uploadToken.headers,
-          body: file,
+          body: uploadFile,
         });
+        if (!uploadResponse.ok) {
+          throw new Error(`媒体上传失败：HTTP ${uploadResponse.status}`);
+        }
       }
 
       await webApi.confirmUpload({ media_no: uploadToken.media_no });
@@ -530,7 +514,7 @@ const RecordForm = ({
           media_no: uploadToken.media_no,
           preview_url: previewSource,
           media_type: mediaType,
-          original_name: file.name,
+          original_name: uploadFile.name,
           is_local: shouldRevokePreview,
         },
       ]);
@@ -1485,7 +1469,6 @@ const RecordForm = ({
           {error ? <p style={{ ...helperTextStyle, color: '#dc2626' }}>{error}</p> : null}
 
         </form>
-        {showFloatingActions ? (
         <div
           className="record-floating-actions"
           style={{
@@ -1570,7 +1553,6 @@ const RecordForm = ({
             </div>
           </div>
         </div>
-        ) : null}
     </div>
   );
 };

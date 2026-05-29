@@ -7,36 +7,38 @@ import { webApi } from '../shared/api/webApi';
 import type { ChildRecord, FamilyInviteResponse, FamilyMemberItem, RecordSummary } from '../shared/api/types';
 import { useAsyncData } from '../shared/hooks';
 import { childStatusLabel, familyMemberStatusLabel, familyRoleLabel, genderLabel, recordTypeLabel } from '../shared/labels';
-import { createPersistableMediaPreview, resolveMediaPreviewUrl, resolveStoredMediaUrl, saveLocalMediaPreview, toLocalMediaReference } from '../shared/localMediaPreview';
+import { createPersistableMediaPreview, resolveMediaPreviewUrl, resolveStoredMediaUrl, saveLocalMediaPreview, toStoredMediaReference } from '../shared/localMediaPreview';
 import { loadLocalSettings } from '../shared/localSettings';
+import { isSupportedImageFile, resolveFileMimeType, withResolvedFileMimeType } from '../shared/mediaFiles';
 import { AppSegmentedControl, Field, PageShell, Panel, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle, textareaStyle } from '../shared/ui';
 import { EmptyState, buttonRowStyle, formSubmitSpacingStyle, rowStyle } from './shared';
 import { RefAvatar, RefSectionTitle, refCardStyle, refMutedTextStyle, refPageStyle, refSoftCardStyle, referenceAssets } from './reference-ui';
 
 const uploadChildAvatarImage = async (childNo: string, file: File) => {
+  const uploadFile = withResolvedFileMimeType(file);
   const uploadToken = await webApi.createUploadToken({
     child_no: childNo,
-    file_name: file.name,
-    mime_type: file.type,
-    size_bytes: file.size,
+    file_name: uploadFile.name,
+    mime_type: resolveFileMimeType(uploadFile) || uploadFile.type,
+    size_bytes: uploadFile.size,
     media_type: 'image',
   });
 
-  if (uploadToken.mock_upload) {
-    const preview = await createPersistableMediaPreview(file);
-    saveLocalMediaPreview(uploadToken.media_no, preview);
-    await webApi.confirmUpload({ media_no: uploadToken.media_no });
-    return toLocalMediaReference(uploadToken.media_no);
-  }
+  const preview = await createPersistableMediaPreview(uploadFile);
+  saveLocalMediaPreview(uploadToken.media_no, preview);
 
-  await fetch(uploadToken.upload_url, {
-    method: uploadToken.method,
-    headers: uploadToken.headers,
-    body: file,
-  });
+  if (!uploadToken.mock_upload) {
+    const uploadResponse = await fetch(uploadToken.upload_url, {
+      method: uploadToken.method,
+      headers: uploadToken.headers,
+      body: uploadFile,
+    });
+    if (!uploadResponse.ok) {
+      throw new Error(`头像上传失败：HTTP ${uploadResponse.status}`);
+    }
+  }
   await webApi.confirmUpload({ media_no: uploadToken.media_no });
-  const access = await webApi.mediaAccessUrl(uploadToken.media_no);
-  return access.access_url;
+  return toStoredMediaReference(uploadToken.media_no);
 };
 
 const ChildAvatarPreview = ({ src, label }: { src?: string | null; label: string }) => {
@@ -280,7 +282,7 @@ export const FamilyChildPage = () => {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file || !activeChild?.child_no) return;
-    if (!file.type.startsWith('image/')) {
+    if (!isSupportedImageFile(file)) {
       setMessage('头像仅支持 JPG、PNG、WebP、HEIC 图片');
       return;
     }
@@ -291,8 +293,8 @@ export const FamilyChildPage = () => {
       const avatarUrl = await uploadChildAvatarImage(activeChild.child_no, file);
       const updated = await webApi.updateChild(activeChild.child_no, { avatar_url: avatarUrl });
       await refreshChildren();
-      setActiveChild(updated);
-      setForm((current) => ({ ...current, avatar_url: updated.avatar_url ?? avatarUrl }));
+      setActiveChild({ ...updated, avatar_url: avatarUrl });
+      setForm((current) => ({ ...current, avatar_url: avatarUrl }));
       setMessage('头像已更新');
     } catch (err) {
       setMessage(err instanceof Error ? err.message : '头像上传失败');

@@ -7,13 +7,16 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../prisma/prisma.service';
 import {
   FAMILY_MEMBER_ACTIVE_STATUS,
+  MEDIA_STATUS_READY,
   MEMBER_INVITE_STATUS_ACCEPTED,
   MEMBER_INVITE_STATUS_PENDING,
   USER_ACTIVE_STATUS,
 } from '../../shared/constants';
 import { getJwtAccessSecret, getJwtRefreshSecret, isSmsEnabled } from '../../shared/env-config';
+import { parseMediaReference } from '../../shared/media-reference';
 import { SmsCodeService } from '../../shared/services/sms-code.service';
 import { SmsService } from '../../shared/services/sms/sms.service';
+import { StorageService } from '../../shared/services/storage.service';
 import { generateBizNo, hashToken, parseDurationToSeconds } from '../../shared/utils';
 import { LoginDto } from './dto/login.dto';
 import { getRegisterInviteCode, getRegisterPasswordConfirm, RegisterDto } from './dto/register.dto';
@@ -35,6 +38,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly smsCodeService: SmsCodeService,
     private readonly smsService: SmsService,
+    private readonly storageService: StorageService,
   ) {}
 
   private get accessTokenTtlSeconds() {
@@ -227,6 +231,8 @@ export class AuthService {
 
     const childCount = await this.countAccessibleChildren(session.user.id);
 
+    const avatarUrl = await this.resolveUserAvatarUrl(session.user.id, session.user.avatarUrl);
+
     return {
       access_token: accessToken,
       refresh_token: nextRefreshToken,
@@ -234,7 +240,7 @@ export class AuthService {
       user: {
         user_no: session.user.userNo,
         nickname: session.user.nickname,
-        avatar_url: session.user.avatarUrl,
+        avatar_url: avatarUrl,
         membership_type: session.user.membershipType,
       },
       need_create_child: childCount === 0,
@@ -262,6 +268,7 @@ export class AuthService {
     await this.createSession(user.id, refreshToken);
 
     const childCount = await this.countAccessibleChildren(user.id);
+    const avatarUrl = await this.resolveUserAvatarUrl(user.id, user.avatarUrl);
 
     return {
       access_token: accessToken,
@@ -270,7 +277,7 @@ export class AuthService {
       user: {
         user_no: user.userNo,
         nickname: user.nickname,
-        avatar_url: user.avatarUrl,
+        avatar_url: avatarUrl,
         membership_type: user.membershipType,
       },
       need_create_child: childCount === 0,
@@ -314,6 +321,27 @@ export class AuthService {
         expiresAt: new Date(Date.now() + this.refreshTokenTtlSeconds * 1000),
       },
     });
+  }
+
+  private async resolveUserAvatarUrl(userId: bigint, avatarUrl: string | null) {
+    const mediaNo = parseMediaReference(avatarUrl);
+    if (!mediaNo) return avatarUrl;
+
+    const media = await this.prisma.recordMedia.findFirst({
+      where: {
+        mediaNo,
+        uploaderUserId: userId,
+        status: MEDIA_STATUS_READY,
+      },
+      select: { objectKey: true },
+    });
+    if (!media) return null;
+
+    try {
+      return (await this.storageService.createAccessUrl(media.objectKey)).access_url;
+    } catch {
+      return null;
+    }
   }
 
   private async revokeSession(refreshToken: string) {

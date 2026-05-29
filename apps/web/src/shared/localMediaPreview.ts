@@ -1,4 +1,6 @@
 const STORAGE_KEY_PREFIX = 'nianlun-local-media-preview:';
+const LOCAL_MEDIA_REFERENCE_PREFIX = 'local-media:';
+const STORED_MEDIA_REFERENCE_PREFIX = 'media:';
 const MAX_PREVIEW_BYTES = 4_200_000;
 const IMAGE_PREVIEW_MAX_SIDE = 1280;
 
@@ -88,11 +90,18 @@ export const getLocalMediaPreview = (mediaNo?: string | null) => {
 export const resolveMediaPreviewUrl = (mediaNo: string | null | undefined, accessUrl: string | null | undefined) =>
   getLocalMediaPreview(mediaNo) ?? accessUrl ?? null;
 
-export const toLocalMediaReference = (mediaNo: string) => `local-media:${mediaNo}`;
+export const toLocalMediaReference = (mediaNo: string) => `${LOCAL_MEDIA_REFERENCE_PREFIX}${mediaNo}`;
+
+export const toStoredMediaReference = (mediaNo: string) => `${STORED_MEDIA_REFERENCE_PREFIX}${mediaNo}`;
 
 export const resolveStoredMediaUrl = (value: string | null | undefined) => {
   const normalizedValue = value?.trim();
   if (!normalizedValue) return null;
-  if (!normalizedValue.startsWith('local-media:')) return normalizedValue;
-  return getLocalMediaPreview(normalizedValue.slice('local-media:'.length)) ?? null;
+  if (normalizedValue.startsWith(LOCAL_MEDIA_REFERENCE_PREFIX)) {
+    return getLocalMediaPreview(normalizedValue.slice(LOCAL_MEDIA_REFERENCE_PREFIX.length)) ?? null;
+  }
+  if (normalizedValue.startsWith(STORED_MEDIA_REFERENCE_PREFIX)) {
+    return getLocalMediaPreview(normalizedValue.slice(STORED_MEDIA_REFERENCE_PREFIX.length)) ?? null;
+  }
+  return normalizedValue;
 };

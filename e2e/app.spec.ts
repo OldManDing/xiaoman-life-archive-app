@@ -181,7 +181,7 @@ test.describe('App critical journeys', () => {
     const photoChooserPromise = page.waitForEvent('filechooser');
     await page.getByRole('button', { name: '拍照记录' }).click();
     const photoChooser = await photoChooserPromise;
-    await photoChooser.setFiles({ name: 'camera-photo.png', mimeType: 'image/png', buffer: tinyPng });
+    await photoChooser.setFiles({ name: 'camera-photo.JPG', mimeType: 'application/octet-stream', buffer: tinyPng });
     await expect(page.getByText('已选择 1 个媒体，将随记录一起保存。')).toBeVisible();
     await expect(page.getByRole('dialog', { name: '手机采集' })).toHaveCount(0);
 
@@ -202,6 +202,51 @@ test.describe('App critical journeys', () => {
     await audioChooser.setFiles({ name: 'voice.wav', mimeType: 'audio/wav', buffer: Buffer.from([82, 73, 70, 70]) });
     await expect(page.getByText('已选择 1 个媒体，将随记录一起保存。')).toBeVisible();
     await expect(page.getByRole('dialog', { name: '手机采集' })).toHaveCount(0);
+  });
+
+  test('profile avatar upload stores a stable media reference when mobile picker returns generic MIME', async ({ page }) => {
+    let updateMePayload: { avatar_url?: string } | null = null;
+    page.on('request', (request) => {
+      if (request.method() === 'PATCH' && request.url().includes('/api/v1/users/me')) {
+        updateMePayload = request.postDataJSON() as { avatar_url?: string };
+      }
+    });
+
+    await loginWeb(page);
+    await page.goto(`${webBaseURL}/profile/account`);
+    await page.locator('input[type="file"]').setInputFiles({
+      name: 'avatar.JPG',
+      mimeType: 'application/octet-stream',
+      buffer: tinyPng,
+    });
+
+    await expect(page.getByText('头像已更新')).toBeVisible();
+    expect(updateMePayload?.avatar_url).toMatch(/^media:m_/);
+    await expect(page.getByRole('img', { name: '小满妈妈' })).toBeVisible();
+  });
+
+  test('record floating publish actions stay inside the app frame', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await loginWeb(page);
+    await page.goto(`${webBaseURL}/record/create`);
+    await page.evaluate(() => {
+      document.documentElement.scrollTop = document.documentElement.scrollHeight;
+    });
+
+    await expect(page.locator('.record-floating-actions')).toBeVisible();
+    const layout = await page.evaluate(() => {
+      const actions = document.querySelector('.record-floating-actions')?.getBoundingClientRect();
+      const parent = document.querySelector('.record-floating-actions')?.parentElement?.getBoundingClientRect();
+      return {
+        actionsLeft: actions?.left ?? 0,
+        actionsRight: actions?.right ?? 0,
+        parentLeft: parent?.left ?? 0,
+        parentRight: parent?.right ?? 0,
+      };
+    });
+
+    expect(layout.actionsLeft).toBeGreaterThanOrEqual(layout.parentLeft - 1);
+    expect(layout.actionsRight).toBeLessThanOrEqual(layout.parentRight + 1);
   });
 
   test('home quick actions open matching record modes', async ({ page }) => {
