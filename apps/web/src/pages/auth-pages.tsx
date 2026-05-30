@@ -1,4 +1,4 @@
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useState, type CSSProperties, type ChangeEvent, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Calendar, Camera } from 'lucide-react';
 
@@ -148,6 +148,89 @@ const normalizeAuthErrorMessage = (mode: AuthMode, message: string) => {
   return message;
 };
 
+const authPageContentStyle: CSSProperties = {
+  width: '100%',
+  maxWidth: '430px',
+  margin: '0 auto',
+  display: 'grid',
+  alignContent: 'start',
+  gap: '14px',
+  padding: 'calc(18px + env(safe-area-inset-top)) 0 24px',
+};
+
+const authHeroStyle: CSSProperties = {
+  display: 'grid',
+  justifyItems: 'center',
+  gap: '8px',
+  textAlign: 'center',
+};
+
+const authLogoStyle: CSSProperties = {
+  width: '72px',
+  height: '72px',
+  borderRadius: '22px',
+  boxShadow: '0 12px 26px rgba(115, 74, 41, 0.16)',
+};
+
+const authTitleStyle: CSSProperties = {
+  margin: 0,
+  color: '#172033',
+  fontSize: '24px',
+  fontWeight: 850,
+  lineHeight: 1.18,
+};
+
+const authDescriptionStyle: CSSProperties = {
+  margin: '5px 0 0',
+  color: '#687386',
+  fontSize: '14px',
+  lineHeight: 1.45,
+};
+
+const authTaglineStyle: CSSProperties = {
+  ...helperTextStyle,
+  color: '#57534e',
+  fontWeight: 700,
+  lineHeight: 1.45,
+};
+
+const authPanelStyle: CSSProperties = {
+  padding: '16px',
+  borderRadius: '22px',
+};
+
+const authFormStyle: CSSProperties = {
+  ...rowStyle,
+  gap: '11px',
+};
+
+const authAgreementStyle: CSSProperties = {
+  display: 'flex',
+  gap: '10px',
+  alignItems: 'flex-start',
+  minHeight: '44px',
+  color: '#78716c',
+  fontSize: '13px',
+  lineHeight: 1.55,
+  cursor: 'pointer',
+};
+
+const authCheckboxStyle: CSSProperties = {
+  width: '20px',
+  height: '20px',
+  margin: '2px 0 0',
+  flex: '0 0 auto',
+};
+
+const disabledSubmitButtonStyle: CSSProperties = {
+  ...primaryButtonStyle,
+  background: '#d8e0e7',
+  color: '#64748b',
+  boxShadow: 'none',
+  cursor: 'not-allowed',
+  opacity: 1,
+};
+
 export const SplashPage = () => (
   <PageShell title="正在进入年轮" description="系统正在检查登录状态，并会自动前往合适的页面。">
     <Panel>
@@ -281,19 +364,18 @@ export const LoginPage = () => {
   };
 
   return (
-    <PageShell title="登录注册" description={mode === 'login' ? '使用账号密码进入年轮。' : '使用邀请码创建账号并加入家庭。'}>
-      <section style={{ display: 'grid', justifyItems: 'center', gap: '10px', paddingTop: '4px' }} aria-label="年轮品牌">
-        <img
-          src="/brand/nianlun-logo-192.png"
-          alt="年轮"
-          width={84}
-          height={84}
-          style={{ borderRadius: '24px', boxShadow: '0 14px 30px rgba(115, 74, 41, 0.16)' }}
-        />
-        <p style={{ ...helperTextStyle, color: '#57534e', fontWeight: 700 }}>一家人的成长年轮，慢慢沉淀成档案。</p>
-      </section>
-      <Panel>
-        <form onSubmit={onSubmit} style={rowStyle}>
+    <PageShell title="登录注册" hideHeader>
+      <div style={authPageContentStyle}>
+        <section style={authHeroStyle} aria-label="年轮品牌">
+          <img src="/brand/nianlun-logo-192.png" alt="年轮" width={72} height={72} style={authLogoStyle} />
+          <div>
+            <h1 style={authTitleStyle}>登录注册</h1>
+            <p style={authDescriptionStyle}>{mode === 'login' ? '使用账号密码进入年轮。' : '使用邀请码创建账号并加入家庭。'}</p>
+          </div>
+          <p style={authTaglineStyle}>一家人的成长年轮，慢慢沉淀成档案。</p>
+        </section>
+        <Panel style={authPanelStyle}>
+          <form onSubmit={onSubmit} style={authFormStyle}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
             <button
               type="button"
@@ -352,12 +434,12 @@ export const LoginPage = () => {
               </Field>
             </>
           ) : null}
-          <label style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', color: '#78716c', fontSize: '13px', lineHeight: 1.6 }}>
+          <label style={authAgreementStyle}>
             <input
               type="checkbox"
               checked={acceptedAgreement}
               onChange={(event) => updateAcceptedAgreement(event.target.checked)}
-              style={{ marginTop: '4px' }}
+              style={authCheckboxStyle}
             />
             <span>
               我已阅读并同意《用户协议》和《隐私政策》
@@ -367,11 +449,12 @@ export const LoginPage = () => {
           <button type="button" style={{ ...secondaryButtonStyle, justifyContent: 'center' }} onClick={openLegalPage}>
             查看完整协议与隐私政策
           </button>
-          <button type="submit" style={primaryButtonStyle} disabled={submitting || !canSubmit}>
+          <button type="submit" style={submitting || !canSubmit ? disabledSubmitButtonStyle : primaryButtonStyle} disabled={submitting || !canSubmit}>
             {submitting ? (mode === 'login' ? '登录中…' : '注册中…') : mode === 'login' ? '进入年轮' : '注册并进入'}
           </button>
-        </form>
-      </Panel>
+          </form>
+        </Panel>
+      </div>
     </PageShell>
   );
 };

@@ -131,6 +131,18 @@ describe('App Shell', () => {
     expect(await screen.findByText('登录注册')).toBeDefined();
   });
 
+  it('renders auth submit button with a clear disabled style', async () => {
+    refreshMock.mockRejectedValue(new Error('unauthorized'));
+    render(<App />);
+
+    const submitButton = (await screen.findByRole('button', { name: '进入年轮' })) as HTMLButtonElement;
+
+    expect(submitButton.disabled).toBe(true);
+    expect(submitButton.style.cursor).toBe('not-allowed');
+    expect(submitButton.style.boxShadow).toBe('none');
+    expect(submitButton.style.opacity).toBe('1');
+  });
+
   it('logs in with password after agreement is accepted', async () => {
     refreshMock.mockRejectedValue(new Error('unauthorized'));
     loginMock.mockResolvedValue({

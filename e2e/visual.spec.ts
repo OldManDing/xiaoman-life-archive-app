@@ -23,6 +23,13 @@ test.describe('Visual review smoke', () => {
     await page.goto(`${webBaseURL}/auth/login`);
 
     await expect(page.getByRole('heading', { name: '登录注册' })).toBeVisible();
+    const authSubmitButton = page.getByRole('button', { name: '进入年轮' });
+    await expect(authSubmitButton).toBeDisabled();
+    await expect(authSubmitButton).toHaveCSS('cursor', 'not-allowed');
+    await expect(authSubmitButton).toHaveCSS('box-shadow', 'none');
+    const authSubmitBox = await authSubmitButton.boundingBox();
+    expect(authSubmitBox?.y ?? Number.POSITIVE_INFINITY).toBeLessThan(700);
+    expect((authSubmitBox?.height ?? 0)).toBeGreaterThanOrEqual(44);
     await expect(page.getByText(/验证码登录|短信登录|接受邀请|邀请链接/)).toHaveCount(0);
     await expectNoPageOverflow(page);
     await saveScreenshot(page, 'app-login-mobile.png');
