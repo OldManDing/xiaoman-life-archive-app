@@ -208,7 +208,8 @@ test.describe('Visual review smoke', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(`${adminBaseURL}/login`);
     await expect(page.getByRole('heading', { name: '管理员登录' })).toBeVisible();
-    await expect(page.getByText('管理入口')).toBeVisible();
+    await expect(page.getByText('管理入口')).toHaveCount(0);
+    await expect(page.getByText('年轮运营中枢')).toHaveCount(0);
     await expect(page.getByRole('button', { name: '进入管理后台' })).toBeVisible();
     await expectNoPageOverflow(page);
     await saveScreenshot(page, 'admin-login.png');

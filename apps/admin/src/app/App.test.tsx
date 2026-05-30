@@ -225,7 +225,9 @@ describe('App', () => {
 
   it('renders the redesigned login page', () => {
     renderWithRouter('/login');
-    expect(screen.getByText('年轮运营中枢')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '管理员登录' })).toBeInTheDocument();
+    expect(screen.queryByText('年轮运营中枢')).not.toBeInTheDocument();
+    expect(screen.queryByText('管理入口')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: '进入管理后台' })).toBeInTheDocument();
   });
 
