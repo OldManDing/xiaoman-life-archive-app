@@ -204,6 +204,13 @@ test.describe('Visual review smoke', () => {
 
   test('captures Admin key screens without layout overflow', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(`${adminBaseURL}/login`);
+    await expect(page.getByRole('heading', { name: '管理员登录' })).toBeVisible();
+    await expect(page.getByText('管理入口')).toBeVisible();
+    await expect(page.getByRole('button', { name: '进入管理后台' })).toBeVisible();
+    await expectNoPageOverflow(page);
+    await saveScreenshot(page, 'admin-login.png');
+
     await loginAdmin(page);
 
     await expectNoEnglishSeedCopy(page);
@@ -231,7 +238,26 @@ test.describe('Visual review smoke', () => {
   });
 
   test('captures Admin mobile key screens without layout overflow', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 568 });
+    await page.goto(`${adminBaseURL}/login`);
+    const compactLoginButton = page.getByRole('button', { name: '进入管理后台' });
+    await expect(compactLoginButton).toBeVisible();
+    const compactLoginButtonBox = await compactLoginButton.boundingBox();
+    expect((compactLoginButtonBox?.y ?? Number.POSITIVE_INFINITY) + (compactLoginButtonBox?.height ?? 0)).toBeLessThanOrEqual(540);
+    expect(compactLoginButtonBox?.height ?? 0).toBeGreaterThanOrEqual(40);
+    await expectNoPageOverflow(page);
+    await saveScreenshot(page, 'admin-login-small-mobile.png');
+
     await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`${adminBaseURL}/login`);
+    const mobileLoginButton = page.getByRole('button', { name: '进入管理后台' });
+    await expect(mobileLoginButton).toBeVisible();
+    const mobileLoginButtonBox = await mobileLoginButton.boundingBox();
+    expect((mobileLoginButtonBox?.y ?? Number.POSITIVE_INFINITY) + (mobileLoginButtonBox?.height ?? 0)).toBeLessThanOrEqual(700);
+    expect(mobileLoginButtonBox?.height ?? 0).toBeGreaterThanOrEqual(40);
+    await expectNoPageOverflow(page);
+    await saveScreenshot(page, 'admin-login-mobile.png');
+
     await loginAdmin(page);
 
     await expect(page.getByRole('heading', { name: '后台总览' })).toBeVisible();
