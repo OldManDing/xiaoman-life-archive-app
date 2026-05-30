@@ -92,7 +92,8 @@ test.describe('App critical journeys', () => {
     await expect(page.getByText('小满', { exact: true }).first()).toBeVisible();
     await expect(page.getByText('今日值得记录')).toBeVisible();
     await expect(page.getByText('最近更新')).toBeVisible();
-    await expect(page.getByText('一年前的今天')).toBeVisible();
+    await expect(page.getByText('一年前的今天')).toHaveCount(0);
+    await expect(page.getByText('第一次在草地上奔跑')).toHaveCount(0);
     await expectNoEnglishSeedCopy(page);
     await expectNoUnfinishedCopy(page);
   });
