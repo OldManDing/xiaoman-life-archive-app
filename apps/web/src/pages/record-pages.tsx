@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useRef, useState, type ChangeEvent, type CSSProperties, type FormEvent } from 'react';
-import { BookOpen, Check, ChevronRight, Clock, Eye, FileAudio, Image, ImagePlus, MapPin, Mic, PlayCircle, Sparkles, Star, Tag, Video, X } from 'lucide-react';
+import { AlertCircle, BookOpen, Check, CheckCircle2, ChevronRight, Clock, Eye, FileAudio, Image, ImagePlus, MapPin, Mic, PlayCircle, Sparkles, Star, Tag, Video, X } from 'lucide-react';
 import { Camera, CameraResultType, CameraSource, type GalleryPhoto, type Photo } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 import type { ReactNode } from 'react';
@@ -31,6 +31,18 @@ type NativeImageAsset = Pick<Photo | GalleryPhoto, 'webPath' | 'format'>;
 const tagOptions = ['生日纪念', '户外日常', '语言发育', '大动作发展', '睡前时光', '亲子陪伴', '第一次', '家庭日常'];
 
 const locationOptions = ['家里', '小区', '公园', '学校', '医院', '游乐场', '爷爷奶奶家', '外婆家'];
+const PERSISTABLE_NON_IMAGE_PREVIEW_BYTES = 4_200_000;
+
+const revokeObjectUrl = (url?: string | null) => {
+  if (url?.startsWith('blob:') && typeof URL.revokeObjectURL === 'function') {
+    URL.revokeObjectURL(url);
+  }
+};
+
+const normalizePromptMessage = (message: string) =>
+  /google\s*play|play services|gms|service_version|service missing|service disabled/i.test(message)
+    ? '当前手机定位服务不可用，可手动填写地点或选择常用地点。'
+    : message;
 
 const metadataPanelStyle = {
   background: 'rgba(255,255,255,0.88)',
@@ -175,6 +187,76 @@ const MediaActionButton = ({
     </span>
   </button>
 );
+
+const NoticeDialog = ({
+  tone,
+  message,
+  onClose,
+}: {
+  tone: 'success' | 'error';
+  message: string;
+  onClose: () => void;
+}) => {
+  const Icon = tone === 'error' ? AlertCircle : CheckCircle2;
+  const color = tone === 'error' ? '#dc2626' : '#0f766e';
+  const background = tone === 'error' ? '#fff1f2' : '#ecfdf5';
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="操作提示"
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 30,
+        background: 'rgba(15,23,42,0.28)',
+        display: 'grid',
+        placeItems: 'center',
+        padding: '24px',
+      }}
+    >
+      <section
+        style={{
+          width: 'min(100%, 340px)',
+          borderRadius: '24px',
+          background: '#ffffff',
+          border: '1px solid rgba(126,145,170,0.22)',
+          boxShadow: '0 28px 62px rgba(15,23,42,0.22)',
+          padding: '18px',
+          display: 'grid',
+          gap: '14px',
+        }}
+      >
+        <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+          <span style={{ width: 38, height: 38, borderRadius: '999px', background, color, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+            <Icon size={19} strokeWidth={2.3} />
+          </span>
+          <div style={{ display: 'grid', gap: '5px', minWidth: 0, flex: 1 }}>
+            <strong style={{ color: '#172033', fontSize: '16px', fontWeight: 900 }}>操作提示</strong>
+            <p style={{ margin: 0, color: '#475569', fontSize: '14px', lineHeight: 1.65, fontWeight: 650 }}>{normalizePromptMessage(message)}</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          style={{
+            minHeight: '44px',
+            border: 'none',
+            borderRadius: '16px',
+            background: '#17342f',
+            color: '#ffffff',
+            fontSize: '14px',
+            fontWeight: 900,
+            cursor: 'pointer',
+          }}
+        >
+          知道了
+        </button>
+      </section>
+    </div>
+  );
+};
 
 type RenderableMediaPreview = {
   media_no: string;
@@ -528,7 +610,7 @@ const RecordForm = ({
     return () => {
       mediaPreviewsRef.current.forEach((item) => {
         if (item.is_local) {
-          URL.revokeObjectURL(item.preview_url);
+          revokeObjectUrl(item.preview_url);
         }
       });
     };
@@ -575,9 +657,9 @@ const RecordForm = ({
     const uploadFile = withResolvedFileMimeType(file);
     setUploading(true);
     setError(null);
-    const previewUrl = URL.createObjectURL(uploadFile);
+    const previewUrl = typeof URL.createObjectURL === 'function' ? URL.createObjectURL(uploadFile) : '';
     let previewSource = previewUrl;
-    let shouldRevokePreview = true;
+    let shouldRevokePreview = Boolean(previewUrl);
     try {
       const uploadToken = await webApi.createUploadToken({
         child_no: childNo,
@@ -587,14 +669,16 @@ const RecordForm = ({
         media_type: mediaType,
       });
 
-      if (uploadToken.mock_upload) {
+      if (mediaType === 'image' || uploadFile.size <= PERSISTABLE_NON_IMAGE_PREVIEW_BYTES) {
         try {
-          previewSource = await createPersistableMediaPreview(uploadFile);
-          shouldRevokePreview = false;
-          saveLocalMediaPreview(uploadToken.media_no, previewSource);
-          URL.revokeObjectURL(previewUrl);
+          const persistedPreview = await createPersistableMediaPreview(uploadFile);
+          if (saveLocalMediaPreview(uploadToken.media_no, persistedPreview)) {
+            previewSource = persistedPreview;
+            shouldRevokePreview = false;
+            revokeObjectUrl(previewUrl);
+          }
         } catch {
-          previewSource = previewUrl;
+          // The server upload can still succeed; keep the temporary preview for the edit screen.
         }
       }
 
@@ -630,7 +714,7 @@ const RecordForm = ({
         },
       ]);
     } catch (err) {
-      URL.revokeObjectURL(previewUrl);
+      revokeObjectUrl(previewUrl);
       setError(err instanceof Error ? err.message : '上传失败');
     } finally {
       setUploading(false);
@@ -727,7 +811,7 @@ const RecordForm = ({
     setMediaPreviews((current) => {
       const removed = current.find((item) => item.media_no === mediaNo);
       if (removed?.is_local) {
-        URL.revokeObjectURL(removed.preview_url);
+        revokeObjectUrl(removed.preview_url);
       }
       return current.filter((item) => item.media_no !== mediaNo);
     });
@@ -884,6 +968,7 @@ const RecordForm = ({
       : form.record_type === 'audio'
         ? '支持 M4A、MP3、WAV、WebM、OGG 语音'
       : '支持 JPG、PNG、WebP、HEIC、MP4、WebM、M4A、MP3、WAV';
+  const noticeMessage = error ?? selectorMessage;
 
   const useCurrentLocation = async () => {
     setLocationLoading(true);
@@ -1233,7 +1318,10 @@ const RecordForm = ({
               }}
               placeholder="给这一刻起个名字"
               value={form.title}
-              onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
+              onChange={(event) => {
+                setError(null);
+                setForm((current) => ({ ...current, title: event.target.value }));
+              }}
             />
             <textarea
               ref={contentInputRef}
@@ -1253,7 +1341,10 @@ const RecordForm = ({
               }}
               placeholder="在想什么呢？记录一下这一刻发生的故事…"
               value={form.content_text}
-              onChange={(event) => setForm((current) => ({ ...current, content_text: event.target.value }))}
+              onChange={(event) => {
+                setError(null);
+                setForm((current) => ({ ...current, content_text: event.target.value }));
+              }}
             />
             <div style={{ borderRadius: '18px', background: '#f8f7ff', border: '1px solid #e9e6ff', padding: '12px', display: 'grid', gap: '10px' }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '9px' }}>
@@ -1419,7 +1510,10 @@ const RecordForm = ({
                     style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
                     type="datetime-local"
                     value={form.event_time}
-                    onChange={(event) => setForm((current) => ({ ...current, event_time: event.target.value }))}
+                    onChange={(event) => {
+                      setError(null);
+                      setForm((current) => ({ ...current, event_time: event.target.value }));
+                    }}
                   />
                   <div style={{ minHeight: '40px', padding: '8px 13px', display: 'flex', alignItems: 'center', gap: '7px', pointerEvents: 'none' }}>
                     <Clock size={14} strokeWidth={2.2} color="#a8a29e" />
@@ -1434,7 +1528,11 @@ const RecordForm = ({
                     aria-label="搜索地点"
                     style={{ ...inputStyle, ...metadataPillStyle, width: '100%', minHeight: '44px', borderRadius: '999px', background: '#fafaf9', padding: '8px 12px 8px 34px', fontSize: '13px', fontWeight: 700 }}
                     value={form.location_text}
-                    onChange={(event) => setForm((current) => ({ ...current, location_text: event.target.value }))}
+                    onChange={(event) => {
+                      setError(null);
+                      setSelectorMessage(null);
+                      setForm((current) => ({ ...current, location_text: event.target.value }));
+                    }}
                     placeholder="添加地点"
                   />
                 </div>
@@ -1578,12 +1676,23 @@ const RecordForm = ({
             </span>
           </button>
 
-          {selectorMessage ? <p style={{ ...helperTextStyle, color: '#0f766e' }}>{selectorMessage}</p> : null}
           {mediaNos.length ? <p style={helperTextStyle}>已选择 {mediaNos.length} 个媒体，将随记录一起保存。</p> : null}
           {uploading ? <p style={helperTextStyle}>正在上传媒体…</p> : null}
-          {error ? <p style={{ ...helperTextStyle, color: '#dc2626' }}>{error}</p> : null}
 
         </form>
+        {noticeMessage ? (
+          <NoticeDialog
+            tone={error ? 'error' : 'success'}
+            message={noticeMessage}
+            onClose={() => {
+              if (error) {
+                setError(null);
+                return;
+              }
+              setSelectorMessage(null);
+            }}
+          />
+        ) : null}
         <div
           className="record-floating-actions"
           style={{

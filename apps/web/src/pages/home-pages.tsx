@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type CSSProperties, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Camera,
@@ -57,9 +57,23 @@ const iconButtonStyle: CSSProperties = {
 const formatDay = (value: string) => new Date(value).getDate();
 const formatMonth = (value: string) => new Date(value).toLocaleDateString('zh-CN', { month: 'short' });
 const formatShortDate = (value: string) => new Date(value).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+const formatAnniversaryDate = (value: string) => new Date(value).toLocaleDateString('zh-CN', { year: 'numeric', month: 'numeric', day: 'numeric' });
 const formatMonthTitle = (value: string) => {
   const date = new Date(value);
   return `${date.getFullYear()}年 ${date.getMonth() + 1}月`;
+};
+
+const getOneYearAgoWindow = () => {
+  const target = new Date();
+  target.setFullYear(target.getFullYear() - 1);
+  const start = new Date(target);
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(target);
+  end.setHours(23, 59, 59, 999);
+  return {
+    startIso: start.toISOString(),
+    endIso: end.toISOString(),
+  };
 };
 
 const getCoverUrl = (record: RecordSummary) => resolveMediaPreviewUrl(record.cover_media_no, record.cover_url);
@@ -145,6 +159,7 @@ export const HomePage = () => {
   const navigate = useNavigate();
   const { user, activeChild, children, setActiveChild, refreshChildren } = useAuth();
   const [promptIndex, setPromptIndex] = useState(0);
+  const anniversaryWindow = useMemo(() => getOneYearAgoWindow(), []);
   const { data: recordData, loading, error } = useAsyncData<RecordSummary[]>(
     async () => {
       if (!activeChild) return [];
@@ -152,6 +167,21 @@ export const HomePage = () => {
       return result.list;
     },
     [activeChild?.child_no],
+  );
+  const { data: anniversaryData } = useAsyncData<RecordSummary[]>(
+    async () => {
+      if (!activeChild) return [];
+      const result = await webApi.listRecords({
+        child_no: activeChild.child_no,
+        page: 1,
+        page_size: 1,
+        status: 'published',
+        start_time: anniversaryWindow.startIso,
+        end_time: anniversaryWindow.endIso,
+      });
+      return result.list;
+    },
+    [activeChild?.child_no, anniversaryWindow.startIso, anniversaryWindow.endIso],
   );
 
   useEffect(() => {
@@ -163,6 +193,7 @@ export const HomePage = () => {
   }, [activeChild, children, setActiveChild]);
 
   const records = recordData ?? [];
+  const anniversaryRecord = anniversaryData?.[0] ?? null;
   const childName = activeChild?.name?.trim() || '孩子';
   const prompt = prompts(childName)[promptIndex % prompts(childName).length];
   const switchChild = () => {
@@ -351,28 +382,25 @@ export const HomePage = () => {
           {!loading && !error && !records.length ? <EmptyState message="还没有成长记录，先留下第一条。" /> : null}
         </section>
 
-        <section>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
-            <h2 style={{ margin: 0, color: '#172033', fontSize: 18, fontWeight: 950 }}>一年前的今天</h2>
-            <span style={{ color: '#687386', fontSize: 11, fontWeight: 800 }}>2025/5/9</span>
-          </div>
-          <button type="button" onClick={() => navigate(records[0] ? `/record/${records[0].record_no}` : '/record/create')} style={{ ...refSoftCardStyle, width: '100%', padding: 0, overflow: 'hidden', textAlign: 'left', cursor: 'pointer' }}>
-            <div style={{ position: 'relative', height: 154, background: '#e7e5e4' }}>
-              <img src={referenceAssets.parkPhoto} alt="第一次在草地上奔跑" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                        <span style={{ position: 'absolute', inset: 0, background: 'rgba(10,18,28,0.42)' }} />
-              <span style={{ position: 'absolute', left: 15, bottom: 13, color: '#fff', fontSize: 14, fontWeight: 950, textShadow: '0 2px 8px rgba(0,0,0,0.35)' }}>第一次在草地上奔跑</span>
+        {anniversaryRecord ? (
+          <section>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+              <h2 style={{ margin: 0, color: '#172033', fontSize: 18, fontWeight: 950 }}>一年前的今天</h2>
+              <span style={{ color: '#687386', fontSize: 11, fontWeight: 800 }}>{formatAnniversaryDate(anniversaryRecord.event_time)}</span>
             </div>
-            <div style={{ padding: '14px 16px', display: 'grid', gap: 10 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#334155', fontSize: 12, fontWeight: 850 }}>
-                <span>本月档案进度</span>
-                <span>{Math.min(100, records.length * 10)}%</span>
+            <button type="button" onClick={() => navigate(`/record/${anniversaryRecord.record_no}`)} style={{ ...refSoftCardStyle, width: '100%', padding: 0, overflow: 'hidden', textAlign: 'left', cursor: 'pointer' }}>
+              <div style={{ position: 'relative', height: 154, background: '#e7e5e4' }}>
+                <img src={getCoverUrl(anniversaryRecord) ?? referenceAssets.parkPhoto} alt={anniversaryRecord.title ?? '一年前的成长记录'} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                <span style={{ position: 'absolute', inset: 0, background: 'rgba(10,18,28,0.42)' }} />
+                <span style={{ position: 'absolute', left: 15, bottom: 13, color: '#fff', fontSize: 14, fontWeight: 950, textShadow: '0 2px 8px rgba(0,0,0,0.35)' }}>{anniversaryRecord.title ?? '一年前的成长记录'}</span>
               </div>
-              <div style={{ height: 8, borderRadius: '999px', background: '#e7eef6', overflow: 'hidden' }}>
-                    <span style={{ display: 'block', width: `${Math.min(100, records.length * 10)}%`, height: '100%', borderRadius: '999px', background: '#17342f' }} />
+              <div style={{ padding: '14px 16px', display: 'grid', gap: 8 }}>
+                <span style={{ color: '#334155', fontSize: 13, lineHeight: 1.65, fontWeight: 750 }}>{anniversaryRecord.summary ?? '这条真实记录来自一年前的今天。'}</span>
+                <span style={{ color: '#687386', fontSize: 11, fontWeight: 800 }}>{anniversaryRecord.creator_name} 记录</span>
               </div>
-            </div>
-          </button>
-        </section>
+            </button>
+          </section>
+        ) : null}
       </main>
     </div>
   );

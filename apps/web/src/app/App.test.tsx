@@ -33,7 +33,12 @@ vi.mock('../shared/api/webApi', () => ({
   },
 }));
 
+vi.mock('../shared/deviceLocation', () => ({
+  getCurrentDeviceLocation: vi.fn(),
+}));
+
 import { webApi } from '../shared/api/webApi';
+import { getCurrentDeviceLocation } from '../shared/deviceLocation';
 
 const refreshMock = vi.mocked(webApi.refresh);
 const listChildrenMock = vi.mocked(webApi.listChildren);
@@ -49,6 +54,7 @@ const searchLocationsMock = vi.mocked(webApi.searchLocations);
 const updateMeMock = vi.mocked(webApi.updateMe);
 const createUploadTokenMock = vi.mocked(webApi.createUploadToken);
 const confirmUploadMock = vi.mocked(webApi.confirmUpload);
+const getCurrentDeviceLocationMock = vi.mocked(getCurrentDeviceLocation);
 
 const demoChild = {
   child_no: 'c_001',
@@ -100,6 +106,7 @@ describe('App Shell', () => {
     updateMeMock.mockReset();
     createUploadTokenMock.mockReset();
     confirmUploadMock.mockReset();
+    getCurrentDeviceLocationMock.mockReset();
     window.history.pushState({}, '', '/auth/login');
   });
 
@@ -441,6 +448,76 @@ describe('App Shell', () => {
     });
   });
 
+  it('does not show the one-year-ago card without a real anniversary record', async () => {
+    window.history.pushState({}, '', '/home');
+    mockAuthenticatedSession();
+    listRecordsMock.mockImplementation(async (query) => {
+      if (query.start_time || query.end_time) {
+        return { list: [], page: 1, page_size: 1, total: 0, has_more: false };
+      }
+      return {
+        list: [
+          {
+            record_no: 'r_recent',
+            cover_media_no: null,
+            cover_media_type: null,
+            cover_url: null,
+            title: '最近真实记录',
+            summary: '这是最近发布的真实记录。',
+            event_time: '2026-05-28T10:00:00.000Z',
+            location_text: null,
+            tags: [],
+            creator_name: '测试用户',
+            is_milestone: false,
+            record_type: 'text',
+            status: 'published' as const,
+          },
+        ],
+        page: 1,
+        page_size: 5,
+        total: 1,
+        has_more: false,
+      };
+    });
+
+    render(<App />);
+
+    expect(await screen.findByText('最近真实记录')).toBeDefined();
+    expect(screen.queryByText('一年前的今天')).toBeNull();
+    expect(screen.queryByText('第一次在草地上奔跑')).toBeNull();
+  });
+
+  it('shows the one-year-ago card only from the anniversary records API result', async () => {
+    window.history.pushState({}, '', '/home');
+    mockAuthenticatedSession();
+    const anniversaryRecord = {
+      record_no: 'r_anniversary',
+      cover_media_no: null,
+      cover_media_type: null,
+      cover_url: null,
+      title: '一年前真实记录',
+      summary: '这是从接口返回的一年前记录。',
+      event_time: '2025-05-30T10:00:00.000Z',
+      location_text: null,
+      tags: [],
+      creator_name: '测试用户',
+      is_milestone: false,
+      record_type: 'text',
+      status: 'published' as const,
+    };
+    listRecordsMock.mockImplementation(async (query) => {
+      if (query.start_time || query.end_time) {
+        return { list: [anniversaryRecord], page: 1, page_size: 1, total: 1, has_more: false };
+      }
+      return { list: [], page: 1, page_size: 5, total: 0, has_more: false };
+    });
+
+    render(<App />);
+
+    expect(await screen.findByText('一年前的今天')).toBeDefined();
+    expect(screen.getByText('一年前真实记录')).toBeDefined();
+  });
+
   it('keeps manual location available when map provider search fails', async () => {
     window.history.pushState({}, '', '/record/create?type=text');
     refreshMock.mockResolvedValue({
@@ -541,6 +618,20 @@ describe('App Shell', () => {
     });
   });
 
+  it('shows phone location failures in a dialog without raw Google Play wording', async () => {
+    window.history.pushState({}, '', '/record/create?type=text');
+    mockAuthenticatedSession();
+    getCurrentDeviceLocationMock.mockRejectedValue(new Error('Google Play services are not available'));
+
+    render(<App />);
+
+    fireEvent.click(await screen.findByRole('button', { name: '手机定位' }));
+
+    const dialog = await screen.findByRole('dialog', { name: '操作提示' });
+    expect(dialog.textContent).toContain('当前手机定位服务不可用，可手动填写地点或选择常用地点。');
+    expect(dialog.textContent).not.toMatch(/Google Play/i);
+  });
+
   it('shows a fixed preview area before capturing media', async () => {
     window.history.pushState({}, '', '/record/create?type=mixed&focus=media');
     mockAuthenticatedSession();
@@ -601,6 +692,108 @@ describe('App Shell', () => {
         Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: originalRevokeObjectURL });
       } else {
         Reflect.deleteProperty(URL, 'revokeObjectURL');
+      }
+    }
+  });
+
+  it('keeps uploaded media preview available after publishing before the server has an access URL', async () => {
+    window.history.pushState({}, '', '/record/create?type=mixed&focus=media');
+    mockAuthenticatedSession();
+    const originalCreateObjectURL = URL.createObjectURL;
+    const originalRevokeObjectURL = URL.revokeObjectURL;
+    const originalFetch = globalThis.fetch;
+    Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: vi.fn(() => 'blob:record-photo-preview') });
+    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: vi.fn() });
+    Object.defineProperty(globalThis, 'fetch', { configurable: true, value: vi.fn().mockResolvedValue({ ok: true }) });
+
+    const createdRecord = {
+      record_no: 'r_published_preview',
+      child_no: 'c_001',
+      creator_user_no: 'u_001',
+      creator_name: '测试用户',
+      record_type: 'mixed',
+      title: '发布后预览',
+      content_text: '发布后马上应该看到刚上传的照片。',
+      media_list: [
+        {
+          media_no: 'm_preview_after_publish',
+          media_type: 'image',
+          access_url: '',
+          original_name: 'photo.png',
+          mime_type: 'image/png',
+          size_bytes: 12,
+          width: null,
+          height: null,
+          duration_seconds: null,
+        },
+      ],
+      tags: [],
+      event_time: '2026-05-28T10:00:00.000Z',
+      location_text: null,
+      visibility_scope: 'family',
+      is_milestone: false,
+      ai_generated_title: null,
+      ai_summary: null,
+      ai_status: null,
+      status: 'published',
+      created_at: '2026-05-28T10:00:00.000Z',
+      updated_at: '2026-05-28T10:00:00.000Z',
+    };
+
+    createUploadTokenMock.mockResolvedValue({
+      media_no: 'm_preview_after_publish',
+      object_key: 'mock/photo.png',
+      upload_url: 'https://upload.example/photo.png',
+      method: 'PUT',
+      headers: {},
+      mock_upload: false,
+      expires_in: 600,
+    });
+    confirmUploadMock.mockResolvedValue({
+      media_no: 'm_preview_after_publish',
+      status: 'ready',
+      width: null,
+      height: null,
+      duration_seconds: null,
+      created_at: '2026-05-28T10:00:00.000Z',
+      updated_at: '2026-05-28T10:00:00.000Z',
+    });
+    createRecordMock.mockResolvedValue(createdRecord);
+    detailRecordMock.mockResolvedValue(createdRecord);
+
+    try {
+      render(<App />);
+      const fileInput = await waitFor(() => {
+        const input = document.querySelector('input[aria-label="拍照记录"]');
+        expect(input).not.toBeNull();
+        return input as HTMLInputElement;
+      });
+      fireEvent.change(fileInput, {
+        target: { files: [new File(['photo'], 'photo.png', { type: 'image/png' })] },
+      });
+      await waitFor(() => expect(confirmUploadMock).toHaveBeenCalled());
+
+      fireEvent.change(screen.getByPlaceholderText('给这一刻起个名字'), { target: { value: '发布后预览' } });
+      fireEvent.change(screen.getByPlaceholderText('在想什么呢？记录一下这一刻发生的故事…'), { target: { value: '发布后马上应该看到刚上传的照片。' } });
+      fireEvent.click(screen.getByRole('button', { name: '发布' }));
+
+      const primaryPreview = await screen.findByTestId('record-primary-media-preview');
+      expect(primaryPreview.querySelector('img')?.getAttribute('src')).toMatch(/^data:image\/png;base64,/);
+    } finally {
+      if (originalCreateObjectURL) {
+        Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: originalCreateObjectURL });
+      } else {
+        Reflect.deleteProperty(URL, 'createObjectURL');
+      }
+      if (originalRevokeObjectURL) {
+        Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: originalRevokeObjectURL });
+      } else {
+        Reflect.deleteProperty(URL, 'revokeObjectURL');
+      }
+      if (originalFetch) {
+        Object.defineProperty(globalThis, 'fetch', { configurable: true, value: originalFetch });
+      } else {
+        Reflect.deleteProperty(globalThis, 'fetch');
       }
     }
   });
