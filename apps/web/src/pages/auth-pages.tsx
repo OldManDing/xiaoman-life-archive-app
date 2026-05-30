@@ -180,20 +180,6 @@ const authTitleStyle: CSSProperties = {
   lineHeight: 1.18,
 };
 
-const authDescriptionStyle: CSSProperties = {
-  margin: '5px 0 0',
-  color: '#687386',
-  fontSize: '14px',
-  lineHeight: 1.45,
-};
-
-const authTaglineStyle: CSSProperties = {
-  ...helperTextStyle,
-  color: '#57534e',
-  fontWeight: 700,
-  lineHeight: 1.45,
-};
-
 const authPanelStyle: CSSProperties = {
   padding: '16px',
   borderRadius: '22px',
@@ -370,9 +356,7 @@ export const LoginPage = () => {
           <img src="/brand/nianlun-logo-192.png" alt="年轮" width={72} height={72} style={authLogoStyle} />
           <div>
             <h1 style={authTitleStyle}>登录注册</h1>
-            <p style={authDescriptionStyle}>{mode === 'login' ? '使用账号密码进入年轮。' : '使用邀请码创建账号并加入家庭。'}</p>
           </div>
-          <p style={authTaglineStyle}>一家人的成长年轮，慢慢沉淀成档案。</p>
         </section>
         <Panel style={authPanelStyle}>
           <form onSubmit={onSubmit} style={authFormStyle}>

@@ -129,6 +129,8 @@ describe('App Shell', () => {
     refreshMock.mockRejectedValue(new Error('unauthorized'));
     render(<App />);
     expect(await screen.findByText('登录注册')).toBeDefined();
+    expect(screen.queryByText('使用账号密码进入年轮。')).toBeNull();
+    expect(screen.queryByText('一家人的成长年轮，慢慢沉淀成档案。')).toBeNull();
   });
 
   it('renders auth submit button with a clear disabled style', async () => {

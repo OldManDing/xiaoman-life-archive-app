@@ -23,6 +23,8 @@ test.describe('Visual review smoke', () => {
     await page.goto(`${webBaseURL}/auth/login`);
 
     await expect(page.getByRole('heading', { name: '登录注册' })).toBeVisible();
+    await expect(page.getByText('使用账号密码进入年轮。')).toHaveCount(0);
+    await expect(page.getByText('一家人的成长年轮，慢慢沉淀成档案。')).toHaveCount(0);
     const authSubmitButton = page.getByRole('button', { name: '进入年轮' });
     await expect(authSubmitButton).toBeDisabled();
     await expect(authSubmitButton).toHaveCSS('cursor', 'not-allowed');
