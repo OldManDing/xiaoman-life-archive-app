@@ -4,6 +4,11 @@ const config: CapacitorConfig = {
   appId: 'com.xmlga.nianlun',
   appName: '年轮',
   webDir: 'www',
+  plugins: {
+    CapacitorHttp: {
+      enabled: true,
+    },
+  },
   server: {
     androidScheme: 'https',
   },

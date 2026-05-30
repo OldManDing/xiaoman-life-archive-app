@@ -1,0 +1,159 @@
+{
+  "startedAt": "2026-05-30T03:51:45.938Z",
+  "device": "emulator-5554",
+  "appPackage": "com.xmlga.nianlun",
+  "login": {
+    "href": "https://localhost/home",
+    "text": "孩子\n小满妈妈\nTODAY MEMORY\n把今天的小变化，收进年轮。\n\n先留下一个画面、一句话或一段声音，系统会帮你整理成家庭时间轴。\n\n记录此刻\n时间轴\n本月记录\n0\n档案进度\n0%\n拍照记录\n打开相机，先留住画面\n视频记录\n记录动作和现场声音\n写一句话\n快速写下今天的细节\n里程碑\n第一次和重要节点\n今日值得记录\n换一条\n\n孩子最近最喜欢的一件玩具是什么？它有什么特别的故事吗？\n\n去记录\n最近更新\n查看全部\n\n还没有成长记录，先留下第一条。\n\n一年前的今天\n2025/5/9\n第一次在草地上奔跑\n本月档案进度\n0%\n首页\n时间轴\n记录\n家庭\n我的",
+    "inputs": [],
+    "buttons": [
+      {
+        "text": "添加孩子档案",
+        "disabled": false
+      },
+      {
+        "text": "搜索记录",
+        "disabled": false
+      },
+      {
+        "text": "记录此刻",
+        "disabled": false
+      },
+      {
+        "text": "时间轴",
+        "disabled": false
+      },
+      {
+        "text": "拍照记录 打开相机，先留住画面",
+        "disabled": true
+      },
+      {
+        "text": "视频记录 记录动作和现场声音",
+        "disabled": true
+      },
+      {
+        "text": "写一句话 快速写下今天的细节",
+        "disabled": true
+      },
+      {
+        "text": "里程碑 第一次和重要节点",
+        "disabled": true
+      },
+      {
+        "text": "换一条",
+        "disabled": false
+      },
+      {
+        "text": "去记录",
+        "disabled": false
+      },
+      {
+        "text": "查看全部",
+        "disabled": false
+      },
+      {
+        "text": "第一次在草地上奔跑 本月档案进度 0%",
+        "disabled": false
+      },
+      {
+        "text": "首页",
+        "disabled": false
+      },
+      {
+        "text": "时间轴",
+        "disabled": false
+      },
+      {
+        "text": "记录",
+        "disabled": false
+      },
+      {
+        "text": "家庭",
+        "disabled": false
+      },
+      {
+        "text": "我的",
+        "disabled": false
+      }
+    ]
+  },
+  "avatarUpload": {
+    "injected": {
+      "ok": true,
+      "fileCount": 1,
+      "fileName": "native-avatar.JPG",
+      "fileType": "image/png"
+    },
+    "page": {
+      "href": "https://localhost/profile/account",
+      "text": "个人资料\n\n查看当前账号信息与会员状态，并支持修改昵称。\n\n上传头像\n昵称\n\n会员类型：基础会员\n\n脱敏手机号：138****0000\n\n头像已更新\n\n保存昵称",
+      "inputs": [
+        {
+          "type": "file",
+          "value": "",
+          "checked": false,
+          "ariaLabel": "",
+          "placeholder": ""
+        },
+        {
+          "type": "text",
+          "value": "小满妈妈",
+          "checked": false,
+          "ariaLabel": "",
+          "placeholder": ""
+        }
+      ],
+      "buttons": [
+        {
+          "text": "返回",
+          "disabled": false
+        },
+        {
+          "text": "保存昵称",
+          "disabled": false
+        }
+      ]
+    }
+  },
+  "publishWithImage": {
+    "title": "Native upload publish 114498",
+    "injected": {
+      "ok": true,
+      "fileCount": 1,
+      "fileName": "native-publish.JPG",
+      "fileType": "image/png"
+    },
+    "page": {
+      "href": "https://localhost/record/r_mprte148b0c1",
+      "text": "记录详情\n图片\n图文档案\n已发布\nNative upload publish 114498\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\nAI 智能提取\n\n当前还没有 AI 摘要，可以点击下方按钮生成标题、摘要或标签。\n\n标题\n摘要\n标签\n\n媒体数量：1\n\n2026/5/30 09:45:00\n家庭可见\n未填写地点\n媒体\n编辑记录\n删除记录",
+      "inputs": [],
+      "buttons": [
+        {
+          "text": "返回",
+          "disabled": false
+        },
+        {
+          "text": "标题",
+          "disabled": false
+        },
+        {
+          "text": "摘要",
+          "disabled": false
+        },
+        {
+          "text": "标签",
+          "disabled": false
+        },
+        {
+          "text": "编辑记录",
+          "disabled": false
+        },
+        {
+          "text": "删除记录",
+          "disabled": false
+        }
+      ]
+    }
+  },
+  "finishedAt": "2026-05-30T03:51:59.197Z"
+}

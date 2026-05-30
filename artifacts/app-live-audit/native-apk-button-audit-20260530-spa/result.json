@@ -1,0 +1,1832 @@
+{
+  "device": "emulator-5554",
+  "appPackage": "com.xmlga.nianlun",
+  "startedAt": "2026-05-30T03:53:54.092Z",
+  "login": {
+    "ok": true,
+    "filled": {
+      "textInput": true,
+      "passwordInput": true,
+      "checkbox": true,
+      "modeButtons": [
+        "登录",
+        "注册",
+        "查看完整协议与隐私政策",
+        "进入年轮"
+      ]
+    },
+    "submitted": {
+      "ok": true,
+      "disabled": false,
+      "text": "进入年轮"
+    },
+    "page": {
+      "href": "https://localhost/home",
+      "text": "小满\n1岁4月29天\nTODAY MEMORY\n把今天的小变化，收进年轮。\n\n先留下一个画面、一句话或一段声音，系统会帮你整理成家庭时间轴。\n\n记录此刻\n时间轴\n本月记录\n5\n档案进度\n50%\n拍照记录\n打开相机，先留住画面\n视频记录\n记录动作和现场声音\n写一句话\n快速写下今天的细节\n里程碑\n第一次和重要节点\n今日值得记录\n换一条\n\n小满最近最喜欢的一件玩具是什么？它有什么特别的故事吗？\n\n去记录\n最近更新\n查看全部\n30\n5月\nNative upload publish 114498\n这是原生 APK 文件注入和发布流程的真实验证记录。\n小满妈妈\n30\n5月\nNative upload publish 221860\n这是原生 APK 文件注入和发布流程的真实验证记录。\n小满妈妈\n一年前的今天\n2025/5/9\n第一次在草地上奔跑\n本月档案进度\n50%\n首页\n时间轴\n记录\n家庭\n我的",
+      "buttons": [
+        {
+          "text": "切换孩子档案",
+          "disabled": false
+        },
+        {
+          "text": "搜索记录",
+          "disabled": false
+        },
+        {
+          "text": "记录此刻",
+          "disabled": false
+        },
+        {
+          "text": "时间轴",
+          "disabled": false
+        },
+        {
+          "text": "拍照记录 打开相机，先留住画面",
+          "disabled": false
+        },
+        {
+          "text": "视频记录 记录动作和现场声音",
+          "disabled": false
+        },
+        {
+          "text": "写一句话 快速写下今天的细节",
+          "disabled": false
+        },
+        {
+          "text": "里程碑 第一次和重要节点",
+          "disabled": false
+        },
+        {
+          "text": "换一条",
+          "disabled": false
+        },
+        {
+          "text": "去记录",
+          "disabled": false
+        },
+        {
+          "text": "查看全部",
+          "disabled": false
+        },
+        {
+          "text": "30 5月 Native upload publish 114498 这是原生 APK 文件注入和发布流程的真实验证记录。 小满妈妈",
+          "disabled": false
+        },
+        {
+          "text": "30 5月 Native upload publish 221860 这是原生 APK 文件注入和发布流程的真实验证记录。 小满妈妈",
+          "disabled": false
+        },
+        {
+          "text": "第一次在草地上奔跑 本月档案进度 50%",
+          "disabled": false
+        },
+        {
+          "text": "首页",
+          "disabled": false
+        },
+        {
+          "text": "时间轴",
+          "disabled": false
+        },
+        {
+          "text": "记录",
+          "disabled": false
+        },
+        {
+          "text": "家庭",
+          "disabled": false
+        },
+        {
+          "text": "我的",
+          "disabled": false
+        }
+      ]
+    }
+  },
+  "routes": [
+    {
+      "name": "home",
+      "path": "/home",
+      "href": "https://localhost/home",
+      "buttons": [
+        {
+          "label": "切换孩子档案",
+          "index": 0,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/home",
+          "responseText": "孩子\n2岁2月12天\nTODAY MEMORY\n把今天的小变化，收进年轮。\n\n先留下一个画面、一句话或一段声音，系统会帮你整理成家庭时间轴。\n\n记录此刻\n时间轴\n本月记录\n0\n档案进度\n0%\n拍照记录\n打开相机，先留住画面\n视频记录\n记录动作和现场声音\n写一句话\n快速写下今天的细节\n里程碑\n第一次和重要节点\n今日值得记录\n换一条\n\n孩子最近最喜欢的一件玩具是什么？它有什么特别的故事吗？\n\n去记录\n最近更新\n查看全部\n\n还没有成长记录，先留下第一条。\n\n一年前的今天\n2025/5/9\n第一次在草地上奔跑\n本月档案进度"
+        },
+        {
+          "label": "搜索记录",
+          "index": 1,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/search",
+          "responseText": "搜索\n搜索历史\n清空\n\n最近搜索会保存在本机，方便下次回看同一批成长记录。\n\n热门标签\n\n有记录标签后会自动出现在这里。"
+        },
+        {
+          "label": "记录此刻",
+          "index": 2,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create?focus=media",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n小\n小满\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、Web"
+        },
+        {
+          "label": "时间轴",
+          "index": 3,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/timeline",
+          "responseText": "时间轴\n2026年 5月\n· 5条记录\n图文档案\nNative upload publish 114498\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\n5/30 09:45\n小满妈妈记录\n编辑\n查看\n图文档案\nNative upload publish 221860\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\n5/30 09:45\n小满妈妈记录\n编辑\n查看\n图文档案\nNative upload publish 724441\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\n5/3"
+        },
+        {
+          "label": "拍照记录 打开相机，先留住画面",
+          "index": 4,
+          "action": "system-picker",
+          "ok": true,
+          "hrefAfter": "",
+          "responseText": ""
+        },
+        {
+          "label": "视频记录 记录动作和现场声音",
+          "index": 5,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create?type=video&focus=media",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n小\n小满\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n视频采集\n直接打开系统相机录制视频，也可以从手机相册导入。\n拍摄视频\n打开系统相机录制\n从相册选择\n导入已有视频素材\n支持 MP4、WebM、MOV 视频\n写下这一刻\n标题让以后容易找到，正文保留当时的细节和情绪。\n不知道怎么整理？\n先写几句话，AI 可以帮你生成标题、摘要和标签。\n生成标题/摘要/标签\n补充信息\n"
+        },
+        {
+          "label": "写一句话 快速写下今天的细节",
+          "index": 6,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create?type=text&focus=content",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n小\n小满\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n写下这一刻\n标题让以后容易找到，正文保留当时的细节和情绪。\n不知道怎么整理？\n先写几句话，AI 可以帮你生成标题、摘要和标签。\n生成标题/摘要/标签\n补充信息\n可见范围、地点、标签和里程碑用于后续检索与家庭协作。\n可见范围\n家庭成员可见\n今天 03:54\n添加标签\n生日纪念\n户外日常\n语言发育\n大动作发展\n睡前时光\n亲子陪伴\n第一次\n家庭日常\n添加标签\n手机定位\n里程碑\n第"
+        },
+        {
+          "label": "里程碑 第一次和重要节点",
+          "index": 7,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create?type=milestone&focus=content",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n小\n小满\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、Web"
+        },
+        {
+          "label": "换一条",
+          "index": 8,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/home",
+          "responseText": "小满\n1岁4月29天\nTODAY MEMORY\n把今天的小变化，收进年轮。\n\n先留下一个画面、一句话或一段声音，系统会帮你整理成家庭时间轴。\n\n记录此刻\n时间轴\n本月记录\n5\n档案进度\n50%\n拍照记录\n打开相机，先留住画面\n视频记录\n记录动作和现场声音\n写一句话\n快速写下今天的细节\n里程碑\n第一次和重要节点\n今日值得记录\n换一条\n\n今天有没有一个小进步？比如独立完成一件事、学会一个词，或主动表达了感受。\n\n去记录\n最近更新\n查看全部\n30\n5月\nNative upload publish 114498\n这是原生 "
+        },
+        {
+          "label": "去记录",
+          "index": 9,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n小\n小满\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、Web"
+        },
+        {
+          "label": "查看全部",
+          "index": 10,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/timeline",
+          "responseText": "时间轴\n2026年 5月\n· 5条记录\n图文档案\nNative upload publish 114498\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\n5/30 09:45\n小满妈妈记录\n编辑\n查看\n图文档案\nNative upload publish 221860\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\n5/30 09:45\n小满妈妈记录\n编辑\n查看\n图文档案\nNative upload publish 724441\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\n5/3"
+        },
+        {
+          "label": "30 5月 Native upload publish 114498 这是原生 APK 文件注入和发布流程的真实验证记录。 小满妈妈",
+          "index": 11,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_mprte148b0c1",
+          "responseText": "记录详情\n图片\n图文档案\n已发布\nNative upload publish 114498\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\nAI 智能提取\n\n当前还没有 AI 摘要，可以点击下方按钮生成标题、摘要或标签。\n\n标题\n摘要\n标签\n\n媒体数量：1\n\n2026/5/30 09:45:00\n家庭可见\n未填写地点\n媒体\n编辑记录\n删除记录"
+        },
+        {
+          "label": "30 5月 Native upload publish 221860 这是原生 APK 文件注入和发布流程的真实验证记录。 小满妈妈",
+          "index": 12,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_mprqh7l1a462",
+          "responseText": "记录详情\n图片\n图文档案\n已发布\nNative upload publish 221860\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\nAI 智能提取\n\n当前还没有 AI 摘要，可以点击下方按钮生成标题、摘要或标签。\n\n标题\n摘要\n标签\n\n媒体数量：1\n\n2026/5/30 09:45:00\n家庭可见\n未填写地点\n媒体\n编辑记录\n删除记录"
+        },
+        {
+          "label": "第一次在草地上奔跑 本月档案进度 50%",
+          "index": 13,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_mprte148b0c1",
+          "responseText": "记录详情\n图片\n图文档案\n已发布\nNative upload publish 114498\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\nAI 智能提取\n\n当前还没有 AI 摘要，可以点击下方按钮生成标题、摘要或标签。\n\n标题\n摘要\n标签\n\n媒体数量：1\n\n2026/5/30 09:45:00\n家庭可见\n未填写地点\n媒体\n编辑记录\n删除记录"
+        },
+        {
+          "label": "首页",
+          "index": 14,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/home",
+          "responseText": "小满\n1岁4月29天\nTODAY MEMORY\n把今天的小变化，收进年轮。\n\n先留下一个画面、一句话或一段声音，系统会帮你整理成家庭时间轴。\n\n记录此刻\n时间轴\n本月记录\n5\n档案进度\n50%\n拍照记录\n打开相机，先留住画面\n视频记录\n记录动作和现场声音\n写一句话\n快速写下今天的细节\n里程碑\n第一次和重要节点\n今日值得记录\n换一条\n\n小满最近最喜欢的一件玩具是什么？它有什么特别的故事吗？\n\n去记录\n最近更新\n查看全部\n30\n5月\nNative upload publish 114498\n这是原生 APK 文件注入和"
+        },
+        {
+          "label": "时间轴",
+          "index": 15,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/timeline",
+          "responseText": "时间轴\n2026年 5月\n· 5条记录\n图文档案\nNative upload publish 114498\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\n5/30 09:45\n小满妈妈记录\n编辑\n查看\n图文档案\nNative upload publish 221860\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\n5/30 09:45\n小满妈妈记录\n编辑\n查看\n图文档案\nNative upload publish 724441\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\n5/3"
+        },
+        {
+          "label": "记录",
+          "index": 16,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n小\n小满\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、Web"
+        },
+        {
+          "label": "家庭",
+          "index": 17,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/family",
+          "responseText": "家庭\n小满的家庭\n\n已有 4 位家人加入记录\n\n家庭成员\n小满妈妈\n管理员\n已加入家庭记录\n小\n小满外婆\n只读成员\n已加入家庭记录\n家\n家人\n可编辑成员\n已加入家庭记录\nn\nnative_delete_20260524052526\n可编辑成员\n已加入家庭记录\n最近家庭动态\n小满妈妈\n上传了照片\n5/30 09:45\n小满妈妈\n上传了照片\n5/30 09:45\n家人寄语\n\n“宝贝，愿你慢慢长大，全家人都会陪你，把这一段时光一件一件收好。”\n\n首页\n时间轴\n记录\n家庭\n我的"
+        },
+        {
+          "label": "我的",
+          "index": 18,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile",
+          "responseText": "小满妈妈\n基础会员\n当前档案：小满\n编辑主页\n草稿箱\n暂无草稿\n我的孩子\n小满\n1岁4月29天\n+ 添加宝宝\n管理中心\n月报与纪念册\n导出与备份\n会员中心\n隐私设置\n家庭管理\n帮助与反馈\n设置区\n账号与安全\n关于我们\n退出登录\n首页\n时间轴\n记录\n家庭\n我的"
+        }
+      ],
+      "screenshot": "artifacts/app-live-audit/native-apk-button-audit-20260530-spa/home-before.png"
+    },
+    {
+      "name": "search",
+      "path": "/search",
+      "href": "https://localhost/search",
+      "buttons": [
+        {
+          "label": "返回",
+          "index": 0,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/search",
+          "responseText": "搜索\n搜索历史\n清空\n\n最近搜索会保存在本机，方便下次回看同一批成长记录。\n\n热门标签\n#语言\n#吃饭\n#第一次\n#自主进食\n#自己吃饭\n#用勺子"
+        },
+        {
+          "label": "搜索",
+          "index": 1,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/search",
+          "responseText": "搜索\n搜索历史\n清空\n\n最近搜索会保存在本机，方便下次回看同一批成长记录。\n\n热门标签\n#语言\n#吃饭\n#第一次\n#自主进食\n#自己吃饭\n#用勺子"
+        },
+        {
+          "label": "清空",
+          "index": 2,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/search",
+          "responseText": "搜索\n搜索历史\n清空\n\n最近搜索会保存在本机，方便下次回看同一批成长记录。\n\n热门标签\n#语言\n#吃饭\n#第一次\n#自主进食\n#自己吃饭\n#用勺子"
+        },
+        {
+          "label": "#语言",
+          "index": 3,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/search",
+          "responseText": "搜索\n搜索历史\n清空\n语言\n热门标签\n#语言\n搜索结果\n标签结果\n#语言\n地点结果\n客厅\n匹配记录\n17\n5月\n学会说谢谢\n今天小满把玩具递给家人时主动说了谢谢，大家都很惊喜。\n1 个标签"
+        },
+        {
+          "label": "#吃饭",
+          "index": 4,
+          "action": "dynamic-state",
+          "ok": true,
+          "hrefAfter": "https://localhost/search",
+          "responseText": "搜索\n搜索历史\n清空\n语言\n热门标签\n#语言\n搜索结果\n标签结果\n#语言\n地点结果\n客厅\n匹配记录\n17\n5月\n学会说谢谢\n今天小满把玩具递给家人时主动说了谢谢，大家都很惊喜。\n1 个标签",
+          "reason": "dynamic-label-not-visible"
+        },
+        {
+          "label": "#第一次",
+          "index": 5,
+          "action": "dynamic-state",
+          "ok": true,
+          "hrefAfter": "https://localhost/search",
+          "responseText": "搜索\n搜索历史\n清空\n语言\n热门标签\n#语言\n搜索结果\n标签结果\n#语言\n地点结果\n客厅\n匹配记录\n17\n5月\n学会说谢谢\n今天小满把玩具递给家人时主动说了谢谢，大家都很惊喜。\n1 个标签",
+          "reason": "dynamic-label-not-visible"
+        },
+        {
+          "label": "#自主进食",
+          "index": 6,
+          "action": "dynamic-state",
+          "ok": true,
+          "hrefAfter": "https://localhost/search",
+          "responseText": "搜索\n搜索历史\n清空\n语言\n热门标签\n#语言\n搜索结果\n标签结果\n#语言\n地点结果\n客厅\n匹配记录\n17\n5月\n学会说谢谢\n今天小满把玩具递给家人时主动说了谢谢，大家都很惊喜。\n1 个标签",
+          "reason": "dynamic-label-not-visible"
+        },
+        {
+          "label": "#自己吃饭",
+          "index": 7,
+          "action": "dynamic-state",
+          "ok": true,
+          "hrefAfter": "https://localhost/search",
+          "responseText": "搜索\n搜索历史\n清空\n语言\n热门标签\n#语言\n搜索结果\n标签结果\n#语言\n地点结果\n客厅\n匹配记录\n17\n5月\n学会说谢谢\n今天小满把玩具递给家人时主动说了谢谢，大家都很惊喜。\n1 个标签",
+          "reason": "dynamic-label-not-visible"
+        },
+        {
+          "label": "#用勺子",
+          "index": 8,
+          "action": "dynamic-state",
+          "ok": true,
+          "hrefAfter": "https://localhost/search",
+          "responseText": "搜索\n搜索历史\n清空\n语言\n热门标签\n#语言\n搜索结果\n标签结果\n#语言\n地点结果\n客厅\n匹配记录\n17\n5月\n学会说谢谢\n今天小满把玩具递给家人时主动说了谢谢，大家都很惊喜。\n1 个标签",
+          "reason": "dynamic-label-not-visible"
+        }
+      ],
+      "screenshot": "artifacts/app-live-audit/native-apk-button-audit-20260530-spa/search-before.png"
+    },
+    {
+      "name": "timeline",
+      "path": "/timeline",
+      "href": "https://localhost/timeline",
+      "buttons": [
+        {
+          "label": "搜索记录",
+          "index": 0,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/timeline",
+          "responseText": "时间轴\n2026年 5月\n· 5条记录\n图文档案\nNative upload publish 114498\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\n5/30 09:45\n小满妈妈记录\n编辑\n查看\n图文档案\nNative upload publish 221860\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\n5/30 09:45\n小满妈妈记录\n编辑\n查看\n图文档案\nNative upload publish 724441\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\n5/3"
+        },
+        {
+          "label": "筛选记录",
+          "index": 1,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/timeline",
+          "responseText": "时间轴\n筛选记录\n记录类型\n全部\n照片\n视频\n文字\n语音\n里程碑\n标签\n#语言\n#吃饭\n#第一次\n#自主进食\n#自己吃饭\n#用勺子\n2026年 5月\n· 5条记录\n图文档案\nNative upload publish 114498\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\n5/30 09:45\n小满妈妈记录\n编辑\n查看\n图文档案\nNative upload publish 221860\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\n5/30 09:45\n小满妈妈记录\n编辑\n查看\n图文档案"
+        },
+        {
+          "label": "编辑",
+          "index": 2,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_mprte148b0c1/edit",
+          "responseText": "编辑记录\n保存\n发布对象\n小\n小满\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n3/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、WebP、H"
+        },
+        {
+          "label": "查看",
+          "index": 3,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_mprte148b0c1",
+          "responseText": "记录详情\n图片\n图文档案\n已发布\nNative upload publish 114498\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\nAI 智能提取\n\n当前还没有 AI 摘要，可以点击下方按钮生成标题、摘要或标签。\n\n标题\n摘要\n标签\n\n媒体数量：1\n\n2026/5/30 09:45:00\n家庭可见\n未填写地点\n媒体\n编辑记录\n删除记录"
+        },
+        {
+          "label": "编辑",
+          "index": 4,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_mprqh7l1a462/edit",
+          "responseText": "编辑记录\n保存\n发布对象\n小\n小满\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n3/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、WebP、H"
+        },
+        {
+          "label": "查看",
+          "index": 5,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_mprqh7l1a462",
+          "responseText": "记录详情\n图片\n图文档案\n已发布\nNative upload publish 221860\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\nAI 智能提取\n\n当前还没有 AI 摘要，可以点击下方按钮生成标题、摘要或标签。\n\n标题\n摘要\n标签\n\n媒体数量：1\n\n2026/5/30 09:45:00\n家庭可见\n未填写地点\n媒体\n编辑记录\n删除记录"
+        },
+        {
+          "label": "编辑",
+          "index": 6,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_mprpl25racbf/edit",
+          "responseText": "编辑记录\n保存\n发布对象\n小\n小满\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n3/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、WebP、H"
+        },
+        {
+          "label": "查看",
+          "index": 7,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_mprpl25racbf",
+          "responseText": "记录详情\n图片\n图文档案\n已发布\nNative upload publish 724441\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\nAI 智能提取\n\n当前还没有 AI 摘要，可以点击下方按钮生成标题、摘要或标签。\n\n标题\n摘要\n标签\n\n媒体数量：1\n\n2026/5/30 09:45:00\n家庭可见\n未填写地点\n媒体\n编辑记录\n删除记录"
+        },
+        {
+          "label": "编辑",
+          "index": 8,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_demo_002/edit",
+          "responseText": "编辑记录\n保存\n发布对象\n小\n小满\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n3/3 已完成\n标题\n正文\n时间\n写下这一刻\n标题让以后容易找到，正文保留当时的细节和情绪。\n不知道怎么整理？\n先写几句话，AI 可以帮你生成标题、摘要和标签。\n生成标题/摘要/标签\n补充信息\n可见范围、地点、标签和里程碑用于后续检索与家庭协作。\n可见范围\n家庭成员可见\n5月17日 23:02\n添加标签\n生日纪念\n户外日常\n语言发育\n大动作发展\n睡前时光\n亲子陪伴\n第一次\n家庭日常\n添加标签\n手机定位\n使用手动地"
+        },
+        {
+          "label": "查看",
+          "index": 9,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_demo_002",
+          "responseText": "记录详情\n文字档案\n已发布\n学会说谢谢\n\n今天小满把玩具递给家人时主动说了谢谢，大家都很惊喜。\n\nAI 智能提取\n\n当前还没有 AI 摘要，可以点击下方按钮生成标题、摘要或标签。\n\nAI 状态：等待处理\n\n标题\n摘要\n标签\n\n媒体数量：0\n\n2026/5/17 23:02:01\n家庭可见\n客厅\n语言\n编辑记录\n删除记录"
+        },
+        {
+          "label": "编辑",
+          "index": 10,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_demo_001/edit",
+          "responseText": "编辑记录\n保存\n发布对象\n小\n小满\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n3/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、WebP、H"
+        },
+        {
+          "label": "查看",
+          "index": 11,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_demo_001",
+          "responseText": "记录详情\n里程碑档案\n已发布\n第一次自己吃饭\n\n小满第一次尝试用勺子自己吃饭，虽然洒了一点，但看起来特别自豪。\n\nAI 智能提取\n\n小满第一次尝试用勺子自己吃饭，虽然洒了一点，但看起来特别自豪。\n\nAI 状态：已完成\n\n标题\n摘要\n标签\n\n媒体数量：0\n\n2026/5/16 23:02:00\n家庭可见\n家里\n吃饭\n用勺子\n第一次\n自主进食\n自己吃饭\n编辑记录\n删除记录"
+        },
+        {
+          "label": "首页",
+          "index": 12,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/home",
+          "responseText": "小满\n1岁4月29天\nTODAY MEMORY\n把今天的小变化，收进年轮。\n\n先留下一个画面、一句话或一段声音，系统会帮你整理成家庭时间轴。\n\n记录此刻\n时间轴\n本月记录\n5\n档案进度\n50%\n拍照记录\n打开相机，先留住画面\n视频记录\n记录动作和现场声音\n写一句话\n快速写下今天的细节\n里程碑\n第一次和重要节点\n今日值得记录\n换一条\n\n小满最近最喜欢的一件玩具是什么？它有什么特别的故事吗？\n\n去记录\n最近更新\n查看全部\n30\n5月\nNative upload publish 114498\n这是原生 APK 文件注入和"
+        },
+        {
+          "label": "时间轴",
+          "index": 13,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/timeline",
+          "responseText": "时间轴\n2026年 5月\n· 5条记录\n图文档案\nNative upload publish 114498\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\n5/30 09:45\n小满妈妈记录\n编辑\n查看\n图文档案\nNative upload publish 221860\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\n5/30 09:45\n小满妈妈记录\n编辑\n查看\n图文档案\nNative upload publish 724441\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\n5/3"
+        },
+        {
+          "label": "记录",
+          "index": 14,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n小\n小满\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、Web"
+        },
+        {
+          "label": "家庭",
+          "index": 15,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/family",
+          "responseText": "家庭\n小满的家庭\n\n已有 4 位家人加入记录\n\n家庭成员\n小满妈妈\n管理员\n已加入家庭记录\n小\n小满外婆\n只读成员\n已加入家庭记录\n家\n家人\n可编辑成员\n已加入家庭记录\nn\nnative_delete_20260524052526\n可编辑成员\n已加入家庭记录\n最近家庭动态\n小满妈妈\n上传了照片\n5/30 09:45\n小满妈妈\n上传了照片\n5/30 09:45\n家人寄语\n\n“宝贝，愿你慢慢长大，全家人都会陪你，把这一段时光一件一件收好。”\n\n首页\n时间轴\n记录\n家庭\n我的"
+        },
+        {
+          "label": "我的",
+          "index": 16,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile",
+          "responseText": "小满妈妈\n基础会员\n当前档案：小满\n编辑主页\n草稿箱\n暂无草稿\n我的孩子\n小满\n1岁4月29天\n+ 添加宝宝\n管理中心\n月报与纪念册\n导出与备份\n会员中心\n隐私设置\n家庭管理\n帮助与反馈\n设置区\n账号与安全\n关于我们\n退出登录\n首页\n时间轴\n记录\n家庭\n我的"
+        }
+      ],
+      "screenshot": "artifacts/app-live-audit/native-apk-button-audit-20260530-spa/timeline-before.png"
+    },
+    {
+      "name": "record-create",
+      "path": "/record/create",
+      "href": "https://localhost/record/create",
+      "buttons": [
+        {
+          "label": "取消",
+          "index": 0,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/home",
+          "responseText": "小满\n1岁4月29天\nTODAY MEMORY\n把今天的小变化，收进年轮。\n\n先留下一个画面、一句话或一段声音，系统会帮你整理成家庭时间轴。\n\n记录此刻\n时间轴\n本月记录\n5\n档案进度\n50%\n拍照记录\n打开相机，先留住画面\n视频记录\n记录动作和现场声音\n写一句话\n快速写下今天的细节\n里程碑\n第一次和重要节点\n今日值得记录\n换一条\n\n小满最近最喜欢的一件玩具是什么？它有什么特别的故事吗？\n\n去记录\n最近更新\n查看全部\n30\n5月\nNative upload publish 114498\n这是原生 APK 文件注入和"
+        },
+        {
+          "label": "发布",
+          "index": 1,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n小\n小满\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、Web"
+        },
+        {
+          "label": "切换孩子：小满",
+          "index": 2,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、We"
+        },
+        {
+          "label": "切换或查看孩子资料",
+          "index": 3,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、We"
+        },
+        {
+          "label": "拍照记录",
+          "index": 4,
+          "action": "system-picker",
+          "ok": true,
+          "hrefAfter": "",
+          "responseText": ""
+        },
+        {
+          "label": "拍摄视频",
+          "index": 5,
+          "action": "system-picker",
+          "ok": true,
+          "hrefAfter": "",
+          "responseText": ""
+        },
+        {
+          "label": "从相册添加",
+          "index": 6,
+          "action": "system-picker",
+          "ok": true,
+          "hrefAfter": "",
+          "responseText": ""
+        },
+        {
+          "label": "录制语音",
+          "index": 7,
+          "action": "system-picker",
+          "ok": true,
+          "hrefAfter": "",
+          "responseText": ""
+        },
+        {
+          "label": "上传语音",
+          "index": 8,
+          "action": "system-picker",
+          "ok": true,
+          "hrefAfter": "",
+          "responseText": ""
+        },
+        {
+          "label": "AI 智能建议",
+          "index": 9,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、We"
+        },
+        {
+          "label": "可见范围 家庭成员可见",
+          "index": 10,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、We"
+        },
+        {
+          "label": "选择标签",
+          "index": 11,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、We"
+        },
+        {
+          "label": "手机定位",
+          "index": 12,
+          "action": "system-picker",
+          "ok": true,
+          "hrefAfter": "",
+          "responseText": ""
+        },
+        {
+          "label": "切换里程碑记录",
+          "index": 13,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、We"
+        },
+        {
+          "label": "存草稿",
+          "index": 14,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、We"
+        },
+        {
+          "label": "完成发布",
+          "index": 15,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、We"
+        }
+      ],
+      "screenshot": "artifacts/app-live-audit/native-apk-button-audit-20260530-spa/record-create-before.png"
+    },
+    {
+      "name": "record-create-text",
+      "path": "/record/create?type=text&focus=content",
+      "href": "https://localhost/record/create?type=text&focus=content",
+      "buttons": [
+        {
+          "label": "取消",
+          "index": 0,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/home",
+          "responseText": "小满\n1岁4月29天\nTODAY MEMORY\n把今天的小变化，收进年轮。\n\n先留下一个画面、一句话或一段声音，系统会帮你整理成家庭时间轴。\n\n记录此刻\n时间轴\n本月记录\n5\n档案进度\n50%\n拍照记录\n打开相机，先留住画面\n视频记录\n记录动作和现场声音\n写一句话\n快速写下今天的细节\n里程碑\n第一次和重要节点\n今日值得记录\n换一条\n\n小满最近最喜欢的一件玩具是什么？它有什么特别的故事吗？\n\n去记录\n最近更新\n查看全部\n30\n5月\nNative upload publish 114498\n这是原生 APK 文件注入和"
+        },
+        {
+          "label": "发布",
+          "index": 1,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create?type=text&focus=content",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n小\n小满\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n写下这一刻\n标题让以后容易找到，正文保留当时的细节和情绪。\n不知道怎么整理？\n先写几句话，AI 可以帮你生成标题、摘要和标签。\n生成标题/摘要/标签\n补充信息\n可见范围、地点、标签和里程碑用于后续检索与家庭协作。\n可见范围\n家庭成员可见\n今天 03:57\n添加标签\n生日纪念\n户外日常\n语言发育\n大动作发展\n睡前时光\n亲子陪伴\n第一次\n家庭日常\n添加标签\n手机定位\n里程碑\n第"
+        },
+        {
+          "label": "切换孩子：小满",
+          "index": 2,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create?type=text&focus=content",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n写下这一刻\n标题让以后容易找到，正文保留当时的细节和情绪。\n不知道怎么整理？\n先写几句话，AI 可以帮你生成标题、摘要和标签。\n生成标题/摘要/标签\n补充信息\n可见范围、地点、标签和里程碑用于后续检索与家庭协作。\n可见范围\n家庭成员可见\n今天 03:57\n添加标签\n生日纪念\n户外日常\n语言发育\n大动作发展\n睡前时光\n亲子陪伴\n第一次\n家庭日常\n添加标签\n手机定位\n里程碑\n"
+        },
+        {
+          "label": "切换或查看孩子资料",
+          "index": 3,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create?type=text&focus=content",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n写下这一刻\n标题让以后容易找到，正文保留当时的细节和情绪。\n不知道怎么整理？\n先写几句话，AI 可以帮你生成标题、摘要和标签。\n生成标题/摘要/标签\n补充信息\n可见范围、地点、标签和里程碑用于后续检索与家庭协作。\n可见范围\n家庭成员可见\n今天 03:57\n添加标签\n生日纪念\n户外日常\n语言发育\n大动作发展\n睡前时光\n亲子陪伴\n第一次\n家庭日常\n添加标签\n手机定位\n里程碑\n"
+        },
+        {
+          "label": "AI 智能建议",
+          "index": 4,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create?type=text&focus=content",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n写下这一刻\n标题让以后容易找到，正文保留当时的细节和情绪。\n不知道怎么整理？\n先写几句话，AI 可以帮你生成标题、摘要和标签。\n生成标题/摘要/标签\n补充信息\n可见范围、地点、标签和里程碑用于后续检索与家庭协作。\n可见范围\n家庭成员可见\n今天 03:57\n添加标签\n生日纪念\n户外日常\n语言发育\n大动作发展\n睡前时光\n亲子陪伴\n第一次\n家庭日常\n添加标签\n手机定位\n里程碑\n"
+        },
+        {
+          "label": "可见范围 家庭成员可见",
+          "index": 5,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create?type=text&focus=content",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n写下这一刻\n标题让以后容易找到，正文保留当时的细节和情绪。\n不知道怎么整理？\n先写几句话，AI 可以帮你生成标题、摘要和标签。\n生成标题/摘要/标签\n补充信息\n可见范围、地点、标签和里程碑用于后续检索与家庭协作。\n可见范围\n家庭成员可见\n家庭成员可见\n与后台权限保持一致，家庭成员可查看这条记录。\n\n当前记录默认仅对家庭成员可见，和家庭成员角色权限保持一致。\n\n今天 03:"
+        },
+        {
+          "label": "家庭成员可见 与后台权限保持一致，家庭成员可查看这条记录。",
+          "index": 6,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create?type=text&focus=content",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n写下这一刻\n标题让以后容易找到，正文保留当时的细节和情绪。\n不知道怎么整理？\n先写几句话，AI 可以帮你生成标题、摘要和标签。\n生成标题/摘要/标签\n补充信息\n可见范围、地点、标签和里程碑用于后续检索与家庭协作。\n可见范围\n家庭成员可见\n家庭成员可见\n与后台权限保持一致，家庭成员可查看这条记录。\n\n当前记录默认仅对家庭成员可见，和家庭成员角色权限保持一致。\n\n今天 03:"
+        },
+        {
+          "label": "选择标签",
+          "index": 7,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create?type=text&focus=content",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n写下这一刻\n标题让以后容易找到，正文保留当时的细节和情绪。\n不知道怎么整理？\n先写几句话，AI 可以帮你生成标题、摘要和标签。\n生成标题/摘要/标签\n补充信息\n可见范围、地点、标签和里程碑用于后续检索与家庭协作。\n可见范围\n家庭成员可见\n家庭成员可见\n与后台权限保持一致，家庭成员可查看这条记录。\n\n当前记录默认仅对家庭成员可见，和家庭成员角色权限保持一致。\n\n今天 03:"
+        },
+        {
+          "label": "添加标签",
+          "index": 8,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create?type=text&focus=content",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n写下这一刻\n标题让以后容易找到，正文保留当时的细节和情绪。\n不知道怎么整理？\n先写几句话，AI 可以帮你生成标题、摘要和标签。\n生成标题/摘要/标签\n补充信息\n可见范围、地点、标签和里程碑用于后续检索与家庭协作。\n可见范围\n家庭成员可见\n家庭成员可见\n与后台权限保持一致，家庭成员可查看这条记录。\n\n当前记录默认仅对家庭成员可见，和家庭成员角色权限保持一致。\n\n今天 03:"
+        },
+        {
+          "label": "生日纪念",
+          "index": 9,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create?type=text&focus=content",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n写下这一刻\n标题让以后容易找到，正文保留当时的细节和情绪。\n不知道怎么整理？\n先写几句话，AI 可以帮你生成标题、摘要和标签。\n生成标题/摘要/标签\n补充信息\n可见范围、地点、标签和里程碑用于后续检索与家庭协作。\n可见范围\n家庭成员可见\n家庭成员可见\n与后台权限保持一致，家庭成员可查看这条记录。\n\n当前记录默认仅对家庭成员可见，和家庭成员角色权限保持一致。\n\n今天 03:"
+        },
+        {
+          "label": "户外日常",
+          "index": 10,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create?type=text&focus=content",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n写下这一刻\n标题让以后容易找到，正文保留当时的细节和情绪。\n不知道怎么整理？\n先写几句话，AI 可以帮你生成标题、摘要和标签。\n生成标题/摘要/标签\n补充信息\n可见范围、地点、标签和里程碑用于后续检索与家庭协作。\n可见范围\n家庭成员可见\n家庭成员可见\n与后台权限保持一致，家庭成员可查看这条记录。\n\n当前记录默认仅对家庭成员可见，和家庭成员角色权限保持一致。\n\n今天 03:"
+        },
+        {
+          "label": "语言发育",
+          "index": 11,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create?type=text&focus=content",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n写下这一刻\n标题让以后容易找到，正文保留当时的细节和情绪。\n不知道怎么整理？\n先写几句话，AI 可以帮你生成标题、摘要和标签。\n生成标题/摘要/标签\n补充信息\n可见范围、地点、标签和里程碑用于后续检索与家庭协作。\n可见范围\n家庭成员可见\n家庭成员可见\n与后台权限保持一致，家庭成员可查看这条记录。\n\n当前记录默认仅对家庭成员可见，和家庭成员角色权限保持一致。\n\n今天 03:"
+        },
+        {
+          "label": "大动作发展",
+          "index": 12,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create?type=text&focus=content",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n写下这一刻\n标题让以后容易找到，正文保留当时的细节和情绪。\n不知道怎么整理？\n先写几句话，AI 可以帮你生成标题、摘要和标签。\n生成标题/摘要/标签\n补充信息\n可见范围、地点、标签和里程碑用于后续检索与家庭协作。\n可见范围\n家庭成员可见\n家庭成员可见\n与后台权限保持一致，家庭成员可查看这条记录。\n\n当前记录默认仅对家庭成员可见，和家庭成员角色权限保持一致。\n\n今天 03:"
+        },
+        {
+          "label": "睡前时光",
+          "index": 13,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create?type=text&focus=content",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n写下这一刻\n标题让以后容易找到，正文保留当时的细节和情绪。\n不知道怎么整理？\n先写几句话，AI 可以帮你生成标题、摘要和标签。\n生成标题/摘要/标签\n补充信息\n可见范围、地点、标签和里程碑用于后续检索与家庭协作。\n可见范围\n家庭成员可见\n家庭成员可见\n与后台权限保持一致，家庭成员可查看这条记录。\n\n当前记录默认仅对家庭成员可见，和家庭成员角色权限保持一致。\n\n今天 03:"
+        },
+        {
+          "label": "亲子陪伴",
+          "index": 14,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create?type=text&focus=content",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n写下这一刻\n标题让以后容易找到，正文保留当时的细节和情绪。\n不知道怎么整理？\n先写几句话，AI 可以帮你生成标题、摘要和标签。\n生成标题/摘要/标签\n补充信息\n可见范围、地点、标签和里程碑用于后续检索与家庭协作。\n可见范围\n家庭成员可见\n家庭成员可见\n与后台权限保持一致，家庭成员可查看这条记录。\n\n当前记录默认仅对家庭成员可见，和家庭成员角色权限保持一致。\n\n今天 03:"
+        },
+        {
+          "label": "第一次",
+          "index": 15,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create?type=text&focus=content",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n写下这一刻\n标题让以后容易找到，正文保留当时的细节和情绪。\n不知道怎么整理？\n先写几句话，AI 可以帮你生成标题、摘要和标签。\n生成标题/摘要/标签\n补充信息\n可见范围、地点、标签和里程碑用于后续检索与家庭协作。\n可见范围\n家庭成员可见\n家庭成员可见\n与后台权限保持一致，家庭成员可查看这条记录。\n\n当前记录默认仅对家庭成员可见，和家庭成员角色权限保持一致。\n\n今天 03:"
+        },
+        {
+          "label": "家庭日常",
+          "index": 16,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create?type=text&focus=content",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n写下这一刻\n标题让以后容易找到，正文保留当时的细节和情绪。\n不知道怎么整理？\n先写几句话，AI 可以帮你生成标题、摘要和标签。\n生成标题/摘要/标签\n补充信息\n可见范围、地点、标签和里程碑用于后续检索与家庭协作。\n可见范围\n家庭成员可见\n家庭成员可见\n与后台权限保持一致，家庭成员可查看这条记录。\n\n当前记录默认仅对家庭成员可见，和家庭成员角色权限保持一致。\n\n今天 03:"
+        },
+        {
+          "label": "手机定位",
+          "index": 17,
+          "action": "system-picker",
+          "ok": true,
+          "hrefAfter": "",
+          "responseText": ""
+        },
+        {
+          "label": "切换里程碑记录",
+          "index": 18,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create?type=text&focus=content",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、We"
+        },
+        {
+          "label": "存草稿",
+          "index": 19,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create?type=text&focus=content",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、We"
+        },
+        {
+          "label": "完成发布",
+          "index": 20,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create?type=text&focus=content",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、We"
+        }
+      ],
+      "screenshot": "artifacts/app-live-audit/native-apk-button-audit-20260530-spa/record-create-text-before.png"
+    },
+    {
+      "name": "record-detail",
+      "path": "/record/r_demo_001",
+      "href": "https://localhost/record/r_demo_001",
+      "buttons": [
+        {
+          "label": "返回",
+          "index": 0,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_demo_001",
+          "responseText": "记录详情\n里程碑档案\n已发布\n第一次自己吃饭\n\n小满第一次尝试用勺子自己吃饭，虽然洒了一点，但看起来特别自豪。\n\nAI 智能提取\n\n小满第一次尝试用勺子自己吃饭，虽然洒了一点，但看起来特别自豪。\n\nAI 状态：已完成\n\n标题\n摘要\n标签\n\n媒体数量：0\n\n2026/5/16 23:02:00\n家庭可见\n家里\n吃饭\n用勺子\n第一次\n自主进食\n自己吃饭\n编辑记录\n删除记录"
+        },
+        {
+          "label": "标题",
+          "index": 1,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_demo_001",
+          "responseText": "记录详情\n里程碑档案\n已发布\n第一次自己吃饭\n\n小满第一次尝试用勺子自己吃饭，虽然洒了一点，但看起来特别自豪。\n\nAI 智能提取\n\n小满第一次尝试用勺子自己吃饭，虽然洒了一点，但看起来特别自豪。\n\nAI 状态：已完成\n\n标题\n摘要\n标签\n\n媒体数量：0\n\n2026/5/16 23:02:00\n家庭可见\n家里\n吃饭\n用勺子\n第一次\n自主进食\n自己吃饭\n编辑记录\n删除记录"
+        },
+        {
+          "label": "摘要",
+          "index": 2,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_demo_001",
+          "responseText": "记录详情\n里程碑档案\n已发布\n第一次自己吃饭\n\n小满第一次尝试用勺子自己吃饭，虽然洒了一点，但看起来特别自豪。\n\nAI 智能提取\n\n小满第一次尝试用勺子自己吃饭，虽然洒了一点，但看起来特别自豪。\n\nAI 状态：已完成\n\n请求失败，请稍后重试\n\n标题\n摘要\n标签\n\n媒体数量：0\n\n2026/5/16 23:02:00\n家庭可见\n家里\n吃饭\n用勺子\n第一次\n自主进食\n自己吃饭\n编辑记录\n删除记录"
+        },
+        {
+          "label": "标签",
+          "index": 3,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_demo_001",
+          "responseText": "记录详情\n里程碑档案\n已发布\n第一次自己吃饭\n\n小满第一次尝试用勺子自己吃饭，虽然洒了一点，但看起来特别自豪。\n\nAI 智能提取\n\n小满第一次尝试用勺子自己吃饭，虽然洒了一点，但看起来特别自豪。\n\nAI 状态：已完成\n\n请求失败，请稍后重试\n\n标题\n摘要\n标签\n\n媒体数量：0\n\n2026/5/16 23:02:00\n家庭可见\n家里\n吃饭\n用勺子\n第一次\n自主进食\n自己吃饭\n编辑记录\n删除记录"
+        },
+        {
+          "label": "编辑记录",
+          "index": 4,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_demo_001/edit",
+          "responseText": "编辑记录\n\n正在加载记录详情。\n\n加载中…"
+        },
+        {
+          "label": "删除记录",
+          "index": 5,
+          "action": "destructive",
+          "ok": true,
+          "hrefAfter": "",
+          "responseText": ""
+        }
+      ],
+      "screenshot": "artifacts/app-live-audit/native-apk-button-audit-20260530-spa/record-detail-before.png"
+    },
+    {
+      "name": "record-edit",
+      "path": "/record/r_demo_001/edit",
+      "href": "https://localhost/record/r_demo_001/edit",
+      "buttons": [
+        {
+          "label": "返回",
+          "index": 0,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_demo_001/edit",
+          "responseText": "编辑记录\n保存\n发布对象\n小\n小满\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n3/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、WebP、H"
+        },
+        {
+          "label": "保存",
+          "index": 1,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_demo_001",
+          "responseText": "记录详情\n里程碑档案\n已发布\n第一次自己吃饭\n\n小满第一次尝试用勺子自己吃饭，虽然洒了一点，但看起来特别自豪。\n\nAI 智能提取\n\n小满第一次尝试用勺子自己吃饭，虽然洒了一点，但看起来特别自豪。\n\nAI 状态：已完成\n\n标题\n摘要\n标签\n\n媒体数量：0\n\n2026/5/16 23:02:00\n家庭可见\n家里\n吃饭\n用勺子\n第一次\n自主进食\n自己吃饭\n编辑记录\n删除记录"
+        },
+        {
+          "label": "切换孩子：小满",
+          "index": 2,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_demo_001/edit",
+          "responseText": "编辑记录\n保存\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n3/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、WebP、"
+        },
+        {
+          "label": "切换或查看孩子资料",
+          "index": 3,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_demo_001/edit",
+          "responseText": "编辑记录\n保存\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n3/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、WebP、"
+        },
+        {
+          "label": "拍照记录",
+          "index": 4,
+          "action": "system-picker",
+          "ok": true,
+          "hrefAfter": "",
+          "responseText": ""
+        },
+        {
+          "label": "拍摄视频",
+          "index": 5,
+          "action": "system-picker",
+          "ok": true,
+          "hrefAfter": "",
+          "responseText": ""
+        },
+        {
+          "label": "从相册添加",
+          "index": 6,
+          "action": "system-picker",
+          "ok": true,
+          "hrefAfter": "",
+          "responseText": ""
+        },
+        {
+          "label": "录制语音",
+          "index": 7,
+          "action": "system-picker",
+          "ok": true,
+          "hrefAfter": "",
+          "responseText": ""
+        },
+        {
+          "label": "上传语音",
+          "index": 8,
+          "action": "system-picker",
+          "ok": true,
+          "hrefAfter": "",
+          "responseText": ""
+        },
+        {
+          "label": "AI 智能建议",
+          "index": 9,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_demo_001/edit",
+          "responseText": "编辑记录\n保存\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n3/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、WebP、"
+        },
+        {
+          "label": "可见范围 家庭成员可见",
+          "index": 10,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_demo_001/edit",
+          "responseText": "编辑记录\n保存\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n3/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、WebP、"
+        },
+        {
+          "label": "选择标签",
+          "index": 11,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_demo_001/edit",
+          "responseText": "编辑记录\n保存\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n3/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、WebP、"
+        },
+        {
+          "label": "手机定位",
+          "index": 12,
+          "action": "system-picker",
+          "ok": true,
+          "hrefAfter": "",
+          "responseText": ""
+        },
+        {
+          "label": "家里",
+          "index": 13,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_demo_001/edit",
+          "responseText": "编辑记录\n保存\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n3/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、WebP、"
+        },
+        {
+          "label": "#吃饭",
+          "index": 14,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_demo_001/edit",
+          "responseText": "编辑记录\n保存\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n3/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、WebP、"
+        },
+        {
+          "label": "#用勺子",
+          "index": 15,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_demo_001/edit",
+          "responseText": "编辑记录\n保存\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n3/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、WebP、"
+        },
+        {
+          "label": "#第一次",
+          "index": 16,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_demo_001/edit",
+          "responseText": "编辑记录\n保存\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n3/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、WebP、"
+        },
+        {
+          "label": "#自主进食",
+          "index": 17,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_demo_001/edit",
+          "responseText": "编辑记录\n保存\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n3/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、WebP、"
+        },
+        {
+          "label": "#自己吃饭",
+          "index": 18,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_demo_001/edit",
+          "responseText": "编辑记录\n保存\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n3/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、WebP、"
+        },
+        {
+          "label": "切换里程碑记录",
+          "index": 19,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_demo_001/edit",
+          "responseText": "编辑记录\n保存\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n3/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、WebP、"
+        },
+        {
+          "label": "更新记录",
+          "index": 20,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_demo_001/edit",
+          "responseText": "编辑记录\n保存\n发布对象\n请选择孩子\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n3/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、WebP、"
+        }
+      ],
+      "screenshot": "artifacts/app-live-audit/native-apk-button-audit-20260530-spa/record-edit-before.png"
+    },
+    {
+      "name": "family",
+      "path": "/family",
+      "href": "https://localhost/family",
+      "buttons": [
+        {
+          "label": "邀请成员",
+          "index": 0,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/family/invite",
+          "responseText": "邀请家庭成员\n\n创建邀请码后，被邀请人可用它注册账号并加入家庭。\n\n绑定手机号（可选）\n邀请角色\n只读成员\n可编辑成员\n生成邀请码"
+        },
+        {
+          "label": "小满妈妈 管理员 已加入家庭记录",
+          "index": 1,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/family/members/u_demo_parent_001",
+          "responseText": "家人资料\n小满妈妈\n管理员\n3\n发布记录\n13\n加入天数\nTA的记录\nNative upload publish 724441\n2026/5/30\nNative upload publish 221860\n2026/5/30\nNative upload publish 114498\n2026/5/30\n权限管理\n修改角色权限\n加入时间\n2026/5/17\n移出家庭"
+        },
+        {
+          "label": "小 小满外婆 只读成员 已加入家庭记录",
+          "index": 2,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/family/members/u_demo_viewer_001",
+          "responseText": "家人资料\n小满外婆\n只读成员\n0\n发布记录\n13\n加入天数\nTA的记录\n\nTA还没有发布过记录。\n\n权限管理\n修改角色权限\n加入时间\n2026/5/17\n移出家庭"
+        },
+        {
+          "label": "家 家人 可编辑成员 已加入家庭记录",
+          "index": 3,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/family/members/u_mpe0hkere2eb",
+          "responseText": "家人资料\nnative_parent_520007\n可编辑成员\n0\n发布记录\n10\n加入天数\nTA的记录\n\nTA还没有发布过记录。\n\n权限管理\n修改角色权限\n加入时间\n2026/5/20\n移出家庭"
+        },
+        {
+          "label": "n native_delete_20260524052526 可编辑成员 已加入家庭记录",
+          "index": 4,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/family/members/u_mpiuxvsm640e",
+          "responseText": "家人资料\nnative_delete_20260524052526\n可编辑成员\n0\n发布记录\n7\n加入天数\nTA的记录\n\nTA还没有发布过记录。\n\n权限管理\n修改角色权限\n加入时间\n2026/5/23\n移出家庭"
+        },
+        {
+          "label": "查看家庭动态：Native upload publish 114498",
+          "index": 5,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_mprte148b0c1",
+          "responseText": "记录详情\n图片\n图文档案\n已发布\nNative upload publish 114498\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\nAI 智能提取\n\n当前还没有 AI 摘要，可以点击下方按钮生成标题、摘要或标签。\n\n标题\n摘要\n标签\n\n媒体数量：1\n\n2026/5/30 09:45:00\n家庭可见\n未填写地点\n媒体\n编辑记录\n删除记录"
+        },
+        {
+          "label": "查看家庭动态：Native upload publish 221860",
+          "index": 6,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/r_mprqh7l1a462",
+          "responseText": "记录详情\n图片\n图文档案\n已发布\nNative upload publish 221860\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\nAI 智能提取\n\n当前还没有 AI 摘要，可以点击下方按钮生成标题、摘要或标签。\n\n标题\n摘要\n标签\n\n媒体数量：1\n\n2026/5/30 09:45:00\n家庭可见\n未填写地点\n媒体\n编辑记录\n删除记录"
+        },
+        {
+          "label": "首页",
+          "index": 7,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/home",
+          "responseText": "小满\n1岁4月29天\nTODAY MEMORY\n把今天的小变化，收进年轮。\n\n先留下一个画面、一句话或一段声音，系统会帮你整理成家庭时间轴。\n\n记录此刻\n时间轴\n本月记录\n5\n档案进度\n50%\n拍照记录\n打开相机，先留住画面\n视频记录\n记录动作和现场声音\n写一句话\n快速写下今天的细节\n里程碑\n第一次和重要节点\n今日值得记录\n换一条\n\n小满最近最喜欢的一件玩具是什么？它有什么特别的故事吗？\n\n去记录\n最近更新\n查看全部\n30\n5月\nNative upload publish 114498\n这是原生 APK 文件注入和"
+        },
+        {
+          "label": "时间轴",
+          "index": 8,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/timeline",
+          "responseText": "时间轴\n2026年 5月\n· 5条记录\n图文档案\nNative upload publish 114498\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\n5/30 09:45\n小满妈妈记录\n编辑\n查看\n图文档案\nNative upload publish 221860\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\n5/30 09:45\n小满妈妈记录\n编辑\n查看\n图文档案\nNative upload publish 724441\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\n5/3"
+        },
+        {
+          "label": "记录",
+          "index": 9,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n小\n小满\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、Web"
+        },
+        {
+          "label": "家庭",
+          "index": 10,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/family",
+          "responseText": "家庭\n小满的家庭\n\n已有 4 位家人加入记录\n\n家庭成员\n小满妈妈\n管理员\n已加入家庭记录\n小\n小满外婆\n只读成员\n已加入家庭记录\n家\n家人\n可编辑成员\n已加入家庭记录\nn\nnative_delete_20260524052526\n可编辑成员\n已加入家庭记录\n最近家庭动态\n小满妈妈\n上传了照片\n5/30 09:45\n小满妈妈\n上传了照片\n5/30 09:45\n家人寄语\n\n“宝贝，愿你慢慢长大，全家人都会陪你，把这一段时光一件一件收好。”\n\n首页\n时间轴\n记录\n家庭\n我的"
+        },
+        {
+          "label": "我的",
+          "index": 11,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile",
+          "responseText": "小满妈妈\n基础会员\n当前档案：小满\n编辑主页\n草稿箱\n暂无草稿\n我的孩子\n小满\n1岁4月29天\n+ 添加宝宝\n管理中心\n月报与纪念册\n导出与备份\n会员中心\n隐私设置\n家庭管理\n帮助与反馈\n设置区\n账号与安全\n关于我们\n退出登录\n首页\n时间轴\n记录\n家庭\n我的"
+        }
+      ],
+      "screenshot": "artifacts/app-live-audit/native-apk-button-audit-20260530-spa/family-before.png"
+    },
+    {
+      "name": "family-child",
+      "path": "/family/child",
+      "href": "https://localhost/family/child",
+      "buttons": [
+        {
+          "label": "返回",
+          "index": 0,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/family",
+          "responseText": "家庭\n小满的家庭\n\n已有 4 位家人加入记录\n\n家庭成员\n小满妈妈\n管理员\n已加入家庭记录\n小\n小满外婆\n只读成员\n已加入家庭记录\n家\n家人\n可编辑成员\n已加入家庭记录\nn\nnative_delete_20260524052526\n可编辑成员\n已加入家庭记录\n最近家庭动态\n小满妈妈\n上传了照片\n5/30 09:45\n小满妈妈\n上传了照片\n5/30 09:45\n家人寄语\n\n“宝贝，愿你慢慢长大，全家人都会陪你，把这一段时光一件一件收好。”\n\n首页\n时间轴\n记录\n家庭\n我的"
+        },
+        {
+          "label": "女",
+          "index": 1,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/family/child",
+          "responseText": "孩子资料\n\n查看并编辑当前孩子的基础资料。\n\n上传头像\n\n档案状态：正常\n\n当前性别：未知\n\n孩子姓名\n生日\n2025/01/01\n性别\n女\n男\n未知\n出生地\n备注\n保存孩子资料\n返回家庭页"
+        },
+        {
+          "label": "男",
+          "index": 2,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/family/child",
+          "responseText": "孩子资料\n\n查看并编辑当前孩子的基础资料。\n\n上传头像\n\n档案状态：正常\n\n当前性别：未知\n\n孩子姓名\n生日\n2025/01/01\n性别\n女\n男\n未知\n出生地\n备注\n保存孩子资料\n返回家庭页"
+        },
+        {
+          "label": "未知",
+          "index": 3,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/family/child",
+          "responseText": "孩子资料\n\n查看并编辑当前孩子的基础资料。\n\n上传头像\n\n档案状态：正常\n\n当前性别：未知\n\n孩子姓名\n生日\n2025/01/01\n性别\n女\n男\n未知\n出生地\n备注\n保存孩子资料\n返回家庭页"
+        },
+        {
+          "label": "保存孩子资料",
+          "index": 4,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/family/child",
+          "responseText": "孩子资料\n\n查看并编辑当前孩子的基础资料。\n\n上传头像\n\n档案状态：正常\n\n当前性别：未知\n\n孩子姓名\n生日\n2025/01/01\n性别\n女\n男\n未知\n出生地\n备注\n\n保存成功\n\n保存孩子资料\n返回家庭页"
+        },
+        {
+          "label": "返回家庭页",
+          "index": 5,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/family",
+          "responseText": "家庭\n小满的家庭\n\n已有 4 位家人加入记录\n\n家庭成员\n小满妈妈\n管理员\n已加入家庭记录\n小\n小满外婆\n只读成员\n已加入家庭记录\n家\n家人\n可编辑成员\n已加入家庭记录\nn\nnative_delete_20260524052526\n可编辑成员\n已加入家庭记录\n最近家庭动态\n小满妈妈\n上传了照片\n5/30 09:45\n小满妈妈\n上传了照片\n5/30 09:45\n家人寄语\n\n“宝贝，愿你慢慢长大，全家人都会陪你，把这一段时光一件一件收好。”\n\n首页\n时间轴\n记录\n家庭\n我的"
+        }
+      ],
+      "screenshot": "artifacts/app-live-audit/native-apk-button-audit-20260530-spa/family-child-before.png"
+    },
+    {
+      "name": "family-members",
+      "path": "/family/members",
+      "href": "https://localhost/family/members",
+      "buttons": [
+        {
+          "label": "返回",
+          "index": 0,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/family",
+          "responseText": "家庭\n小满的家庭\n\n已有 4 位家人加入记录\n\n家庭成员\n小满妈妈\n管理员\n已加入家庭记录\n小\n小满外婆\n只读成员\n已加入家庭记录\n家\n家人\n可编辑成员\n已加入家庭记录\nn\nnative_delete_20260524052526\n可编辑成员\n已加入家庭记录\n最近家庭动态\n小满妈妈\n上传了照片\n5/30 09:45\n小满妈妈\n上传了照片\n5/30 09:45\n家人寄语\n\n“宝贝，愿你慢慢长大，全家人都会陪你，把这一段时光一件一件收好。”\n\n首页\n时间轴\n记录\n家庭\n我的"
+        },
+        {
+          "label": "设为只读",
+          "index": 1,
+          "action": "disabled",
+          "ok": true,
+          "hrefAfter": "",
+          "responseText": ""
+        },
+        {
+          "label": "设为可编辑",
+          "index": 2,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/family/members",
+          "responseText": "家庭成员管理\n\n查看成员、邀请来源和角色信息。\n\n成员角色已更新\n\n共 4 位成员，优先显示最近需要管理的账号。\n\n小满妈妈\n管理员\n\n家庭档案管理员\n\n手机号：138****0000\n\n状态：正常\n\n来源：系统创建 / 当前管理员\n\n小满外婆\n可编辑成员\n\n共同记录成员\n\n手机号：139****0000\n\n状态：正常\n\n来源：家人邀请加入\n\n设为只读\n设为可编辑\nnative_parent_520007\n可编辑成员\n\n共同记录成员\n\n手机号：未提供\n\n状态：正常\n\n来源：家人邀请加入\n\n设为只读\n设为可编辑\nna"
+        },
+        {
+          "label": "设为只读",
+          "index": 3,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/family/members",
+          "responseText": "家庭成员管理\n\n查看成员、邀请来源和角色信息。\n\n成员角色已更新\n\n共 4 位成员，优先显示最近需要管理的账号。\n\n小满妈妈\n管理员\n\n家庭档案管理员\n\n手机号：138****0000\n\n状态：正常\n\n来源：系统创建 / 当前管理员\n\n小满外婆\n可编辑成员\n\n共同记录成员\n\n手机号：139****0000\n\n状态：正常\n\n来源：家人邀请加入\n\n设为只读\n设为可编辑\nnative_parent_520007\n只读成员\n\n共同记录成员\n\n手机号：未提供\n\n状态：正常\n\n来源：家人邀请加入\n\n设为只读\n设为可编辑\nnat"
+        },
+        {
+          "label": "设为可编辑",
+          "index": 4,
+          "action": "disabled",
+          "ok": true,
+          "hrefAfter": "",
+          "responseText": ""
+        },
+        {
+          "label": "设为只读",
+          "index": 5,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/family/members",
+          "responseText": "家庭成员管理\n\n查看成员、邀请来源和角色信息。\n\n成员角色已更新\n\n共 4 位成员，优先显示最近需要管理的账号。\n\n小满妈妈\n管理员\n\n家庭档案管理员\n\n手机号：138****0000\n\n状态：正常\n\n来源：系统创建 / 当前管理员\n\n小满外婆\n可编辑成员\n\n共同记录成员\n\n手机号：139****0000\n\n状态：正常\n\n来源：家人邀请加入\n\n设为只读\n设为可编辑\nnative_parent_520007\n只读成员\n\n共同记录成员\n\n手机号：未提供\n\n状态：正常\n\n来源：家人邀请加入\n\n设为只读\n设为可编辑\nnat"
+        },
+        {
+          "label": "设为可编辑",
+          "index": 6,
+          "action": "disabled",
+          "ok": true,
+          "hrefAfter": "",
+          "responseText": ""
+        }
+      ],
+      "screenshot": "artifacts/app-live-audit/native-apk-button-audit-20260530-spa/family-members-before.png"
+    },
+    {
+      "name": "family-invite",
+      "path": "/family/invite",
+      "href": "https://localhost/family/invite",
+      "buttons": [
+        {
+          "label": "返回",
+          "index": 0,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/family",
+          "responseText": "家庭\n小满的家庭\n\n已有 4 位家人加入记录\n\n家庭成员\n小满妈妈\n管理员\n已加入家庭记录\n小\n小满外婆\n可编辑成员\n已加入家庭记录\n家\n家人\n只读成员\n已加入家庭记录\nn\nnative_delete_20260524052526\n只读成员\n已加入家庭记录\n最近家庭动态\n小满妈妈\n上传了照片\n5/30 09:45\n小满妈妈\n上传了照片\n5/30 09:45\n家人寄语\n\n“宝贝，愿你慢慢长大，全家人都会陪你，把这一段时光一件一件收好。”\n\n首页\n时间轴\n记录\n家庭\n我的"
+        },
+        {
+          "label": "只读成员",
+          "index": 1,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/family/invite",
+          "responseText": "邀请家庭成员\n\n创建邀请码后，被邀请人可用它注册账号并加入家庭。\n\n绑定手机号（可选）\n邀请角色\n只读成员\n可编辑成员\n生成邀请码"
+        },
+        {
+          "label": "可编辑成员",
+          "index": 2,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/family/invite",
+          "responseText": "邀请家庭成员\n\n创建邀请码后，被邀请人可用它注册账号并加入家庭。\n\n绑定手机号（可选）\n邀请角色\n只读成员\n可编辑成员\n生成邀请码"
+        },
+        {
+          "label": "生成邀请码",
+          "index": 3,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/family/invite",
+          "responseText": "邀请家庭成员\n\n创建邀请码后，被邀请人可用它注册账号并加入家庭。\n\n绑定手机号（可选）\n邀请角色\n只读成员\n可编辑成员\n\n邀请码已生成，可直接复制后发送给家人。\n\n生成邀请码\n邀请码已生成\n\n邀请编号：invite_mprtsgju597b\n\n邀请码\n54896346d4d0564491645f9b6107cf72\n\n邀请角色：可编辑成员\n\n失效时间：2026/6/2 04:03:11\n\n把邀请码发送给家人，对方在注册页填写后会自动加入家庭；登录时只需要账号和密码。\n\n复制邀请码"
+        }
+      ],
+      "screenshot": "artifacts/app-live-audit/native-apk-button-audit-20260530-spa/family-invite-before.png"
+    },
+    {
+      "name": "profile",
+      "path": "/profile",
+      "href": "https://localhost/profile",
+      "buttons": [
+        {
+          "label": "编辑主页",
+          "index": 0,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/account",
+          "responseText": "个人资料\n\n查看当前账号信息与会员状态，并支持修改昵称。\n\n上传头像\n昵称\n\n会员类型：基础会员\n\n脱敏手机号：当前未提供\n\n保存昵称"
+        },
+        {
+          "label": "草稿箱 暂无草稿",
+          "index": 1,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n小\n小满\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、Web"
+        },
+        {
+          "label": "小满 1岁4月29天",
+          "index": 2,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/family/child",
+          "responseText": "孩子资料\n\n查看并编辑当前孩子的基础资料。\n\n上传头像\n\n档案状态：正常\n\n当前性别：未知\n\n孩子姓名\n生日\n2025/01/01\n性别\n女\n男\n未知\n出生地\n备注\n保存孩子资料\n返回家庭页"
+        },
+        {
+          "label": "+ 添加宝宝",
+          "index": 3,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/onboarding/child?mode=add",
+          "responseText": "添加宝宝档案\n+\n设置头像\n宝宝小名\n性别\n男孩 👦\n女孩 👧\n出生日期\n年/月/日\n完成创建"
+        },
+        {
+          "label": "月报与纪念册",
+          "index": 4,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/reports",
+          "responseText": "月报与纪念册\n\n为 小满 整理的\n\n专属时光记忆和可导出的家庭资产\n\n最新月报\n2026年4月\n成长月报\n0\n记录数量\n0\n影像记录\n本月故事摘要\n\n这个月还没有可生成月报的真实记录。发布第一条记录后，这里会按实际内容整理故事摘要、里程碑和影像回顾。\n\n记录本月第一条\nAI 月报摘要\n\n本月还没有真实记录，添加记录后会自动汇总为成长月报。\n\n往期纪念册\n2026年\n4月纪念册\n查看 / 导出\n2026年\n3月纪念册\n查看 / 导出\n2026年\n2月纪念册\n查看 / 导出\n2026年\n1月纪念册\n查看 / 导出"
+        },
+        {
+          "label": "导出与备份",
+          "index": 5,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/export",
+          "responseText": "导出与备份\n一键备份数字资产\n\n将您在应用中记录的所有照片、视频和文字日志打包下载，永久保存在您的私人设备中。\n\n选择导出内容\n全部数据（推荐）\n包含所有文字记录、高清图片和视频文件\n仅图片和视频\n只导出媒体文件，适合节省空间\n仅文字记录\n导出为 TXT/PDF 格式的纯文字日记\n长期交付留痕\n\n需要云端完整打包或为孩子成年后的档案移交做准备时，先提交申请并写入后台审计，运营可按身份核验和档案完整性流程继续处理。\n\n当前账号为家庭管理员，可发起正式导出与交付申请。\n\n提交打包申请\n成年移交准备\n最近申请\n成年移交 "
+        },
+        {
+          "label": "会员中心",
+          "index": 6,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/membership",
+          "responseText": "会员中心\n小满妈妈\n基础会员\nVIP PRO\n\n到期时间：长期有效\n\n刷新会员信息\n您的专属特权\n高清画质下载\n大容量媒体备份\n精美时光月报\n每月自动生成\n云端安全加密\n保存敏感资产\n家庭人数无限\n邀请亲友一起记录\n成长纪念册\n\n作为高级会员，您每年可申领一本由专业排版生成的成长纪念册，将数字记忆变成可保存的家庭资产。\n\n免费申领本年度纪念册"
+        },
+        {
+          "label": "隐私设置",
+          "index": 7,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/settings",
+          "responseText": "隐私设置\n默认谁可以看到您的记录\n仅家庭成员\n允许通过手机号搜索到我\n向新成员展示历史时间轴\n\n我们尊重每个家庭对孩子影像和成长记录的保护习惯。新的访问规则会优先同步到账号，本机也会保留一份偏好用于离线和旧版本接口降级。"
+        },
+        {
+          "label": "家庭管理",
+          "index": 8,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/family",
+          "responseText": "家庭\n小满的家庭\n\n已有 4 位家人加入记录\n\n家庭成员\n小满妈妈\n管理员\n已加入家庭记录\n小\n小满外婆\n可编辑成员\n已加入家庭记录\n家\n家人\n只读成员\n已加入家庭记录\nn\nnative_delete_20260524052526\n只读成员\n已加入家庭记录\n最近家庭动态\n小满妈妈\n上传了照片\n5/30 09:45\n小满妈妈\n上传了照片\n5/30 09:45\n家人寄语\n\n“宝贝，愿你慢慢长大，全家人都会陪你，把这一段时光一件一件收好。”\n\n首页\n时间轴\n记录\n家庭\n我的"
+        },
+        {
+          "label": "帮助与反馈",
+          "index": 9,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/help",
+          "responseText": "帮助与反馈\n\n查看常见问题，并提交当前设备上的反馈记录。\n\n常见问题\n\n账号密码用于登录；注册账号时需要填写家庭邀请码；照片上传支持 JPG、PNG、WebP。\n\n如果记录没有出现在首页，请先检查是否已选择孩子档案，再返回首页刷新。\n\n提交反馈\n问题类型\n使用问题\n页面显示\n数据异常\n功能建议\n使用问题\n反馈内容\n联系方式\n提交反馈"
+        },
+        {
+          "label": "账号与安全",
+          "index": 10,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/security",
+          "responseText": "账号与安全\n手机号码\n当前未提供\n登录密码\n已设置\n第三方账号绑定\n已绑定微信\n注销账号"
+        },
+        {
+          "label": "关于我们",
+          "index": 11,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/about",
+          "responseText": "关于我们\nnianlun\n\n版本 1.0.0（构建 20260514）\n\n功能介绍\n用户服务协议\n隐私政策\n服务说明\n联系我们\n帮助与反馈\n应用反馈\n\n年轮 © 2026\n\n守护每个家庭的成长记录。"
+        },
+        {
+          "label": "退出登录",
+          "index": 12,
+          "action": "destructive",
+          "ok": true,
+          "hrefAfter": "",
+          "responseText": ""
+        },
+        {
+          "label": "首页",
+          "index": 13,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/home",
+          "responseText": "小满\n1岁4月29天\nTODAY MEMORY\n把今天的小变化，收进年轮。\n\n先留下一个画面、一句话或一段声音，系统会帮你整理成家庭时间轴。\n\n记录此刻\n时间轴\n本月记录\n5\n档案进度\n50%\n拍照记录\n打开相机，先留住画面\n视频记录\n记录动作和现场声音\n写一句话\n快速写下今天的细节\n里程碑\n第一次和重要节点\n今日值得记录\n换一条\n\n小满最近最喜欢的一件玩具是什么？它有什么特别的故事吗？\n\n去记录\n最近更新\n查看全部\n30\n5月\nNative upload publish 114498\n这是原生 APK 文件注入和"
+        },
+        {
+          "label": "时间轴",
+          "index": 14,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/timeline",
+          "responseText": "时间轴\n2026年 5月\n· 5条记录\n图文档案\nNative upload publish 114498\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\n5/30 09:45\n小满妈妈记录\n编辑\n查看\n图文档案\nNative upload publish 221860\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\n5/30 09:45\n小满妈妈记录\n编辑\n查看\n图文档案\nNative upload publish 724441\n\n这是原生 APK 文件注入和发布流程的真实验证记录。\n\n5/3"
+        },
+        {
+          "label": "记录",
+          "index": 15,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n小\n小满\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、Web"
+        },
+        {
+          "label": "家庭",
+          "index": 16,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/family",
+          "responseText": "家庭\n小满的家庭\n\n已有 4 位家人加入记录\n\n家庭成员\n小满妈妈\n管理员\n已加入家庭记录\n小\n小满外婆\n可编辑成员\n已加入家庭记录\n家\n家人\n只读成员\n已加入家庭记录\nn\nnative_delete_20260524052526\n只读成员\n已加入家庭记录\n最近家庭动态\n小满妈妈\n上传了照片\n5/30 09:45\n小满妈妈\n上传了照片\n5/30 09:45\n家人寄语\n\n“宝贝，愿你慢慢长大，全家人都会陪你，把这一段时光一件一件收好。”\n\n首页\n时间轴\n记录\n家庭\n我的"
+        },
+        {
+          "label": "我的",
+          "index": 17,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile",
+          "responseText": "小满妈妈\n基础会员\n当前档案：小满\n编辑主页\n草稿箱\n暂无草稿\n我的孩子\n小满\n1岁4月29天\n+ 添加宝宝\n管理中心\n月报与纪念册\n导出与备份\n会员中心\n隐私设置\n家庭管理\n帮助与反馈\n设置区\n账号与安全\n关于我们\n退出登录\n首页\n时间轴\n记录\n家庭\n我的"
+        }
+      ],
+      "screenshot": "artifacts/app-live-audit/native-apk-button-audit-20260530-spa/profile-before.png"
+    },
+    {
+      "name": "profile-account",
+      "path": "/profile/account",
+      "href": "https://localhost/profile/account",
+      "buttons": [
+        {
+          "label": "返回",
+          "index": 0,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile",
+          "responseText": "小满妈妈\n基础会员\n当前档案：小满\n编辑主页\n草稿箱\n暂无草稿\n我的孩子\n小满\n1岁4月29天\n+ 添加宝宝\n管理中心\n月报与纪念册\n导出与备份\n会员中心\n隐私设置\n家庭管理\n帮助与反馈\n设置区\n账号与安全\n关于我们\n退出登录\n首页\n时间轴\n记录\n家庭\n我的"
+        },
+        {
+          "label": "保存昵称",
+          "index": 1,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/account",
+          "responseText": "个人资料\n\n查看当前账号信息与会员状态，并支持修改昵称。\n\n上传头像\n昵称\n\n会员类型：基础会员\n\n脱敏手机号：138****0000\n\n昵称保存成功\n\n保存昵称"
+        }
+      ],
+      "screenshot": "artifacts/app-live-audit/native-apk-button-audit-20260530-spa/profile-account-before.png"
+    },
+    {
+      "name": "profile-reports",
+      "path": "/profile/reports",
+      "href": "https://localhost/profile/reports",
+      "buttons": [
+        {
+          "label": "返回",
+          "index": 0,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile",
+          "responseText": "小满妈妈\n基础会员\n当前档案：小满\n编辑主页\n草稿箱\n暂无草稿\n我的孩子\n小满\n1岁4月29天\n+ 添加宝宝\n管理中心\n月报与纪念册\n导出与备份\n会员中心\n隐私设置\n家庭管理\n帮助与反馈\n设置区\n账号与安全\n关于我们\n退出登录\n首页\n时间轴\n记录\n家庭\n我的"
+        },
+        {
+          "label": "记录本月第一条",
+          "index": 1,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/record/create",
+          "responseText": "取消\n记录时光\n发布\n发布对象\n小\n小满\n今天的片段会归进家庭时间轴。\n切换孩子\n发布前只需要补齐这 3 项\n1/3 已完成\n标题\n正文\n时间\n影像与声音\n把今天最有质感的一帧、一句话、一段声音留下来。\n图片 / 视频\n原生相机拍照和系统相册导入分开处理，避免局部预览异常。\n拍照记录\n打开原生相机拍照\n拍摄视频\n打开系统相机录像\n从相册添加\n原生相册多选照片\n语音采集\n录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。\n录制语音\n打开系统录音入口\n上传语音\n选择已有录音或音频\n支持 JPG、PNG、Web"
+        },
+        {
+          "label": "导出月报摘要",
+          "index": 2,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/export",
+          "responseText": "导出与备份\n一键备份数字资产\n\n将您在应用中记录的所有照片、视频和文字日志打包下载，永久保存在您的私人设备中。\n\n选择导出内容\n全部数据（推荐）\n包含所有文字记录、高清图片和视频文件\n仅图片和视频\n只导出媒体文件，适合节省空间\n仅文字记录\n导出为 TXT/PDF 格式的纯文字日记\n长期交付留痕\n\n需要云端完整打包或为孩子成年后的档案移交做准备时，先提交申请并写入后台审计，运营可按身份核验和档案完整性流程继续处理。\n\n当前账号为家庭管理员，可发起正式导出与交付申请。\n\n提交打包申请\n成年移交准备\n最近申请\n成年移交 "
+        },
+        {
+          "label": "2026年 4月纪念册 查看 / 导出",
+          "index": 3,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/export",
+          "responseText": "导出与备份\n一键备份数字资产\n\n将您在应用中记录的所有照片、视频和文字日志打包下载，永久保存在您的私人设备中。\n\n选择导出内容\n全部数据（推荐）\n包含所有文字记录、高清图片和视频文件\n仅图片和视频\n只导出媒体文件，适合节省空间\n仅文字记录\n导出为 TXT/PDF 格式的纯文字日记\n长期交付留痕\n\n需要云端完整打包或为孩子成年后的档案移交做准备时，先提交申请并写入后台审计，运营可按身份核验和档案完整性流程继续处理。\n\n当前账号为家庭管理员，可发起正式导出与交付申请。\n\n提交打包申请\n成年移交准备\n最近申请\n成年移交 "
+        },
+        {
+          "label": "2026年 3月纪念册 查看 / 导出",
+          "index": 4,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/export",
+          "responseText": "导出与备份\n一键备份数字资产\n\n将您在应用中记录的所有照片、视频和文字日志打包下载，永久保存在您的私人设备中。\n\n选择导出内容\n全部数据（推荐）\n包含所有文字记录、高清图片和视频文件\n仅图片和视频\n只导出媒体文件，适合节省空间\n仅文字记录\n导出为 TXT/PDF 格式的纯文字日记\n长期交付留痕\n\n需要云端完整打包或为孩子成年后的档案移交做准备时，先提交申请并写入后台审计，运营可按身份核验和档案完整性流程继续处理。\n\n当前账号为家庭管理员，可发起正式导出与交付申请。\n\n提交打包申请\n成年移交准备\n最近申请\n成年移交 "
+        },
+        {
+          "label": "2026年 2月纪念册 查看 / 导出",
+          "index": 5,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/export",
+          "responseText": "导出与备份\n一键备份数字资产\n\n将您在应用中记录的所有照片、视频和文字日志打包下载，永久保存在您的私人设备中。\n\n选择导出内容\n全部数据（推荐）\n包含所有文字记录、高清图片和视频文件\n仅图片和视频\n只导出媒体文件，适合节省空间\n仅文字记录\n导出为 TXT/PDF 格式的纯文字日记\n长期交付留痕\n\n需要云端完整打包或为孩子成年后的档案移交做准备时，先提交申请并写入后台审计，运营可按身份核验和档案完整性流程继续处理。\n\n当前账号为家庭管理员，可发起正式导出与交付申请。\n\n提交打包申请\n成年移交准备\n最近申请\n成年移交 "
+        },
+        {
+          "label": "2026年 1月纪念册 查看 / 导出",
+          "index": 6,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/export",
+          "responseText": "导出与备份\n一键备份数字资产\n\n将您在应用中记录的所有照片、视频和文字日志打包下载，永久保存在您的私人设备中。\n\n选择导出内容\n全部数据（推荐）\n包含所有文字记录、高清图片和视频文件\n仅图片和视频\n只导出媒体文件，适合节省空间\n仅文字记录\n导出为 TXT/PDF 格式的纯文字日记\n长期交付留痕\n\n需要云端完整打包或为孩子成年后的档案移交做准备时，先提交申请并写入后台审计，运营可按身份核验和档案完整性流程继续处理。\n\n当前账号为家庭管理员，可发起正式导出与交付申请。\n\n提交打包申请\n成年移交准备\n最近申请\n成年移交 "
+        }
+      ],
+      "screenshot": "artifacts/app-live-audit/native-apk-button-audit-20260530-spa/profile-reports-before.png"
+    },
+    {
+      "name": "profile-export",
+      "path": "/profile/export",
+      "href": "https://localhost/profile/export",
+      "buttons": [
+        {
+          "label": "返回",
+          "index": 0,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile",
+          "responseText": "小满妈妈\n基础会员\n当前档案：小满\n编辑主页\n草稿箱\n暂无草稿\n我的孩子\n小满\n1岁4月29天\n+ 添加宝宝\n管理中心\n月报与纪念册\n导出与备份\n会员中心\n隐私设置\n家庭管理\n帮助与反馈\n设置区\n账号与安全\n关于我们\n退出登录\n首页\n时间轴\n记录\n家庭\n我的"
+        },
+        {
+          "label": "全部数据（推荐） 包含所有文字记录、高清图片和视频文件",
+          "index": 1,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/export",
+          "responseText": "导出与备份\n一键备份数字资产\n\n将您在应用中记录的所有照片、视频和文字日志打包下载，永久保存在您的私人设备中。\n\n选择导出内容\n全部数据（推荐）\n包含所有文字记录、高清图片和视频文件\n仅图片和视频\n只导出媒体文件，适合节省空间\n仅文字记录\n导出为 TXT/PDF 格式的纯文字日记\n长期交付留痕\n\n需要云端完整打包或为孩子成年后的档案移交做准备时，先提交申请并写入后台审计，运营可按身份核验和档案完整性流程继续处理。\n\n当前账号为家庭管理员，可发起正式导出与交付申请。\n\n提交打包申请\n成年移交准备\n最近申请\n成年移交 "
+        },
+        {
+          "label": "仅图片和视频 只导出媒体文件，适合节省空间",
+          "index": 2,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/export",
+          "responseText": "导出与备份\n一键备份数字资产\n\n将您在应用中记录的所有照片、视频和文字日志打包下载，永久保存在您的私人设备中。\n\n选择导出内容\n全部数据（推荐）\n包含所有文字记录、高清图片和视频文件\n仅图片和视频\n只导出媒体文件，适合节省空间\n仅文字记录\n导出为 TXT/PDF 格式的纯文字日记\n长期交付留痕\n\n需要云端完整打包或为孩子成年后的档案移交做准备时，先提交申请并写入后台审计，运营可按身份核验和档案完整性流程继续处理。\n\n当前账号为家庭管理员，可发起正式导出与交付申请。\n\n提交打包申请\n成年移交准备\n最近申请\n成年移交 "
+        },
+        {
+          "label": "仅文字记录 导出为 TXT/PDF 格式的纯文字日记",
+          "index": 3,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/export",
+          "responseText": "导出与备份\n一键备份数字资产\n\n将您在应用中记录的所有照片、视频和文字日志打包下载，永久保存在您的私人设备中。\n\n选择导出内容\n全部数据（推荐）\n包含所有文字记录、高清图片和视频文件\n仅图片和视频\n只导出媒体文件，适合节省空间\n仅文字记录\n导出为 TXT/PDF 格式的纯文字日记\n长期交付留痕\n\n需要云端完整打包或为孩子成年后的档案移交做准备时，先提交申请并写入后台审计，运营可按身份核验和档案完整性流程继续处理。\n\n当前账号为家庭管理员，可发起正式导出与交付申请。\n\n提交打包申请\n成年移交准备\n最近申请\n成年移交 "
+        },
+        {
+          "label": "提交打包申请",
+          "index": 4,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/export",
+          "responseText": "导出与备份\n一键备份数字资产\n\n将您在应用中记录的所有照片、视频和文字日志打包下载，永久保存在您的私人设备中。\n\n选择导出内容\n全部数据（推荐）\n包含所有文字记录、高清图片和视频文件\n仅图片和视频\n只导出媒体文件，适合节省空间\n仅文字记录\n导出为 TXT/PDF 格式的纯文字日记\n长期交付留痕\n\n需要云端完整打包或为孩子成年后的档案移交做准备时，先提交申请并写入后台审计，运营可按身份核验和档案完整性流程继续处理。\n\n当前账号为家庭管理员，可发起正式导出与交付申请。\n\n提交打包申请\n成年移交准备\n最近申请\n档案打包 "
+        },
+        {
+          "label": "成年移交准备",
+          "index": 5,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/export",
+          "responseText": "导出与备份\n一键备份数字资产\n\n将您在应用中记录的所有照片、视频和文字日志打包下载，永久保存在您的私人设备中。\n\n选择导出内容\n全部数据（推荐）\n包含所有文字记录、高清图片和视频文件\n仅图片和视频\n只导出媒体文件，适合节省空间\n仅文字记录\n导出为 TXT/PDF 格式的纯文字日记\n长期交付留痕\n\n需要云端完整打包或为孩子成年后的档案移交做准备时，先提交申请并写入后台审计，运营可按身份核验和档案完整性流程继续处理。\n\n当前账号为家庭管理员，可发起正式导出与交付申请。\n\n提交打包申请\n成年移交准备\n最近申请\n成年移交 "
+        },
+        {
+          "label": "下载审计留痕摘要",
+          "index": 6,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/export",
+          "responseText": "导出与备份\n一键备份数字资产\n\n将您在应用中记录的所有照片、视频和文字日志打包下载，永久保存在您的私人设备中。\n\n选择导出内容\n全部数据（推荐）\n包含所有文字记录、高清图片和视频文件\n仅图片和视频\n只导出媒体文件，适合节省空间\n仅文字记录\n导出为 TXT/PDF 格式的纯文字日记\n长期交付留痕\n\n需要云端完整打包或为孩子成年后的档案移交做准备时，先提交申请并写入后台审计，运营可按身份核验和档案完整性流程继续处理。\n\n当前账号为家庭管理员，可发起正式导出与交付申请。\n\n提交打包申请\n成年移交准备\n最近申请\n成年移交 "
+        }
+      ],
+      "screenshot": "artifacts/app-live-audit/native-apk-button-audit-20260530-spa/profile-export-before.png"
+    },
+    {
+      "name": "profile-membership",
+      "path": "/profile/membership",
+      "href": "https://localhost/profile/membership",
+      "buttons": [
+        {
+          "label": "返回",
+          "index": 0,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile",
+          "responseText": "小满妈妈\n基础会员\n当前档案：小满\n编辑主页\n草稿箱\n暂无草稿\n我的孩子\n小满\n1岁4月29天\n+ 添加宝宝\n管理中心\n月报与纪念册\n导出与备份\n会员中心\n隐私设置\n家庭管理\n帮助与反馈\n设置区\n账号与安全\n关于我们\n退出登录\n首页\n时间轴\n记录\n家庭\n我的"
+        },
+        {
+          "label": "刷新会员信息",
+          "index": 1,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/membership",
+          "responseText": "会员中心\n小满妈妈\n基础会员\nVIP PRO\n\n到期时间：长期有效\n\n刷新会员信息\n您的专属特权\n高清画质下载\n大容量媒体备份\n精美时光月报\n每月自动生成\n云端安全加密\n保存敏感资产\n家庭人数无限\n邀请亲友一起记录\n成长纪念册\n\n作为高级会员，您每年可申领一本由专业排版生成的成长纪念册，将数字记忆变成可保存的家庭资产。\n\n会员信息已刷新\n\n免费申领本年度纪念册"
+        },
+        {
+          "label": "免费申领本年度纪念册",
+          "index": 2,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/membership",
+          "responseText": "会员中心\n小满妈妈\n基础会员\nVIP PRO\n\n到期时间：长期有效\n\n刷新会员信息\n您的专属特权\n高清画质下载\n大容量媒体备份\n精美时光月报\n每月自动生成\n云端安全加密\n保存敏感资产\n家庭人数无限\n邀请亲友一起记录\n成长纪念册\n\n作为高级会员，您每年可申领一本由专业排版生成的成长纪念册，将数字记忆变成可保存的家庭资产。\n\n纪念册申领已提交，我们会核对会员权益后联系你。\n\n免费申领本年度纪念册"
+        }
+      ],
+      "screenshot": "artifacts/app-live-audit/native-apk-button-audit-20260530-spa/profile-membership-before.png"
+    },
+    {
+      "name": "profile-security",
+      "path": "/profile/security",
+      "href": "https://localhost/profile/security",
+      "buttons": [
+        {
+          "label": "返回",
+          "index": 0,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile",
+          "responseText": "小满妈妈\n基础会员\n当前档案：小满\n编辑主页\n草稿箱\n暂无草稿\n我的孩子\n小满\n1岁4月29天\n+ 添加宝宝\n管理中心\n月报与纪念册\n导出与备份\n会员中心\n隐私设置\n家庭管理\n帮助与反馈\n设置区\n账号与安全\n关于我们\n退出登录\n首页\n时间轴\n记录\n家庭\n我的"
+        },
+        {
+          "label": "手机号码 138****0000",
+          "index": 1,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/account",
+          "responseText": "个人资料\n\n查看当前账号信息与会员状态，并支持修改昵称。\n\n上传头像\n昵称\n\n会员类型：基础会员\n\n脱敏手机号：138****0000\n\n保存昵称"
+        },
+        {
+          "label": "登录密码 已设置",
+          "index": 2,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/account",
+          "responseText": "个人资料\n\n查看当前账号信息与会员状态，并支持修改昵称。\n\n上传头像\n昵称\n\n会员类型：基础会员\n\n脱敏手机号：138****0000\n\n保存昵称"
+        },
+        {
+          "label": "第三方账号绑定 已绑定微信",
+          "index": 3,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/account",
+          "responseText": "个人资料\n\n查看当前账号信息与会员状态，并支持修改昵称。\n\n上传头像\n昵称\n\n会员类型：基础会员\n\n脱敏手机号：138****0000\n\n保存昵称"
+        },
+        {
+          "label": "注销账号",
+          "index": 4,
+          "action": "destructive",
+          "ok": true,
+          "hrefAfter": "",
+          "responseText": ""
+        }
+      ],
+      "screenshot": "artifacts/app-live-audit/native-apk-button-audit-20260530-spa/profile-security-before.png"
+    },
+    {
+      "name": "profile-help",
+      "path": "/profile/help",
+      "href": "https://localhost/profile/help",
+      "buttons": [
+        {
+          "label": "返回",
+          "index": 0,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile",
+          "responseText": "小满妈妈\n基础会员\n当前档案：小满\n编辑主页\n草稿箱\n暂无草稿\n我的孩子\n小满\n1岁4月29天\n+ 添加宝宝\n管理中心\n月报与纪念册\n导出与备份\n会员中心\n隐私设置\n家庭管理\n帮助与反馈\n设置区\n账号与安全\n关于我们\n退出登录\n首页\n时间轴\n记录\n家庭\n我的"
+        },
+        {
+          "label": "问题类型",
+          "index": 1,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/help",
+          "responseText": "帮助与反馈\n\n查看常见问题，并提交当前设备上的反馈记录。\n\n常见问题\n\n账号密码用于登录；注册账号时需要填写家庭邀请码；照片上传支持 JPG、PNG、WebP。\n\n如果记录没有出现在首页，请先检查是否已选择孩子档案，再返回首页刷新。\n\n提交反馈\n问题类型\n使用问题\n页面显示\n数据异常\n功能建议\n使用问题\n使用问题\n页面显示\n数据异常\n功能建议\n反馈内容\n联系方式\n提交反馈"
+        },
+        {
+          "label": "提交反馈",
+          "index": 2,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/help",
+          "responseText": "帮助与反馈\n\n查看常见问题，并提交当前设备上的反馈记录。\n\n常见问题\n\n账号密码用于登录；注册账号时需要填写家庭邀请码；照片上传支持 JPG、PNG、WebP。\n\n如果记录没有出现在首页，请先检查是否已选择孩子档案，再返回首页刷新。\n\n提交反馈\n问题类型\n使用问题\n页面显示\n数据异常\n功能建议\n使用问题\n使用问题\n页面显示\n数据异常\n功能建议\n反馈内容\n联系方式\n\n请至少输入 6 个字，方便定位问题。\n\n提交反馈"
+        }
+      ],
+      "screenshot": "artifacts/app-live-audit/native-apk-button-audit-20260530-spa/profile-help-before.png"
+    },
+    {
+      "name": "profile-settings",
+      "path": "/profile/settings",
+      "href": "https://localhost/profile/settings",
+      "buttons": [
+        {
+          "label": "返回",
+          "index": 0,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile",
+          "responseText": "小满妈妈\n基础会员\n当前档案：小满\n编辑主页\n草稿箱\n暂无草稿\n我的孩子\n小满\n1岁4月29天\n+ 添加宝宝\n管理中心\n月报与纪念册\n导出与备份\n会员中心\n隐私设置\n家庭管理\n帮助与反馈\n设置区\n账号与安全\n关于我们\n退出登录\n首页\n时间轴\n记录\n家庭\n我的"
+        },
+        {
+          "label": "默认谁可以看到您的记录 仅家庭成员",
+          "index": 1,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/settings",
+          "responseText": "隐私设置\n默认谁可以看到您的记录\n仅家庭成员\n允许通过手机号搜索到我\n向新成员展示历史时间轴\n\n我们尊重每个家庭对孩子影像和成长记录的保护习惯。新的访问规则会优先同步到账号，本机也会保留一份偏好用于离线和旧版本接口降级。\n\n当前默认仅家庭成员可见。"
+        },
+        {
+          "label": "允许通过手机号搜索到我",
+          "index": 2,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/settings",
+          "responseText": "隐私设置\n默认谁可以看到您的记录\n仅家庭成员\n允许通过手机号搜索到我\n向新成员展示历史时间轴\n\n我们尊重每个家庭对孩子影像和成长记录的保护习惯。新的访问规则会优先同步到账号，本机也会保留一份偏好用于离线和旧版本接口降级。\n\n设置已同步到账号。"
+        },
+        {
+          "label": "向新成员展示历史时间轴",
+          "index": 3,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/settings",
+          "responseText": "隐私设置\n默认谁可以看到您的记录\n仅家庭成员\n允许通过手机号搜索到我\n向新成员展示历史时间轴\n\n我们尊重每个家庭对孩子影像和成长记录的保护习惯。新的访问规则会优先同步到账号，本机也会保留一份偏好用于离线和旧版本接口降级。\n\n设置已同步到账号。"
+        }
+      ],
+      "screenshot": "artifacts/app-live-audit/native-apk-button-audit-20260530-spa/profile-settings-before.png"
+    },
+    {
+      "name": "profile-about",
+      "path": "/profile/about",
+      "href": "https://localhost/profile/about",
+      "buttons": [
+        {
+          "label": "返回",
+          "index": 0,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile",
+          "responseText": "小满妈妈\n基础会员\n当前档案：小满\n编辑主页\n草稿箱\n暂无草稿\n我的孩子\n小满\n1岁4月29天\n+ 添加宝宝\n管理中心\n月报与纪念册\n导出与备份\n会员中心\n隐私设置\n家庭管理\n帮助与反馈\n设置区\n账号与安全\n关于我们\n退出登录\n首页\n时间轴\n记录\n家庭\n我的"
+        },
+        {
+          "label": "功能介绍",
+          "index": 1,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/about",
+          "responseText": "关于我们\nnianlun\n\n版本 1.0.0（构建 20260514）\n\n功能介绍\n用户服务协议\n隐私政策\n服务说明\n联系我们\n帮助与反馈\n应用反馈\n\n年轮支持成长记录、家庭协作、时间轴、月报纪念册、档案交付和审计留痕导出。\n\n年轮 © 2026\n\n守护每个家庭的成长记录。"
+        },
+        {
+          "label": "用户服务协议",
+          "index": 2,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/legal",
+          "responseText": "关于与协议\n\n查看当前版本说明、用户协议、隐私政策和儿童信息保护规则。\n\n当前版本说明\n\n当前版本已覆盖登录、建档、记录、时间轴、家庭成员、媒体上传和后台运营主流程。\n\n用户协议\n\n本服务用于记录孩子成长过程中的文字、图片、家庭协作和成长时间轴。用户应使用真实、合法的信息创建家庭档案。\n\n用户应妥善保管账号、密码、邀请码和设备，不得将账号借给他人使用，也不得上传侵权、违法、骚扰、广告或损害未成年人权益的内容。\n\n家庭创建者可以邀请成员共同维护孩子档案；家庭成员不得擅自公开、转发或商业化使用孩子资料和影像内容。\n\n平"
+        },
+        {
+          "label": "隐私政策",
+          "index": 3,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/legal",
+          "responseText": "关于与协议\n\n查看当前版本说明、用户协议、隐私政策和儿童信息保护规则。\n\n当前版本说明\n\n当前版本已覆盖登录、建档、记录、时间轴、家庭成员、媒体上传和后台运营主流程。\n\n用户协议\n\n本服务用于记录孩子成长过程中的文字、图片、家庭协作和成长时间轴。用户应使用真实、合法的信息创建家庭档案。\n\n用户应妥善保管账号、密码、邀请码和设备，不得将账号借给他人使用，也不得上传侵权、违法、骚扰、广告或损害未成年人权益的内容。\n\n家庭创建者可以邀请成员共同维护孩子档案；家庭成员不得擅自公开、转发或商业化使用孩子资料和影像内容。\n\n平"
+        },
+        {
+          "label": "服务说明",
+          "index": 4,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/about",
+          "responseText": "关于我们\nnianlun\n\n版本 1.0.0（构建 20260514）\n\n功能介绍\n用户服务协议\n隐私政策\n服务说明\n联系我们\n帮助与反馈\n应用反馈\n\n当前版本已覆盖成长记录、家庭协作、时间轴回看、档案导出和运营后台管理。\n\n年轮 © 2026\n\n守护每个家庭的成长记录。"
+        },
+        {
+          "label": "联系我们 帮助与反馈",
+          "index": 5,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/help",
+          "responseText": "帮助与反馈\n\n查看常见问题，并提交当前设备上的反馈记录。\n\n常见问题\n\n账号密码用于登录；注册账号时需要填写家庭邀请码；照片上传支持 JPG、PNG、WebP。\n\n如果记录没有出现在首页，请先检查是否已选择孩子档案，再返回首页刷新。\n\n提交反馈\n问题类型\n使用问题\n页面显示\n数据异常\n功能建议\n使用问题\n反馈内容\n联系方式\n提交反馈"
+        },
+        {
+          "label": "应用反馈",
+          "index": 6,
+          "action": "click",
+          "ok": true,
+          "hrefAfter": "https://localhost/profile/help",
+          "responseText": "帮助与反馈\n\n查看常见问题，并提交当前设备上的反馈记录。\n\n常见问题\n\n账号密码用于登录；注册账号时需要填写家庭邀请码；照片上传支持 JPG、PNG、WebP。\n\n如果记录没有出现在首页，请先检查是否已选择孩子档案，再返回首页刷新。\n\n提交反馈\n问题类型\n使用问题\n页面显示\n数据异常\n功能建议\n使用问题\n反馈内容\n联系方式\n提交反馈"
+        }
+      ],
+      "screenshot": "artifacts/app-live-audit/native-apk-button-audit-20260530-spa/profile-about-before.png"
+    }
+  ],
+  "totals": {
+    "clicked": 174,
+    "skipped": 20,
+    "failed": 0,
+    "routeScreenshots": 40
+  },
+  "finishedAt": "2026-05-30T04:07:12.360Z"
+}

@@ -1,0 +1,124 @@
+{
+  "startedAt": "2026-05-30T02:42:58.568Z",
+  "checks": [
+    {
+      "route": "/search",
+      "label": "#吃饭",
+      "ok": true,
+      "reason": "dynamic-search-tag-not-visible-in-current-state",
+      "href": "https://localhost/search",
+      "visibleLabels": [
+        "返回",
+        "搜索",
+        "清空",
+        "第一次",
+        "吃饭"
+      ],
+      "skipped": true
+    },
+    {
+      "route": "/search",
+      "label": "#第一次",
+      "ok": true,
+      "href": "https://localhost/search"
+    },
+    {
+      "route": "/record/create?type=text&focus=content",
+      "label": "生日纪念",
+      "ok": true,
+      "href": "https://localhost/record/create?type=text&focus=content"
+    },
+    {
+      "route": "/record/create?type=text&focus=content",
+      "label": "户外日常",
+      "ok": true,
+      "href": "https://localhost/record/create?type=text&focus=content"
+    },
+    {
+      "route": "/record/create?type=text&focus=content",
+      "label": "语言发育",
+      "ok": true,
+      "href": "https://localhost/record/create?type=text&focus=content"
+    },
+    {
+      "route": "/record/create?type=text&focus=content",
+      "label": "大动作发展",
+      "ok": true,
+      "href": "https://localhost/record/create?type=text&focus=content"
+    },
+    {
+      "route": "/record/create?type=text&focus=content",
+      "label": "睡前时光",
+      "ok": true,
+      "href": "https://localhost/record/create?type=text&focus=content"
+    },
+    {
+      "route": "/record/create?type=text&focus=content",
+      "label": "亲子陪伴",
+      "ok": true,
+      "href": "https://localhost/record/create?type=text&focus=content"
+    },
+    {
+      "route": "/record/create?type=text&focus=content",
+      "label": "第一次",
+      "ok": true,
+      "href": "https://localhost/record/create?type=text&focus=content"
+    },
+    {
+      "route": "/record/create?type=text&focus=content",
+      "label": "家庭日常",
+      "ok": true,
+      "href": "https://localhost/record/create?type=text&focus=content"
+    },
+    {
+      "route": "/record/create?type=text&focus=content",
+      "label": "#生日纪念",
+      "ok": true,
+      "href": "https://localhost/record/create?type=text&focus=content"
+    },
+    {
+      "route": "/record/create?type=text&focus=content",
+      "label": "#户外日常",
+      "ok": true,
+      "href": "https://localhost/record/create?type=text&focus=content"
+    },
+    {
+      "route": "/record/create?type=text&focus=content",
+      "label": "#语言发育",
+      "ok": true,
+      "href": "https://localhost/record/create?type=text&focus=content"
+    },
+    {
+      "route": "/record/create?type=text&focus=content",
+      "label": "#大动作发展",
+      "ok": true,
+      "href": "https://localhost/record/create?type=text&focus=content"
+    },
+    {
+      "route": "/record/create?type=text&focus=content",
+      "label": "#睡前时光",
+      "ok": true,
+      "href": "https://localhost/record/create?type=text&focus=content"
+    },
+    {
+      "route": "/record/create?type=text&focus=content",
+      "label": "#亲子陪伴",
+      "ok": true,
+      "href": "https://localhost/record/create?type=text&focus=content"
+    },
+    {
+      "route": "/record/create?type=text&focus=content",
+      "label": "#第一次",
+      "ok": true,
+      "href": "https://localhost/record/create?type=text&focus=content"
+    },
+    {
+      "route": "/record/create?type=text&focus=content",
+      "label": "#家庭日常",
+      "ok": true,
+      "href": "https://localhost/record/create?type=text&focus=content"
+    }
+  ],
+  "failed": [],
+  "finishedAt": "2026-05-30T02:42:58.569Z"
+}
