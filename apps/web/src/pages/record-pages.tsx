@@ -176,6 +176,117 @@ const MediaActionButton = ({
   </button>
 );
 
+type RenderableMediaPreview = {
+  media_no: string;
+  preview_url?: string | null;
+  access_url?: string | null;
+  media_type: string;
+  original_name?: string | null;
+  duration_seconds?: number | null;
+};
+
+const mediaPreviewLabel = (mediaType: string) => {
+  if (mediaType === 'video') return '视频预览';
+  if (mediaType === 'audio') return '语音预览';
+  return '照片预览';
+};
+
+const mediaPreviewHelp = (mediaType: string) => {
+  if (mediaType === 'video') return '可直接播放确认画面和声音';
+  if (mediaType === 'audio') return '可直接播放确认录音内容';
+  return '可放大查看构图和清晰度';
+};
+
+const mediaPreviewCardBaseStyle: CSSProperties = {
+  position: 'relative',
+  minHeight: '156px',
+  borderRadius: '18px',
+  overflow: 'hidden',
+  border: '1px solid #e7e5e4',
+  background: '#ffffff',
+  boxShadow: '0 10px 24px rgba(15,23,42,0.06)',
+};
+
+const MediaPreviewTile = ({
+  media,
+  compact,
+  onRemove,
+}: {
+  media: RenderableMediaPreview;
+  compact?: boolean;
+  onRemove?: (mediaNo: string) => void;
+}) => {
+  const mediaUrl = resolveMediaPreviewUrl(media.media_no, media.preview_url ?? media.access_url ?? null) ?? media.preview_url ?? media.access_url ?? '';
+  const label = mediaPreviewLabel(media.media_type);
+
+  return (
+    <div
+      aria-label={label}
+      title={mediaPreviewHelp(media.media_type)}
+      style={{
+        ...mediaPreviewCardBaseStyle,
+        minHeight: compact ? '132px' : media.media_type === 'audio' ? '156px' : '168px',
+        height: compact ? '132px' : media.media_type === 'audio' ? '156px' : '168px',
+        borderRadius: compact ? '14px' : '18px',
+      }}
+    >
+      {media.media_type === 'image' && mediaUrl ? (
+        <img src={mediaUrl} alt={media.original_name ?? '已上传照片'} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+      ) : null}
+      {media.media_type === 'video' && mediaUrl ? (
+        <video src={mediaUrl} controls playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', background: '#292524' }} />
+      ) : null}
+      {media.media_type === 'audio' && mediaUrl ? (
+        <div style={{ width: '100%', height: '100%', minHeight: compact ? '132px' : '156px', display: 'grid', alignContent: 'center', gap: '12px', padding: compact ? '14px' : '16px', background: '#faf8f5', boxSizing: 'border-box' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '9px', color: '#57534e', fontSize: compact ? '12px' : '13px', fontWeight: 800, minWidth: 0 }}>
+            <PlayCircle size={19} strokeWidth={2.2} />
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{media.original_name ?? '语音记录'}</span>
+          </div>
+          <audio src={mediaUrl} controls style={{ width: '100%', height: '32px' }} />
+          {media.duration_seconds ? <span style={{ fontSize: '12px', color: '#a8a29e' }}>{media.duration_seconds} 秒</span> : null}
+        </div>
+      ) : null}
+      {!mediaUrl || !['image', 'video', 'audio'].includes(media.media_type) ? (
+        <div style={{ minHeight: compact ? '132px' : '156px', display: 'grid', placeItems: 'center', color: '#78716c', padding: '14px', boxSizing: 'border-box' }}>
+          <div style={{ display: 'grid', justifyItems: 'center', gap: '8px', textAlign: 'center' }}>
+            <Image size={28} strokeWidth={1.8} />
+            <span style={{ fontSize: '12px', fontWeight: 800 }}>{mediaTypeLabel(media.media_type)}</span>
+          </div>
+        </div>
+      ) : null}
+      {media.media_type !== 'audio' && mediaUrl ? (
+        <span style={{ position: 'absolute', left: '10px', bottom: '10px', borderRadius: '999px', background: 'rgba(41,37,36,0.72)', color: '#fff', padding: '6px 10px', fontSize: '11px', fontWeight: 800 }}>
+          {label}
+        </span>
+      ) : null}
+      {onRemove ? (
+        <button
+          type="button"
+          aria-label="移除媒体"
+          onClick={() => onRemove(media.media_no)}
+          style={{
+            position: 'absolute',
+            top: '8px',
+            right: '8px',
+            width: '44px',
+            height: '44px',
+            borderRadius: '999px',
+            border: '1px solid rgba(255,255,255,0.72)',
+            background: 'rgba(41,37,36,0.72)',
+            color: '#fff',
+            display: 'grid',
+            placeItems: 'center',
+            cursor: 'pointer',
+            padding: 0,
+          }}
+        >
+          <X size={15} strokeWidth={2.4} />
+        </button>
+      ) : null}
+    </div>
+  );
+};
+
 const isGeneratedSvgAvatar = (src?: string | null) => Boolean(src?.trim().startsWith('data:image/svg+xml'));
 
 const isNativeAppRuntime = () => {
@@ -983,58 +1094,62 @@ const RecordForm = ({
                 <span style={{ color: '#687386', fontSize: '12px', lineHeight: 1.65, fontWeight: 650 }}>把今天最有质感的一帧、一句话、一段声音留下来。</span>
               </div>
 
-              {mediaPreviews.length ? (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
-                  {mediaPreviews.map((media) => (
-                    <div
-                      key={media.media_no}
-                      style={{
-                        position: 'relative',
-                        minHeight: '156px',
-                        borderRadius: '18px',
-                        overflow: 'hidden',
-                        border: '1px solid #e7e5e4',
-                        background: '#ffffff',
-                        boxShadow: '0 10px 24px rgba(15,23,42,0.06)',
-                      }}
-                    >
-                      {media.media_type === 'image' ? <img src={media.preview_url} alt={media.original_name ?? '已上传照片'} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /> : null}
-                      {media.media_type === 'video' ? <video src={media.preview_url} controls muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', background: '#292524' }} /> : null}
-                      {media.media_type === 'audio' ? (
-                        <div style={{ width: '100%', height: '100%', display: 'grid', alignContent: 'center', gap: '12px', padding: '16px', background: '#faf8f5' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '9px', color: '#57534e', fontSize: '13px', fontWeight: 700 }}>
-                            <PlayCircle size={19} strokeWidth={2.2} />
-                            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{media.original_name ?? '语音记录'}</span>
-                          </div>
-                          <audio src={media.preview_url} controls style={{ width: '100%', height: '32px' }} />
-                        </div>
-                      ) : null}
-                      <button
-                        type="button"
-                        aria-label="移除媒体"
-                        onClick={() => removeMedia(media.media_no)}
-                        style={{
-                          position: 'absolute',
-                          top: '8px',
-                          right: '8px',
-                          width: '44px',
-                          height: '44px',
-                          borderRadius: '999px',
-                          border: '1px solid rgba(255,255,255,0.72)',
-                          background: 'rgba(41,37,36,0.72)',
-                          color: '#fff',
-                          display: 'grid',
-                          placeItems: 'center',
-                          cursor: 'pointer',
-                          padding: 0,
-                        }}
-                      >
-                        <X size={15} strokeWidth={2.4} />
-                      </button>
-                    </div>
-                  ))}
+              <section
+                aria-label="媒体预览"
+                style={{
+                  borderRadius: '24px',
+                  border: '1px solid rgba(126,145,170,0.22)',
+                  background: 'rgba(255,255,255,0.9)',
+                  padding: '14px',
+                  display: 'grid',
+                  gap: '12px',
+                  boxShadow: '0 12px 28px rgba(25,35,55,0.07)',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                  <div style={{ display: 'grid', gap: '3px', minWidth: 0 }}>
+                    <strong style={{ color: '#172033', fontSize: '15px', fontWeight: 900 }}>已选媒体预览</strong>
+                    <span style={{ color: '#687386', fontSize: '12px', lineHeight: 1.5, fontWeight: 650 }}>
+                      {mediaPreviews.length ? '确认照片、视频或语音没有问题后再发布。' : '拍完照片、录完视频或语音后会显示在这里。'}
+                    </span>
+                  </div>
+                  <span style={{ borderRadius: '999px', background: mediaPreviews.length ? '#ecfdf5' : '#f4f4f5', color: mediaPreviews.length ? '#166534' : '#71717a', padding: '6px 10px', fontSize: '11px', fontWeight: 900, whiteSpace: 'nowrap' }}>
+                    {mediaPreviews.length ? `${mediaPreviews.length} 个` : '待添加'}
+                  </span>
                 </div>
-              ) : null}
+
+                {mediaPreviews.length ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
+                    {mediaPreviews.map((media) => (
+                      <MediaPreviewTile key={media.media_no} media={media} onRemove={removeMedia} />
+                    ))}
+                  </div>
+                ) : (
+                  <div
+                    data-testid="record-media-preview-empty"
+                    style={{
+                      minHeight: '128px',
+                      borderRadius: '18px',
+                      border: '1px dashed rgba(126,145,170,0.34)',
+                      background: '#f8fafc',
+                      display: 'grid',
+                      placeItems: 'center',
+                      padding: '16px',
+                      textAlign: 'center',
+                      color: '#64748b',
+                    }}
+                  >
+                    <div style={{ display: 'grid', justifyItems: 'center', gap: '10px' }}>
+                      <div style={{ display: 'flex', gap: '10px', color: '#475569' }}>
+                        <ImagePlus size={20} strokeWidth={2.2} />
+                        <Video size={20} strokeWidth={2.2} />
+                        <FileAudio size={20} strokeWidth={2.2} />
+                      </div>
+                      <span style={{ fontSize: '13px', fontWeight: 800, lineHeight: 1.6 }}>这里会显示拍摄后的照片、视频和语音播放器</span>
+                    </div>
+                  </div>
+                )}
+              </section>
 
               <div style={{ display: 'grid', gap: '12px' }}>
                 {showPhotoVideoAction ? (
@@ -1694,17 +1809,23 @@ export const ViewRecordPage = () => {
       {data ? (
         <article style={{ display: 'grid', gap: '16px' }}>
           <section style={{ borderRadius: '16px', border: '1px solid #ebe6dc', background: '#ffffff', overflow: 'hidden', boxShadow: '0 2px 12px rgba(15,23,42,0.025)' }}>
-            {primaryMedia && primaryMediaUrl && primaryMedia.media_type !== 'audio' ? (
-              <div style={{ position: 'relative', background: '#fafaf9' }}>
-                {primaryMedia.media_type === 'video' ? (
-                  <video src={primaryMediaUrl} controls playsInline style={{ width: '100%', aspectRatio: '16 / 10', objectFit: 'cover', display: 'block', background: '#292524' }} />
-                ) : (
-                  <img src={primaryMediaUrl} alt={data.title ?? primaryMedia.original_name ?? '记录封面'} style={{ width: '100%', aspectRatio: '16 / 10', objectFit: 'cover', display: 'block' }} />
-                )}
-                <span style={{ position: 'absolute', left: '14px', bottom: '14px', borderRadius: '999px', background: 'rgba(41,37,36,0.72)', color: '#fff', padding: '6px 10px', fontSize: '12px', fontWeight: 700 }}>
-                  {mediaTypeLabel(primaryMedia.media_type)}
-                </span>
-              </div>
+            {primaryMedia && primaryMediaUrl ? (
+              primaryMedia.media_type === 'audio' ? (
+                <div data-testid="record-primary-media-preview" style={{ padding: '14px', background: '#fafaf9' }}>
+                  <MediaPreviewTile media={{ ...primaryMedia, preview_url: primaryMediaUrl }} />
+                </div>
+              ) : (
+                <div data-testid="record-primary-media-preview" style={{ position: 'relative', background: '#fafaf9' }}>
+                  {primaryMedia.media_type === 'video' ? (
+                    <video src={primaryMediaUrl} controls playsInline preload="metadata" style={{ width: '100%', aspectRatio: '16 / 10', objectFit: 'cover', display: 'block', background: '#292524' }} />
+                  ) : (
+                    <img src={primaryMediaUrl} alt={data.title ?? primaryMedia.original_name ?? '记录封面'} style={{ width: '100%', aspectRatio: '16 / 10', objectFit: 'cover', display: 'block' }} />
+                  )}
+                  <span style={{ position: 'absolute', left: '14px', bottom: '14px', borderRadius: '999px', background: 'rgba(41,37,36,0.72)', color: '#fff', padding: '6px 10px', fontSize: '12px', fontWeight: 700 }}>
+                    {mediaPreviewLabel(primaryMedia.media_type)}
+                  </span>
+                </div>
+              )
             ) : null}
             <div style={{ padding: '18px', display: 'grid', gap: '14px' }}>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -1782,33 +1903,15 @@ export const ViewRecordPage = () => {
           {data.media_list.length ? (
             <Panel>
               <div style={{ display: 'grid', gap: '12px' }}>
-                <strong style={{ color: '#292524' }}>媒体</strong>
+                <div style={{ display: 'grid', gap: '3px' }}>
+                  <strong style={{ color: '#292524' }}>全部媒体预览</strong>
+                  <span style={{ color: '#78716c', fontSize: '12px', lineHeight: 1.6 }}>照片、视频和语音都可以在这里直接查看或播放。</span>
+                </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
                   {data.media_list.map((media) => {
                     const mediaUrl = resolveMediaPreviewUrl(media.media_no, media.access_url) ?? media.access_url;
                     return (
-                      <div key={media.media_no} style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid #e7e5e4', background: '#fafaf9', minHeight: '132px' }}>
-                        {media.media_type === 'image' ? <img src={mediaUrl} alt={media.original_name ?? data.title ?? '记录照片'} style={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', display: 'block' }} /> : null}
-                        {media.media_type === 'video' ? <video src={mediaUrl} controls playsInline style={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', display: 'block', background: '#292524' }} /> : null}
-                        {media.media_type === 'audio' ? (
-                          <div style={{ minHeight: '132px', display: 'grid', alignContent: 'center', gap: '10px', padding: '14px', color: '#57534e' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700 }}>
-                              <FileAudio size={22} strokeWidth={2.1} />
-                              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{media.original_name ?? '语音记录'}</span>
-                            </div>
-                            <audio src={mediaUrl} controls style={{ width: '100%' }} />
-                            {media.duration_seconds ? <span style={{ fontSize: '12px', color: '#a8a29e' }}>{media.duration_seconds} 秒</span> : null}
-                          </div>
-                        ) : null}
-                        {!['image', 'video', 'audio'].includes(media.media_type) ? (
-                          <div style={{ minHeight: '132px', display: 'grid', placeItems: 'center', color: '#78716c' }}>
-                            <div style={{ display: 'grid', justifyItems: 'center', gap: '8px' }}>
-                              <Image size={28} strokeWidth={1.8} />
-                              <span>{mediaTypeLabel(media.media_type)}</span>
-                            </div>
-                          </div>
-                        ) : null}
-                      </div>
+                      <MediaPreviewTile key={media.media_no} media={{ ...media, preview_url: mediaUrl }} compact />
                     );
                   })}
                 </div>

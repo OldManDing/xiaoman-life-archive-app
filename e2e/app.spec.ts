@@ -176,6 +176,8 @@ test.describe('App critical journeys', () => {
     await loginWeb(page);
 
     await page.goto(`${webBaseURL}/record/create?type=mixed&focus=media`);
+    await expect(page.getByLabel('媒体预览')).toBeVisible();
+    await expect(page.getByText('这里会显示拍摄后的照片、视频和语音播放器')).toBeVisible();
     await expect(page.locator('input[aria-label="拍照记录"]')).toHaveAttribute('capture', 'environment');
     await expect(page.locator('input[aria-label="从相册添加"]')).toHaveAttribute('multiple', '');
     const photoChooserPromise = page.waitForEvent('filechooser');
@@ -183,6 +185,7 @@ test.describe('App critical journeys', () => {
     const photoChooser = await photoChooserPromise;
     await photoChooser.setFiles({ name: 'camera-photo.JPG', mimeType: 'application/octet-stream', buffer: tinyPng });
     await expect(page.getByText('已选择 1 个媒体，将随记录一起保存。')).toBeVisible();
+    await expect(page.getByLabel('照片预览')).toBeVisible();
     await expect(page.getByRole('dialog', { name: '手机采集' })).toHaveCount(0);
 
     await page.goto(`${webBaseURL}/record/create?type=video&focus=media`);
@@ -192,6 +195,7 @@ test.describe('App critical journeys', () => {
     const videoChooser = await videoChooserPromise;
     await videoChooser.setFiles({ name: 'camera-video.mp4', mimeType: 'video/mp4', buffer: Buffer.from([0, 0, 0, 0]) });
     await expect(page.getByText('已选择 1 个媒体，将随记录一起保存。')).toBeVisible();
+    await expect(page.getByLabel('视频预览')).toBeVisible();
     await expect(page.getByRole('dialog', { name: '手机采集' })).toHaveCount(0);
 
     await page.goto(`${webBaseURL}/record/create?type=audio&focus=media`);
@@ -201,6 +205,7 @@ test.describe('App critical journeys', () => {
     const audioChooser = await audioChooserPromise;
     await audioChooser.setFiles({ name: 'voice.wav', mimeType: 'audio/wav', buffer: Buffer.from([82, 73, 70, 70]) });
     await expect(page.getByText('已选择 1 个媒体，将随记录一起保存。')).toBeVisible();
+    await expect(page.getByLabel('语音预览')).toBeVisible();
     await expect(page.getByRole('dialog', { name: '手机采集' })).toHaveCount(0);
   });
 

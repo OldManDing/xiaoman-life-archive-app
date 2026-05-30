@@ -47,6 +47,38 @@ const createRecordMock = vi.mocked(webApi.createRecord);
 const detailRecordMock = vi.mocked(webApi.detailRecord);
 const searchLocationsMock = vi.mocked(webApi.searchLocations);
 
+const demoChild = {
+  child_no: 'c_001',
+  family_no: 'f_001',
+  owner_user_no: 'u_001',
+  name: '小满',
+  avatar_url: null,
+  birthday: '2025-01-01',
+  gender: 'female',
+  birth_place: '上海',
+  remark: null,
+  current_age_display: '1岁4个月',
+  status: 'normal',
+  created_at: '2026-04-21T00:00:00.000Z',
+  updated_at: '2026-04-21T00:00:00.000Z',
+};
+
+const mockAuthenticatedSession = () => {
+  refreshMock.mockResolvedValue({
+    access_token: 'token-123',
+    expires_in: 7200,
+    user: {
+      user_no: 'u_001',
+      nickname: '测试用户',
+      avatar_url: null,
+      membership_type: 'free',
+    },
+    need_create_child: false,
+  });
+  listChildrenMock.mockResolvedValue([demoChild]);
+  detailChildMock.mockResolvedValue(demoChild);
+};
+
 describe('App Shell', () => {
   beforeEach(() => {
     clearAccessToken();
@@ -501,6 +533,62 @@ describe('App Shell', () => {
         status: 'published',
       }));
     });
+  });
+
+  it('shows a fixed preview area before capturing media', async () => {
+    window.history.pushState({}, '', '/record/create?type=mixed&focus=media');
+    mockAuthenticatedSession();
+
+    render(<App />);
+
+    expect(await screen.findByLabelText('媒体预览')).toBeDefined();
+    expect(screen.getByTestId('record-media-preview-empty')).toBeDefined();
+    expect(screen.getByRole('button', { name: '拍照记录' })).toBeDefined();
+    expect(screen.getByRole('button', { name: '拍摄视频' })).toBeDefined();
+  });
+
+  it('shows audio records in the primary media preview', async () => {
+    window.history.pushState({}, '', '/record/r_audio_preview');
+    mockAuthenticatedSession();
+    detailRecordMock.mockResolvedValue({
+      record_no: 'r_audio_preview',
+      child_no: 'c_001',
+      creator_user_no: 'u_001',
+      creator_name: '测试用户',
+      record_type: 'audio',
+      title: '睡前故事',
+      content_text: '今晚讲了一个很长的故事。',
+      media_list: [
+        {
+          media_no: 'm_audio_001',
+          media_type: 'audio',
+          access_url: 'https://example.com/audio/story.m4a',
+          original_name: 'story.m4a',
+          mime_type: 'audio/x-m4a',
+          size_bytes: 1200,
+          width: null,
+          height: null,
+          duration_seconds: 8,
+        },
+      ],
+      tags: [],
+      event_time: '2026-05-28T10:00:00.000Z',
+      location_text: '家里',
+      visibility_scope: 'family',
+      is_milestone: false,
+      ai_generated_title: null,
+      ai_summary: null,
+      ai_status: null,
+      status: 'published',
+      created_at: '2026-05-28T10:00:00.000Z',
+      updated_at: '2026-05-28T10:00:00.000Z',
+    });
+
+    render(<App />);
+
+    const primaryPreview = await screen.findByTestId('record-primary-media-preview');
+    expect(screen.getAllByLabelText('语音预览').length).toBeGreaterThan(0);
+    expect(primaryPreview.querySelector('audio')?.getAttribute('src')).toBe('https://example.com/audio/story.m4a');
   });
 
   it('uses neutral home prompts when the child profile has no display name', async () => {
