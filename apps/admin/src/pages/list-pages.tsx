@@ -44,7 +44,7 @@ import {
   userStatusLabel,
   visibilityScopeLabel,
 } from '../shared/labels';
-import { AdminSelect, Badge, EmptyState, PageShell, Panel } from '../shared/ui';
+import { AdminDateInput, AdminSelect, Badge, EmptyState, PageShell, Panel } from '../shared/ui';
 import { inputStyle, mutedTextStyle, primaryButtonStyle, secondaryButtonStyle, tableStyle, thTdStyle } from '../shared/uiStyles';
 import { useAdminAuth } from '../shared/useAdminAuth';
 import { DetailDrawer, DetailGrid, DetailList, DetailSection, JsonBlock, MediaPreview } from './detail-drawer';
@@ -490,8 +490,7 @@ const useMembershipDialog = () => {
         </label>
         <label className="admin-modal-field">
           到期日期
-          <input
-            type="date"
+          <AdminDateInput
             value={dialog.expireDate}
             disabled={dialog.membershipType === 'free'}
             onChange={(event) => setDialog((current) => (current ? { ...current, expireDate: event.target.value, error: null } : current))}
@@ -1917,8 +1916,8 @@ export const AuditLogsPage = () => {
                 </option>
               ))}
             </AdminSelect>
-            <input style={inputStyle} type="datetime-local" value={startTime} onChange={(event) => setStartTime(event.target.value)} aria-label="开始时间" />
-            <input style={inputStyle} type="datetime-local" value={endTime} onChange={(event) => setEndTime(event.target.value)} aria-label="结束时间" />
+            <AdminDateInput type="datetime-local" value={startTime} onChange={(event) => setStartTime(event.target.value)} aria-label="开始时间" />
+            <AdminDateInput type="datetime-local" value={endTime} onChange={(event) => setEndTime(event.target.value)} aria-label="结束时间" />
           </div>
           <div className="admin-audit-filter-actions" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <button type="submit" style={primaryButtonStyle} disabled={loading}>

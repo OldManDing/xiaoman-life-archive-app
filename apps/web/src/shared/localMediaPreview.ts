@@ -100,6 +100,18 @@ export const toLocalMediaReference = (mediaNo: string) => `${LOCAL_MEDIA_REFEREN
 
 export const toStoredMediaReference = (mediaNo: string) => `${STORED_MEDIA_REFERENCE_PREFIX}${mediaNo}`;
 
+export const getStoredMediaReferenceNo = (value: string | null | undefined) => {
+  const normalizedValue = value?.trim();
+  if (!normalizedValue) return null;
+  if (normalizedValue.startsWith(LOCAL_MEDIA_REFERENCE_PREFIX)) {
+    return normalizedValue.slice(LOCAL_MEDIA_REFERENCE_PREFIX.length) || null;
+  }
+  if (normalizedValue.startsWith(STORED_MEDIA_REFERENCE_PREFIX)) {
+    return normalizedValue.slice(STORED_MEDIA_REFERENCE_PREFIX.length) || null;
+  }
+  return null;
+};
+
 export const resolveStoredMediaUrl = (value: string | null | undefined) => {
   const normalizedValue = value?.trim();
   if (!normalizedValue) return null;

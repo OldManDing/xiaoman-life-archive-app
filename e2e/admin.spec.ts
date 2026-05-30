@@ -193,10 +193,10 @@ test.describe('Admin critical journeys', () => {
     await page.getByRole('link', { name: '系统运维', exact: true }).click();
 
     await expect(page.getByRole('heading', { name: '系统运维' })).toBeVisible();
-    await expect(page.getByText('运行配置')).toBeVisible();
-    await expect(page.getByText('备份恢复与告警值班')).toBeVisible();
+    await expect(page.getByRole('heading', { name: '运行配置' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: '备份恢复与告警值班' })).toBeVisible();
     await expect(page.getByText('告警联系人', { exact: true })).toBeVisible();
-    await expect(page.getByText('运营动作')).toBeVisible();
+    await expect(page.getByRole('heading', { name: '运营动作' })).toBeVisible();
     await expect(page.getByText('家庭与档案')).toBeVisible();
     await expect(page.getByText('成长资产')).toBeVisible();
     await expect(page.getByRole('row', { name: /对象存储/ })).toBeVisible();

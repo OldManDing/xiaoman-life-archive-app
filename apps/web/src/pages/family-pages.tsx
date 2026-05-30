@@ -5,9 +5,9 @@ import { Calendar, Camera, ChevronRight, Clock, Copy, FileText, Heart, Image as 
 import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
 import type { ChildRecord, FamilyInviteResponse, FamilyMemberItem, RecordSummary } from '../shared/api/types';
-import { useAsyncData } from '../shared/hooks';
+import { useAsyncData, useStoredMediaUrl } from '../shared/hooks';
 import { childStatusLabel, familyMemberStatusLabel, familyRoleLabel, genderLabel, recordTypeLabel } from '../shared/labels';
-import { createPersistableMediaPreview, resolveMediaPreviewUrl, resolveStoredMediaUrl, saveLocalMediaPreview, toStoredMediaReference } from '../shared/localMediaPreview';
+import { createPersistableMediaPreview, resolveMediaPreviewUrl, saveLocalMediaPreview, toStoredMediaReference } from '../shared/localMediaPreview';
 import { loadLocalSettings } from '../shared/localSettings';
 import { isSupportedImageFile, resolveFileMimeType, withResolvedFileMimeType } from '../shared/mediaFiles';
 import { AppSegmentedControl, Field, PageShell, Panel, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle, textareaStyle } from '../shared/ui';
@@ -44,7 +44,7 @@ const uploadChildAvatarImage = async (childNo: string, file: File) => {
 };
 
 const ChildAvatarPreview = ({ src, label }: { src?: string | null; label: string }) => {
-  const resolvedSrc = resolveStoredMediaUrl(src);
+  const resolvedSrc = useStoredMediaUrl(src);
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
 
   useEffect(() => {
@@ -66,11 +66,11 @@ const isGeneratedSvgAvatar = (src?: string | null) => Boolean(src?.trim().starts
 
 const resolveReferenceAvatar = (src: string | null | undefined, fallbackSrc: string) => {
   if (!src || isGeneratedSvgAvatar(src)) return fallbackSrc;
-  return resolveStoredMediaUrl(src) ?? fallbackSrc;
+  return src;
 };
 
 const FamilyAvatar = ({ src, label, size = 42, radius = '999px', fallbackSrc }: { src?: string | null; label: string; size?: number; radius?: string; fallbackSrc?: string }) => {
-  const resolvedSrc = src && !isGeneratedSvgAvatar(src) ? resolveStoredMediaUrl(src) : null;
+  const resolvedSrc = useStoredMediaUrl(src && !isGeneratedSvgAvatar(src) ? src : null);
   const displaySrc = resolvedSrc ?? fallbackSrc;
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
 
@@ -319,6 +319,7 @@ export const FamilyChildPage = () => {
       await refreshChildren();
       setActiveChild({ ...updated, avatar_url: avatarUrl });
       setForm((current) => ({ ...current, avatar_url: avatarUrl }));
+      setAvatarPreviewUrl(null);
       setMessage('头像已更新');
     } catch (err) {
       setAvatarPreviewUrl(null);

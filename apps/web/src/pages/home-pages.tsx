@@ -23,7 +23,7 @@ import { webApi } from '../shared/api/webApi';
 import type { RecordSummary } from '../shared/api/types';
 import { useAsyncData } from '../shared/hooks';
 import { recordTypeLabel } from '../shared/labels';
-import { resolveMediaPreviewUrl, resolveStoredMediaUrl } from '../shared/localMediaPreview';
+import { resolveMediaPreviewUrl } from '../shared/localMediaPreview';
 import { loadLocalSettings } from '../shared/localSettings';
 import { EmptyState } from './shared';
 import {
@@ -84,7 +84,7 @@ const isGeneratedSvgAvatar = (src?: string | null) => Boolean(src?.trim().starts
 
 const referenceAvatarFor = (src: string | null | undefined, fallbackSrc: string) => {
   if (!src || isGeneratedSvgAvatar(src)) return fallbackSrc;
-  return resolveStoredMediaUrl(src) ?? fallbackSrc;
+  return src;
 };
 
 const childAvatarFor = (src?: string | null) => referenceAvatarFor(src, referenceAssets.childAvatar);

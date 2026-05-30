@@ -5,9 +5,9 @@ import { BookHeart, Camera, CheckCircle2, ChevronRight, CreditCard, DownloadClou
 import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
 import type { ArchiveExportRequestItem, RecordSummary } from '../shared/api/types';
-import { useAsyncData } from '../shared/hooks';
+import { useAsyncData, useStoredMediaUrl } from '../shared/hooks';
 import { membershipTypeLabel } from '../shared/labels';
-import { createPersistableMediaPreview, resolveMediaPreviewUrl, resolveStoredMediaUrl, saveLocalMediaPreview, toStoredMediaReference } from '../shared/localMediaPreview';
+import { createPersistableMediaPreview, resolveMediaPreviewUrl, saveLocalMediaPreview, toStoredMediaReference } from '../shared/localMediaPreview';
 import { loadLocalSettings, localSettingsToPreferences, preferencesToLocalSettings, saveLocalSettings, type LocalSettings } from '../shared/localSettings';
 import { isSupportedImageFile, resolveFileMimeType, withResolvedFileMimeType } from '../shared/mediaFiles';
 import { AppSelect, Field, PageShell, Panel, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle, textareaStyle } from '../shared/ui';
@@ -59,7 +59,7 @@ const uploadAvatarImage = async (childNo: string, file: File) => {
 };
 
 const ProfileAvatar = ({ src, label, fallbackSrc = referenceAssets.momAvatar }: { src?: string | null; label: string; fallbackSrc?: string }) => {
-  const resolvedSrc = src && !isGeneratedSvgAvatar(src) ? resolveStoredMediaUrl(src) : null;
+  const resolvedSrc = useStoredMediaUrl(src && !isGeneratedSvgAvatar(src) ? src : null);
   const displaySrc = resolvedSrc ?? fallbackSrc;
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
 
@@ -93,7 +93,7 @@ const ProfileAvatar = ({ src, label, fallbackSrc = referenceAssets.momAvatar }: 
 };
 
 const SmallChildAvatar = ({ src, label }: { src?: string | null; label: string }) => {
-  const resolvedSrc = src && !isGeneratedSvgAvatar(src) ? resolveStoredMediaUrl(src) : null;
+  const resolvedSrc = useStoredMediaUrl(src && !isGeneratedSvgAvatar(src) ? src : null);
   const displaySrc = resolvedSrc ?? referenceAssets.childAvatar;
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
 
@@ -290,7 +290,7 @@ export const ProfilePage = () => {
     <div style={refPageStyle}>
       <section style={{ background: 'rgba(255,255,255,0.96)', padding: 'calc(54px + env(safe-area-inset-top)) 20px 30px', borderBottom: '1px solid rgba(126,145,170,0.2)', borderRadius: '0 0 32px 32px', boxShadow: '0 20px 42px rgba(25,35,55,0.12)' }}>
         <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-          <RefAvatar src={user?.avatar_url && !isGeneratedSvgAvatar(user.avatar_url) ? resolveStoredMediaUrl(user.avatar_url) ?? referenceAssets.momAvatar : referenceAssets.momAvatar} label={user?.nickname ?? '我的头像'} size={72} />
+          <RefAvatar src={user?.avatar_url && !isGeneratedSvgAvatar(user.avatar_url) ? user.avatar_url : referenceAssets.momAvatar} label={user?.nickname ?? '我的头像'} size={72} />
           <div style={{ minWidth: 0, flex: 1, display: 'grid', gap: 6 }}>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
               <strong style={{ color: '#172033', fontSize: 25, lineHeight: 1.1, fontWeight: 950 }}>{user?.nickname ?? '未登录用户'}</strong>
@@ -320,7 +320,7 @@ export const ProfilePage = () => {
             <button type="button" onClick={() => navigate('/family/child')} style={{ width: '100%', minHeight: 78, border: 'none', borderBottom: '1px solid rgba(126,145,170,0.14)', background: 'rgba(255,255,255,0.76)', padding: '15px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, textAlign: 'left', cursor: 'pointer' }}>
               <span style={{ display: 'flex', gap: 13, alignItems: 'center', minWidth: 0 }}>
                 <RefAvatar
-                  src={activeChild?.avatar_url && !isGeneratedSvgAvatar(activeChild.avatar_url) ? resolveStoredMediaUrl(activeChild.avatar_url) ?? referenceAssets.childAvatar : referenceAssets.childAvatar}
+                  src={activeChild?.avatar_url && !isGeneratedSvgAvatar(activeChild.avatar_url) ? activeChild.avatar_url : referenceAssets.childAvatar}
                   label={activeChild?.name ?? '孩子'}
                   size={44}
                   fallbackSrc={referenceAssets.childAvatar}
@@ -433,6 +433,7 @@ export const AccountPage = () => {
       const avatarUrl = await uploadAvatarImage(activeChild.child_no, uploadFile);
       const nextProfile = await webApi.updateMe({ avatar_url: avatarUrl });
       setUserProfile({ ...nextProfile, avatar_url: avatarUrl });
+      setAvatarPreviewUrl(null);
       setMessage('头像已更新');
     } catch (err) {
       setAvatarPreviewUrl(null);

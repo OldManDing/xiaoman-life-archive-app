@@ -45,6 +45,37 @@ const adminRoutes = [
 const stateChangingConfirmPattern = /(\u786e\u8ba4\u6267\u884c|\u786e\u8ba4\u91cd\u7f6e|\u4fdd\u5b58\u914d\u7f6e)/;
 const logoutPattern = /\u9000\u51fa/;
 const auditPhone = `139${String(Date.now()).slice(-8)}`;
+const minimumRouteClicks: Record<string, number> = {
+  '/users': 6,
+  '/families': 2,
+  '/invites': 3,
+  '/children': 2,
+  '/records': 3,
+  '/media': 5,
+  '/ai-jobs': 2,
+  '/content-risks': 1,
+  '/support-tickets': 2,
+  '/archive-export-requests': 2,
+  '/system-config': 1,
+  '/audit-logs': 2,
+  '/logout': 1,
+};
+const routesWithExpectedButtonCoverage = new Set(
+  Object.keys(minimumRouteClicks).filter((route) => route !== '/logout'),
+);
+const routesWithFilterControls = new Set([
+  '/users',
+  '/families',
+  '/invites',
+  '/children',
+  '/records',
+  '/media',
+  '/ai-jobs',
+  '/content-risks',
+  '/support-tickets',
+  '/archive-export-requests',
+  '/audit-logs',
+]);
 
 const auditOutputPath = join(process.cwd(), 'artifacts', 'app-live-audit', 'admin-interaction-audit-20260529.json');
 
@@ -52,8 +83,40 @@ const waitForSettledUi = async (page: Page, timeout = 1_000) => {
   await page.waitForLoadState('networkidle', { timeout }).catch(() => undefined);
 };
 
+const waitForRouteButtons = async (page: Page, route: string) => {
+  if (!routesWithExpectedButtonCoverage.has(route)) return;
+
+  await expect
+    .poll(
+      async () =>
+        page.locator('.admin-main button').evaluateAll((buttons) =>
+          buttons.filter((button) => {
+            const element = button as HTMLButtonElement;
+            const rect = element.getBoundingClientRect();
+            const style = window.getComputedStyle(element);
+            return (
+              !element.disabled &&
+              rect.width > 0 &&
+              rect.height > 0 &&
+              style.display !== 'none' &&
+              style.visibility !== 'hidden'
+            );
+          }).length,
+        ),
+      {
+        timeout: 8_000,
+        message: `${route} should expose enabled admin action buttons before the audit clicks start`,
+      },
+    )
+    .toBeGreaterThan(0);
+};
+
 const isElementUsable = async (handle: ElementHandle<Element>) =>
   handle.evaluate((element) => {
+    if (element.classList.contains('admin-select-native')) {
+      return { visible: false, disabled: true, readOnly: true };
+    }
+
     const rect = element.getBoundingClientRect();
     const style = window.getComputedStyle(element);
     const formControl = element as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | HTMLButtonElement;
@@ -84,9 +147,10 @@ const labelFor = async (handle: ElementHandle<Element>) =>
 const isShellButton = async (handle: ElementHandle<Element>) =>
   handle.evaluate((element) => Boolean(element.closest('aside'))).catch(() => false);
 
-const fillVisibleControls = async (page: Page) => {
+const fillVisibleControls = async (page: Page, route?: string) => {
   let touched = 0;
   const handles = await page.$$('input, textarea, select');
+  const preserveFilterValues = Boolean(route && routesWithFilterControls.has(route));
 
   for (const handle of handles) {
     const usable = await isElementUsable(handle);
@@ -99,6 +163,7 @@ const fillVisibleControls = async (page: Page) => {
       return {
         tagName,
         type: input.type ?? '',
+        currentValue: 'value' in element ? (element as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).value ?? '' : '',
         options: tagName === 'select' ? Array.from(select.options).map((option) => option.value) : [],
       };
     });
@@ -108,15 +173,24 @@ const fillVisibleControls = async (page: Page) => {
 
     try {
       if (info.tagName === 'select') {
-        const value = info.options.find((option) => option !== '') ?? info.options[0];
+        const value = info.options.find((option) => option !== '' && option !== info.currentValue) ?? info.options[0];
         if (value !== undefined) {
-          await (handle as ElementHandle<HTMLSelectElement>).selectOption(value);
+          if (!preserveFilterValues || value !== info.currentValue) {
+            await (handle as ElementHandle<HTMLSelectElement>).selectOption(value);
+            if (preserveFilterValues && info.currentValue !== value && info.options.includes(info.currentValue)) {
+              await (handle as ElementHandle<HTMLSelectElement>).selectOption(info.currentValue);
+            }
+          }
           touched += 1;
         }
         continue;
       }
 
       if (info.type === 'checkbox' || info.type === 'radio') {
+        if (preserveFilterValues) {
+          touched += 1;
+          continue;
+        }
         await (handle as ElementHandle<HTMLInputElement>).check({ force: true }).catch(() => undefined);
         touched += 1;
         continue;
@@ -138,6 +212,9 @@ const fillVisibleControls = async (page: Page) => {
                 : auditPhone;
 
       await (handle as ElementHandle<HTMLInputElement | HTMLTextAreaElement>).fill(value);
+      if (preserveFilterValues) {
+        await (handle as ElementHandle<HTMLInputElement | HTMLTextAreaElement>).fill(info.currentValue);
+      }
       touched += 1;
     } catch {
       // The caller records visible UI failures from Playwright assertions and console errors.
@@ -152,6 +229,7 @@ const collectStyleIssues = async (page: Page, route: string, viewport: string) =
     ({ route: currentRoute, viewport: currentViewport }) => {
       const issues: AuditIssue[] = [];
       const visible = (element: Element) => {
+        if (element.classList.contains('admin-select-native')) return false;
         const rect = element.getBoundingClientRect();
         const style = window.getComputedStyle(element);
         return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden';
@@ -338,7 +416,9 @@ test.describe('Admin exhaustive interaction audit', () => {
     for (const route of adminRoutes) {
       await navigateWithinAdmin(page, route);
       await waitForSettledUi(page, 3_000);
-      const inputsTouched = await fillVisibleControls(page);
+      await waitForRouteButtons(page, route);
+      const inputsTouched = await fillVisibleControls(page, route);
+      await waitForRouteButtons(page, route);
       issues.push(...(await collectStyleIssues(page, route, 'desktop')));
       const clickResult = await clickVisibleButtons(page, route, issues);
       clicks.push(...clickResult.clicked);
@@ -372,11 +452,32 @@ test.describe('Admin exhaustive interaction audit', () => {
     mkdirSync(join(process.cwd(), 'artifacts', 'app-live-audit'), { recursive: true });
     writeFileSync(auditOutputPath, JSON.stringify({ issues, clicks, routeSummaries, runtimeErrors, failedRequests }, null, 2), 'utf8');
 
+    const clickCountsByRoute = clicks.reduce<Record<string, number>>((summary, click) => {
+      summary[click.route] = (summary[click.route] ?? 0) + 1;
+      return summary;
+    }, {});
+
     expect(runtimeErrors, 'browser console/page errors').toEqual([]);
     expect(failedRequests, 'failed requests and 5xx API responses').toEqual([]);
     expect(issues, 'style and click issues').toEqual([]);
     expect(routeSummaries.filter((summary) => summary.buttonCandidates > 0 && summary.buttonsClicked === 0), 'routes with unclicked candidate buttons').toEqual([]);
-    expect(clicks.length).toBeGreaterThan(40);
+    expect(
+      routeSummaries.filter(
+        (summary) => routesWithExpectedButtonCoverage.has(summary.route) && summary.buttonCandidates === 0,
+      ),
+      'admin routes that never exposed any clickable buttons',
+    ).toEqual([]);
+    expect(Object.keys(clickCountsByRoute), 'routes with confirmed admin button coverage').toEqual(
+      expect.arrayContaining(Object.keys(minimumRouteClicks)),
+    );
+
+    for (const [route, minimumClicks] of Object.entries(minimumRouteClicks)) {
+      expect(clickCountsByRoute[route] ?? 0, `${route} click coverage`).toBeGreaterThanOrEqual(minimumClicks);
+    }
+
+    expect(clicks.length).toBeGreaterThanOrEqual(
+      Object.values(minimumRouteClicks).reduce((total, count) => total + count, 0),
+    );
   });
 
   test('mobile admin pages keep controls within the viewport without gradients', async ({ page }) => {

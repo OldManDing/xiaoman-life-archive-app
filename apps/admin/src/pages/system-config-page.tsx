@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Save, Settings2 } from 'lucide-react';
 
 import { adminApi, type AdminSystemConfigItem } from '../shared/request';
-import { Badge, EmptyState, PageShell, Panel } from '../shared/ui';
+import { AdminDateInput, Badge, EmptyState, PageShell, Panel } from '../shared/ui';
 import { inputStyle, mutedTextStyle, primaryButtonStyle, secondaryButtonStyle } from '../shared/uiStyles';
 import { useAdminAuth } from '../shared/useAdminAuth';
 import { TableShell } from './shared';
@@ -134,15 +134,24 @@ export const SystemConfigPage = () => {
             </div>
             <label style={{ display: 'grid', gap: '6px', color: '#33413d', fontWeight: 700 }}>
               配置值
-              <input
-                style={inputStyle}
-                type={editing.value_type === 'datetime' ? 'datetime-local' : editing.value_type === 'number' ? 'number' : 'text'}
-                min={editing.value_type === 'number' ? 1 : undefined}
-                max={editing.value_type === 'number' ? 3650 : undefined}
-                value={value}
-                onChange={(event) => setValue(event.target.value)}
-                disabled={!canEdit || saving}
-              />
+              {editing.value_type === 'datetime' ? (
+                <AdminDateInput
+                  type="datetime-local"
+                  value={value}
+                  onChange={(event) => setValue(event.target.value)}
+                  disabled={!canEdit || saving}
+                />
+              ) : (
+                <input
+                  style={inputStyle}
+                  type={editing.value_type === 'number' ? 'number' : 'text'}
+                  min={editing.value_type === 'number' ? 1 : undefined}
+                  max={editing.value_type === 'number' ? 3650 : undefined}
+                  value={value}
+                  onChange={(event) => setValue(event.target.value)}
+                  disabled={!canEdit || saving}
+                />
+              )}
             </label>
             <label style={{ display: 'grid', gap: '6px', color: '#33413d', fontWeight: 700 }}>
               操作原因

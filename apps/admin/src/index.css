@@ -553,6 +553,108 @@ table {
   resize: initial;
 }
 
+.admin-select-shell,
+.admin-date-input-shell {
+  min-width: 0;
+}
+
+.admin-select-trigger,
+.admin-date-input {
+  box-shadow: 0 1px 0 rgba(18, 60, 55, 0.04);
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease,
+    background-color 0.16s ease;
+}
+
+.admin-select-trigger:hover,
+.admin-date-input:hover {
+  border-color: #8fb2aa !important;
+  background: #fbfdfb !important;
+}
+
+.admin-select-trigger:focus-visible,
+.admin-date-input:focus-visible {
+  outline: 3px solid rgba(20, 184, 166, 0.22);
+  outline-offset: 2px;
+  border-color: #2f6f65 !important;
+  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.08);
+}
+
+.admin-select-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-select-chevron,
+.admin-date-input-icon {
+  flex: 0 0 auto;
+  color: #66736f;
+}
+
+.admin-select-menu {
+  position: absolute;
+  z-index: 45;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: min(320px, 48vh);
+  overflow-y: auto;
+  border: 1px solid #cbd5d1;
+  border-radius: 8px;
+  padding: 6px;
+  background: #ffffff;
+  box-shadow: 0 18px 38px rgba(12, 27, 25, 0.16);
+}
+
+.admin-select-option {
+  width: 100%;
+  min-height: 38px;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: #263532;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 750;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-select-option:hover,
+.admin-select-option[aria-selected="true"] {
+  background: #edf8f2;
+  color: #123c37;
+}
+
+.admin-select-option:disabled {
+  color: #94a3a0;
+  cursor: not-allowed;
+}
+
+.admin-date-input-shell input[type="date"],
+.admin-date-input-shell input[type="datetime-local"] {
+  color-scheme: light;
+}
+
+.admin-date-input-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
 .admin-modal-error {
   margin: 0;
   border-radius: 8px;

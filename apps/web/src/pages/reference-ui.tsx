@@ -2,6 +2,8 @@ import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
+import { useStoredMediaUrl } from '../shared/hooks';
+
 export const referenceAssets = {
   momAvatar: '/reference-ui/avatar-mom.png',
   childAvatar: '/reference-ui/avatar-child.png',
@@ -146,18 +148,20 @@ export const RefAvatar = ({
   fallbackSrc?: string;
 }) => {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
-  const displaySrc = failedSrc === src ? fallbackSrc : src;
+  const resolvedSrc = useStoredMediaUrl(src);
+  const effectiveSrc = resolvedSrc ?? fallbackSrc;
+  const displaySrc = failedSrc === effectiveSrc ? fallbackSrc : effectiveSrc;
 
   useEffect(() => {
     setFailedSrc(null);
-  }, [src]);
+  }, [effectiveSrc]);
 
   return (
     <img
       src={displaySrc}
       alt={label}
       onError={() => {
-        if (displaySrc !== fallbackSrc) setFailedSrc(src);
+        if (displaySrc !== fallbackSrc) setFailedSrc(effectiveSrc);
       }}
       style={{
         width: `${size}px`,

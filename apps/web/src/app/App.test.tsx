@@ -54,6 +54,7 @@ const searchLocationsMock = vi.mocked(webApi.searchLocations);
 const updateMeMock = vi.mocked(webApi.updateMe);
 const createUploadTokenMock = vi.mocked(webApi.createUploadToken);
 const confirmUploadMock = vi.mocked(webApi.confirmUpload);
+const mediaAccessUrlMock = vi.mocked(webApi.mediaAccessUrl);
 const getCurrentDeviceLocationMock = vi.mocked(getCurrentDeviceLocation);
 
 const demoChild = {
@@ -106,6 +107,7 @@ describe('App Shell', () => {
     updateMeMock.mockReset();
     createUploadTokenMock.mockReset();
     confirmUploadMock.mockReset();
+    mediaAccessUrlMock.mockReset();
     getCurrentDeviceLocationMock.mockReset();
     window.history.pushState({}, '', '/auth/login');
   });
@@ -694,6 +696,36 @@ describe('App Shell', () => {
         Reflect.deleteProperty(URL, 'revokeObjectURL');
       }
     }
+  });
+
+  it('resolves account avatar media references when the local preview cache is missing', async () => {
+    window.history.pushState({}, '', '/profile/account');
+    window.localStorage.clear();
+    refreshMock.mockResolvedValue({
+      access_token: 'token-123',
+      expires_in: 7200,
+      user: {
+        user_no: 'u_avatar',
+        nickname: '测试用户',
+        avatar_url: 'media:m_remote_avatar',
+        membership_type: 'free',
+      },
+      need_create_child: false,
+    });
+    listChildrenMock.mockResolvedValue([demoChild]);
+    detailChildMock.mockResolvedValue(demoChild);
+    mediaAccessUrlMock.mockResolvedValue({
+      media_no: 'm_remote_avatar',
+      access_url: 'https://cdn.example.test/avatar.jpg',
+      expires_in: 3600,
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect((screen.getByRole('img', { name: '测试用户' }) as HTMLImageElement).src).toBe('https://cdn.example.test/avatar.jpg');
+    });
+    expect(mediaAccessUrlMock).toHaveBeenCalledWith('m_remote_avatar');
   });
 
   it('keeps uploaded media preview available after publishing before the server has an access URL', async () => {
