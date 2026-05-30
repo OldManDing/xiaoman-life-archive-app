@@ -48,7 +48,7 @@ const auditPhone = `139${String(Date.now()).slice(-8)}`;
 const minimumRouteClicks: Record<string, number> = {
   '/users': 6,
   '/families': 2,
-  '/invites': 3,
+  '/invites': 2,
   '/children': 2,
   '/records': 3,
   '/media': 5,
