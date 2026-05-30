@@ -22,6 +22,9 @@ test.describe('Admin critical journeys', () => {
 
   test('logs in and renders dashboard with localized seed data', async ({ page }) => {
     await loginAdmin(page);
+    await page.reload();
+    await expect(page).toHaveURL(/\/dashboard$/);
+    await expect(page.getByRole('heading', { name: '后台总览' })).toBeVisible();
 
     await expect(page.getByText('系统管理员')).toBeVisible();
     await expect(page.getByText('超级管理员', { exact: true })).toBeVisible();
