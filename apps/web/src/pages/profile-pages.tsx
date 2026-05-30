@@ -29,6 +29,8 @@ const profileSectionStyle = {
 
 const isGeneratedSvgAvatar = (src?: string | null) => Boolean(src?.trim().startsWith('data:image/svg+xml'));
 
+const isPositiveStatusMessage = (message: string) => !/(失败|不能|请先|仅支持|无法|错误)/.test(message);
+
 const uploadAvatarImage = async (childNo: string, file: File) => {
   const uploadFile = withResolvedFileMimeType(file);
   const uploadToken = await webApi.createUploadToken({
@@ -59,8 +61,14 @@ const uploadAvatarImage = async (childNo: string, file: File) => {
 const ProfileAvatar = ({ src, label, fallbackSrc = referenceAssets.momAvatar }: { src?: string | null; label: string; fallbackSrc?: string }) => {
   const resolvedSrc = src && !isGeneratedSvgAvatar(src) ? resolveStoredMediaUrl(src) : null;
   const displaySrc = resolvedSrc ?? fallbackSrc;
-  if (displaySrc) {
-    return <img src={displaySrc} alt={label} style={{ width: '68px', height: '68px', borderRadius: '999px', objectFit: 'cover', border: '1px solid #e7e5e4', boxShadow: '0 5px 16px rgba(15,23,42,0.12)', flexShrink: 0 }} />;
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    setFailedSrc(null);
+  }, [displaySrc]);
+
+  if (displaySrc && failedSrc !== displaySrc) {
+    return <img src={displaySrc} alt={label} onError={() => setFailedSrc(displaySrc)} style={{ width: '68px', height: '68px', borderRadius: '999px', objectFit: 'cover', border: '1px solid #e7e5e4', boxShadow: '0 5px 16px rgba(15,23,42,0.12)', flexShrink: 0 }} />;
   }
 
   return (
@@ -87,8 +95,14 @@ const ProfileAvatar = ({ src, label, fallbackSrc = referenceAssets.momAvatar }: 
 const SmallChildAvatar = ({ src, label }: { src?: string | null; label: string }) => {
   const resolvedSrc = src && !isGeneratedSvgAvatar(src) ? resolveStoredMediaUrl(src) : null;
   const displaySrc = resolvedSrc ?? referenceAssets.childAvatar;
-  if (displaySrc) {
-    return <img src={displaySrc} alt={label} style={{ width: '38px', height: '38px', borderRadius: '999px', objectFit: 'cover', border: '1px solid #eee9df', flexShrink: 0 }} />;
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    setFailedSrc(null);
+  }, [displaySrc]);
+
+  if (displaySrc && failedSrc !== displaySrc) {
+    return <img src={displaySrc} alt={label} onError={() => setFailedSrc(displaySrc)} style={{ width: '38px', height: '38px', borderRadius: '999px', objectFit: 'cover', border: '1px solid #eee9df', flexShrink: 0 }} />;
   }
 
   return (
@@ -309,6 +323,7 @@ export const ProfilePage = () => {
                   src={activeChild?.avatar_url && !isGeneratedSvgAvatar(activeChild.avatar_url) ? resolveStoredMediaUrl(activeChild.avatar_url) ?? referenceAssets.childAvatar : referenceAssets.childAvatar}
                   label={activeChild?.name ?? '孩子'}
                   size={44}
+                  fallbackSrc={referenceAssets.childAvatar}
                 />
                 <span style={{ minWidth: 0 }}>
                   <strong style={{ display: 'block', color: '#172033', fontSize: 16, fontWeight: 900 }}>{activeChild?.name ?? '孩子资料'}</strong>
@@ -362,12 +377,19 @@ export const AccountPage = () => {
   const [nickname, setNickname] = useState(user?.nickname ?? '');
   const [saving, setSaving] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const displayMobile = settings.hideMobileMask ? '已隐藏' : user?.mobile ?? '当前未提供';
 
   useEffect(() => {
     setNickname(user?.nickname ?? '');
   }, [user?.nickname]);
+
+  useEffect(() => {
+    return () => {
+      if (avatarPreviewUrl?.startsWith('blob:') && typeof URL.revokeObjectURL === 'function') URL.revokeObjectURL(avatarPreviewUrl);
+    };
+  }, [avatarPreviewUrl]);
 
   const onSave = async () => {
     const trimmed = nickname.trim();
@@ -402,14 +424,18 @@ export const AccountPage = () => {
       return;
     }
 
+    const uploadFile = withResolvedFileMimeType(file);
+    const previewUrl = typeof URL.createObjectURL === 'function' ? URL.createObjectURL(uploadFile) : null;
+    setAvatarPreviewUrl(previewUrl);
     setAvatarUploading(true);
-    setMessage(null);
+    setMessage('头像本地预览已显示，正在保存到账号…');
     try {
-      const avatarUrl = await uploadAvatarImage(activeChild.child_no, file);
+      const avatarUrl = await uploadAvatarImage(activeChild.child_no, uploadFile);
       const nextProfile = await webApi.updateMe({ avatar_url: avatarUrl });
       setUserProfile({ ...nextProfile, avatar_url: avatarUrl });
       setMessage('头像已更新');
     } catch (err) {
+      setAvatarPreviewUrl(null);
       setMessage(err instanceof Error ? err.message : '头像上传失败');
     } finally {
       setAvatarUploading(false);
@@ -421,7 +447,7 @@ export const AccountPage = () => {
       <Panel>
         <div style={rowStyle}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-            <ProfileAvatar src={user?.avatar_url} label={user?.nickname ?? '我的头像'} />
+            <ProfileAvatar src={avatarPreviewUrl ?? user?.avatar_url} label={user?.nickname ?? '我的头像'} />
             <label
               style={{
                 ...secondaryButtonStyle,
@@ -441,7 +467,7 @@ export const AccountPage = () => {
           </Field>
           <p style={helperTextStyle}>会员类型：{membershipTypeLabel(user?.membership_type)}</p>
           <p style={helperTextStyle}>脱敏手机号：{displayMobile}</p>
-          {message ? <p style={{ ...helperTextStyle, color: message.includes('成功') ? '#0f766e' : '#dc2626' }}>{message}</p> : null}
+          {message ? <p style={{ ...helperTextStyle, color: isPositiveStatusMessage(message) ? '#0f766e' : '#dc2626' }}>{message}</p> : null}
           <div style={buttonRowStyle}>
             <button type="button" style={primaryButtonStyle} onClick={() => void onSave()} disabled={saving}>
               {saving ? '保存中…' : '保存昵称'}

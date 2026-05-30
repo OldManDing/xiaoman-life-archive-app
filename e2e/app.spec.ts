@@ -189,6 +189,8 @@ test.describe('App critical journeys', () => {
     await expect(page.getByRole('dialog', { name: '手机采集' })).toHaveCount(0);
 
     await page.goto(`${webBaseURL}/record/create?type=video&focus=media`);
+    await expect(page.getByLabel('媒体预览')).toBeVisible();
+    await expect(page.getByText('这里会显示拍摄后的照片、视频和语音播放器')).toBeVisible();
     await expect(page.locator('input[aria-label="拍摄视频"]')).toHaveAttribute('capture', 'environment');
     const videoChooserPromise = page.waitForEvent('filechooser');
     await page.getByRole('button', { name: '拍摄视频' }).click();
@@ -199,6 +201,8 @@ test.describe('App critical journeys', () => {
     await expect(page.getByRole('dialog', { name: '手机采集' })).toHaveCount(0);
 
     await page.goto(`${webBaseURL}/record/create?type=audio&focus=media`);
+    await expect(page.getByLabel('媒体预览')).toBeVisible();
+    await expect(page.getByText('这里会显示拍摄后的照片、视频和语音播放器')).toBeVisible();
     await expect(page.locator('input[aria-label="录制语音"]')).toHaveAttribute('capture', '');
     const audioChooserPromise = page.waitForEvent('filechooser');
     await page.getByRole('button', { name: '录制语音' }).click();

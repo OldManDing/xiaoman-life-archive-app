@@ -14,6 +14,8 @@ import { AppSegmentedControl, Field, PageShell, Panel, helperTextStyle, inputSty
 import { EmptyState, buttonRowStyle, formSubmitSpacingStyle, rowStyle } from './shared';
 import { RefAvatar, RefSectionTitle, refCardStyle, refMutedTextStyle, refPageStyle, refSoftCardStyle, referenceAssets } from './reference-ui';
 
+const isPositiveStatusMessage = (message: string) => !/(失败|不能|请先|仅支持|无法|错误)/.test(message);
+
 const uploadChildAvatarImage = async (childNo: string, file: File) => {
   const uploadFile = withResolvedFileMimeType(file);
   const uploadToken = await webApi.createUploadToken({
@@ -43,8 +45,14 @@ const uploadChildAvatarImage = async (childNo: string, file: File) => {
 
 const ChildAvatarPreview = ({ src, label }: { src?: string | null; label: string }) => {
   const resolvedSrc = resolveStoredMediaUrl(src);
-  if (resolvedSrc) {
-    return <img src={resolvedSrc} alt={label} style={{ width: '72px', height: '72px', borderRadius: '8px', objectFit: 'cover', border: '1px solid #e7e5e4', background: '#f5f5f4' }} />;
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    setFailedSrc(null);
+  }, [resolvedSrc]);
+
+  if (resolvedSrc && failedSrc !== resolvedSrc) {
+    return <img src={resolvedSrc} alt={label} onError={() => setFailedSrc(resolvedSrc)} style={{ width: '72px', height: '72px', borderRadius: '8px', objectFit: 'cover', border: '1px solid #e7e5e4', background: '#f5f5f4' }} />;
   }
 
   return (
@@ -64,8 +72,14 @@ const resolveReferenceAvatar = (src: string | null | undefined, fallbackSrc: str
 const FamilyAvatar = ({ src, label, size = 42, radius = '999px', fallbackSrc }: { src?: string | null; label: string; size?: number; radius?: string; fallbackSrc?: string }) => {
   const resolvedSrc = src && !isGeneratedSvgAvatar(src) ? resolveStoredMediaUrl(src) : null;
   const displaySrc = resolvedSrc ?? fallbackSrc;
-  if (displaySrc) {
-    return <img src={displaySrc} alt={label} style={{ width: `${size}px`, height: `${size}px`, borderRadius: radius, objectFit: 'cover', border: '1px solid #eee9df', flexShrink: 0, boxShadow: '0 2px 8px rgba(15,23,42,0.03)' }} />;
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+
+  useEffect(() => {
+    setFailedSrc(null);
+  }, [displaySrc]);
+
+  if (displaySrc && failedSrc !== displaySrc) {
+    return <img src={displaySrc} alt={label} onError={() => setFailedSrc(displaySrc)} style={{ width: `${size}px`, height: `${size}px`, borderRadius: radius, objectFit: 'cover', border: '1px solid #eee9df', flexShrink: 0, boxShadow: '0 2px 8px rgba(15,23,42,0.03)' }} />;
   }
 
   return (
@@ -126,7 +140,7 @@ export const FamilyPage = () => {
           {activeChild ? (
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 14, alignItems: 'center' }}>
               <div style={{ display: 'flex', gap: 13, alignItems: 'center', minWidth: 0 }}>
-                <RefAvatar src={resolveReferenceAvatar(activeChild.avatar_url, referenceAssets.childPhoto)} label={activeChildName} size={52} radius="16px" />
+                <RefAvatar src={resolveReferenceAvatar(activeChild.avatar_url, referenceAssets.childPhoto)} label={activeChildName} size={52} radius="16px" fallbackSrc={referenceAssets.childPhoto} />
                 <div style={{ minWidth: 0 }}>
                   <h2 style={{ margin: 0, color: '#172033', fontSize: 18, fontWeight: 950, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeChildName}的家庭</h2>
                   <p style={{ ...refMutedTextStyle, marginTop: 4 }}>已有 {membersLoading ? '…' : memberCount} 位家人加入记录</p>
@@ -246,6 +260,7 @@ export const FamilyChildPage = () => {
   });
   const [saving, setSaving] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
@@ -260,6 +275,12 @@ export const FamilyChildPage = () => {
       });
     }
   }, [data]);
+
+  useEffect(() => {
+    return () => {
+      if (avatarPreviewUrl?.startsWith('blob:') && typeof URL.revokeObjectURL === 'function') URL.revokeObjectURL(avatarPreviewUrl);
+    };
+  }, [avatarPreviewUrl]);
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -287,16 +308,20 @@ export const FamilyChildPage = () => {
       return;
     }
 
+    const uploadFile = withResolvedFileMimeType(file);
+    const previewUrl = typeof URL.createObjectURL === 'function' ? URL.createObjectURL(uploadFile) : null;
+    setAvatarPreviewUrl(previewUrl);
     setAvatarUploading(true);
-    setMessage(null);
+    setMessage('头像本地预览已显示，正在保存到档案…');
     try {
-      const avatarUrl = await uploadChildAvatarImage(activeChild.child_no, file);
+      const avatarUrl = await uploadChildAvatarImage(activeChild.child_no, uploadFile);
       const updated = await webApi.updateChild(activeChild.child_no, { avatar_url: avatarUrl });
       await refreshChildren();
       setActiveChild({ ...updated, avatar_url: avatarUrl });
       setForm((current) => ({ ...current, avatar_url: avatarUrl }));
       setMessage('头像已更新');
     } catch (err) {
+      setAvatarPreviewUrl(null);
       setMessage(err instanceof Error ? err.message : '头像上传失败');
     } finally {
       setAvatarUploading(false);
@@ -311,7 +336,7 @@ export const FamilyChildPage = () => {
         {!loading && !error && data ? (
           <form onSubmit={onSubmit} style={rowStyle}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-              <ChildAvatarPreview src={form.avatar_url || data.avatar_url} label={form.name || data.name} />
+              <ChildAvatarPreview src={avatarPreviewUrl ?? (form.avatar_url || data.avatar_url)} label={form.name || data.name} />
               <label
                 style={{
                   ...secondaryButtonStyle,
@@ -361,7 +386,7 @@ export const FamilyChildPage = () => {
             <Field label="备注">
               <textarea style={textareaStyle} value={form.remark} onChange={(event) => setForm((current) => ({ ...current, remark: event.target.value }))} />
             </Field>
-            {message ? <p style={{ ...helperTextStyle, color: message === '保存成功' ? '#0f766e' : '#dc2626' }}>{message}</p> : null}
+            {message ? <p style={{ ...helperTextStyle, color: isPositiveStatusMessage(message) ? '#0f766e' : '#dc2626' }}>{message}</p> : null}
             <div style={{ ...buttonRowStyle, ...formSubmitSpacingStyle }}>
               <button type="submit" style={primaryButtonStyle} disabled={saving}>
                 {saving ? '保存中…' : '保存孩子资料'}

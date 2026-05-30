@@ -1,4 +1,4 @@
-import { type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -137,27 +137,41 @@ export const RefAvatar = ({
   label,
   size = 44,
   radius = '999px',
+  fallbackSrc = referenceAssets.momAvatar,
 }: {
   src?: string;
   label: string;
   size?: number;
   radius?: string;
-}) => (
-  <img
-    src={src}
-    alt={label}
-    style={{
-      width: `${size}px`,
-      height: `${size}px`,
-      borderRadius: radius,
-      objectFit: 'cover',
-      border: '2px solid rgba(255,255,255,0.92)',
-      boxShadow: '0 8px 20px rgba(25,35,55,0.16)',
-      flexShrink: 0,
-      background: '#f5f5f4',
-    }}
-  />
-);
+  fallbackSrc?: string;
+}) => {
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const displaySrc = failedSrc === src ? fallbackSrc : src;
+
+  useEffect(() => {
+    setFailedSrc(null);
+  }, [src]);
+
+  return (
+    <img
+      src={displaySrc}
+      alt={label}
+      onError={() => {
+        if (displaySrc !== fallbackSrc) setFailedSrc(src);
+      }}
+      style={{
+        width: `${size}px`,
+        height: `${size}px`,
+        borderRadius: radius,
+        objectFit: 'cover',
+        border: '2px solid rgba(255,255,255,0.92)',
+        boxShadow: '0 8px 20px rgba(25,35,55,0.16)',
+        flexShrink: 0,
+        background: '#f5f5f4',
+      }}
+    />
+  );
+};
 
 export const RefSectionTitle = ({ children, style }: { children: ReactNode; style?: CSSProperties }) => (
   <h2 style={{ margin: '0 0 12px 2px', color: '#334155', fontSize: '15px', fontWeight: 900, ...style }}>{children}</h2>

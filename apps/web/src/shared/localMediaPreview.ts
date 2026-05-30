@@ -3,6 +3,7 @@ const LOCAL_MEDIA_REFERENCE_PREFIX = 'local-media:';
 const STORED_MEDIA_REFERENCE_PREFIX = 'media:';
 const MAX_PREVIEW_BYTES = 4_200_000;
 const IMAGE_PREVIEW_MAX_SIDE = 1280;
+const RAW_BROWSER_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 
 export const readFileAsDataUrl = (file: File) =>
   new Promise<string>((resolve, reject) => {
@@ -59,8 +60,13 @@ const compressImagePreview = async (file: File) => {
 };
 
 export const createPersistableMediaPreview = async (file: File) => {
+  const normalizedType = file.type.toLowerCase().split(';', 1)[0];
+  if (normalizedType.startsWith('image/') && !RAW_BROWSER_IMAGE_TYPES.has(normalizedType)) {
+    return compressImagePreview(file);
+  }
+
   const dataUrl = await readFileAsDataUrl(file);
-  if (dataUrl.length <= MAX_PREVIEW_BYTES || !file.type.startsWith('image/')) return dataUrl;
+  if (dataUrl.length <= MAX_PREVIEW_BYTES || !normalizedType.startsWith('image/')) return dataUrl;
   return compressImagePreview(file);
 };
 

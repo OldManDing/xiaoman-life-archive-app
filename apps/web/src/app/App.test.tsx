@@ -46,6 +46,9 @@ const listRecordsMock = vi.mocked(webApi.listRecords);
 const createRecordMock = vi.mocked(webApi.createRecord);
 const detailRecordMock = vi.mocked(webApi.detailRecord);
 const searchLocationsMock = vi.mocked(webApi.searchLocations);
+const updateMeMock = vi.mocked(webApi.updateMe);
+const createUploadTokenMock = vi.mocked(webApi.createUploadToken);
+const confirmUploadMock = vi.mocked(webApi.confirmUpload);
 
 const demoChild = {
   child_no: 'c_001',
@@ -94,6 +97,9 @@ describe('App Shell', () => {
     createRecordMock.mockReset();
     detailRecordMock.mockReset();
     searchLocationsMock.mockReset();
+    updateMeMock.mockReset();
+    createUploadTokenMock.mockReset();
+    confirmUploadMock.mockReset();
     window.history.pushState({}, '', '/auth/login');
   });
 
@@ -545,6 +551,58 @@ describe('App Shell', () => {
     expect(screen.getByTestId('record-media-preview-empty')).toBeDefined();
     expect(screen.getByRole('button', { name: '拍照记录' })).toBeDefined();
     expect(screen.getByRole('button', { name: '拍摄视频' })).toBeDefined();
+  });
+
+  it('shows the empty media preview immediately for video and audio capture routes', async () => {
+    mockAuthenticatedSession();
+
+    for (const route of ['/record/create?type=video&focus=media', '/record/create?type=audio&focus=media']) {
+      window.history.pushState({}, '', route);
+      const view = render(<App />);
+      expect(await screen.findByLabelText('媒体预览')).toBeDefined();
+      expect(screen.getByTestId('record-media-preview-empty')).toBeDefined();
+      view.unmount();
+    }
+  });
+
+  it('shows an account avatar preview before the upload finishes', async () => {
+    window.history.pushState({}, '', '/profile/account');
+    mockAuthenticatedSession();
+    createUploadTokenMock.mockReturnValue(new Promise(() => undefined));
+    const originalCreateObjectURL = URL.createObjectURL;
+    const originalRevokeObjectURL = URL.revokeObjectURL;
+    Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: vi.fn(() => 'blob:avatar-preview') });
+    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: vi.fn() });
+
+    try {
+      render(<App />);
+      const avatarInput = await waitFor(() => {
+        const input = document.querySelector('input[type="file"]');
+        expect(input).not.toBeNull();
+        return input as HTMLInputElement;
+      });
+
+      fireEvent.change(avatarInput, {
+        target: { files: [new File(['avatar'], 'avatar.JPG', { type: 'image/png' })] },
+      });
+
+      await waitFor(() => {
+        expect((screen.getByRole('img') as HTMLImageElement).src).toBe('blob:avatar-preview');
+      });
+      expect(screen.getByText('头像本地预览已显示，正在保存到账号…')).toBeDefined();
+      expect(createUploadTokenMock).toHaveBeenCalled();
+    } finally {
+      if (originalCreateObjectURL) {
+        Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: originalCreateObjectURL });
+      } else {
+        Reflect.deleteProperty(URL, 'createObjectURL');
+      }
+      if (originalRevokeObjectURL) {
+        Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: originalRevokeObjectURL });
+      } else {
+        Reflect.deleteProperty(URL, 'revokeObjectURL');
+      }
+    }
   });
 
   it('shows audio records in the primary media preview', async () => {
