@@ -187,6 +187,7 @@ export const AdminSelect = ({
 };
 
 export const AdminDateInput = ({
+  className,
   containerStyle,
   inputStyle: inputStyleOverride,
   type = 'date',
@@ -201,11 +202,12 @@ export const AdminDateInput = ({
       {...props}
       type={type}
       disabled={disabled}
-      className="admin-date-input"
+      className={['admin-date-input', className].filter(Boolean).join(' ')}
       style={{
         ...inputStyle,
+        height: '42px',
         minHeight: '42px',
-        paddingRight: '42px',
+        padding: '10px 42px 10px 12px',
         opacity: disabled ? 0.62 : 1,
         cursor: disabled ? 'not-allowed' : 'text',
         ...inputStyleOverride,

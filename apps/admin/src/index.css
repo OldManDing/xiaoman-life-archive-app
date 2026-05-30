@@ -561,7 +561,41 @@ table {
 
 .admin-date-input-shell input[type="date"],
 .admin-date-input-shell input[type="datetime-local"] {
+  width: 100%;
   color-scheme: light;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.35;
+}
+
+.admin-date-input::-webkit-datetime-edit {
+  padding: 0;
+}
+
+.admin-date-input::-webkit-calendar-picker-indicator {
+  width: 24px;
+  height: 24px;
+  margin-right: -4px;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.admin-date-input::-webkit-inner-spin-button,
+.admin-date-input::-webkit-clear-button {
+  display: none;
+}
+
+.admin-date-input:disabled {
+  background: #f5f8f6 !important;
+}
+
+.admin-date-input:disabled + .admin-date-input-icon {
+  color: #94a3a0;
+}
+
+.admin-date-input-shell:focus-within .admin-date-input-icon,
+.admin-date-input-shell:hover .admin-date-input-icon {
+  color: #2f6f65;
 }
 
 .admin-date-input-icon {
