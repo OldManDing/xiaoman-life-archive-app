@@ -4,6 +4,7 @@ const STORED_MEDIA_REFERENCE_PREFIX = 'media:';
 const MAX_PREVIEW_BYTES = 4_200_000;
 const IMAGE_PREVIEW_MAX_SIDE = 1280;
 const RAW_BROWSER_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+const runtimeMediaPreviewUrls = new Map<string, string>();
 
 export const readFileAsDataUrl = (file: File) =>
   new Promise<string>((resolve, reject) => {
@@ -61,17 +62,21 @@ const compressImagePreview = async (file: File) => {
 
 export const createPersistableMediaPreview = async (file: File) => {
   const normalizedType = file.type.toLowerCase().split(';', 1)[0];
+  const isImage = normalizedType.startsWith('image/');
+  if (!isImage && file.size > MAX_PREVIEW_BYTES) return null;
+
   if (normalizedType.startsWith('image/') && !RAW_BROWSER_IMAGE_TYPES.has(normalizedType)) {
     return compressImagePreview(file);
   }
 
   const dataUrl = await readFileAsDataUrl(file);
-  if (dataUrl.length <= MAX_PREVIEW_BYTES || !normalizedType.startsWith('image/')) return dataUrl;
+  if (!isImage) return dataUrl.length <= MAX_PREVIEW_BYTES ? dataUrl : null;
+  if (dataUrl.length <= MAX_PREVIEW_BYTES) return dataUrl;
   return compressImagePreview(file);
 };
 
-export const saveLocalMediaPreview = (mediaNo: string, dataUrl: string) => {
-  if (!mediaNo || !/^data:(image|video|audio)\//.test(dataUrl)) return false;
+export const saveLocalMediaPreview = (mediaNo: string, dataUrl: string | null | undefined) => {
+  if (!mediaNo || !dataUrl || !/^data:(image|video|audio)\//.test(dataUrl)) return false;
   if (dataUrl.length > MAX_PREVIEW_BYTES) return false;
 
   try {
@@ -93,8 +98,24 @@ export const getLocalMediaPreview = (mediaNo?: string | null) => {
   }
 };
 
+export const saveRuntimeMediaPreview = (mediaNo: string, previewUrl: string | null | undefined) => {
+  if (!mediaNo || !previewUrl) return false;
+  runtimeMediaPreviewUrls.set(mediaNo, previewUrl);
+  return true;
+};
+
+export const getRuntimeMediaPreview = (mediaNo?: string | null) => {
+  if (!mediaNo) return null;
+  return runtimeMediaPreviewUrls.get(mediaNo) ?? null;
+};
+
+export const removeRuntimeMediaPreview = (mediaNo?: string | null) => {
+  if (!mediaNo) return;
+  runtimeMediaPreviewUrls.delete(mediaNo);
+};
+
 export const resolveMediaPreviewUrl = (mediaNo: string | null | undefined, accessUrl: string | null | undefined) =>
-  getLocalMediaPreview(mediaNo) ?? accessUrl ?? null;
+  getRuntimeMediaPreview(mediaNo) ?? getLocalMediaPreview(mediaNo) ?? accessUrl ?? null;
 
 export const toLocalMediaReference = (mediaNo: string) => `${LOCAL_MEDIA_REFERENCE_PREFIX}${mediaNo}`;
 
@@ -116,10 +137,10 @@ export const resolveStoredMediaUrl = (value: string | null | undefined) => {
   const normalizedValue = value?.trim();
   if (!normalizedValue) return null;
   if (normalizedValue.startsWith(LOCAL_MEDIA_REFERENCE_PREFIX)) {
-    return getLocalMediaPreview(normalizedValue.slice(LOCAL_MEDIA_REFERENCE_PREFIX.length)) ?? null;
+    return resolveMediaPreviewUrl(normalizedValue.slice(LOCAL_MEDIA_REFERENCE_PREFIX.length), null);
   }
   if (normalizedValue.startsWith(STORED_MEDIA_REFERENCE_PREFIX)) {
-    return getLocalMediaPreview(normalizedValue.slice(STORED_MEDIA_REFERENCE_PREFIX.length)) ?? null;
+    return resolveMediaPreviewUrl(normalizedValue.slice(STORED_MEDIA_REFERENCE_PREFIX.length), null);
   }
   return normalizedValue;
 };

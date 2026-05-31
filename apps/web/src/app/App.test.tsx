@@ -672,6 +672,45 @@ describe('App Shell', () => {
     }
   });
 
+  it('shows selected video preview immediately while upload is still pending', async () => {
+    window.history.pushState({}, '', '/record/create?type=video&focus=media');
+    mockAuthenticatedSession();
+    createUploadTokenMock.mockReturnValue(new Promise(() => undefined));
+    const originalCreateObjectURL = URL.createObjectURL;
+    const originalRevokeObjectURL = URL.revokeObjectURL;
+    Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: vi.fn(() => 'blob:record-video-preview') });
+    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: vi.fn() });
+
+    try {
+      render(<App />);
+      const videoInput = await waitFor(() => {
+        const input = document.querySelector('input[aria-label="拍摄视频"]');
+        expect(input).not.toBeNull();
+        return input as HTMLInputElement;
+      });
+
+      fireEvent.change(videoInput, {
+        target: { files: [new File(['video'], 'clip.mp4', { type: 'video/mp4' })] },
+      });
+
+      const preview = await screen.findByLabelText('视频预览');
+      expect(preview.querySelector('video')?.getAttribute('src')).toBe('blob:record-video-preview');
+      expect(screen.getByText('上传中')).toBeDefined();
+      expect(createUploadTokenMock).toHaveBeenCalled();
+    } finally {
+      if (originalCreateObjectURL) {
+        Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: originalCreateObjectURL });
+      } else {
+        Reflect.deleteProperty(URL, 'createObjectURL');
+      }
+      if (originalRevokeObjectURL) {
+        Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: originalRevokeObjectURL });
+      } else {
+        Reflect.deleteProperty(URL, 'revokeObjectURL');
+      }
+    }
+  });
+
   it('shows an account avatar preview before the upload finishes', async () => {
     window.history.pushState({}, '', '/profile/account');
     mockAuthenticatedSession();
@@ -824,7 +863,110 @@ describe('App Shell', () => {
       fireEvent.click(screen.getByRole('button', { name: '发布' }));
 
       const primaryPreview = await screen.findByTestId('record-primary-media-preview');
-      expect(primaryPreview.querySelector('img')?.getAttribute('src')).toMatch(/^data:image\/png;base64,/);
+      expect(primaryPreview.querySelector('img')?.getAttribute('src')).toMatch(/^(data:image\/png;base64,|blob:record-photo-preview$)/);
+    } finally {
+      if (originalCreateObjectURL) {
+        Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: originalCreateObjectURL });
+      } else {
+        Reflect.deleteProperty(URL, 'createObjectURL');
+      }
+      if (originalRevokeObjectURL) {
+        Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: originalRevokeObjectURL });
+      } else {
+        Reflect.deleteProperty(URL, 'revokeObjectURL');
+      }
+      if (originalFetch) {
+        Object.defineProperty(globalThis, 'fetch', { configurable: true, value: originalFetch });
+      } else {
+        Reflect.deleteProperty(globalThis, 'fetch');
+      }
+    }
+  });
+
+  it('keeps uploaded video preview available after publishing before the server has an access URL', async () => {
+    window.history.pushState({}, '', '/record/create?type=video&focus=media');
+    mockAuthenticatedSession();
+    const originalCreateObjectURL = URL.createObjectURL;
+    const originalRevokeObjectURL = URL.revokeObjectURL;
+    const originalFetch = globalThis.fetch;
+    Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: vi.fn(() => 'blob:record-video-preview') });
+    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: vi.fn() });
+    Object.defineProperty(globalThis, 'fetch', { configurable: true, value: vi.fn().mockResolvedValue({ ok: true }) });
+
+    const createdRecord = {
+      record_no: 'r_published_video_preview',
+      child_no: 'c_001',
+      creator_user_no: 'u_001',
+      creator_name: '测试用户',
+      record_type: 'video',
+      title: '发布后视频预览',
+      content_text: '发布后马上应该看到刚上传的视频。',
+      media_list: [
+        {
+          media_no: 'm_video_after_publish',
+          media_type: 'video',
+          access_url: '',
+          original_name: 'clip.mp4',
+          mime_type: 'video/mp4',
+          size_bytes: 4_300_001,
+          width: null,
+          height: null,
+          duration_seconds: null,
+        },
+      ],
+      tags: [],
+      event_time: '2026-05-28T10:00:00.000Z',
+      location_text: null,
+      visibility_scope: 'family',
+      is_milestone: false,
+      ai_generated_title: null,
+      ai_summary: null,
+      ai_status: null,
+      status: 'published',
+      created_at: '2026-05-28T10:00:00.000Z',
+      updated_at: '2026-05-28T10:00:00.000Z',
+    };
+
+    createUploadTokenMock.mockResolvedValue({
+      media_no: 'm_video_after_publish',
+      object_key: 'mock/clip.mp4',
+      upload_url: 'https://upload.example/clip.mp4',
+      method: 'PUT',
+      headers: {},
+      mock_upload: false,
+      expires_in: 600,
+    });
+    confirmUploadMock.mockResolvedValue({
+      media_no: 'm_video_after_publish',
+      status: 'ready',
+      width: null,
+      height: null,
+      duration_seconds: null,
+      created_at: '2026-05-28T10:00:00.000Z',
+      updated_at: '2026-05-28T10:00:00.000Z',
+    });
+    createRecordMock.mockResolvedValue(createdRecord);
+    detailRecordMock.mockResolvedValue(createdRecord);
+
+    try {
+      render(<App />);
+      const videoInput = await waitFor(() => {
+        const input = document.querySelector('input[aria-label="拍摄视频"]');
+        expect(input).not.toBeNull();
+        return input as HTMLInputElement;
+      });
+      fireEvent.change(videoInput, {
+        target: { files: [new File([new Uint8Array(4_300_001)], 'clip.mp4', { type: 'video/mp4' })] },
+      });
+      await waitFor(() => expect(confirmUploadMock).toHaveBeenCalled());
+
+      fireEvent.change(screen.getByPlaceholderText('给这一刻起个名字'), { target: { value: '发布后视频预览' } });
+      fireEvent.change(screen.getByPlaceholderText('在想什么呢？记录一下这一刻发生的故事…'), { target: { value: '发布后马上应该看到刚上传的视频。' } });
+      const publishButtons = screen.getAllByRole('button', { name: /发布|完成发布/ });
+      fireEvent.click(publishButtons[publishButtons.length - 1]);
+
+      const primaryPreview = await screen.findByTestId('record-primary-media-preview');
+      expect(primaryPreview.querySelector('video')?.getAttribute('src')).toBe('blob:record-video-preview');
     } finally {
       if (originalCreateObjectURL) {
         Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: originalCreateObjectURL });

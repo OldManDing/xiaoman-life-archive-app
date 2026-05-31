@@ -27,7 +27,7 @@ const uploadChildAvatarImage = async (childNo: string, file: File) => {
   });
 
   const preview = await createPersistableMediaPreview(uploadFile);
-  saveLocalMediaPreview(uploadToken.media_no, preview);
+  if (preview) saveLocalMediaPreview(uploadToken.media_no, preview);
 
   if (!uploadToken.mock_upload) {
     const uploadResponse = await fetch(uploadToken.upload_url, {

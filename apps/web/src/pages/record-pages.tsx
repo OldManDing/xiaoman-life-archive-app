@@ -10,7 +10,7 @@ import { webApi } from '../shared/api/webApi';
 import type { AiJobDetail, LocationSuggestion, RecordDetail } from '../shared/api/types';
 import { useAsyncData } from '../shared/hooks';
 import { aiJobStatusLabel, mediaTypeLabel, recordStatusLabel, recordTypeLabel, visibilityScopeLabel } from '../shared/labels';
-import { createPersistableMediaPreview, resolveMediaPreviewUrl, resolveStoredMediaUrl, saveLocalMediaPreview } from '../shared/localMediaPreview';
+import { createPersistableMediaPreview, removeRuntimeMediaPreview, resolveMediaPreviewUrl, resolveStoredMediaUrl, saveLocalMediaPreview, saveRuntimeMediaPreview } from '../shared/localMediaPreview';
 import { getCurrentDeviceLocation } from '../shared/deviceLocation';
 import { AppSelect, AppTopBar, PageShell, Panel, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle } from '../shared/ui';
 import { EmptyState, buttonRowStyle, formSubmitSpacingStyle, formatDateTimeLocal, rowStyle } from './shared';
@@ -23,6 +23,8 @@ type MediaPreview = {
   media_type: 'image' | 'video' | 'audio';
   original_name?: string | null;
   is_local?: boolean;
+  upload_status?: 'uploading' | 'ready' | 'failed';
+  error_message?: string | null;
 };
 
 type MediaType = MediaPreview['media_type'];
@@ -32,6 +34,13 @@ const tagOptions = ['生日纪念', '户外日常', '语言发育', '大动作�
 
 const locationOptions = ['家里', '小区', '公园', '学校', '医院', '游乐场', '爷爷奶奶家', '外婆家'];
 const PERSISTABLE_NON_IMAGE_PREVIEW_BYTES = 4_200_000;
+
+const createPendingMediaNo = () => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return `pending-${crypto.randomUUID()}`;
+  }
+  return `pending-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+};
 
 const revokeObjectUrl = (url?: string | null) => {
   if (url?.startsWith('blob:') && typeof URL.revokeObjectURL === 'function') {
@@ -265,6 +274,8 @@ type RenderableMediaPreview = {
   media_type: string;
   original_name?: string | null;
   duration_seconds?: number | null;
+  upload_status?: 'uploading' | 'ready' | 'failed';
+  error_message?: string | null;
 };
 
 const mediaPreviewLabel = (mediaType: string) => {
@@ -300,6 +311,7 @@ const MediaPreviewTile = ({
 }) => {
   const mediaUrl = resolveMediaPreviewUrl(media.media_no, media.preview_url ?? media.access_url ?? null) ?? media.preview_url ?? media.access_url ?? '';
   const label = mediaPreviewLabel(media.media_type);
+  const statusLabel = media.upload_status === 'uploading' ? '上传中' : media.upload_status === 'failed' ? '上传失败' : null;
 
   return (
     <div
@@ -339,6 +351,16 @@ const MediaPreviewTile = ({
       {media.media_type !== 'audio' && mediaUrl ? (
         <span style={{ position: 'absolute', left: '10px', bottom: '10px', borderRadius: '999px', background: 'rgba(41,37,36,0.72)', color: '#fff', padding: '6px 10px', fontSize: '11px', fontWeight: 800 }}>
           {label}
+        </span>
+      ) : null}
+      {statusLabel ? (
+        <span style={{ position: 'absolute', right: '10px', bottom: '10px', borderRadius: '999px', background: media.upload_status === 'failed' ? 'rgba(220,38,38,0.92)' : 'rgba(23,52,47,0.86)', color: '#fff', padding: '6px 10px', fontSize: '11px', fontWeight: 850 }}>
+          {statusLabel}
+        </span>
+      ) : null}
+      {media.upload_status === 'failed' && media.error_message ? (
+        <span style={{ position: 'absolute', left: '10px', right: '10px', top: '10px', borderRadius: '12px', background: 'rgba(255,241,242,0.94)', color: '#be123c', padding: '7px 9px', fontSize: '11px', lineHeight: 1.45, fontWeight: 750 }}>
+          {media.error_message}
         </span>
       ) : null}
       {onRemove ? (
@@ -641,6 +663,31 @@ const RecordForm = ({
     input.click();
   };
 
+  const persistConfirmedMediaPreview = async (mediaNo: string, file: File, mediaType: MediaType, objectUrl: string) => {
+    if (mediaType !== 'image' && file.size > PERSISTABLE_NON_IMAGE_PREVIEW_BYTES) return;
+
+    try {
+      const persistedPreview = await createPersistableMediaPreview(file);
+      if (!persistedPreview || !saveLocalMediaPreview(mediaNo, persistedPreview)) return;
+
+      removeRuntimeMediaPreview(mediaNo);
+      setMediaPreviews((current) =>
+        current.map((item) =>
+          item.media_no === mediaNo
+            ? {
+                ...item,
+                preview_url: persistedPreview,
+                is_local: false,
+              }
+            : item,
+        ),
+      );
+      revokeObjectUrl(objectUrl);
+    } catch {
+      // Keep the runtime blob preview when a compact persisted preview cannot be generated.
+    }
+  };
+
   const uploadMediaFile = async (file: File) => {
     const childNo = form.child_no || currentChild?.child_no || (await waitForSelectedChildNo());
     if (!childNo) {
@@ -657,9 +704,21 @@ const RecordForm = ({
     const uploadFile = withResolvedFileMimeType(file);
     setUploading(true);
     setError(null);
+    const pendingMediaNo = createPendingMediaNo();
     const previewUrl = typeof URL.createObjectURL === 'function' ? URL.createObjectURL(uploadFile) : '';
-    let previewSource = previewUrl;
-    let shouldRevokePreview = Boolean(previewUrl);
+    if (previewUrl) saveRuntimeMediaPreview(pendingMediaNo, previewUrl);
+    setMediaPreviews((current) => [
+      ...current,
+      {
+        media_no: pendingMediaNo,
+        preview_url: previewUrl,
+        media_type: mediaType,
+        original_name: uploadFile.name,
+        is_local: Boolean(previewUrl),
+        upload_status: 'uploading',
+      },
+    ]);
+
     try {
       const uploadToken = await webApi.createUploadToken({
         child_no: childNo,
@@ -669,18 +728,7 @@ const RecordForm = ({
         media_type: mediaType,
       });
 
-      if (mediaType === 'image' || uploadFile.size <= PERSISTABLE_NON_IMAGE_PREVIEW_BYTES) {
-        try {
-          const persistedPreview = await createPersistableMediaPreview(uploadFile);
-          if (saveLocalMediaPreview(uploadToken.media_no, persistedPreview)) {
-            previewSource = persistedPreview;
-            shouldRevokePreview = false;
-            revokeObjectUrl(previewUrl);
-          }
-        } catch {
-          // The server upload can still succeed; keep the temporary preview for the edit screen.
-        }
-      }
+      if (previewUrl) saveRuntimeMediaPreview(uploadToken.media_no, previewUrl);
 
       if (!uploadToken.mock_upload) {
         const uploadResponse = await fetch(uploadToken.upload_url, {
@@ -703,19 +751,37 @@ const RecordForm = ({
         return current;
       });
       setMediaNos((current) => [...current, uploadToken.media_no]);
-      setMediaPreviews((current) => [
-        ...current,
-        {
-          media_no: uploadToken.media_no,
-          preview_url: previewSource,
-          media_type: mediaType,
-          original_name: uploadFile.name,
-          is_local: shouldRevokePreview,
-        },
-      ]);
+      setMediaPreviews((current) =>
+        current.map((item) =>
+          item.media_no === pendingMediaNo
+            ? {
+                media_no: uploadToken.media_no,
+                preview_url: previewUrl,
+                media_type: mediaType,
+                original_name: uploadFile.name,
+                is_local: false,
+                upload_status: 'ready',
+              }
+            : item,
+        ),
+      );
+      removeRuntimeMediaPreview(pendingMediaNo);
+      if (previewUrl) void persistConfirmedMediaPreview(uploadToken.media_no, uploadFile, mediaType, previewUrl);
     } catch (err) {
-      revokeObjectUrl(previewUrl);
-      setError(err instanceof Error ? err.message : '上传失败');
+      removeRuntimeMediaPreview(pendingMediaNo);
+      const message = err instanceof Error ? err.message : '上传失败';
+      setMediaPreviews((current) =>
+        current.map((item) =>
+          item.media_no === pendingMediaNo
+            ? {
+                ...item,
+                upload_status: 'failed',
+                error_message: message,
+              }
+            : item,
+        ),
+      );
+      setError(message);
     } finally {
       setUploading(false);
     }
@@ -807,10 +873,11 @@ const RecordForm = ({
   };
 
   const removeMedia = (mediaNo: string) => {
+    removeRuntimeMediaPreview(mediaNo);
     setMediaNos((current) => current.filter((item) => item !== mediaNo));
     setMediaPreviews((current) => {
       const removed = current.find((item) => item.media_no === mediaNo);
-      if (removed?.is_local) {
+      if (removed?.is_local || removed?.preview_url?.startsWith('blob:')) {
         revokeObjectUrl(removed.preview_url);
       }
       return current.filter((item) => item.media_no !== mediaNo);
@@ -818,6 +885,11 @@ const RecordForm = ({
   };
 
   const submitRecord = async (nextStatus = form.status) => {
+    if (uploading) {
+      setError('媒体还在上传，请等预览标记为完成后再发布。');
+      return;
+    }
+
     const childNo = form.child_no || currentChild?.child_no || (await waitForSelectedChildNo());
     if (nextStatus === 'published') {
       const title = form.title.trim();

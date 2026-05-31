@@ -489,7 +489,7 @@ export const OnboardingChildPage = () => {
     setAvatarPreviewFailed(false);
     try {
       const avatarUrl = await createPersistableMediaPreview(uploadFile);
-      setForm((current) => ({ ...current, avatar_url: avatarUrl }));
+      if (avatarUrl) setForm((current) => ({ ...current, avatar_url: avatarUrl }));
       setError(null);
     } catch {
       setAvatarPreviewUrl(null);

@@ -19,4 +19,9 @@ describe('mediaFiles', () => {
     expect(normalized.type).toBe('image/png');
     expect(normalized.name).toBe('avatar.png');
   });
+
+  it('infers mobile video types from filenames when the picker returns a generic MIME type', () => {
+    expect(resolveFileMimeType(new File([new Uint8Array([1])], 'birthday.MP4', { type: 'application/octet-stream' }))).toBe('video/mp4');
+    expect(deriveMediaType(new File([new Uint8Array([1])], 'camera.MOV', { type: 'application/octet-stream' }))).toBe('video');
+  });
 });
