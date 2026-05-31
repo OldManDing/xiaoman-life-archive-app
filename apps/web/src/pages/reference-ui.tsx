@@ -160,6 +160,7 @@ export const RefAvatar = ({
     <img
       src={displaySrc}
       alt={label}
+      decoding="async"
       onError={() => {
         if (displaySrc !== fallbackSrc) setFailedSrc(effectiveSrc);
       }}

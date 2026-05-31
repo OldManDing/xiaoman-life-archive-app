@@ -4,7 +4,7 @@ import { Calendar, Camera } from 'lucide-react';
 
 import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
-import { createPersistableMediaPreview } from '../shared/localMediaPreview';
+import { createPersistableAvatarPreview } from '../shared/localMediaPreview';
 import { isSupportedImageFile, withResolvedFileMimeType } from '../shared/mediaFiles';
 import { Field, PageShell, Panel, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle } from '../shared/ui';
 import { rowStyle } from './shared';
@@ -488,7 +488,7 @@ export const OnboardingChildPage = () => {
     setAvatarPreviewUrl(previewUrl);
     setAvatarPreviewFailed(false);
     try {
-      const avatarUrl = await createPersistableMediaPreview(uploadFile);
+      const avatarUrl = await createPersistableAvatarPreview(uploadFile);
       if (avatarUrl) setForm((current) => ({ ...current, avatar_url: avatarUrl }));
       setError(null);
     } catch {
@@ -524,7 +524,7 @@ export const OnboardingChildPage = () => {
       <form onSubmit={onSubmit} style={{ ...rowStyle, gap: '22px' }}>
         <div style={{ display: 'grid', justifyItems: 'center', gap: '10px', paddingTop: '6px' }}>
           <label style={{ width: '96px', height: '96px', borderRadius: '999px', border: '4px solid #ffffff', background: '#f1f5f9', display: 'grid', placeItems: 'center', color: '#cbd5e1', position: 'relative', cursor: 'pointer', overflow: 'hidden', boxShadow: '0 8px 18px rgba(15,23,42,0.07)' }}>
-            {childAvatarPreviewSrc && !avatarPreviewFailed ? <img src={childAvatarPreviewSrc} alt="宝宝头像预览" onError={() => setAvatarPreviewFailed(true)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Camera size={34} strokeWidth={1.9} />}
+            {childAvatarPreviewSrc && !avatarPreviewFailed ? <img src={childAvatarPreviewSrc} alt="宝宝头像预览" decoding="async" onError={() => setAvatarPreviewFailed(true)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Camera size={34} strokeWidth={1.9} />}
             <span style={{ position: 'absolute', right: '0', bottom: '0', width: '30px', height: '30px', borderRadius: '999px', background: '#292524', color: '#ffffff', display: 'grid', placeItems: 'center', fontSize: '19px', fontWeight: 700, border: '2px solid #ffffff', lineHeight: 1 }}>+</span>
             <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" onChange={(event) => void onAvatarChange(event)} style={{ display: 'none' }} />
           </label>

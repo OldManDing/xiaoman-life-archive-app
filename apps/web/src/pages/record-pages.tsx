@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useRef, useState, type ChangeEvent, type CSSProperties, type FormEvent } from 'react';
-import { AlertCircle, BookOpen, Check, CheckCircle2, ChevronRight, Clock, Eye, FileAudio, Image, ImagePlus, MapPin, Mic, PlayCircle, Sparkles, Star, Tag, Video, X } from 'lucide-react';
+import { AlertCircle, BookOpen, Check, CheckCircle2, ChevronRight, Clock, Eye, FileAudio, Image, ImagePlus, MapPin, Maximize2, Mic, PlayCircle, Sparkles, Star, Tag, Video, X } from 'lucide-react';
 import { Camera, CameraResultType, CameraSource, type GalleryPhoto, type Photo } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 import type { ReactNode } from 'react';
@@ -278,6 +278,10 @@ type RenderableMediaPreview = {
   error_message?: string | null;
 };
 
+type FullscreenMediaPreview = RenderableMediaPreview & {
+  preview_url?: string | null;
+};
+
 const mediaPreviewLabel = (mediaType: string) => {
   if (mediaType === 'video') return '视频预览';
   if (mediaType === 'audio') return '语音预览';
@@ -304,10 +308,12 @@ const MediaPreviewTile = ({
   media,
   compact,
   onRemove,
+  onOpen,
 }: {
   media: RenderableMediaPreview;
   compact?: boolean;
   onRemove?: (mediaNo: string) => void;
+  onOpen?: (media: FullscreenMediaPreview) => void;
 }) => {
   const mediaUrl = resolveMediaPreviewUrl(media.media_no, media.preview_url ?? media.access_url ?? null) ?? media.preview_url ?? media.access_url ?? '';
   const label = mediaPreviewLabel(media.media_type);
@@ -325,10 +331,15 @@ const MediaPreviewTile = ({
       }}
     >
       {media.media_type === 'image' && mediaUrl ? (
-        <img src={mediaUrl} alt={media.original_name ?? '已上传照片'} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        <img src={mediaUrl} alt={media.original_name ?? '已上传照片'} loading={compact ? 'lazy' : 'eager'} decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
       ) : null}
       {media.media_type === 'video' && mediaUrl ? (
-        <video src={mediaUrl} controls playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', background: '#292524' }} />
+        <>
+          <video src={mediaUrl} muted playsInline preload="none" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', background: '#292524' }} />
+          <span aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: '#ffffff', pointerEvents: 'none' }}>
+            <PlayCircle size={compact ? 34 : 42} strokeWidth={1.8} fill="rgba(41,37,36,0.38)" />
+          </span>
+        </>
       ) : null}
       {media.media_type === 'audio' && mediaUrl ? (
         <div style={{ width: '100%', height: '100%', minHeight: compact ? '132px' : '156px', display: 'grid', alignContent: 'center', gap: '12px', padding: compact ? '14px' : '16px', background: '#faf8f5', boxSizing: 'border-box' }}>
@@ -363,6 +374,30 @@ const MediaPreviewTile = ({
           {media.error_message}
         </span>
       ) : null}
+      {mediaUrl && onOpen ? (
+        <button
+          type="button"
+          aria-label={`全屏查看${label}`}
+          onClick={() => onOpen({ ...media, preview_url: mediaUrl })}
+          style={{
+            position: 'absolute',
+            top: '8px',
+            left: '8px',
+            width: '44px',
+            height: '44px',
+            borderRadius: '999px',
+            border: '1px solid rgba(255,255,255,0.72)',
+            background: 'rgba(41,37,36,0.72)',
+            color: '#fff',
+            display: 'grid',
+            placeItems: 'center',
+            cursor: 'pointer',
+            padding: 0,
+          }}
+        >
+          <Maximize2 size={15} strokeWidth={2.4} />
+        </button>
+      ) : null}
       {onRemove ? (
         <button
           type="button"
@@ -387,6 +422,110 @@ const MediaPreviewTile = ({
           <X size={15} strokeWidth={2.4} />
         </button>
       ) : null}
+    </div>
+  );
+};
+
+const MediaFullscreenDialog = ({
+  media,
+  onClose,
+}: {
+  media: FullscreenMediaPreview | null;
+  onClose: () => void;
+}) => {
+  const mediaUrl = media ? resolveMediaPreviewUrl(media.media_no, media.preview_url ?? media.access_url ?? null) ?? media.preview_url ?? media.access_url ?? '' : '';
+  const label = media ? mediaPreviewLabel(media.media_type) : '媒体预览';
+
+  useEffect(() => {
+    if (!media) return undefined;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [media, onClose]);
+
+  if (!media || !mediaUrl) return null;
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`全屏${label}`}
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        inset: 0,
+        zIndex: 80,
+        background: 'rgba(15,23,42,0.94)',
+        display: 'grid',
+        placeItems: 'center',
+        padding: 'calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom))',
+      }}
+    >
+      <button
+        type="button"
+        aria-label="关闭全屏预览"
+        onClick={onClose}
+        style={{
+          position: 'absolute',
+          top: 'calc(12px + env(safe-area-inset-top))',
+          right: '12px',
+          width: '44px',
+          height: '44px',
+          borderRadius: '999px',
+          border: '1px solid rgba(255,255,255,0.28)',
+          background: 'rgba(255,255,255,0.14)',
+          color: '#ffffff',
+          display: 'grid',
+          placeItems: 'center',
+          cursor: 'pointer',
+          padding: 0,
+        }}
+      >
+        <X size={20} strokeWidth={2.4} />
+      </button>
+      <div
+        onClick={(event) => event.stopPropagation()}
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'grid',
+          placeItems: 'center',
+          padding: '42px 0 10px',
+          boxSizing: 'border-box',
+        }}
+      >
+        {media.media_type === 'image' ? (
+          <img
+            src={mediaUrl}
+            alt={media.original_name ?? label}
+            decoding="async"
+            style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block', borderRadius: '10px' }}
+          />
+        ) : null}
+        {media.media_type === 'video' ? (
+          <video
+            src={mediaUrl}
+            controls
+            autoPlay
+            playsInline
+            preload="auto"
+            style={{ width: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block', background: '#000000', borderRadius: '10px' }}
+          />
+        ) : null}
+        {media.media_type === 'audio' ? (
+          <div style={{ width: 'min(100%, 420px)', display: 'grid', gap: '16px', color: '#ffffff', textAlign: 'center' }}>
+            <FileAudio size={44} strokeWidth={1.8} style={{ justifySelf: 'center' }} />
+            <strong style={{ fontSize: '16px', fontWeight: 850 }}>{media.original_name ?? label}</strong>
+            <audio src={mediaUrl} controls autoPlay style={{ width: '100%' }} />
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 };
@@ -531,6 +670,7 @@ const RecordForm = ({
   const [aiPreviewTags, setAiPreviewTags] = useState<string[]>([]);
   const [mediaNos, setMediaNos] = useState<string[]>(initialValue.media_nos);
   const [mediaPreviews, setMediaPreviews] = useState<MediaPreview[]>(initialValue.media_items);
+  const [fullscreenMedia, setFullscreenMedia] = useState<FullscreenMediaPreview | null>(null);
   const mediaPreviewsRef = useRef<MediaPreview[]>(initialValue.media_items);
   const titleInputRef = useRef<HTMLInputElement | null>(null);
   const contentInputRef = useRef<HTMLTextAreaElement | null>(null);
@@ -1278,7 +1418,7 @@ const RecordForm = ({
                 {mediaPreviews.length ? (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
                     {mediaPreviews.map((media) => (
-                      <MediaPreviewTile key={media.media_no} media={media} onRemove={removeMedia} />
+                      <MediaPreviewTile key={media.media_no} media={media} onRemove={removeMedia} onOpen={setFullscreenMedia} />
                     ))}
                   </div>
                 ) : (
@@ -1849,6 +1989,7 @@ const RecordForm = ({
             </div>
           </div>
         </div>
+        <MediaFullscreenDialog media={fullscreenMedia} onClose={() => setFullscreenMedia(null)} />
     </div>
   );
 };
@@ -1905,6 +2046,7 @@ export const ViewRecordPage = () => {
   const [aiError, setAiError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [fullscreenMedia, setFullscreenMedia] = useState<FullscreenMediaPreview | null>(null);
 
   useEffect(() => {
     if (!aiJob || !['pending', 'processing'].includes(aiJob.status)) return;
@@ -1972,6 +2114,7 @@ export const ViewRecordPage = () => {
 
   const primaryMedia = data?.media_list[0] ?? null;
   const primaryMediaUrl = primaryMedia ? resolveMediaPreviewUrl(primaryMedia.media_no, primaryMedia.access_url) ?? primaryMedia.access_url : null;
+  const primaryFullscreenMedia = primaryMedia && primaryMediaUrl ? { ...primaryMedia, preview_url: primaryMediaUrl } : null;
 
   return (
     <PageShell
@@ -1993,15 +2136,39 @@ export const ViewRecordPage = () => {
             {primaryMedia && primaryMediaUrl ? (
               primaryMedia.media_type === 'audio' ? (
                 <div data-testid="record-primary-media-preview" style={{ padding: '14px', background: '#fafaf9' }}>
-                  <MediaPreviewTile media={{ ...primaryMedia, preview_url: primaryMediaUrl }} />
+                  <MediaPreviewTile media={{ ...primaryMedia, preview_url: primaryMediaUrl }} onOpen={setFullscreenMedia} />
                 </div>
               ) : (
                 <div data-testid="record-primary-media-preview" style={{ position: 'relative', background: '#fafaf9' }}>
                   {primaryMedia.media_type === 'video' ? (
-                    <video src={primaryMediaUrl} controls playsInline preload="metadata" style={{ width: '100%', aspectRatio: '16 / 10', objectFit: 'cover', display: 'block', background: '#292524' }} />
+                    <video src={primaryMediaUrl} controls playsInline preload="none" style={{ width: '100%', aspectRatio: '16 / 10', objectFit: 'cover', display: 'block', background: '#292524' }} />
                   ) : (
-                    <img src={primaryMediaUrl} alt={data.title ?? primaryMedia.original_name ?? '记录封面'} style={{ width: '100%', aspectRatio: '16 / 10', objectFit: 'cover', display: 'block' }} />
+                    <img src={primaryMediaUrl} alt={data.title ?? primaryMedia.original_name ?? '记录封面'} loading="eager" decoding="async" style={{ width: '100%', aspectRatio: '16 / 10', objectFit: 'cover', display: 'block' }} />
                   )}
+                  {primaryFullscreenMedia ? (
+                    <button
+                      type="button"
+                      aria-label={`全屏查看${mediaPreviewLabel(primaryMedia.media_type)}`}
+                      onClick={() => setFullscreenMedia(primaryFullscreenMedia)}
+                      style={{
+                        position: 'absolute',
+                        top: '14px',
+                        right: '14px',
+                        width: '44px',
+                        height: '44px',
+                        borderRadius: '999px',
+                        border: '1px solid rgba(255,255,255,0.72)',
+                        background: 'rgba(41,37,36,0.72)',
+                        color: '#fff',
+                        display: 'grid',
+                        placeItems: 'center',
+                        cursor: 'pointer',
+                        padding: 0,
+                      }}
+                    >
+                      <Maximize2 size={16} strokeWidth={2.4} />
+                    </button>
+                  ) : null}
                   <span style={{ position: 'absolute', left: '14px', bottom: '14px', borderRadius: '999px', background: 'rgba(41,37,36,0.72)', color: '#fff', padding: '6px 10px', fontSize: '12px', fontWeight: 700 }}>
                     {mediaPreviewLabel(primaryMedia.media_type)}
                   </span>
@@ -2092,7 +2259,7 @@ export const ViewRecordPage = () => {
                   {data.media_list.map((media) => {
                     const mediaUrl = resolveMediaPreviewUrl(media.media_no, media.access_url) ?? media.access_url;
                     return (
-                      <MediaPreviewTile key={media.media_no} media={{ ...media, preview_url: mediaUrl }} compact />
+                      <MediaPreviewTile key={media.media_no} media={{ ...media, preview_url: mediaUrl }} compact onOpen={setFullscreenMedia} />
                     );
                   })}
                 </div>
@@ -2110,6 +2277,7 @@ export const ViewRecordPage = () => {
           </div>
         </article>
       ) : null}
+      <MediaFullscreenDialog media={fullscreenMedia} onClose={() => setFullscreenMedia(null)} />
     </PageShell>
   );
 };

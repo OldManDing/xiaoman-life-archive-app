@@ -7,7 +7,7 @@ import { webApi } from '../shared/api/webApi';
 import type { ChildRecord, FamilyInviteResponse, FamilyMemberItem, RecordSummary } from '../shared/api/types';
 import { useAsyncData, useStoredMediaUrl } from '../shared/hooks';
 import { childStatusLabel, familyMemberStatusLabel, familyRoleLabel, genderLabel, recordTypeLabel } from '../shared/labels';
-import { createPersistableMediaPreview, resolveMediaPreviewUrl, saveLocalMediaPreview, toStoredMediaReference } from '../shared/localMediaPreview';
+import { createPersistableAvatarPreview, resolveMediaPreviewUrl, saveLocalMediaPreview, saveRuntimeMediaPreview, toStoredMediaReference } from '../shared/localMediaPreview';
 import { loadLocalSettings } from '../shared/localSettings';
 import { isSupportedImageFile, resolveFileMimeType, withResolvedFileMimeType } from '../shared/mediaFiles';
 import { AppSegmentedControl, Field, PageShell, Panel, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle, textareaStyle } from '../shared/ui';
@@ -16,7 +16,7 @@ import { RefAvatar, RefSectionTitle, refCardStyle, refMutedTextStyle, refPageSty
 
 const isPositiveStatusMessage = (message: string) => !/(失败|不能|请先|仅支持|无法|错误)/.test(message);
 
-const uploadChildAvatarImage = async (childNo: string, file: File) => {
+const uploadChildAvatarImage = async (childNo: string, file: File, previewUrl?: string | null) => {
   const uploadFile = withResolvedFileMimeType(file);
   const uploadToken = await webApi.createUploadToken({
     child_no: childNo,
@@ -26,8 +26,7 @@ const uploadChildAvatarImage = async (childNo: string, file: File) => {
     media_type: 'image',
   });
 
-  const preview = await createPersistableMediaPreview(uploadFile);
-  if (preview) saveLocalMediaPreview(uploadToken.media_no, preview);
+  if (previewUrl) saveRuntimeMediaPreview(uploadToken.media_no, previewUrl);
 
   if (!uploadToken.mock_upload) {
     const uploadResponse = await fetch(uploadToken.upload_url, {
@@ -40,6 +39,15 @@ const uploadChildAvatarImage = async (childNo: string, file: File) => {
     }
   }
   await webApi.confirmUpload({ media_no: uploadToken.media_no });
+  try {
+    const preview = await createPersistableAvatarPreview(uploadFile);
+    if (preview) {
+      saveLocalMediaPreview(uploadToken.media_no, preview);
+      saveRuntimeMediaPreview(uploadToken.media_no, preview);
+    }
+  } catch {
+    // The runtime blob preview still keeps the avatar visible in the current app session.
+  }
   return toStoredMediaReference(uploadToken.media_no);
 };
 
@@ -52,7 +60,7 @@ const ChildAvatarPreview = ({ src, label }: { src?: string | null; label: string
   }, [resolvedSrc]);
 
   if (resolvedSrc && failedSrc !== resolvedSrc) {
-    return <img src={resolvedSrc} alt={label} onError={() => setFailedSrc(resolvedSrc)} style={{ width: '72px', height: '72px', borderRadius: '8px', objectFit: 'cover', border: '1px solid #e7e5e4', background: '#f5f5f4' }} />;
+    return <img src={resolvedSrc} alt={label} decoding="async" onError={() => setFailedSrc(resolvedSrc)} style={{ width: '72px', height: '72px', borderRadius: '8px', objectFit: 'cover', border: '1px solid #e7e5e4', background: '#f5f5f4' }} />;
   }
 
   return (
@@ -79,7 +87,7 @@ const FamilyAvatar = ({ src, label, size = 42, radius = '999px', fallbackSrc }: 
   }, [displaySrc]);
 
   if (displaySrc && failedSrc !== displaySrc) {
-    return <img src={displaySrc} alt={label} onError={() => setFailedSrc(displaySrc)} style={{ width: `${size}px`, height: `${size}px`, borderRadius: radius, objectFit: 'cover', border: '1px solid #eee9df', flexShrink: 0, boxShadow: '0 2px 8px rgba(15,23,42,0.03)' }} />;
+    return <img src={displaySrc} alt={label} decoding="async" onError={() => setFailedSrc(displaySrc)} style={{ width: `${size}px`, height: `${size}px`, borderRadius: radius, objectFit: 'cover', border: '1px solid #eee9df', flexShrink: 0, boxShadow: '0 2px 8px rgba(15,23,42,0.03)' }} />;
   }
 
   return (
@@ -205,7 +213,7 @@ export const FamilyPage = () => {
                     <span style={{ color: '#9ca3af', fontSize: 11, fontWeight: 700 }}>{new Date(record.event_time).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false })}</span>
                     {coverUrl && mediaKind !== 'audio' ? (
                       <span style={{ position: 'relative', display: 'block', width: 'min(100%, 232px)', height: 148 }}>
-                        <img src={coverUrl} alt={record.title ?? '家庭动态图片'} style={{ width: '100%', height: '100%', borderRadius: 16, objectFit: 'cover', border: '1px solid #eee9df', display: 'block' }} />
+                        <img src={coverUrl} alt={record.title ?? '家庭动态图片'} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', borderRadius: 16, objectFit: 'cover', border: '1px solid #eee9df', display: 'block' }} />
                         {mediaKind === 'video' ? (
                           <span aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: '#ffffff' }}>
                             <PlayCircle size={40} fill="rgba(255,255,255,0.34)" strokeWidth={1.8} />
@@ -218,7 +226,7 @@ export const FamilyPage = () => {
                         <span style={{ fontSize: 13, fontWeight: 700 }}>语音记录</span>
                       </div>
                     ) : (
-                      <img src={index % 2 ? referenceAssets.parkPhoto : referenceAssets.childPhoto} alt={record.title ?? '家庭动态图片'} style={{ width: 'min(100%, 232px)', height: 148, borderRadius: 16, objectFit: 'cover', border: '1px solid #eee9df' }} />
+                      <img src={index % 2 ? referenceAssets.parkPhoto : referenceAssets.childPhoto} alt={record.title ?? '家庭动态图片'} loading="lazy" decoding="async" style={{ width: 'min(100%, 232px)', height: 148, borderRadius: 16, objectFit: 'cover', border: '1px solid #eee9df' }} />
                     )}
                   </button>
                 );
@@ -314,7 +322,7 @@ export const FamilyChildPage = () => {
     setAvatarUploading(true);
     setMessage('头像本地预览已显示，正在保存到档案…');
     try {
-      const avatarUrl = await uploadChildAvatarImage(activeChild.child_no, uploadFile);
+      const avatarUrl = await uploadChildAvatarImage(activeChild.child_no, uploadFile, previewUrl);
       const updated = await webApi.updateChild(activeChild.child_no, { avatar_url: avatarUrl });
       await refreshChildren();
       setActiveChild({ ...updated, avatar_url: avatarUrl });

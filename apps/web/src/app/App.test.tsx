@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './App';
 import { clearLoginFormDraft } from '../pages/auth-pages';
 import { clearAccessToken } from '../shared/auth/tokenMemory';
+import { clearMediaAccessUrlCache } from '../shared/hooks';
 
 vi.mock('../shared/api/webApi', () => ({
   webApi: {
@@ -108,6 +109,7 @@ describe('App Shell', () => {
     createUploadTokenMock.mockReset();
     confirmUploadMock.mockReset();
     mediaAccessUrlMock.mockReset();
+    clearMediaAccessUrlCache();
     getCurrentDeviceLocationMock.mockReset();
     window.history.pushState({}, '', '/auth/login');
   });
@@ -751,6 +753,71 @@ describe('App Shell', () => {
     }
   });
 
+  it('keeps the account avatar visible after a successful upload', async () => {
+    window.history.pushState({}, '', '/profile/account');
+    mockAuthenticatedSession();
+    createUploadTokenMock.mockResolvedValue({
+      media_no: 'm_account_avatar_success',
+      object_key: 'mock/avatar.png',
+      upload_url: 'https://upload.example/avatar.png',
+      method: 'PUT',
+      headers: {},
+      mock_upload: true,
+      expires_in: 600,
+    });
+    confirmUploadMock.mockResolvedValue({
+      media_no: 'm_account_avatar_success',
+      status: 'ready',
+      width: null,
+      height: null,
+      duration_seconds: null,
+      created_at: '2026-05-28T10:00:00.000Z',
+      updated_at: '2026-05-28T10:00:00.000Z',
+    });
+    updateMeMock.mockResolvedValue({
+      user_no: 'u_001',
+      nickname: 'Avatar user',
+      avatar_url: 'media:m_account_avatar_success',
+      membership_type: 'free',
+    });
+    const originalCreateObjectURL = URL.createObjectURL;
+    const originalRevokeObjectURL = URL.revokeObjectURL;
+    Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: vi.fn(() => 'blob:avatar-success-preview') });
+    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: vi.fn() });
+
+    try {
+      render(<App />);
+      const avatarInput = await waitFor(() => {
+        const input = document.querySelector('input[type="file"]');
+        expect(input).not.toBeNull();
+        return input as HTMLInputElement;
+      });
+
+      fireEvent.change(avatarInput, {
+        target: { files: [new File(['avatar'], 'avatar.png', { type: 'image/png' })] },
+      });
+
+      await waitFor(() => {
+        expect(updateMeMock).toHaveBeenCalledWith({ avatar_url: 'media:m_account_avatar_success' });
+      });
+      await waitFor(() => {
+        expect((screen.getByRole('img', { name: 'Avatar user' }) as HTMLImageElement).src).toMatch(/^data:image\/png;base64,/);
+      });
+      expect(mediaAccessUrlMock).not.toHaveBeenCalledWith('m_account_avatar_success');
+    } finally {
+      if (originalCreateObjectURL) {
+        Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: originalCreateObjectURL });
+      } else {
+        Reflect.deleteProperty(URL, 'createObjectURL');
+      }
+      if (originalRevokeObjectURL) {
+        Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: originalRevokeObjectURL });
+      } else {
+        Reflect.deleteProperty(URL, 'revokeObjectURL');
+      }
+    }
+  });
+
   it('resolves account avatar media references when the local preview cache is missing', async () => {
     window.history.pushState({}, '', '/profile/account');
     window.localStorage.clear();
@@ -967,6 +1034,13 @@ describe('App Shell', () => {
 
       const primaryPreview = await screen.findByTestId('record-primary-media-preview');
       expect(primaryPreview.querySelector('video')?.getAttribute('src')).toBe('blob:record-video-preview');
+      expect(primaryPreview.querySelector('video')?.getAttribute('preload')).toBe('none');
+      const fullscreenButton = primaryPreview.querySelector('button') as HTMLButtonElement | null;
+      expect(fullscreenButton).not.toBeNull();
+      fireEvent.click(fullscreenButton!);
+      const fullscreenDialog = await screen.findByRole('dialog');
+      expect(fullscreenDialog.querySelector('video')?.getAttribute('src')).toBe('blob:record-video-preview');
+      expect(fullscreenDialog.querySelector('video')?.getAttribute('preload')).toBe('auto');
     } finally {
       if (originalCreateObjectURL) {
         Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: originalCreateObjectURL });

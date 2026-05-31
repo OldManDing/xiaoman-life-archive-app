@@ -3,6 +3,14 @@ import { useEffect, useState } from 'react';
 import { webApi } from './api/webApi';
 import { getStoredMediaReferenceNo, resolveStoredMediaUrl } from './localMediaPreview';
 
+const mediaAccessUrlCache = new Map<string, string | null>();
+const mediaAccessUrlPromises = new Map<string, Promise<string | null>>();
+
+export const clearMediaAccessUrlCache = () => {
+  mediaAccessUrlCache.clear();
+  mediaAccessUrlPromises.clear();
+};
+
 export const useAsyncData = <T,>(loader: () => Promise<T>, deps: unknown[] = []) => {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
@@ -35,11 +43,11 @@ export const useAsyncData = <T,>(loader: () => Promise<T>, deps: unknown[] = [])
 export const useStoredMediaUrl = (value: string | null | undefined) => {
   const resolvedLocalUrl = resolveStoredMediaUrl(value);
   const mediaNo = getStoredMediaReferenceNo(value);
-  const [remoteUrl, setRemoteUrl] = useState<string | null>(null);
+  const [remoteUrl, setRemoteUrl] = useState<string | null>(() => (mediaNo ? mediaAccessUrlCache.get(mediaNo) ?? null : null));
 
   useEffect(() => {
     let mounted = true;
-    setRemoteUrl(null);
+    setRemoteUrl(mediaNo ? mediaAccessUrlCache.get(mediaNo) ?? null : null);
 
     if (!mediaNo || resolvedLocalUrl) {
       return () => {
@@ -47,13 +55,27 @@ export const useStoredMediaUrl = (value: string | null | undefined) => {
       };
     }
 
-    webApi
-      .mediaAccessUrl(mediaNo)
+    if (mediaAccessUrlCache.has(mediaNo)) {
+      return () => {
+        mounted = false;
+      };
+    }
+
+    const request =
+      mediaAccessUrlPromises.get(mediaNo) ??
+      webApi
+        .mediaAccessUrl(mediaNo)
+        .then((response) => response.access_url || null)
+        .catch(() => null)
+        .finally(() => {
+          mediaAccessUrlPromises.delete(mediaNo);
+        });
+    mediaAccessUrlPromises.set(mediaNo, request);
+
+    request
       .then((response) => {
-        if (mounted) setRemoteUrl(response.access_url || null);
-      })
-      .catch(() => {
-        if (mounted) setRemoteUrl(null);
+        mediaAccessUrlCache.set(mediaNo, response);
+        if (mounted) setRemoteUrl(response);
       });
 
     return () => {

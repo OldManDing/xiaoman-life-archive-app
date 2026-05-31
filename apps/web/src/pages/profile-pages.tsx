@@ -7,7 +7,7 @@ import { webApi } from '../shared/api/webApi';
 import type { ArchiveExportRequestItem, RecordSummary } from '../shared/api/types';
 import { useAsyncData, useStoredMediaUrl } from '../shared/hooks';
 import { membershipTypeLabel } from '../shared/labels';
-import { createPersistableMediaPreview, resolveMediaPreviewUrl, saveLocalMediaPreview, toStoredMediaReference } from '../shared/localMediaPreview';
+import { createPersistableAvatarPreview, resolveMediaPreviewUrl, saveLocalMediaPreview, saveRuntimeMediaPreview, toStoredMediaReference } from '../shared/localMediaPreview';
 import { loadLocalSettings, localSettingsToPreferences, preferencesToLocalSettings, saveLocalSettings, type LocalSettings } from '../shared/localSettings';
 import { isSupportedImageFile, resolveFileMimeType, withResolvedFileMimeType } from '../shared/mediaFiles';
 import { AppSelect, Field, PageShell, Panel, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle, textareaStyle } from '../shared/ui';
@@ -31,7 +31,7 @@ const isGeneratedSvgAvatar = (src?: string | null) => Boolean(src?.trim().starts
 
 const isPositiveStatusMessage = (message: string) => !/(失败|不能|请先|仅支持|无法|错误)/.test(message);
 
-const uploadAvatarImage = async (childNo: string, file: File) => {
+const uploadAvatarImage = async (childNo: string, file: File, previewUrl?: string | null) => {
   const uploadFile = withResolvedFileMimeType(file);
   const uploadToken = await webApi.createUploadToken({
     child_no: childNo,
@@ -41,8 +41,7 @@ const uploadAvatarImage = async (childNo: string, file: File) => {
     media_type: 'image',
   });
 
-  const preview = await createPersistableMediaPreview(uploadFile);
-  if (preview) saveLocalMediaPreview(uploadToken.media_no, preview);
+  if (previewUrl) saveRuntimeMediaPreview(uploadToken.media_no, previewUrl);
 
   if (!uploadToken.mock_upload) {
     const uploadResponse = await fetch(uploadToken.upload_url, {
@@ -55,6 +54,15 @@ const uploadAvatarImage = async (childNo: string, file: File) => {
     }
   }
   await webApi.confirmUpload({ media_no: uploadToken.media_no });
+  try {
+    const preview = await createPersistableAvatarPreview(uploadFile);
+    if (preview) {
+      saveLocalMediaPreview(uploadToken.media_no, preview);
+      saveRuntimeMediaPreview(uploadToken.media_no, preview);
+    }
+  } catch {
+    // The runtime blob preview still keeps the avatar visible in the current app session.
+  }
   return toStoredMediaReference(uploadToken.media_no);
 };
 
@@ -68,7 +76,7 @@ const ProfileAvatar = ({ src, label, fallbackSrc = referenceAssets.momAvatar }: 
   }, [displaySrc]);
 
   if (displaySrc && failedSrc !== displaySrc) {
-    return <img src={displaySrc} alt={label} onError={() => setFailedSrc(displaySrc)} style={{ width: '68px', height: '68px', borderRadius: '999px', objectFit: 'cover', border: '1px solid #e7e5e4', boxShadow: '0 5px 16px rgba(15,23,42,0.12)', flexShrink: 0 }} />;
+    return <img src={displaySrc} alt={label} decoding="async" onError={() => setFailedSrc(displaySrc)} style={{ width: '68px', height: '68px', borderRadius: '999px', objectFit: 'cover', border: '1px solid #e7e5e4', boxShadow: '0 5px 16px rgba(15,23,42,0.12)', flexShrink: 0 }} />;
   }
 
   return (
@@ -102,7 +110,7 @@ const SmallChildAvatar = ({ src, label }: { src?: string | null; label: string }
   }, [displaySrc]);
 
   if (displaySrc && failedSrc !== displaySrc) {
-    return <img src={displaySrc} alt={label} onError={() => setFailedSrc(displaySrc)} style={{ width: '38px', height: '38px', borderRadius: '999px', objectFit: 'cover', border: '1px solid #eee9df', flexShrink: 0 }} />;
+    return <img src={displaySrc} alt={label} decoding="async" onError={() => setFailedSrc(displaySrc)} style={{ width: '38px', height: '38px', borderRadius: '999px', objectFit: 'cover', border: '1px solid #eee9df', flexShrink: 0 }} />;
   }
 
   return (
@@ -430,7 +438,7 @@ export const AccountPage = () => {
     setAvatarUploading(true);
     setMessage('头像本地预览已显示，正在保存到账号…');
     try {
-      const avatarUrl = await uploadAvatarImage(activeChild.child_no, uploadFile);
+      const avatarUrl = await uploadAvatarImage(activeChild.child_no, uploadFile, previewUrl);
       const nextProfile = await webApi.updateMe({ avatar_url: avatarUrl });
       setUserProfile({ ...nextProfile, avatar_url: avatarUrl });
       setAvatarPreviewUrl(null);
@@ -721,8 +729,8 @@ export const ReportsPage = () => {
                     const cover = resolveMediaPreviewUrl(item.cover_media_no, item.cover_url);
                     return (
                       <button key={item.record_no} type="button" onClick={() => navigate(`/record/${item.record_no}`)} style={{ border: 'none', padding: 0, background: '#fafaf9', borderRadius: '14px', overflow: 'hidden', aspectRatio: '1 / 1', cursor: 'pointer' }}>
-                        {cover && item.cover_media_type === 'video' ? <video src={cover} muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /> : null}
-                        {cover && item.cover_media_type !== 'video' ? <img src={cover} alt={item.title ?? '纪念册影像'} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /> : null}
+                        {cover && item.cover_media_type === 'video' ? <video src={cover} muted playsInline preload="none" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /> : null}
+                        {cover && item.cover_media_type !== 'video' ? <img src={cover} alt={item.title ?? '纪念册影像'} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /> : null}
                       </button>
                     );
                   })}

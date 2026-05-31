@@ -41,6 +41,16 @@ describe('resolveStoredMediaUrl', () => {
     removeRuntimeMediaPreview('m_runtime');
   });
 
+  it('prefers persisted previews over runtime blob URLs when both exist', () => {
+    const dataUrl = 'data:image/png;base64,avatar';
+    saveRuntimeMediaPreview('m_runtime', 'blob:revoked-avatar-preview');
+    expect(saveLocalMediaPreview('m_runtime', dataUrl)).toBe(true);
+
+    expect(resolveStoredMediaUrl(toStoredMediaReference('m_runtime'))).toBe(dataUrl);
+
+    removeRuntimeMediaPreview('m_runtime');
+  });
+
   it('does not read large non-image files into persisted data URLs', async () => {
     const file = new File([new Uint8Array(4_300_001)], 'clip.mp4', { type: 'video/mp4' });
 

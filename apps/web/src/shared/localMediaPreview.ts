@@ -6,6 +6,11 @@ const IMAGE_PREVIEW_MAX_SIDE = 1280;
 const RAW_BROWSER_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 const runtimeMediaPreviewUrls = new Map<string, string>();
 
+type PersistableMediaPreviewOptions = {
+  maxBytes?: number;
+  imageMaxSide?: number;
+};
+
 export const readFileAsDataUrl = (file: File) =>
   new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -29,7 +34,10 @@ const imageFromObjectUrl = (objectUrl: string) =>
     image.src = objectUrl;
   });
 
-const compressImagePreview = async (file: File) => {
+const compressImagePreview = async (file: File, options: PersistableMediaPreviewOptions = {}) => {
+  const maxBytes = options.maxBytes ?? MAX_PREVIEW_BYTES;
+  const imageMaxSide = options.imageMaxSide ?? IMAGE_PREVIEW_MAX_SIDE;
+
   if (typeof document === 'undefined' || typeof window === 'undefined') {
     return readFileAsDataUrl(file);
   }
@@ -37,7 +45,7 @@ const compressImagePreview = async (file: File) => {
   const objectUrl = URL.createObjectURL(file);
   try {
     const image = await imageFromObjectUrl(objectUrl);
-    const scale = Math.min(1, IMAGE_PREVIEW_MAX_SIDE / Math.max(image.naturalWidth || image.width, image.naturalHeight || image.height));
+    const scale = Math.min(1, imageMaxSide / Math.max(image.naturalWidth || image.width, image.naturalHeight || image.height));
     const width = Math.max(1, Math.round((image.naturalWidth || image.width) * scale));
     const height = Math.max(1, Math.round((image.naturalHeight || image.height) * scale));
     const canvas = document.createElement('canvas');
@@ -49,7 +57,7 @@ const compressImagePreview = async (file: File) => {
     context.drawImage(image, 0, 0, width, height);
     for (const quality of [0.82, 0.68, 0.54]) {
       const compressed = canvas.toDataURL('image/jpeg', quality);
-      if (compressed.length <= MAX_PREVIEW_BYTES) return compressed;
+      if (compressed.length <= maxBytes) return compressed;
     }
   } catch {
     return readFileAsDataUrl(file);
@@ -61,19 +69,30 @@ const compressImagePreview = async (file: File) => {
 };
 
 export const createPersistableMediaPreview = async (file: File) => {
+  return createPersistableMediaPreviewWithOptions(file);
+};
+
+export const createPersistableMediaPreviewWithOptions = async (file: File, options: PersistableMediaPreviewOptions = {}) => {
+  const maxBytes = options.maxBytes ?? MAX_PREVIEW_BYTES;
   const normalizedType = file.type.toLowerCase().split(';', 1)[0];
   const isImage = normalizedType.startsWith('image/');
-  if (!isImage && file.size > MAX_PREVIEW_BYTES) return null;
+  if (!isImage && file.size > maxBytes) return null;
 
   if (normalizedType.startsWith('image/') && !RAW_BROWSER_IMAGE_TYPES.has(normalizedType)) {
-    return compressImagePreview(file);
+    return compressImagePreview(file, options);
   }
 
   const dataUrl = await readFileAsDataUrl(file);
-  if (!isImage) return dataUrl.length <= MAX_PREVIEW_BYTES ? dataUrl : null;
-  if (dataUrl.length <= MAX_PREVIEW_BYTES) return dataUrl;
-  return compressImagePreview(file);
+  if (!isImage) return dataUrl.length <= maxBytes ? dataUrl : null;
+  if (dataUrl.length <= maxBytes) return dataUrl;
+  return compressImagePreview(file, options);
 };
+
+export const createPersistableAvatarPreview = (file: File) =>
+  createPersistableMediaPreviewWithOptions(file, {
+    imageMaxSide: 420,
+    maxBytes: 650_000,
+  });
 
 export const saveLocalMediaPreview = (mediaNo: string, dataUrl: string | null | undefined) => {
   if (!mediaNo || !dataUrl || !/^data:(image|video|audio)\//.test(dataUrl)) return false;
@@ -115,7 +134,7 @@ export const removeRuntimeMediaPreview = (mediaNo?: string | null) => {
 };
 
 export const resolveMediaPreviewUrl = (mediaNo: string | null | undefined, accessUrl: string | null | undefined) =>
-  getRuntimeMediaPreview(mediaNo) ?? getLocalMediaPreview(mediaNo) ?? accessUrl ?? null;
+  getLocalMediaPreview(mediaNo) ?? getRuntimeMediaPreview(mediaNo) ?? accessUrl ?? null;
 
 export const toLocalMediaReference = (mediaNo: string) => `${LOCAL_MEDIA_REFERENCE_PREFIX}${mediaNo}`;
 

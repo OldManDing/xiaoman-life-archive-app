@@ -226,6 +226,7 @@ export const HomePage = () => {
             src={referenceAssets.childPhoto}
             alt=""
             aria-hidden="true"
+            decoding="async"
             style={{
               position: 'absolute',
               right: -32,
@@ -390,7 +391,7 @@ export const HomePage = () => {
             </div>
             <button type="button" onClick={() => navigate(`/record/${anniversaryRecord.record_no}`)} style={{ ...refSoftCardStyle, width: '100%', padding: 0, overflow: 'hidden', textAlign: 'left', cursor: 'pointer' }}>
               <div style={{ position: 'relative', height: 154, background: '#e7e5e4' }}>
-                <img src={getCoverUrl(anniversaryRecord) ?? referenceAssets.parkPhoto} alt={anniversaryRecord.title ?? '一年前的成长记录'} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                <img src={getCoverUrl(anniversaryRecord) ?? referenceAssets.parkPhoto} alt={anniversaryRecord.title ?? '一年前的成长记录'} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 <span style={{ position: 'absolute', inset: 0, background: 'rgba(10,18,28,0.42)' }} />
                 <span style={{ position: 'absolute', left: 15, bottom: 13, color: '#fff', fontSize: 14, fontWeight: 950, textShadow: '0 2px 8px rgba(0,0,0,0.35)' }}>{anniversaryRecord.title ?? '一年前的成长记录'}</span>
               </div>
@@ -796,7 +797,7 @@ export const TimelinePage = () => {
                             <span style={{ color: '#57534e', fontSize: 13, fontWeight: 800 }}>0:12</span>
                           </div>
                         ) : (
-                          <img src={imageUrl} alt={record.title ?? '成长照片'} style={{ width: '100%', height: 170, objectFit: 'cover', borderRadius: 18, display: 'block', background: '#f5f5f4' }} />
+                          <img src={imageUrl} alt={record.title ?? '成长照片'} loading="lazy" decoding="async" style={{ width: '100%', height: 170, objectFit: 'cover', borderRadius: 18, display: 'block', background: '#f5f5f4' }} />
                         )}
                         <footer style={{ display: 'grid', gap: 10 }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, color: '#a1a1aa', fontSize: 13, fontWeight: 700 }}>
