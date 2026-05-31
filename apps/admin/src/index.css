@@ -1376,6 +1376,37 @@ table {
   display: block;
 }
 
+.admin-media-preview-placeholder {
+  min-height: 156px;
+  border: 1px dashed #cbd5d1;
+  border-radius: 8px;
+  padding: 18px;
+  display: grid;
+  place-items: center;
+  gap: 12px;
+  text-align: center;
+  color: #66736f;
+  background: #f6f8f7;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.admin-media-preview-load {
+  min-height: 36px;
+  border: 1px solid #123c37;
+  border-radius: 8px;
+  padding: 0 14px;
+  color: #ffffff;
+  background: #123c37;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.admin-media-preview-load:hover {
+  background: #0e302c;
+}
+
 .admin-media-preview-empty {
   border: 1px dashed #cbd5d1;
   border-radius: 8px;

@@ -53,6 +53,8 @@ const updateSystemConfigMock = vi.mocked(adminApi.updateSystemConfig);
 const listUsersMock = vi.mocked(adminApi.listUsers);
 const listFamiliesMock = vi.mocked(adminApi.listFamilies);
 const getFamilyDetailMock = vi.mocked(adminApi.getFamilyDetail);
+const listRecordsMock = vi.mocked(adminApi.listRecords);
+const getRecordDetailMock = vi.mocked(adminApi.getRecordDetail);
 const listInvitesMock = vi.mocked(adminApi.listInvites);
 const createInviteMock = vi.mocked(adminApi.createInvite);
 const resetUserPasswordMock = vi.mocked(adminApi.resetUserPassword);
@@ -79,6 +81,8 @@ describe('App', () => {
     listUsersMock.mockReset();
     listFamiliesMock.mockReset();
     getFamilyDetailMock.mockReset();
+    listRecordsMock.mockReset();
+    getRecordDetailMock.mockReset();
     listInvitesMock.mockReset();
     createInviteMock.mockReset();
     resetUserPasswordMock.mockReset();
@@ -395,6 +399,116 @@ describe('App', () => {
     expect(await screen.findByText('家庭成员')).toBeInTheDocument();
     expect(screen.getByText('第一次骑车')).toBeInTheDocument();
     expect(screen.getByText('handoff_001')).toBeInTheDocument();
+  });
+
+  it('keeps record media previews unloaded until requested', async () => {
+    loginMock.mockResolvedValue({
+      access_token: 'admin-token',
+      expires_in: 7200,
+      admin: {
+        username: 'admin',
+        display_name: '系统管理员',
+        role: 'super_admin',
+      },
+    });
+    listRecordsMock.mockResolvedValue({
+      list: [
+        {
+          record_no: 'r_001',
+          child_no: 'c_001',
+          child_name: '小满',
+          creator_user_no: 'u_001',
+          creator_name: '测试家长',
+          title: '第一次自己吃饭',
+          record_type: 'image',
+          visibility_scope: 'family',
+          status: 'published',
+          created_at: '2026-05-27T00:00:00.000Z',
+        },
+      ],
+      page: 1,
+      page_size: 20,
+      total: 1,
+      has_more: false,
+    });
+    getRecordDetailMock.mockResolvedValue({
+      record_no: 'r_001',
+      child_no: 'c_001',
+      child_name: '小满',
+      creator_user_no: 'u_001',
+      creator_name: '测试家长',
+      title: '第一次自己吃饭',
+      record_type: 'image',
+      visibility_scope: 'family',
+      status: 'published',
+      created_at: '2026-05-27T00:00:00.000Z',
+      family_no: 'f_001',
+      content_text: '今天自己吃饭很认真。',
+      tags: [],
+      media_list: [
+        {
+          media_no: 'm_001',
+          family_no: 'f_001',
+          child_no: 'c_001',
+          child_name: '小满',
+          uploader_user_no: 'u_001',
+          uploader_name: '测试家长',
+          uploader_mobile: null,
+          media_type: 'image',
+          status: 'ready',
+          original_name: 'photo.jpg',
+          mime_type: 'image/jpeg',
+          size_bytes: 128000,
+          object_key: 'records/photo.jpg',
+          record_no: 'r_001',
+          record_title: '第一次自己吃饭',
+          created_at: '2026-05-27T00:00:00.000Z',
+          storage_provider: 'minio',
+          bucket: 'xiaoman-local',
+          access_url: 'https://cdn.example.com/photo.jpg',
+          width: 1200,
+          height: 900,
+          duration_seconds: null,
+          updated_at: '2026-05-27T01:00:00.000Z',
+        },
+      ],
+      ai_jobs: [],
+      event_time: '2026-05-27T00:00:00.000Z',
+      location_text: null,
+      is_milestone: false,
+      ai_generated_title: null,
+      ai_summary: null,
+      ai_status: null,
+      published_at: '2026-05-27T00:10:00.000Z',
+      updated_at: '2026-05-27T01:00:00.000Z',
+    });
+
+    renderWithRouter('/login');
+
+    fireEvent.change(screen.getByPlaceholderText('请输入用户名'), { target: { value: 'admin' } });
+    fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
+    fireEvent.click(screen.getByRole('button', { name: '进入管理后台' }));
+
+    const recordsLink = (await screen.findAllByRole('link')).find((link) => link.getAttribute('href') === '/records');
+    expect(recordsLink).toBeTruthy();
+    fireEvent.click(recordsLink!);
+
+    expect(await screen.findByRole('heading', { name: '记录列表' })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(listRecordsMock).toHaveBeenCalledWith({ keyword: undefined, page: 1, page_size: 20 });
+    });
+    fireEvent.click(screen.getByRole('button', { name: '详情' }));
+
+    await waitFor(() => {
+      expect(getRecordDetailMock).toHaveBeenCalledWith('r_001');
+    });
+    expect(await screen.findByText('内容预览')).toBeInTheDocument();
+    expect(screen.queryByRole('img', { name: 'photo.jpg' })).not.toBeInTheDocument();
+    expect(screen.getByText('点击后加载预览，避免一次性拉取大量媒体。')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '加载预览' }));
+
+    expect(screen.getByRole('img', { name: 'photo.jpg' })).toHaveAttribute('src', 'https://cdn.example.com/photo.jpg');
   });
 
   it('resets a user password from account management', async () => {

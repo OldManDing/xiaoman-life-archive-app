@@ -260,6 +260,8 @@ export const MediaPreview = ({
         className="admin-media-preview-image"
         src={src}
         alt={alt}
+        loading="lazy"
+        decoding="async"
         onError={() => setFailedSrc(src)}
       />
     );
@@ -267,7 +269,7 @@ export const MediaPreview = ({
 
   if (kind === 'video') {
     return (
-      <video className="admin-media-preview-video" src={src} controls preload="metadata" onError={() => setFailedSrc(src)}>
+      <video className="admin-media-preview-video" src={src} controls preload="none" onError={() => setFailedSrc(src)}>
         当前浏览器不支持视频预览。
       </video>
     );
@@ -276,7 +278,7 @@ export const MediaPreview = ({
   if (kind === 'audio') {
     return (
       <div className="admin-media-preview-audio">
-        <audio src={src} controls preload="metadata" onError={() => setFailedSrc(src)}>
+        <audio src={src} controls preload="none" onError={() => setFailedSrc(src)}>
           当前浏览器不支持音频预览。
         </audio>
       </div>

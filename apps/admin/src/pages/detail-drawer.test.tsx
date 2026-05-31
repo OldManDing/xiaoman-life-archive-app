@@ -8,18 +8,22 @@ describe('MediaPreview', () => {
     render(<MediaPreview src="https://example.com/photo.jpg" alt="photo" mediaType="image" mimeType="image/jpeg" />);
 
     expect(screen.getByRole('img', { name: 'photo' })).toHaveAttribute('src', 'https://example.com/photo.jpg');
+    expect(screen.getByRole('img', { name: 'photo' })).toHaveAttribute('loading', 'lazy');
+    expect(screen.getByRole('img', { name: 'photo' })).toHaveAttribute('decoding', 'async');
   });
 
   it('renders video previews inline', () => {
     const { container } = render(<MediaPreview src="https://example.com/clip.mp4" alt="clip" mediaType="video" mimeType="video/mp4" />);
 
     expect(container.querySelector('video')).toHaveAttribute('src', 'https://example.com/clip.mp4');
+    expect(container.querySelector('video')).toHaveAttribute('preload', 'none');
   });
 
   it('renders audio previews inline', () => {
     const { container } = render(<MediaPreview src="https://example.com/voice.m4a" alt="voice" mediaType="audio" mimeType="audio/mp4" />);
 
     expect(container.querySelector('audio')).toHaveAttribute('src', 'https://example.com/voice.m4a');
+    expect(container.querySelector('audio')).toHaveAttribute('preload', 'none');
   });
 
   it('shows an explicit empty state when no access url exists', () => {

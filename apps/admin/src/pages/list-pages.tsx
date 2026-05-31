@@ -797,38 +797,65 @@ const ChildDetailContent = ({ data }: { data: AdminChildDetail }) => (
   </>
 );
 
-const RecordContentPreview = ({ data }: { data: AdminRecordDetail }) => (
-  <DetailSection title="内容预览">
-    <div className="admin-content-preview">
-      <article className="admin-record-preview-text">
-        <div className="admin-record-preview-eyebrow">{recordTypeLabel(data.record_type)}</div>
-        <h4>{data.title ?? '未命名记录'}</h4>
-        {data.content_text ? <p>{data.content_text}</p> : <p className="admin-record-preview-muted">暂无文字内容</p>}
-      </article>
-      {data.media_list.length ? (
-        <div className="admin-media-preview-grid">
-          {data.media_list.map((item) => (
-            <article key={item.media_no} className="admin-media-preview-card">
-              <div className="admin-media-preview-card-head">
-                <strong>{item.original_name ?? item.media_no}</strong>
-                <span>{mediaTypeLabel(item.media_type)}</span>
-              </div>
-              <MediaPreview
-                src={item.access_url}
-                alt={item.original_name ?? item.media_no}
-                mediaType={item.media_type}
-                mimeType={item.mime_type}
-              />
-              {item.access_url ? <a className="admin-media-preview-open" href={item.access_url} target="_blank" rel="noreferrer">打开原文件</a> : null}
-            </article>
-          ))}
-        </div>
-      ) : (
-        <div className="admin-media-preview-empty">暂无图片或视频</div>
-      )}
-    </div>
-  </DetailSection>
-);
+const RecordContentPreview = ({ data }: { data: AdminRecordDetail }) => {
+  const [visiblePreviews, setVisiblePreviews] = useState<Set<string>>(() => new Set());
+
+  const showPreview = (mediaNo: string) => {
+    setVisiblePreviews((current) => {
+      const next = new Set(current);
+      next.add(mediaNo);
+      return next;
+    });
+  };
+
+  return (
+    <DetailSection title="内容预览">
+      <div className="admin-content-preview">
+        <article className="admin-record-preview-text">
+          <div className="admin-record-preview-eyebrow">{recordTypeLabel(data.record_type)}</div>
+          <h4>{data.title ?? '未命名记录'}</h4>
+          {data.content_text ? <p>{data.content_text}</p> : <p className="admin-record-preview-muted">暂无文字内容</p>}
+        </article>
+        {data.media_list.length ? (
+          <div className="admin-media-preview-grid">
+            {data.media_list.map((item) => {
+              const isPreviewVisible = visiblePreviews.has(item.media_no);
+
+              return (
+                <article key={item.media_no} className="admin-media-preview-card">
+                  <div className="admin-media-preview-card-head">
+                    <strong>{item.original_name ?? item.media_no}</strong>
+                    <span>{mediaTypeLabel(item.media_type)}</span>
+                  </div>
+                  {isPreviewVisible ? (
+                    <MediaPreview
+                      src={item.access_url}
+                      alt={item.original_name ?? item.media_no}
+                      mediaType={item.media_type}
+                      mimeType={item.mime_type}
+                    />
+                  ) : (
+                    <div className="admin-media-preview-placeholder">
+                      <span>{item.access_url ? '点击后加载预览，避免一次性拉取大量媒体。' : '暂无预览地址'}</span>
+                      {item.access_url ? (
+                        <button type="button" className="admin-media-preview-load" onClick={() => showPreview(item.media_no)}>
+                          加载预览
+                        </button>
+                      ) : null}
+                    </div>
+                  )}
+                  {item.access_url ? <a className="admin-media-preview-open" href={item.access_url} target="_blank" rel="noreferrer">打开原文件</a> : null}
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="admin-media-preview-empty">暂无图片或视频</div>
+        )}
+      </div>
+    </DetailSection>
+  );
+};
 
 const RecordDetailContent = ({ data }: { data: AdminRecordDetail }) => (
   <>
