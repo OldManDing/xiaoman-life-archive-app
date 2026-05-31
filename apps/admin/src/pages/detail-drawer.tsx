@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from 'react';
+import { useState, type CSSProperties, type ReactNode } from 'react';
 
 import { Panel } from '../shared/ui';
 
@@ -215,30 +215,78 @@ export const JsonBlock = ({ value }: { value: unknown }) => (
   </pre>
 );
 
-export const MediaPreview = ({ src, alt }: { src: string | null; alt: string }) =>
-  src ? (
-    <img
-      src={src}
-      alt={alt}
-      style={{
-        width: '100%',
-        maxHeight: '280px',
-        objectFit: 'cover',
-        borderRadius: '8px',
-        border: '1px solid #d6dedb',
-        background: '#fff',
-      }}
-    />
-  ) : (
-    <div
-      style={{
-        borderRadius: '8px',
-        border: '1px dashed #cbd5d1',
-        padding: '18px',
-        color: '#66736f',
-        background: '#fff',
-      }}
-    >
-      暂无预览
+const previewKind = (mediaType?: string | null, mimeType?: string | null) => {
+  if (mediaType === 'image' || mimeType?.startsWith('image/')) return 'image';
+  if (mediaType === 'video' || mimeType?.startsWith('video/')) return 'video';
+  if (mediaType === 'audio' || mimeType?.startsWith('audio/')) return 'audio';
+  return 'file';
+};
+
+export const MediaPreview = ({
+  src,
+  alt,
+  mediaType,
+  mimeType,
+}: {
+  src: string | null;
+  alt: string;
+  mediaType?: string | null;
+  mimeType?: string | null;
+}) => {
+  const kind = previewKind(mediaType, mimeType);
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const failed = Boolean(src && failedSrc === src);
+
+  if (!src) {
+    return (
+      <div className="admin-media-preview-empty">
+        暂无预览地址
+      </div>
+    );
+  }
+
+  if (failed) {
+    return (
+      <div className="admin-media-preview-empty">
+        <span>预览加载失败</span>
+        <a href={src} target="_blank" rel="noreferrer">打开原文件</a>
+      </div>
+    );
+  }
+
+  if (kind === 'image') {
+    return (
+      <img
+        className="admin-media-preview-image"
+        src={src}
+        alt={alt}
+        onError={() => setFailedSrc(src)}
+      />
+    );
+  }
+
+  if (kind === 'video') {
+    return (
+      <video className="admin-media-preview-video" src={src} controls preload="metadata" onError={() => setFailedSrc(src)}>
+        当前浏览器不支持视频预览。
+      </video>
+    );
+  }
+
+  if (kind === 'audio') {
+    return (
+      <div className="admin-media-preview-audio">
+        <audio src={src} controls preload="metadata" onError={() => setFailedSrc(src)}>
+          当前浏览器不支持音频预览。
+        </audio>
+      </div>
+    );
+  }
+
+  return (
+    <div className="admin-media-preview-empty">
+      <span>该文件不能内嵌预览</span>
+      <a href={src} target="_blank" rel="noreferrer">打开原文件</a>
     </div>
   );
+};
