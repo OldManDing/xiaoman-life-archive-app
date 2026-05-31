@@ -294,6 +294,12 @@ const mediaPreviewHelp = (mediaType: string) => {
   return '可放大查看构图和清晰度';
 };
 
+const mediaFullscreenActionLabel = (mediaType: string) => {
+  if (mediaType === 'video') return '全屏查看视频';
+  if (mediaType === 'audio') return '全屏播放语音';
+  return '全屏查看照片';
+};
+
 const mediaPreviewCardBaseStyle: CSSProperties = {
   position: 'relative',
   minHeight: '156px',
@@ -377,7 +383,7 @@ const MediaPreviewTile = ({
       {mediaUrl && onOpen ? (
         <button
           type="button"
-          aria-label={`全屏查看${label}`}
+          aria-label={mediaFullscreenActionLabel(media.media_type)}
           onClick={() => onOpen({ ...media, preview_url: mediaUrl })}
           style={{
             position: 'absolute',
@@ -2148,7 +2154,7 @@ export const ViewRecordPage = () => {
                   {primaryFullscreenMedia ? (
                     <button
                       type="button"
-                      aria-label={`全屏查看${mediaPreviewLabel(primaryMedia.media_type)}`}
+                      aria-label={mediaFullscreenActionLabel(primaryMedia.media_type)}
                       onClick={() => setFullscreenMedia(primaryFullscreenMedia)}
                       style={{
                         position: 'absolute',
