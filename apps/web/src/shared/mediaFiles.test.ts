@@ -11,6 +11,21 @@ describe('mediaFiles', () => {
     expect(isSupportedImageFile(file)).toBe(true);
   });
 
+  it('accepts Android WebView image wildcard MIME types for avatar uploads', () => {
+    const file = new File([new Uint8Array([1])], 'avatar', { type: 'image/*' });
+
+    expect(resolveFileMimeType(file)).toBe('image/jpeg');
+    expect(deriveMediaType(file)).toBe('image');
+    expect(isSupportedImageFile(file)).toBe(true);
+  });
+
+  it('prefers the filename extension when a mobile picker returns a wildcard MIME type', () => {
+    const file = new File([new Uint8Array([1])], 'avatar.png', { type: 'image/*' });
+
+    expect(resolveFileMimeType(file)).toBe('image/png');
+    expect(withResolvedFileMimeType(file).type).toBe('image/png');
+  });
+
   it('wraps files with inferred MIME type so previews and uploads use image data URLs', async () => {
     const file = new File([new Uint8Array([1])], 'avatar.png', { type: 'application/octet-stream' });
     const normalized = withResolvedFileMimeType(file);

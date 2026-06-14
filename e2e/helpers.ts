@@ -11,7 +11,7 @@ export async function loginWeb(page: Page) {
   await page.getByRole('checkbox', { name: '我已阅读并同意《用户协议》和《隐私政策》' }).check();
   await page.getByRole('button', { name: '进入年轮' }).click();
   await expect(page).toHaveURL(/\/home$/);
-  await expect(page.getByText('最近更新')).toBeVisible();
+  await expect(page.getByText('成长时间线')).toBeVisible();
 }
 
 export async function loginAdmin(page: Page) {

@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useRef, useState, type ChangeEvent, type CSSProperties, type FormEvent } from 'react';
-import { AlertCircle, BookOpen, Check, CheckCircle2, ChevronRight, Clock, Eye, FileAudio, Image, ImagePlus, MapPin, Maximize2, Mic, PlayCircle, Sparkles, Star, Tag, Video, X } from 'lucide-react';
+import { AlertCircle, BookOpen, Check, CheckCircle2, ChevronRight, Clock, Eye, FileAudio, Image, ImagePlus, MapPin, Maximize2, Mic, PlayCircle, Ruler, Sparkles, Star, Tag, Video, X } from 'lucide-react';
 import { Camera, CameraResultType, CameraSource, type GalleryPhoto, type Photo } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 import type { ReactNode } from 'react';
@@ -30,7 +30,7 @@ type MediaPreview = {
 type MediaType = MediaPreview['media_type'];
 type NativeImageAsset = Pick<Photo | GalleryPhoto, 'webPath' | 'format'>;
 
-const tagOptions = ['生日纪念', '户外日常', '语言发育', '大动作发展', '睡前时光', '亲子陪伴', '第一次', '家庭日常'];
+const tagOptions = ['生日纪念', '户外日常', '语言发育', '大动作发展', '睡前时光', '亲子陪伴', '第一次', '家庭日常', '身高记录', '体重记录'];
 
 const locationOptions = ['家里', '小区', '公园', '学校', '医院', '游乐场', '爷爷奶奶家', '外婆家'];
 const PERSISTABLE_NON_IMAGE_PREVIEW_BYTES = 4_200_000;
@@ -53,32 +53,24 @@ const normalizePromptMessage = (message: string) =>
     ? '当前手机定位服务不可用，可手动填写地点或选择常用地点。'
     : message;
 
-const metadataPanelStyle = {
-  background: 'rgba(255,255,255,0.88)',
-  padding: '0',
-  display: 'grid',
-  gap: '12px',
-} as const;
+const formatMetricNumber = (value: string) => {
+  const normalized = Number(value);
+  if (!Number.isFinite(normalized)) return '';
+  return normalized.toFixed(1).replace(/\.0$/, '');
+};
+
+const normalizeMetricInput = (value: string) => value.replace(/[^\d.]/g, '').replace(/(\..*)\./g, '$1').slice(0, 6);
 
 const metadataSelectStyle = {
   minHeight: '44px',
   borderRadius: '999px',
-  background: 'rgba(255,255,255,0.92)',
-  border: '1px solid rgba(126,145,170,0.24)',
-  boxShadow: '0 8px 18px rgba(25,35,55,0.06)',
+  background: 'rgba(var(--nl-surface-rgb),0.82)',
+  border: '1px solid var(--nl-border)',
 } as const;
 
 const metadataIconSelectStyle = {
   ...metadataSelectStyle,
   paddingLeft: '36px',
-} as const;
-
-const metadataPillStyle = {
-  minHeight: '44px',
-  borderRadius: '999px',
-  border: '1px solid rgba(126,145,170,0.24)',
-  background: 'rgba(255,255,255,0.82)',
-  boxShadow: '0 6px 14px rgba(25,35,55,0.05)',
 } as const;
 
 const compactPillButtonStyle = {
@@ -87,15 +79,15 @@ const compactPillButtonStyle = {
   padding: '8px 13px',
   borderRadius: '999px',
   fontSize: '12px',
-  boxShadow: '0 8px 18px rgba(25,35,55,0.07)',
+  boxShadow: 'none',
 } as const;
 
 const selectedChipButtonStyle = {
   minHeight: '44px',
-  border: '1px solid rgba(126,145,170,0.24)',
+  border: '1px solid var(--nl-border)',
   borderRadius: '999px',
-  background: 'rgba(255,255,255,0.92)',
-  color: '#334155',
+  background: 'rgba(var(--nl-surface-rgb),0.74)',
+  color: 'var(--nl-muted-strong)',
   padding: '7px 11px',
   fontSize: '12px',
   fontWeight: 700,
@@ -103,69 +95,55 @@ const selectedChipButtonStyle = {
   alignItems: 'center',
   gap: '5px',
   cursor: 'pointer',
-  boxShadow: '0 8px 18px rgba(25,35,55,0.06)',
+  boxShadow: 'none',
 } as const;
 
-const mediaActionCardStyle: CSSProperties = {
-  borderRadius: '24px',
-  border: '1px solid rgba(126,145,170,0.22)',
-  background: 'rgba(255,255,255,0.96)',
-  padding: '15px',
-  display: 'grid',
-  gap: '12px',
-  boxShadow: '0 16px 34px rgba(25,35,55,0.09)',
-};
 const mediaActionButtonStyle: CSSProperties = {
-  minHeight: '62px',
+  minHeight: '50px',
   width: '100%',
-  borderRadius: '20px',
-  border: '1px solid rgba(126,145,170,0.22)',
-  background: 'rgba(255,255,255,0.9)',
-  color: '#172033',
-  padding: '11px',
+  minWidth: 0,
+  boxSizing: 'border-box',
+  borderRadius: '13px',
+  border: '1px solid var(--nl-border)',
+  background: 'rgba(var(--nl-surface-rgb),0.78)',
+  color: 'var(--nl-ink)',
+  padding: '6px 4px',
   display: 'flex',
+  flexDirection: 'column',
   alignItems: 'center',
-  gap: '10px',
-  textAlign: 'left',
+  justifyContent: 'center',
+  gap: '5px',
+  textAlign: 'center',
   cursor: 'pointer',
-  boxShadow: '0 10px 22px rgba(25,35,55,0.07)',
+  boxShadow: 'none',
   transition: 'transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease',
 };
 
 const mediaActionIconStyle: CSSProperties = {
-  width: '34px',
-  height: '34px',
-  borderRadius: '14px',
-  background: '#edf7f5',
-  color: '#17342f',
+  width: '22px',
+  height: '22px',
+  borderRadius: '9px',
+  background: 'rgba(var(--nl-accent-rgb),0.14)',
+  color: 'var(--nl-accent)',
   display: 'grid',
   placeItems: 'center',
   flexShrink: 0,
 };
 
 const mediaActionLabelStyle: CSSProperties = {
-  fontSize: '14px',
+  fontSize: '10.5px',
   fontWeight: 800,
+  lineHeight: 1.2,
   letterSpacing: 0,
-};
-
-const mediaActionDescriptionStyle: CSSProperties = {
-  color: '#687386',
-  fontSize: '12px',
-  lineHeight: 1.5,
-};
-
-const sectionEyebrowStyle: CSSProperties = {
-  color: '#687386',
-  fontSize: '11px',
-  fontWeight: 800,
-  letterSpacing: '0.12em',
-  textTransform: 'uppercase',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
 };
 
 const MediaActionButton = ({
   icon,
   label,
+  displayLabel,
   description,
   onClick,
   disabled,
@@ -173,6 +151,7 @@ const MediaActionButton = ({
 }: {
   icon: ReactNode;
   label: string;
+  displayLabel?: string;
   description: string;
   onClick: () => void;
   disabled?: boolean;
@@ -188,12 +167,10 @@ const MediaActionButton = ({
       opacity: disabled ? 0.65 : 1,
       ...style,
     }}
+    title={description}
   >
     <span style={mediaActionIconStyle}>{icon}</span>
-    <span style={{ display: 'grid', gap: '3px', minWidth: 0 }}>
-      <span style={mediaActionLabelStyle}>{label}</span>
-      <span style={mediaActionDescriptionStyle}>{description}</span>
-    </span>
+    <span style={mediaActionLabelStyle}>{displayLabel ?? label}</span>
   </button>
 );
 
@@ -207,8 +184,8 @@ const NoticeDialog = ({
   onClose: () => void;
 }) => {
   const Icon = tone === 'error' ? AlertCircle : CheckCircle2;
-  const color = tone === 'error' ? '#dc2626' : '#0f766e';
-  const background = tone === 'error' ? '#fff1f2' : '#ecfdf5';
+  const color = tone === 'error' ? 'var(--nl-danger)' : 'var(--nl-success)';
+  const background = tone === 'error' ? 'rgba(255,118,148,0.14)' : 'rgba(var(--nl-success-rgb),0.14)';
 
   return (
     <div
@@ -219,7 +196,7 @@ const NoticeDialog = ({
         position: 'fixed',
         inset: 0,
         zIndex: 30,
-        background: 'rgba(15,23,42,0.28)',
+        background: 'rgba(5,9,24,0.58)',
         display: 'grid',
         placeItems: 'center',
         padding: '24px',
@@ -228,10 +205,10 @@ const NoticeDialog = ({
       <section
         style={{
           width: 'min(100%, 340px)',
-          borderRadius: '24px',
-          background: '#ffffff',
-          border: '1px solid rgba(126,145,170,0.22)',
-          boxShadow: '0 28px 62px rgba(15,23,42,0.22)',
+          borderRadius: '22px',
+          background: 'var(--nl-surface-strong)',
+          border: '1px solid var(--nl-border)',
+          boxShadow: 'var(--nl-shadow-float)',
           padding: '18px',
           display: 'grid',
           gap: '14px',
@@ -242,8 +219,8 @@ const NoticeDialog = ({
             <Icon size={19} strokeWidth={2.3} />
           </span>
           <div style={{ display: 'grid', gap: '5px', minWidth: 0, flex: 1 }}>
-            <strong style={{ color: '#172033', fontSize: '16px', fontWeight: 900 }}>操作提示</strong>
-            <p style={{ margin: 0, color: '#475569', fontSize: '14px', lineHeight: 1.65, fontWeight: 650 }}>{normalizePromptMessage(message)}</p>
+            <strong style={{ color: 'var(--nl-ink)', fontSize: '16px', fontWeight: 900 }}>操作提示</strong>
+            <p style={{ margin: 0, color: 'var(--nl-muted-strong)', fontSize: '14px', lineHeight: 1.65, fontWeight: 650 }}>{normalizePromptMessage(message)}</p>
           </div>
         </div>
         <button
@@ -253,7 +230,7 @@ const NoticeDialog = ({
             minHeight: '44px',
             border: 'none',
             borderRadius: '16px',
-            background: '#17342f',
+            background: 'linear-gradient(135deg, var(--nl-primary), var(--nl-primary-2))',
             color: '#ffffff',
             fontSize: '14px',
             fontWeight: 900,
@@ -305,9 +282,9 @@ const mediaPreviewCardBaseStyle: CSSProperties = {
   minHeight: '156px',
   borderRadius: '18px',
   overflow: 'hidden',
-  border: '1px solid #e7e5e4',
-  background: '#ffffff',
-  boxShadow: '0 10px 24px rgba(15,23,42,0.06)',
+  border: '1px solid var(--nl-border)',
+  background: 'var(--nl-surface-soft)',
+  boxShadow: '0 8px 22px rgba(var(--nl-shadow-rgb),0.24)',
 };
 
 const MediaPreviewTile = ({
@@ -341,15 +318,15 @@ const MediaPreviewTile = ({
       ) : null}
       {media.media_type === 'video' && mediaUrl ? (
         <>
-          <video src={mediaUrl} muted playsInline preload="none" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', background: '#292524' }} />
-          <span aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: '#ffffff', pointerEvents: 'none' }}>
-            <PlayCircle size={compact ? 34 : 42} strokeWidth={1.8} fill="rgba(41,37,36,0.38)" />
+          <video src={mediaUrl} muted playsInline preload="none" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', background: 'var(--nl-surface-soft)' }} />
+          <span aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: 'var(--nl-ink)', pointerEvents: 'none' }}>
+            <PlayCircle size={compact ? 34 : 42} strokeWidth={1.8} fill="rgba(var(--nl-primary-rgb),0.18)" />
           </span>
         </>
       ) : null}
       {media.media_type === 'audio' && mediaUrl ? (
-        <div style={{ width: '100%', height: '100%', minHeight: compact ? '132px' : '156px', display: 'grid', alignContent: 'center', gap: '12px', padding: compact ? '14px' : '16px', background: '#faf8f5', boxSizing: 'border-box' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '9px', color: '#57534e', fontSize: compact ? '12px' : '13px', fontWeight: 800, minWidth: 0 }}>
+        <div style={{ width: '100%', height: '100%', minHeight: compact ? '132px' : '156px', display: 'grid', alignContent: 'center', gap: '12px', padding: compact ? '14px' : '16px', background: 'var(--nl-surface-soft)', boxSizing: 'border-box' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '9px', color: 'var(--nl-muted-strong)', fontSize: compact ? '12px' : '13px', fontWeight: 800, minWidth: 0 }}>
             <PlayCircle size={19} strokeWidth={2.2} />
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{media.original_name ?? '语音记录'}</span>
           </div>
@@ -358,7 +335,7 @@ const MediaPreviewTile = ({
         </div>
       ) : null}
       {!mediaUrl || !['image', 'video', 'audio'].includes(media.media_type) ? (
-        <div style={{ minHeight: compact ? '132px' : '156px', display: 'grid', placeItems: 'center', color: '#78716c', padding: '14px', boxSizing: 'border-box' }}>
+        <div style={{ minHeight: compact ? '132px' : '156px', display: 'grid', placeItems: 'center', color: 'var(--nl-muted)', padding: '14px', boxSizing: 'border-box' }}>
           <div style={{ display: 'grid', justifyItems: 'center', gap: '8px', textAlign: 'center' }}>
             <Image size={28} strokeWidth={1.8} />
             <span style={{ fontSize: '12px', fontWeight: 800 }}>{mediaTypeLabel(media.media_type)}</span>
@@ -366,65 +343,65 @@ const MediaPreviewTile = ({
         </div>
       ) : null}
       {media.media_type !== 'audio' && mediaUrl ? (
-        <span style={{ position: 'absolute', left: '10px', bottom: '10px', borderRadius: '999px', background: 'rgba(41,37,36,0.72)', color: '#fff', padding: '6px 10px', fontSize: '11px', fontWeight: 800 }}>
+        <span style={{ position: 'absolute', left: '10px', bottom: '10px', borderRadius: '999px', background: 'rgba(var(--nl-surface-rgb),0.9)', border: '1px solid var(--nl-border)', color: 'var(--nl-muted-strong)', padding: '6px 10px', fontSize: '11px', fontWeight: 800 }}>
           {label}
         </span>
       ) : null}
       {statusLabel ? (
-        <span style={{ position: 'absolute', right: '10px', bottom: '10px', borderRadius: '999px', background: media.upload_status === 'failed' ? 'rgba(220,38,38,0.92)' : 'rgba(23,52,47,0.86)', color: '#fff', padding: '6px 10px', fontSize: '11px', fontWeight: 850 }}>
+        <span style={{ position: 'absolute', right: '10px', bottom: '10px', borderRadius: '999px', background: media.upload_status === 'failed' ? 'rgba(255,118,148,0.14)' : 'rgba(var(--nl-success-rgb),0.14)', color: media.upload_status === 'failed' ? 'var(--nl-danger)' : 'var(--nl-success)', border: '1px solid var(--nl-border)', padding: '6px 10px', fontSize: '11px', fontWeight: 850 }}>
           {statusLabel}
         </span>
       ) : null}
       {media.upload_status === 'failed' && media.error_message ? (
-        <span style={{ position: 'absolute', left: '10px', right: '10px', top: '10px', borderRadius: '12px', background: 'rgba(255,241,242,0.94)', color: '#be123c', padding: '7px 9px', fontSize: '11px', lineHeight: 1.45, fontWeight: 750 }}>
+        <span style={{ position: 'absolute', left: '10px', right: '10px', top: '10px', borderRadius: '12px', background: 'rgba(255,118,148,0.16)', color: 'var(--nl-danger)', border: '1px solid rgba(255,118,148,0.24)', padding: '7px 9px', fontSize: '11px', lineHeight: 1.45, fontWeight: 750 }}>
           {media.error_message}
         </span>
       ) : null}
       {mediaUrl && onOpen ? (
-        <button
-          type="button"
-          aria-label={mediaFullscreenActionLabel(media.media_type)}
-          onClick={() => onOpen({ ...media, preview_url: mediaUrl })}
-          style={{
-            position: 'absolute',
-            top: '8px',
-            left: '8px',
-            width: '44px',
-            height: '44px',
-            borderRadius: '999px',
-            border: '1px solid rgba(255,255,255,0.72)',
-            background: 'rgba(41,37,36,0.72)',
-            color: '#fff',
-            display: 'grid',
-            placeItems: 'center',
-            cursor: 'pointer',
-            padding: 0,
-          }}
-        >
+          <button
+            type="button"
+            aria-label={mediaFullscreenActionLabel(media.media_type)}
+            onClick={() => onOpen({ ...media, preview_url: mediaUrl })}
+            style={{
+              position: 'absolute',
+              top: '8px',
+              left: '8px',
+              width: '44px',
+              height: '44px',
+              borderRadius: '999px',
+              border: '1px solid var(--nl-border)',
+              background: 'rgba(var(--nl-surface-rgb),0.9)',
+              color: 'var(--nl-ink)',
+              display: 'grid',
+              placeItems: 'center',
+              cursor: 'pointer',
+              padding: 0,
+            }}
+          >
           <Maximize2 size={15} strokeWidth={2.4} />
         </button>
       ) : null}
       {onRemove ? (
-        <button
-          type="button"
-          aria-label="移除媒体"
-          onClick={() => onRemove(media.media_no)}
-          style={{
-            position: 'absolute',
-            top: '8px',
-            right: '8px',
-            width: '44px',
-            height: '44px',
-            borderRadius: '999px',
-            border: '1px solid rgba(255,255,255,0.72)',
-            background: 'rgba(41,37,36,0.72)',
-            color: '#fff',
-            display: 'grid',
-            placeItems: 'center',
-            cursor: 'pointer',
-            padding: 0,
-          }}
-        >
+          <button
+            type="button"
+            aria-label="移除媒体"
+            onClick={() => onRemove(media.media_no)}
+            style={{
+              position: 'absolute',
+              top: '8px',
+              right: '8px',
+              width: '44px',
+              height: '44px',
+              borderRadius: '999px',
+              border: '1px solid var(--nl-border)',
+              background: 'rgba(var(--nl-surface-rgb),0.9)',
+              color: 'var(--nl-ink)',
+              display: 'grid',
+              placeItems: 'center',
+              cursor: 'pointer',
+              padding: 0,
+            }}
+          >
           <X size={15} strokeWidth={2.4} />
         </button>
       ) : null}
@@ -467,10 +444,10 @@ const MediaFullscreenDialog = ({
         position: 'fixed',
         inset: 0,
         zIndex: 80,
-        background: 'rgba(15,23,42,0.94)',
+        background: 'rgba(5,9,24,0.94)',
         display: 'grid',
         placeItems: 'center',
-        padding: 'calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom))',
+        padding: 'calc(42px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom))',
       }}
     >
       <button
@@ -479,14 +456,14 @@ const MediaFullscreenDialog = ({
         onClick={onClose}
         style={{
           position: 'absolute',
-          top: 'calc(12px + env(safe-area-inset-top))',
+          top: 'calc(42px + env(safe-area-inset-top))',
           right: '12px',
           width: '44px',
           height: '44px',
           borderRadius: '999px',
-          border: '1px solid rgba(255,255,255,0.28)',
-          background: 'rgba(255,255,255,0.14)',
-          color: '#ffffff',
+          border: '1px solid var(--nl-border)',
+          background: 'rgba(var(--nl-surface-rgb),0.74)',
+          color: 'var(--nl-ink)',
           display: 'grid',
           placeItems: 'center',
           cursor: 'pointer',
@@ -596,6 +573,8 @@ const normalizeLocationText = (value?: string | null) => {
   return coordinateLocationPattern.test(text) ? '当前位置附近' : text;
 };
 
+const normalizeLocationSuggestions = (value?: LocationSuggestion[] | null) => (Array.isArray(value) ? value : []);
+
 const splitTags = (value: string) =>
   value
     .split(',')
@@ -622,27 +601,48 @@ const formatDateTimeDisplay = (value: string) => {
   });
 };
 
+type RecordFormInitialValue = {
+  child_no: string;
+  record_type: string;
+  title: string;
+  content_text: string;
+  media_nos: string[];
+  media_items: MediaPreview[];
+  tags: string;
+  location_text: string;
+  visibility_scope: string;
+  event_time: string;
+  status: string;
+};
+
+const normalizeRecordFormInitialValue = (value: RecordFormInitialValue): RecordFormInitialValue => {
+  const looseValue = value as Partial<RecordFormInitialValue>;
+  return {
+    child_no: looseValue.child_no ?? '',
+    record_type: looseValue.record_type || 'text',
+    title: looseValue.title ?? '',
+    content_text: looseValue.content_text ?? '',
+    media_nos: Array.isArray(looseValue.media_nos) ? looseValue.media_nos : [],
+    media_items: Array.isArray(looseValue.media_items) ? looseValue.media_items : [],
+    tags: looseValue.tags ?? '',
+    location_text: looseValue.location_text ?? '',
+    visibility_scope: looseValue.visibility_scope || 'family',
+    event_time: looseValue.event_time ?? '',
+    status: looseValue.status || 'published',
+  };
+};
+
 const RecordForm = ({
   mode,
   initialValue,
   initialFocus,
+  initialMetricMode,
   onSubmit,
 }: {
   mode: 'create' | 'edit';
   initialFocus?: 'media' | 'content' | null;
-  initialValue: {
-    child_no: string;
-    record_type: string;
-    title: string;
-    content_text: string;
-    media_nos: string[];
-    media_items: MediaPreview[];
-    tags: string;
-    location_text: string;
-    visibility_scope: string;
-    event_time: string;
-    status: string;
-  };
+  initialMetricMode?: 'height' | null;
+  initialValue: RecordFormInitialValue;
   onSubmit: (value: {
     child_no: string;
     record_type: string;
@@ -659,7 +659,8 @@ const RecordForm = ({
 }) => {
   const navigate = useNavigate();
   const { activeChild, children } = useAuth();
-  const [form, setForm] = useState(initialValue);
+  const normalizedInitialValue = useMemo(() => normalizeRecordFormInitialValue(initialValue), [initialValue]);
+  const [form, setForm] = useState(normalizedInitialValue);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [pendingAction, setPendingAction] = useState<'publish' | 'draft' | null>(null);
@@ -674,10 +675,13 @@ const RecordForm = ({
   const [aiPreviewLoading, setAiPreviewLoading] = useState(false);
   const [aiPreviewSummary, setAiPreviewSummary] = useState<string | null>(null);
   const [aiPreviewTags, setAiPreviewTags] = useState<string[]>([]);
-  const [mediaNos, setMediaNos] = useState<string[]>(initialValue.media_nos);
-  const [mediaPreviews, setMediaPreviews] = useState<MediaPreview[]>(initialValue.media_items);
+  const [heightValue, setHeightValue] = useState('');
+  const [weightValue, setWeightValue] = useState('');
+  const [metricNote, setMetricNote] = useState('');
+  const [mediaNos, setMediaNos] = useState<string[]>(normalizedInitialValue.media_nos);
+  const [mediaPreviews, setMediaPreviews] = useState<MediaPreview[]>(normalizedInitialValue.media_items);
   const [fullscreenMedia, setFullscreenMedia] = useState<FullscreenMediaPreview | null>(null);
-  const mediaPreviewsRef = useRef<MediaPreview[]>(initialValue.media_items);
+  const mediaPreviewsRef = useRef<MediaPreview[]>(normalizedInitialValue.media_items);
   const titleInputRef = useRef<HTMLInputElement | null>(null);
   const contentInputRef = useRef<HTMLTextAreaElement | null>(null);
   const timeInputRef = useRef<HTMLInputElement | null>(null);
@@ -690,8 +694,9 @@ const RecordForm = ({
 
   const currentChild = children.find((child) => child.child_no === form.child_no) ?? activeChild ?? children[0] ?? null;
   const currentChildName = currentChild?.name?.trim() || '请选择孩子';
-  const currentChildAvatar = currentChild?.avatar_url && !isGeneratedSvgAvatar(currentChild.avatar_url) ? resolveStoredMediaUrl(currentChild.avatar_url) : null;
+  const currentChildAvatar = referenceAssets.childAvatar;
   const selectedTags = splitTags(form.tags);
+  const isHeightRecord = mode === 'create' && initialMetricMode === 'height';
 
   useEffect(() => {
     if (!form.child_no && currentChild?.child_no) {
@@ -716,10 +721,16 @@ const RecordForm = ({
   };
 
   useEffect(() => {
-    setForm(initialValue);
-    setMediaNos(initialValue.media_nos);
-    setMediaPreviews(initialValue.media_items);
-  }, [initialValue]);
+    const nextInitialValue = normalizeRecordFormInitialValue(initialValue);
+    setForm(nextInitialValue);
+    setMediaNos(nextInitialValue.media_nos);
+    setMediaPreviews(nextInitialValue.media_items);
+    if (initialMetricMode !== 'height') {
+      setHeightValue('');
+      setWeightValue('');
+      setMetricNote('');
+    }
+  }, [initialMetricMode, initialValue]);
 
   useEffect(() => {
     mediaPreviewsRef.current = mediaPreviews;
@@ -742,7 +753,7 @@ const RecordForm = ({
         .searchLocations({ keyword })
         .then((result) => {
           if (!cancelled) {
-            setPoiSuggestions(result.list);
+            setPoiSuggestions(normalizeLocationSuggestions(result?.list));
             setPoiSearchFailed(false);
           }
         })
@@ -1030,6 +1041,26 @@ const RecordForm = ({
     });
   };
 
+  const buildHeightRecordPayload = () => {
+    const heightText = formatMetricNumber(heightValue);
+    const weightText = formatMetricNumber(weightValue);
+    const noteText = metricNote.trim();
+    const title = heightText ? `${currentChildName}身高 ${heightText}cm` : form.title.trim();
+    const contentLines = [
+      heightText ? `身高：${heightText} cm` : null,
+      weightText ? `体重：${weightText} kg` : null,
+      noteText ? `备注：${noteText}` : null,
+    ].filter(Boolean) as string[];
+    const tags = new Set([...splitTags(form.tags), '身高记录']);
+    if (weightText) tags.add('体重记录');
+
+    return {
+      title,
+      contentText: contentLines.join('\n'),
+      tags: Array.from(tags),
+    };
+  };
+
   const submitRecord = async (nextStatus = form.status) => {
     if (uploading) {
       setError('媒体还在上传，请等预览标记为完成后再发布。');
@@ -1037,11 +1068,16 @@ const RecordForm = ({
     }
 
     const childNo = form.child_no || currentChild?.child_no || (await waitForSelectedChildNo());
+    const heightRecordPayload = isHeightRecord ? buildHeightRecordPayload() : null;
     if (nextStatus === 'published') {
-      const title = form.title.trim();
-      const contentText = form.content_text.trim();
+      const title = heightRecordPayload?.title ?? form.title.trim();
+      const contentText = heightRecordPayload?.contentText ?? form.content_text.trim();
       if (!childNo) {
         setError('发布前请选择孩子档案');
+        return;
+      }
+      if (isHeightRecord && !formatMetricNumber(heightValue)) {
+        setError('请先填写本次身高');
         return;
       }
       if (!title) {
@@ -1059,10 +1095,6 @@ const RecordForm = ({
         window.setTimeout(() => timeInputRef.current?.focus(), 0);
         return;
       }
-      if (form.record_type === 'mixed' && mediaNos.length === 0) {
-        setError('图文记录发布前请至少上传一张照片或视频');
-        return;
-      }
       if (form.record_type === 'video' && mediaNos.length === 0) {
         setError('视频记录发布前请上传一段视频');
         return;
@@ -1077,19 +1109,20 @@ const RecordForm = ({
     setPendingAction(nextStatus === 'draft' ? 'draft' : 'publish');
     setError(null);
     try {
-      const nextMediaNos = form.record_type === 'text' ? [] : mediaNos;
+      const nextRecordType = isHeightRecord ? 'text' : form.record_type === 'mixed' && mediaNos.length === 0 ? 'text' : form.record_type;
+      const nextMediaNos = nextRecordType === 'text' ? [] : mediaNos;
       const locationText = normalizeLocationText(form.location_text);
       await onSubmit({
         child_no: childNo,
-        record_type: form.record_type,
-        title: form.title.trim() || undefined,
-        content_text: form.content_text.trim() || undefined,
+        record_type: nextRecordType,
+        title: (heightRecordPayload?.title ?? form.title.trim()) || undefined,
+        content_text: (heightRecordPayload?.contentText ?? form.content_text.trim()) || undefined,
         media_nos: nextMediaNos,
-        tags: splitTags(form.tags),
+        tags: heightRecordPayload?.tags ?? splitTags(form.tags),
         location_text: locationText || undefined,
         visibility_scope: form.visibility_scope,
         event_time: form.event_time ? new Date(form.event_time).toISOString() : undefined,
-        is_milestone: form.record_type === 'milestone',
+        is_milestone: !isHeightRecord && form.record_type === 'milestone',
         status: nextStatus,
       });
     } catch (err) {
@@ -1145,6 +1178,7 @@ const RecordForm = ({
     }
   };
 
+  const safePoiSuggestions = normalizeLocationSuggestions(poiSuggestions);
   const filteredLocationOptions = locationOptions.filter((item) => item.includes(form.location_text.trim()) || form.location_text.trim().includes(item));
   const mergedLocationSuggestions: LocationSuggestion[] = [
     ...filteredLocationOptions.map((name, index) => ({
@@ -1157,7 +1191,7 @@ const RecordForm = ({
       longitude: null,
       source: 'local',
     })),
-    ...poiSuggestions.filter((suggestion) => !filteredLocationOptions.includes(suggestion.name)),
+    ...safePoiSuggestions.filter((suggestion) => !filteredLocationOptions.includes(suggestion.name)),
   ].slice(0, 5);
   const manualLocationText = normalizeLocationText(form.location_text);
   const hasManualLocationSuggestion =
@@ -1166,14 +1200,7 @@ const RecordForm = ({
       const locationText = formatLocationText(location);
       return locationText === manualLocationText || location.name.trim() === manualLocationText;
     });
-  const requiredItems = [
-    { label: '标题', done: Boolean(form.title.trim()) },
-    { label: '正文', done: Boolean(form.content_text.trim()) },
-    { label: '时间', done: Boolean(form.event_time) },
-  ];
-  const completionCount = requiredItems.filter((item) => item.done).length;
-  const completionPercent = Math.round((completionCount / requiredItems.length) * 100);
-  const showMediaSection = form.record_type !== 'text';
+  const showMediaSection = !isHeightRecord && form.record_type !== 'text';
   const showPhotoVideoAction = showMediaSection && form.record_type !== 'audio';
   const showAudioAction = showMediaSection && form.record_type !== 'video';
   const photoVideoAccept =
@@ -1182,10 +1209,13 @@ const RecordForm = ({
       : 'image/*,video/*,image/jpeg,image/png,image/webp,image/heic,image/heif,video/mp4,video/webm,video/quicktime,video/3gpp';
   const mediaHint =
     form.record_type === 'video'
-      ? '支持 MP4、WebM、MOV 视频'
+      ? '支持常见视频格式'
       : form.record_type === 'audio'
-        ? '支持 M4A、MP3、WAV、WebM、OGG 语音'
-      : '支持 JPG、PNG、WebP、HEIC、MP4、WebM、M4A、MP3、WAV';
+        ? '支持常见音频格式'
+        : form.record_type === 'mixed'
+          ? '可选，支持图片、视频和语音'
+          : '支持图片、视频和语音';
+  const emptyMediaPreviewLabel = form.record_type === 'mixed' ? '可不添加' : '尚未添加';
   const noticeMessage = error ?? selectorMessage;
 
   const useCurrentLocation = async () => {
@@ -1200,10 +1230,9 @@ const RecordForm = ({
         latitude: location.latitude,
         longitude: location.longitude,
       }).catch(() => null);
-      if (nearby?.list.length) {
-        setPoiSuggestions(nearby.list.slice(0, 5));
-      }
-      const nearestLocation = nearby?.list.find((item) => item.name.trim() || item.address?.trim());
+      const nearbySuggestions = normalizeLocationSuggestions(nearby?.list);
+      setPoiSuggestions(nearbySuggestions.slice(0, 5));
+      const nearestLocation = nearbySuggestions.find((item) => item.name.trim() || item.address?.trim());
       const locationText = nearestLocation ? formatLocationText(nearestLocation) : '当前位置';
       setForm((current) => ({ ...current, location_text: locationText }));
       setSelectorMessage(
@@ -1222,14 +1251,15 @@ const RecordForm = ({
     <div
       style={{
         minHeight: '100dvh',
-        background: '#f4f8fc',
-        color: '#172033',
-        padding: '0 20px calc(40px + env(safe-area-inset-bottom))',
+        background: 'linear-gradient(180deg, #050918 0%, #0b1130 52%, #050918 100%)',
+        color: 'var(--nl-ink)',
+        padding: '0 16px calc(86px + env(safe-area-inset-bottom))',
         boxSizing: 'border-box',
+        overflowX: 'hidden',
       }}
     >
         <AppTopBar
-          title={mode === 'create' ? '记录时光' : '编辑记录'}
+          title={isHeightRecord ? '记录身高' : mode === 'create' ? '记录时光' : '编辑记录'}
           backLabel={mode === 'create' ? '取消' : '返回'}
           backVariant={mode === 'create' ? 'text' : 'icon'}
           onBack={() => {
@@ -1239,22 +1269,22 @@ const RecordForm = ({
             }
             navigate(-1);
           }}
-          background="rgba(248, 251, 255, 0.84)"
-          style={{ position: 'relative', top: 'auto', margin: '0 -20px 20px', padding: 'calc(28px + env(safe-area-inset-top)) 20px 18px' }}
+          background="rgba(5, 9, 24, 0.88)"
+          style={{ position: 'relative', top: 'auto', margin: '0 -16px 8px', padding: 'calc(28px + env(safe-area-inset-top)) 16px 10px' }}
           action={
             <button
               type="submit"
               form="record-form"
+              aria-label={mode === 'create' ? '发布' : '保存'}
               style={{
-                ...primaryButtonStyle,
                 minHeight: '44px',
-                borderRadius: '16px',
-                background: '#17342f',
-                padding: '10px 14px',
-                fontSize: '12px',
-                letterSpacing: '0.02em',
+                border: 'none',
+                background: 'transparent',
+                color: 'var(--nl-primary)',
+                padding: '0 2px',
+                fontSize: '15px',
+                fontWeight: 850,
                 cursor: submitting || uploading ? 'not-allowed' : 'pointer',
-                boxShadow: '0 14px 28px rgba(23,52,47,0.24)',
                 opacity: submitting || uploading ? 0.72 : 1,
               }}
               disabled={submitting || uploading}
@@ -1263,290 +1293,318 @@ const RecordForm = ({
             </button>
           }
         />
-        <form id="record-form" onSubmit={handleSubmit} style={{ ...rowStyle, gap: '24px' }}>
+        <form id="record-form" onSubmit={handleSubmit} style={{ ...rowStyle, gap: '10px', width: '100%', maxWidth: '100%', overflowX: 'hidden' }}>
           <section
             style={{
+              order: 0,
+              padding: '0 2px 9px',
+              background: 'transparent',
+              borderBottom: '1px solid var(--nl-border)',
               display: 'grid',
-              gap: '14px',
+              gridTemplateColumns: 'minmax(0, 1fr) auto',
+              alignItems: 'center',
+              gap: '10px',
             }}
           >
-            <div
+            <button
+              type="button"
+              aria-label={`切换孩子：${currentChildName}`}
+              onClick={switchChild}
               style={{
-                borderRadius: '28px',
-                padding: '17px',
-                background: 'rgba(255,255,255,0.96)',
-                border: '1px solid rgba(126,145,170,0.2)',
-                display: 'grid',
-                gridTemplateColumns: 'minmax(0, 1fr) auto',
+                minWidth: 0,
+                border: 'none',
+                background: 'transparent',
+                padding: 0,
+                minHeight: '44px',
+                display: 'flex',
                 alignItems: 'center',
-                gap: '16px',
-                boxShadow: '0 20px 42px rgba(25,35,55,0.11)',
+                gap: '10px',
+                cursor: 'pointer',
+                textAlign: 'left',
               }}
             >
-              <div style={{ display: 'grid', gap: '7px' }}>
-                <span style={sectionEyebrowStyle}>发布对象</span>
-                <button
-                  type="button"
-                  aria-label={`切换孩子：${currentChildName}`}
-                  onClick={switchChild}
-                  style={{
-                    minWidth: 0,
-                    border: 'none',
-                    background: 'transparent',
-                    padding: 0,
-                    minHeight: '44px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '42px',
-                      height: '42px',
-                      borderRadius: '999px',
-                      background: currentChildAvatar ? '#ffffff' : '#eef6ff',
-                      border: '2px solid rgba(255,255,255,0.94)',
-                      display: 'grid',
-                      placeItems: 'center',
-                      color: '#17342f',
-                      fontWeight: 700,
-                      boxShadow: '0 10px 20px rgba(25,35,55,0.13)',
-                      flexShrink: 0,
-                      overflow: 'hidden',
-                    }}
-                  >
-                    {currentChildAvatar ? <img src={currentChildAvatar} alt={currentChildName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (currentChild?.name?.slice(0, 1) ?? '宝')}
-                  </div>
-                  <div style={{ display: 'grid', gap: '2px', minWidth: 0 }}>
-                    <strong style={{ fontSize: '18px', color: '#172033', fontWeight: 950, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{currentChildName}</strong>
-                    <span style={{ fontSize: '12px', color: '#5f6d7f', lineHeight: 1.5, fontWeight: 700 }}>今天的片段会归进家庭时间轴。</span>
-                  </div>
-                </button>
-              </div>
-              <button
-                type="button"
-                aria-label="切换或查看孩子资料"
-                onClick={switchChild}
-                style={{ border: '1px solid rgba(126,145,170,0.24)', background: 'rgba(255,255,255,0.86)', color: '#334155', display: 'inline-flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px', padding: '0 14px', minHeight: '44px', borderRadius: '999px', fontSize: '13px', fontWeight: 800, cursor: 'pointer', whiteSpace: 'nowrap', boxShadow: '0 10px 20px rgba(25,35,55,0.08)' }}
+              <div
+                style={{
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '999px',
+                  background: currentChildAvatar ? 'var(--nl-surface-soft)' : 'rgba(var(--nl-accent-rgb),0.14)',
+                  border: '1px solid var(--nl-border)',
+                  display: 'grid',
+                  placeItems: 'center',
+                  color: 'var(--nl-accent)',
+                  fontWeight: 800,
+                  flexShrink: 0,
+                  overflow: 'hidden',
+                }}
               >
-                切换孩子
-                <ChevronRight size={16} strokeWidth={2.3} />
-              </button>
-            </div>
-
-            <section
-              aria-label="发布前必填项"
+                {currentChildAvatar ? <img src={currentChildAvatar} alt={currentChildName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (currentChild?.name?.slice(0, 1) ?? '宝')}
+              </div>
+              <span style={{ display: 'grid', gap: '2px', minWidth: 0 }}>
+                <strong style={{ fontSize: '15px', color: 'var(--nl-ink)', fontWeight: 900, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{currentChildName}</strong>
+                <span style={{ fontSize: '12px', color: 'var(--nl-muted)', lineHeight: 1.4, fontWeight: 650 }}>记录对象</span>
+              </span>
+            </button>
+            <label
               style={{
-                borderRadius: '22px',
-                background: 'rgba(255,255,255,0.86)',
-                border: '1px solid rgba(217,119,6,0.18)',
-                padding: '12px',
-                display: 'grid',
-                gap: '8px',
+                position: 'relative',
+                minHeight: '44px',
+                borderRadius: '999px',
+                border: '1px solid var(--nl-border)',
+                background: 'rgba(var(--nl-surface-rgb),0.74)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '7px',
+                padding: '0 10px',
+                boxSizing: 'border-box',
+                overflow: 'hidden',
+                cursor: 'pointer',
+              }}
+              onClick={() => {
+                const picker = timeInputRef.current as (HTMLInputElement & { showPicker?: () => void }) | null;
+                try {
+                  picker?.showPicker?.();
+                } catch {
+                  picker?.focus();
+                }
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-                <strong style={{ color: '#172033', fontSize: '13px' }}>发布前只需要补齐这 3 项</strong>
-                <span style={{ color: '#a16207', fontSize: '11px', fontWeight: 850 }}>{completionCount}/3 已完成</span>
-              </div>
-              <div style={{ height: 7, borderRadius: '999px', background: 'rgba(126,145,170,0.14)', overflow: 'hidden' }}>
-                <span
-                  className="record-progress-fill"
-                  style={{
-                    display: 'block',
-                    height: '100%',
-                    width: `${completionPercent}%`,
-                    borderRadius: '999px',
-                    background: '#17342f',
-                  }}
-                />
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: `repeat(${requiredItems.length}, minmax(0, 1fr))`, gap: '8px' }}>
-              {requiredItems.map((item) => (
-                <span
-                  key={item.label}
-                  style={{
-                    minHeight: '36px',
-                    borderRadius: '999px',
-                    border: item.done ? '1px solid #bfe7d0' : '1px solid rgba(126,145,170,0.22)',
-                    background: item.done ? '#ecfdf5' : 'rgba(255,255,255,0.78)',
-                    color: item.done ? '#166534' : '#78716c',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '5px',
-                    fontSize: '12px',
-                    fontWeight: 800,
-                  }}
-                >
-                  {item.done ? <Check size={13} strokeWidth={2.5} /> : null}
-                  {item.label}
-                </span>
-              ))}
-              </div>
-            </section>
+              <input
+                ref={timeInputRef}
+                className="app-date-time-input"
+                aria-label="发生时间 *"
+                style={{ position: 'fixed', left: '-100vw', top: 0, width: 1, height: 1, opacity: 0, pointerEvents: 'none', colorScheme: 'light', background: 'transparent' }}
+                type="datetime-local"
+                value={form.event_time}
+                onChange={(event) => {
+                  setError(null);
+                  setForm((current) => ({ ...current, event_time: event.target.value }));
+                }}
+              />
+              <Clock size={14} strokeWidth={2.2} color="var(--nl-muted)" />
+              <span style={{ flex: 1, minWidth: 0, color: form.event_time ? 'var(--nl-ink)' : 'var(--nl-muted)', fontSize: '12px', fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', pointerEvents: 'none' }}>
+                {form.event_time ? formatDateTimeDisplay(form.event_time) : '选择时间'}
+              </span>
+            </label>
           </section>
 
+          {isHeightRecord ? (
+            <section
+              style={{
+                order: 1,
+                display: 'grid',
+                gap: '13px',
+                borderRadius: '20px',
+                border: '1px solid var(--nl-border)',
+                background: 'var(--nl-surface)',
+                padding: '15px 16px 16px',
+              }}
+            >
+              <div style={{ display: 'flex', gap: '11px', alignItems: 'center' }}>
+                <span style={{ width: '34px', height: '34px', borderRadius: '13px', background: 'rgba(var(--nl-accent-rgb),0.14)', color: 'var(--nl-accent)', display: 'grid', placeItems: 'center', flexShrink: 0, boxShadow: '0 0 18px rgba(var(--nl-accent-rgb),0.18)' }}>
+                  <Ruler size={18} strokeWidth={2.3} />
+                </span>
+                <span style={{ minWidth: 0, display: 'grid', gap: '3px' }}>
+                  <strong style={{ color: 'var(--nl-ink)', fontSize: '15px', fontWeight: 900 }}>身高记录</strong>
+                  <span style={{ color: 'var(--nl-muted)', fontSize: '12px', lineHeight: 1.45, fontWeight: 650 }}>记录本次测量结果，发布后会进入最近记录和时间轴。</span>
+                </span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
+                <label style={{ display: 'grid', gap: '7px', minWidth: 0 }}>
+                  <span style={{ color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 850 }}>身高 cm</span>
+                  <input
+                    aria-label="身高 cm"
+                    inputMode="decimal"
+                    value={heightValue}
+                    onChange={(event) => {
+                      setError(null);
+                      setHeightValue(normalizeMetricInput(event.target.value));
+                    }}
+                    placeholder="例如 92.5"
+                    style={{ ...inputStyle, minHeight: '48px', borderRadius: '16px', fontWeight: 850 }}
+                  />
+                </label>
+                <label style={{ display: 'grid', gap: '7px', minWidth: 0 }}>
+                  <span style={{ color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 850 }}>体重 kg</span>
+                  <input
+                    aria-label="体重 kg"
+                    inputMode="decimal"
+                    value={weightValue}
+                    onChange={(event) => {
+                      setError(null);
+                      setWeightValue(normalizeMetricInput(event.target.value));
+                    }}
+                    placeholder="可选"
+                    style={{ ...inputStyle, minHeight: '48px', borderRadius: '16px', fontWeight: 850 }}
+                  />
+                </label>
+              </div>
+              <label style={{ display: 'grid', gap: '7px' }}>
+                <span style={{ color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 850 }}>备注</span>
+                <textarea
+                  aria-label="身高记录备注"
+                  value={metricNote}
+                  onChange={(event) => {
+                    setError(null);
+                    setMetricNote(event.target.value);
+                  }}
+                  placeholder="例如早晨测量、穿薄衣、最近长高很明显"
+                  style={{ ...inputStyle, minHeight: '82px', resize: 'none', lineHeight: 1.65, borderRadius: '16px' }}
+                />
+              </label>
+            </section>
+          ) : null}
+
           {showMediaSection ? (
-            <section style={{ display: 'grid', gap: '14px' }}>
-              <div style={{ display: 'grid', gap: '4px' }}>
-                <span style={{ color: '#172033', fontSize: '19px', fontWeight: 950, letterSpacing: 0 }}>影像与声音</span>
-                <span style={{ color: '#687386', fontSize: '12px', lineHeight: 1.65, fontWeight: 650 }}>把今天最有质感的一帧、一句话、一段声音留下来。</span>
+            <section
+              style={{
+                order: 2,
+                display: 'grid',
+                gap: '8px',
+                borderRadius: '20px',
+                border: '1px solid var(--nl-border)',
+                background: 'rgba(var(--nl-surface-rgb),0.72)',
+                padding: '11px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '12px' }}>
+                <strong style={{ color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 900 }}>{form.record_type === 'mixed' ? '素材（可选）' : '素材'}</strong>
+                <span style={{ minWidth: 0, color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 750, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{uploading ? '正在上传…' : mediaHint}</span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: showPhotoVideoAction && showAudioAction ? 'repeat(5, minmax(0, 1fr))' : 'repeat(2, minmax(0, 1fr))', gap: '6px' }}>
+                {showPhotoVideoAction ? (
+                  form.record_type === 'video' ? (
+                    <>
+                      <MediaActionButton icon={<Video size={17} strokeWidth={2.2} />} label="拍摄视频" displayLabel="视频" description="打开系统相机录制" onClick={() => triggerMediaInput(videoCaptureInputRef.current, '请在系统相机中完成拍摄，保存后会自动加入记录。')} disabled={uploading} />
+                      <MediaActionButton icon={<ImagePlus size={17} strokeWidth={2.2} />} label="从相册选择" displayLabel="相册" description="导入已有视频素材" onClick={() => triggerMediaInput(galleryInputRef.current, '请从相册选择视频素材。')} disabled={uploading} />
+                    </>
+                  ) : (
+                    <>
+                      <MediaActionButton icon={<ImagePlus size={17} strokeWidth={2.2} />} label="拍照记录" displayLabel="拍照" description="打开原生相机拍照" onClick={() => void openNativePhotoCapture()} disabled={uploading} />
+                      <MediaActionButton icon={<Image size={17} strokeWidth={2.2} />} label="从相册添加" displayLabel="相册" description="原生相册多选照片" onClick={() => void openNativeGalleryImages()} disabled={uploading} />
+                      <MediaActionButton icon={<Video size={17} strokeWidth={2.2} />} label="拍摄视频" displayLabel="视频" description="打开系统相机录像" onClick={() => triggerMediaInput(videoCaptureInputRef.current, '请在系统相机中完成拍摄，保存后会自动加入记录。')} disabled={uploading} />
+                    </>
+                  )
+                ) : null}
+                {showAudioAction ? (
+                  <>
+                    <MediaActionButton icon={<Mic size={17} strokeWidth={2.2} />} label="录制语音" displayLabel="录音" description="打开系统录音入口" onClick={() => triggerMediaInput(audioCaptureInputRef.current, '请使用系统录音入口录制，保存后会自动加入记录。')} disabled={uploading} />
+                    <MediaActionButton icon={<FileAudio size={17} strokeWidth={2.2} />} label="上传语音" displayLabel="上传" description="选择已有录音或音频" onClick={() => triggerMediaInput(audioLibraryInputRef.current, '请选择已有录音或音频文件。')} disabled={uploading} />
+                  </>
+                ) : null}
               </div>
 
               <section
                 aria-label="媒体预览"
                 style={{
-                  borderRadius: '24px',
-                  border: '1px solid rgba(126,145,170,0.22)',
-                  background: 'rgba(255,255,255,0.9)',
-                  padding: '14px',
+                  borderRadius: '14px',
+                  border: mediaPreviews.length ? '1px solid var(--nl-border)' : 'none',
+                  background: mediaPreviews.length ? 'rgba(var(--nl-surface-rgb),0.58)' : 'transparent',
+                  padding: mediaPreviews.length ? '8px' : 0,
                   display: 'grid',
-                  gap: '12px',
-                  boxShadow: '0 12px 28px rgba(25,35,55,0.07)',
+                  gap: '8px',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-                  <div style={{ display: 'grid', gap: '3px', minWidth: 0 }}>
-                    <strong style={{ color: '#172033', fontSize: '15px', fontWeight: 900 }}>已选媒体预览</strong>
-                    <span style={{ color: '#687386', fontSize: '12px', lineHeight: 1.5, fontWeight: 650 }}>
-                      {mediaPreviews.length ? '确认照片、视频或语音没有问题后再发布。' : '拍完照片、录完视频或语音后会显示在这里。'}
-                    </span>
-                  </div>
-                  <span style={{ borderRadius: '999px', background: mediaPreviews.length ? '#ecfdf5' : '#f4f4f5', color: mediaPreviews.length ? '#166534' : '#71717a', padding: '6px 10px', fontSize: '11px', fontWeight: 900, whiteSpace: 'nowrap' }}>
-                    {mediaPreviews.length ? `${mediaPreviews.length} 个` : '待添加'}
-                  </span>
-                </div>
-
                 {mediaPreviews.length ? (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
                     {mediaPreviews.map((media) => (
-                      <MediaPreviewTile key={media.media_no} media={media} onRemove={removeMedia} onOpen={setFullscreenMedia} />
+                      <MediaPreviewTile key={media.media_no} media={media} compact onRemove={removeMedia} onOpen={setFullscreenMedia} />
                     ))}
                   </div>
                 ) : (
                   <div
                     data-testid="record-media-preview-empty"
                     style={{
-                      minHeight: '128px',
-                      borderRadius: '18px',
-                      border: '1px dashed rgba(126,145,170,0.34)',
-                      background: '#f8fafc',
-                      display: 'grid',
-                      placeItems: 'center',
-                      padding: '16px',
-                      textAlign: 'center',
-                      color: '#64748b',
+                      minHeight: '42px',
+                      borderRadius: '12px',
+                      border: '1px dashed var(--nl-border)',
+                      background: 'rgba(var(--nl-surface-rgb),0.52)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '10px',
+                      padding: '0 12px',
+                      color: 'var(--nl-muted)',
                     }}
                   >
-                    <div style={{ display: 'grid', justifyItems: 'center', gap: '10px' }}>
-                      <div style={{ display: 'flex', gap: '10px', color: '#475569' }}>
-                        <ImagePlus size={20} strokeWidth={2.2} />
-                        <Video size={20} strokeWidth={2.2} />
-                        <FileAudio size={20} strokeWidth={2.2} />
-                      </div>
-                      <span style={{ fontSize: '13px', fontWeight: 800, lineHeight: 1.6 }}>这里会显示拍摄后的照片、视频和语音播放器</span>
-                    </div>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '12px', fontWeight: 800 }}>
+                      <ImagePlus size={15} strokeWidth={2.2} />
+                      媒体预览
+                    </span>
+                    <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '11px', fontWeight: 650 }}>{mediaPreviews.length ? `${mediaPreviews.length} 个素材` : emptyMediaPreviewLabel}</span>
                   </div>
                 )}
               </section>
 
-              <div style={{ display: 'grid', gap: '12px' }}>
-                {showPhotoVideoAction ? (
-                  <section style={mediaActionCardStyle}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
-                      <div style={{ display: 'grid', gap: '5px' }}>
-                        <strong style={{ color: '#292524', fontSize: '15px', fontWeight: 800 }}>{form.record_type === 'video' ? '视频采集' : '图片 / 视频'}</strong>
-                        <span style={{ color: '#78716c', fontSize: '12px', lineHeight: 1.6 }}>
-                          {form.record_type === 'video' ? '直接打开系统相机录制视频，也可以从手机相册导入。' : '原生相机拍照和系统相册导入分开处理，避免局部预览异常。'}
-                        </span>
-                      </div>
-                      <span style={{ width: '42px', height: '42px', borderRadius: '16px', background: '#f7f4ee', border: '1px solid #ece3d5', display: 'grid', placeItems: 'center', color: '#5b5348', flexShrink: 0 }}>
-                        {form.record_type === 'video' ? <Video size={18} strokeWidth={2.1} /> : <ImagePlus size={18} strokeWidth={2.1} />}
-                      </span>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
-                      {form.record_type === 'video' ? (
-                        <>
-                          <MediaActionButton icon={<Video size={18} strokeWidth={2.2} />} label="拍摄视频" description="打开系统相机录制" onClick={() => triggerMediaInput(videoCaptureInputRef.current, '请在系统相机中完成拍摄，保存后会自动加入记录。')} disabled={uploading} />
-                          <MediaActionButton icon={<ImagePlus size={18} strokeWidth={2.2} />} label="从相册选择" description="导入已有视频素材" onClick={() => triggerMediaInput(galleryInputRef.current, '请从相册选择视频素材。')} disabled={uploading} />
-                        </>
-                      ) : (
-                        <>
-                          <MediaActionButton icon={<ImagePlus size={18} strokeWidth={2.2} />} label="拍照记录" description="打开原生相机拍照" onClick={() => void openNativePhotoCapture()} disabled={uploading} />
-                          <MediaActionButton icon={<Video size={18} strokeWidth={2.2} />} label="拍摄视频" description="打开系统相机录像" onClick={() => triggerMediaInput(videoCaptureInputRef.current, '请在系统相机中完成拍摄，保存后会自动加入记录。')} disabled={uploading} />
-                          <MediaActionButton icon={<Image size={18} strokeWidth={2.2} />} label="从相册添加" description="原生相册多选照片" onClick={() => void openNativeGalleryImages()} disabled={uploading} style={{ gridColumn: '1 / -1' }} />
-                        </>
-                      )}
-                    </div>
-                  </section>
-                ) : null}
-
-                {showAudioAction ? (
-                  <section style={mediaActionCardStyle}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px' }}>
-                      <div style={{ display: 'grid', gap: '5px' }}>
-                        <strong style={{ color: '#292524', fontSize: '15px', fontWeight: 800 }}>语音采集</strong>
-                        <span style={{ color: '#78716c', fontSize: '12px', lineHeight: 1.6 }}>录一段和上传已有音频分开，优先交给系统录音或文件选择器处理。</span>
-                      </div>
-                      <span style={{ width: '42px', height: '42px', borderRadius: '16px', background: '#f7f4ee', border: '1px solid #ece3d5', display: 'grid', placeItems: 'center', color: '#5b5348', flexShrink: 0 }}>
-                        <Mic size={18} strokeWidth={2.1} />
-                      </span>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
-                      <MediaActionButton icon={<Mic size={18} strokeWidth={2.2} />} label="录制语音" description="打开系统录音入口" onClick={() => triggerMediaInput(audioCaptureInputRef.current, '请使用系统录音入口录制，保存后会自动加入记录。')} disabled={uploading} />
-                      <MediaActionButton icon={<FileAudio size={18} strokeWidth={2.2} />} label="上传语音" description="选择已有录音或音频" onClick={() => triggerMediaInput(audioLibraryInputRef.current, '请选择已有录音或音频文件。')} disabled={uploading} />
-                    </div>
-                  </section>
-                ) : null}
-
-                <input ref={photoCaptureInputRef} aria-label="拍照记录" type="file" accept="image/*,image/jpeg,image/png,image/webp,image/heic,image/heif" capture="environment" onChange={(event) => void onFileChange(event)} disabled={uploading} style={{ display: 'none' }} />
-                <input ref={videoCaptureInputRef} aria-label="拍摄视频" type="file" accept="video/*,video/mp4,video/webm,video/quicktime,video/3gpp" capture="environment" onChange={(event) => void onFileChange(event)} disabled={uploading} style={{ display: 'none' }} />
-                <input ref={galleryInputRef} aria-label={form.record_type === 'video' ? '从相册选择视频' : '从相册添加'} type="file" accept={photoVideoAccept} multiple onChange={(event) => void onFileChange(event)} disabled={uploading} style={{ display: 'none' }} />
-                <input ref={audioCaptureInputRef} aria-label="录制语音" type="file" accept="audio/*,audio/mpeg,audio/mp4,audio/m4a,audio/x-m4a,audio/aac,audio/wav,audio/x-wav,audio/webm,audio/ogg,audio/3gpp,audio/amr" capture onChange={(event) => void onFileChange(event)} disabled={uploading} style={{ display: 'none' }} />
-                <input ref={audioLibraryInputRef} aria-label="上传语音" type="file" accept="audio/*,audio/mpeg,audio/mp4,audio/m4a,audio/x-m4a,audio/aac,audio/wav,audio/x-wav,audio/webm,audio/ogg,audio/3gpp,audio/amr" onChange={(event) => void onFileChange(event)} disabled={uploading} style={{ display: 'none' }} />
-              </div>
-
-              <span style={{ color: '#a8a29e', fontSize: '11px', lineHeight: 1.45, fontWeight: 600 }}>{uploading ? '正在上传媒体…' : mediaHint}</span>
+              <input ref={photoCaptureInputRef} aria-label="拍照记录" type="file" accept="image/*,image/jpeg,image/png,image/webp,image/heic,image/heif" capture="environment" onChange={(event) => void onFileChange(event)} disabled={uploading} style={{ display: 'none' }} />
+              <input ref={videoCaptureInputRef} aria-label="拍摄视频" type="file" accept="video/*,video/mp4,video/webm,video/quicktime,video/3gpp" capture="environment" onChange={(event) => void onFileChange(event)} disabled={uploading} style={{ display: 'none' }} />
+              <input ref={galleryInputRef} aria-label={form.record_type === 'video' ? '从相册选择视频' : '从相册添加'} type="file" accept={photoVideoAccept} multiple onChange={(event) => void onFileChange(event)} disabled={uploading} style={{ display: 'none' }} />
+              <input ref={audioCaptureInputRef} aria-label="录制语音" type="file" accept="audio/*,audio/mpeg,audio/mp4,audio/m4a,audio/x-m4a,audio/aac,audio/wav,audio/x-wav,audio/webm,audio/ogg,audio/3gpp,audio/amr" capture onChange={(event) => void onFileChange(event)} disabled={uploading} style={{ display: 'none' }} />
+              <input ref={audioLibraryInputRef} aria-label="上传语音" type="file" accept="audio/*,audio/mpeg,audio/mp4,audio/m4a,audio/x-m4a,audio/aac,audio/wav,audio/x-wav,audio/webm,audio/ogg,audio/3gpp,audio/amr" onChange={(event) => void onFileChange(event)} disabled={uploading} style={{ display: 'none' }} />
             </section>
           ) : null}
 
-          <div style={{ display: 'grid', gap: '18px', borderRadius: '28px', border: '1px solid #efe4d4', background: '#fffdfa', padding: '20px 18px', boxShadow: '0 16px 36px rgba(41,37,36,0.05)' }}>
-            <div style={{ display: 'grid', gap: '4px' }}>
-              <span style={{ color: '#292524', fontSize: '18px', fontWeight: 800, letterSpacing: 0 }}>写下这一刻</span>
-              <span style={{ color: '#78716c', fontSize: '12px', lineHeight: 1.55 }}>标题让以后容易找到，正文保留当时的细节和情绪。</span>
+          {!isHeightRecord ? (
+          <div style={{ order: 1, display: 'grid', gap: '10px', borderRadius: '20px', border: '1px solid var(--nl-border)', background: 'rgba(var(--nl-surface-rgb),0.72)', padding: '13px 15px 14px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', alignItems: 'center', gap: '10px', borderBottom: '1px solid var(--nl-border)', paddingBottom: '10px' }}>
+              <input
+                ref={titleInputRef}
+                className="record-title-input"
+                style={{
+                  width: '100%',
+                  minWidth: 0,
+                  minHeight: '36px',
+                  border: 'none',
+                  padding: '6px 0',
+                  fontSize: '16px',
+                  fontWeight: 800,
+                  lineHeight: 1.35,
+                  color: 'var(--nl-ink)',
+                  outline: 'none',
+                  background: 'transparent',
+                  boxSizing: 'border-box',
+                }}
+                placeholder="给这一刻起个名字"
+                value={form.title}
+                onChange={(event) => {
+                  setError(null);
+                  setForm((current) => ({ ...current, title: event.target.value }));
+                }}
+              />
+              <button
+                type="button"
+                aria-label="AI 智能建议"
+                onClick={() => void generateAiPreview()}
+                disabled={aiPreviewLoading}
+                style={{
+                  minHeight: '34px',
+                  border: '1px solid var(--nl-border)',
+                  borderRadius: '999px',
+                  background: 'rgba(var(--nl-surface-rgb),0.74)',
+                  color: 'var(--nl-ink)',
+                  padding: '7px 10px',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '5px',
+                  fontSize: '12px',
+                  fontWeight: 800,
+                  whiteSpace: 'nowrap',
+                  cursor: aiPreviewLoading ? 'not-allowed' : 'pointer',
+                  opacity: aiPreviewLoading ? 0.72 : 1,
+                  boxShadow: 'none',
+                }}
+              >
+                <Sparkles size={14} strokeWidth={2.2} />
+                {aiPreviewLoading ? '整理中…' : 'AI 整理'}
+              </button>
             </div>
-            <input
-              ref={titleInputRef}
-              className="record-title-input"
-              style={{
-                width: '100%',
-                border: 'none',
-                borderBottom: '1px solid #ece3d6',
-                padding: '0 0 14px',
-                fontSize: '18px',
-                fontWeight: 700,
-                color: '#292524',
-                outline: 'none',
-                background: 'transparent',
-                boxSizing: 'border-box',
-              }}
-              placeholder="给这一刻起个名字"
-              value={form.title}
-              onChange={(event) => {
-                setError(null);
-                setForm((current) => ({ ...current, title: event.target.value }));
-              }}
-            />
             <textarea
               ref={contentInputRef}
               className="record-body-input"
               style={{
                 width: '100%',
-                minHeight: '184px',
+                minHeight: '104px',
                 border: 'none',
                 outline: 'none',
                 resize: 'none',
@@ -1554,7 +1612,7 @@ const RecordForm = ({
                 padding: 0,
                 fontSize: '15px',
                 lineHeight: 1.9,
-                color: '#44403c',
+                color: 'var(--nl-muted-strong)',
                 boxSizing: 'border-box',
               }}
               placeholder="在想什么呢？记录一下这一刻发生的故事…"
@@ -1564,49 +1622,12 @@ const RecordForm = ({
                 setForm((current) => ({ ...current, content_text: event.target.value }));
               }}
             />
-            <div style={{ borderRadius: '18px', background: '#f8f7ff', border: '1px solid #e9e6ff', padding: '12px', display: 'grid', gap: '10px' }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '9px' }}>
-                <span style={{ width: '28px', height: '28px', borderRadius: '999px', background: '#ffffff', color: '#6366f1', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-                  <Sparkles size={15} strokeWidth={2.2} />
-                </span>
-                <div style={{ minWidth: 0 }}>
-                  <strong style={{ display: 'block', color: '#312e81', fontSize: '13px', marginBottom: '3px' }}>不知道怎么整理？</strong>
-                  <span style={{ color: '#6b7280', fontSize: '12px', lineHeight: 1.6 }}>先写几句话，AI 可以帮你生成标题、摘要和标签。</span>
-                </div>
-              </div>
-              <button
-                type="button"
-                aria-label="AI 智能建议"
-                onClick={() => void generateAiPreview()}
-                disabled={aiPreviewLoading}
-                style={{
-                  minHeight: '40px',
-                  border: '1px solid #e8dece',
-                  borderRadius: '14px',
-                  background: '#fffaf2',
-                  color: '#6f4b2f',
-                  padding: '10px 13px',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '6px',
-                  fontSize: '12px',
-                  fontWeight: 800,
-                  cursor: aiPreviewLoading ? 'not-allowed' : 'pointer',
-                  opacity: aiPreviewLoading ? 0.72 : 1,
-                  boxShadow: '0 8px 20px rgba(41,37,36,0.06)',
-                }}
-              >
-                <Sparkles size={14} strokeWidth={2.2} />
-                {aiPreviewLoading ? 'AI 生成中…' : '生成标题/摘要/标签'}
-              </button>
-            </div>
             {aiPreviewSummary || aiPreviewTags.length ? (
               <section
                 style={{
                   borderRadius: '18px',
-                  background: '#f8f9fa',
-                  border: '1px solid #eef2ff',
+                  background: 'rgba(var(--nl-primary-rgb),0.14)',
+                  border: '1px solid var(--nl-border)',
                   padding: '14px 14px 13px',
                   display: 'grid',
                   gap: '10px',
@@ -1616,18 +1637,18 @@ const RecordForm = ({
               >
                 <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: '#818cf8' }} />
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingLeft: '2px' }}>
-                  <span style={{ width: '28px', height: '28px', borderRadius: '999px', background: '#eef2ff', color: '#6366f1', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                  <span style={{ width: '28px', height: '28px', borderRadius: '999px', background: 'rgba(var(--nl-accent-rgb),0.14)', color: 'var(--nl-accent)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
                     <Sparkles size={15} strokeWidth={2.2} />
                   </span>
                   <div style={{ minWidth: 0, flex: 1 }}>
-                    <strong style={{ display: 'block', marginBottom: '4px', color: '#312e81', fontSize: '12px', fontWeight: 800 }}>AI 智能建议</strong>
-                    {aiPreviewSummary ? <p style={{ margin: 0, color: '#4a4a4a', fontSize: '13px', lineHeight: 1.7 }}>{aiPreviewSummary}</p> : null}
+                    <strong style={{ display: 'block', marginBottom: '4px', color: 'var(--nl-ink)', fontSize: '12px', fontWeight: 800 }}>AI 智能建议</strong>
+                    {aiPreviewSummary ? <p style={{ margin: 0, color: 'var(--nl-muted-strong)', fontSize: '13px', lineHeight: 1.7 }}>{aiPreviewSummary}</p> : null}
                   </div>
                 </div>
                 {aiPreviewTags.length ? (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px', paddingLeft: '38px' }}>
                     {aiPreviewTags.map((tag, index) => (
-                      <span key={`${tag}-${index}`} style={{ borderRadius: '999px', background: '#ffffff', border: '1px solid #e0e7ff', color: '#4f46e5', padding: '5px 9px', fontSize: '11px', fontWeight: 700 }}>
+                      <span key={`${tag}-${index}`} style={{ borderRadius: '999px', background: 'rgba(var(--nl-surface-rgb),0.72)', border: '1px solid var(--nl-border)', color: 'var(--nl-accent)', padding: '5px 9px', fontSize: '11px', fontWeight: 700 }}>
                         #{tag}
                       </span>
                     ))}
@@ -1636,11 +1657,12 @@ const RecordForm = ({
               </section>
             ) : null}
           </div>
+          ) : null}
 
-          <div style={{ display: 'grid', gap: '12px' }}>
-            <div style={{ display: 'grid', gap: '4px' }}>
-              <span style={{ color: '#292524', fontSize: '15px', fontWeight: 800 }}>补充信息</span>
-              <span style={{ color: '#78716c', fontSize: '12px', lineHeight: 1.55 }}>可见范围、地点、标签和里程碑用于后续检索与家庭协作。</span>
+          <div style={{ order: 3, display: 'grid', gap: '8px', borderRadius: '20px', border: '1px solid var(--nl-border)', background: 'rgba(var(--nl-surface-rgb),0.72)', padding: '12px 13px 13px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
+              <span style={{ color: 'var(--nl-ink)', fontSize: '15px', fontWeight: 850 }}>更多设置</span>
+              <span style={{ color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 750 }}>可选</span>
             </div>
             <button
               type="button"
@@ -1650,24 +1672,25 @@ const RecordForm = ({
                 setSelectorMessage(null);
               }}
               style={{
-                borderRadius: '18px',
-                border: '1px solid #efede9',
-                background: visibilityOpen ? '#fffdf9' : '#ffffff',
-                padding: '15px 16px',
+                minHeight: '44px',
+                borderRadius: '15px',
+                border: '1px solid var(--nl-border)',
+                background: visibilityOpen ? 'rgba(var(--nl-primary-rgb),0.14)' : 'rgba(var(--nl-surface-rgb),0.74)',
+                padding: '0 12px',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 gap: '12px',
                 cursor: 'pointer',
                 textAlign: 'left',
-                boxShadow: visibilityOpen ? '0 8px 20px rgba(41,37,36,0.045)' : '0 2px 10px rgba(41,37,36,0.025)',
+                boxShadow: 'none',
               }}
             >
-              <span style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#57534e', fontSize: '15px', fontWeight: 600 }}>
-                <Eye size={18} strokeWidth={2.2} />
+              <span style={{ display: 'flex', alignItems: 'center', gap: '9px', color: 'var(--nl-ink)', fontSize: '13px', fontWeight: 800 }}>
+                <Eye size={16} strokeWidth={2.2} />
                 可见范围
               </span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#57534e', fontSize: '14px', fontWeight: 600 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--nl-ink)', fontSize: '13px', fontWeight: 800 }}>
                 家庭成员可见
                 <ChevronRight size={16} strokeWidth={2.2} style={{ transform: visibilityOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.16s ease' }} />
               </span>
@@ -1675,10 +1698,10 @@ const RecordForm = ({
             {visibilityOpen ? (
               <div
                 style={{
-                  borderRadius: '18px',
-                  border: '1px solid #eee9df',
-                  background: '#faf8f5',
-                  padding: '12px',
+                  borderRadius: '16px',
+                  border: '1px solid var(--nl-border)',
+                  background: 'rgba(var(--nl-surface-rgb),0.58)',
+                  padding: '10px',
                   display: 'grid',
                   gap: '10px',
                 }}
@@ -1688,10 +1711,10 @@ const RecordForm = ({
                   aria-pressed="true"
                   style={{
                     width: '100%',
-                    border: '1px solid #ded8cf',
+                    border: '1px solid var(--nl-border)',
                     borderRadius: '14px',
-                    background: '#ffffff',
-                    color: '#292524',
+                    background: 'rgba(var(--nl-surface-rgb),0.74)',
+                    color: 'var(--nl-ink)',
                     padding: '12px 13px',
                     display: 'flex',
                     alignItems: 'center',
@@ -1701,7 +1724,7 @@ const RecordForm = ({
                     fontWeight: 700,
                     textAlign: 'left',
                     cursor: 'pointer',
-                    boxShadow: '0 4px 14px rgba(41,37,36,0.04)',
+                    boxShadow: 'none',
                   }}
                   onClick={() => {
                     setForm((current) => ({ ...current, visibility_scope: 'family' }));
@@ -1710,41 +1733,44 @@ const RecordForm = ({
                 >
                   <span style={{ display: 'grid', gap: '3px' }}>
                     <span>家庭成员可见</span>
-                    <span style={{ color: '#78716c', fontSize: '12px', fontWeight: 600 }}>与后台权限保持一致，家庭成员可查看这条记录。</span>
+                    <span style={{ color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 600 }}>与后台权限保持一致，家庭成员可查看这条记录。</span>
                   </span>
-                  <Check size={18} strokeWidth={2.5} color="#a16207" />
+                  <Check size={18} strokeWidth={2.5} color="var(--nl-accent)" />
                 </button>
                 <p style={{ ...helperTextStyle, lineHeight: 1.65 }}>当前记录默认仅对家庭成员可见，和家庭成员角色权限保持一致。</p>
               </div>
             ) : null}
 
-            <section style={metadataPanelStyle}>
-              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-                <div style={{ ...metadataPillStyle, position: 'relative', overflow: 'hidden', flex: '0 1 154px' }}>
-                  <input
-                    ref={timeInputRef}
-                    className="app-date-time-input"
-                    aria-label="发生时间 *"
-                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
-                    type="datetime-local"
-                    value={form.event_time}
-                    onChange={(event) => {
-                      setError(null);
-                      setForm((current) => ({ ...current, event_time: event.target.value }));
-                    }}
-                  />
-                  <div style={{ minHeight: '40px', padding: '8px 13px', display: 'flex', alignItems: 'center', gap: '7px', pointerEvents: 'none' }}>
-                    <Clock size={14} strokeWidth={2.2} color="#a8a29e" />
-                    <span style={{ flex: 1, minWidth: 0, color: form.event_time ? '#57534e' : '#78716c', fontSize: '13px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {form.event_time ? formatDateTimeDisplay(form.event_time) : '选择时间'}
-                    </span>
-                  </div>
-                </div>
-                <div style={{ position: 'relative', flex: '0 1 156px', minWidth: '142px' }}>
-                  <MapPin size={14} strokeWidth={2.2} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#a8a29e', pointerEvents: 'none' }} />
+            <section style={{ display: 'grid', gap: '8px' }}>
+              <div
+                style={{
+                  minHeight: '46px',
+                  borderRadius: '15px',
+                  border: '1px solid var(--nl-border)',
+                  background: 'rgba(var(--nl-surface-rgb),0.66)',
+                  display: 'grid',
+                  gridTemplateColumns: 'minmax(0, 1fr) auto',
+                  alignItems: 'stretch',
+                  overflow: 'hidden',
+                }}
+              >
+                <label style={{ position: 'relative', minWidth: 0, display: 'flex', alignItems: 'center' }}>
+                  <MapPin size={15} strokeWidth={2.2} style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: 'var(--nl-muted)', pointerEvents: 'none' }} />
                   <input
                     aria-label="搜索地点"
-                    style={{ ...inputStyle, ...metadataPillStyle, width: '100%', minHeight: '44px', borderRadius: '999px', background: '#fafaf9', padding: '8px 12px 8px 34px', fontSize: '13px', fontWeight: 700 }}
+                    style={{
+                      width: '100%',
+                      minWidth: 0,
+                      minHeight: '46px',
+                      border: 'none',
+                      outline: 'none',
+                      background: 'transparent',
+                      color: 'var(--nl-ink)',
+                      padding: '0 10px 0 38px',
+                      boxSizing: 'border-box',
+                      fontSize: '13px',
+                      fontWeight: 800,
+                    }}
                     value={form.location_text}
                     onChange={(event) => {
                       setError(null);
@@ -1753,43 +1779,42 @@ const RecordForm = ({
                     }}
                     placeholder="添加地点"
                   />
-                </div>
-                <div style={{ position: 'relative', flex: '1 1 138px', minWidth: '138px' }}>
-                  <Tag size={14} strokeWidth={2.2} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#a8a29e', pointerEvents: 'none', zIndex: 1 }} />
-                  <AppSelect
-                    aria-label="选择标签"
-                    value={tagSelectValue}
-                    onChange={(event) => {
-                      setTagSelectValue(event.target.value);
-                      addSelectedTag(event.target.value);
-                    }}
-                    selectStyle={{ ...metadataIconSelectStyle, ...metadataPillStyle, borderRadius: '999px', minHeight: '44px', paddingTop: '8px', paddingBottom: '8px', fontSize: '13px', fontWeight: 700 }}
-                  >
-                    <option value="">添加标签</option>
-                    {tagOptions.map((tag) => (
-                      <option key={tag} value={tag} disabled={selectedTags.includes(tag)}>
-                        {tag}
-                      </option>
-                    ))}
-                  </AppSelect>
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                </label>
                 <button
                   type="button"
-                  style={{ ...compactPillButtonStyle, opacity: locationLoading ? 0.72 : 1 }}
+                  aria-label="手机定位"
+                  style={{
+                    minWidth: '68px',
+                    minHeight: '46px',
+                    border: 'none',
+                    borderLeft: '1px solid var(--nl-border)',
+                    background: 'transparent',
+                    color: 'var(--nl-accent)',
+                    padding: '0 12px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '5px',
+                    fontSize: '12px',
+                    fontWeight: 850,
+                    cursor: locationLoading ? 'not-allowed' : 'pointer',
+                    opacity: locationLoading ? 0.72 : 1,
+                  }}
                   onClick={() => void useCurrentLocation()}
                   disabled={locationLoading}
                 >
                   <MapPin size={13} strokeWidth={2.2} />
-                  {locationLoading ? '定位中…' : '手机定位'}
+                  {locationLoading ? '定位中' : '定位'}
                 </button>
-                {form.location_text.trim() || poiLoading ? (
-                  <>
+              </div>
+
+              {form.location_text.trim() || poiLoading ? (
+                <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap', paddingTop: '1px' }}>
                   {hasManualLocationSuggestion ? (
                     <button
                       type="button"
-                      style={compactPillButtonStyle}
+                      aria-label={`使用手动地点：${manualLocationText}`}
+                      style={{ ...compactPillButtonStyle, minHeight: '36px', padding: '6px 10px', fontSize: '11px' }}
                       onClick={() => {
                         setForm((current) => ({ ...current, location_text: manualLocationText }));
                         setSelectorMessage(
@@ -1799,14 +1824,14 @@ const RecordForm = ({
                         );
                       }}
                     >
-                      使用手动地点：{manualLocationText}
+                      使用：{manualLocationText}
                     </button>
                   ) : null}
                   {mergedLocationSuggestions.map((location) => (
                     <button
                       key={location.id}
                       type="button"
-                      style={compactPillButtonStyle}
+                      style={{ ...compactPillButtonStyle, minHeight: '36px', padding: '6px 10px', fontSize: '11px' }}
                       title={[location.name, location.district, location.address].filter(Boolean).join(' · ')}
                       onClick={() => {
                         setForm((current) => ({ ...current, location_text: formatLocationText(location) }));
@@ -1817,13 +1842,43 @@ const RecordForm = ({
                     </button>
                   ))}
                   {poiLoading ? <span style={{ ...helperTextStyle, alignSelf: 'center' }}>搜索地点中…</span> : null}
-                  </>
-                ) : null}
+                </div>
+              ) : null}
+
+              <div style={{ position: 'relative' }}>
+                <Tag size={15} strokeWidth={2.2} style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: 'var(--nl-muted)', pointerEvents: 'none', zIndex: 1 }} />
+                <AppSelect
+                  aria-label="选择标签"
+                  value={tagSelectValue}
+                  onChange={(event) => {
+                    setTagSelectValue(event.target.value);
+                    addSelectedTag(event.target.value);
+                  }}
+                  selectStyle={{
+                    ...metadataIconSelectStyle,
+                    minHeight: '46px',
+                    borderRadius: '15px',
+                    border: '1px solid var(--nl-border)',
+                    background: 'rgba(var(--nl-surface-rgb),0.66)',
+                    padding: '0 13px 0 38px',
+                    fontSize: '13px',
+                    fontWeight: 800,
+                    boxShadow: 'none',
+                  }}
+                >
+                  <option value="">添加标签</option>
+                  {tagOptions.map((tag) => (
+                    <option key={tag} value={tag} disabled={selectedTags.includes(tag)}>
+                      {tag}
+                    </option>
+                  ))}
+                </AppSelect>
               </div>
+
               {selectedTags.length ? (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px', paddingTop: '1px' }}>
                   {selectedTags.map((tag, index) => (
-                    <button key={`${tag}-${index}`} type="button" onClick={() => removeSelectedTag(tag)} style={selectedChipButtonStyle}>
+                    <button key={`${tag}-${index}`} type="button" onClick={() => removeSelectedTag(tag)} style={{ ...selectedChipButtonStyle, minHeight: '34px', padding: '5px 9px', fontSize: '11px' }}>
                       #{tag}
                       <X size={12} strokeWidth={2.4} />
                     </button>
@@ -1838,39 +1893,39 @@ const RecordForm = ({
             aria-label="切换里程碑记录"
             aria-pressed={form.record_type === 'milestone'}
             style={{
+              order: 4,
               width: '100%',
-              minHeight: '66px',
-              border: form.record_type === 'milestone' ? '1px solid #e7c66a' : '1px solid #efe7da',
-              borderRadius: '22px',
-              background: form.record_type === 'milestone' ? '#fff7d9' : '#ffffff',
-              padding: '11px 12px',
+              minHeight: '50px',
+              border: form.record_type === 'milestone' ? '1px solid rgba(var(--nl-primary-rgb),0.42)' : '1px solid var(--nl-border)',
+              borderRadius: '18px',
+              background: form.record_type === 'milestone' ? 'rgba(var(--nl-primary-rgb),0.16)' : 'var(--nl-surface)',
+              padding: '8px 12px',
               display: 'flex',
               alignItems: 'center',
               gap: '12px',
               textAlign: 'left',
               cursor: 'pointer',
-              boxShadow: form.record_type === 'milestone' ? '0 12px 24px rgba(161,98,7,0.10)' : '0 4px 14px rgba(41,37,36,0.035)',
+              boxShadow: 'none',
             }}
             onClick={() => setForm((current) => ({ ...current, record_type: current.record_type === 'milestone' ? 'mixed' : 'milestone' }))}
           >
             <span
               style={{
-                width: '42px',
-                height: '42px',
-                borderRadius: '16px',
-                background: form.record_type === 'milestone' ? '#f9d56f' : '#f7f2ea',
+                width: '32px',
+                height: '32px',
+                borderRadius: '12px',
+                background: form.record_type === 'milestone' ? 'rgba(var(--nl-primary-rgb),0.2)' : 'rgba(var(--nl-surface-rgb),0.74)',
                 display: 'grid',
                 placeItems: 'center',
-                color: form.record_type === 'milestone' ? '#78350f' : '#8a8177',
+                color: form.record_type === 'milestone' ? 'var(--nl-primary-2)' : 'var(--nl-muted)',
                 flexShrink: 0,
-                boxShadow: form.record_type === 'milestone' ? 'inset 0 -1px 0 rgba(120,53,15,0.14)' : 'none',
+                boxShadow: form.record_type === 'milestone' ? 'inset 0 -1px 0 rgba(var(--nl-primary-rgb),0.18)' : 'none',
               }}
             >
               <Star size={18} strokeWidth={2.3} fill={form.record_type === 'milestone' ? 'currentColor' : 'none'} />
             </span>
             <span style={{ display: 'grid', gap: '3px', minWidth: 0, flex: 1 }}>
-              <span style={{ fontSize: '14px', fontWeight: 850, color: '#292524' }}>里程碑</span>
-              <span style={{ fontSize: '12px', lineHeight: 1.45, color: '#78716c' }}>第一次、生日、入园等关键节点会被单独归档。</span>
+              <span style={{ fontSize: '13px', fontWeight: 850, color: 'var(--nl-ink)' }}>里程碑</span>
             </span>
             <span
               aria-hidden="true"
@@ -1878,9 +1933,9 @@ const RecordForm = ({
                 minWidth: '58px',
                 minHeight: '32px',
                 borderRadius: '999px',
-                background: form.record_type === 'milestone' ? '#78350f' : '#f4f0ea',
-                color: form.record_type === 'milestone' ? '#ffffff' : '#8a8177',
-                border: form.record_type === 'milestone' ? '1px solid #78350f' : '1px solid #e8dfd3',
+                background: form.record_type === 'milestone' ? 'linear-gradient(135deg, var(--nl-primary), var(--nl-primary-2))' : 'rgba(var(--nl-surface-rgb),0.74)',
+                color: form.record_type === 'milestone' ? '#ffffff' : 'var(--nl-muted)',
+                border: form.record_type === 'milestone' ? '1px solid var(--nl-primary)' : '1px solid var(--nl-border)',
                 padding: '7px 10px',
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -1894,8 +1949,8 @@ const RecordForm = ({
             </span>
           </button>
 
-          {mediaNos.length ? <p style={helperTextStyle}>已选择 {mediaNos.length} 个媒体，将随记录一起保存。</p> : null}
-          {uploading ? <p style={helperTextStyle}>正在上传媒体…</p> : null}
+          {mediaNos.length ? <p style={{ ...helperTextStyle, order: 5 }}>已选择 {mediaNos.length} 个媒体，将随记录一起保存。</p> : null}
+          {uploading ? <p style={{ ...helperTextStyle, order: 5 }}>正在上传媒体…</p> : null}
 
         </form>
         {noticeMessage ? (
@@ -1911,90 +1966,6 @@ const RecordForm = ({
             }}
           />
         ) : null}
-        <div
-          className="record-floating-actions"
-          style={{
-            position: 'relative',
-            zIndex: 1,
-            width: '100%',
-            padding: '16px 0 0',
-            boxSizing: 'border-box',
-            background: 'transparent',
-          }}
-        >
-          <div
-            style={{
-              borderRadius: '26px',
-              border: '1px solid rgba(126,145,170,0.22)',
-              background: 'rgba(255,255,255,0.92)',
-              boxShadow: '0 -12px 36px rgba(25,35,55,0.14)',
-              padding: '12px',
-              display: 'grid',
-              gap: '10px',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-              <span style={{ color: '#687386', fontSize: '12px', fontWeight: 800 }}>发布准备度</span>
-              <strong style={{ color: completionPercent === 100 ? '#166534' : '#a16207', fontSize: '12px', fontWeight: 900 }}>{completionPercent}%</strong>
-            </div>
-            <div style={{ height: 6, borderRadius: '999px', background: 'rgba(126,145,170,0.14)', overflow: 'hidden' }}>
-              <span
-                className="record-progress-fill"
-                style={{
-                  display: 'block',
-                  height: '100%',
-                  width: `${completionPercent}%`,
-                  borderRadius: '999px',
-                  background: completionPercent === 100 ? '#166534' : '#17342f',
-                }}
-              />
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: mode === 'create' ? '0.82fr 1.18fr' : '1fr', gap: '10px' }}>
-              {mode === 'create' ? (
-                <button
-                  type="button"
-                  className="nl-pressable"
-                  style={{
-                    ...secondaryButtonStyle,
-                    minHeight: '48px',
-                    borderRadius: '18px',
-                    padding: '10px 12px',
-                    fontSize: '13px',
-                    cursor: submitting || uploading ? 'not-allowed' : 'pointer',
-                  }}
-                  onClick={() => {
-                    setForm((current) => ({ ...current, status: 'draft' }));
-                    void submitRecord('draft');
-                  }}
-                  disabled={submitting || uploading}
-                >
-                  <BookOpen size={15} strokeWidth={2.1} />
-                  {pendingAction === 'draft' ? '保存中…' : '存草稿'}
-                </button>
-              ) : null}
-              <button
-                type="submit"
-                form="record-form"
-                className="nl-pressable"
-                style={{
-                  ...primaryButtonStyle,
-                  minHeight: '50px',
-                  borderRadius: '18px',
-                  background: completionPercent === 100 ? '#17342f' : primaryButtonStyle.background,
-                  padding: '12px 14px',
-                  fontSize: '14px',
-                  fontWeight: 900,
-                  cursor: submitting || uploading ? 'not-allowed' : 'pointer',
-                  opacity: submitting || uploading ? 0.72 : 1,
-                }}
-                disabled={submitting || uploading}
-              >
-                {pendingAction === 'publish' ? (mode === 'create' ? '发布中…' : '保存中…') : mode === 'create' ? '完成发布' : '更新记录'}
-                <ChevronRight size={16} strokeWidth={2.5} />
-              </button>
-            </div>
-          </div>
-        </div>
         <MediaFullscreenDialog media={fullscreenMedia} onClose={() => setFullscreenMedia(null)} />
     </div>
   );
@@ -2007,7 +1978,8 @@ export const CreateRecordPage = () => {
   const [defaultEventTime] = useState(() => formatDateTimeLocal(new Date().toISOString()));
   const requestedType = searchParams.get('type');
   const requestedFocus = searchParams.get('focus');
-  const initialRecordType = ['mixed', 'text', 'video', 'audio', 'milestone'].includes(requestedType ?? '') ? requestedType! : 'mixed';
+  const initialMetricMode = requestedType === 'height' ? 'height' : null;
+  const initialRecordType = initialMetricMode ? 'text' : ['mixed', 'text', 'video', 'audio', 'milestone'].includes(requestedType ?? '') ? requestedType! : 'mixed';
   const initialFocus = requestedFocus === 'media' || requestedFocus === 'content' ? requestedFocus : null;
   const initialValue = useMemo(() => ({
     child_no: activeChild?.child_no ?? '',
@@ -2027,6 +1999,7 @@ export const CreateRecordPage = () => {
     <RecordForm
       mode="create"
       initialFocus={initialFocus}
+      initialMetricMode={initialMetricMode}
       initialValue={initialValue}
       onSubmit={async (value) => {
         const record = await webApi.createRecord(value);
@@ -2121,6 +2094,13 @@ export const ViewRecordPage = () => {
   const primaryMedia = data?.media_list[0] ?? null;
   const primaryMediaUrl = primaryMedia ? resolveMediaPreviewUrl(primaryMedia.media_no, primaryMedia.access_url) ?? primaryMedia.access_url : null;
   const primaryFullscreenMedia = primaryMedia && primaryMediaUrl ? { ...primaryMedia, preview_url: primaryMediaUrl } : null;
+  const aiJobSuggestedTitle =
+    aiJob?.status === 'success' && aiJob.job_type === 'record_title' && typeof aiJob.output_json?.suggested_title === 'string'
+      ? aiJob.output_json.suggested_title.trim()
+      : null;
+  const generatedTitle = data?.ai_generated_title?.trim() || aiJobSuggestedTitle || null;
+  const displayTitle = data ? (data.title?.trim() || generatedTitle || '未命名记录') : '未命名记录';
+  const aiJobProcessing = aiJob?.status === 'pending' || aiJob?.status === 'processing';
 
   return (
     <PageShell
@@ -2138,18 +2118,18 @@ export const ViewRecordPage = () => {
       {error ? <Panel><EmptyState message={`加载失败：${error}`} /></Panel> : null}
       {data ? (
         <article style={{ display: 'grid', gap: '16px' }}>
-          <section style={{ borderRadius: '16px', border: '1px solid #ebe6dc', background: '#ffffff', overflow: 'hidden', boxShadow: '0 2px 12px rgba(15,23,42,0.025)' }}>
+          <section style={{ borderRadius: '24px', border: '1px solid var(--nl-border)', background: 'var(--nl-surface)', overflow: 'hidden', boxShadow: 'var(--nl-shadow-sm)' }}>
             {primaryMedia && primaryMediaUrl ? (
               primaryMedia.media_type === 'audio' ? (
-                <div data-testid="record-primary-media-preview" style={{ padding: '14px', background: '#fafaf9' }}>
+                <div data-testid="record-primary-media-preview" style={{ padding: '14px', background: 'var(--nl-surface-soft)' }}>
                   <MediaPreviewTile media={{ ...primaryMedia, preview_url: primaryMediaUrl }} onOpen={setFullscreenMedia} />
                 </div>
               ) : (
-                <div data-testid="record-primary-media-preview" style={{ position: 'relative', background: '#fafaf9' }}>
+                <div data-testid="record-primary-media-preview" style={{ position: 'relative', background: 'var(--nl-surface-soft)' }}>
                   {primaryMedia.media_type === 'video' ? (
-                    <video src={primaryMediaUrl} controls playsInline preload="none" style={{ width: '100%', aspectRatio: '16 / 10', objectFit: 'cover', display: 'block', background: '#292524' }} />
+        <video src={primaryMediaUrl} controls playsInline preload="none" style={{ width: '100%', aspectRatio: '16 / 10', objectFit: 'cover', display: 'block', background: 'var(--nl-surface-soft)' }} />
                   ) : (
-                    <img src={primaryMediaUrl} alt={data.title ?? primaryMedia.original_name ?? '记录封面'} loading="eager" decoding="async" style={{ width: '100%', aspectRatio: '16 / 10', objectFit: 'cover', display: 'block' }} />
+                    <img src={primaryMediaUrl} alt={displayTitle || primaryMedia.original_name || '记录封面'} loading="eager" decoding="async" style={{ width: '100%', aspectRatio: '16 / 10', objectFit: 'cover', display: 'block' }} />
                   )}
                   {primaryFullscreenMedia ? (
                     <button
@@ -2163,9 +2143,9 @@ export const ViewRecordPage = () => {
                         width: '44px',
                         height: '44px',
                         borderRadius: '999px',
-                        border: '1px solid rgba(255,255,255,0.72)',
-                        background: 'rgba(41,37,36,0.72)',
-                        color: '#fff',
+                        border: '1px solid rgba(197,190,255,0.58)',
+                        background: 'rgba(5,9,24,0.74)',
+                        color: 'var(--nl-ink)',
                         display: 'grid',
                         placeItems: 'center',
                         cursor: 'pointer',
@@ -2175,7 +2155,7 @@ export const ViewRecordPage = () => {
                       <Maximize2 size={16} strokeWidth={2.4} />
                     </button>
                   ) : null}
-                  <span style={{ position: 'absolute', left: '14px', bottom: '14px', borderRadius: '999px', background: 'rgba(41,37,36,0.72)', color: '#fff', padding: '6px 10px', fontSize: '12px', fontWeight: 700 }}>
+                  <span style={{ position: 'absolute', left: '14px', bottom: '14px', borderRadius: '999px', background: 'rgba(5,9,24,0.74)', color: 'var(--nl-ink)', padding: '6px 10px', fontSize: '12px', fontWeight: 700, border: '1px solid rgba(197,190,255,0.42)', backdropFilter: 'blur(12px)' }}>
                     {mediaPreviewLabel(primaryMedia.media_type)}
                   </span>
                 </div>
@@ -2183,43 +2163,48 @@ export const ViewRecordPage = () => {
             ) : null}
             <div style={{ padding: '18px', display: 'grid', gap: '14px' }}>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: '999px', background: data.is_milestone ? '#fef3c7' : '#fafaf9', color: data.is_milestone ? '#a16207' : '#57534e', border: '1px solid #ebe6dc', padding: '6px 10px', fontSize: '12px', fontWeight: 700 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: '999px', background: data.is_milestone ? 'rgba(var(--nl-primary-rgb),0.18)' : 'rgba(var(--nl-surface-rgb),0.72)', color: data.is_milestone ? 'var(--nl-primary-2)' : 'var(--nl-muted-strong)', border: '1px solid var(--nl-border)', padding: '6px 10px', fontSize: '12px', fontWeight: 700 }}>
                   {data.is_milestone ? <Star size={13} fill="currentColor" /> : null}
                   {recordTypeLabel(data.record_type, data.is_milestone)}
                 </span>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: '999px', background: '#fafaf9', color: '#78716c', border: '1px solid #ebe6dc', padding: '6px 10px', fontSize: '12px', fontWeight: 700 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: '999px', background: 'rgba(var(--nl-surface-rgb),0.72)', color: 'var(--nl-muted-strong)', border: '1px solid var(--nl-border)', padding: '6px 10px', fontSize: '12px', fontWeight: 700 }}>
                   {recordStatusLabel(data.status)}
                 </span>
               </div>
               <div style={{ display: 'grid', gap: '8px' }}>
-                <h2 style={{ margin: 0, color: '#292524', fontSize: '23px', lineHeight: 1.28, fontWeight: 700 }}>{data.title ?? '未命名记录'}</h2>
-                <p style={{ margin: 0, color: '#57534e', fontSize: '15px', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{data.content_text ?? '暂无正文'}</p>
+                <h2 style={{ margin: 0, color: 'var(--nl-ink)', fontSize: '23px', lineHeight: 1.28, fontWeight: 800 }}>{displayTitle}</h2>
+                <p style={{ margin: 0, color: 'var(--nl-muted-strong)', fontSize: '15px', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{data.content_text ?? '暂无正文'}</p>
               </div>
-              <section style={{ borderRadius: '18px', background: '#f8f9fa', border: '1px solid #eef2ff', padding: '14px 14px 13px', display: 'grid', gap: '12px', position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: '#818cf8' }} />
+              <section style={{ borderRadius: '20px', background: 'rgba(var(--nl-primary-rgb),0.1)', border: '1px solid var(--nl-border)', padding: '14px 14px 13px', display: 'grid', gap: '12px', position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: 'linear-gradient(180deg, var(--nl-primary), var(--nl-primary-2))' }} />
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingLeft: '2px' }}>
-                  <span style={{ width: '28px', height: '28px', borderRadius: '999px', background: '#eef2ff', color: '#6366f1', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                  <span style={{ width: '28px', height: '28px', borderRadius: '999px', background: 'rgba(var(--nl-accent-rgb),0.14)', color: 'var(--nl-accent)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
                     <Sparkles size={15} strokeWidth={2.2} />
                   </span>
                   <div style={{ minWidth: 0, flex: 1 }}>
-                    <strong style={{ display: 'block', marginBottom: '4px', color: '#312e81', fontSize: '12px', fontWeight: 800 }}>AI 智能提取</strong>
-                    <p style={{ margin: 0, color: '#4a4a4a', fontSize: '13px', lineHeight: 1.7 }}>
-                      {data.ai_summary ?? (aiJob?.status === 'pending' || aiJob?.status === 'processing' ? `${aiActionLabel}正在处理中，请稍候…` : '当前还没有 AI 摘要，可以点击下方按钮生成标题、摘要或标签。')}
+                    <strong style={{ display: 'block', marginBottom: '4px', color: 'var(--nl-ink)', fontSize: '12px', fontWeight: 800 }}>AI 智能提取</strong>
+                    <p style={{ margin: 0, color: 'var(--nl-muted-strong)', fontSize: '13px', lineHeight: 1.7 }}>
+                      {data.ai_summary ?? (aiJobProcessing ? `${aiActionLabel}正在处理中，请稍候…` : generatedTitle ? 'AI 标题已生成，可以继续生成摘要或标签。' : '当前还没有 AI 摘要，可以点击下方按钮生成标题、摘要或标签。')}
                     </p>
-                    {data.ai_status ? <p style={{ ...helperTextStyle, marginTop: '6px', color: '#6366f1' }}>AI 状态：{aiJobStatusLabel(data.ai_status)}</p> : null}
+                    {generatedTitle ? (
+                      <p style={{ margin: '6px 0 0', color: 'var(--nl-ink)', fontSize: '13px', lineHeight: 1.65, fontWeight: 700 }}>
+                        AI 标题：{generatedTitle}
+                      </p>
+                    ) : null}
+                    {data.ai_status ? <p style={{ ...helperTextStyle, marginTop: '6px', color: 'var(--nl-accent)' }}>AI 状态：{aiJobStatusLabel(data.ai_status)}</p> : null}
                     {aiJob?.status === 'success' ? <p style={{ ...helperTextStyle, marginTop: '6px', color: '#0f766e' }}>{aiActionLabel}已生成并同步到记录详情。</p> : null}
-                    {aiJob?.status === 'failed' ? <p style={{ ...helperTextStyle, marginTop: '6px', color: '#dc2626' }}>AI 处理失败：{aiJob.error_message ?? '未知错误'}</p> : null}
-                    {aiError ? <p style={{ ...helperTextStyle, marginTop: '6px', color: '#dc2626' }}>{aiError}</p> : null}
+        {aiJob?.status === 'failed' ? <p style={{ ...helperTextStyle, marginTop: '6px', color: 'var(--nl-danger)' }}>AI 处理失败：{aiJob.error_message ?? '未知错误'}</p> : null}
+        {aiError ? <p style={{ ...helperTextStyle, marginTop: '6px', color: 'var(--nl-danger)' }}>{aiError}</p> : null}
                   </div>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px' }}>
-                  <button style={{ ...secondaryButtonStyle, minHeight: '36px', justifyContent: 'center', borderRadius: '999px', minWidth: 0, paddingInline: '6px', fontSize: '12px', background: '#ffffff' }} onClick={() => void onGenerateAi('record_title', 'AI 标题', 'AI 标题生成失败')} disabled={aiLoading || aiJob?.status === 'pending' || aiJob?.status === 'processing'}>
+                  <button style={{ ...secondaryButtonStyle, minHeight: '36px', justifyContent: 'center', borderRadius: '999px', minWidth: 0, paddingInline: '6px', fontSize: '12px', background: 'rgba(var(--nl-surface-rgb),0.72)' }} onClick={() => void onGenerateAi('record_title', 'AI 标题', 'AI 标题生成失败')} disabled={aiLoading || aiJob?.status === 'pending' || aiJob?.status === 'processing'}>
                     {aiLoading && aiActionLabel === 'AI 标题' ? '生成中…' : '标题'}
                   </button>
-                  <button style={{ ...secondaryButtonStyle, minHeight: '36px', justifyContent: 'center', borderRadius: '999px', minWidth: 0, paddingInline: '6px', fontSize: '12px', background: '#ffffff' }} onClick={() => void onGenerateAi('record_summary', 'AI 摘要', 'AI 摘要生成失败')} disabled={aiLoading || aiJob?.status === 'pending' || aiJob?.status === 'processing'}>
+                  <button style={{ ...secondaryButtonStyle, minHeight: '36px', justifyContent: 'center', borderRadius: '999px', minWidth: 0, paddingInline: '6px', fontSize: '12px', background: 'rgba(var(--nl-surface-rgb),0.72)' }} onClick={() => void onGenerateAi('record_summary', 'AI 摘要', 'AI 摘要生成失败')} disabled={aiLoading || aiJob?.status === 'pending' || aiJob?.status === 'processing'}>
                     {aiLoading && aiActionLabel === 'AI 摘要' ? '生成中…' : '摘要'}
                   </button>
-                  <button style={{ ...secondaryButtonStyle, minHeight: '36px', justifyContent: 'center', borderRadius: '999px', minWidth: 0, paddingInline: '6px', fontSize: '12px', background: '#ffffff' }} onClick={() => void onGenerateAi('record_tags', 'AI 标签', 'AI 标签生成失败')} disabled={aiLoading || aiJob?.status === 'pending' || aiJob?.status === 'processing'}>
+                  <button style={{ ...secondaryButtonStyle, minHeight: '36px', justifyContent: 'center', borderRadius: '999px', minWidth: 0, paddingInline: '6px', fontSize: '12px', background: 'rgba(var(--nl-surface-rgb),0.72)' }} onClick={() => void onGenerateAi('record_tags', 'AI 标签', 'AI 标签生成失败')} disabled={aiLoading || aiJob?.status === 'pending' || aiJob?.status === 'processing'}>
                     {aiLoading && aiActionLabel === 'AI 标签' ? '生成中…' : '标签'}
                   </button>
                 </div>
@@ -2227,15 +2212,15 @@ export const ViewRecordPage = () => {
               <div style={{ display: 'grid', gap: '8px' }}>
                 <p style={helperTextStyle}>媒体数量：{data.media_list.length}</p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: '999px', background: '#fafaf9', border: '1px solid #ebe6dc', padding: '7px 10px', color: '#57534e', fontSize: '12px', fontWeight: 700 }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: '999px', background: 'rgba(var(--nl-surface-rgb),0.72)', border: '1px solid var(--nl-border)', padding: '7px 10px', color: 'var(--nl-muted-strong)', fontSize: '12px', fontWeight: 700 }}>
                     <Clock size={13} />
                     {new Date(data.event_time).toLocaleString('zh-CN', { hour12: false })}
                   </span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: '999px', background: '#fafaf9', border: '1px solid #ebe6dc', padding: '7px 10px', color: '#57534e', fontSize: '12px', fontWeight: 700 }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: '999px', background: 'rgba(var(--nl-surface-rgb),0.72)', border: '1px solid var(--nl-border)', padding: '7px 10px', color: 'var(--nl-muted-strong)', fontSize: '12px', fontWeight: 700 }}>
                     <Eye size={13} />
                     {visibilityScopeLabel(data.visibility_scope)}
                   </span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: '999px', background: '#fafaf9', border: '1px solid #ebe6dc', padding: '7px 10px', color: '#57534e', fontSize: '12px', fontWeight: 700 }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: '999px', background: 'rgba(var(--nl-surface-rgb),0.72)', border: '1px solid var(--nl-border)', padding: '7px 10px', color: 'var(--nl-muted-strong)', fontSize: '12px', fontWeight: 700 }}>
                     <MapPin size={13} />
                     {normalizeLocationText(data.location_text) || '未填写地点'}
                   </span>
@@ -2243,7 +2228,7 @@ export const ViewRecordPage = () => {
                 {data.tags.length ? (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px' }}>
                     {data.tags.map((tag, index) => (
-                      <span key={`${data.record_no}-${tag}-${index}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '8px', background: '#fffdf9', border: '1px solid #ebe6dc', padding: '5px 8px', color: '#78716c', fontSize: '11px', fontWeight: 700 }}>
+                      <span key={`${data.record_no}-${tag}-${index}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '10px', background: 'rgba(var(--nl-surface-rgb),0.72)', border: '1px solid var(--nl-border)', padding: '5px 8px', color: 'var(--nl-muted-strong)', fontSize: '11px', fontWeight: 700 }}>
                         <Tag size={10} />
                         {tag}
                       </span>
@@ -2258,8 +2243,8 @@ export const ViewRecordPage = () => {
             <Panel>
               <div style={{ display: 'grid', gap: '12px' }}>
                 <div style={{ display: 'grid', gap: '3px' }}>
-                  <strong style={{ color: '#292524' }}>全部媒体预览</strong>
-                  <span style={{ color: '#78716c', fontSize: '12px', lineHeight: 1.6 }}>照片、视频和语音都可以在这里直接查看或播放。</span>
+                  <strong style={{ color: 'var(--nl-ink)' }}>全部媒体预览</strong>
+                  <span style={{ color: 'var(--nl-muted-strong)', fontSize: '12px', lineHeight: 1.6 }}>照片、视频和语音都可以在这里直接查看或播放。</span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
                   {data.media_list.map((media) => {
@@ -2277,7 +2262,7 @@ export const ViewRecordPage = () => {
             <button style={primaryButtonStyle} onClick={() => navigate(`/record/${data.record_no}/edit`)}>
               编辑记录
             </button>
-            <button style={{ ...secondaryButtonStyle, color: '#dc2626' }} onClick={() => void onDelete()} disabled={deleting}>
+          <button style={{ ...secondaryButtonStyle, color: 'var(--nl-danger)' }} onClick={() => void onDelete()} disabled={deleting}>
               {deleting ? '删除中…' : '删除记录'}
             </button>
           </div>

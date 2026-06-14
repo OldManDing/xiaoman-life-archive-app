@@ -12,6 +12,11 @@ import { CreateUploadTokenDto } from './dto/create-upload-token.dto';
 
 const normalizeMimeType = (mimeType: string) => mimeType.toLowerCase().split(';', 1)[0].trim();
 const GENERIC_UPLOAD_MIME_TYPES = new Set(['application/octet-stream', 'binary/octet-stream']);
+const FALLBACK_UPLOAD_MIME_TYPE_BY_WILDCARD: Record<string, string> = {
+  'image/*': 'image/jpeg',
+  'video/*': 'video/mp4',
+  'audio/*': 'audio/mpeg',
+};
 const MIME_TYPE_BY_EXTENSION: Record<string, string> = {
   jpg: 'image/jpeg',
   jpeg: 'image/jpeg',
@@ -40,8 +45,10 @@ const inferMimeTypeFromFileName = (fileName: string) => {
 
 const resolveUploadMimeType = (dto: Pick<CreateUploadTokenDto, 'file_name' | 'mime_type'>) => {
   const mimeType = normalizeMimeType(dto.mime_type || '');
-  if (mimeType && !GENERIC_UPLOAD_MIME_TYPES.has(mimeType)) return mimeType;
-  return inferMimeTypeFromFileName(dto.file_name) ?? mimeType;
+  const inferredMimeType = inferMimeTypeFromFileName(dto.file_name);
+  if (!mimeType || GENERIC_UPLOAD_MIME_TYPES.has(mimeType)) return inferredMimeType ?? mimeType;
+  if (mimeType.endsWith('/*')) return inferredMimeType ?? FALLBACK_UPLOAD_MIME_TYPE_BY_WILDCARD[mimeType] ?? mimeType;
+  return mimeType;
 };
 
 @Injectable()

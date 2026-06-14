@@ -2,6 +2,12 @@ export type SupportedMediaType = 'image' | 'video' | 'audio';
 
 const GENERIC_MIME_TYPES = new Set(['application/octet-stream', 'binary/octet-stream']);
 
+const FALLBACK_MIME_TYPE_BY_WILDCARD: Record<string, string> = {
+  'image/*': 'image/jpeg',
+  'video/*': 'video/mp4',
+  'audio/*': 'audio/mpeg',
+};
+
 const MIME_TYPE_ALIASES: Record<string, string> = {
   'image/jpg': 'image/jpeg',
   'audio/m4a': 'audio/x-m4a',
@@ -46,8 +52,10 @@ export const inferMimeTypeFromFileName = (fileName?: string | null) => {
 
 export const resolveFileMimeType = (file: Pick<File, 'name' | 'type'>) => {
   const normalized = normalizeMimeType(file.type);
-  if (normalized && !GENERIC_MIME_TYPES.has(normalized)) return normalized;
-  return inferMimeTypeFromFileName(file.name) || normalized;
+  const inferred = inferMimeTypeFromFileName(file.name);
+  if (!normalized || GENERIC_MIME_TYPES.has(normalized)) return inferred || normalized;
+  if (normalized.endsWith('/*')) return inferred || FALLBACK_MIME_TYPE_BY_WILDCARD[normalized] || normalized;
+  return normalized;
 };
 
 export const deriveMediaType = (file: Pick<File, 'name' | 'type'>): SupportedMediaType | null => {

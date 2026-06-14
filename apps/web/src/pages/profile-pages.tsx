@@ -12,13 +12,13 @@ import { loadLocalSettings, localSettingsToPreferences, preferencesToLocalSettin
 import { isSupportedImageFile, resolveFileMimeType, withResolvedFileMimeType } from '../shared/mediaFiles';
 import { AppSelect, Field, PageShell, Panel, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle, textareaStyle } from '../shared/ui';
 import { EmptyState, buttonRowStyle, rowStyle } from './shared';
-import { RefAvatar, RefListRow, RefSectionTitle, refCardStyle, refPageStyle, refSoftCardStyle, referenceAssets } from './reference-ui';
+import { RefAvatar, RefListRow, RefSectionTitle, isReferencePlaceholderAvatar, refCardStyle, refPageStyle, refSoftCardStyle, referenceAssets } from './reference-ui';
 
 const profileCardStyle = {
-  background: '#ffffff',
-  border: '1px solid #eef0f2',
+  background: 'var(--nl-surface)',
+  border: '1px solid var(--nl-border)',
   borderRadius: '24px',
-  boxShadow: '0 3px 12px rgba(15,23,42,0.035)',
+  boxShadow: 'var(--nl-shadow-sm)',
   overflow: 'hidden',
 } as const;
 
@@ -27,9 +27,8 @@ const profileSectionStyle = {
   paddingRight: '20px',
 } as const;
 
-const isGeneratedSvgAvatar = (src?: string | null) => Boolean(src?.trim().startsWith('data:image/svg+xml'));
 
-const isPositiveStatusMessage = (message: string) => !/(失败|不能|请先|仅支持|无法|错误)/.test(message);
+const isPositiveStatusMessage = (message: string) => !/(失败|不能|请先|请至少|请输入|仅支持|无法|错误|暂时)/.test(message);
 
 const uploadAvatarImage = async (childNo: string, file: File, previewUrl?: string | null) => {
   const uploadFile = withResolvedFileMimeType(file);
@@ -67,8 +66,8 @@ const uploadAvatarImage = async (childNo: string, file: File, previewUrl?: strin
 };
 
 const ProfileAvatar = ({ src, label, fallbackSrc = referenceAssets.momAvatar }: { src?: string | null; label: string; fallbackSrc?: string }) => {
-  const resolvedSrc = useStoredMediaUrl(src && !isGeneratedSvgAvatar(src) ? src : null);
-  const displaySrc = resolvedSrc ?? fallbackSrc;
+  const resolvedSrc = useStoredMediaUrl(src && !isReferencePlaceholderAvatar(src) ? src : null);
+  const displaySrc = resolvedSrc && !isReferencePlaceholderAvatar(resolvedSrc) ? resolvedSrc : fallbackSrc;
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
 
   useEffect(() => {
@@ -76,7 +75,7 @@ const ProfileAvatar = ({ src, label, fallbackSrc = referenceAssets.momAvatar }: 
   }, [displaySrc]);
 
   if (displaySrc && failedSrc !== displaySrc) {
-    return <img src={displaySrc} alt={label} decoding="async" onError={() => setFailedSrc(displaySrc)} style={{ width: '68px', height: '68px', borderRadius: '999px', objectFit: 'cover', border: '1px solid #e7e5e4', boxShadow: '0 5px 16px rgba(15,23,42,0.12)', flexShrink: 0 }} />;
+    return <img src={displaySrc} alt={label} decoding="async" onError={() => setFailedSrc(displaySrc)} style={{ width: '68px', height: '68px', borderRadius: '999px', objectFit: 'cover', border: '1px solid var(--nl-border)', background: 'linear-gradient(135deg, rgba(var(--nl-primary-rgb),0.22), rgba(var(--nl-accent-rgb),0.12)), var(--nl-surface-soft)', boxShadow: '0 14px 32px rgba(var(--nl-shadow-rgb),0.32)', flexShrink: 0 }} />;
   }
 
   return (
@@ -85,13 +84,13 @@ const ProfileAvatar = ({ src, label, fallbackSrc = referenceAssets.momAvatar }: 
         width: '68px',
         height: '68px',
         borderRadius: '999px',
-        background: '#f5f5f4',
-        border: '1px solid #e7e5e4',
+        background: 'linear-gradient(135deg, rgba(var(--nl-primary-rgb),0.22), rgba(var(--nl-accent-rgb),0.12)), var(--nl-surface-soft)',
+        border: '1px solid var(--nl-border)',
         display: 'grid',
         placeItems: 'center',
         fontWeight: 700,
-        color: '#44403c',
-        boxShadow: '0 5px 16px rgba(15,23,42,0.12)',
+        color: 'var(--nl-ink)',
+        boxShadow: '0 14px 32px rgba(var(--nl-shadow-rgb),0.28)',
         flexShrink: 0,
       }}
     >
@@ -101,8 +100,8 @@ const ProfileAvatar = ({ src, label, fallbackSrc = referenceAssets.momAvatar }: 
 };
 
 const SmallChildAvatar = ({ src, label }: { src?: string | null; label: string }) => {
-  const resolvedSrc = useStoredMediaUrl(src && !isGeneratedSvgAvatar(src) ? src : null);
-  const displaySrc = resolvedSrc ?? referenceAssets.childAvatar;
+  const resolvedSrc = useStoredMediaUrl(src && !isReferencePlaceholderAvatar(src) ? src : null);
+  const displaySrc = resolvedSrc && !isReferencePlaceholderAvatar(resolvedSrc) ? resolvedSrc : referenceAssets.childAvatar;
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
 
   useEffect(() => {
@@ -110,11 +109,11 @@ const SmallChildAvatar = ({ src, label }: { src?: string | null; label: string }
   }, [displaySrc]);
 
   if (displaySrc && failedSrc !== displaySrc) {
-    return <img src={displaySrc} alt={label} decoding="async" onError={() => setFailedSrc(displaySrc)} style={{ width: '38px', height: '38px', borderRadius: '999px', objectFit: 'cover', border: '1px solid #eee9df', flexShrink: 0 }} />;
+    return <img src={displaySrc} alt={label} decoding="async" onError={() => setFailedSrc(displaySrc)} style={{ width: '38px', height: '38px', borderRadius: '999px', objectFit: 'cover', border: '1px solid var(--nl-border)', background: 'linear-gradient(135deg, rgba(var(--nl-primary-rgb),0.22), rgba(var(--nl-accent-rgb),0.12)), var(--nl-surface-soft)', flexShrink: 0 }} />;
   }
 
   return (
-    <div style={{ width: '38px', height: '38px', borderRadius: '999px', border: '1px solid #eee9df', background: '#f5f5f4', display: 'grid', placeItems: 'center', color: '#57534e', fontWeight: 700, flexShrink: 0 }}>
+    <div style={{ width: '38px', height: '38px', borderRadius: '999px', border: '1px solid var(--nl-border)', background: 'linear-gradient(135deg, rgba(var(--nl-primary-rgb),0.22), rgba(var(--nl-accent-rgb),0.12)), var(--nl-surface-soft)', display: 'grid', placeItems: 'center', color: 'var(--nl-muted-strong)', fontWeight: 700, flexShrink: 0 }}>
       {label.slice(0, 1) || '宝'}
     </div>
   );
@@ -142,7 +141,7 @@ const ProfileListItem = ({
     style={{
       width: '100%',
       border: 'none',
-      borderBottom: '1px solid #f7f4ef',
+      borderBottom: '1px solid var(--nl-border)',
       background: 'transparent',
       minHeight: '70px',
       padding: '15px 16px',
@@ -156,18 +155,18 @@ const ProfileListItem = ({
     }}
   >
     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
-      <div style={{ width: '36px', height: '36px', borderRadius: '999px', background: '#ffffff', border: '1px solid #eee9df', display: 'grid', placeItems: 'center', color: '#94a3b8', flexShrink: 0 }}>
+      <div style={{ width: '36px', height: '36px', borderRadius: '999px', background: 'rgba(var(--nl-accent-rgb),0.14)', border: '1px solid var(--nl-border)', display: 'grid', placeItems: 'center', color: 'var(--nl-accent)', flexShrink: 0 }}>
         <Icon size={19} strokeWidth={2} />
       </div>
       <div style={{ minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <span style={{ fontSize: '16px', fontWeight: 500, color: '#44403c' }}>{title}</span>
-          {badge ? <span style={{ fontSize: '11px', color: '#a8a29e', fontWeight: 700 }}>{badge}</span> : null}
+          <span style={{ fontSize: '16px', fontWeight: 700, color: 'var(--nl-ink)' }}>{title}</span>
+          {badge ? <span style={{ fontSize: '11px', color: 'var(--nl-muted)', fontWeight: 700 }}>{badge}</span> : null}
         </div>
         {description ? <p style={{ ...helperTextStyle, marginTop: '3px', lineHeight: 1.5 }}>{description}</p> : null}
       </div>
     </div>
-    {!disabled || onClick ? <ChevronRight size={18} color="#d6d3d1" strokeWidth={2} /> : null}
+    {!disabled || onClick ? <ChevronRight size={18} color="var(--nl-muted)" strokeWidth={2} /> : null}
   </button>
 );
 
@@ -185,10 +184,10 @@ const ProfileQuickAction = ({
   onClick: () => void;
 }) => {
   const toneStyles = {
-    neutral: { background: '#ffffff', color: '#57534e', iconBg: '#fafaf9', border: '#eef0f2' },
-    warm: { background: '#fffaf0', color: '#a16207', iconBg: '#fef3c7', border: '#f5e7c0' },
-    green: { background: '#f7fbf7', color: '#166534', iconBg: '#dcfce7', border: '#dceee0' },
-    blue: { background: '#f8fbff', color: '#1d4ed8', iconBg: '#dbeafe', border: '#e1e7f5' },
+    neutral: { background: 'rgba(var(--nl-surface-rgb),0.72)', color: 'var(--nl-muted-strong)', iconBg: 'rgba(var(--nl-accent-rgb),0.12)', border: 'var(--nl-border)' },
+    warm: { background: 'rgba(var(--nl-primary-rgb),0.12)', color: 'var(--nl-primary-2)', iconBg: 'rgba(var(--nl-primary-rgb),0.16)', border: 'rgba(var(--nl-primary-rgb),0.24)' },
+    green: { background: 'rgba(var(--nl-success-rgb),0.12)', color: 'var(--nl-success)', iconBg: 'rgba(var(--nl-success-rgb),0.16)', border: 'rgba(var(--nl-success-rgb),0.22)' },
+    blue: { background: 'rgba(var(--nl-accent-rgb),0.12)', color: 'var(--nl-accent)', iconBg: 'rgba(var(--nl-accent-rgb),0.16)', border: 'rgba(var(--nl-accent-rgb),0.22)' },
   }[tone];
 
   return (
@@ -201,13 +200,13 @@ const ProfileQuickAction = ({
         borderRadius: '20px',
         border: `1px solid ${toneStyles.border}`,
         background: toneStyles.background,
-        color: '#292524',
+        color: 'var(--nl-ink)',
         padding: '14px',
         display: 'grid',
         alignContent: 'space-between',
         gap: '12px',
         textAlign: 'left',
-        boxShadow: '0 3px 12px rgba(15,23,42,0.035)',
+        boxShadow: 'var(--nl-shadow-sm)',
         cursor: 'pointer',
       }}
     >
@@ -215,8 +214,8 @@ const ProfileQuickAction = ({
         <Icon size={18} strokeWidth={2.1} />
       </span>
       <span style={{ display: 'grid', gap: '4px' }}>
-        <strong style={{ fontSize: '14px', fontWeight: 800, color: '#292524', lineHeight: 1.2 }}>{title}</strong>
-        <span style={{ fontSize: '12px', lineHeight: 1.45, color: '#78716c', fontWeight: 600 }}>{description}</span>
+        <strong style={{ fontSize: '14px', fontWeight: 800, color: 'var(--nl-ink)', lineHeight: 1.2 }}>{title}</strong>
+        <span style={{ fontSize: '12px', lineHeight: 1.45, color: 'var(--nl-muted-strong)', fontWeight: 600 }}>{description}</span>
       </span>
     </button>
   );
@@ -228,17 +227,18 @@ const settingsRowStyle = {
   alignItems: 'center',
   gap: '14px',
   padding: '14px 0',
-  borderBottom: '1px solid #f2efe9',
+  borderBottom: '1px solid var(--nl-border)',
 } as const;
 
 const toggleButtonStyle = (enabled: boolean) =>
   ({
     minWidth: '58px',
     minHeight: '44px',
-    border: 'none',
+    border: '1px solid var(--nl-border)',
     borderRadius: '999px',
     padding: '4px',
-    background: enabled ? '#292524' : '#d6d3d1',
+    background: enabled ? 'linear-gradient(135deg, var(--nl-primary), var(--nl-primary-2))' : 'rgba(var(--nl-surface-rgb),0.74)',
+    boxShadow: enabled ? '0 10px 24px rgba(var(--nl-primary-rgb),0.28)' : 'inset 0 1px 0 rgba(216,220,255,0.06)',
     cursor: 'pointer',
     display: 'flex',
     justifyContent: enabled ? 'flex-end' : 'flex-start',
@@ -248,8 +248,8 @@ const toggleKnobStyle = {
   width: '22px',
   height: '22px',
   borderRadius: '999px',
-  background: '#ffffff',
-  boxShadow: '0 1px 4px rgba(15,23,42,0.18)',
+  background: 'linear-gradient(135deg, rgba(248,249,255,0.96), rgba(216,220,255,0.86))',
+  boxShadow: '0 1px 4px rgba(var(--nl-shadow-rgb),0.28)',
 } as const;
 
 const toMonthKey = (value: string | Date) => {
@@ -274,10 +274,10 @@ const archiveExportStatusText = (value: ArchiveExportRequestItem['status']) => {
 };
 
 const archiveExportStatusColor = (value: ArchiveExportRequestItem['status']) => {
-  if (value === 'completed') return '#0f766e';
-  if (value === 'rejected') return '#dc2626';
-  if (value === 'processing') return '#b45309';
-  return '#4b5563';
+  if (value === 'completed') return 'var(--nl-success)';
+  if (value === 'rejected') return 'var(--nl-danger)';
+  if (value === 'processing') return 'var(--nl-primary-2)';
+  return 'var(--nl-muted)';
 };
 
 const formatProfileDateTime = (value: string | null) => (value ? new Date(value).toLocaleString('zh-CN', { hour12: false }) : '—');
@@ -296,51 +296,51 @@ export const ProfilePage = () => {
   const latestDraft = draftRecords?.[0] ?? null;
   return (
     <div style={refPageStyle}>
-      <section style={{ background: 'rgba(255,255,255,0.96)', padding: 'calc(54px + env(safe-area-inset-top)) 20px 30px', borderBottom: '1px solid rgba(126,145,170,0.2)', borderRadius: '0 0 32px 32px', boxShadow: '0 20px 42px rgba(25,35,55,0.12)' }}>
-        <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-          <RefAvatar src={user?.avatar_url && !isGeneratedSvgAvatar(user.avatar_url) ? user.avatar_url : referenceAssets.momAvatar} label={user?.nickname ?? '我的头像'} size={72} />
-          <div style={{ minWidth: 0, flex: 1, display: 'grid', gap: 6 }}>
+      <section style={{ background: 'linear-gradient(135deg, rgba(var(--nl-surface-strong-rgb),0.96), rgba(var(--nl-primary-rgb),0.16) 62%, rgba(var(--nl-surface-strong-rgb),0.92))', padding: 'calc(30px + env(safe-area-inset-top)) 20px 18px', borderBottom: '1px solid var(--nl-border)', borderRadius: '0 0 24px 24px', boxShadow: 'var(--nl-shadow-sm)', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'relative', display: 'flex', gap: 12, alignItems: 'center' }}>
+          <RefAvatar src={user?.avatar_url && !isReferencePlaceholderAvatar(user.avatar_url) ? user.avatar_url : referenceAssets.momAvatar} label={user?.nickname ?? '我的头像'} size={54} />
+          <div style={{ minWidth: 0, flex: 1, display: 'grid', gap: 4 }}>
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-              <strong style={{ color: '#172033', fontSize: 25, lineHeight: 1.1, fontWeight: 950 }}>{user?.nickname ?? '未登录用户'}</strong>
-              <span style={{ color: '#d97706', background: '#fff7dc', border: '1px solid #f1d99b', borderRadius: '999px', padding: '3px 10px', fontSize: 12, fontWeight: 900 }}>{membershipTypeLabel(user?.membership_type)}</span>
+              <strong style={{ color: 'var(--nl-ink)', fontSize: 20, lineHeight: 1.1, fontWeight: 950 }}>{user?.nickname ?? '未登录用户'}</strong>
+              <span style={{ color: 'var(--nl-accent)', background: 'rgba(var(--nl-accent-rgb),0.14)', border: '1px solid var(--nl-border)', borderRadius: '999px', padding: '3px 9px', fontSize: 11, fontWeight: 900 }}>{membershipTypeLabel(user?.membership_type)}</span>
             </div>
-            <span style={{ color: '#5f6d7f', fontSize: 15, fontWeight: 700 }}>当前档案：{activeChild?.name ?? '未选择孩子'}</span>
+            <span style={{ color: 'var(--nl-muted)', fontSize: 12, fontWeight: 700 }}>当前档案：{activeChild?.name ?? '未选择孩子'}</span>
           </div>
-          <button type="button" onClick={() => navigate('/profile/account')} style={{ minHeight: 44, borderRadius: '999px', border: '1px solid rgba(126,145,170,0.24)', background: 'rgba(255,255,255,0.86)', color: '#334155', padding: '9px 18px', fontSize: 15, fontWeight: 850, cursor: 'pointer', boxShadow: '0 10px 20px rgba(25,35,55,0.08)' }}>编辑主页</button>
+          <button type="button" onClick={() => navigate('/profile/account')} style={{ ...secondaryButtonStyle, minHeight: 36, padding: '7px 12px', fontSize: 12 }}>编辑主页</button>
         </div>
       </section>
 
-      <main style={{ display: 'grid', gap: 24, padding: '18px 20px 28px' }}>
-        <button type="button" onClick={() => navigate(latestDraft ? `/record/${latestDraft.record_no}/edit` : '/record/create')} style={{ ...refSoftCardStyle, width: '100%', minHeight: 66, padding: '15px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left', cursor: 'pointer' }}>
+      <main style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10, padding: '10px 20px calc(168px + env(safe-area-inset-bottom))' }}>
+        <button type="button" onClick={() => navigate(latestDraft ? `/record/${latestDraft.record_no}/edit` : '/record/create')} style={{ ...refSoftCardStyle, width: '100%', minHeight: 54, padding: '10px 13px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left', cursor: 'pointer' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
-            <FileBox size={22} color="#2f66d8" />
-            <span style={{ color: '#172033', fontSize: 16, fontWeight: 900 }}>草稿箱</span>
+            <FileBox size={20} color="var(--nl-primary)" />
+            <span style={{ color: 'var(--nl-ink)', fontSize: 15, fontWeight: 900 }}>草稿箱</span>
           </span>
-          <span style={{ display: 'inline-flex', gap: 8, alignItems: 'center', color: '#687386', fontSize: 14, fontWeight: 750 }}>
+          <span style={{ display: 'inline-flex', gap: 8, alignItems: 'center', color: 'var(--nl-muted)', fontSize: 13, fontWeight: 750 }}>
             {latestDraft ? `${draftRecords?.length ?? 1} 条待完善记录` : '暂无草稿'}
-            <ChevronRight size={17} color="#cbd5e1" />
+            <ChevronRight size={17} color="var(--nl-muted)" />
           </span>
         </button>
 
         <section>
           <RefSectionTitle>我的孩子</RefSectionTitle>
           <div style={{ ...refSoftCardStyle, padding: 0, overflow: 'hidden' }}>
-            <button type="button" onClick={() => navigate('/family/child')} style={{ width: '100%', minHeight: 78, border: 'none', borderBottom: '1px solid rgba(126,145,170,0.14)', background: 'rgba(255,255,255,0.76)', padding: '15px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, textAlign: 'left', cursor: 'pointer' }}>
+            <button type="button" onClick={() => navigate('/family/child')} style={{ width: '100%', minHeight: 60, border: 'none', borderBottom: '1px solid var(--nl-border)', background: 'rgba(var(--nl-surface-rgb),0.72)', padding: '10px 13px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, textAlign: 'left', cursor: 'pointer' }}>
               <span style={{ display: 'flex', gap: 13, alignItems: 'center', minWidth: 0 }}>
                 <RefAvatar
-                  src={activeChild?.avatar_url && !isGeneratedSvgAvatar(activeChild.avatar_url) ? activeChild.avatar_url : referenceAssets.childAvatar}
+                  src={activeChild?.avatar_url && !isReferencePlaceholderAvatar(activeChild.avatar_url) ? activeChild.avatar_url : referenceAssets.childAvatar}
                   label={activeChild?.name ?? '孩子'}
-                  size={44}
+                  size={36}
                   fallbackSrc={referenceAssets.childAvatar}
                 />
                 <span style={{ minWidth: 0 }}>
-                  <strong style={{ display: 'block', color: '#172033', fontSize: 16, fontWeight: 900 }}>{activeChild?.name ?? '孩子资料'}</strong>
-                  <span style={{ display: 'block', marginTop: 4, color: '#687386', fontSize: 13, fontWeight: 700 }}>{activeChild?.current_age_display ?? '查看和维护孩子的基础资料'}</span>
+                  <strong style={{ display: 'block', color: 'var(--nl-ink)', fontSize: 15, fontWeight: 900 }}>{activeChild?.name ?? '孩子资料'}</strong>
+                  <span style={{ display: 'block', marginTop: 3, color: 'var(--nl-muted)', fontSize: 12, fontWeight: 700 }}>{activeChild?.current_age_display ?? '查看和维护孩子的基础资料'}</span>
                 </span>
               </span>
-              <ChevronRight size={18} color="#cbd5e1" />
+              <ChevronRight size={18} color="var(--nl-muted)" />
             </button>
-            <button type="button" onClick={() => navigate('/onboarding/child?mode=add')} style={{ margin: '14px 16px 16px', width: 'calc(100% - 32px)', minHeight: 54, borderRadius: 18, border: '1px dashed rgba(47,102,216,0.38)', background: '#f7fbff', color: '#2f66d8', fontSize: 15, fontWeight: 850, cursor: 'pointer' }}>+ 添加宝宝</button>
+            <button type="button" onClick={() => navigate('/onboarding/child?mode=add')} style={{ margin: '8px 13px 12px', width: 'calc(100% - 26px)', minHeight: 42, borderRadius: 15, border: '1px dashed rgba(var(--nl-accent-rgb),0.28)', background: 'rgba(var(--nl-primary-rgb),0.12)', color: 'var(--nl-accent)', fontSize: 13, fontWeight: 850, cursor: 'pointer' }}>+ 添加宝宝</button>
           </div>
         </section>
 
@@ -350,21 +350,21 @@ export const ProfilePage = () => {
             <RefListRow icon={<BookHeart size={22} />} title="月报与纪念册" onClick={() => navigate('/profile/reports')} />
             <RefListRow icon={<DownloadCloud size={22} />} title="导出与备份" onClick={() => navigate('/profile/export')} />
             <RefListRow icon={<CreditCard size={22} />} title="会员中心" onClick={() => navigate('/profile/membership')} />
-            <RefListRow icon={<ShieldCheck size={22} />} title="隐私设置" onClick={() => navigate('/profile/settings')} />
-            <RefListRow icon={<Users size={22} />} title="家庭管理" onClick={() => navigate('/family')} />
-            <RefListRow icon={<HelpCircle size={22} />} title="帮助与反馈" onClick={() => navigate('/profile/help')} isLast />
+            <RefListRow icon={<ShieldCheck size={22} />} title="隐私设置" onClick={() => navigate('/profile/settings')} isLast />
           </div>
         </section>
 
-        <section>
+        <section style={{ paddingTop: 20 }}>
           <RefSectionTitle>设置区</RefSectionTitle>
           <div style={{ ...refCardStyle, borderRadius: 22, overflow: 'hidden' }}>
             <RefListRow icon={<Lock size={22} />} title="账号与安全" onClick={() => navigate('/profile/security')} />
+            <RefListRow icon={<Users size={22} />} title="家庭管理" onClick={() => navigate('/family/members')} />
+            <RefListRow icon={<HelpCircle size={22} />} title="帮助与反馈" onClick={() => navigate('/profile/help')} />
             <RefListRow icon={<Info size={22} />} title="关于我们" onClick={() => navigate('/profile/about')} isLast />
           </div>
           <button
             type="button"
-            style={{ ...refSoftCardStyle, width: '100%', marginTop: 22, minHeight: 58, border: '1px solid #eef0f2', color: '#ef4444', fontSize: 16, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer' }}
+            style={{ ...refSoftCardStyle, width: '100%', marginTop: 16, minHeight: 52, border: '1px solid rgba(255,107,139,0.24)', color: 'var(--nl-danger)', fontSize: 15, fontWeight: 900, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer' }}
             onClick={async () => {
               await logout();
               navigate('/auth/login', { replace: true });
@@ -476,7 +476,7 @@ export const AccountPage = () => {
           </Field>
           <p style={helperTextStyle}>会员类型：{membershipTypeLabel(user?.membership_type)}</p>
           <p style={helperTextStyle}>脱敏手机号：{displayMobile}</p>
-          {message ? <p style={{ ...helperTextStyle, color: isPositiveStatusMessage(message) ? '#0f766e' : '#dc2626' }}>{message}</p> : null}
+          {message ? <p style={{ ...helperTextStyle, color: isPositiveStatusMessage(message) ? 'var(--nl-success)' : 'var(--nl-danger)' }}>{message}</p> : null}
           <div style={buttonRowStyle}>
             <button type="button" style={primaryButtonStyle} onClick={() => void onSave()} disabled={saving}>
               {saving ? '保存中…' : '保存昵称'}
@@ -538,13 +538,13 @@ export const SettingsPage = () => {
         <button
           type="button"
           onClick={() => setMessage('当前默认仅家庭成员可见。')}
-          style={{ ...settingsRowStyle, width: '100%', border: 'none', borderBottom: '1px solid #f2efe9', background: '#ffffff', padding: '17px 18px', textAlign: 'left', cursor: 'pointer' }}
+          style={{ ...settingsRowStyle, width: '100%', border: 'none', borderBottom: '1px solid var(--nl-border)', background: 'rgba(var(--nl-surface-rgb),0.72)', padding: '17px 18px', textAlign: 'left', cursor: 'pointer' }}
         >
           <span style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
-            <ShieldCheck size={18} color="#94a3b8" />
-            <span style={{ color: '#57534e', fontSize: '14px', fontWeight: 700 }}>默认谁可以看到您的记录</span>
+            <ShieldCheck size={18} color="var(--nl-accent)" />
+            <span style={{ color: 'var(--nl-muted-strong)', fontSize: '14px', fontWeight: 700 }}>默认谁可以看到您的记录</span>
           </span>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: '#a8a29e', fontSize: '12px', fontWeight: 700 }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 700 }}>
             仅家庭成员
             <ChevronRight size={15} />
           </span>
@@ -558,8 +558,8 @@ export const SettingsPage = () => {
           return (
             <div key={item.key} style={{ ...settingsRowStyle, padding: '17px 18px' }}>
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center', minWidth: 0 }}>
-                <Icon size={18} color="#94a3b8" />
-                <strong style={{ display: 'block', color: '#57534e', fontSize: '14px' }}>{item.title}</strong>
+                <Icon size={18} color="var(--nl-accent)" />
+                <strong style={{ display: 'block', color: 'var(--nl-muted-strong)', fontSize: '14px' }}>{item.title}</strong>
               </div>
               <button type="button" aria-label={item.title} aria-pressed={enabled} style={toggleButtonStyle(enabled)} onClick={() => void updateSetting(item.key)} disabled={syncing}>
                 <span style={toggleKnobStyle} />
@@ -598,26 +598,26 @@ export const ReportsPage = () => {
   const hasMonthlyRecords = monthlyRecords.length > 0;
   const latest = monthlyRecords[0];
   const monthlySummary = monthlyRecords.length
-    ? `这个月已经留下 ${monthlyRecords.length} 个成长瞬间。${milestoneCount ? `${milestoneCount} 个里程碑把关键变化标了出来，` : ''}${imageCount ? `${imageCount} 条影像让回忆有画面，` : ''}${textCount ? `${textCount} 条文字记录保留了当时的语气。` : '每一条记录都会进入孩子的长期档案。'}`
-    : '这个月还没有可生成月报的真实记录。发布第一条记录后，这里会按实际内容整理故事摘要、里程碑和影像回顾。';
+    ? `该月已经留下 ${monthlyRecords.length} 个成长瞬间。${milestoneCount ? `${milestoneCount} 个里程碑把关键变化标了出来，` : ''}${imageCount ? `${imageCount} 条影像让回忆有画面，` : ''}${textCount ? `${textCount} 条文字记录保留了当时的语气。` : '每一条记录都会进入孩子的长期档案。'}`
+    : '该月还没有可生成月报的真实记录。添加记录后，这里会按实际内容整理故事摘要、里程碑和影像回顾。';
 
-  const pastMonths = [1, 2, 3, 4].map((offset) => {
+  const pastMonths = [2, 3, 4, 5].map((offset) => {
     const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - offset, 1);
     return { year: date.getFullYear(), month: date.getMonth() + 1 };
   });
 
   return (
     <PageShell title="月报与纪念册" backTo="/profile">
-      {loading ? <Panel><EmptyState message="正在整理本月记录…" /></Panel> : null}
+      {loading ? <Panel><EmptyState message="正在整理月度记录…" /></Panel> : null}
       {error ? <Panel><EmptyState message={`月报加载失败：${error}`} /></Panel> : null}
       {!loading && !error ? (
         <>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '16px' }}>
             <div>
-              <p style={{ margin: 0, color: '#57534e', fontSize: '14px', fontWeight: 700 }}>
+              <p style={{ margin: 0, color: 'var(--nl-muted-strong)', fontSize: '14px', fontWeight: 700 }}>
                 为 {activeChild?.name ?? '孩子'} 整理的
               </p>
-              <p style={{ margin: '5px 0 0', color: '#a8a29e', fontSize: '13px', fontWeight: 600 }}>专属时光记忆和可导出的家庭资产</p>
+              <p style={{ margin: '5px 0 0', color: 'var(--nl-muted)', fontSize: '13px', fontWeight: 600 }}>专属时光记忆和可导出的家庭资产</p>
             </div>
             <SmallChildAvatar src={activeChild?.avatar_url} label={activeChild?.name ?? '孩子'} />
           </div>
@@ -626,23 +626,23 @@ export const ReportsPage = () => {
               borderRadius: '28px',
               padding: '22px',
               position: 'relative',
-              border: '1px solid #eef0f2',
-              background: '#ffffff',
-              boxShadow: '0 5px 18px rgba(15,23,42,0.045)',
+              border: '1px solid var(--nl-border)',
+              background: 'linear-gradient(135deg, rgba(var(--nl-surface-strong-rgb),0.96), rgba(var(--nl-surface-strong-rgb),0.9))',
+              boxShadow: 'var(--nl-shadow-sm)',
               display: 'grid',
               gap: '16px',
             }}
           >
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 42px', gap: '14px', alignItems: 'start' }}>
               <div>
-                <span style={{ display: 'inline-flex', color: '#d97706', fontSize: '12px', fontWeight: 800, marginBottom: '8px' }}>最新月报</span>
-                <h2 style={{ margin: 0, color: '#292524', fontSize: '25px', fontWeight: 800, lineHeight: 1.16 }}>
+                <span style={{ display: 'inline-flex', color: 'var(--nl-accent)', fontSize: '12px', fontWeight: 800, marginBottom: '8px' }}>最新月报</span>
+                <h2 style={{ margin: 0, color: 'var(--nl-ink)', fontSize: '25px', fontWeight: 850, lineHeight: 1.16 }}>
                   {reportYear}年{reportMonth}月
                   <br />
                   成长月报
                 </h2>
               </div>
-              <div style={{ width: '40px', height: '40px', borderRadius: '12px', border: '1px solid #eef1f4', background: '#f8fafc', color: '#94a3b8', display: 'grid', placeItems: 'center' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: '12px', border: '1px solid var(--nl-border)', background: 'rgba(var(--nl-accent-rgb),0.14)', color: 'var(--nl-accent)', display: 'grid', placeItems: 'center' }}>
                 <BookHeart size={19} />
               </div>
             </div>
@@ -652,33 +652,33 @@ export const ReportsPage = () => {
                 { label: '记录数量', value: monthlyRecords.length },
                 { label: '影像记录', value: imageCount },
               ].map((item) => (
-                <div key={item.label} style={{ borderRadius: '16px', background: '#fcfaf5', border: '1px solid #f5f1e6', padding: '12px', textAlign: 'center' }}>
-                  <strong style={{ display: 'block', fontSize: '19px', color: '#292524', lineHeight: 1 }}>{item.value}</strong>
-                  <span style={{ display: 'block', marginTop: '6px', color: '#a8a29e', fontSize: '11px', fontWeight: 800 }}>{item.label}</span>
+                <div key={item.label} style={{ borderRadius: '16px', background: 'rgba(var(--nl-surface-rgb),0.72)', border: '1px solid var(--nl-border)', padding: '12px', textAlign: 'center' }}>
+                  <strong style={{ display: 'block', fontSize: '19px', color: 'var(--nl-ink)', lineHeight: 1 }}>{item.value}</strong>
+                  <span style={{ display: 'block', marginTop: '6px', color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 800 }}>{item.label}</span>
                 </div>
               ))}
             </div>
 
-            <div style={{ borderRadius: '18px', background: '#fcfaf5', border: '1px solid #f5f1e6', padding: '14px', display: 'grid', gap: '8px' }}>
-              <strong style={{ color: '#a16207', fontSize: '13px' }}>本月故事摘要</strong>
+            <div style={{ borderRadius: '18px', background: 'rgba(var(--nl-primary-rgb),0.08)', border: '1px solid var(--nl-border)', padding: '14px', display: 'grid', gap: '8px' }}>
+              <strong style={{ color: 'var(--nl-accent)', fontSize: '13px' }}>月度故事摘要</strong>
               <p style={{ ...helperTextStyle, lineHeight: 1.8 }}>{monthlySummary}</p>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 48px', gap: '10px', alignItems: 'center' }}>
-              <button type="button" style={{ ...primaryButtonStyle, width: '100%', minHeight: '44px', boxShadow: '0 8px 18px rgba(41,37,36,0.16)' }} onClick={() => latest ? navigate(`/record/${latest.record_no}`) : navigate('/record/create')}>
-                {hasMonthlyRecords ? '查看月报' : '记录本月第一条'}
+              <button type="button" style={{ ...primaryButtonStyle, width: '100%', minHeight: '44px' }} onClick={() => latest ? navigate(`/record/${latest.record_no}`) : navigate('/record/create')}>
+                {hasMonthlyRecords ? '查看月报' : '添加记录'}
               </button>
               <button type="button" aria-label="导出月报摘要" title="导出月报摘要" style={{ ...secondaryButtonStyle, width: '48px', minWidth: '48px', minHeight: '48px', padding: 0, borderRadius: '999px', justifyContent: 'center' }} onClick={() => navigate('/profile/export')}>
                 <DownloadCloud size={18} strokeWidth={2.2} />
               </button>
             </div>
 
-            <div style={{ borderTop: '1px solid #f3f0ea', paddingTop: '12px', display: 'grid', gap: '8px' }}>
-              <strong style={{ color: '#d97706', fontSize: '13px' }}>AI 月报摘要</strong>
+            <div style={{ borderTop: '1px solid var(--nl-border)', paddingTop: '12px', display: 'grid', gap: '8px' }}>
+              <strong style={{ color: 'var(--nl-accent)', fontSize: '13px' }}>AI 月报摘要</strong>
               <p style={{ ...helperTextStyle, lineHeight: 1.75 }}>
                 {monthlyRecords.length
-                  ? `本月共记录 ${monthlyRecords.length} 个成长瞬间，其中 ${milestoneCount} 个里程碑、${imageCount} 条影像记录、${textCount} 条文字记录。`
-                  : '本月还没有真实记录，添加记录后会自动汇总为成长月报。'}
+                  ? `该月共记录 ${monthlyRecords.length} 个成长瞬间，其中 ${milestoneCount} 个里程碑、${imageCount} 条影像记录、${textCount} 条文字记录。`
+                  : '该月还没有真实记录，添加记录后会自动汇总为成长月报。'}
               </p>
               {latest ? (
                 <button type="button" style={{ ...secondaryButtonStyle, justifyContent: 'space-between', textAlign: 'left' }} onClick={() => navigate(`/record/${latest.record_no}`)}>
@@ -690,8 +690,8 @@ export const ReportsPage = () => {
           </section>
 
           <section>
-            <h2 style={{ margin: '0 0 14px', fontSize: '16px', fontWeight: 800, color: '#44403c', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <BookHeart size={18} color="#94a3b8" />
+            <h2 style={{ margin: '0 0 14px', fontSize: '16px', fontWeight: 800, color: 'var(--nl-ink)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <BookHeart size={18} color="var(--nl-accent)" />
               往期纪念册
             </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
@@ -702,9 +702,9 @@ export const ReportsPage = () => {
                   style={{
                     minHeight: '138px',
                     borderRadius: '22px',
-                    border: '1px solid #eef0f2',
-                    background: index === pastMonths.length - 1 ? '#fbfaf7' : '#ffffff',
-                    color: '#292524',
+                    border: '1px solid var(--nl-border)',
+                    background: index === pastMonths.length - 1 ? 'rgba(var(--nl-accent-rgb),0.12)' : 'rgba(var(--nl-surface-rgb),0.72)',
+                    color: 'var(--nl-ink)',
                     padding: '14px',
                     display: 'grid',
                     alignContent: 'space-between',
@@ -714,7 +714,7 @@ export const ReportsPage = () => {
                   onClick={() => navigate('/profile/export')}
                 >
                   <strong style={{ fontSize: '15px', lineHeight: 1.25 }}>{item.year}年<br />{item.month}月纪念册</strong>
-                  <span style={{ color: '#a8a29e', fontSize: '12px', fontWeight: 700 }}>查看 / 导出</span>
+                  <span style={{ color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 700 }}>查看 / 导出</span>
                 </button>
               ))}
             </div>
@@ -728,7 +728,7 @@ export const ReportsPage = () => {
                   {mediaRecords.slice(0, 6).map((item) => {
                     const cover = resolveMediaPreviewUrl(item.cover_media_no, item.cover_url);
                     return (
-                      <button key={item.record_no} type="button" onClick={() => navigate(`/record/${item.record_no}`)} style={{ border: 'none', padding: 0, background: '#fafaf9', borderRadius: '14px', overflow: 'hidden', aspectRatio: '1 / 1', cursor: 'pointer' }}>
+                      <button key={item.record_no} type="button" onClick={() => navigate(`/record/${item.record_no}`)} style={{ border: 'none', padding: 0, background: 'var(--nl-surface-soft)', borderRadius: '14px', overflow: 'hidden', aspectRatio: '1 / 1', cursor: 'pointer' }}>
                         {cover && item.cover_media_type === 'video' ? <video src={cover} muted playsInline preload="none" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /> : null}
                         {cover && item.cover_media_type !== 'video' ? <img src={cover} alt={item.title ?? '纪念册影像'} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} /> : null}
                       </button>
@@ -747,7 +747,7 @@ export const ReportsPage = () => {
                   <button key={item.record_no} type="button" style={{ ...secondaryButtonStyle, borderRadius: '14px', textAlign: 'left', justifyContent: 'space-between' }} onClick={() => navigate(`/record/${item.record_no}`)}>
                     <span style={{ display: 'grid', gap: '4px' }}>
                       <span style={{ fontWeight: 700 }}>{item.title ?? '未命名记录'}</span>
-                      <span style={{ color: '#78716c', fontSize: '12px' }}>{new Date(item.event_time).toLocaleString('zh-CN', { hour12: false })}</span>
+                      <span style={{ color: 'var(--nl-muted)', fontSize: '12px' }}>{new Date(item.event_time).toLocaleString('zh-CN', { hour12: false })}</span>
                     </span>
                     <ChevronRight size={16} />
                   </button>
@@ -809,8 +809,11 @@ export const ExportBackupPage = () => {
       const anchor = document.createElement('a');
       anchor.href = url;
       anchor.download = result.file_name;
+      anchor.style.display = 'none';
+      document.body.appendChild(anchor);
       anchor.click();
-      URL.revokeObjectURL(url);
+      anchor.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 0);
       setMessage(`档案摘要已生成：${result.summary.record_count} 条记录、${result.summary.media_count} 个媒体，并已写入审计日志。`);
     } catch (err) {
       setMessage(err instanceof Error ? err.message : '档案摘要生成失败，请稍后再试');
@@ -872,16 +875,16 @@ export const ExportBackupPage = () => {
 
   return (
     <PageShell title="导出与备份" backTo="/profile">
-      <Panel style={{ textAlign: 'center', padding: '26px 20px', borderRadius: '18px', boxShadow: '0 2px 8px rgba(41,37,36,0.03)' }}>
-        <div style={{ width: '54px', height: '54px', borderRadius: '999px', background: '#fff4d6', color: '#d97706', display: 'grid', placeItems: 'center', margin: '0 auto 15px' }}>
+      <Panel style={{ textAlign: 'center', padding: '26px 20px', borderRadius: '18px', boxShadow: 'var(--nl-shadow-sm)' }}>
+        <div style={{ width: '54px', height: '54px', borderRadius: '999px', background: 'rgba(var(--nl-accent-rgb),0.14)', color: 'var(--nl-accent)', display: 'grid', placeItems: 'center', margin: '0 auto 15px' }}>
           <DownloadCloud size={23} strokeWidth={2.2} />
         </div>
-        <h2 style={{ margin: 0, color: '#292524', fontSize: '17px', fontWeight: 800 }}>一键备份数字资产</h2>
+        <h2 style={{ margin: 0, color: 'var(--nl-ink)', fontSize: '17px', fontWeight: 800 }}>一键备份数字资产</h2>
         <p style={{ ...helperTextStyle, margin: '9px auto 0', maxWidth: '280px', lineHeight: 1.65 }}>将您在应用中记录的所有照片、视频和文字日志打包下载，永久保存在您的私人设备中。</p>
       </Panel>
 
       <section>
-        <h2 style={{ margin: '0 0 14px', fontSize: '15px', fontWeight: 800, color: '#292524' }}>选择导出内容</h2>
+        <h2 style={{ margin: '0 0 14px', fontSize: '15px', fontWeight: 800, color: 'var(--nl-ink)' }}>选择导出内容</h2>
         <div style={{ display: 'grid', gap: '12px' }}>
           {exportOptions.map((item) => {
             const selected = exportMode === item.value;
@@ -893,8 +896,8 @@ export const ExportBackupPage = () => {
                 onClick={() => setExportMode(item.value)}
                 style={{
                   borderRadius: '16px',
-                  border: selected ? '1.5px solid #292524' : '1px solid #eef1f4',
-                  background: '#ffffff',
+                  border: selected ? '1.5px solid var(--nl-primary)' : '1px solid var(--nl-border)',
+                  background: selected ? 'rgba(var(--nl-accent-rgb),0.14)' : 'rgba(var(--nl-surface-rgb),0.72)',
                   minHeight: '68px',
                   padding: '13px 15px',
                   display: 'grid',
@@ -903,17 +906,17 @@ export const ExportBackupPage = () => {
                   alignItems: 'center',
                   textAlign: 'left',
                   cursor: 'pointer',
-                  boxShadow: selected ? '0 5px 14px rgba(41,37,36,0.07)' : '0 1px 4px rgba(41,37,36,0.02)',
+                  boxShadow: selected ? '0 14px 30px rgba(var(--nl-primary-rgb),0.24)' : 'var(--nl-shadow-sm)',
                 }}
               >
-                <span style={{ width: '36px', height: '36px', borderRadius: '999px', background: selected ? '#292524' : '#f8fafc', color: selected ? '#ffffff' : '#cbd5e1', display: 'grid', placeItems: 'center' }}>
+                <span style={{ width: '36px', height: '36px', borderRadius: '999px', background: selected ? 'linear-gradient(135deg, var(--nl-primary), var(--nl-primary-2))' : 'rgba(var(--nl-accent-rgb),0.12)', color: selected ? '#ffffff' : 'var(--nl-muted)', display: 'grid', placeItems: 'center' }}>
                   <FileBox size={17} />
                 </span>
                 <span style={{ minWidth: 0 }}>
-                  <strong style={{ display: 'block', color: '#292524', fontSize: '14px', fontWeight: 800 }}>{item.title}</strong>
-                  <span style={{ display: 'block', marginTop: '4px', color: '#a8a29e', fontSize: '12px', lineHeight: 1.45 }}>{item.description}</span>
+                  <strong style={{ display: 'block', color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 800 }}>{item.title}</strong>
+                  <span style={{ display: 'block', marginTop: '4px', color: 'var(--nl-muted)', fontSize: '12px', lineHeight: 1.45 }}>{item.description}</span>
                 </span>
-                {selected ? <CheckCircle2 size={20} color="#292524" strokeWidth={2.4} /> : <span style={{ width: '18px', height: '18px', borderRadius: '999px', border: '1px solid #d6d3d1', background: '#ffffff' }} />}
+                {selected ? <CheckCircle2 size={20} color="var(--nl-accent)" strokeWidth={2.4} /> : <span style={{ width: '18px', height: '18px', borderRadius: '999px', border: '1px solid var(--nl-border)', background: 'rgba(255,255,255,0.04)' }} />}
               </button>
             );
           })}
@@ -923,13 +926,13 @@ export const ExportBackupPage = () => {
       {loading ? <EmptyState message="正在整理档案摘要…" /> : null}
       {error ? <EmptyState message={`摘要整理失败：${error}`} /> : null}
 
-      <Panel style={{ display: 'grid', gap: '12px', borderRadius: '18px', boxShadow: '0 2px 8px rgba(41,37,36,0.03)' }}>
+      <Panel style={{ display: 'grid', gap: '12px', borderRadius: '18px', boxShadow: 'var(--nl-shadow-sm)' }}>
         <div style={{ display: 'grid', gap: '6px' }}>
-          <strong style={{ color: '#292524', fontSize: '15px' }}>长期交付留痕</strong>
+          <strong style={{ color: 'var(--nl-ink)', fontSize: '15px' }}>长期交付留痕</strong>
           <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.65 }}>
             需要云端完整打包或为孩子成年后的档案移交做准备时，先提交申请并写入后台审计，运营可按身份核验和档案完整性流程继续处理。
           </p>
-          <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.65, color: canExportArchive ? '#0f766e' : '#b45309' }}>
+          <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.65, color: canExportArchive ? 'var(--nl-success)' : 'var(--nl-primary-2)' }}>
             {canExportArchive ? '当前账号为家庭管理员，可发起正式导出与交付申请。' : '为保护家庭档案，首版仅家庭管理员可导出或发起交付申请。'}
           </p>
         </div>
@@ -952,9 +955,9 @@ export const ExportBackupPage = () => {
           </button>
         </div>
         <div style={{ display: 'grid', gap: '10px', paddingTop: '2px' }}>
-          <strong style={{ color: '#292524', fontSize: '14px' }}>最近申请</strong>
+          <strong style={{ color: 'var(--nl-ink)', fontSize: '14px' }}>最近申请</strong>
           {archiveRequestsLoading ? <p style={{ ...helperTextStyle, margin: 0 }}>正在读取最近交付申请…</p> : null}
-          {archiveRequestsError ? <p style={{ ...helperTextStyle, margin: 0, color: '#dc2626' }}>最近申请读取失败：{archiveRequestsError}</p> : null}
+      {archiveRequestsError ? <p style={{ ...helperTextStyle, margin: 0, color: 'var(--nl-danger)' }}>最近申请读取失败：{archiveRequestsError}</p> : null}
           {!archiveRequestsLoading && !archiveRequestsError && archiveRequestsList.length === 0 ? (
             <p style={{ ...helperTextStyle, margin: 0 }}>暂无交付申请。提交后可在这里查看处理状态。</p>
           ) : null}
@@ -962,16 +965,16 @@ export const ExportBackupPage = () => {
             <div
               key={item.request_no}
               style={{
-                border: '1px solid #eef0f2',
+                border: '1px solid var(--nl-border)',
                 borderRadius: '16px',
                 padding: '12px',
                 display: 'grid',
                 gap: '8px',
-                background: '#ffffff',
+                background: 'rgba(var(--nl-surface-rgb),0.72)',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'center' }}>
-                <strong style={{ color: '#292524', fontSize: '14px', lineHeight: 1.35 }}>
+                <strong style={{ color: 'var(--nl-ink)', fontSize: '14px', lineHeight: 1.35 }}>
                   {archiveExportPurposeText(item.purpose)} · {archiveExportTypeText(item.export_type)}
                 </strong>
                 <span style={{ color: archiveExportStatusColor(item.status), fontSize: '12px', fontWeight: 800, whiteSpace: 'nowrap' }}>
@@ -987,7 +990,7 @@ export const ExportBackupPage = () => {
         </div>
       </Panel>
 
-      {message ? <p style={{ ...helperTextStyle, color: message.includes('失败') ? '#dc2626' : '#0f766e' }}>{message}</p> : null}
+        {message ? <p style={{ ...helperTextStyle, color: isPositiveStatusMessage(message) ? 'var(--nl-success)' : 'var(--nl-danger)' }}>{message}</p> : null}
       <button type="button" style={{ ...primaryButtonStyle, width: '100%', minHeight: '50px', borderRadius: '999px' }} onClick={() => void downloadSummary()} disabled={loading || downloadingSummary || Boolean(error) || !canExportArchive}>
         {downloadingSummary ? '正在生成摘要…' : '下载审计留痕摘要'}
       </button>
@@ -996,14 +999,24 @@ export const ExportBackupPage = () => {
 };
 
 export const MembershipPage = () => {
+  const navigate = useNavigate();
   const { user, setUserProfile } = useAuth();
   const [refreshing, setRefreshing] = useState(false);
   const [requestingBook, setRequestingBook] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [showBookHelpFallback, setShowBookHelpFallback] = useState(false);
+  const membershipType = user?.membership_type ?? 'free';
+  const hasBookBenefit = ['premium', 'family', 'family_member', 'ai_plus'].includes(membershipType);
+  const membershipBadge = hasBookBenefit ? (membershipType === 'ai_plus' ? 'AI PLUS' : membershipType === 'premium' ? 'VIP PRO' : 'FAMILY') : 'BASIC';
+  const membershipBookText = hasBookBenefit
+    ? '作为高级会员，您每年可申领一本由专业排版生成的成长纪念册，将数字记忆变成可保存的家庭资产。'
+    : '当前账号为基础会员，成长纪念册申领需要先确认会员权益。您可以提交咨询，客服核对后会联系您。';
+  const membershipMessageIsError = message ? /失败|无法|暂时|错误/.test(message) : false;
 
   const refreshMembership = async () => {
     setRefreshing(true);
     setMessage(null);
+    setShowBookHelpFallback(false);
     try {
       const profile = await webApi.me();
       setUserProfile(profile);
@@ -1018,6 +1031,7 @@ export const MembershipPage = () => {
   const requestMembershipBook = async () => {
     setRequestingBook(true);
     setMessage(null);
+    setShowBookHelpFallback(false);
     try {
       const result = await webApi.requestMembershipBook({
         year: new Date().getFullYear(),
@@ -1026,6 +1040,7 @@ export const MembershipPage = () => {
       setMessage(result.message);
     } catch {
       setMessage('申领暂时无法同步服务器，请通过帮助与反馈提交申请。');
+      setShowBookHelpFallback(true);
     } finally {
       setRequestingBook(false);
     }
@@ -1033,30 +1048,30 @@ export const MembershipPage = () => {
 
   return (
     <PageShell title="会员中心" backTo="/profile">
-          <section style={{ borderRadius: '20px', border: '1px solid #292524', background: '#1f1f1f', padding: '18px', minHeight: '142px', color: '#ffffff', display: 'grid', gap: '14px', boxShadow: '0 10px 22px rgba(15,15,15,0.18)', overflow: 'hidden', position: 'relative' }}>
-        <div style={{ position: 'absolute', right: '0', top: '-34px', width: '104px', height: '104px', borderRadius: '999px', border: '22px solid rgba(255,255,255,0.04)', boxSizing: 'border-box' }} />
+      <section style={{ borderRadius: '24px', border: '1px solid var(--nl-border)', background: 'linear-gradient(135deg, rgba(var(--nl-surface-strong-rgb),0.96), rgba(var(--nl-surface-strong-rgb),0.9))', padding: '18px', minHeight: '142px', color: 'var(--nl-ink)', display: 'grid', gap: '14px', boxShadow: 'var(--nl-shadow-sm)', overflow: 'hidden', position: 'relative' }}>
+        <div style={{ position: 'absolute', right: '0', top: '-34px', width: '104px', height: '104px', borderRadius: '999px', border: '22px solid rgba(var(--nl-accent-rgb),0.08)', boxSizing: 'border-box' }} />
         <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center', minWidth: 0 }}>
             <ProfileAvatar src={user?.avatar_url} label={user?.nickname ?? '会员'} />
             <div style={{ minWidth: 0 }}>
               <strong style={{ display: 'block', fontSize: '17px', fontWeight: 800 }}>{user?.nickname ?? '年轮会员'}</strong>
-              <span style={{ display: 'block', marginTop: '5px', color: 'rgba(255,255,255,0.68)', fontSize: '12px', fontWeight: 700 }}>{membershipTypeLabel(user?.membership_type)}</span>
+              <span style={{ display: 'block', marginTop: '5px', color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 700 }}>{membershipTypeLabel(user?.membership_type)}</span>
             </div>
           </div>
-          <span style={{ borderRadius: '999px', background: '#d97706', color: '#ffffff', padding: '6px 10px', fontSize: '10px', fontWeight: 900 }}>VIP PRO</span>
+          <span style={{ borderRadius: '999px', background: hasBookBenefit ? 'rgba(var(--nl-primary-rgb),0.18)' : 'rgba(var(--nl-surface-rgb),0.74)', color: hasBookBenefit ? 'var(--nl-primary-2)' : 'var(--nl-muted-strong)', border: hasBookBenefit ? '1px solid rgba(var(--nl-primary-rgb),0.3)' : '1px solid var(--nl-border)', padding: '6px 10px', fontSize: '10px', fontWeight: 900 }}>{membershipBadge}</span>
         </div>
         <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: '12px' }}>
-          <p style={{ margin: 0, color: 'rgba(255,255,255,0.74)', fontSize: '12px', lineHeight: 1.6 }}>
+          <p style={{ margin: 0, color: 'var(--nl-muted)', fontSize: '12px', lineHeight: 1.6 }}>
             到期时间：{user?.membership_expire_at ? new Date(user.membership_expire_at).toLocaleDateString('zh-CN') : '长期有效'}
           </p>
-          <button type="button" style={{ ...primaryButtonStyle, minHeight: '44px', padding: '8px 12px', background: '#ffffff', color: '#292524', boxShadow: 'none', fontSize: '12px' }} onClick={() => void refreshMembership()} disabled={refreshing}>
+          <button type="button" style={{ ...secondaryButtonStyle, minHeight: '44px', padding: '8px 12px', background: 'rgba(var(--nl-surface-rgb),0.74)', color: 'var(--nl-ink)', boxShadow: 'none', fontSize: '12px' }} onClick={() => void refreshMembership()} disabled={refreshing}>
             {refreshing ? '刷新中' : '刷新会员信息'}
           </button>
         </div>
       </section>
 
       <section>
-        <h2 style={{ margin: '0 0 12px 2px', fontSize: '14px', fontWeight: 800, color: '#292524' }}>您的专属特权</h2>
+        <h2 style={{ margin: '0 0 12px 2px', fontSize: '14px', fontWeight: 800, color: 'var(--nl-ink)' }}>您的专属特权</h2>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
           {[
             { icon: DownloadCloud, title: '高清画质下载', desc: '大容量媒体备份' },
@@ -1066,13 +1081,13 @@ export const MembershipPage = () => {
           ].map((item) => {
             const Icon = item.icon;
             return (
-              <div key={item.title} style={{ borderRadius: '14px', border: '1px solid #eef1f4', background: '#ffffff', padding: '14px', display: 'grid', gap: '10px', boxShadow: '0 1px 4px rgba(41,37,36,0.02)' }}>
-                <div style={{ width: '30px', height: '30px', borderRadius: '999px', background: '#fff4d6', color: '#d97706', display: 'grid', placeItems: 'center' }}>
+              <div key={item.title} style={{ borderRadius: '16px', border: '1px solid var(--nl-border)', background: 'rgba(var(--nl-surface-rgb),0.72)', padding: '14px', display: 'grid', gap: '10px', boxShadow: 'var(--nl-shadow-sm)' }}>
+                <div style={{ width: '30px', height: '30px', borderRadius: '999px', background: 'rgba(var(--nl-accent-rgb),0.14)', color: 'var(--nl-accent)', display: 'grid', placeItems: 'center' }}>
                   <Icon size={15} />
                 </div>
                 <div>
-                  <strong style={{ display: 'block', fontSize: '13px', color: '#292524' }}>{item.title}</strong>
-                  <span style={{ display: 'block', marginTop: '4px', fontSize: '11px', color: '#a8a29e', lineHeight: 1.4 }}>{item.desc}</span>
+                  <strong style={{ display: 'block', fontSize: '13px', color: 'var(--nl-ink)' }}>{item.title}</strong>
+                  <span style={{ display: 'block', marginTop: '4px', fontSize: '11px', color: 'var(--nl-muted)', lineHeight: 1.4 }}>{item.desc}</span>
                 </div>
               </div>
             );
@@ -1080,19 +1095,28 @@ export const MembershipPage = () => {
         </div>
       </section>
 
-      <Panel style={{ borderRadius: '18px', boxShadow: '0 2px 8px rgba(41,37,36,0.03)' }}>
+      <Panel style={{ borderRadius: '18px', boxShadow: 'var(--nl-shadow-sm)' }}>
         <div style={rowStyle}>
           <strong>成长纪念册</strong>
-          <p style={{ ...helperTextStyle, lineHeight: 1.75 }}>作为高级会员，您每年可申领一本由专业排版生成的成长纪念册，将数字记忆变成可保存的家庭资产。</p>
-          {message ? <p style={{ ...helperTextStyle, color: message.includes('失败') ? '#dc2626' : '#0f766e' }}>{message}</p> : null}
+          <p style={{ ...helperTextStyle, lineHeight: 1.75 }}>{membershipBookText}</p>
+          {message ? <p style={{ ...helperTextStyle, color: membershipMessageIsError ? 'var(--nl-danger)' : 'var(--nl-success)' }}>{message}</p> : null}
           <button
             type="button"
-            style={{ ...primaryButtonStyle, width: '100%', borderRadius: '18px', background: '#d97706', boxShadow: '0 6px 14px rgba(217,119,6,0.18)' }}
-            onClick={() => void requestMembershipBook()}
+            style={{ ...primaryButtonStyle, width: '100%', borderRadius: '18px' }}
+            onClick={() => hasBookBenefit ? void requestMembershipBook() : navigate('/profile/help?topic=membership')}
             disabled={refreshing || requestingBook}
           >
-            {requestingBook ? '提交中…' : '免费申领本年度纪念册'}
+            {requestingBook ? '提交中…' : hasBookBenefit ? '免费申领本年度纪念册' : '咨询会员权益'}
           </button>
+          {showBookHelpFallback ? (
+            <button
+              type="button"
+              style={{ ...secondaryButtonStyle, width: '100%', borderRadius: '18px', justifyContent: 'center' }}
+              onClick={() => navigate('/profile/help?topic=membership')}
+            >
+              打开帮助与反馈
+            </button>
+          ) : null}
         </div>
       </Panel>
     </PageShell>
@@ -1106,12 +1130,12 @@ export const SecurityPage = () => {
   const rows = [
     { title: '手机号码', value: user?.mobile ?? '当前未提供', icon: Smartphone, onClick: () => navigate('/profile/account') },
     { title: '登录密码', value: '已设置', icon: KeyRound, onClick: () => navigate('/profile/account') },
-    { title: '第三方账号绑定', value: '已绑定微信', icon: ShieldCheck, onClick: () => navigate('/profile/account') },
+    { title: '第三方账号绑定', value: '暂未接入', icon: ShieldCheck, onClick: () => navigate('/profile/account') },
   ];
 
   return (
     <PageShell title="账号与安全" backTo="/profile">
-      <Panel style={{ padding: 0, overflow: 'hidden', borderRadius: '18px', boxShadow: '0 2px 8px rgba(41,37,36,0.03)' }}>
+      <Panel style={{ padding: 0, overflow: 'hidden', borderRadius: '18px', boxShadow: 'var(--nl-shadow-sm)' }}>
         {rows.map((item, index) => {
           const Icon = item.icon;
           return (
@@ -1123,8 +1147,8 @@ export const SecurityPage = () => {
               width: '100%',
               minHeight: '62px',
               border: 'none',
-              borderBottom: index === rows.length - 1 ? 'none' : '1px solid #f3f0ea',
-              background: '#ffffff',
+              borderBottom: index === rows.length - 1 ? 'none' : '1px solid var(--nl-border)',
+              background: 'rgba(var(--nl-surface-rgb),0.72)',
               padding: '0 16px',
               display: 'flex',
               justifyContent: 'space-between',
@@ -1134,13 +1158,13 @@ export const SecurityPage = () => {
               cursor: 'pointer',
             }}
           >
-            <span style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#57534e', fontSize: '14px', fontWeight: 700 }}>
-              <Icon size={17} color="#94a3b8" strokeWidth={2} />
+            <span style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--nl-muted-strong)', fontSize: '14px', fontWeight: 700 }}>
+              <Icon size={17} color="var(--nl-accent)" strokeWidth={2} />
               {item.title}
             </span>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#a8a29e', fontSize: '13px', fontWeight: 700 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: 'var(--nl-muted)', fontSize: '13px', fontWeight: 700 }}>
               {item.value}
-              <ChevronRight size={16} color="#d6d3d1" />
+              <ChevronRight size={16} color="var(--nl-muted)" />
             </span>
           </button>
           );
@@ -1205,15 +1229,21 @@ export const AccountDeletionPage = () => {
   const submit = async (event?: FormEvent<HTMLFormElement>) => {
     event?.preventDefault();
     if (!check) return;
+    const normalizedPassword = password.trim();
+    const normalizedConfirmText = confirmText.trim();
     if (!check.can_delete) {
       setMessage(check.blockers[0] ?? '当前账号暂时不能直接注销');
       return;
     }
-    if (!password.trim()) {
+    if (check.requires_password && !normalizedPassword) {
       setMessage('请输入当前登录密码');
       return;
     }
-    if (confirmText.trim() !== check.confirm_text) {
+    if (check.requires_password && normalizedPassword.length < 8) {
+      setMessage('登录密码至少 8 位');
+      return;
+    }
+    if (normalizedConfirmText !== check.confirm_text) {
       setMessage(`请输入“${check.confirm_text}”后再继续`);
       return;
     }
@@ -1221,8 +1251,8 @@ export const AccountDeletionPage = () => {
     setSubmitting(true);
     try {
       const result = await webApi.deleteMe({
-        password: password.trim(),
-        confirm_text: confirmText.trim(),
+        password: normalizedPassword,
+        confirm_text: normalizedConfirmText,
       });
       setMessage(result.message);
       clearSession();
@@ -1244,40 +1274,40 @@ export const AccountDeletionPage = () => {
           {!loading && check ? (
             <div style={{ display: 'grid', gap: '10px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
-                <Panel style={{ padding: '14px 16px', borderRadius: '18px', boxShadow: 'none', background: '#fcfcfd' }}>
-                  <strong style={{ fontSize: '20px', color: '#292524' }}>{check.summary.owned_family_count}</strong>
+                <Panel style={{ padding: '14px 16px', borderRadius: '18px', boxShadow: 'none', background: 'rgba(var(--nl-surface-rgb),0.74)' }}>
+                  <strong style={{ fontSize: '20px', color: 'var(--nl-ink)' }}>{check.summary.owned_family_count}</strong>
                   <p style={helperTextStyle}>你拥有的家庭</p>
                 </Panel>
-                <Panel style={{ padding: '14px 16px', borderRadius: '18px', boxShadow: 'none', background: '#fcfcfd' }}>
-                  <strong style={{ fontSize: '20px', color: '#292524' }}>{check.summary.joined_family_count}</strong>
+                <Panel style={{ padding: '14px 16px', borderRadius: '18px', boxShadow: 'none', background: 'rgba(var(--nl-surface-rgb),0.74)' }}>
+                  <strong style={{ fontSize: '20px', color: 'var(--nl-ink)' }}>{check.summary.joined_family_count}</strong>
                   <p style={helperTextStyle}>你加入的家庭</p>
                 </Panel>
-                <Panel style={{ padding: '14px 16px', borderRadius: '18px', boxShadow: 'none', background: '#fcfcfd' }}>
-                  <strong style={{ fontSize: '20px', color: '#292524' }}>{check.summary.active_child_count}</strong>
+                <Panel style={{ padding: '14px 16px', borderRadius: '18px', boxShadow: 'none', background: 'rgba(var(--nl-surface-rgb),0.74)' }}>
+                  <strong style={{ fontSize: '20px', color: 'var(--nl-ink)' }}>{check.summary.active_child_count}</strong>
                   <p style={helperTextStyle}>你名下孩子档案</p>
                 </Panel>
-                <Panel style={{ padding: '14px 16px', borderRadius: '18px', boxShadow: 'none', background: '#fcfcfd' }}>
-                  <strong style={{ fontSize: '20px', color: '#292524' }}>{check.summary.active_record_count}</strong>
+                <Panel style={{ padding: '14px 16px', borderRadius: '18px', boxShadow: 'none', background: 'rgba(var(--nl-surface-rgb),0.74)' }}>
+                  <strong style={{ fontSize: '20px', color: 'var(--nl-ink)' }}>{check.summary.active_record_count}</strong>
                   <p style={helperTextStyle}>你创建的有效记录</p>
                 </Panel>
               </div>
               {check.blockers.length ? (
-                <div style={{ borderRadius: '18px', background: '#fff7ed', border: '1px solid #fed7aa', padding: '14px 16px', color: '#9a3412', display: 'grid', gap: '8px' }}>
+                <div style={{ borderRadius: '18px', background: 'rgba(var(--nl-primary-rgb),0.12)', border: '1px solid rgba(var(--nl-primary-rgb),0.24)', padding: '14px 16px', color: 'var(--nl-primary-2)', display: 'grid', gap: '8px' }}>
                   <strong>当前还不能直接注销</strong>
                   {check.blockers.map((item) => (
                     <p key={item} style={{ margin: 0, fontSize: '13px', lineHeight: 1.6 }}>{item}</p>
                   ))}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px', marginTop: '4px' }}>
-                    <button type="button" style={{ ...secondaryButtonStyle, minHeight: '42px', borderRadius: '999px', boxShadow: 'none', color: '#9a3412' }} onClick={() => navigate('/family/members')}>
+                    <button type="button" style={{ ...secondaryButtonStyle, minHeight: '42px', borderRadius: '999px', boxShadow: 'none', color: 'var(--nl-primary-2)' }} onClick={() => navigate('/family/members')}>
                       去处理成员
                     </button>
-                    <button type="button" style={{ ...secondaryButtonStyle, minHeight: '42px', borderRadius: '999px', boxShadow: 'none', color: '#9a3412' }} onClick={() => navigate('/profile/help?topic=account-delete')}>
+                    <button type="button" style={{ ...secondaryButtonStyle, minHeight: '42px', borderRadius: '999px', boxShadow: 'none', color: 'var(--nl-primary-2)' }} onClick={() => navigate('/profile/help?topic=account-delete')}>
                       提交协助
                     </button>
                   </div>
                 </div>
               ) : (
-                <div style={{ borderRadius: '18px', background: '#f0fdf4', border: '1px solid #bbf7d0', padding: '14px 16px', color: '#166534', display: 'grid', gap: '6px' }}>
+                <div style={{ borderRadius: '18px', background: 'rgba(var(--nl-success-rgb),0.12)', border: '1px solid rgba(var(--nl-success-rgb),0.24)', padding: '14px 16px', color: 'var(--nl-success)', display: 'grid', gap: '6px' }}>
                   <strong>当前账号可以注销</strong>
                   <p style={{ margin: 0, fontSize: '13px', lineHeight: 1.6 }}>注销后将立即退出登录，密码和账号凭据会失效，不能恢复。</p>
                 </div>
@@ -1295,13 +1325,13 @@ export const AccountDeletionPage = () => {
           <Field label={`确认文案（输入“${check?.confirm_text ?? '确认注销'}”）`}>
             <input style={inputStyle} value={confirmText} onChange={(event) => setConfirmText(event.target.value)} placeholder={check?.confirm_text ?? '确认注销'} />
           </Field>
-          {message ? <p style={{ ...helperTextStyle, color: message.includes('已') ? '#0f766e' : '#dc2626' }}>{message}</p> : null}
+          {message ? <p style={{ ...helperTextStyle, color: message.includes('已') ? 'var(--nl-success)' : 'var(--nl-danger)' }}>{message}</p> : null}
           <div style={buttonRowStyle}>
             <button
               type="submit"
               style={{
                 ...primaryButtonStyle,
-                background: check?.can_delete ? '#dc2626' : '#d6d3d1',
+                background: check?.can_delete ? 'linear-gradient(135deg, var(--nl-danger), #ff9aae)' : 'rgba(var(--nl-surface-rgb),0.58)',
                 boxShadow: 'none',
               }}
               disabled={submitting || loading || !check?.can_delete}
@@ -1315,14 +1345,57 @@ export const AccountDeletionPage = () => {
   );
 };
 
+type HelpFeedbackTopic = 'account-delete' | 'membership' | 'family-remove';
+
+const helpFeedbackTopicConfig: Record<HelpFeedbackTopic, { category: string; content: string; description: string }> = {
+  'account-delete': {
+    category: '数据异常',
+    content: '申请注销账号，请联系我完成身份确认和儿童信息处理。',
+    description: '账号注销需要人工确认，请提交申请后等待联系。',
+  },
+  membership: {
+    category: '功能建议',
+    content: '咨询会员权益与成长纪念册申领，请联系我确认升级方式。',
+    description: '会员权益咨询会自动带入反馈内容，提交后等待联系。',
+  },
+  'family-remove': {
+    category: '数据异常',
+    content: '申请移出家庭成员，请联系我完成管理员确认和成员关系处理。',
+    description: '成员移出需要管理员二次确认，请提交申请后等待联系。',
+  },
+};
+
+const isHelpFeedbackTopic = (value: string | null): value is HelpFeedbackTopic =>
+  value === 'account-delete' || value === 'membership' || value === 'family-remove';
+
+const getHelpFeedbackContent = (topic: HelpFeedbackTopic | null, memberNo: string | null) => {
+  if (!topic) return '';
+  if (topic === 'family-remove' && memberNo) {
+    return `申请移出家庭成员（用户编号：${memberNo}），请联系我完成管理员确认和成员关系处理。`;
+  }
+  return helpFeedbackTopicConfig[topic].content;
+};
+
 export const HelpFeedbackPage = () => {
   const location = useLocation();
-  const accountDeleteTopic = new URLSearchParams(location.search).get('topic') === 'account-delete';
-  const [category, setCategory] = useState(accountDeleteTopic ? '数据异常' : '使用问题');
-  const [content, setContent] = useState(accountDeleteTopic ? '申请注销账号，请联系我完成身份确认和儿童信息处理。' : '');
+  const searchParams = new URLSearchParams(location.search);
+  const topicParam = searchParams.get('topic');
+  const memberNo = searchParams.get('member');
+  const topic = isHelpFeedbackTopic(topicParam) ? topicParam : null;
+  const topicConfig = topic ? helpFeedbackTopicConfig[topic] : null;
+  const initialCategory = topicConfig?.category ?? '使用问题';
+  const initialContent = getHelpFeedbackContent(topic, memberNo);
+  const [category, setCategory] = useState(initialCategory);
+  const [content, setContent] = useState(initialContent);
   const [contact, setContact] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    setCategory(initialCategory);
+    setContent(initialContent);
+    setMessage(null);
+  }, [initialCategory, initialContent]);
 
   const submitFeedback = async () => {
     const normalized = content.trim();
@@ -1337,14 +1410,14 @@ export const HelpFeedbackPage = () => {
         category,
         content: normalized,
         contact: contact.trim() || undefined,
-        topic: accountDeleteTopic ? 'account-delete' : undefined,
+        topic: topic ?? undefined,
       });
       setContent('');
       setContact('');
       setMessage(result.message);
       return;
     } catch {
-      const item = { category, content: normalized, contact: contact.trim(), created_at: new Date().toISOString(), sync_status: 'pending' };
+      const item = { category, content: normalized, contact: contact.trim(), topic: topic ?? undefined, created_at: new Date().toISOString(), sync_status: 'pending' };
       let list: typeof item[] = [];
       try {
         const raw = window.localStorage.getItem('xiaoman-web-feedback-list');
@@ -1352,17 +1425,21 @@ export const HelpFeedbackPage = () => {
       } catch {
         list = [];
       }
-      window.localStorage.setItem('xiaoman-web-feedback-list', JSON.stringify([item, ...list].slice(0, 20)));
-      setContent('');
-      setContact('');
-      setMessage('暂时无法同步服务器，已先保存在本机，请稍后再提交。');
+      try {
+        window.localStorage.setItem('xiaoman-web-feedback-list', JSON.stringify([item, ...list].slice(0, 20)));
+        setContent('');
+        setContact('');
+        setMessage('暂时无法同步服务器，已先保存在本机，请稍后再提交。');
+      } catch {
+        setMessage('暂时无法同步服务器，本机也无法保存，请稍后重试或复制内容后联系支持。');
+      }
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <PageShell title="帮助与反馈" description={accountDeleteTopic ? '账号注销需要人工确认，请提交申请后等待联系。' : '查看常见问题，并提交当前设备上的反馈记录。'} backTo="/profile">
+    <PageShell title="帮助与反馈" description={topicConfig?.description ?? '查看常见问题，并提交当前设备上的反馈记录。'} backTo="/profile">
       <Panel>
         <div style={rowStyle}>
           <strong>常见问题</strong>
@@ -1387,7 +1464,7 @@ export const HelpFeedbackPage = () => {
           <Field label="联系方式">
             <input style={inputStyle} value={contact} onChange={(event) => setContact(event.target.value)} placeholder="手机号或微信，可选" />
           </Field>
-          {message ? <p style={{ ...helperTextStyle, color: message.includes('无法') ? '#dc2626' : '#0f766e' }}>{message}</p> : null}
+          {message ? <p style={{ ...helperTextStyle, color: isPositiveStatusMessage(message) ? 'var(--nl-success)' : 'var(--nl-danger)' }}>{message}</p> : null}
           <div style={buttonRowStyle}>
             <button type="button" style={primaryButtonStyle} onClick={() => void submitFeedback()} disabled={submitting}>
               {submitting ? '提交中…' : '提交反馈'}
@@ -1449,8 +1526,8 @@ const AboutMenuLink = ({
       width: '100%',
       minHeight: '54px',
       border: 'none',
-      borderBottom: isLast ? 'none' : '1px solid #f3f4f6',
-      background: '#ffffff',
+      borderBottom: isLast ? 'none' : '1px solid var(--nl-border)',
+      background: 'rgba(var(--nl-surface-rgb),0.72)',
       padding: '14px 16px',
       display: 'flex',
       alignItems: 'center',
@@ -1460,14 +1537,14 @@ const AboutMenuLink = ({
       cursor: 'pointer',
     }}
   >
-    <span style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: 0, color: '#4a4a4a', fontSize: '15px', fontWeight: 700 }}>
-      <Icon size={18} color="#94a3b8" strokeWidth={2} />
+    <span style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: 0, color: 'var(--nl-muted-strong)', fontSize: '15px', fontWeight: 700 }}>
+      <Icon size={18} color="var(--nl-accent)" strokeWidth={2} />
       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
     </span>
     {value ? (
-      <span style={{ color: '#a1a1aa', fontSize: '13px', whiteSpace: 'nowrap' }}>{value}</span>
+      <span style={{ color: 'var(--nl-muted)', fontSize: '13px', whiteSpace: 'nowrap' }}>{value}</span>
     ) : (
-      <ChevronRight size={16} color="#cbd5e1" strokeWidth={2.2} />
+      <ChevronRight size={16} color="var(--nl-muted)" strokeWidth={2.2} />
     )}
   </button>
 );
@@ -1484,10 +1561,10 @@ export const AboutPage = () => {
           alt="年轮"
           width={96}
           height={96}
-          style={{ borderRadius: '26px', boxShadow: '0 12px 26px rgba(115, 74, 41, 0.16)', marginBottom: '16px' }}
+          style={{ borderRadius: '26px', boxShadow: '0 16px 34px rgba(var(--nl-primary-rgb),0.24)', marginBottom: '16px' }}
         />
-        <h2 style={{ margin: 0, color: '#2c2c2c', fontSize: '20px', fontWeight: 800 }}>nianlun</h2>
-        <p style={{ margin: '6px 0 0', color: '#a1a1aa', fontSize: '12px', fontWeight: 600 }}>版本 1.0.0（构建 20260514）</p>
+        <h2 style={{ margin: 0, color: 'var(--nl-ink)', fontSize: '20px', fontWeight: 800 }}>nianlun</h2>
+        <p style={{ margin: '6px 0 0', color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 600 }}>版本 1.0.0（构建 20260514）</p>
       </section>
 
       <Panel style={{ padding: 0, overflow: 'hidden' }}>
@@ -1502,8 +1579,8 @@ export const AboutPage = () => {
         <AboutMenuLink icon={HelpCircle} label="应用反馈" isLast onClick={() => navigate('/profile/help')} />
       </Panel>
 
-      {message ? <p style={{ ...helperTextStyle, color: '#57534e', textAlign: 'center' }}>{message}</p> : null}
-      <div style={{ textAlign: 'center', color: '#a1a1aa', fontSize: '10px', lineHeight: 1.7, paddingTop: '8px' }}>
+      {message ? <p style={{ ...helperTextStyle, color: 'var(--nl-muted-strong)', textAlign: 'center' }}>{message}</p> : null}
+      <div style={{ textAlign: 'center', color: 'var(--nl-muted)', fontSize: '10px', lineHeight: 1.7, paddingTop: '8px' }}>
         <p style={{ margin: 0 }}>年轮 © 2026</p>
         <p style={{ margin: 0 }}>守护每个家庭的成长记录。</p>
       </div>

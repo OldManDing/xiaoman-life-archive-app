@@ -155,7 +155,7 @@ const authPageContentStyle: CSSProperties = {
   display: 'grid',
   alignContent: 'start',
   gap: '14px',
-  padding: 'calc(18px + env(safe-area-inset-top)) 0 24px',
+  padding: 'calc(42px + env(safe-area-inset-top)) 0 24px',
 };
 
 const authHeroStyle: CSSProperties = {
@@ -169,12 +169,12 @@ const authLogoStyle: CSSProperties = {
   width: '72px',
   height: '72px',
   borderRadius: '22px',
-  boxShadow: '0 12px 26px rgba(115, 74, 41, 0.16)',
+  boxShadow: '0 16px 34px rgba(var(--nl-primary-rgb),0.24)',
 };
 
 const authTitleStyle: CSSProperties = {
   margin: 0,
-  color: '#172033',
+  color: 'var(--nl-ink)',
   fontSize: '24px',
   fontWeight: 850,
   lineHeight: 1.18,
@@ -195,7 +195,7 @@ const authAgreementStyle: CSSProperties = {
   gap: '10px',
   alignItems: 'flex-start',
   minHeight: '44px',
-  color: '#78716c',
+  color: 'var(--nl-muted-strong)',
   fontSize: '13px',
   lineHeight: 1.55,
   cursor: 'pointer',
@@ -210,8 +210,8 @@ const authCheckboxStyle: CSSProperties = {
 
 const disabledSubmitButtonStyle: CSSProperties = {
   ...primaryButtonStyle,
-  background: '#d8e0e7',
-  color: '#64748b',
+  background: 'rgba(var(--nl-surface-rgb),0.62)',
+  color: 'var(--nl-muted)',
   boxShadow: 'none',
   cursor: 'not-allowed',
   opacity: 1,
@@ -429,7 +429,7 @@ export const LoginPage = () => {
               我已阅读并同意《用户协议》和《隐私政策》
             </span>
           </label>
-          {error ? <p style={{ ...helperTextStyle, color: '#dc2626' }}>{error}</p> : null}
+        {error ? <p style={{ ...helperTextStyle, color: 'var(--nl-danger)' }}>{error}</p> : null}
           <button type="button" style={{ ...secondaryButtonStyle, justifyContent: 'center' }} onClick={openLegalPage}>
             查看完整协议与隐私政策
           </button>
@@ -523,22 +523,22 @@ export const OnboardingChildPage = () => {
     <PageShell title={isAddingChild ? '添加宝宝档案' : '完善宝宝信息'} backTo={isAddingChild ? '/profile' : undefined}>
       <form onSubmit={onSubmit} style={{ ...rowStyle, gap: '22px' }}>
         <div style={{ display: 'grid', justifyItems: 'center', gap: '10px', paddingTop: '6px' }}>
-          <label style={{ width: '96px', height: '96px', borderRadius: '999px', border: '4px solid #ffffff', background: '#f1f5f9', display: 'grid', placeItems: 'center', color: '#cbd5e1', position: 'relative', cursor: 'pointer', overflow: 'hidden', boxShadow: '0 8px 18px rgba(15,23,42,0.07)' }}>
+          <label style={{ width: '96px', height: '96px', borderRadius: '999px', border: '1px solid var(--nl-border)', background: 'var(--nl-surface-soft)', display: 'grid', placeItems: 'center', color: 'var(--nl-muted)', position: 'relative', cursor: 'pointer', overflow: 'hidden', boxShadow: '0 16px 34px rgba(var(--nl-shadow-rgb),0.32), 0 0 0 5px rgba(var(--nl-primary-rgb),0.14)' }}>
             {childAvatarPreviewSrc && !avatarPreviewFailed ? <img src={childAvatarPreviewSrc} alt="宝宝头像预览" decoding="async" onError={() => setAvatarPreviewFailed(true)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Camera size={34} strokeWidth={1.9} />}
-            <span style={{ position: 'absolute', right: '0', bottom: '0', width: '30px', height: '30px', borderRadius: '999px', background: '#292524', color: '#ffffff', display: 'grid', placeItems: 'center', fontSize: '19px', fontWeight: 700, border: '2px solid #ffffff', lineHeight: 1 }}>+</span>
+            <span style={{ position: 'absolute', right: '0', bottom: '0', width: '30px', height: '30px', borderRadius: '999px', background: 'linear-gradient(135deg, var(--nl-primary), var(--nl-primary-2))', color: '#ffffff', display: 'grid', placeItems: 'center', fontSize: '19px', fontWeight: 700, border: '1px solid var(--nl-border)', lineHeight: 1 }}>+</span>
             <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" onChange={(event) => void onAvatarChange(event)} style={{ display: 'none' }} />
           </label>
-          <span style={{ color: '#a1a1aa', fontSize: '12px', fontWeight: 700 }}>设置头像</span>
+          <span style={{ color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 700 }}>设置头像</span>
         </div>
 
-        <Panel style={{ padding: 0, borderRadius: '24px', overflow: 'hidden', boxShadow: '0 8px 22px rgba(41,37,36,0.04)' }}>
+        <Panel style={{ padding: 0, borderRadius: '24px', overflow: 'hidden', boxShadow: 'var(--nl-shadow-sm)' }}>
           <div style={{ display: 'grid' }}>
-            <div style={{ padding: '16px', borderBottom: '1px solid #f3f4f6' }}>
+            <div style={{ padding: '16px', borderBottom: '1px solid var(--nl-border)' }}>
             <Field label="宝宝小名">
               <input style={{ ...inputStyle, border: 'none', padding: 0, minHeight: '44px' }} value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="请输入宝宝小名" />
             </Field>
             </div>
-            <div style={{ padding: '16px', borderBottom: '1px solid #f3f4f6' }}>
+            <div style={{ padding: '16px', borderBottom: '1px solid var(--nl-border)' }}>
             <Field label="性别">
               <div role="radiogroup" aria-label="性别" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
                 {[
@@ -556,9 +556,9 @@ export const OnboardingChildPage = () => {
                       style={{
                         minHeight: '44px',
                         borderRadius: '14px',
-                        border: selected ? (item.value === 'male' ? '1px solid #bfdbfe' : '1px solid #fbcfe8') : '1px solid #eef1f4',
-                        background: selected ? (item.value === 'male' ? '#eff6ff' : '#fdf2f8') : '#f8fafc',
-                        color: selected ? '#2563eb' : '#78716c',
+                        border: selected ? '1px solid rgba(197,190,255,0.72)' : '1px solid var(--nl-border)',
+                        background: selected ? 'linear-gradient(135deg, rgba(var(--nl-primary-rgb),0.34), rgba(var(--nl-accent-rgb),0.16))' : 'rgba(var(--nl-surface-rgb),0.72)',
+                        color: selected ? 'var(--nl-ink)' : 'var(--nl-muted-strong)',
                         fontSize: '13px',
                         fontWeight: 800,
                         cursor: 'pointer',
@@ -573,7 +573,7 @@ export const OnboardingChildPage = () => {
             </div>
             <div style={{ padding: '16px', position: 'relative' }}>
             <Field label="出生日期">
-              <span style={{ position: 'relative', minHeight: '44px', paddingRight: '28px', display: 'flex', alignItems: 'center', color: form.birthday ? '#292524' : '#a1a1aa', fontSize: '14px', fontWeight: 600 }}>
+              <span style={{ position: 'relative', minHeight: '44px', paddingRight: '28px', display: 'flex', alignItems: 'center', color: form.birthday ? 'var(--nl-ink)' : 'var(--nl-muted)', fontSize: '14px', fontWeight: 600 }}>
                 <input
                   style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
                   type="date"
@@ -584,13 +584,13 @@ export const OnboardingChildPage = () => {
                 <span style={{ pointerEvents: 'none' }}>{form.birthday ? form.birthday.replace(/-/g, '/') : '年/月/日'}</span>
               </span>
             </Field>
-              <Calendar size={18} color="#cbd5e1" style={{ position: 'absolute', right: '16px', bottom: '20px', pointerEvents: 'none' }} />
+              <Calendar size={18} color="var(--nl-muted)" style={{ position: 'absolute', right: '16px', bottom: '20px', pointerEvents: 'none' }} />
             </div>
           </div>
         </Panel>
 
-        {error ? <p style={{ ...helperTextStyle, color: '#dc2626' }}>{error}</p> : null}
-        <button type="submit" style={{ ...primaryButtonStyle, width: '100%', minHeight: '48px', boxShadow: '0 8px 20px rgba(41,37,36,0.16)' }} disabled={submitting}>
+        {error ? <p style={{ ...helperTextStyle, color: 'var(--nl-danger)' }}>{error}</p> : null}
+        <button type="submit" style={{ ...primaryButtonStyle, width: '100%', minHeight: '48px', boxShadow: '0 12px 28px rgba(var(--nl-primary-rgb),0.24)' }} disabled={submitting}>
           {submitting ? '提交中…' : '完成创建'}
         </button>
       </form>
