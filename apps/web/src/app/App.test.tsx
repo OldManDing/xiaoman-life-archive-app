@@ -23,6 +23,7 @@ vi.mock('../shared/api/webApi', () => ({
     listRecords: vi.fn(),
     detailRecord: vi.fn(),
     updateRecord: vi.fn(),
+    deleteRecord: vi.fn(),
     createAiJob: vi.fn(),
     detailAiJob: vi.fn(),
     createUploadToken: vi.fn(),
@@ -30,7 +31,16 @@ vi.mock('../shared/api/webApi', () => ({
     mediaAccessUrl: vi.fn(),
     searchLocations: vi.fn(),
     me: vi.fn(),
+    preferences: vi.fn(),
+    updatePreferences: vi.fn(),
+    submitFeedback: vi.fn(),
+    requestMembershipBook: vi.fn(),
+    deletionCheck: vi.fn(),
+    deleteMe: vi.fn(),
     detailChild: vi.fn(),
+    listFamilyMembers: vi.fn(),
+    updateFamilyMemberRole: vi.fn(),
+    createFamilyInvite: vi.fn(),
   },
 }));
 
@@ -51,11 +61,24 @@ const detailChildMock = vi.mocked(webApi.detailChild);
 const listRecordsMock = vi.mocked(webApi.listRecords);
 const createRecordMock = vi.mocked(webApi.createRecord);
 const detailRecordMock = vi.mocked(webApi.detailRecord);
+const deleteRecordMock = vi.mocked(webApi.deleteRecord);
+const createAiJobMock = vi.mocked(webApi.createAiJob);
+const detailAiJobMock = vi.mocked(webApi.detailAiJob);
 const searchLocationsMock = vi.mocked(webApi.searchLocations);
 const updateMeMock = vi.mocked(webApi.updateMe);
+const meMock = vi.mocked(webApi.me);
+const preferencesMock = vi.mocked(webApi.preferences);
+const updatePreferencesMock = vi.mocked(webApi.updatePreferences);
+const submitFeedbackMock = vi.mocked(webApi.submitFeedback);
+const requestMembershipBookMock = vi.mocked(webApi.requestMembershipBook);
+const deletionCheckMock = vi.mocked(webApi.deletionCheck);
+const deleteMeMock = vi.mocked(webApi.deleteMe);
 const createUploadTokenMock = vi.mocked(webApi.createUploadToken);
 const confirmUploadMock = vi.mocked(webApi.confirmUpload);
 const mediaAccessUrlMock = vi.mocked(webApi.mediaAccessUrl);
+const listFamilyMembersMock = vi.mocked(webApi.listFamilyMembers);
+const updateFamilyMemberRoleMock = vi.mocked(webApi.updateFamilyMemberRole);
+const createFamilyInviteMock = vi.mocked(webApi.createFamilyInvite);
 const getCurrentDeviceLocationMock = vi.mocked(getCurrentDeviceLocation);
 
 const demoChild = {
@@ -104,11 +127,24 @@ describe('App Shell', () => {
     listRecordsMock.mockReset();
     createRecordMock.mockReset();
     detailRecordMock.mockReset();
+    deleteRecordMock.mockReset();
+    createAiJobMock.mockReset();
+    detailAiJobMock.mockReset();
     searchLocationsMock.mockReset();
     updateMeMock.mockReset();
+    meMock.mockReset();
+    preferencesMock.mockReset();
+    updatePreferencesMock.mockReset();
+    submitFeedbackMock.mockReset();
+    requestMembershipBookMock.mockReset();
+    deletionCheckMock.mockReset();
+    deleteMeMock.mockReset();
     createUploadTokenMock.mockReset();
     confirmUploadMock.mockReset();
     mediaAccessUrlMock.mockReset();
+    listFamilyMembersMock.mockReset();
+    updateFamilyMemberRoleMock.mockReset();
+    createFamilyInviteMock.mockReset();
     clearMediaAccessUrlCache();
     getCurrentDeviceLocationMock.mockReset();
     window.history.pushState({}, '', '/auth/login');
@@ -534,6 +570,150 @@ describe('App Shell', () => {
 
     expect(await screen.findByText('一年前的今天')).toBeDefined();
     expect(screen.getByText('一年前真实记录')).toBeDefined();
+  });
+
+  it('shows a clear empty state when timeline filters have no matching records', async () => {
+    window.history.pushState({}, '', '/timeline');
+    mockAuthenticatedSession();
+    listRecordsMock.mockResolvedValue({
+      list: [
+        {
+          record_no: 'r_text_only',
+          cover_media_no: null,
+          cover_media_type: null,
+          cover_url: null,
+          title: '普通文字记录',
+          summary: '这是一条普通记录。',
+          event_time: '2026-05-28T10:00:00.000Z',
+          location_text: null,
+          tags: ['日常'],
+          creator_name: '测试用户',
+          is_milestone: false,
+          record_type: 'text',
+          status: 'published' as const,
+        },
+      ],
+      page: 1,
+      page_size: 40,
+      total: 1,
+      has_more: false,
+    });
+
+    render(<App />);
+
+    expect(await screen.findByText('普通文字记录')).toBeDefined();
+    fireEvent.click(screen.getByRole('button', { name: '筛选记录' }));
+    fireEvent.click(screen.getByRole('button', { name: '里程碑' }));
+
+    expect(await screen.findByText('没有符合「里程碑」的记录。')).toBeDefined();
+    expect(screen.queryByText('当前孩子还没有已发布记录。')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: '清除筛选' }));
+    expect(await screen.findByText('普通文字记录')).toBeDefined();
+  });
+
+  it('opens height recording route without duplicating the timeline label', async () => {
+    window.history.pushState({}, '', '/record/create?type=height');
+    mockAuthenticatedSession();
+    listRecordsMock.mockImplementation(async (query) => {
+      if (query.start_time || query.end_time) {
+        return { list: [], page: 1, page_size: 1, total: 0, has_more: false };
+      }
+      return { list: [], page: 1, page_size: 5, total: 0, has_more: false };
+    });
+    const createdRecord = {
+      record_no: 'r_height',
+      child_no: 'c_001',
+      creator_user_no: 'u_001',
+      creator_name: '测试用户',
+      record_type: 'text',
+      title: '小满身高 92.5cm',
+      content_text: '身高：92.5 cm\n体重：12.8 kg\n备注：早晨测量',
+      media_list: [],
+      tags: ['身高记录', '体重记录'],
+      event_time: '2026-05-28T10:00:00.000Z',
+      location_text: null,
+      visibility_scope: 'family',
+      is_milestone: false,
+      ai_generated_title: null,
+      ai_summary: null,
+      ai_status: null,
+      status: 'published',
+      created_at: '2026-05-28T10:00:00.000Z',
+      updated_at: '2026-05-28T10:00:00.000Z',
+    };
+    createRecordMock.mockResolvedValue(createdRecord);
+    detailRecordMock.mockResolvedValue(createdRecord);
+
+    render(<App />);
+
+    expect(await screen.findByRole('heading', { name: '记录身高' })).toBeDefined();
+    expect(screen.queryByText('成长时间线')).toBeNull();
+    fireEvent.change(screen.getByLabelText('身高 cm'), { target: { value: '92.5' } });
+    fireEvent.change(screen.getByLabelText('体重 kg'), { target: { value: '12.8' } });
+    fireEvent.change(screen.getByLabelText('身高记录备注'), { target: { value: '早晨测量' } });
+    fireEvent.click(screen.getByRole('button', { name: '发布' }));
+
+    await waitFor(() => {
+      expect(createRecordMock).toHaveBeenCalledWith(expect.objectContaining({
+        child_no: 'c_001',
+        record_type: 'text',
+        title: '小满身高 92.5cm',
+        content_text: '身高：92.5 cm\n体重：12.8 kg\n备注：早晨测量',
+        tags: ['身高记录', '体重记录'],
+        is_milestone: false,
+        status: 'published',
+      }));
+    });
+  });
+
+  it('publishes a default record as text when no media is attached', async () => {
+    window.history.pushState({}, '', '/record/create');
+    mockAuthenticatedSession();
+    const createdRecord = {
+      record_no: 'r_text_only',
+      child_no: 'c_001',
+      creator_user_no: 'u_001',
+      creator_name: '测试用户',
+      record_type: 'text',
+      title: '今天会自己收玩具',
+      content_text: '小满睡前把积木都放回盒子里，还认真说了晚安。',
+      media_list: [],
+      tags: [],
+      event_time: '2026-05-28T10:00:00.000Z',
+      location_text: null,
+      visibility_scope: 'family',
+      is_milestone: false,
+      ai_generated_title: null,
+      ai_summary: null,
+      ai_status: null,
+      status: 'published',
+      created_at: '2026-05-28T10:00:00.000Z',
+      updated_at: '2026-05-28T10:00:00.000Z',
+    };
+    createRecordMock.mockResolvedValue(createdRecord);
+    detailRecordMock.mockResolvedValue(createdRecord);
+
+    render(<App />);
+
+    fireEvent.change(await screen.findByPlaceholderText('给这一刻起个名字'), {
+      target: { value: '今天会自己收玩具' },
+    });
+    fireEvent.change(screen.getByPlaceholderText('在想什么呢？记录一下这一刻发生的故事…'), {
+      target: { value: '小满睡前把积木都放回盒子里，还认真说了晚安。' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '发布' }));
+
+    await waitFor(() => {
+      expect(createRecordMock).toHaveBeenCalledWith(expect.objectContaining({
+        child_no: 'c_001',
+        record_type: 'text',
+        title: '今天会自己收玩具',
+        content_text: '小满睡前把积木都放回盒子里，还认真说了晚安。',
+        media_nos: [],
+        status: 'published',
+      }));
+    });
   });
 
   it('keeps manual location available when map provider search fails', async () => {
@@ -1104,6 +1284,38 @@ describe('App Shell', () => {
     expect(primaryPreview.querySelector('audio')?.getAttribute('src')).toBe('https://example.com/audio/story.m4a');
   });
 
+  it('shows AI generated titles on record details', async () => {
+    window.history.pushState({}, '', '/record/r_ai_title');
+    mockAuthenticatedSession();
+    detailRecordMock.mockResolvedValue({
+      record_no: 'r_ai_title',
+      child_no: 'c_001',
+      creator_user_no: 'u_001',
+      creator_name: '测试用户',
+      record_type: 'text',
+      title: null,
+      content_text: '今天第一次自己整理玩具。',
+      media_list: [],
+      tags: [],
+      event_time: '2026-05-28T10:00:00.000Z',
+      location_text: '家里',
+      visibility_scope: 'family',
+      is_milestone: false,
+      ai_generated_title: '第一次主动整理玩具',
+      ai_summary: null,
+      ai_status: 'success',
+      status: 'published',
+      created_at: '2026-05-28T10:00:00.000Z',
+      updated_at: '2026-05-28T10:00:00.000Z',
+    });
+
+    render(<App />);
+
+    expect(await screen.findByRole('heading', { name: '第一次主动整理玩具' })).toBeDefined();
+    expect(screen.getByText('AI 标题：第一次主动整理玩具')).toBeDefined();
+    expect(screen.queryByText('当前还没有 AI 摘要，可以点击下方按钮生成标题、摘要或标签。')).toBeNull();
+  });
+
   it('uses neutral home prompts when the child profile has no display name', async () => {
     window.history.pushState({}, '', '/home');
     refreshMock.mockResolvedValue({
@@ -1144,8 +1356,8 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    expect(await screen.findByText('孩子最近最喜欢的一件玩具是什么？它有什么特别的故事吗？')).toBeDefined();
-    expect(screen.queryByText('小满最近最喜欢的一件玩具是什么？它有什么特别的故事吗？')).toBeNull();
+    expect((await screen.findAllByText('今天想和我聊聊孩子的什么趣事呢?')).length).toBeGreaterThan(0);
+    expect(screen.queryAllByText('今天想和我聊聊小满的什么趣事呢?')).toHaveLength(0);
   });
 
   it('uses real profile context and nianlun branding without placeholder copy', async () => {
@@ -1224,6 +1436,308 @@ describe('App Shell', () => {
     expect(screen.queryByText(/familyarchive\.com/)).toBeNull();
   });
 
+  it('opens family member management from the profile family management row', async () => {
+    window.history.pushState({}, '', '/profile');
+    mockAuthenticatedSession();
+    listRecordsMock.mockResolvedValue({
+      list: [],
+      page: 1,
+      page_size: 3,
+      total: 0,
+      has_more: false,
+    });
+    listFamilyMembersMock.mockResolvedValue({
+      family_no: 'f_001',
+      list: [
+        {
+          user_no: 'u_001',
+          nickname: '测试用户',
+          mobile_masked: '138****0000',
+          role: 'owner',
+          status: 1,
+          joined_at: '2026-04-21T00:00:00.000Z',
+          invited_by_user_no: null,
+        },
+      ],
+    });
+
+    render(<App />);
+
+    fireEvent.click(await screen.findByRole('button', { name: /家庭管理/ }));
+
+    await waitFor(() => expect(window.location.pathname).toBe('/family/members'));
+    expect(listFamilyMembersMock).toHaveBeenCalledWith('f_001');
+  });
+
+  it('does not fall back to another member when a family member URL is invalid', async () => {
+    window.history.pushState({}, '', '/family/members/u_missing');
+    mockAuthenticatedSession();
+    listFamilyMembersMock.mockResolvedValue({
+      family_no: 'f_001',
+      list: [
+        {
+          user_no: 'u_001',
+          nickname: '测试用户',
+          mobile_masked: '138****0000',
+          role: 'owner',
+          status: 1,
+          joined_at: '2026-04-21T00:00:00.000Z',
+          invited_by_user_no: null,
+        },
+      ],
+    });
+    listRecordsMock.mockResolvedValue({
+      list: [
+        {
+          record_no: 'r_owner',
+          cover_media_no: null,
+          cover_media_type: null,
+          cover_url: null,
+          title: '管理员的记录',
+          summary: '不应该出现在错误成员页',
+          ai_summary: null,
+          event_time: '2026-05-28T10:00:00.000Z',
+          location_text: null,
+          tags: [],
+          creator_user_no: 'u_001',
+          creator_name: '测试用户',
+          is_milestone: false,
+          record_type: 'text',
+          status: 'published',
+        },
+      ],
+      page: 1,
+      page_size: 30,
+      total: 1,
+      has_more: false,
+    });
+
+    render(<App />);
+
+    expect(await screen.findByText('未找到该家庭成员。')).toBeDefined();
+    expect(screen.queryByText('管理员的记录')).toBeNull();
+  });
+
+  it('opens a prefilled help request from the family member remove action', async () => {
+    window.history.pushState({}, '', '/family/members/u_member');
+    mockAuthenticatedSession();
+    listFamilyMembersMock.mockResolvedValue({
+      family_no: 'f_001',
+      list: [
+        {
+          user_no: 'u_member',
+          nickname: '家庭成员',
+          mobile_masked: '139****0000',
+          role: 'editor',
+          status: 1,
+          joined_at: '2026-04-22T00:00:00.000Z',
+          invited_by_user_no: 'u_001',
+        },
+      ],
+    });
+    listRecordsMock.mockResolvedValue({
+      list: [],
+      page: 1,
+      page_size: 30,
+      total: 0,
+      has_more: false,
+    });
+
+    render(<App />);
+
+    expect(await screen.findByRole('heading', { name: '家人资料' })).toBeDefined();
+    fireEvent.click(screen.getByRole('button', { name: /移出家庭/ }));
+
+    expect(await screen.findByRole('heading', { name: '帮助与反馈' })).toBeDefined();
+    expect(screen.getByRole('combobox', { name: '问题类型' }).textContent).toContain('数据异常');
+    expect((screen.getByLabelText('反馈内容') as HTMLTextAreaElement).value).toContain('u_member');
+  });
+
+  it('clears search history without clearing the active keyword or results', async () => {
+    window.history.pushState({}, '', '/search');
+    window.localStorage.setItem('nianlun.search.history.v1', JSON.stringify(['公园', '星星']));
+    mockAuthenticatedSession();
+    listRecordsMock.mockResolvedValue({
+      list: [
+        {
+          record_no: 'r_search',
+          cover_media_no: null,
+          cover_media_type: null,
+          cover_url: null,
+          title: '公园里追光的小跑步',
+          summary: '在社区公园完成第一次独立跑步。',
+          ai_summary: null,
+          event_time: '2026-05-28T10:00:00.000Z',
+          location_text: '社区公园',
+          tags: ['跑步'],
+          creator_user_no: 'u_001',
+          creator_name: '测试用户',
+          is_milestone: false,
+          record_type: 'text',
+          status: 'published',
+        },
+      ],
+      page: 1,
+      page_size: 50,
+      total: 1,
+      has_more: false,
+    });
+
+    try {
+      render(<App />);
+
+      const keywordInput = (await screen.findByLabelText('搜索关键词')) as HTMLInputElement;
+      fireEvent.change(keywordInput, { target: { value: '公园' } });
+      fireEvent.click(screen.getByRole('button', { name: '搜索' }));
+
+      expect(await screen.findByText('公园里追光的小跑步')).toBeDefined();
+      fireEvent.click(screen.getByRole('button', { name: '清空' }));
+
+      expect(keywordInput.value).toBe('公园');
+      expect(screen.getByText('公园里追光的小跑步')).toBeDefined();
+      expect(screen.queryByRole('button', { name: '星星' })).toBeNull();
+    } finally {
+      window.localStorage.removeItem('nianlun.search.history.v1');
+    }
+  });
+
+  it('keeps basic membership copy and security binding status truthful', async () => {
+    window.history.pushState({}, '', '/profile/membership');
+    mockAuthenticatedSession();
+
+    const { unmount } = render(<App />);
+
+    expect(await screen.findByRole('heading', { name: '会员中心' })).toBeDefined();
+    expect(screen.getByText('BASIC')).toBeDefined();
+    expect(screen.getByText(/当前账号为基础会员/)).toBeDefined();
+    expect(screen.queryByText('VIP PRO')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: '咨询会员权益' }));
+    expect(await screen.findByRole('heading', { name: '帮助与反馈' })).toBeDefined();
+    expect(screen.getByRole('combobox', { name: '问题类型' }).textContent).toContain('功能建议');
+    expect((screen.getByLabelText('反馈内容') as HTMLTextAreaElement).value).toContain('咨询会员权益');
+
+    unmount();
+    window.history.pushState({}, '', '/profile/security');
+    render(<App />);
+    expect(await screen.findByRole('heading', { name: '账号与安全' })).toBeDefined();
+    expect(screen.getByText('暂未接入')).toBeDefined();
+    expect(screen.queryByText('已绑定微信')).toBeNull();
+  });
+
+  it('offers a help fallback when premium membership book requests fail', async () => {
+    window.history.pushState({}, '', '/profile/membership');
+    refreshMock.mockResolvedValue({
+      access_token: 'token-premium',
+      expires_in: 7200,
+      user: {
+        user_no: 'u_premium',
+        nickname: '高级会员',
+        avatar_url: null,
+        mobile: '138****0000',
+        membership_type: 'premium',
+      },
+      need_create_child: false,
+    });
+    listChildrenMock.mockResolvedValue([demoChild]);
+    detailChildMock.mockResolvedValue(demoChild);
+    requestMembershipBookMock.mockRejectedValue(new Error('offline'));
+
+    render(<App />);
+
+    expect(await screen.findByRole('heading', { name: '会员中心' })).toBeDefined();
+    expect(screen.getByText('VIP PRO')).toBeDefined();
+    fireEvent.click(screen.getByRole('button', { name: '免费申领本年度纪念册' }));
+
+    expect(await screen.findByText('申领暂时无法同步服务器，请通过帮助与反馈提交申请。')).toBeDefined();
+    fireEvent.click(screen.getByRole('button', { name: '打开帮助与反馈' }));
+
+    expect(await screen.findByRole('heading', { name: '帮助与反馈' })).toBeDefined();
+    expect(screen.getByRole('combobox', { name: '问题类型' }).textContent).toContain('功能建议');
+    expect((screen.getByLabelText('反馈内容') as HTMLTextAreaElement).value).toContain('成长纪念册申领');
+  });
+
+  it('marks short feedback validation as an error without submitting', async () => {
+    window.history.pushState({}, '', '/profile/help');
+    mockAuthenticatedSession();
+
+    render(<App />);
+
+    expect(await screen.findByRole('heading', { name: '帮助与反馈' })).toBeDefined();
+    fireEvent.change(screen.getByLabelText('反馈内容'), { target: { value: '太短' } });
+    fireEvent.click(screen.getByRole('button', { name: '提交反馈' }));
+
+    const validation = await screen.findByText('请至少输入 6 个字，方便定位问题。');
+    expect(validation.getAttribute('style')).toContain('var(--nl-danger)');
+    expect(submitFeedbackMock).not.toHaveBeenCalled();
+  });
+
+  it('keeps feedback content when offline local save is blocked', async () => {
+    window.history.pushState({}, '', '/profile/help?topic=membership');
+    mockAuthenticatedSession();
+    submitFeedbackMock.mockRejectedValue(new Error('offline'));
+
+    render(<App />);
+
+    expect(await screen.findByRole('heading', { name: '帮助与反馈' })).toBeDefined();
+    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('blocked');
+    });
+
+    try {
+      fireEvent.click(screen.getByRole('button', { name: '提交反馈' }));
+
+      expect(await screen.findByText('暂时无法同步服务器，本机也无法保存，请稍后重试或复制内容后联系支持。')).toBeDefined();
+      expect((screen.getByLabelText('反馈内容') as HTMLTextAreaElement).value).toContain('咨询会员权益');
+    } finally {
+      setItemSpy.mockRestore();
+    }
+  });
+
+  it('validates account deletion password length before submitting', async () => {
+    window.history.pushState({}, '', '/profile/account-delete');
+    mockAuthenticatedSession();
+    deletionCheckMock.mockResolvedValue({
+      can_delete: true,
+      requires_password: true,
+      confirm_text: '确认注销',
+      blockers: [],
+      summary: {
+        owned_family_count: 0,
+        joined_family_count: 0,
+        active_child_count: 0,
+        active_record_count: 0,
+      },
+    });
+
+    render(<App />);
+
+    expect(await screen.findByRole('heading', { name: '注销账号' })).toBeDefined();
+    fireEvent.change(screen.getByLabelText('登录密码'), { target: { value: '123' } });
+    fireEvent.change(screen.getByLabelText(/确认文案/), { target: { value: '确认注销' } });
+    fireEvent.click(screen.getByRole('button', { name: '确认注销账号' }));
+
+    expect(await screen.findByText('登录密码至少 8 位')).toBeDefined();
+    expect(deleteMeMock).not.toHaveBeenCalled();
+  });
+
+  it('uses real home quick actions instead of unavailable mailbox entry', async () => {
+    window.history.pushState({}, '', '/home');
+    mockAuthenticatedSession();
+    listRecordsMock.mockResolvedValue({
+      list: [],
+      page: 1,
+      page_size: 5,
+      total: 0,
+      has_more: false,
+    });
+
+    render(<App />);
+
+    expect(await screen.findByRole('button', { name: /月报/ })).toBeDefined();
+    expect(screen.queryByRole('button', { name: /未来信箱/ })).toBeNull();
+  });
+
   it('keeps monthly report empty state based on real records only', async () => {
     window.history.pushState({}, '', '/profile/reports');
     refreshMock.mockResolvedValue({
@@ -1280,9 +1794,15 @@ describe('App Shell', () => {
     render(<App />);
 
     expect(await screen.findByRole('heading', { name: '月报与纪念册' })).toBeDefined();
-    expect(screen.getByText('这个月还没有可生成月报的真实记录。发布第一条记录后，这里会按实际内容整理故事摘要、里程碑和影像回顾。')).toBeDefined();
-    expect(screen.getByText('记录本月第一条')).toBeDefined();
+    expect(screen.getByText('月度故事摘要')).toBeDefined();
+    expect(screen.getByText('该月还没有可生成月报的真实记录。添加记录后，这里会按实际内容整理故事摘要、里程碑和影像回顾。')).toBeDefined();
+    expect(screen.getByText('添加记录')).toBeDefined();
+    expect(screen.queryByText('本月故事摘要')).toBeNull();
+    expect(screen.queryByText('记录本月第一条')).toBeNull();
     expect(screen.queryByText(/小满完成了第一次独立走路/)).toBeNull();
     expect(screen.getAllByText('0').length).toBeGreaterThanOrEqual(2);
+    const latestReportDate = new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1);
+    const latestBookLabel = `${latestReportDate.getFullYear()}年${latestReportDate.getMonth() + 1}月纪念册`;
+    expect(Array.from(document.querySelectorAll('button strong')).map((node) => node.textContent)).not.toContain(latestBookLabel);
   });
 });

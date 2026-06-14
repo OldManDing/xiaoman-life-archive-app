@@ -368,7 +368,7 @@ export class RecordsService {
     recordType: string;
     isMilestone: boolean;
     aiSummary?: string | null;
-    creator: { nickname: string };
+    creator: { userNo: string; nickname: string };
     tags: Array<{ tagName: string }>;
     media: Array<{ objectKey: string; mediaNo: string; mediaType: string }>;
     status: number;
@@ -387,6 +387,7 @@ export class RecordsService {
       event_time: record.eventTime.toISOString(),
       location_text: record.locationText,
       tags: uniqueTagNames(record.tags),
+      creator_user_no: record.creator.userNo,
       creator_name: record.creator.nickname,
       is_milestone: record.isMilestone,
       record_type: record.recordType,

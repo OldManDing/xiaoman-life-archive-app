@@ -7,23 +7,26 @@ const pageShellStyle: CSSProperties = {
   alignContent: 'start',
   gap: '18px',
   minHeight: '100dvh',
-  padding: '0 20px 28px',
-  background: '#f4f8fc',
+  gridTemplateColumns: 'minmax(0, 1fr)',
+  padding: '0 20px calc(72px + env(safe-area-inset-bottom))',
+  background: 'linear-gradient(180deg, #050918 0%, #0b1130 52%, #050918 100%)',
+  color: 'var(--nl-ink)',
+  overflowX: 'hidden',
   animation: 'app-page-enter 260ms cubic-bezier(0.22, 1, 0.36, 1) both',
 };
 
 const cardStyle: CSSProperties = {
-  background: 'rgba(255,255,255,0.92)',
-  borderRadius: '26px',
+  background: 'var(--nl-surface)',
+  borderRadius: '20px',
   padding: '18px',
-  border: '1px solid rgba(126,145,170,0.22)',
-  boxShadow: '0 12px 30px rgba(25, 35, 55, 0.08)',
-  backdropFilter: 'blur(14px)',
+  border: '1px solid var(--nl-border)',
+  boxShadow: 'var(--nl-shadow-sm)',
+  backdropFilter: 'blur(18px)',
 };
 
 const headingStyle: CSSProperties = {
   margin: 0,
-  color: '#172033',
+  color: 'var(--nl-ink)',
   fontSize: '22px',
   fontWeight: 850,
   lineHeight: 1.3,
@@ -32,9 +35,9 @@ const headingStyle: CSSProperties = {
 const backControlStyle: CSSProperties = {
   minHeight: '44px',
   borderRadius: '999px',
-  border: '1px solid rgba(126,145,170,0.24)',
-  background: 'rgba(255,255,255,0.9)',
-  color: '#334155',
+  border: '1px solid var(--nl-border)',
+  background: 'rgba(var(--nl-surface-rgb), 0.74)',
+  color: 'var(--nl-ink)',
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -43,7 +46,7 @@ const backControlStyle: CSSProperties = {
   textDecoration: 'none',
   fontSize: '13px',
   fontWeight: 700,
-  boxShadow: '0 8px 18px rgba(25, 35, 55, 0.07)',
+  boxShadow: 'var(--nl-shadow-sm)',
   cursor: 'pointer',
 };
 
@@ -54,7 +57,7 @@ const topBarBackStyle = (variant: 'icon' | 'pill' | 'text'): CSSProperties => {
       minWidth: '44px',
       border: 'none',
       background: 'transparent',
-      color: '#334155',
+      color: 'var(--nl-muted-strong)',
       display: 'inline-flex',
       alignItems: 'center',
       justifyContent: 'flex-start',
@@ -74,7 +77,7 @@ const topBarBackStyle = (variant: 'icon' | 'pill' | 'text'): CSSProperties => {
       gap: 0,
       border: 'none',
       background: 'transparent',
-      color: '#172033',
+      color: 'var(--nl-ink)',
       display: 'inline-flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -95,7 +98,7 @@ export const AppTopBar = ({
   backVariant = 'icon',
   onBack,
   action,
-  background = 'rgba(248, 251, 255, 0.84)',
+  background = 'rgba(5, 9, 24, 0.86)',
   style,
 }: {
   title: string;
@@ -122,10 +125,10 @@ export const AppTopBar = ({
         position: 'sticky',
         top: 0,
         zIndex: 3,
-        padding: 'calc(13px + env(safe-area-inset-top)) 20px 11px',
+        padding: 'calc(30px + env(safe-area-inset-top)) 20px 11px',
         background,
-        borderBottom: '1px solid rgba(126,145,170,0.18)',
-        backdropFilter: 'blur(22px)',
+        borderBottom: '1px solid var(--nl-border)',
+        backdropFilter: 'blur(18px)',
         ...style,
       }}
     >
@@ -171,7 +174,7 @@ export const AppTopBar = ({
           style={{
             margin: '9px auto 0',
             maxWidth: '320px',
-            color: '#687386',
+            color: 'var(--nl-muted)',
             lineHeight: 1.55,
             fontSize: '13px',
             textAlign: 'center',
@@ -206,9 +209,9 @@ export const PageShell = ({
       backTo || onBack ? (
         <AppTopBar title={title} description={description} backTo={backTo} onBack={onBack} backLabel={backLabel} style={{ margin: '0 -20px' }} />
       ) : (
-        <header style={{ padding: 'calc(24px + env(safe-area-inset-top)) 0 8px', display: 'grid', gap: '8px' }}>
+        <header style={{ padding: 'calc(42px + env(safe-area-inset-top)) 0 8px', display: 'grid', gap: '8px' }}>
           <h1 style={{ ...headingStyle, fontSize: '24px', fontWeight: 700 }}>{title}</h1>
-          {description ? <p style={{ margin: '8px 0 0', color: '#687386', lineHeight: 1.6, fontSize: '14px' }}>{description}</p> : null}
+          {description ? <p style={{ margin: '8px 0 0', color: 'var(--nl-muted)', lineHeight: 1.6, fontSize: '14px' }}>{description}</p> : null}
         </header>
       )
     ) : null}
@@ -221,7 +224,7 @@ export const Panel = ({ children, style }: { children: ReactNode; style?: CSSPro
 );
 
 export const Field = ({ label, children }: { label: string; children: ReactNode }) => (
-  <label style={{ display: 'grid', gap: '8px', fontSize: '12px', color: '#687386', fontWeight: 850 }}>
+  <label style={{ display: 'grid', gap: '8px', fontSize: '12px', color: 'var(--nl-muted)', fontWeight: 850 }}>
     <span>{label}</span>
     {children}
   </label>
@@ -232,13 +235,13 @@ export const inputStyle: CSSProperties = {
   boxSizing: 'border-box',
   minHeight: '48px',
   borderRadius: '18px',
-  border: '1px solid rgba(126,145,170,0.24)',
+  border: '1px solid var(--nl-border)',
   padding: '12px 14px',
   fontSize: '14px',
-  color: '#172033',
-  background: 'rgba(255,255,255,0.92)',
+  color: 'var(--nl-ink)',
+  background: 'rgba(var(--nl-surface-rgb), 0.82)',
   outline: 'none',
-  boxShadow: '0 6px 14px rgba(25,35,55,0.04)',
+  boxShadow: 'none',
   transition: 'border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease',
 };
 
@@ -246,17 +249,17 @@ export const selectControlStyle: CSSProperties = {
   width: '100%',
   minHeight: '44px',
   borderRadius: '18px',
-  border: '1px solid rgba(126,145,170,0.24)',
+  border: '1px solid var(--nl-border)',
   padding: '10px 13px',
   boxSizing: 'border-box',
-  color: '#172033',
-  background: 'rgba(255,255,255,0.9)',
+  color: 'var(--nl-ink)',
+  background: 'rgba(var(--nl-surface-rgb), 0.82)',
   fontSize: '14px',
   lineHeight: 1.35,
   fontWeight: 600,
   cursor: 'pointer',
   outline: 'none',
-  boxShadow: '0 6px 14px rgba(25,35,55,0.04)',
+  boxShadow: 'none',
   transition: 'border-color 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease',
 };
 
@@ -362,14 +365,14 @@ export const AppSelect = ({
           minHeight: props.disabled ? selectControlStyle.minHeight : selectControlStyle.minHeight,
           opacity: props.disabled ? 0.55 : 1,
           cursor: props.disabled ? 'not-allowed' : 'pointer',
-          color: placeholder ? '#687386' : '#172033',
+          color: placeholder ? 'rgba(169,178,218,0.66)' : 'var(--nl-ink)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: '8px',
           textAlign: 'left',
           ...selectStyle,
-          ...(open ? { border: '1px solid rgba(47,102,216,0.42)', background: '#ffffff', boxShadow: '0 0 0 4px rgba(47,102,216,0.1)' } : {}),
+          ...(open ? { border: '1px solid rgba(var(--nl-accent-rgb),0.46)', background: 'rgba(var(--nl-surface-strong-rgb),0.96)', boxShadow: '0 0 0 4px rgba(var(--nl-accent-rgb),0.12)' } : {}),
         }}
       >
         <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedOption?.label ?? ''}</span>
@@ -389,9 +392,10 @@ export const AppSelect = ({
             maxHeight: '220px',
             overflowY: 'auto',
             borderRadius: '20px',
-            border: '1px solid rgba(126,145,170,0.22)',
-            background: 'rgba(255,255,255,0.98)',
-            boxShadow: '0 24px 48px rgba(25, 35, 55, 0.16)',
+            border: '1px solid var(--nl-border)',
+            background: 'rgba(var(--nl-surface-strong-rgb),0.98)',
+            boxShadow: '0 18px 42px rgba(var(--nl-shadow-rgb),0.42)',
+            backdropFilter: 'blur(18px)',
             padding: '7px',
           }}
         >
@@ -410,8 +414,8 @@ export const AppSelect = ({
                   minHeight: '44px',
                   border: 'none',
                   borderRadius: '13px',
-                  background: selected ? '#eef6ff' : 'transparent',
-                  color: option.disabled ? '#a8a29e' : '#172033',
+                  background: selected ? 'rgba(var(--nl-primary-rgb),0.2)' : 'transparent',
+                  color: option.disabled ? 'rgba(169,178,218,0.42)' : 'var(--nl-ink)',
                   padding: '7px 32px 7px 9px',
                   display: 'flex',
                   alignItems: 'center',
@@ -424,7 +428,7 @@ export const AppSelect = ({
                 }}
               >
                 <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{option.label}</span>
-                {selected ? <Check size={16} strokeWidth={2.3} style={{ position: 'absolute', right: '9px', color: '#2f66d8' }} /> : null}
+                {selected ? <Check size={16} strokeWidth={2.3} style={{ position: 'absolute', right: '9px', color: 'var(--nl-accent)' }} /> : null}
               </button>
             );
           })}
@@ -455,8 +459,8 @@ export const AppSegmentedControl = ({
       gap: '6px',
       padding: '4px',
       borderRadius: '999px',
-      background: 'rgba(232,239,248,0.8)',
-      border: '1px solid rgba(126,145,170,0.22)',
+      background: 'rgba(var(--nl-surface-rgb), 0.72)',
+      border: '1px solid var(--nl-border)',
       ...style,
     }}
   >
@@ -475,8 +479,8 @@ export const AppSegmentedControl = ({
             minHeight: '44px',
             border: 'none',
             borderRadius: '999px',
-            background: selected ? '#17342f' : 'transparent',
-            color: selected ? '#ffffff' : '#334155',
+            background: selected ? 'linear-gradient(135deg, var(--nl-primary), var(--nl-primary-2))' : 'transparent',
+            color: selected ? '#ffffff' : 'var(--nl-muted)',
             fontSize: options.length > 4 ? '12px' : '13px',
             fontWeight: 700,
             cursor: 'pointer',
@@ -502,10 +506,10 @@ export const primaryButtonStyle: CSSProperties = {
   border: 'none',
   borderRadius: '999px',
   padding: '12px 18px',
-  background: '#17342f',
+  background: 'linear-gradient(135deg, var(--nl-primary), var(--nl-primary-2))',
   color: '#ffffff',
   fontSize: '14px',
-  fontWeight: 700,
+  fontWeight: 850,
   cursor: 'pointer',
   display: 'inline-flex',
   alignItems: 'center',
@@ -513,20 +517,20 @@ export const primaryButtonStyle: CSSProperties = {
   gap: '8px',
   lineHeight: 1.2,
   textDecoration: 'none',
-  boxShadow: '0 12px 24px rgba(23,52,47,0.22)',
+  boxShadow: '0 12px 30px rgba(var(--nl-primary-rgb),0.34), inset 0 1px 0 rgba(255,255,255,0.22)',
   transition: 'transform 0.14s ease, box-shadow 0.16s ease, background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, opacity 0.16s ease',
 };
 
 export const secondaryButtonStyle: CSSProperties = {
   ...primaryButtonStyle,
-  border: '1px solid rgba(126,145,170,0.24)',
-  background: 'rgba(255,255,255,0.92)',
-  color: '#334155',
-  boxShadow: '0 8px 18px rgba(25,35,55,0.07)',
+  border: '1px solid var(--nl-border)',
+  background: 'rgba(var(--nl-surface-rgb), 0.74)',
+  color: 'var(--nl-muted-strong)',
+  boxShadow: '0 8px 22px rgba(var(--nl-shadow-rgb),0.22)',
 };
 
 export const helperTextStyle: CSSProperties = {
   margin: 0,
   fontSize: '13px',
-  color: '#687386',
+  color: 'var(--nl-muted)',
 };

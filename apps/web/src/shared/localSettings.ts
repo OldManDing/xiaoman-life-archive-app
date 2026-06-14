@@ -47,10 +47,18 @@ export const loadLocalSettings = (): LocalSettings => {
 
 export const saveLocalSettings = (settings: LocalSettings) => {
   if (typeof window === 'undefined') return;
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  } catch {
+    // Local settings are an optional device preference and should never block UI actions.
+  }
 };
 
 export const clearLocalSettings = () => {
   if (typeof window === 'undefined') return;
-  window.localStorage.removeItem(STORAGE_KEY);
+  try {
+    window.localStorage.removeItem(STORAGE_KEY);
+  } catch {
+    // Ignore storage failures in restricted WebViews.
+  }
 };

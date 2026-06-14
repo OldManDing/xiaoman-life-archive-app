@@ -71,8 +71,8 @@ export const AppRouter = () => {
           minHeight: '100dvh',
           display: 'grid',
           placeItems: 'center',
-          background: '#faf8f5',
-          color: '#57534e',
+          background: 'linear-gradient(180deg, #050918 0%, #0b1130 52%, #050918 100%)',
+          color: 'var(--nl-muted-strong)',
           fontSize: '14px',
           fontWeight: 600,
         }}

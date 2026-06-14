@@ -148,6 +148,7 @@ export interface RecordSummary {
   event_time: string;
   location_text: string | null;
   tags: string[];
+  creator_user_no?: string;
   creator_name: string;
   is_milestone: boolean;
   record_type: string;

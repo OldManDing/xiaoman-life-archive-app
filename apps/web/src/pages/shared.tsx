@@ -29,7 +29,7 @@ export const sectionTitleStyle = {
   margin: 0,
   fontSize: '16px',
   fontWeight: 700,
-  color: '#1f2937',
+  color: 'var(--nl-ink)',
 } as const;
 
 export const mutedChipStyle = {
@@ -38,19 +38,19 @@ export const mutedChipStyle = {
   gap: '6px',
   padding: '6px 12px',
   borderRadius: '999px',
-  background: '#f5f5f4',
-  border: '1px solid #e7e5e4',
-  color: '#57534e',
+  background: 'rgba(var(--nl-surface-rgb),0.74)',
+  border: '1px solid var(--nl-border)',
+  color: 'var(--nl-muted-strong)',
   fontSize: '12px',
   fontWeight: 600,
 } as const;
 
 export const listCardStyle = {
   textAlign: 'left' as const,
-  border: '1px solid #ece7df',
+  border: '1px solid var(--nl-border)',
   borderRadius: '8px',
   padding: '16px',
-  background: '#ffffff',
+  background: 'var(--nl-surface)',
   cursor: 'pointer',
   boxShadow: '0 6px 20px rgba(15, 23, 42, 0.04)',
 } as const;
@@ -63,10 +63,10 @@ export const HubLink = ({ to, title, description }: { to: string; title: string;
       gap: '6px',
       padding: '16px',
       borderRadius: '8px',
-      border: '1px solid #e5e7eb',
-      color: '#111827',
+      border: '1px solid var(--nl-border)',
+      color: 'var(--nl-ink)',
       textDecoration: 'none',
-      background: '#ffffff',
+      background: 'var(--nl-surface)',
     }}
   >
     <strong>{title}</strong>

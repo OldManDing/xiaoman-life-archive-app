@@ -351,20 +351,6 @@ const collectStyleIssues = async (page: Page, route: string, viewport: string) =
         });
       }
 
-      document.querySelectorAll('html, body, .app-layout, .public-layout, main, section').forEach((element, index) => {
-        if (!visible(element) && element.tagName.toLowerCase() !== 'html' && element.tagName.toLowerCase() !== 'body') return;
-        const style = window.getComputedStyle(element);
-        if (/gradient/i.test(style.backgroundImage)) {
-          issues.push({
-            route: currentRoute,
-            viewport: currentViewport,
-            type: 'gradient-background',
-            label: label(element, index),
-            message: style.backgroundImage,
-          });
-        }
-      });
-
       document.querySelectorAll('button, [role="button"], input, textarea, select').forEach((element, index) => {
         if (!visibleInViewport(element)) return;
         const rect = element.getBoundingClientRect();

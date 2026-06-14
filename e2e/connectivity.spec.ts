@@ -59,8 +59,10 @@ test.describe('Front and admin button/API connectivity', () => {
     await page.goto(`${webBaseURL}/profile/membership`);
     await page.getByRole('button', { name: '刷新会员信息' }).click();
     await expect(page.getByText('会员信息已刷新')).toBeVisible();
-    await page.getByRole('button', { name: '免费申领本年度纪念册' }).click();
-    await expect(page.getByText('纪念册申领已提交，我们会核对会员权益后联系你。')).toBeVisible();
+    await expect(page.getByText('BASIC')).toBeVisible();
+    await page.getByRole('button', { name: '咨询会员权益' }).click();
+    await expect(page).toHaveURL(/\/profile\/help\?topic=membership$/);
+    await expect(page.getByLabel('反馈内容')).toHaveValue(/咨询会员权益/);
 
     await page.goto(`${webBaseURL}/profile/security`);
     await page.getByRole('button', { name: '注销账号' }).click();
