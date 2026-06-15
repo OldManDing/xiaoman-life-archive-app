@@ -112,6 +112,12 @@ const getFamilyMemberDisplayName = (member: FamilyMemberItem) =>
   /^native_delete_/i.test(member.nickname.trim()) ? '已移除成员' :
   /^native_parent_\d+$/i.test(member.nickname.trim()) ? '家人' : member.nickname;
 
+const rolePermissionItems = [
+  { role: '管理员', detail: '管理成员、导出档案、调整权限' },
+  { role: '可编辑', detail: '查看记录、补充记录、参与整理' },
+  { role: '只读', detail: '查看家庭可见内容，不修改档案' },
+];
+
 export const FamilyPage = () => {
   const navigate = useNavigate();
   const { activeChild } = useAuth();
@@ -142,7 +148,7 @@ export const FamilyPage = () => {
         <h1 style={{ margin: 0, color: 'var(--nl-ink)', fontSize: 22, fontWeight: 950 }}>家庭</h1>
       </header>
 
-      <main style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10, padding: '0 20px calc(168px + env(safe-area-inset-bottom))' }}>
+      <main style={{ display: 'flex', flexDirection: 'column', gap: 10, minHeight: 'calc(var(--nl-page-min-height, 100dvh) - 68px)', boxSizing: 'border-box', padding: '0 20px 44px' }}>
       <section style={{ ...refSoftCardStyle, padding: 13, minHeight: 76 }}>
           {activeChild ? (
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 14, alignItems: 'center' }}>
@@ -153,7 +159,7 @@ export const FamilyPage = () => {
                   <p style={{ ...refMutedTextStyle, marginTop: 3, fontSize: 12 }}>已有 {membersLoading ? '…' : memberCount} 位家人加入记录</p>
                 </div>
               </div>
-          <Link to="/family/invite" aria-label="邀请成员" title="邀请成员" style={{ width: 42, height: 42, borderRadius: '15px', background: 'linear-gradient(135deg, var(--nl-primary), var(--nl-primary-2))', color: '#ffffff', display: 'grid', placeItems: 'center', textDecoration: 'none', flexShrink: 0, boxShadow: '0 14px 28px rgba(var(--nl-primary-rgb),0.34)' }}>
+          <Link to="/family/invite" aria-label="邀请成员" title="邀请成员" style={{ width: 42, height: 42, borderRadius: '15px', background: 'var(--nl-primary)', color: '#ffffff', display: 'grid', placeItems: 'center', textDecoration: 'none', flexShrink: 0, boxShadow: '0 8px 18px rgba(var(--nl-shadow-rgb),0.22)', border: '1px solid rgba(245,205,140,0.5)' }}>
                 <UserPlus size={19} />
               </Link>
             </div>
@@ -184,7 +190,7 @@ export const FamilyPage = () => {
             }) : (
               <div style={{ padding: 18, display: 'grid', gap: 12, justifyItems: 'center' }}>
                 <EmptyState message="暂无家庭成员信息。" />
-                <button type="button" onClick={() => navigate('/family/invite')} style={{ minHeight: 38, border: 'none', borderRadius: '999px', background: 'linear-gradient(135deg, var(--nl-primary), var(--nl-primary-2))', color: '#ffffff', padding: '8px 16px', fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>邀请家人</button>
+                <button type="button" onClick={() => navigate('/family/invite')} style={{ minHeight: 38, border: '1px solid rgba(245,205,140,0.5)', borderRadius: '999px', background: 'var(--nl-primary)', color: '#ffffff', padding: '8px 16px', fontSize: 13, fontWeight: 800, cursor: 'pointer', boxShadow: '0 8px 18px rgba(var(--nl-shadow-rgb),0.22)' }}>邀请家人</button>
               </div>
             )}
           </div>
@@ -232,10 +238,16 @@ export const FamilyPage = () => {
               })}
             </div>
           ) : null}
-          {!recordsLoading && !recordsError && !recentFamilyRecords.length ? <EmptyState message="还没有可展示的家庭动态。" /> : null}
+          {!recordsLoading && !recordsError && !recentFamilyRecords.length ? (
+            <section style={{ ...refSoftCardStyle, padding: 16, display: 'grid', gap: 10 }}>
+              <strong style={{ color: 'var(--nl-ink)', fontSize: 14, fontWeight: 900 }}>还没有家庭动态</strong>
+              <p style={{ ...refMutedTextStyle, margin: 0 }}>家人发布照片、文字或语音后，这里会按时间展示最近协作内容。</p>
+              <button type="button" onClick={() => navigate('/record/create')} style={{ minHeight: 40, borderRadius: '999px', border: '1px solid var(--nl-border)', background: 'rgba(var(--nl-surface-rgb),0.72)', color: 'var(--nl-muted-strong)', fontSize: 12, fontWeight: 850, cursor: 'pointer' }}>去记录一刻</button>
+            </section>
+          ) : null}
         </section>
 
-      <section style={{ ...refSoftCardStyle, background: 'rgba(var(--nl-primary-rgb),0.08)', borderColor: 'var(--nl-border)', padding: 14, position: 'relative', overflow: 'hidden' }}>
+      <section style={{ ...refSoftCardStyle, marginTop: 'auto', background: 'rgba(var(--nl-primary-rgb),0.08)', borderColor: 'var(--nl-border)', padding: 14, position: 'relative', overflow: 'hidden' }}>
           <Heart size={58} strokeWidth={1.2} style={{ position: 'absolute', right: -10, bottom: -14, color: 'rgba(var(--nl-primary-rgb),0.14)' }} />
           <div style={{ position: 'relative', display: 'grid', gap: 5 }}>
             <h2 style={{ margin: 0, color: 'var(--nl-ink)', fontSize: 14, fontWeight: 950 }}>家人寄语</h2>
@@ -465,6 +477,17 @@ export const FamilyMembersPage = () => {
               {message ? <p style={{ ...helperTextStyle, color: message === '成员角色已更新' ? 'var(--nl-success)' : 'var(--nl-danger)' }}>{message}</p> : null}
         {members.length ? (
           <div style={{ display: 'grid', gap: '12px' }}>
+            <section style={{ borderRadius: '16px', border: '1px solid var(--nl-border)', background: 'rgba(var(--nl-surface-rgb),0.66)', padding: '13px', display: 'grid', gap: '10px' }}>
+              <strong style={{ color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 900 }}>权限说明</strong>
+              <div style={{ display: 'grid', gap: '8px' }}>
+                {rolePermissionItems.map((item) => (
+                  <div key={item.role} style={{ display: 'grid', gridTemplateColumns: '64px minmax(0, 1fr)', gap: '8px', alignItems: 'start' }}>
+                    <span style={{ borderRadius: '999px', border: '1px solid var(--nl-border)', background: 'rgba(var(--nl-accent-rgb),0.12)', color: 'var(--nl-accent)', padding: '5px 8px', fontSize: '11px', fontWeight: 900, textAlign: 'center' }}>{item.role}</span>
+                    <span style={{ color: 'var(--nl-muted-strong)', fontSize: '12px', lineHeight: 1.55, fontWeight: 650 }}>{item.detail}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center' }}>
               <p style={{ ...helperTextStyle, color: 'var(--nl-muted-strong)' }}>共 {members.length} 位成员，优先显示最近需要管理的账号。</p>
               {hiddenMemberCount ? (
@@ -592,6 +615,12 @@ export const FamilyMemberDetailPage = () => {
 
   const roleColor = member?.role === 'owner' ? 'var(--nl-primary-2)' : member?.role === 'editor' ? 'var(--nl-accent)' : 'var(--nl-muted-strong)';
   const roleBg = member?.role === 'owner' ? 'rgba(var(--nl-primary-rgb),0.16)' : member?.role === 'editor' ? 'rgba(var(--nl-accent-rgb),0.14)' : 'rgba(var(--nl-surface-rgb),0.74)';
+  const currentRoleDescription =
+    member?.role === 'owner'
+      ? '管理员可以维护家庭成员、发起档案导出和处理关键设置。'
+      : member?.role === 'editor'
+        ? '可编辑成员可以查看家庭记录，也可以补充新的成长内容。'
+        : '只读成员可以查看家庭可见内容，不能修改档案和成员权限。';
 
   return (
     <PageShell title="家人资料" backTo="/family">
@@ -637,6 +666,10 @@ export const FamilyMemberDetailPage = () => {
           <section>
             <h2 style={{ margin: '0 0 12px 4px', color: 'var(--nl-ink)', fontSize: '15px', fontWeight: 800 }}>权限管理</h2>
             <Panel style={{ padding: 0, overflow: 'hidden', borderRadius: '18px', boxShadow: 'var(--nl-shadow-sm)' }}>
+              <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--nl-border)', background: 'rgba(var(--nl-surface-rgb),0.72)', display: 'grid', gap: '5px' }}>
+                <strong style={{ color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 850 }}>当前角色：{familyRoleLabel(member.role)}</strong>
+                <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.65 }}>{currentRoleDescription}</p>
+              </div>
               <button type="button" onClick={() => void changeRole()} disabled={!canEditRole || updating} style={{ width: '100%', minHeight: '56px', border: 'none', borderBottom: '1px solid var(--nl-border)', background: 'rgba(var(--nl-surface-rgb),0.72)', padding: '13px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', textAlign: 'left', cursor: canEditRole ? 'pointer' : 'default', opacity: canEditRole ? 1 : 0.68 }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 700 }}>
                   <span style={{ width: '32px', height: '32px', borderRadius: '999px', background: 'rgba(var(--nl-accent-rgb),0.14)', color: 'var(--nl-accent)', display: 'grid', placeItems: 'center' }}><ShieldAlert size={15} /></span>

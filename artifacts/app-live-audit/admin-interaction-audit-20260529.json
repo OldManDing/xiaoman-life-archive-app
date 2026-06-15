@@ -1,0 +1,381 @@
+{
+  "issues": [],
+  "clicks": [
+    {
+      "route": "/users",
+      "label": "重置密码"
+    },
+    {
+      "route": "/users",
+      "label": "调整权益"
+    },
+    {
+      "route": "/users",
+      "label": "详情"
+    },
+    {
+      "route": "/users",
+      "label": "冻结"
+    },
+    {
+      "route": "/users",
+      "label": "重置密码"
+    },
+    {
+      "route": "/users",
+      "label": "调整权益"
+    },
+    {
+      "route": "/users",
+      "label": "详情"
+    },
+    {
+      "route": "/users",
+      "label": "冻结"
+    },
+    {
+      "route": "/users",
+      "label": "查询"
+    },
+    {
+      "route": "/families",
+      "label": "详情"
+    },
+    {
+      "route": "/families",
+      "label": "查询"
+    },
+    {
+      "route": "/invites",
+      "label": "下一页"
+    },
+    {
+      "route": "/invites",
+      "label": "查询"
+    },
+    {
+      "route": "/invites",
+      "label": "生成邀请码"
+    },
+    {
+      "route": "/children",
+      "label": "详情"
+    },
+    {
+      "route": "/children",
+      "label": "查询"
+    },
+    {
+      "route": "/records",
+      "label": "详情"
+    },
+    {
+      "route": "/records",
+      "label": "下架"
+    },
+    {
+      "route": "/records",
+      "label": "详情"
+    },
+    {
+      "route": "/records",
+      "label": "下架"
+    },
+    {
+      "route": "/records",
+      "label": "查询"
+    },
+    {
+      "route": "/media",
+      "label": "异常"
+    },
+    {
+      "route": "/media",
+      "label": "下架"
+    },
+    {
+      "route": "/media",
+      "label": "详情"
+    },
+    {
+      "route": "/media",
+      "label": "通过"
+    },
+    {
+      "route": "/media",
+      "label": "查询"
+    },
+    {
+      "route": "/ai-jobs",
+      "label": "详情"
+    },
+    {
+      "route": "/ai-jobs",
+      "label": "详情"
+    },
+    {
+      "route": "/ai-jobs",
+      "label": "详情"
+    },
+    {
+      "route": "/ai-jobs",
+      "label": "详情"
+    },
+    {
+      "route": "/ai-jobs",
+      "label": "详情"
+    },
+    {
+      "route": "/ai-jobs",
+      "label": "详情"
+    },
+    {
+      "route": "/ai-jobs",
+      "label": "详情"
+    },
+    {
+      "route": "/ai-jobs",
+      "label": "详情"
+    },
+    {
+      "route": "/ai-jobs",
+      "label": "详情"
+    },
+    {
+      "route": "/ai-jobs",
+      "label": "详情"
+    },
+    {
+      "route": "/ai-jobs",
+      "label": "详情"
+    },
+    {
+      "route": "/ai-jobs",
+      "label": "详情"
+    },
+    {
+      "route": "/ai-jobs",
+      "label": "详情"
+    },
+    {
+      "route": "/ai-jobs",
+      "label": "详情"
+    },
+    {
+      "route": "/ai-jobs",
+      "label": "详情"
+    },
+    {
+      "route": "/ai-jobs",
+      "label": "详情"
+    },
+    {
+      "route": "/ai-jobs",
+      "label": "详情"
+    },
+    {
+      "route": "/ai-jobs",
+      "label": "详情"
+    },
+    {
+      "route": "/ai-jobs",
+      "label": "详情"
+    },
+    {
+      "route": "/ai-jobs",
+      "label": "详情"
+    },
+    {
+      "route": "/ai-jobs",
+      "label": "查询"
+    },
+    {
+      "route": "/ai-jobs",
+      "label": "清空"
+    },
+    {
+      "route": "/content-risks",
+      "label": "下一页"
+    },
+    {
+      "route": "/content-risks",
+      "label": "清空"
+    },
+    {
+      "route": "/content-risks",
+      "label": "全部类型"
+    },
+    {
+      "route": "/content-risks",
+      "label": "全部级别"
+    },
+    {
+      "route": "/content-risks",
+      "label": "全部状态"
+    },
+    {
+      "route": "/support-tickets",
+      "label": "下一页"
+    },
+    {
+      "route": "/support-tickets",
+      "label": "查询"
+    },
+    {
+      "route": "/support-tickets",
+      "label": "全部优先级"
+    },
+    {
+      "route": "/support-tickets",
+      "label": "全部状态"
+    },
+    {
+      "route": "/archive-export-requests",
+      "label": "下一页"
+    },
+    {
+      "route": "/archive-export-requests",
+      "label": "查询"
+    },
+    {
+      "route": "/archive-export-requests",
+      "label": "全部类型"
+    },
+    {
+      "route": "/archive-export-requests",
+      "label": "全部状态"
+    },
+    {
+      "route": "/system-config",
+      "label": "调整"
+    },
+    {
+      "route": "/system-config",
+      "label": "调整"
+    },
+    {
+      "route": "/system-config",
+      "label": "调整"
+    },
+    {
+      "route": "/system-config",
+      "label": "调整"
+    },
+    {
+      "route": "/system-config",
+      "label": "调整"
+    },
+    {
+      "route": "/audit-logs",
+      "label": "下一页"
+    },
+    {
+      "route": "/audit-logs",
+      "label": "查询"
+    },
+    {
+      "route": "/audit-logs",
+      "label": "清空"
+    },
+    {
+      "route": "/audit-logs",
+      "label": "全部动作"
+    },
+    {
+      "route": "/audit-logs",
+      "label": "全部目标类型"
+    },
+    {
+      "route": "/logout",
+      "label": "logout"
+    }
+  ],
+  "routeSummaries": [
+    {
+      "route": "/dashboard",
+      "inputsTouched": 0,
+      "buttonCandidates": 0,
+      "buttonsClicked": 0
+    },
+    {
+      "route": "/users",
+      "inputsTouched": 1,
+      "buttonCandidates": 10,
+      "buttonsClicked": 9
+    },
+    {
+      "route": "/families",
+      "inputsTouched": 1,
+      "buttonCandidates": 3,
+      "buttonsClicked": 2
+    },
+    {
+      "route": "/invites",
+      "inputsTouched": 3,
+      "buttonCandidates": 18,
+      "buttonsClicked": 3
+    },
+    {
+      "route": "/children",
+      "inputsTouched": 1,
+      "buttonCandidates": 3,
+      "buttonsClicked": 2
+    },
+    {
+      "route": "/records",
+      "inputsTouched": 1,
+      "buttonCandidates": 6,
+      "buttonsClicked": 5
+    },
+    {
+      "route": "/media",
+      "inputsTouched": 1,
+      "buttonCandidates": 6,
+      "buttonsClicked": 5
+    },
+    {
+      "route": "/ai-jobs",
+      "inputsTouched": 1,
+      "buttonCandidates": 22,
+      "buttonsClicked": 22
+    },
+    {
+      "route": "/content-risks",
+      "inputsTouched": 1,
+      "buttonCandidates": 6,
+      "buttonsClicked": 5
+    },
+    {
+      "route": "/support-tickets",
+      "inputsTouched": 2,
+      "buttonCandidates": 74,
+      "buttonsClicked": 4
+    },
+    {
+      "route": "/archive-export-requests",
+      "inputsTouched": 1,
+      "buttonCandidates": 78,
+      "buttonsClicked": 4
+    },
+    {
+      "route": "/ops-readiness",
+      "inputsTouched": 0,
+      "buttonCandidates": 0,
+      "buttonsClicked": 0
+    },
+    {
+      "route": "/system-config",
+      "inputsTouched": 0,
+      "buttonCandidates": 5,
+      "buttonsClicked": 5
+    },
+    {
+      "route": "/audit-logs",
+      "inputsTouched": 3,
+      "buttonCandidates": 15,
+      "buttonsClicked": 5
+    }
+  ],
+  "runtimeErrors": [],
+  "failedRequests": []
+}

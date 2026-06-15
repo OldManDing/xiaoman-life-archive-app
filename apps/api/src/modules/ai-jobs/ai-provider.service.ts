@@ -1,7 +1,7 @@
-import { BadGatewayException, Injectable } from '@nestjs/common';
+import { BadGatewayException, Injectable, Logger } from '@nestjs/common';
 import { AiJobType } from '@prisma/client';
 
-import { getAiProviderName } from '../../shared/env-config';
+import { getAiProviderName, isStrictEnvironment } from '../../shared/env-config';
 
 export type AiProviderOutput = {
   suggested_title?: string;
@@ -15,6 +15,8 @@ type OpenAiCompatibleResponse = {
 
 @Injectable()
 export class AiProviderService {
+  private readonly logger = new Logger(AiProviderService.name);
+
   async run(params: {
     jobType: AiJobType;
     contentText: string;
@@ -25,25 +27,94 @@ export class AiProviderService {
     const plainText = params.contentText.trim() || params.title.trim() || '成长记录';
 
     if (provider === 'openai' || provider === 'openai-compatible') {
-      return this.runOpenAiCompatible(params, plainText);
+      try {
+        return await this.runOpenAiCompatible(params, plainText);
+      } catch (error) {
+        if (!isStrictEnvironment()) throw error;
+
+        this.logger.warn(`AI provider ${provider} failed, using local fallback: ${this.safeErrorMessage(error)}`);
+        return this.runLocalFallback(params, plainText);
+      }
     }
 
+    return this.runLocalFallback(params, plainText);
+  }
+
+  private runLocalFallback(
+    params: {
+      jobType: AiJobType;
+      contentText: string;
+      title: string;
+      existingTags: string[];
+    },
+    plainText: string,
+  ): AiProviderOutput {
     switch (params.jobType) {
       case AiJobType.record_title:
-        return { suggested_title: params.title || `${plainText.slice(0, 10)}${plainText.length > 10 ? '…' : ''}` };
+        return { suggested_title: this.buildFallbackTitle(params.title, plainText) };
       case AiJobType.record_summary:
-        return { summary: plainText.slice(0, 60) };
+        return { summary: this.buildFallbackSummary(params.title, params.contentText, plainText) };
       case AiJobType.record_tags:
         return {
-          tags: Array.from(new Set([...params.existingTags, plainText.slice(0, 4), '成长']))
-            .filter(Boolean)
-            .slice(0, 5),
+          tags: this.buildFallbackTags(params.existingTags, `${params.title} ${params.contentText}`),
         };
       case AiJobType.monthly_report:
         return { summary: '本月成长月报已生成。' };
       default:
         return { summary: '摘要已生成。' };
     }
+  }
+
+  private buildFallbackTitle(title: string, plainText: string): string {
+    const explicitTitle = title.trim();
+    if (explicitTitle) return explicitTitle.slice(0, 80);
+
+    const firstSentence = plainText
+      .replace(/\s+/g, ' ')
+      .split(/[。！？!?；;\n]/)
+      .map((item) => item.trim())
+      .find(Boolean);
+    const compact = (firstSentence || plainText).replace(/[，,、]/g, '').trim();
+    if (!compact) return '成长记录';
+    return `${compact.slice(0, 14)}${compact.length > 14 ? '…' : ''}`;
+  }
+
+  private buildFallbackSummary(title: string, contentText: string, plainText: string): string {
+    const normalizedContent = contentText.replace(/\s+/g, ' ').trim();
+    if (normalizedContent) return `${normalizedContent.slice(0, 120)}${normalizedContent.length > 120 ? '…' : ''}`;
+
+    const normalizedTitle = title.trim();
+    if (normalizedTitle) return `记录了${normalizedTitle.slice(0, 80)}。`;
+    return `${plainText.slice(0, 120)}${plainText.length > 120 ? '…' : ''}`;
+  }
+
+  private buildFallbackTags(existingTags: string[], content: string): string[] {
+    const tagSet = new Set(existingTags.map((item) => item.trim()).filter(Boolean));
+    const candidates: Array<{ tag: string; pattern: RegExp }> = [
+      { tag: '观察', pattern: /观察|发现|探索|好奇/ },
+      { tag: '自然', pattern: /公园|花草|户外|自然|天气|动物/ },
+      { tag: '运动', pattern: /跑|跳|走|爬|球|运动|骑/ },
+      { tag: '表达', pattern: /说|讲|分享|表达|语言|唱/ },
+      { tag: '阅读', pattern: /书|读|绘本|故事/ },
+      { tag: '饮食', pattern: /吃|饭|奶|水果|辅食/ },
+      { tag: '睡眠', pattern: /睡|午觉|夜醒/ },
+      { tag: '身高体重', pattern: /身高|体重|长高|称重/ },
+      { tag: '里程碑', pattern: /第一次|学会|独立|生日|纪念/ },
+    ];
+
+    for (const candidate of candidates) {
+      if (candidate.pattern.test(content)) tagSet.add(candidate.tag);
+    }
+    tagSet.add('成长');
+
+    return Array.from(tagSet)
+      .map((item) => item.slice(0, 12))
+      .filter(Boolean)
+      .slice(0, 5);
+  }
+
+  private safeErrorMessage(error: unknown): string {
+    return error instanceof Error ? error.message : String(error);
   }
 
   private async runOpenAiCompatible(

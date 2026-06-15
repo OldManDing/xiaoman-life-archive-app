@@ -113,7 +113,7 @@ export class AiJobsProcessor {
         data: {
           status: AiJobStatus.failed,
           retryCount,
-          errorMessage: error instanceof Error ? error.message : 'AI 处理失败',
+          errorMessage: error instanceof Error ? error.message : '整理失败',
           finishedAt: new Date(),
         },
       });

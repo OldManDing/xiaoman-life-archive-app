@@ -67,17 +67,97 @@ export const AppRouter = () => {
   if (isBootstrapping) {
     return (
       <div
+        aria-busy="true"
+        aria-label="正在进入年轮"
         style={{
           minHeight: '100dvh',
-          display: 'grid',
-          placeItems: 'center',
-          background: 'linear-gradient(180deg, #050918 0%, #0b1130 52%, #050918 100%)',
+          boxSizing: 'border-box',
+          padding: 'max(22px, env(safe-area-inset-top)) 18px max(24px, env(safe-area-inset-bottom))',
+          background: 'var(--nl-page-bg)',
           color: 'var(--nl-muted-strong)',
-          fontSize: '14px',
-          fontWeight: 600,
+          display: 'grid',
+          alignContent: 'start',
+          gap: '18px',
         }}
       >
-        正在进入年轮…
+        <style>
+          {`
+            @keyframes nlBootPulse {
+              0%, 100% { opacity: 0.52; transform: translateY(0); }
+              50% { opacity: 0.95; transform: translateY(-1px); }
+            }
+          `}
+        </style>
+        <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+            <div
+              style={{
+                width: '38px',
+                height: '38px',
+                borderRadius: '15px',
+                background: 'rgba(var(--nl-primary-rgb),0.18)',
+                border: '1px solid var(--nl-border)',
+                display: 'grid',
+                placeItems: 'center',
+                color: 'var(--nl-primary)',
+                fontSize: '16px',
+                fontWeight: 900,
+              }}
+            >
+              年
+            </div>
+            <div style={{ display: 'grid', gap: '5px', minWidth: 0 }}>
+              <strong style={{ color: 'var(--nl-ink)', fontSize: '17px', lineHeight: 1.1 }}>年轮</strong>
+              <span style={{ color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 700 }}>正在进入家庭时间线</span>
+            </div>
+          </div>
+          <div style={{ width: '38px', height: '38px', borderRadius: '999px', background: 'rgba(var(--nl-surface-rgb),0.7)', border: '1px solid var(--nl-border)', animation: 'nlBootPulse 1.6s ease-in-out infinite' }} />
+        </header>
+
+        <main style={{ display: 'grid', gap: '14px' }}>
+          <section
+            style={{
+              borderRadius: '24px',
+              border: '1px solid var(--nl-border)',
+              background: 'rgba(var(--nl-surface-rgb),0.72)',
+              padding: '18px',
+              display: 'grid',
+              gap: '14px',
+              boxShadow: 'var(--nl-shadow-sm)',
+              backdropFilter: 'blur(18px)',
+            }}
+          >
+            <div style={{ width: '42%', height: '13px', borderRadius: '999px', background: 'rgba(var(--nl-surface-strong-rgb),0.9)', animation: 'nlBootPulse 1.5s ease-in-out infinite' }} />
+            <div style={{ width: '82%', height: '26px', borderRadius: '999px', background: 'rgba(var(--nl-primary-rgb),0.18)', animation: 'nlBootPulse 1.55s ease-in-out infinite' }} />
+            <div style={{ width: '64%', height: '13px', borderRadius: '999px', background: 'rgba(var(--nl-surface-strong-rgb),0.72)', animation: 'nlBootPulse 1.7s ease-in-out infinite' }} />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px', marginTop: '2px' }}>
+              {[0, 1, 2].map((item) => (
+                <div key={item} style={{ height: '42px', borderRadius: '16px', background: 'rgba(var(--nl-surface-rgb),0.62)', border: '1px solid var(--nl-border)', animation: `nlBootPulse ${1.45 + item * 0.08}s ease-in-out infinite` }} />
+              ))}
+            </div>
+          </section>
+
+          <section style={{ display: 'grid', gap: '10px' }}>
+            {[0, 1, 2].map((item) => (
+              <div
+                key={item}
+                style={{
+                  minHeight: '78px',
+                  borderRadius: '20px',
+                  border: '1px solid var(--nl-border)',
+                  background: 'rgba(var(--nl-surface-rgb),0.58)',
+                  padding: '14px',
+                  display: 'grid',
+                  gap: '10px',
+                  animation: `nlBootPulse ${1.55 + item * 0.1}s ease-in-out infinite`,
+                }}
+              >
+                <div style={{ width: item === 0 ? '72%' : item === 1 ? '58%' : '66%', height: '14px', borderRadius: '999px', background: 'rgba(var(--nl-surface-strong-rgb),0.72)' }} />
+                <div style={{ width: item === 0 ? '46%' : item === 1 ? '70%' : '52%', height: '12px', borderRadius: '999px', background: 'rgba(var(--nl-surface-strong-rgb),0.58)' }} />
+              </div>
+            ))}
+          </section>
+        </main>
       </div>
     );
   }

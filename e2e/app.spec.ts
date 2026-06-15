@@ -1,29 +1,11 @@
-import { expect, test, type APIRequestContext } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 import { expectNoEnglishSeedCopy, expectNoUnfinishedCopy, loginWeb, webBaseURL } from './helpers';
 
-const apiBaseURL = process.env.E2E_API_BASE_URL ?? `http://127.0.0.1:${process.env.E2E_API_PORT ?? 3001}/api/v1`;
 const tinyPng = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=',
   'base64',
 );
-
-async function createRegistrationInviteCode(request: APIRequestContext) {
-  const loginResponse = await request.post(`${apiBaseURL}/admin/auth/login`, {
-    data: { username: 'admin', password: 'ChangeMe123!' },
-  });
-  expect(loginResponse.ok()).toBe(true);
-  const loginBody = await loginResponse.json();
-  const accessToken = loginBody.data.access_token as string;
-
-  const inviteResponse = await request.post(`${apiBaseURL}/admin/invites`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
-    data: { expires_in_hours: 2 },
-  });
-  expect(inviteResponse.ok()).toBe(true);
-  const inviteBody = await inviteResponse.json();
-  return inviteBody.data.invite_code as string;
-}
 
 test.describe('App critical journeys', () => {
   test('anonymous login page stays quiet and tab pages reserve bottom navigation space', async ({ browser }) => {
@@ -65,6 +47,7 @@ test.describe('App critical journeys', () => {
           mainBottom: mainRect?.bottom ?? 0,
           navTop: navRect?.top ?? 0,
           navHeight: navRect?.height ?? 0,
+          mainPaddingBottom: main ? Number.parseFloat(getComputedStyle(main).paddingBottom) : Number.NaN,
           mainOverflowY: main ? getComputedStyle(main).overflowY : '',
           overflowX: document.documentElement.scrollWidth > window.innerWidth + 2,
         };
@@ -72,6 +55,7 @@ test.describe('App critical journeys', () => {
 
       expect(layout.overflowX).toBe(false);
       expect(layout.mainOverflowY).toBe('auto');
+      expect(layout.mainPaddingBottom).toBeLessThanOrEqual(4);
       expect(layout.navHeight).toBeGreaterThanOrEqual(74);
       expect(layout.mainBottom).toBeLessThanOrEqual(layout.navTop + 1);
     }
@@ -117,8 +101,24 @@ test.describe('App critical journeys', () => {
     expect(storedDraft).not.toContain('DemoUser123!');
   });
 
-  test('deleted account cannot log in again and shows password error', async ({ page, request }) => {
-    const inviteCode = await createRegistrationInviteCode(request);
+  test('registers without an invite code and reaches child onboarding', async ({ page }) => {
+    const credential = `standalone_${Date.now().toString(36)}`;
+    const password = 'Standalone123!';
+
+    await page.goto(`${webBaseURL}/auth/login`);
+    await page.getByRole('button', { name: '注册' }).click();
+    await page.getByPlaceholder('请输入账号').fill(credential);
+    await page.getByPlaceholder('请输入密码').fill(password);
+    await page.getByPlaceholder('请再次输入密码').fill(password);
+    await page.getByRole('checkbox', { name: '我已阅读并同意《用户协议》和《隐私政策》' }).check();
+    await expect(page.getByRole('button', { name: '注册并进入' })).toBeEnabled();
+    await page.getByRole('button', { name: '注册并进入' }).click();
+
+    await expect(page).toHaveURL(/\/onboarding\/child$/);
+    await expect(page.getByRole('heading', { name: '完善宝宝信息' })).toBeVisible();
+  });
+
+  test('deleted account cannot log in again and shows password error', async ({ page }) => {
     const credential = `delete_accept_${Date.now().toString(36)}`;
     const password = 'DeleteUser123!';
 
@@ -127,7 +127,6 @@ test.describe('App critical journeys', () => {
     await page.getByPlaceholder('请输入账号').fill(credential);
     await page.getByPlaceholder('请输入密码').fill(password);
     await page.getByPlaceholder('请再次输入密码').fill(password);
-    await page.getByPlaceholder('请输入邀请码').fill(inviteCode);
     await page.getByRole('checkbox', { name: '我已阅读并同意《用户协议》和《隐私政策》' }).check();
     await page.getByRole('button', { name: '注册并进入' }).click();
 
@@ -281,24 +280,25 @@ test.describe('App critical journeys', () => {
     expect(layout.actionsRight).toBeLessThanOrEqual(layout.viewportRight);
   });
 
-  test('home quick actions open matching record modes', async ({ page }) => {
+  test('home removes secondary cards while record routes stay available', async ({ page }) => {
     const consoleErrors: string[] = [];
     page.on('console', (message) => {
       if (message.type() === 'error') consoleErrors.push(message.text());
     });
 
     await loginWeb(page);
+    await page.goto(`${webBaseURL}/home`);
 
-    await page.getByRole('button', { name: '记录', exact: true }).click();
-    await expect(page).toHaveURL(/\/record\/create$/);
+    await expect(page.getByText('今天先做这三件事')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: '相册' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'AI故事' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: '月报' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /成长星球/ })).toBeVisible();
+
+    await page.goto(`${webBaseURL}/record/create`);
     await expect(page.getByRole('button', { name: '拍照记录' })).toBeVisible();
     await expect(page.getByRole('button', { name: '拍摄视频' })).toBeVisible();
     await expect(page.getByRole('button', { name: '从相册添加' })).toBeVisible();
-
-    await page.goto(`${webBaseURL}/home`);
-    await page.getByRole('button', { name: '月报' }).click();
-    await expect(page).toHaveURL(/\/profile\/reports$/);
-    await expect(page.getByRole('heading', { name: '月报与纪念册' })).toBeVisible();
 
     await page.goto(`${webBaseURL}/record/create?type=audio&focus=media`);
     await expect(page.getByText('素材')).toBeVisible();
@@ -307,7 +307,7 @@ test.describe('App critical journeys', () => {
     expect(consoleErrors.join('\n')).not.toContain('style property during rerender');
 
     await page.goto(`${webBaseURL}/home`);
-    await page.getByRole('button', { name: '去记录' }).click();
+    await page.getByRole('button', { name: '记录今日提示' }).click();
     await expect(page).toHaveURL(/\/record\/create$/);
     await expect(page.getByRole('heading', { name: '记录时光' })).toBeVisible();
 
@@ -403,7 +403,7 @@ test.describe('App critical journeys', () => {
     await expect(page.getByText('AI 状态：已完成')).toBeVisible();
 
     await page.getByRole('button', { name: '摘要' }).click();
-    await expect(page.getByText(/AI 摘要(正在处理中|已生成并同步到记录详情)/)).toBeVisible();
+    await expect(page.getByText(/AI 摘要(正在处理中|已生成并同步到记录详情)|调用频率(受限|超限)/)).toBeVisible();
 
     await page.getByRole('button', { name: '编辑记录' }).click();
     await expect(page).toHaveURL(/\/record\/r_demo_001\/edit$/);

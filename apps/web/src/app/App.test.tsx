@@ -80,6 +80,7 @@ const listFamilyMembersMock = vi.mocked(webApi.listFamilyMembers);
 const updateFamilyMemberRoleMock = vi.mocked(webApi.updateFamilyMemberRole);
 const createFamilyInviteMock = vi.mocked(webApi.createFamilyInvite);
 const getCurrentDeviceLocationMock = vi.mocked(getCurrentDeviceLocation);
+const optionalInvitePlaceholder = '已有家庭邀请码可填写，没有也能注册';
 
 const demoChild = {
   child_no: 'c_001',
@@ -97,7 +98,7 @@ const demoChild = {
   updated_at: '2026-04-21T00:00:00.000Z',
 };
 
-const mockAuthenticatedSession = () => {
+const mockAuthenticatedSession = (userOverrides: Partial<{ membership_type: string; membership_expire_at: string | null }> = {}) => {
   refreshMock.mockResolvedValue({
     access_token: 'token-123',
     expires_in: 7200,
@@ -106,6 +107,7 @@ const mockAuthenticatedSession = () => {
       nickname: '测试用户',
       avatar_url: null,
       membership_type: 'free',
+      ...userOverrides,
     },
     need_create_child: false,
   });
@@ -160,7 +162,8 @@ describe('App Shell', () => {
     window.history.pushState({}, '', '/home');
     refreshMock.mockReturnValue(new Promise(() => undefined));
     render(<App />);
-    expect(screen.getByText('正在进入年轮…')).toBeDefined();
+    expect(screen.getByLabelText('正在进入年轮')).toBeDefined();
+    expect(screen.getByText('正在进入家庭时间线')).toBeDefined();
   });
 
   it('redirects to login if unauthenticated after bootstrap', async () => {
@@ -241,7 +244,7 @@ describe('App Shell', () => {
     fireEvent.change(screen.getByPlaceholderText('请输入账号'), { target: { value: 'new_parent' } });
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'Parent123!' } });
     fireEvent.change(screen.getByPlaceholderText('请再次输入密码'), { target: { value: 'Parent123!' } });
-    fireEvent.change(screen.getByPlaceholderText('请输入邀请码'), { target: { value: 'NL-REG001-REG002' } });
+    fireEvent.change(screen.getByPlaceholderText(optionalInvitePlaceholder), { target: { value: 'NL-REG001-REG002' } });
     fireEvent.click(screen.getByRole('checkbox'));
     fireEvent.click(screen.getByRole('button', { name: '查看完整协议与隐私政策' }));
 
@@ -252,7 +255,7 @@ describe('App Shell', () => {
     expect((screen.getByPlaceholderText('请输入账号') as HTMLInputElement).value).toBe('new_parent');
     expect((screen.getByPlaceholderText('请输入密码') as HTMLInputElement).value).toBe('Parent123!');
     expect((screen.getByPlaceholderText('请再次输入密码') as HTMLInputElement).value).toBe('Parent123!');
-    expect((screen.getByPlaceholderText('请输入邀请码') as HTMLInputElement).value).toBe('NL-REG001-REG002');
+    expect((screen.getByPlaceholderText(optionalInvitePlaceholder) as HTMLInputElement).value).toBe('NL-REG001-REG002');
     expect((screen.getByRole('checkbox') as HTMLInputElement).checked).toBe(true);
   });
 
@@ -326,7 +329,39 @@ describe('App Shell', () => {
     expect(await screen.findByText('今日值得记录')).toBeDefined();
   });
 
-  it('registers with password and invite code after agreement is accepted', async () => {
+  it('registers with password without invite code after agreement is accepted', async () => {
+    refreshMock.mockRejectedValue(new Error('unauthorized'));
+    registerMock.mockResolvedValue({
+      access_token: 'token-register',
+      expires_in: 7200,
+      user: {
+        user_no: 'u_register',
+        nickname: '注册用户',
+        avatar_url: null,
+        membership_type: 'free',
+      },
+      need_create_child: true,
+    });
+
+    render(<App />);
+
+    fireEvent.click(await screen.findByRole('button', { name: '注册' }));
+    fireEvent.change(screen.getByPlaceholderText('请输入账号'), { target: { value: 'standalone_parent' } });
+    fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'Parent123!' } });
+    fireEvent.change(screen.getByPlaceholderText('请再次输入密码'), { target: { value: 'Parent123!' } });
+    fireEvent.click(screen.getByRole('checkbox'));
+    fireEvent.click(screen.getByRole('button', { name: '注册并进入' }));
+
+    await waitFor(() => {
+      expect(registerMock).toHaveBeenCalledWith({
+        credential: 'standalone_parent',
+        password: 'Parent123!',
+        password_confirm: 'Parent123!',
+      });
+    });
+  });
+
+  it('registers with password and optional invite code after agreement is accepted', async () => {
     refreshMock.mockRejectedValue(new Error('unauthorized'));
     registerMock.mockResolvedValue({
       access_token: 'token-register',
@@ -346,7 +381,7 @@ describe('App Shell', () => {
     fireEvent.change(screen.getByPlaceholderText('请输入账号'), { target: { value: 'new_parent' } });
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'Parent123!' } });
     fireEvent.change(screen.getByPlaceholderText('请再次输入密码'), { target: { value: 'Parent123!' } });
-    fireEvent.change(screen.getByPlaceholderText('请输入邀请码'), { target: { value: 'join-family-001' } });
+    fireEvent.change(screen.getByPlaceholderText(optionalInvitePlaceholder), { target: { value: 'join-family-001' } });
     fireEvent.click(screen.getByRole('checkbox'));
     fireEvent.click(screen.getByRole('button', { name: '注册并进入' }));
 
@@ -369,7 +404,7 @@ describe('App Shell', () => {
     fireEvent.change(screen.getByPlaceholderText('请输入账号'), { target: { value: 'new_parent' } });
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: '123456' } });
     fireEvent.change(screen.getByPlaceholderText('请再次输入密码'), { target: { value: '123456' } });
-    fireEvent.change(screen.getByPlaceholderText('请输入邀请码'), { target: { value: 'NL-ABC123-DEF456' } });
+    fireEvent.change(screen.getByPlaceholderText(optionalInvitePlaceholder), { target: { value: 'NL-ABC123-DEF456' } });
     fireEvent.click(screen.getByRole('checkbox'));
     fireEvent.click(screen.getByRole('button', { name: '注册并进入' }));
 
@@ -387,11 +422,11 @@ describe('App Shell', () => {
     fireEvent.change(screen.getByPlaceholderText('请输入账号'), { target: { value: 'new_parent' } });
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'Parent123!' } });
     fireEvent.change(screen.getByPlaceholderText('请再次输入密码'), { target: { value: 'Parent123!' } });
-    fireEvent.change(screen.getByPlaceholderText('请输入邀请码'), { target: { value: 'NL-REG001-REG002' } });
+    fireEvent.change(screen.getByPlaceholderText(optionalInvitePlaceholder), { target: { value: 'NL-REG001-REG002' } });
     fireEvent.click(screen.getByRole('checkbox'));
     fireEvent.click(screen.getByRole('button', { name: '注册并进入' }));
 
-    expect(await screen.findByText('请检查账号、密码、确认密码和邀请码是否完整')).toBeDefined();
+    expect(await screen.findByText('请检查账号、密码和确认密码是否完整')).toBeDefined();
   });
 
   it('creates a child during onboarding', async () => {
@@ -842,6 +877,17 @@ describe('App Shell', () => {
     expect(screen.getByRole('button', { name: '拍摄视频' })).toBeDefined();
   });
 
+  it('hides AI controls on the record editor for non AI members', async () => {
+    window.history.pushState({}, '', '/record/create?type=text');
+    mockAuthenticatedSession();
+
+    render(<App />);
+
+    expect(await screen.findByPlaceholderText('给这一刻起个名字')).toBeDefined();
+    expect(screen.queryByRole('button', { name: '会员整理建议' })).toBeNull();
+    expect(screen.queryByText('AI 会员可生成标题、摘要和标签建议；发布前内容始终由你确认。')).toBeNull();
+  });
+
   it('shows the empty media preview immediately for video and audio capture routes', async () => {
     mockAuthenticatedSession();
 
@@ -1286,7 +1332,7 @@ describe('App Shell', () => {
 
   it('shows AI generated titles on record details', async () => {
     window.history.pushState({}, '', '/record/r_ai_title');
-    mockAuthenticatedSession();
+    mockAuthenticatedSession({ membership_type: 'ai_plus' });
     detailRecordMock.mockResolvedValue({
       record_no: 'r_ai_title',
       child_no: 'c_001',
@@ -1312,8 +1358,40 @@ describe('App Shell', () => {
     render(<App />);
 
     expect(await screen.findByRole('heading', { name: '第一次主动整理玩具' })).toBeDefined();
-    expect(screen.getByText('AI 标题：第一次主动整理玩具')).toBeDefined();
-    expect(screen.queryByText('当前还没有 AI 摘要，可以点击下方按钮生成标题、摘要或标签。')).toBeNull();
+    expect(screen.getByText('建议标题：第一次主动整理玩具')).toBeDefined();
+    expect(screen.queryByText('当前还没有整理摘要，可以点击下方按钮生成标题、摘要或标签。')).toBeNull();
+  });
+
+  it('hides AI extraction on record details for non AI members', async () => {
+    window.history.pushState({}, '', '/record/r_ai_hidden');
+    mockAuthenticatedSession();
+    detailRecordMock.mockResolvedValue({
+      record_no: 'r_ai_hidden',
+      child_no: 'c_001',
+      creator_user_no: 'u_001',
+      creator_name: '测试用户',
+      record_type: 'text',
+      title: null,
+      content_text: '今天第一次自己整理玩具。',
+      media_list: [],
+      tags: [],
+      event_time: '2026-05-28T10:00:00.000Z',
+      location_text: '家里',
+      visibility_scope: 'family',
+      is_milestone: false,
+      ai_generated_title: '第一次主动整理玩具',
+      ai_summary: '孩子主动整理玩具。',
+      ai_status: 'success',
+      status: 'published',
+      created_at: '2026-05-28T10:00:00.000Z',
+      updated_at: '2026-05-28T10:00:00.000Z',
+    });
+
+    render(<App />);
+
+    expect(await screen.findByRole('heading', { name: '未命名记录' })).toBeDefined();
+    expect(screen.queryByText('智能整理')).toBeNull();
+    expect(screen.queryByText('建议标题：第一次主动整理玩具')).toBeNull();
   });
 
   it('uses neutral home prompts when the child profile has no display name', async () => {
@@ -1721,7 +1799,7 @@ describe('App Shell', () => {
     expect(deleteMeMock).not.toHaveBeenCalled();
   });
 
-  it('uses real home quick actions instead of unavailable mailbox entry', async () => {
+  it('uses real home entry points instead of unavailable shortcuts', async () => {
     window.history.pushState({}, '', '/home');
     mockAuthenticatedSession();
     listRecordsMock.mockResolvedValue({
@@ -1734,7 +1812,9 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    expect(await screen.findByRole('button', { name: /月报/ })).toBeDefined();
+    expect(await screen.findByRole('button', { name: /成长星球/ })).toBeDefined();
+    expect(screen.getByRole('button', { name: /记录此刻/ })).toBeDefined();
+    expect(screen.queryByRole('button', { name: /月报/ })).toBeNull();
     expect(screen.queryByRole('button', { name: /未来信箱/ })).toBeNull();
   });
 
@@ -1795,6 +1875,8 @@ describe('App Shell', () => {
 
     expect(await screen.findByRole('heading', { name: '月报与纪念册' })).toBeDefined();
     expect(screen.getByText('月度故事摘要')).toBeDefined();
+    expect(screen.getByText('月报空状态')).toBeDefined();
+    expect(screen.getByText('本月还没有记录')).toBeDefined();
     expect(screen.getByText('该月还没有可生成月报的真实记录。添加记录后，这里会按实际内容整理故事摘要、里程碑和影像回顾。')).toBeDefined();
     expect(screen.getByText('添加记录')).toBeDefined();
     expect(screen.queryByText('本月故事摘要')).toBeNull();

@@ -88,6 +88,10 @@ function requiredEnv(name) {
   return value;
 }
 
+function optionalEnv(name) {
+  return String(process.env[name] || '').trim();
+}
+
 async function parseJsonResponse(response, label) {
   try {
     return await response.json();
@@ -96,9 +100,7 @@ async function parseJsonResponse(response, label) {
   }
 }
 
-async function loginLiveTestUser(apiBaseUrl) {
-  const credential = requiredEnv('LIVE_TEST_USER_CREDENTIAL');
-  const password = requiredEnv('LIVE_TEST_USER_PASSWORD');
+async function loginLiveUser(apiBaseUrl, credential, password, label) {
   const apiV1Base = apiV1BaseFromApiBase(apiBaseUrl);
 
   const loginResponse = await fetchChecked(
@@ -114,12 +116,64 @@ async function loginLiveTestUser(apiBaseUrl) {
         password,
       }),
     },
+    label,
+  );
+  const loginPayload = await parseJsonResponse(loginResponse, label);
+  const accessToken = loginPayload?.data?.access_token;
+  if (!accessToken) fail(`${label} did not return an access token`);
+  return {
+    accessToken,
+    user: loginPayload?.data?.user || null,
+  };
+}
+
+async function loginLiveTestUser(apiBaseUrl) {
+  return loginLiveUser(
+    apiBaseUrl,
+    requiredEnv('LIVE_TEST_USER_CREDENTIAL'),
+    requiredEnv('LIVE_TEST_USER_PASSWORD'),
     'Live test user login',
   );
-  const loginPayload = await parseJsonResponse(loginResponse, 'Live test user login');
-  const accessToken = loginPayload?.data?.access_token;
-  if (!accessToken) fail('Live test user login did not return an access token');
-  return accessToken;
+}
+
+async function resolveLiveAiUser(apiBaseUrl, primarySession) {
+  const credential = optionalEnv('LIVE_AI_TEST_USER_CREDENTIAL');
+  const password = optionalEnv('LIVE_AI_TEST_USER_PASSWORD');
+  if (credential || password) {
+    if (!credential || !password) fail('LIVE_AI_TEST_USER_CREDENTIAL and LIVE_AI_TEST_USER_PASSWORD must be set together');
+    return loginLiveUser(apiBaseUrl, credential, password, 'Live AI member login');
+  }
+
+  if (primarySession?.user?.membership_type === 'ai_plus') return primarySession;
+  return null;
+}
+
+async function assertLiveAiAccessControl(apiBaseUrl, accessToken) {
+  const apiV1Base = apiV1BaseFromApiBase(apiBaseUrl);
+  const previewResponse = await fetch(`${apiV1Base}/ai-jobs/preview`, {
+    method: 'POST',
+    headers: {
+      authorization: `Bearer ${accessToken}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      title: '普通用户 AI 权限验收',
+      content_text: '普通用户不应拥有 AI 生成入口。',
+      tags: ['成长'],
+    }),
+  });
+  const previewPayload = await parseJsonResponse(previewResponse, 'Live AI access control');
+  if (previewResponse.status !== 403) {
+    fail(`Live AI access control expected HTTP 403, got ${previewResponse.status}`);
+  }
+  if (!String(previewPayload?.message || '').includes('AI 功能仅对 AI 会员开放')) {
+    fail(`Live AI access control returned unexpected message: ${previewPayload?.message || '<missing>'}`);
+  }
+
+  return {
+    forbidden: true,
+    message: previewPayload.message,
+  };
 }
 
 async function assertLiveAiPreview(apiBaseUrl, accessToken, expectedAiProvider) {
@@ -255,6 +309,10 @@ function nextActionForFailedCheck(check) {
     return '替换生产 AI endpoint/model/key，确保 provider 兼容 /chat/completions 并能真实返回内容；只修复 AI 时，在当前服务器 release 的 .env.server 中备份并更新 AI_*，执行 docker compose config 校验和 API 重启，然后重新执行带测试账号的 verify:live-readiness。';
   }
 
+  if (check.name === 'aiAccessControl') {
+    return '确认普通用户 membership_type 不为 ai_plus 时，/ai-jobs/preview 与 /records/:record_no/ai-jobs 返回 403；修复 AI 会员权限判断后重新执行 verify:live-readiness。';
+  }
+
   if (check.name === 'poi') {
     const keyHint = error.includes('INVALID_USER_KEY')
       ? '当前错误为 INVALID_USER_KEY，优先确认使用的是高德 Web 服务 Key，且账号已开通 Web 服务 API、服务器出口限制和配额均可用。'
@@ -272,6 +330,16 @@ function blockedRequirementDetailForFailedCheck(check) {
       severity: 'P0',
       owner: 'AI provider 配置负责人',
       evidence: 'verify:production-env 外部 provider 校验 + 登录后 verify:live-readiness AI 预览',
+      next_action: nextActionForFailedCheck(check),
+    };
+  }
+
+  if (check.name === 'aiAccessControl') {
+    return {
+      requirement: 'P0-26 AI 会员权限',
+      severity: 'P0',
+      owner: 'AI 产品权限负责人',
+      evidence: '普通用户登录后 verify:live-readiness AI 访问控制检查',
       next_action: nextActionForFailedCheck(check),
     };
   }
@@ -447,10 +515,20 @@ async function main() {
     assertSecurityHeaders(adminResponse, 'Admin entry');
   }
 
-  const accessToken = await loginLiveTestUser(apiBaseUrl);
+  const testSession = await loginLiveTestUser(apiBaseUrl);
+  const aiSession = await resolveLiveAiUser(apiBaseUrl, testSession);
   const checks = await Promise.all([
-    runReadinessCheck('aiPreview', () => assertLiveAiPreview(apiBaseUrl, accessToken, health.providers.ai)),
-    runReadinessCheck('poi', () => assertLivePoiSearch(apiBaseUrl, expectedMapProvider, accessToken)),
+    runReadinessCheck('aiAccessControl', () => assertLiveAiAccessControl(apiBaseUrl, testSession.accessToken)),
+    runReadinessCheck(
+      'aiPreview',
+      aiSession
+        ? () => assertLiveAiPreview(apiBaseUrl, aiSession.accessToken, health.providers.ai)
+        : () => ({
+            skipped: true,
+            reason: 'LIVE_AI_TEST_USER_CREDENTIAL not configured and live test user is not an AI member',
+          }),
+    ),
+    runReadinessCheck('poi', () => assertLivePoiSearch(apiBaseUrl, expectedMapProvider, testSession.accessToken)),
   ]);
   const summary = {
     api: healthUrl,

@@ -237,8 +237,8 @@ const toggleButtonStyle = (enabled: boolean) =>
     border: '1px solid var(--nl-border)',
     borderRadius: '999px',
     padding: '4px',
-    background: enabled ? 'linear-gradient(135deg, var(--nl-primary), var(--nl-primary-2))' : 'rgba(var(--nl-surface-rgb),0.74)',
-    boxShadow: enabled ? '0 10px 24px rgba(var(--nl-primary-rgb),0.28)' : 'inset 0 1px 0 rgba(216,220,255,0.06)',
+    background: enabled ? 'var(--nl-primary)' : 'rgba(var(--nl-surface-rgb),0.74)',
+    boxShadow: enabled ? '0 8px 18px rgba(var(--nl-shadow-rgb),0.22)' : 'inset 0 1px 0 rgba(245,240,229,0.06)',
     cursor: 'pointer',
     display: 'flex',
     justifyContent: enabled ? 'flex-end' : 'flex-start',
@@ -248,7 +248,7 @@ const toggleKnobStyle = {
   width: '22px',
   height: '22px',
   borderRadius: '999px',
-  background: 'linear-gradient(135deg, rgba(248,249,255,0.96), rgba(216,220,255,0.86))',
+  background: 'rgba(247,240,229,0.96)',
   boxShadow: '0 1px 4px rgba(var(--nl-shadow-rgb),0.28)',
 } as const;
 
@@ -310,7 +310,7 @@ export const ProfilePage = () => {
         </div>
       </section>
 
-      <main style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10, padding: '10px 20px calc(168px + env(safe-area-inset-bottom))' }}>
+      <main style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 10, padding: '10px 20px 44px' }}>
         <button type="button" onClick={() => navigate(latestDraft ? `/record/${latestDraft.record_no}/edit` : '/record/create')} style={{ ...refSoftCardStyle, width: '100%', minHeight: 54, padding: '10px 13px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left', cursor: 'pointer' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
             <FileBox size={20} color="var(--nl-primary)" />
@@ -549,6 +549,10 @@ export const SettingsPage = () => {
             <ChevronRight size={15} />
           </span>
         </button>
+        <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--nl-border)', background: 'rgba(var(--nl-surface-rgb),0.72)', display: 'grid', gap: '8px' }}>
+          <strong style={{ color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 850 }}>可见规则</strong>
+          <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.65 }}>家庭管理员可管理成员、导出与交付；可编辑成员可补充记录；只读成员只能查看家庭成员可见的内容。</p>
+        </div>
         {[
           { key: 'hideMobileMask' as const, title: '允许通过手机号搜索到我', icon: Users, inverted: true },
           { key: 'autoRefreshHome' as const, title: '向新成员展示历史时间轴', icon: RefreshCw },
@@ -597,6 +601,16 @@ export const ReportsPage = () => {
   const textCount = monthlyRecords.filter((item) => item.record_type === 'text').length;
   const hasMonthlyRecords = monthlyRecords.length > 0;
   const latest = monthlyRecords[0];
+  const coverRecord = mediaRecords[0] ?? latest;
+  const coverUrl = coverRecord ? resolveMediaPreviewUrl(coverRecord.cover_media_no, coverRecord.cover_url) : null;
+  const monthlyKeywords = Array.from(
+    new Set([
+      ...monthlyRecords.flatMap((item) => item.tags ?? []),
+      ...(milestoneCount ? ['里程碑'] : []),
+      ...(imageCount ? ['影像'] : []),
+      ...(textCount ? ['文字'] : []),
+    ]),
+  ).slice(0, 5);
   const monthlySummary = monthlyRecords.length
     ? `该月已经留下 ${monthlyRecords.length} 个成长瞬间。${milestoneCount ? `${milestoneCount} 个里程碑把关键变化标了出来，` : ''}${imageCount ? `${imageCount} 条影像让回忆有画面，` : ''}${textCount ? `${textCount} 条文字记录保留了当时的语气。` : '每一条记录都会进入孩子的长期档案。'}`
     : '该月还没有可生成月报的真实记录。添加记录后，这里会按实际内容整理故事摘要、里程碑和影像回顾。';
@@ -624,23 +638,37 @@ export const ReportsPage = () => {
           <section
             style={{
               borderRadius: '28px',
-              padding: '22px',
+              padding: '0',
               position: 'relative',
               border: '1px solid var(--nl-border)',
               background: 'linear-gradient(135deg, rgba(var(--nl-surface-strong-rgb),0.96), rgba(var(--nl-surface-strong-rgb),0.9))',
               boxShadow: 'var(--nl-shadow-sm)',
               display: 'grid',
-              gap: '16px',
+              gap: 0,
+              overflow: 'hidden',
             }}
           >
+            <div style={{ position: 'relative', minHeight: '154px', background: 'rgba(var(--nl-surface-rgb),0.72)' }}>
+              {coverUrl ? (
+                <img src={coverUrl} alt="月报封面" loading="lazy" decoding="async" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : (
+                <img src={referenceAssets.childPhoto} alt="月报封面" loading="lazy" decoding="async" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+              )}
+              <span aria-hidden="true" style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(17,18,16,0.16), rgba(17,18,16,0.82))' }} />
+              <div style={{ position: 'absolute', left: 18, right: 18, bottom: 16, display: 'grid', gap: 6 }}>
+                <span style={{ color: 'rgba(231,234,255,0.86)', fontSize: '12px', fontWeight: 850 }}>{hasMonthlyRecords ? '最新月报预览' : '月报空状态'}</span>
+                <h2 style={{ margin: 0, color: '#ffffff', fontSize: '27px', fontWeight: 900, lineHeight: 1.12, textShadow: '0 2px 12px rgba(0,0,0,0.34)' }}>
+                  {reportYear}年{reportMonth}月成长月报
+                </h2>
+                <span style={{ color: 'rgba(231,234,255,0.78)', fontSize: '12px', fontWeight: 750 }}>可查看、可导出、可长期保存</span>
+              </div>
+            </div>
+
+            <div style={{ padding: '18px 18px 20px', display: 'grid', gap: '16px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 42px', gap: '14px', alignItems: 'start' }}>
               <div>
-                <span style={{ display: 'inline-flex', color: 'var(--nl-accent)', fontSize: '12px', fontWeight: 800, marginBottom: '8px' }}>最新月报</span>
-                <h2 style={{ margin: 0, color: 'var(--nl-ink)', fontSize: '25px', fontWeight: 850, lineHeight: 1.16 }}>
-                  {reportYear}年{reportMonth}月
-                  <br />
-                  成长月报
-                </h2>
+                <span style={{ display: 'inline-flex', color: 'var(--nl-accent)', fontSize: '12px', fontWeight: 800, marginBottom: '8px' }}>成品结构</span>
+                <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.7 }}>封面、故事摘要、精选影像、成长关键词和记录清单会一起组成纪念册。</p>
               </div>
               <div style={{ width: '40px', height: '40px', borderRadius: '12px', border: '1px solid var(--nl-border)', background: 'rgba(var(--nl-accent-rgb),0.14)', color: 'var(--nl-accent)', display: 'grid', placeItems: 'center' }}>
                 <BookHeart size={19} />
@@ -659,10 +687,23 @@ export const ReportsPage = () => {
               ))}
             </div>
 
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {(monthlyKeywords.length ? monthlyKeywords : ['待记录', '成长档案']).map((item) => (
+                <span key={item} style={{ borderRadius: '999px', border: '1px solid var(--nl-border)', background: 'rgba(var(--nl-surface-rgb),0.72)', color: 'var(--nl-muted-strong)', padding: '7px 10px', fontSize: '11px', fontWeight: 850 }}>#{item}</span>
+              ))}
+            </div>
+
             <div style={{ borderRadius: '18px', background: 'rgba(var(--nl-primary-rgb),0.08)', border: '1px solid var(--nl-border)', padding: '14px', display: 'grid', gap: '8px' }}>
               <strong style={{ color: 'var(--nl-accent)', fontSize: '13px' }}>月度故事摘要</strong>
               <p style={{ ...helperTextStyle, lineHeight: 1.8 }}>{monthlySummary}</p>
             </div>
+
+            {!hasMonthlyRecords ? (
+              <div style={{ borderRadius: '18px', background: 'rgba(var(--nl-accent-rgb),0.1)', border: '1px dashed rgba(var(--nl-accent-rgb),0.34)', padding: '14px', display: 'grid', gap: '8px' }}>
+                <strong style={{ color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 850 }}>本月还没有记录</strong>
+                <p style={{ ...helperTextStyle, lineHeight: 1.75 }}>先留下一条照片、文字或语音，月报就会自动沉淀出故事摘要、关键词和记录清单。</p>
+              </div>
+            ) : null}
 
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 48px', gap: '10px', alignItems: 'center' }}>
               <button type="button" style={{ ...primaryButtonStyle, width: '100%', minHeight: '44px' }} onClick={() => latest ? navigate(`/record/${latest.record_no}`) : navigate('/record/create')}>
@@ -674,7 +715,7 @@ export const ReportsPage = () => {
             </div>
 
             <div style={{ borderTop: '1px solid var(--nl-border)', paddingTop: '12px', display: 'grid', gap: '8px' }}>
-              <strong style={{ color: 'var(--nl-accent)', fontSize: '13px' }}>AI 月报摘要</strong>
+              <strong style={{ color: 'var(--nl-accent)', fontSize: '13px' }}>月度摘要</strong>
               <p style={{ ...helperTextStyle, lineHeight: 1.75 }}>
                 {monthlyRecords.length
                   ? `该月共记录 ${monthlyRecords.length} 个成长瞬间，其中 ${milestoneCount} 个里程碑、${imageCount} 条影像记录、${textCount} 条文字记录。`
@@ -686,6 +727,7 @@ export const ReportsPage = () => {
                   <ChevronRight size={16} />
                 </button>
               ) : null}
+            </div>
             </div>
           </section>
 
@@ -883,6 +925,22 @@ export const ExportBackupPage = () => {
         <p style={{ ...helperTextStyle, margin: '9px auto 0', maxWidth: '280px', lineHeight: 1.65 }}>将您在应用中记录的所有照片、视频和文字日志打包下载，永久保存在您的私人设备中。</p>
       </Panel>
 
+      <Panel style={{ borderRadius: '18px', display: 'grid', gap: '11px', boxShadow: 'var(--nl-shadow-sm)' }}>
+        <strong style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--nl-ink)', fontSize: '15px', fontWeight: 850 }}>
+          <ShieldCheck size={17} color="var(--nl-success)" />
+          家庭档案安全说明
+        </strong>
+        <div style={{ display: 'grid', gap: '8px' }}>
+          {[
+            '只有家庭管理员可以发起完整导出和成年移交申请。',
+            '导出申请会写入后台审计，方便追踪谁在什么时候处理过档案。',
+            '记录默认家庭成员可见，不会自动公开到家庭外部。',
+          ].map((item) => (
+            <p key={item} style={{ ...helperTextStyle, margin: 0, lineHeight: 1.65 }}>· {item}</p>
+          ))}
+        </div>
+      </Panel>
+
       <section>
         <h2 style={{ margin: '0 0 14px', fontSize: '15px', fontWeight: 800, color: 'var(--nl-ink)' }}>选择导出内容</h2>
         <div style={{ display: 'grid', gap: '12px' }}>
@@ -906,10 +964,10 @@ export const ExportBackupPage = () => {
                   alignItems: 'center',
                   textAlign: 'left',
                   cursor: 'pointer',
-                  boxShadow: selected ? '0 14px 30px rgba(var(--nl-primary-rgb),0.24)' : 'var(--nl-shadow-sm)',
+                  boxShadow: selected ? '0 8px 18px rgba(var(--nl-shadow-rgb),0.22)' : 'var(--nl-shadow-sm)',
                 }}
               >
-                <span style={{ width: '36px', height: '36px', borderRadius: '999px', background: selected ? 'linear-gradient(135deg, var(--nl-primary), var(--nl-primary-2))' : 'rgba(var(--nl-accent-rgb),0.12)', color: selected ? '#ffffff' : 'var(--nl-muted)', display: 'grid', placeItems: 'center' }}>
+                <span style={{ width: '36px', height: '36px', borderRadius: '999px', background: selected ? 'var(--nl-primary)' : 'rgba(var(--nl-accent-rgb),0.12)', color: selected ? '#ffffff' : 'var(--nl-muted)', display: 'grid', placeItems: 'center' }}>
                   <FileBox size={17} />
                 </span>
                 <span style={{ minWidth: 0 }}>
@@ -1331,7 +1389,7 @@ export const AccountDeletionPage = () => {
               type="submit"
               style={{
                 ...primaryButtonStyle,
-                background: check?.can_delete ? 'linear-gradient(135deg, var(--nl-danger), #ff9aae)' : 'rgba(var(--nl-surface-rgb),0.58)',
+                background: check?.can_delete ? 'var(--nl-danger)' : 'rgba(var(--nl-surface-rgb),0.58)',
                 boxShadow: 'none',
               }}
               disabled={submitting || loading || !check?.can_delete}
@@ -1443,7 +1501,7 @@ export const HelpFeedbackPage = () => {
       <Panel>
         <div style={rowStyle}>
           <strong>常见问题</strong>
-          <p style={helperTextStyle}>账号密码用于登录；注册账号时需要填写家庭邀请码；照片上传支持 JPG、PNG、WebP。</p>
+          <p style={helperTextStyle}>账号密码用于登录；新用户可直接注册，已有家庭邀请码可在注册时填写加入家庭；照片上传支持 JPG、PNG、WebP。</p>
           <p style={helperTextStyle}>如果记录没有出现在首页，请先检查是否已选择孩子档案，再返回首页刷新。</p>
         </div>
       </Panel>

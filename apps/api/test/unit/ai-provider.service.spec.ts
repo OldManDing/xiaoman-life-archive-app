@@ -9,6 +9,8 @@ describe('AiProviderService', () => {
   beforeEach(() => {
     process.env = {
       ...originalEnv,
+      APP_ENV: 'test',
+      NODE_ENV: 'test',
       AI_PROVIDER: 'openai-compatible',
       AI_API_KEY: 'test-ai-secret',
       AI_BASE_URL: 'https://ai.example.com/v1',
@@ -78,9 +80,46 @@ describe('AiProviderService', () => {
     ).rejects.toThrow('AI 服务调用失败：HTTP 404，InvalidEndpointOrModel.NotFound：model not found for key <redacted>');
   });
 
+  it('falls back to local suggestions in production when the provider returns 403', async () => {
+    process.env = {
+      ...originalEnv,
+      APP_ENV: 'production',
+      NODE_ENV: 'production',
+      AI_PROVIDER: 'openai-compatible',
+      AI_API_KEY: 'test-ai-secret',
+      AI_BASE_URL: 'https://ai.example.com/v1',
+      AI_MODEL: 'chat-model',
+    };
+
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 403,
+      text: async () =>
+        JSON.stringify({
+          error: {
+            code: 'Forbidden',
+            message: 'API Key 所属分组已删除',
+          },
+        }),
+    }) as unknown as typeof fetch;
+
+    await expect(
+      new AiProviderService().run({
+        jobType: AiJobType.record_tags,
+        contentText: '今天孩子认真观察公园里的花草，主动分享自己的发现。',
+        title: '',
+        existingTags: ['成长'],
+      }),
+    ).resolves.toEqual({
+      tags: expect.arrayContaining(['成长', '观察', '自然']),
+    });
+  });
+
   it('rejects missing OpenAI-compatible configuration with an actionable message', async () => {
     process.env = {
       ...originalEnv,
+      APP_ENV: 'test',
+      NODE_ENV: 'test',
       AI_PROVIDER: 'openai-compatible',
       AI_API_KEY: '',
       AI_BASE_URL: '',

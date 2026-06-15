@@ -1,0 +1,1174 @@
+{
+  "issues": [],
+  "blockingIssues": [],
+  "clicks": [
+    {
+      "route": "/home",
+      "label": "去记录"
+    },
+    {
+      "route": "/home",
+      "label": "换一条"
+    },
+    {
+      "route": "/home",
+      "label": "126月第一次自己吃饭小满第一次尝试用勺子自己吃饭，虽然洒了一点，但看起来特别自豪。里程碑档案"
+    },
+    {
+      "route": "/home",
+      "label": "136月学会说谢谢今天小满把玩具递给家人时主动说了谢谢，大家都很惊喜。文字档案"
+    },
+    {
+      "route": "/home",
+      "label": "记录今天补一条今天的新变化"
+    },
+    {
+      "route": "/home",
+      "label": "回看成长看看最近的真实记录"
+    },
+    {
+      "route": "/home",
+      "label": "邀请家人一起记录，权限可控"
+    },
+    {
+      "route": "/home",
+      "label": "相册"
+    },
+    {
+      "route": "/home",
+      "label": "记录"
+    },
+    {
+      "route": "/home",
+      "label": "AI故事"
+    },
+    {
+      "route": "/home",
+      "label": "月报"
+    },
+    {
+      "route": "/home",
+      "label": "成长星球已记录 2 个珍贵瞬间"
+    },
+    {
+      "route": "/home",
+      "label": "换一句星语提示"
+    },
+    {
+      "route": "/search",
+      "label": "搜索"
+    },
+    {
+      "route": "/search",
+      "label": "小满1岁5月13天"
+    },
+    {
+      "route": "/timeline",
+      "label": "1岁5个月第一次自己吃饭小满第一次尝试用勺子自己吃饭，虽然洒了一点，但看起来特别自豪。"
+    },
+    {
+      "route": "/timeline",
+      "label": "1岁5个月学会说谢谢今天小满把玩具递给家人时主动说了谢谢，大家都很惊喜。"
+    },
+    {
+      "route": "/timeline",
+      "label": "2026年"
+    },
+    {
+      "route": "/timeline",
+      "label": "2025年"
+    },
+    {
+      "route": "/timeline",
+      "label": "2024年"
+    },
+    {
+      "route": "/timeline",
+      "label": "2023年"
+    },
+    {
+      "route": "/timeline",
+      "label": "筛选记录"
+    },
+    {
+      "route": "/timeline",
+      "label": "#第一次"
+    },
+    {
+      "route": "/timeline",
+      "label": "#吃饭"
+    },
+    {
+      "route": "/timeline",
+      "label": "#小满第一"
+    },
+    {
+      "route": "/timeline",
+      "label": "#成长"
+    },
+    {
+      "route": "/timeline",
+      "label": "里程碑"
+    },
+    {
+      "route": "/timeline",
+      "label": "全部"
+    },
+    {
+      "route": "/record/create",
+      "label": "从相册添加"
+    },
+    {
+      "route": "/record/create",
+      "label": "切换里程碑记录"
+    },
+    {
+      "route": "/record/create",
+      "label": "可见范围"
+    },
+    {
+      "route": "/record/create",
+      "label": "AI 智能建议"
+    },
+    {
+      "route": "/record/create?type=text&focus=content",
+      "label": "切换里程碑记录"
+    },
+    {
+      "route": "/record/create?type=text&focus=content",
+      "label": "可见范围"
+    },
+    {
+      "route": "/record/create?type=text&focus=content",
+      "label": "AI 智能建议"
+    },
+    {
+      "route": "/record/create?type=video&focus=media",
+      "label": "从相册选择视频"
+    },
+    {
+      "route": "/record/create?type=video&focus=media",
+      "label": "切换里程碑记录"
+    },
+    {
+      "route": "/record/create?type=video&focus=media",
+      "label": "可见范围"
+    },
+    {
+      "route": "/record/create?type=video&focus=media",
+      "label": "AI 智能建议"
+    },
+    {
+      "route": "/record/create?type=audio&focus=media",
+      "label": "上传语音"
+    },
+    {
+      "route": "/record/create?type=audio&focus=media",
+      "label": "切换里程碑记录"
+    },
+    {
+      "route": "/record/create?type=audio&focus=media",
+      "label": "可见范围"
+    },
+    {
+      "route": "/record/create?type=audio&focus=media",
+      "label": "AI 智能建议"
+    },
+    {
+      "route": "/record/create?type=milestone&focus=content",
+      "label": "从相册添加"
+    },
+    {
+      "route": "/record/create?type=milestone&focus=content",
+      "label": "切换里程碑记录"
+    },
+    {
+      "route": "/record/create?type=milestone&focus=content",
+      "label": "可见范围"
+    },
+    {
+      "route": "/record/create?type=milestone&focus=content",
+      "label": "AI 智能建议"
+    },
+    {
+      "route": "/record/r_demo_001",
+      "label": "编辑记录"
+    },
+    {
+      "route": "/record/r_demo_001/edit",
+      "label": "切换里程碑记录"
+    },
+    {
+      "route": "/record/r_demo_001/edit",
+      "label": "#吃饭"
+    },
+    {
+      "route": "/record/r_demo_001/edit",
+      "label": "#小满第一"
+    },
+    {
+      "route": "/record/r_demo_001/edit",
+      "label": "#成长"
+    },
+    {
+      "route": "/record/r_demo_001/edit",
+      "label": "#第一次"
+    },
+    {
+      "route": "/record/r_demo_001/edit",
+      "label": "选择标签"
+    },
+    {
+      "route": "/record/r_demo_001/edit",
+      "label": "体重记录"
+    },
+    {
+      "route": "/record/r_demo_001/edit",
+      "label": "#体重记录"
+    },
+    {
+      "route": "/record/r_demo_001/edit",
+      "label": "医院"
+    },
+    {
+      "route": "/record/r_demo_001/edit",
+      "label": "家里"
+    },
+    {
+      "route": "/record/r_demo_001/edit",
+      "label": "小区"
+    },
+    {
+      "route": "/record/r_demo_001/edit",
+      "label": "公园"
+    },
+    {
+      "route": "/record/r_demo_001/edit",
+      "label": "学校"
+    },
+    {
+      "route": "/record/r_demo_001/edit",
+      "label": "手机定位"
+    },
+    {
+      "route": "/family",
+      "label": "查看家庭动态：学会说谢谢"
+    },
+    {
+      "route": "/family",
+      "label": "小小满外婆只读成员已加入家庭记录"
+    },
+    {
+      "route": "/family/child",
+      "label": "返回家庭页"
+    },
+    {
+      "route": "/family/child",
+      "label": "女"
+    },
+    {
+      "route": "/family/child",
+      "label": "男"
+    },
+    {
+      "route": "/family/child",
+      "label": "未知"
+    },
+    {
+      "route": "/family/members",
+      "label": "设为可编辑"
+    },
+    {
+      "route": "/family/members/u_demo_parent_001",
+      "label": "第一次自己吃饭2026/6/12"
+    },
+    {
+      "route": "/family/members/u_demo_parent_001",
+      "label": "学会说谢谢2026/6/13"
+    },
+    {
+      "route": "/family/invite",
+      "label": "生成邀请码"
+    },
+    {
+      "route": "/family/invite",
+      "label": "只读成员"
+    },
+    {
+      "route": "/family/invite",
+      "label": "可编辑成员"
+    },
+    {
+      "route": "/profile",
+      "label": "关于我们"
+    },
+    {
+      "route": "/profile",
+      "label": "应用反馈"
+    },
+    {
+      "route": "/profile",
+      "label": "问题类型"
+    },
+    {
+      "route": "/profile",
+      "label": "功能建议"
+    },
+    {
+      "route": "/onboarding/child?mode=add",
+      "label": "男孩 👦"
+    },
+    {
+      "route": "/onboarding/child?mode=add",
+      "label": "女孩 👧"
+    },
+    {
+      "route": "/profile/reports",
+      "label": "2026年2月纪念册查看 / 导出"
+    },
+    {
+      "route": "/profile/reports",
+      "label": "2026年1月纪念册查看 / 导出"
+    },
+    {
+      "route": "/profile/reports",
+      "label": "2026年4月纪念册查看 / 导出"
+    },
+    {
+      "route": "/profile/reports",
+      "label": "2026年3月纪念册查看 / 导出"
+    },
+    {
+      "route": "/profile/reports",
+      "label": "添加记录"
+    },
+    {
+      "route": "/profile/reports",
+      "label": "导出月报摘要"
+    },
+    {
+      "route": "/profile/export",
+      "label": "下载审计留痕摘要"
+    },
+    {
+      "route": "/profile/export",
+      "label": "仅文字记录导出为 TXT/PDF 格式的纯文字日记"
+    },
+    {
+      "route": "/profile/export",
+      "label": "仅图片和视频只导出媒体文件，适合节省空间"
+    },
+    {
+      "route": "/profile/export",
+      "label": "全部数据（推荐）包含所有文字记录、高清图片和视频文件"
+    },
+    {
+      "route": "/profile/membership",
+      "label": "咨询会员权益"
+    },
+    {
+      "route": "/profile/membership",
+      "label": "刷新会员信息"
+    },
+    {
+      "route": "/profile/security",
+      "label": "注销账号"
+    },
+    {
+      "route": "/profile/security",
+      "label": "第三方账号绑定暂未接入"
+    },
+    {
+      "route": "/profile/security",
+      "label": "登录密码已设置"
+    },
+    {
+      "route": "/profile/security",
+      "label": "手机号码当前未提供"
+    },
+    {
+      "route": "/profile/account-delete",
+      "label": "去处理成员"
+    },
+    {
+      "route": "/profile/account-delete",
+      "label": "提交协助"
+    },
+    {
+      "route": "/profile/help",
+      "label": "问题类型"
+    },
+    {
+      "route": "/profile/help",
+      "label": "功能建议"
+    },
+    {
+      "route": "/profile/settings",
+      "label": "向新成员展示历史时间轴"
+    },
+    {
+      "route": "/profile/settings",
+      "label": "默认谁可以看到您的记录仅家庭成员"
+    },
+    {
+      "route": "/profile/about",
+      "label": "应用反馈"
+    },
+    {
+      "route": "/profile/about",
+      "label": "联系我们帮助与反馈"
+    },
+    {
+      "route": "/profile/about",
+      "label": "服务说明"
+    },
+    {
+      "route": "/profile/about",
+      "label": "隐私政策"
+    },
+    {
+      "route": "/profile/about",
+      "label": "用户服务协议"
+    },
+    {
+      "route": "/profile/about",
+      "label": "功能介绍"
+    }
+  ],
+  "skipped": [
+    {
+      "route": "/home",
+      "label": "查看全部",
+      "reason": "navigation-covered-by-route-audit"
+    },
+    {
+      "route": "/search",
+      "label": "返回",
+      "reason": "navigation-covered-by-route-audit"
+    },
+    {
+      "route": "/search",
+      "label": "第一次",
+      "reason": "search-dynamic-result-covered-by-sampled-clicks"
+    },
+    {
+      "route": "/search",
+      "label": "有照片",
+      "reason": "search-dynamic-result-covered-by-sampled-clicks"
+    },
+    {
+      "route": "/search",
+      "label": "里程碑",
+      "reason": "search-dynamic-result-covered-by-sampled-clicks"
+    },
+    {
+      "route": "/search",
+      "label": "家里",
+      "reason": "search-dynamic-result-covered-by-sampled-clicks"
+    },
+    {
+      "route": "/search",
+      "label": "#语言",
+      "reason": "search-dynamic-result-covered-by-sampled-clicks"
+    },
+    {
+      "route": "/search",
+      "label": "#吃饭",
+      "reason": "search-dynamic-result-covered-by-sampled-clicks"
+    },
+    {
+      "route": "/search",
+      "label": "#小满第一",
+      "reason": "search-dynamic-result-covered-by-sampled-clicks"
+    },
+    {
+      "route": "/search",
+      "label": "#成长",
+      "reason": "search-dynamic-result-covered-by-sampled-clicks"
+    },
+    {
+      "route": "/search",
+      "label": "#第一次",
+      "reason": "search-dynamic-result-covered-by-sampled-clicks"
+    },
+    {
+      "route": "/timeline",
+      "label": "#语言",
+      "reason": "candidate-not-visible-after-reload"
+    },
+    {
+      "route": "/record/create",
+      "label": "取消",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create",
+      "label": "发布",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create",
+      "label": "切换孩子：小满",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create",
+      "label": "拍照记录",
+      "reason": "native-file-picker-covered-by-dedicated-e2e"
+    },
+    {
+      "route": "/record/create",
+      "label": "拍摄视频",
+      "reason": "native-file-picker-covered-by-dedicated-e2e"
+    },
+    {
+      "route": "/record/create",
+      "label": "录制语音",
+      "reason": "native-file-picker-covered-by-dedicated-e2e"
+    },
+    {
+      "route": "/record/create",
+      "label": "上传语音",
+      "reason": "native-file-picker-covered-by-dedicated-e2e"
+    },
+    {
+      "route": "/record/create",
+      "label": "第一次尝试",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create",
+      "label": "今天学会了",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create",
+      "label": "和家人在一起",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create",
+      "label": "可见范围家庭成员可见",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create",
+      "label": "手机定位",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create",
+      "label": "使用手动地点：小满",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create",
+      "label": "选择标签",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=text&focus=content",
+      "label": "取消",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=text&focus=content",
+      "label": "发布",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=text&focus=content",
+      "label": "切换孩子：小满",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=text&focus=content",
+      "label": "第一次尝试",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=text&focus=content",
+      "label": "今天学会了",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=text&focus=content",
+      "label": "和家人在一起",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=text&focus=content",
+      "label": "可见范围家庭成员可见",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=text&focus=content",
+      "label": "手机定位",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=text&focus=content",
+      "label": "使用手动地点：小满",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=text&focus=content",
+      "label": "选择标签",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=video&focus=media",
+      "label": "取消",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=video&focus=media",
+      "label": "发布",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=video&focus=media",
+      "label": "切换孩子：小满",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=video&focus=media",
+      "label": "拍摄视频",
+      "reason": "native-file-picker-covered-by-dedicated-e2e"
+    },
+    {
+      "route": "/record/create?type=video&focus=media",
+      "label": "从相册选择",
+      "reason": "native-file-picker-covered-by-dedicated-e2e"
+    },
+    {
+      "route": "/record/create?type=video&focus=media",
+      "label": "第一次尝试",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=video&focus=media",
+      "label": "今天学会了",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=video&focus=media",
+      "label": "和家人在一起",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=video&focus=media",
+      "label": "可见范围家庭成员可见",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=video&focus=media",
+      "label": "手机定位",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=video&focus=media",
+      "label": "使用手动地点：小满",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=video&focus=media",
+      "label": "选择标签",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=audio&focus=media",
+      "label": "取消",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=audio&focus=media",
+      "label": "发布",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=audio&focus=media",
+      "label": "切换孩子：小满",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=audio&focus=media",
+      "label": "录制语音",
+      "reason": "native-file-picker-covered-by-dedicated-e2e"
+    },
+    {
+      "route": "/record/create?type=audio&focus=media",
+      "label": "第一次尝试",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=audio&focus=media",
+      "label": "今天学会了",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=audio&focus=media",
+      "label": "和家人在一起",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=audio&focus=media",
+      "label": "可见范围家庭成员可见",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=audio&focus=media",
+      "label": "手机定位",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=audio&focus=media",
+      "label": "使用手动地点：小满",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=audio&focus=media",
+      "label": "选择标签",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=milestone&focus=content",
+      "label": "取消",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=milestone&focus=content",
+      "label": "发布",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=milestone&focus=content",
+      "label": "切换孩子：小满",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=milestone&focus=content",
+      "label": "拍照记录",
+      "reason": "native-file-picker-covered-by-dedicated-e2e"
+    },
+    {
+      "route": "/record/create?type=milestone&focus=content",
+      "label": "拍摄视频",
+      "reason": "native-file-picker-covered-by-dedicated-e2e"
+    },
+    {
+      "route": "/record/create?type=milestone&focus=content",
+      "label": "录制语音",
+      "reason": "native-file-picker-covered-by-dedicated-e2e"
+    },
+    {
+      "route": "/record/create?type=milestone&focus=content",
+      "label": "上传语音",
+      "reason": "native-file-picker-covered-by-dedicated-e2e"
+    },
+    {
+      "route": "/record/create?type=milestone&focus=content",
+      "label": "第一次尝试",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=milestone&focus=content",
+      "label": "今天学会了",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=milestone&focus=content",
+      "label": "和家人在一起",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=milestone&focus=content",
+      "label": "可见范围家庭成员可见",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=milestone&focus=content",
+      "label": "手机定位",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=milestone&focus=content",
+      "label": "使用手动地点：小满",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/record/create?type=milestone&focus=content",
+      "label": "选择标签",
+      "reason": "record-create-flow-covered-by-critical-e2e"
+    },
+    {
+      "route": "/family/child",
+      "label": "保存孩子资料",
+      "reason": "destructive-action"
+    },
+    {
+      "route": "/family/members",
+      "label": "设为只读",
+      "reason": "disabled"
+    },
+    {
+      "route": "/family/members",
+      "label": "处理中…",
+      "reason": "disabled"
+    },
+    {
+      "route": "/family/members/u_demo_parent_001",
+      "label": "移出家庭",
+      "reason": "destructive-action"
+    },
+    {
+      "route": "/family/members/u_demo_parent_001",
+      "label": "修改角色权限",
+      "reason": "disabled"
+    },
+    {
+      "route": "/profile",
+      "label": "退出登录",
+      "reason": "destructive-action"
+    },
+    {
+      "route": "/profile",
+      "label": "提交反馈",
+      "reason": "destructive-action"
+    },
+    {
+      "route": "/profile/account",
+      "label": "保存昵称",
+      "reason": "destructive-action"
+    },
+    {
+      "route": "/onboarding/child?mode=add",
+      "label": "完成创建",
+      "reason": "destructive-action"
+    },
+    {
+      "route": "/profile/export",
+      "label": "正在生成摘要…",
+      "reason": "disabled"
+    },
+    {
+      "route": "/profile/export",
+      "label": "提交打包申请",
+      "reason": "destructive-action"
+    },
+    {
+      "route": "/profile/export",
+      "label": "成年移交准备",
+      "reason": "destructive-action"
+    },
+    {
+      "route": "/profile/membership",
+      "label": "刷新中",
+      "reason": "disabled"
+    },
+    {
+      "route": "/profile/account-delete",
+      "label": "确认注销账号",
+      "reason": "disabled"
+    },
+    {
+      "route": "/profile/help",
+      "label": "提交反馈",
+      "reason": "destructive-action"
+    },
+    {
+      "route": "/profile/settings",
+      "label": "允许通过手机号搜索到我",
+      "reason": "disabled"
+    }
+  ],
+  "routeSummaries": [
+    {
+      "route": "/home",
+      "inputsTouched": 0,
+      "buttonCandidates": 16,
+      "buttonsClicked": 13,
+      "buttonsSkipped": 1,
+      "disabledButtons": 0
+    },
+    {
+      "route": "/search",
+      "inputsTouched": 1,
+      "buttonCandidates": 11,
+      "buttonsClicked": 2,
+      "buttonsSkipped": 10,
+      "disabledButtons": 0
+    },
+    {
+      "route": "/timeline",
+      "inputsTouched": 0,
+      "buttonCandidates": 18,
+      "buttonsClicked": 13,
+      "buttonsSkipped": 1,
+      "disabledButtons": 0
+    },
+    {
+      "route": "/record/create",
+      "inputsTouched": 3,
+      "buttonCandidates": 17,
+      "buttonsClicked": 4,
+      "buttonsSkipped": 14,
+      "disabledButtons": 0
+    },
+    {
+      "route": "/record/create?type=text&focus=content",
+      "inputsTouched": 3,
+      "buttonCandidates": 12,
+      "buttonsClicked": 3,
+      "buttonsSkipped": 10,
+      "disabledButtons": 0
+    },
+    {
+      "route": "/record/create?type=video&focus=media",
+      "inputsTouched": 3,
+      "buttonCandidates": 14,
+      "buttonsClicked": 4,
+      "buttonsSkipped": 12,
+      "disabledButtons": 0
+    },
+    {
+      "route": "/record/create?type=audio&focus=media",
+      "inputsTouched": 3,
+      "buttonCandidates": 14,
+      "buttonsClicked": 4,
+      "buttonsSkipped": 11,
+      "disabledButtons": 0
+    },
+    {
+      "route": "/record/create?type=milestone&focus=content",
+      "inputsTouched": 3,
+      "buttonCandidates": 17,
+      "buttonsClicked": 4,
+      "buttonsSkipped": 14,
+      "disabledButtons": 0
+    },
+    {
+      "route": "/record/r_demo_001",
+      "inputsTouched": 0,
+      "buttonCandidates": 7,
+      "buttonsClicked": 1,
+      "buttonsSkipped": 0,
+      "disabledButtons": 0
+    },
+    {
+      "route": "/record/r_demo_001/edit",
+      "inputsTouched": 3,
+      "buttonCandidates": 35,
+      "buttonsClicked": 14,
+      "buttonsSkipped": 0,
+      "disabledButtons": 0
+    },
+    {
+      "route": "/family",
+      "inputsTouched": 0,
+      "buttonCandidates": 3,
+      "buttonsClicked": 2,
+      "buttonsSkipped": 0,
+      "disabledButtons": 0
+    },
+    {
+      "route": "/family/child",
+      "inputsTouched": 3,
+      "buttonCandidates": 5,
+      "buttonsClicked": 4,
+      "buttonsSkipped": 1,
+      "disabledButtons": 0
+    },
+    {
+      "route": "/family/members",
+      "inputsTouched": 0,
+      "buttonCandidates": 2,
+      "buttonsClicked": 1,
+      "buttonsSkipped": 2,
+      "disabledButtons": 2
+    },
+    {
+      "route": "/family/members/u_demo_parent_001",
+      "inputsTouched": 0,
+      "buttonCandidates": 4,
+      "buttonsClicked": 2,
+      "buttonsSkipped": 2,
+      "disabledButtons": 1
+    },
+    {
+      "route": "/family/invite",
+      "inputsTouched": 1,
+      "buttonCandidates": 3,
+      "buttonsClicked": 3,
+      "buttonsSkipped": 0,
+      "disabledButtons": 0
+    },
+    {
+      "route": "/profile",
+      "inputsTouched": 0,
+      "buttonCandidates": 13,
+      "buttonsClicked": 4,
+      "buttonsSkipped": 2,
+      "disabledButtons": 0
+    },
+    {
+      "route": "/profile/account",
+      "inputsTouched": 1,
+      "buttonCandidates": 1,
+      "buttonsClicked": 0,
+      "buttonsSkipped": 1,
+      "disabledButtons": 0
+    },
+    {
+      "route": "/onboarding/child?mode=add",
+      "inputsTouched": 1,
+      "buttonCandidates": 3,
+      "buttonsClicked": 2,
+      "buttonsSkipped": 1,
+      "disabledButtons": 0
+    },
+    {
+      "route": "/profile/reports",
+      "inputsTouched": 0,
+      "buttonCandidates": 6,
+      "buttonsClicked": 6,
+      "buttonsSkipped": 0,
+      "disabledButtons": 0
+    },
+    {
+      "route": "/profile/export",
+      "inputsTouched": 0,
+      "buttonCandidates": 6,
+      "buttonsClicked": 4,
+      "buttonsSkipped": 3,
+      "disabledButtons": 1
+    },
+    {
+      "route": "/profile/membership",
+      "inputsTouched": 0,
+      "buttonCandidates": 2,
+      "buttonsClicked": 2,
+      "buttonsSkipped": 1,
+      "disabledButtons": 1
+    },
+    {
+      "route": "/profile/security",
+      "inputsTouched": 0,
+      "buttonCandidates": 4,
+      "buttonsClicked": 4,
+      "buttonsSkipped": 0,
+      "disabledButtons": 0
+    },
+    {
+      "route": "/profile/account-delete",
+      "inputsTouched": 2,
+      "buttonCandidates": 3,
+      "buttonsClicked": 2,
+      "buttonsSkipped": 1,
+      "disabledButtons": 1
+    },
+    {
+      "route": "/profile/help",
+      "inputsTouched": 2,
+      "buttonCandidates": 6,
+      "buttonsClicked": 2,
+      "buttonsSkipped": 1,
+      "disabledButtons": 0
+    },
+    {
+      "route": "/profile/settings",
+      "inputsTouched": 0,
+      "buttonCandidates": 3,
+      "buttonsClicked": 2,
+      "buttonsSkipped": 1,
+      "disabledButtons": 1
+    },
+    {
+      "route": "/profile/about",
+      "inputsTouched": 0,
+      "buttonCandidates": 6,
+      "buttonsClicked": 6,
+      "buttonsSkipped": 0,
+      "disabledButtons": 0
+    },
+    {
+      "route": "/profile/legal",
+      "inputsTouched": 0,
+      "buttonCandidates": 0,
+      "buttonsClicked": 0,
+      "buttonsSkipped": 0,
+      "disabledButtons": 0
+    }
+  ],
+  "runtimeErrors": [],
+  "ignoredRuntimeErrors": [
+    "Failed to load resource: the server responded with a status of 400 (Bad Request)"
+  ],
+  "failedRequests": [],
+  "ignoredFailedRequests": [
+    "GET http://127.0.0.1:5176/api/v1/children/c_demo_xiaoman_001 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/children/c_demo_xiaoman_001 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/children/c_demo_xiaoman_001 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records/r_demo_001 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records/r_demo_001 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records/r_demo_002 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records/r_demo_002 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records?child_no=c_demo_xiaoman_001&page=1&page_size=50&status=published net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records?child_no=c_demo_xiaoman_001&page=1&page_size=50&status=published net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records?child_no=c_demo_xiaoman_001&page=1&page_size=100 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records?child_no=c_demo_xiaoman_001&page=1&page_size=100 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records?child_no=c_demo_xiaoman_001&page=1&page_size=40&status=published net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records?child_no=c_demo_xiaoman_001&page=1&page_size=40&status=published net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/children/c_demo_xiaoman_001 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records?child_no=c_demo_xiaoman_001&page=1&page_size=1&status=published&start_time=2025-06-13T16:00:00.000Z&end_time=2025-06-14T15:59:59.999Z net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records?child_no=c_demo_xiaoman_001&page=1&page_size=5&status=published net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records/r_demo_001 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records/r_demo_001 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records/r_demo_002 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records/r_demo_002 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records?child_no=c_demo_xiaoman_001&page=1&page_size=40&status=published&tag=%E6%88%90%E9%95%BF net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/locations/search?keyword=%E5%B0%8F%E6%BB%A1 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records/r_demo_001 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records/r_demo_001 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records/r_demo_002 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records/r_demo_002 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/families/f_demo_001/members net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/families/f_demo_001/members net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records?child_no=c_demo_xiaoman_001&page=1&page_size=30 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records?child_no=c_demo_xiaoman_001&page=1&page_size=30 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records?child_no=c_demo_xiaoman_001&page=1&page_size=3&status=published net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/families/f_demo_001/members net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records?child_no=c_demo_xiaoman_001&page=1&page_size=3&status=published net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/families/f_demo_001/members net::ERR_ABORTED",
+    "PUT http://127.0.0.1:5176/api/v1/families/f_demo_001/members/u_demo_viewer_001/role net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records/r_demo_001 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records/r_demo_001 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records/r_demo_002 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records/r_demo_002 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/archive-export-requests?child_no=c_demo_xiaoman_001 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records?child_no=c_demo_xiaoman_001&page=1&page_size=100 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records?child_no=c_demo_xiaoman_001&page=1&page_size=100 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/archive-export-requests?child_no=c_demo_xiaoman_001 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/archive-export-requests?child_no=c_demo_xiaoman_001 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/archive-export-requests?child_no=c_demo_xiaoman_001 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records?child_no=c_demo_xiaoman_001&page=1&page_size=100 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records?child_no=c_demo_xiaoman_001&page=1&page_size=100 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records?child_no=c_demo_xiaoman_001&page=1&page_size=100 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/archive-export-requests?child_no=c_demo_xiaoman_001 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/archive-export-requests?child_no=c_demo_xiaoman_001 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records?child_no=c_demo_xiaoman_001&page=1&page_size=100 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/archive-export-requests?child_no=c_demo_xiaoman_001 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records?child_no=c_demo_xiaoman_001&page=1&page_size=100 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records?child_no=c_demo_xiaoman_001&page=1&page_size=100 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/archive-export-requests?child_no=c_demo_xiaoman_001 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/archive-export-requests?child_no=c_demo_xiaoman_001 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records?child_no=c_demo_xiaoman_001&page=1&page_size=100 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records?child_no=c_demo_xiaoman_001&page=1&page_size=100 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/archive-export-requests?child_no=c_demo_xiaoman_001 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/deletion-check net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/deletion-check net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/families/f_demo_001/members net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/families/f_demo_001/members net::ERR_ABORTED"
+  ],
+  "fileChooserErrors": []
+}

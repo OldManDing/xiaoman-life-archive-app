@@ -119,7 +119,7 @@ export class AuthService {
       throw new BadRequestException('账号已存在，请直接登录');
     }
 
-    const result = await this.createPasswordAccountWithInvite(credential, dto.password, inviteCode.trim());
+    const result = await this.createPasswordAccount(credential, dto.password, inviteCode);
     return this.issueSessionResponse(result);
   }
 
@@ -166,11 +166,11 @@ export class AuthService {
     });
   }
 
-  private async createPasswordAccountWithInvite(credential: string, password: string, inviteCode: string) {
+  private async createPasswordAccount(credential: string, password: string, inviteCode: string) {
     const passwordHash = await bcrypt.hash(password, 10);
 
     return this.prisma.$transaction(async (tx) => {
-      const invite = await this.ensureInviteCanBeAccepted(tx, inviteCode);
+      const invite = inviteCode ? await this.ensureInviteCanBeAccepted(tx, inviteCode) : null;
 
       const user = await tx.user.create({
         data: {
@@ -194,7 +194,9 @@ export class AuthService {
         },
       });
 
-      await this.acceptInviteInTransaction(tx, user.id, invite);
+      if (invite) {
+        await this.acceptInviteInTransaction(tx, user.id, invite);
+      }
 
       return user;
     });

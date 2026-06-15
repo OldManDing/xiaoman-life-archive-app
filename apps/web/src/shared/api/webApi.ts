@@ -37,7 +37,7 @@ export interface RegisterPayload {
   credential: string;
   password: string;
   password_confirm: string;
-  invite_code: string;
+  invite_code?: string;
 }
 
 export interface CreateChildPayload {

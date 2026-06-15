@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties, type ChangeEvent, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Calendar, Camera } from 'lucide-react';
+import { Calendar, Camera, CheckCircle2 } from 'lucide-react';
 
 import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
@@ -144,7 +144,7 @@ const validateInviteCode = (inviteCode: string) => {
 
 const normalizeAuthErrorMessage = (mode: AuthMode, message: string) => {
   if (mode === 'login' && message === '状态不允许') return '账号或密码错误';
-  if (mode === 'register' && message === '参数校验失败') return '请检查账号、密码、确认密码和邀请码是否完整';
+  if (mode === 'register' && message === '参数校验失败') return '请检查账号、密码和确认密码是否完整';
   return message;
 };
 
@@ -168,21 +168,54 @@ const authHeroStyle: CSSProperties = {
 const authLogoStyle: CSSProperties = {
   width: '72px',
   height: '72px',
-  borderRadius: '22px',
-  boxShadow: '0 16px 34px rgba(var(--nl-primary-rgb),0.24)',
+  borderRadius: '20px',
+  boxShadow: '0 14px 30px rgba(var(--nl-shadow-rgb),0.28), 0 0 0 5px rgba(var(--nl-primary-rgb),0.1)',
 };
 
 const authTitleStyle: CSSProperties = {
   margin: 0,
   color: 'var(--nl-ink)',
-  fontSize: '24px',
-  fontWeight: 850,
+  fontSize: '26px',
+  fontWeight: 950,
   lineHeight: 1.18,
+};
+
+const authSubtitleStyle: CSSProperties = {
+  margin: '7px auto 0',
+  maxWidth: '300px',
+  color: 'var(--nl-muted-strong)',
+  fontSize: '13px',
+  lineHeight: 1.58,
+  fontWeight: 750,
+};
+
+const authTrustGridStyle: CSSProperties = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+  gap: '8px',
+};
+
+const authTrustItemStyle: CSSProperties = {
+  minHeight: '58px',
+  borderRadius: '18px',
+  border: '1px solid var(--nl-glass-border)',
+  background: 'var(--nl-glass-soft)',
+  color: 'var(--nl-muted-strong)',
+  display: 'grid',
+  placeItems: 'center',
+  gap: '4px',
+  padding: '8px 4px',
+  textAlign: 'center',
+  fontSize: '11px',
+  lineHeight: 1.25,
+  fontWeight: 850,
+  WebkitBackdropFilter: 'blur(14px) saturate(1.12)',
+  backdropFilter: 'blur(14px) saturate(1.12)',
 };
 
 const authPanelStyle: CSSProperties = {
   padding: '16px',
-  borderRadius: '22px',
+  borderRadius: '20px',
 };
 
 const authFormStyle: CSSProperties = {
@@ -195,18 +228,61 @@ const authAgreementStyle: CSSProperties = {
   gap: '10px',
   alignItems: 'flex-start',
   minHeight: '44px',
+  position: 'relative',
   color: 'var(--nl-muted-strong)',
   fontSize: '13px',
   lineHeight: 1.55,
   cursor: 'pointer',
 };
 
-const authCheckboxStyle: CSSProperties = {
+const authCheckboxStyle = (checked: boolean): CSSProperties => ({
+  appearance: 'none',
+  WebkitAppearance: 'none',
   width: '20px',
   height: '20px',
   margin: '2px 0 0',
   flex: '0 0 auto',
+  borderRadius: '7px',
+  border: checked ? '1px solid rgba(245, 205, 140, 0.68)' : '1px solid var(--nl-border)',
+  backgroundColor: checked ? 'var(--nl-primary)' : 'rgba(var(--nl-surface-rgb), 0.92)',
+  backgroundImage: checked
+    ? 'url("data:image/svg+xml,%3Csvg width=\'14\' height=\'14\' viewBox=\'0 0 14 14\' fill=\'none\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M3 7.1L5.6 9.7L11 4.3\' stroke=\'white\' stroke-width=\'2.2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'/%3E%3C/svg%3E")'
+    : 'none',
+  backgroundPosition: 'center',
+  backgroundRepeat: 'no-repeat',
+  backgroundSize: '14px 14px',
+  boxShadow: checked ? '0 8px 18px rgba(var(--nl-primary-rgb), 0.2)' : 'inset 0 0 0 1px rgba(255, 255, 255, 0.04)',
+  cursor: 'pointer',
+});
+
+const authAgreementTextStyle: CSSProperties = {
+  flex: '1 1 auto',
+  minWidth: 0,
 };
+
+const onboardingStepStyle = (active: boolean): CSSProperties => ({
+  display: 'grid',
+  gridTemplateColumns: '24px minmax(0, 1fr)',
+  gap: '10px',
+  alignItems: 'start',
+  color: active ? 'var(--nl-ink)' : 'var(--nl-muted-strong)',
+  fontSize: '13px',
+  lineHeight: 1.45,
+  fontWeight: 750,
+});
+
+const onboardingStepDotStyle = (active: boolean): CSSProperties => ({
+  width: '24px',
+  height: '24px',
+  borderRadius: '999px',
+  display: 'grid',
+  placeItems: 'center',
+  background: active ? 'rgba(var(--nl-success-rgb),0.16)' : 'rgba(var(--nl-surface-rgb),0.74)',
+  color: active ? 'var(--nl-success)' : 'var(--nl-muted)',
+  border: '1px solid var(--nl-border)',
+  fontSize: '11px',
+  fontWeight: 900,
+});
 
 const disabledSubmitButtonStyle: CSSProperties = {
   ...primaryButtonStyle,
@@ -219,8 +295,13 @@ const disabledSubmitButtonStyle: CSSProperties = {
 
 export const SplashPage = () => (
   <PageShell title="正在进入年轮" description="系统正在检查登录状态，并会自动前往合适的页面。">
-    <Panel>
-      <p style={helperTextStyle}>请稍候，年轮会根据你的账号状态进入登录、建档或首页。</p>
+    <Panel style={{ textAlign: 'center', display: 'grid', justifyItems: 'center', gap: 14, padding: '28px 20px' }}>
+      <img src="/brand/nianlun-logo-192.png" alt="年轮" width={64} height={64} style={{ ...authLogoStyle, width: 64, height: 64, borderRadius: 18 }} />
+      <div style={{ display: 'grid', gap: 6 }}>
+        <strong style={{ color: 'var(--nl-ink)', fontSize: 18, fontWeight: 950 }}>正在同步家庭档案</strong>
+        <p style={{ ...helperTextStyle, margin: 0 }}>正在检查登录状态、孩子档案和最近记录。</p>
+      </div>
+      <span aria-hidden="true" style={{ width: '100%', height: 8, borderRadius: '999px', background: 'linear-gradient(90deg, rgba(var(--nl-surface-rgb),0.52), rgba(var(--nl-primary-rgb),0.32), rgba(var(--nl-surface-rgb),0.52))' }} />
     </Panel>
   </PageShell>
 );
@@ -238,7 +319,7 @@ export const LoginPage = () => {
     acceptedAgreement &&
     form.credential.trim().length > 0 &&
     form.password.length > 0 &&
-    (mode === 'login' || (form.password_confirm.length > 0 && form.invite_code.trim().length > 0));
+    (mode === 'login' || form.password_confirm.length > 0);
 
   const persistDraft = (nextMode: AuthMode, nextForm: AuthFormState, nextAcceptedAgreement: boolean) => {
     saveLoginFormDraft({
@@ -327,17 +408,20 @@ export const LoginPage = () => {
           return;
         }
 
-        const inviteCodeError = validateInviteCode(form.invite_code);
-        if (inviteCodeError) {
-          setError(inviteCodeError);
-          return;
+        const inviteCode = form.invite_code.trim();
+        if (inviteCode) {
+          const inviteCodeError = validateInviteCode(inviteCode);
+          if (inviteCodeError) {
+            setError(inviteCodeError);
+            return;
+          }
         }
 
         await register({
           credential: form.credential.trim(),
           password: form.password,
           password_confirm: form.password_confirm,
-          invite_code: form.invite_code.trim(),
+          ...(inviteCode ? { invite_code: inviteCode } : {}),
         });
         clearLoginFormDraft();
       }
@@ -356,7 +440,16 @@ export const LoginPage = () => {
           <img src="/brand/nianlun-logo-192.png" alt="年轮" width={72} height={72} style={authLogoStyle} />
           <div>
             <h1 style={authTitleStyle}>登录注册</h1>
+            <p style={authSubtitleStyle}>为孩子长期保存照片、文字、语音和家人的共同记忆。</p>
           </div>
+        </section>
+        <section aria-label="年轮价值" style={authTrustGridStyle}>
+          {['成长时间线', '家庭协作', '长期可导出'].map((item) => (
+            <span key={item} style={authTrustItemStyle}>
+              <CheckCircle2 size={15} color="var(--nl-accent)" />
+              {item}
+            </span>
+          ))}
         </section>
         <Panel style={authPanelStyle}>
           <form onSubmit={onSubmit} style={authFormStyle}>
@@ -407,14 +500,15 @@ export const LoginPage = () => {
                   autoComplete="new-password"
                 />
               </Field>
-              <Field label="邀请码">
+              <Field label="邀请码（选填）">
                 <input
                   style={inputStyle}
                   value={form.invite_code}
                   onChange={(event) => updateFormField('invite_code', event.target.value)}
-                  placeholder="请输入邀请码"
+                  placeholder="已有家庭邀请码可填写，没有也能注册"
                   autoComplete="one-time-code"
                 />
+                <p style={{ ...helperTextStyle, margin: '6px 0 0' }}>没有邀请码会先创建自己的家庭档案，之后可邀请家人加入。</p>
               </Field>
             </>
           ) : null}
@@ -423,9 +517,9 @@ export const LoginPage = () => {
               type="checkbox"
               checked={acceptedAgreement}
               onChange={(event) => updateAcceptedAgreement(event.target.checked)}
-              style={authCheckboxStyle}
+              style={authCheckboxStyle(acceptedAgreement)}
             />
-            <span>
+            <span style={authAgreementTextStyle}>
               我已阅读并同意《用户协议》和《隐私政策》
             </span>
           </label>
@@ -522,10 +616,35 @@ export const OnboardingChildPage = () => {
   return (
     <PageShell title={isAddingChild ? '添加宝宝档案' : '完善宝宝信息'} backTo={isAddingChild ? '/profile' : undefined}>
       <form onSubmit={onSubmit} style={{ ...rowStyle, gap: '22px' }}>
+        <Panel style={{ padding: '16px 16px 14px', borderRadius: '20px' }}>
+          <div style={{ display: 'grid', gap: '10px' }}>
+            <div>
+              <strong style={{ display: 'block', color: 'var(--nl-ink)', fontSize: '15px', fontWeight: 900 }}>开始使用的三步</strong>
+              <p style={{ ...helperTextStyle, marginTop: '4px' }}>先建档，再留下第一条记录，最后邀请家人一起维护同一份成长档案。</p>
+            </div>
+            <div style={{ display: 'grid', gap: '9px' }}>
+              {[
+                { title: '完善宝宝信息', done: true },
+                { title: '记录第一条成长瞬间', done: false },
+                { title: '邀请家人加入协作', done: false },
+              ].map((item, index) => (
+                <div key={item.title} style={onboardingStepStyle(item.done)}>
+                  <span style={onboardingStepDotStyle(item.done)}>{item.done ? <CheckCircle2 size={14} strokeWidth={2.5} /> : index + 1}</span>
+                  <span>
+                    <strong style={{ display: 'block', fontSize: '13px', fontWeight: 850, color: 'inherit' }}>{item.title}</strong>
+                    <span style={{ display: 'block', marginTop: '2px', color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 650 }}>
+                      {index === 0 ? '填写头像、生日和基础资料，后面内容会更完整。' : index === 1 ? '从相册或拍照开始，先留下真实的一刻。' : '家人权限可控，协作边界会保持清楚。'}
+                    </span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Panel>
         <div style={{ display: 'grid', justifyItems: 'center', gap: '10px', paddingTop: '6px' }}>
           <label style={{ width: '96px', height: '96px', borderRadius: '999px', border: '1px solid var(--nl-border)', background: 'var(--nl-surface-soft)', display: 'grid', placeItems: 'center', color: 'var(--nl-muted)', position: 'relative', cursor: 'pointer', overflow: 'hidden', boxShadow: '0 16px 34px rgba(var(--nl-shadow-rgb),0.32), 0 0 0 5px rgba(var(--nl-primary-rgb),0.14)' }}>
             {childAvatarPreviewSrc && !avatarPreviewFailed ? <img src={childAvatarPreviewSrc} alt="宝宝头像预览" decoding="async" onError={() => setAvatarPreviewFailed(true)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Camera size={34} strokeWidth={1.9} />}
-            <span style={{ position: 'absolute', right: '0', bottom: '0', width: '30px', height: '30px', borderRadius: '999px', background: 'linear-gradient(135deg, var(--nl-primary), var(--nl-primary-2))', color: '#ffffff', display: 'grid', placeItems: 'center', fontSize: '19px', fontWeight: 700, border: '1px solid var(--nl-border)', lineHeight: 1 }}>+</span>
+            <span style={{ position: 'absolute', right: '0', bottom: '0', width: '30px', height: '30px', borderRadius: '999px', background: 'var(--nl-primary)', color: '#ffffff', display: 'grid', placeItems: 'center', fontSize: '19px', fontWeight: 700, border: '1px solid rgba(245,205,140,0.52)', lineHeight: 1 }}>+</span>
             <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" onChange={(event) => void onAvatarChange(event)} style={{ display: 'none' }} />
           </label>
           <span style={{ color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 700 }}>设置头像</span>
@@ -556,8 +675,8 @@ export const OnboardingChildPage = () => {
                       style={{
                         minHeight: '44px',
                         borderRadius: '14px',
-                        border: selected ? '1px solid rgba(197,190,255,0.72)' : '1px solid var(--nl-border)',
-                        background: selected ? 'linear-gradient(135deg, rgba(var(--nl-primary-rgb),0.34), rgba(var(--nl-accent-rgb),0.16))' : 'rgba(var(--nl-surface-rgb),0.72)',
+                        border: selected ? '1px solid rgba(245,205,140,0.58)' : '1px solid var(--nl-border)',
+                        background: selected ? 'rgba(var(--nl-primary-rgb),0.24)' : 'rgba(var(--nl-surface-rgb),0.72)',
                         color: selected ? 'var(--nl-ink)' : 'var(--nl-muted-strong)',
                         fontSize: '13px',
                         fontWeight: 800,
@@ -590,7 +709,7 @@ export const OnboardingChildPage = () => {
         </Panel>
 
         {error ? <p style={{ ...helperTextStyle, color: 'var(--nl-danger)' }}>{error}</p> : null}
-        <button type="submit" style={{ ...primaryButtonStyle, width: '100%', minHeight: '48px', boxShadow: '0 12px 28px rgba(var(--nl-primary-rgb),0.24)' }} disabled={submitting}>
+        <button type="submit" style={{ ...primaryButtonStyle, width: '100%', minHeight: '48px' }} disabled={submitting}>
           {submitting ? '提交中…' : '完成创建'}
         </button>
       </form>

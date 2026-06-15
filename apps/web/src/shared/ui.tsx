@@ -9,7 +9,7 @@ const pageShellStyle: CSSProperties = {
   minHeight: '100dvh',
   gridTemplateColumns: 'minmax(0, 1fr)',
   padding: '0 20px calc(72px + env(safe-area-inset-bottom))',
-  background: 'linear-gradient(180deg, #050918 0%, #0b1130 52%, #050918 100%)',
+  background: 'var(--nl-page-bg)',
   color: 'var(--nl-ink)',
   overflowX: 'hidden',
   animation: 'app-page-enter 260ms cubic-bezier(0.22, 1, 0.36, 1) both',
@@ -98,7 +98,7 @@ export const AppTopBar = ({
   backVariant = 'icon',
   onBack,
   action,
-  background = 'rgba(5, 9, 24, 0.86)',
+  background = 'rgba(17, 18, 16, 0.88)',
   style,
 }: {
   title: string;
@@ -365,7 +365,7 @@ export const AppSelect = ({
           minHeight: props.disabled ? selectControlStyle.minHeight : selectControlStyle.minHeight,
           opacity: props.disabled ? 0.55 : 1,
           cursor: props.disabled ? 'not-allowed' : 'pointer',
-          color: placeholder ? 'rgba(169,178,218,0.66)' : 'var(--nl-ink)',
+          color: placeholder ? 'rgba(170,159,144,0.68)' : 'var(--nl-ink)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -415,7 +415,7 @@ export const AppSelect = ({
                   border: 'none',
                   borderRadius: '13px',
                   background: selected ? 'rgba(var(--nl-primary-rgb),0.2)' : 'transparent',
-                  color: option.disabled ? 'rgba(169,178,218,0.42)' : 'var(--nl-ink)',
+                  color: option.disabled ? 'rgba(170,159,144,0.44)' : 'var(--nl-ink)',
                   padding: '7px 32px 7px 9px',
                   display: 'flex',
                   alignItems: 'center',
@@ -479,7 +479,7 @@ export const AppSegmentedControl = ({
             minHeight: '44px',
             border: 'none',
             borderRadius: '999px',
-            background: selected ? 'linear-gradient(135deg, var(--nl-primary), var(--nl-primary-2))' : 'transparent',
+            background: selected ? 'var(--nl-primary)' : 'transparent',
             color: selected ? '#ffffff' : 'var(--nl-muted)',
             fontSize: options.length > 4 ? '12px' : '13px',
             fontWeight: 700,
@@ -503,10 +503,10 @@ export const textareaStyle: CSSProperties = {
 
 export const primaryButtonStyle: CSSProperties = {
   minHeight: '46px',
-  border: 'none',
+  border: '1px solid rgba(245,205,140,0.52)',
   borderRadius: '999px',
   padding: '12px 18px',
-  background: 'linear-gradient(135deg, var(--nl-primary), var(--nl-primary-2))',
+  background: 'var(--nl-primary)',
   color: '#ffffff',
   fontSize: '14px',
   fontWeight: 850,
@@ -517,7 +517,7 @@ export const primaryButtonStyle: CSSProperties = {
   gap: '8px',
   lineHeight: 1.2,
   textDecoration: 'none',
-  boxShadow: '0 12px 30px rgba(var(--nl-primary-rgb),0.34), inset 0 1px 0 rgba(255,255,255,0.22)',
+  boxShadow: '0 8px 18px rgba(var(--nl-shadow-rgb),0.22)',
   transition: 'transform 0.14s ease, box-shadow 0.16s ease, background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, opacity 0.16s ease',
 };
 

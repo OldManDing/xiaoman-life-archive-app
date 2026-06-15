@@ -14,7 +14,14 @@ describe('AI jobs async contract', () => {
   let jwtService: JwtService;
   const enqueue = jest.fn();
 
-  const user = { id: BigInt(1), userNo: 'u_001', nickname: '测试用户', deletedAt: null };
+  const user = {
+    id: BigInt(1),
+    userNo: 'u_001',
+    nickname: '测试用户',
+    deletedAt: null,
+    membershipType: 'ai_plus',
+    membershipExpireAt: null as Date | null,
+  };
   const record = {
     id: BigInt(10),
     recordNo: 'r_001',
@@ -120,6 +127,8 @@ describe('AI jobs async contract', () => {
 
   beforeEach(() => {
     enqueue.mockClear();
+    user.membershipType = 'ai_plus';
+    user.membershipExpireAt = null;
   });
 
   afterAll(async () => {
@@ -168,6 +177,44 @@ describe('AI jobs async contract', () => {
             provider: 'mock',
           }),
         );
+      });
+
+    expect(enqueue).not.toHaveBeenCalled();
+  });
+
+  it('rejects ai preview for non AI members', async () => {
+    user.membershipType = 'free';
+    const token = await jwtService.signAsync(
+      { type: 'user', sub: user.id.toString(), user_no: user.userNo },
+      { secret: process.env.JWT_ACCESS_SECRET },
+    );
+
+    await request(app.getHttpServer())
+      .post('/api/v1/ai-jobs/preview')
+      .set('Authorization', `Bearer ${token}`)
+      .send({ title: '第一次吃饭', content_text: '今天第一次自己吃饭', tags: ['成长'] })
+      .expect(403)
+      .expect((response) => {
+        expect(response.body.message).toBe('AI 功能仅对 AI 会员开放');
+      });
+
+    expect(enqueue).not.toHaveBeenCalled();
+  });
+
+  it('rejects ai jobs for non AI members', async () => {
+    user.membershipType = 'free';
+    const token = await jwtService.signAsync(
+      { type: 'user', sub: user.id.toString(), user_no: user.userNo },
+      { secret: process.env.JWT_ACCESS_SECRET },
+    );
+
+    await request(app.getHttpServer())
+      .post(`/api/v1/records/${record.recordNo}/ai-jobs`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ job_types: ['record_title'] })
+      .expect(403)
+      .expect((response) => {
+        expect(response.body.message).toBe('AI 功能仅对 AI 会员开放');
       });
 
     expect(enqueue).not.toHaveBeenCalled();

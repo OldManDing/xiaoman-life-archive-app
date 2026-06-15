@@ -210,6 +210,7 @@ test.describe('Admin critical journeys', () => {
   test('media library exposes localized review actions', async ({ page }) => {
     await loginAdmin(page);
     await page.getByRole('link', { name: '媒体库', exact: true }).click();
+    await page.getByPlaceholder('输入关键字筛选').fill('第一次自己吃饭');
     await page.getByRole('button', { name: '查询' }).click();
 
     const mediaRow = page.getByRole('row', { name: /第一次自己吃饭/ });
@@ -249,6 +250,7 @@ test.describe('Admin critical journeys', () => {
     await expect(page.getByRole('row', { name: /第一次自己吃饭/ })).toContainText('已发布');
 
     await page.getByRole('link', { name: '媒体库', exact: true }).click();
+    await page.getByPlaceholder('输入关键字筛选').fill('第一次自己吃饭');
     await page.getByRole('button', { name: '查询' }).click();
     let mediaRow = page.getByRole('row', { name: /第一次自己吃饭/ });
     await expect(mediaRow).toContainText('可用');

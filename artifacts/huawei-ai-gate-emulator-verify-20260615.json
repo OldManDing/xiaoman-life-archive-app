@@ -1,0 +1,38 @@
+{
+  "setup": {
+    "credential_prefix": "hw_ai_gate_2026",
+    "membership_type": "free",
+    "need_create_child": true,
+    "childCreated": true,
+    "freePreview": {
+      "status": 403,
+      "message": "AI 功能仅对 AI 会员开放",
+      "forbidden": true
+    }
+  },
+  "check": {
+    "href": "https://localhost/record/create?type=text",
+    "hasRecordTitleInput": true,
+    "has403DeletedGroupText": false,
+    "hasOldAiCopy": false,
+    "hasMemberSuggestionButton": false,
+    "buttons": [
+      "取消",
+      "发布",
+      "切换孩子：审核测试宝宝",
+      "第一次尝试",
+      "今天学会了",
+      "和家人在一起",
+      "可见范围\n家庭成员可见",
+      "手机定位",
+      "选择标签",
+      "切换里程碑记录"
+    ]
+  },
+  "screenshotPath": "F:/https-github-com-oldmanding-xiaoman-life/artifacts/huawei-ai-gate-record-create-emulator-20260615.png",
+  "cleanup": {
+    "ok": true,
+    "status": 200,
+    "message": "success"
+  }
+}

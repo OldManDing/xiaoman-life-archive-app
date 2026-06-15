@@ -224,6 +224,14 @@ const fillVisibleControls = async (page: Page, route?: string) => {
   return touched;
 };
 
+const prepareRouteForAudit = async (page: Page, route: string) => {
+  if (route !== '/media') return;
+
+  await page.getByPlaceholder('输入关键字筛选').fill('第一次自己吃饭');
+  await page.getByRole('button', { name: '查询' }).click();
+  await expect(page.getByRole('row', { name: /第一次自己吃饭/ })).toBeVisible();
+};
+
 const collectStyleIssues = async (page: Page, route: string, viewport: string) =>
   page.evaluate(
     ({ route: currentRoute, viewport: currentViewport }) => {
@@ -416,6 +424,7 @@ test.describe('Admin exhaustive interaction audit', () => {
     for (const route of adminRoutes) {
       await navigateWithinAdmin(page, route);
       await waitForSettledUi(page, 3_000);
+      await prepareRouteForAudit(page, route);
       await waitForRouteButtons(page, route);
       const inputsTouched = await fillVisibleControls(page, route);
       await waitForRouteButtons(page, route);

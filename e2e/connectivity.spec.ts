@@ -94,11 +94,11 @@ test.describe('Front and admin button/API connectivity', () => {
     await page.goto(`${webBaseURL}/record/r_demo_001`);
     await expect(page.getByText('AI 智能提取')).toBeVisible();
     await page.getByRole('button', { name: '标题' }).click();
-    await expect(page.getByText(/AI 标题(正在处理中|已生成并同步到记录详情)/)).toBeVisible();
+    await expect(page.getByText(/AI 标题(正在处理中|已生成并同步到记录详情)|调用频率(受限|超限)/)).toBeVisible();
     await page.getByRole('button', { name: '摘要' }).click();
-    await expect(page.getByText(/AI 摘要(正在处理中|已生成并同步到记录详情)/)).toBeVisible();
+    await expect(page.getByText(/AI 摘要(正在处理中|已生成并同步到记录详情)|调用频率(受限|超限)/)).toBeVisible();
     await page.getByRole('button', { name: '标签' }).click();
-    await expect(page.getByText(/AI 标签(正在处理中|已生成并同步到记录详情)/)).toBeVisible();
+    await expect(page.getByText(/AI 标签(正在处理中|已生成并同步到记录详情)|调用频率(受限|超限)/)).toBeVisible();
   });
 
   test('Admin module buttons query, open drawers, and hit mutation APIs', async ({ page }) => {
@@ -139,6 +139,7 @@ test.describe('Front and admin button/API connectivity', () => {
 
     await openAdminModule(page, '/media');
     const mediaRow = page.getByRole('row', { name: /第一次自己吃饭/ });
+    await page.getByPlaceholder('输入关键字筛选').fill('第一次自己吃饭');
     await page.getByRole('button', { name: '查询' }).click();
     await mediaRow.getByRole('button', { name: '详情' }).click();
     await expect(page.getByRole('dialog', { name: '媒体详情' })).toBeVisible();

@@ -486,6 +486,26 @@ describe('Auth session flow', () => {
     });
   });
 
+  it('registers a password account without an invite code and starts child onboarding', async () => {
+    memberships.length = 0;
+    createdFamilies.length = 0;
+
+    const registerResponse = await request(app.getHttpServer())
+      .post('/api/v1/auth/register')
+      .send({
+        credential: 'standalone_parent',
+        password: 'Parent123!',
+        password_confirm: 'Parent123!',
+      })
+      .expect(200);
+
+    expect(registerResponse.headers['set-cookie']?.[0]).toContain('xiaoman_refresh_token=');
+    expect(registerResponse.body.data.access_token).toBeTruthy();
+    expect(registerResponse.body.data.need_create_child).toBe(true);
+    expect(memberships).toHaveLength(0);
+    expect(createdFamilies).toHaveLength(0);
+  });
+
   it('registers a password account with an admin registration invite and creates an owned family', async () => {
     registrationInvite.status = 1;
     registrationInvite.acceptedAt = null;

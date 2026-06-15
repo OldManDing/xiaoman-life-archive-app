@@ -1,5 +1,10 @@
 import { IsString, Length, Matches, MaxLength, MinLength, ValidateIf } from 'class-validator';
 
+const shouldValidateOptionalString = (value: unknown) =>
+  value !== undefined && value !== null && (typeof value !== 'string' || value.trim().length > 0);
+
+const getTrimmedString = (value: unknown) => (typeof value === 'string' ? value.trim() : '');
+
 export class RegisterDto {
   @IsString()
   @MinLength(3)
@@ -21,16 +26,16 @@ export class RegisterDto {
   @Length(8, 72)
   passwordConfirm?: string;
 
-  @ValidateIf((dto: RegisterDto) => dto.invite_code !== undefined || dto.inviteCode === undefined)
+  @ValidateIf((dto: RegisterDto) => shouldValidateOptionalString(dto.invite_code))
   @IsString()
   @Length(6, 128)
   invite_code?: string;
 
-  @ValidateIf((dto: RegisterDto) => dto.invite_code === undefined)
+  @ValidateIf((dto: RegisterDto) => shouldValidateOptionalString(dto.inviteCode))
   @IsString()
   @Length(6, 128)
   inviteCode?: string;
 }
 
 export const getRegisterPasswordConfirm = (dto: RegisterDto) => dto.password_confirm ?? dto.passwordConfirm ?? '';
-export const getRegisterInviteCode = (dto: RegisterDto) => dto.invite_code ?? dto.inviteCode ?? '';
+export const getRegisterInviteCode = (dto: RegisterDto) => getTrimmedString(dto.invite_code) || getTrimmedString(dto.inviteCode);

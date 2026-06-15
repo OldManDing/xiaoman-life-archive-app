@@ -22,8 +22,8 @@ export const isReferencePlaceholderAvatar = (src?: string | null) => {
 };
 
 export const refPageStyle: CSSProperties = {
-  minHeight: '100dvh',
-  background: 'linear-gradient(180deg, #050918 0%, #0b1130 52%, #050918 100%)',
+  minHeight: 'var(--nl-page-min-height, 100dvh)',
+  background: 'var(--nl-page-bg)',
   color: 'var(--nl-ink)',
   overflowX: 'hidden',
   animation: 'app-page-enter 260ms cubic-bezier(0.22, 1, 0.36, 1) both',
@@ -38,10 +38,11 @@ export const refContentStyle: CSSProperties = {
 
 export const refCardStyle: CSSProperties = {
   borderRadius: '20px',
-  border: '1px solid var(--nl-border)',
-  background: 'var(--nl-surface)',
-  boxShadow: '0 16px 36px rgba(var(--nl-shadow-rgb),0.28), inset 0 1px 0 rgba(255,255,255,0.08)',
-  backdropFilter: 'blur(18px)',
+  border: '1px solid var(--nl-glass-border)',
+  background: 'var(--nl-glass-surface)',
+  boxShadow: 'var(--nl-glass-shadow)',
+  WebkitBackdropFilter: 'blur(20px) saturate(1.18)',
+  backdropFilter: 'blur(20px) saturate(1.18)',
 };
 
 export const refSoftCardStyle: CSSProperties = {
@@ -51,9 +52,9 @@ export const refSoftCardStyle: CSSProperties = {
 
 export const refPrimaryButtonStyle: CSSProperties = {
   minHeight: '46px',
-  border: 'none',
+  border: '1px solid rgba(245,205,140,0.52)',
   borderRadius: '999px',
-  background: 'linear-gradient(135deg, var(--nl-primary), var(--nl-primary-2))',
+  background: 'var(--nl-glass-accent)',
   color: '#ffffff',
   padding: '12px 18px',
   fontSize: '14px',
@@ -63,16 +64,18 @@ export const refPrimaryButtonStyle: CSSProperties = {
   justifyContent: 'center',
   gap: '8px',
   cursor: 'pointer',
-  boxShadow: '0 12px 28px rgba(var(--nl-primary-rgb),0.22), inset 0 1px 0 rgba(255,255,255,0.28)',
+  boxShadow: '0 12px 28px rgba(var(--nl-shadow-rgb),0.24), inset 0 1px 0 rgba(255,255,255,0.18)',
+  WebkitBackdropFilter: 'blur(16px) saturate(1.12)',
+  backdropFilter: 'blur(16px) saturate(1.12)',
   transition: 'transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease',
 };
 
 export const refSecondaryButtonStyle: CSSProperties = {
   ...refPrimaryButtonStyle,
-  border: '1px solid var(--nl-border)',
-  background: 'rgba(var(--nl-surface-rgb),0.74)',
+  border: '1px solid var(--nl-glass-border)',
+  background: 'var(--nl-glass-soft)',
   color: 'var(--nl-muted-strong)',
-  boxShadow: '0 12px 28px rgba(var(--nl-shadow-rgb),0.24)',
+  boxShadow: '0 10px 24px rgba(var(--nl-shadow-rgb),0.2), inset 0 1px 0 rgba(255,255,255,0.08)',
 };
 
 export const refMutedTextStyle: CSSProperties = {
@@ -116,9 +119,10 @@ export const RefTopBar = ({
         zIndex: 4,
         height: '52px',
         padding: 'calc(30px + env(safe-area-inset-top)) 14px 0',
-        borderBottom: '1px solid var(--nl-border)',
-        background: 'rgba(5,9,24,0.86)',
-        backdropFilter: 'blur(22px)',
+        borderBottom: '1px solid var(--nl-glass-border)',
+        background: 'var(--nl-glass-strong)',
+        WebkitBackdropFilter: 'blur(24px) saturate(1.16)',
+        backdropFilter: 'blur(24px) saturate(1.16)',
         display: 'grid',
         gridTemplateColumns: '52px minmax(0, 1fr) 52px',
         alignItems: 'center',
@@ -135,13 +139,17 @@ const topBackButtonStyle: CSSProperties = {
   width: '44px',
   minWidth: '44px',
   height: '44px',
-  border: 'none',
-  background: 'transparent',
+  border: '1px solid var(--nl-glass-border)',
+  borderRadius: '999px',
+  background: 'var(--nl-glass-soft)',
   color: 'var(--nl-ink)',
   display: 'grid',
   placeItems: 'center',
   textDecoration: 'none',
   cursor: 'pointer',
+  boxShadow: '0 8px 18px rgba(var(--nl-shadow-rgb),0.18), inset 0 1px 0 rgba(255,255,255,0.08)',
+  WebkitBackdropFilter: 'blur(16px) saturate(1.12)',
+  backdropFilter: 'blur(16px) saturate(1.12)',
 };
 
 export const RefAvatar = ({
@@ -180,7 +188,7 @@ export const RefAvatar = ({
         borderRadius: radius,
         objectFit: 'cover',
         border: '2px solid rgba(231,234,255,0.9)',
-        boxShadow: '0 16px 34px rgba(var(--nl-shadow-rgb),0.36), 0 0 0 5px rgba(160,151,255,0.14)',
+        boxShadow: '0 16px 34px rgba(var(--nl-shadow-rgb),0.32), 0 0 0 5px rgba(var(--nl-primary-rgb),0.12)',
         flexShrink: 0,
         background: 'linear-gradient(135deg, rgba(var(--nl-primary-rgb),0.22), rgba(var(--nl-accent-rgb),0.12)), var(--nl-surface-soft)',
       }}
@@ -214,8 +222,8 @@ export const RefListRow = ({
       width: '100%',
       minHeight: '54px',
       border: 'none',
-      borderBottom: isLast ? 'none' : '1px solid var(--nl-border)',
-      background: 'rgba(var(--nl-surface-rgb),0.72)',
+      borderBottom: isLast ? 'none' : '1px solid var(--nl-glass-border)',
+      background: 'var(--nl-glass-soft)',
       padding: '11px 15px',
       display: 'flex',
       alignItems: 'center',
@@ -225,6 +233,8 @@ export const RefListRow = ({
       cursor: onClick ? 'pointer' : 'default',
       color: danger ? 'var(--nl-danger)' : 'var(--nl-ink)',
       transition: 'background-color 0.18s ease, transform 0.18s ease',
+      WebkitBackdropFilter: 'blur(16px) saturate(1.12)',
+      backdropFilter: 'blur(16px) saturate(1.12)',
     }}
   >
     <span style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: '1 1 auto' }}>
@@ -233,7 +243,7 @@ export const RefListRow = ({
     </span>
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: danger ? 'var(--nl-danger)' : 'var(--nl-muted)', fontSize: '12px', fontWeight: 700, flexShrink: 0 }}>
       {value}
-      {onClick ? <ChevronRight size={16} color="rgba(216,220,255,0.62)" /> : null}
+      {onClick ? <ChevronRight size={16} color="rgba(226,215,197,0.62)" /> : null}
     </span>
   </button>
 );
@@ -247,10 +257,12 @@ export const RefChip = ({ children, active }: { children: ReactNode; active?: bo
       display: 'inline-flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: active ? 'linear-gradient(135deg, var(--nl-primary), var(--nl-primary-2))' : 'rgba(var(--nl-surface-rgb),0.74)',
+      background: active ? 'var(--nl-glass-accent)' : 'var(--nl-glass-soft)',
       color: active ? '#ffffff' : 'var(--nl-muted)',
-      border: active ? '1px solid var(--nl-primary)' : '1px solid var(--nl-border)',
-      boxShadow: active ? '0 12px 26px rgba(var(--nl-primary-rgb),0.34)' : '0 8px 18px rgba(var(--nl-shadow-rgb),0.22)',
+      border: active ? '1px solid rgba(245,205,140,0.52)' : '1px solid var(--nl-glass-border)',
+      boxShadow: active ? '0 8px 18px rgba(var(--nl-shadow-rgb),0.22)' : '0 8px 18px rgba(var(--nl-shadow-rgb),0.22)',
+      WebkitBackdropFilter: 'blur(16px) saturate(1.12)',
+      backdropFilter: 'blur(16px) saturate(1.12)',
       fontSize: '13px',
       fontWeight: 800,
       whiteSpace: 'nowrap',

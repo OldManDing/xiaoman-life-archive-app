@@ -1,0 +1,571 @@
+{
+  "setup": {
+    "credential_prefix": "hw_product_2026061",
+    "membership_type": "free",
+    "childCreated": true,
+    "freePreview": {
+      "status": 403,
+      "message": "AI 功能仅对 AI 会员开放",
+      "forbidden": true
+    }
+  },
+  "publishResult": {
+    "ok": true
+  },
+  "failures": [],
+  "checks": [
+    {
+      "name": "00-login",
+      "route": "/auth/login",
+      "href": "https://localhost/auth/login",
+      "title": "年轮",
+      "textLength": 98,
+      "bootstrapping": false,
+      "hasAuditChild": false,
+      "hasOldAiCopy": false,
+      "hasFreeAiButton": false,
+      "signals": {
+        "loginValue": true,
+        "inviteOptional": false,
+        "homeGuidance": false,
+        "timelineQuickFeedback": false,
+        "recordLayering": false,
+        "monthlyEmptyState": false,
+        "searchHierarchy": false,
+        "familyCollaboration": false,
+        "profileArchiveState": false
+      },
+      "buttonCount": 4,
+      "buttons": [
+        "登录",
+        "注册",
+        "查看完整协议与隐私政策",
+        "进入年轮"
+      ],
+      "inputs": [
+        {
+          "tag": "input",
+          "type": "",
+          "placeholder": "请输入账号",
+          "required": false
+        },
+        {
+          "tag": "input",
+          "type": "password",
+          "placeholder": "请输入密码",
+          "required": false
+        },
+        {
+          "tag": "input",
+          "type": "checkbox",
+          "placeholder": "",
+          "required": false
+        }
+      ],
+      "links": [],
+      "layout": {
+        "viewportHeight": 800,
+        "scrollHeight": 841,
+        "bottomGap": 112
+      },
+      "forcedInviteRisk": false,
+      "screenshotPath": "F:\\https-github-com-oldmanding-xiaoman-life\\artifacts\\huawei-product-smoke-20260615\\00-login.png"
+    },
+    {
+      "name": "00-register-form",
+      "route": "/auth/login",
+      "href": "https://localhost/auth/login",
+      "title": "年轮",
+      "textLength": 142,
+      "bootstrapping": false,
+      "hasAuditChild": false,
+      "hasOldAiCopy": false,
+      "hasFreeAiButton": false,
+      "signals": {
+        "loginValue": true,
+        "inviteOptional": true,
+        "homeGuidance": false,
+        "timelineQuickFeedback": false,
+        "recordLayering": false,
+        "monthlyEmptyState": false,
+        "searchHierarchy": false,
+        "familyCollaboration": false,
+        "profileArchiveState": false
+      },
+      "buttonCount": 4,
+      "buttons": [
+        "登录",
+        "注册",
+        "查看完整协议与隐私政策",
+        "注册并进入"
+      ],
+      "inputs": [
+        {
+          "tag": "input",
+          "type": "",
+          "placeholder": "请输入账号",
+          "required": false
+        },
+        {
+          "tag": "input",
+          "type": "password",
+          "placeholder": "请输入密码",
+          "required": false
+        },
+        {
+          "tag": "input",
+          "type": "password",
+          "placeholder": "请再次输入密码",
+          "required": false
+        },
+        {
+          "tag": "input",
+          "type": "",
+          "placeholder": "已有家庭邀请码可填写，没有也能注册",
+          "required": false
+        },
+        {
+          "tag": "input",
+          "type": "checkbox",
+          "placeholder": "",
+          "required": false
+        }
+      ],
+      "links": [],
+      "layout": {
+        "viewportHeight": 800,
+        "scrollHeight": 1061,
+        "bottomGap": 112
+      },
+      "forcedInviteRisk": false,
+      "screenshotPath": "F:\\https-github-com-oldmanding-xiaoman-life\\artifacts\\huawei-product-smoke-20260615\\00-register-form.png"
+    },
+    {
+      "name": "01-reports-empty-before-record",
+      "route": "/profile/reports",
+      "href": "https://localhost/profile/reports",
+      "title": "年轮",
+      "textLength": 368,
+      "bootstrapping": false,
+      "hasAuditChild": true,
+      "hasOldAiCopy": false,
+      "hasFreeAiButton": false,
+      "signals": {
+        "loginValue": false,
+        "inviteOptional": false,
+        "homeGuidance": false,
+        "timelineQuickFeedback": false,
+        "recordLayering": false,
+        "monthlyEmptyState": true,
+        "searchHierarchy": false,
+        "familyCollaboration": false,
+        "profileArchiveState": false
+      },
+      "buttonCount": 6,
+      "buttons": [
+        "添加记录",
+        "导出月报摘要",
+        "2026年\n4月纪念册\n查看 / 导出",
+        "2026年\n3月纪念册\n查看 / 导出",
+        "2026年\n2月纪念册\n查看 / 导出",
+        "2026年\n1月纪念册\n查看 / 导出"
+      ],
+      "inputs": [],
+      "links": [
+        "/profile"
+      ],
+      "layout": {
+        "viewportHeight": 800,
+        "scrollHeight": 1403,
+        "bottomGap": 0
+      },
+      "screenshotPath": "F:\\https-github-com-oldmanding-xiaoman-life\\artifacts\\huawei-product-smoke-20260615\\01-reports-empty-before-record.png"
+    },
+    {
+      "name": "02-record-create-before",
+      "route": "/record/create?type=text",
+      "href": "https://localhost/record/create?type=text",
+      "title": "年轮",
+      "textLength": 161,
+      "bootstrapping": false,
+      "hasAuditChild": true,
+      "hasOldAiCopy": false,
+      "hasFreeAiButton": false,
+      "signals": {
+        "loginValue": false,
+        "inviteOptional": false,
+        "homeGuidance": false,
+        "timelineQuickFeedback": false,
+        "recordLayering": true,
+        "monthlyEmptyState": false,
+        "searchHierarchy": false,
+        "familyCollaboration": false,
+        "profileArchiveState": false
+      },
+      "buttonCount": 10,
+      "buttons": [
+        "取消",
+        "发布",
+        "切换孩子：Audit Baby",
+        "第一次尝试",
+        "今天学会了",
+        "和家人在一起",
+        "可见范围\n家庭成员可见",
+        "手机定位",
+        "选择标签",
+        "切换里程碑记录"
+      ],
+      "inputs": [
+        {
+          "tag": "input",
+          "type": "datetime-local",
+          "placeholder": "",
+          "required": false
+        },
+        {
+          "tag": "input",
+          "type": "",
+          "placeholder": "给这一刻起个名字",
+          "required": false
+        },
+        {
+          "tag": "textarea",
+          "type": "",
+          "placeholder": "在想什么呢？记录一下这一刻发生的故事…",
+          "required": false
+        },
+        {
+          "tag": "input",
+          "type": "",
+          "placeholder": "添加地点",
+          "required": false
+        },
+        {
+          "tag": "select",
+          "type": "",
+          "placeholder": "",
+          "required": false
+        }
+      ],
+      "links": [],
+      "layout": {
+        "viewportHeight": 800,
+        "scrollHeight": 821,
+        "bottomGap": 0
+      },
+      "screenshotPath": "F:\\https-github-com-oldmanding-xiaoman-life\\artifacts\\huawei-product-smoke-20260615\\02-record-create-before.png"
+    },
+    {
+      "name": "03-record-detail",
+      "route": "/record/:record_no",
+      "href": "https://localhost/record/r_mqfq1nmi87fa",
+      "title": "年轮",
+      "textLength": 15,
+      "bootstrapping": false,
+      "hasAuditChild": false,
+      "hasOldAiCopy": false,
+      "hasFreeAiButton": false,
+      "signals": {
+        "loginValue": false,
+        "inviteOptional": false,
+        "homeGuidance": false,
+        "timelineQuickFeedback": false,
+        "recordLayering": false,
+        "monthlyEmptyState": false,
+        "searchHierarchy": false,
+        "familyCollaboration": false,
+        "profileArchiveState": false
+      },
+      "buttonCount": 1,
+      "buttons": [
+        "返回"
+      ],
+      "inputs": [],
+      "links": [],
+      "layout": {
+        "viewportHeight": 800,
+        "scrollHeight": 800,
+        "bottomGap": 0
+      },
+      "screenshotPath": "F:\\https-github-com-oldmanding-xiaoman-life\\artifacts\\huawei-product-smoke-20260615\\03-record-detail.png"
+    },
+    {
+      "name": "04-home",
+      "route": "/home",
+      "href": "https://localhost/home",
+      "title": "年轮",
+      "textLength": 282,
+      "bootstrapping": false,
+      "hasAuditChild": true,
+      "hasOldAiCopy": false,
+      "hasFreeAiButton": false,
+      "signals": {
+        "loginValue": false,
+        "inviteOptional": false,
+        "homeGuidance": true,
+        "timelineQuickFeedback": false,
+        "recordLayering": false,
+        "monthlyEmptyState": false,
+        "searchHierarchy": false,
+        "familyCollaboration": false,
+        "profileArchiveState": false
+      },
+      "buttonCount": 8,
+      "buttons": [
+        "Audit Baby\n4岁0月14天",
+        "切换孩子",
+        "换一句星语提示",
+        "成长星球\n已记录 1 个珍贵瞬间",
+        "查看全部",
+        "15\n6月\nAudit record title\nAudit record content for Huawei review smoke test. This should publish without provider suggestions.\n文字档案",
+        "换一条记录提示",
+        "记录今日提示"
+      ],
+      "inputs": [],
+      "links": [
+        "/home",
+        "/timeline",
+        "/record/create",
+        "/family",
+        "/profile"
+      ],
+      "layout": {
+        "viewportHeight": 800,
+        "scrollHeight": 800,
+        "bottomGap": 8
+      },
+      "screenshotPath": "F:\\https-github-com-oldmanding-xiaoman-life\\artifacts\\huawei-product-smoke-20260615\\04-home.png"
+    },
+    {
+      "name": "05-timeline",
+      "route": "/timeline",
+      "href": "https://localhost/timeline",
+      "title": "年轮",
+      "textLength": 214,
+      "bootstrapping": false,
+      "hasAuditChild": true,
+      "hasOldAiCopy": false,
+      "hasFreeAiButton": false,
+      "signals": {
+        "loginValue": false,
+        "inviteOptional": false,
+        "homeGuidance": false,
+        "timelineQuickFeedback": true,
+        "recordLayering": false,
+        "monthlyEmptyState": false,
+        "searchHierarchy": false,
+        "familyCollaboration": false,
+        "profileArchiveState": false
+      },
+      "buttonCount": 7,
+      "buttons": [
+        "筛选记录",
+        "2026年",
+        "2025年",
+        "2024年",
+        "2023年",
+        "4岁\nAudit record title\nAudit record content for Huawei review smoke test. This should publish without provider suggestions.",
+        "补一条记录\n照片、文字和语音都会进入时间轴"
+      ],
+      "inputs": [],
+      "links": [
+        "/home",
+        "/timeline",
+        "/record/create",
+        "/family",
+        "/profile"
+      ],
+      "layout": {
+        "viewportHeight": 800,
+        "scrollHeight": 800,
+        "bottomGap": 17
+      },
+      "screenshotPath": "F:\\https-github-com-oldmanding-xiaoman-life\\artifacts\\huawei-product-smoke-20260615\\05-timeline.png"
+    },
+    {
+      "name": "06-search",
+      "route": "/search",
+      "href": "https://localhost/search",
+      "title": "年轮",
+      "textLength": 115,
+      "bootstrapping": false,
+      "hasAuditChild": false,
+      "hasOldAiCopy": false,
+      "hasFreeAiButton": false,
+      "signals": {
+        "loginValue": false,
+        "inviteOptional": false,
+        "homeGuidance": false,
+        "timelineQuickFeedback": false,
+        "recordLayering": false,
+        "monthlyEmptyState": false,
+        "searchHierarchy": true,
+        "familyCollaboration": false,
+        "profileArchiveState": false
+      },
+      "buttonCount": 6,
+      "buttons": [
+        "返回",
+        "搜索",
+        "第一次",
+        "有照片",
+        "里程碑",
+        "家里"
+      ],
+      "inputs": [
+        {
+          "tag": "input",
+          "type": "",
+          "placeholder": "搜索时间、地点、标签或内容...",
+          "required": false
+        }
+      ],
+      "links": [],
+      "layout": {
+        "viewportHeight": 800,
+        "scrollHeight": 800,
+        "bottomGap": 0
+      },
+      "screenshotPath": "F:\\https-github-com-oldmanding-xiaoman-life\\artifacts\\huawei-product-smoke-20260615\\06-search.png"
+    },
+    {
+      "name": "07-family",
+      "route": "/family",
+      "href": "https://localhost/family",
+      "title": "年轮",
+      "textLength": 129,
+      "bootstrapping": false,
+      "hasAuditChild": true,
+      "hasOldAiCopy": false,
+      "hasFreeAiButton": false,
+      "signals": {
+        "loginValue": false,
+        "inviteOptional": false,
+        "homeGuidance": false,
+        "timelineQuickFeedback": false,
+        "recordLayering": false,
+        "monthlyEmptyState": false,
+        "searchHierarchy": false,
+        "familyCollaboration": true,
+        "profileArchiveState": false
+      },
+      "buttonCount": 1,
+      "buttons": [
+        "邀请家人"
+      ],
+      "inputs": [],
+      "links": [
+        "/family/invite",
+        "/home",
+        "/timeline",
+        "/record/create",
+        "/family",
+        "/profile"
+      ],
+      "layout": {
+        "viewportHeight": 800,
+        "scrollHeight": 800,
+        "bottomGap": 17
+      },
+      "screenshotPath": "F:\\https-github-com-oldmanding-xiaoman-life\\artifacts\\huawei-product-smoke-20260615\\07-family.png"
+    },
+    {
+      "name": "08-profile",
+      "route": "/profile",
+      "href": "https://localhost/profile",
+      "title": "年轮",
+      "textLength": 170,
+      "bootstrapping": false,
+      "hasAuditChild": true,
+      "hasOldAiCopy": false,
+      "hasFreeAiButton": false,
+      "signals": {
+        "loginValue": false,
+        "inviteOptional": false,
+        "homeGuidance": false,
+        "timelineQuickFeedback": false,
+        "recordLayering": false,
+        "monthlyEmptyState": false,
+        "searchHierarchy": false,
+        "familyCollaboration": false,
+        "profileArchiveState": true
+      },
+      "buttonCount": 13,
+      "buttons": [
+        "编辑主页",
+        "草稿箱\n暂无草稿",
+        "Audit Baby\n4岁0月14天",
+        "+ 添加宝宝",
+        "月报与纪念册",
+        "导出与备份",
+        "会员中心",
+        "隐私设置",
+        "账号与安全",
+        "家庭管理",
+        "帮助与反馈",
+        "关于我们",
+        "退出登录"
+      ],
+      "inputs": [],
+      "links": [
+        "/home",
+        "/timeline",
+        "/record/create",
+        "/family",
+        "/profile"
+      ],
+      "layout": {
+        "viewportHeight": 800,
+        "scrollHeight": 800,
+        "bottomGap": 0
+      },
+      "screenshotPath": "F:\\https-github-com-oldmanding-xiaoman-life\\artifacts\\huawei-product-smoke-20260615\\08-profile.png"
+    },
+    {
+      "name": "09-profile-reports",
+      "route": "/profile/reports",
+      "href": "https://localhost/profile/reports",
+      "title": "年轮",
+      "textLength": 368,
+      "bootstrapping": false,
+      "hasAuditChild": true,
+      "hasOldAiCopy": false,
+      "hasFreeAiButton": false,
+      "signals": {
+        "loginValue": false,
+        "inviteOptional": false,
+        "homeGuidance": false,
+        "timelineQuickFeedback": false,
+        "recordLayering": false,
+        "monthlyEmptyState": true,
+        "searchHierarchy": false,
+        "familyCollaboration": false,
+        "profileArchiveState": false
+      },
+      "buttonCount": 6,
+      "buttons": [
+        "添加记录",
+        "导出月报摘要",
+        "2026年\n4月纪念册\n查看 / 导出",
+        "2026年\n3月纪念册\n查看 / 导出",
+        "2026年\n2月纪念册\n查看 / 导出",
+        "2026年\n1月纪念册\n查看 / 导出"
+      ],
+      "inputs": [],
+      "links": [
+        "/profile"
+      ],
+      "layout": {
+        "viewportHeight": 800,
+        "scrollHeight": 1403,
+        "bottomGap": 0
+      },
+      "screenshotPath": "F:\\https-github-com-oldmanding-xiaoman-life\\artifacts\\huawei-product-smoke-20260615\\09-profile-reports.png"
+    }
+  ],
+  "cleanup": {
+    "ok": true,
+    "status": 200,
+    "message": "success"
+  }
+}

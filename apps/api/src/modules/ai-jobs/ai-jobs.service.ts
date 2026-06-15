@@ -1,5 +1,5 @@
 import { ForbiddenException, HttpException, HttpStatus, Injectable, NotFoundException } from '@nestjs/common';
-import { AiJobStatus, AiJobType, FamilyMemberRole } from '@prisma/client';
+import { AiJobStatus, AiJobType, FamilyMemberRole, MembershipType } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
 import { AccessControlService } from '../../shared/services/access-control.service';
@@ -24,6 +24,7 @@ export class AiJobsService {
     if (membership.role !== FamilyMemberRole.owner && membership.role !== FamilyMemberRole.editor) {
       throw new ForbiddenException('无权限触发 AI');
     }
+    await this.ensureAiPlusMember(userId);
 
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
@@ -94,6 +95,7 @@ export class AiJobsService {
     if (!membership) {
       throw new ForbiddenException('无权限查看 AI 任务');
     }
+    await this.ensureAiPlusMember(userId);
 
     return {
       job_no: job.jobNo,
@@ -112,13 +114,15 @@ export class AiJobsService {
     };
   }
 
-  async preview(_userId: bigint, dto: PreviewAiDto) {
+  async preview(userId: bigint, dto: PreviewAiDto) {
+    await this.ensureAiPlusMember(userId);
+
     const title = dto.title?.trim() ?? '';
     const contentText = dto.content_text?.trim() ?? '';
     const existingTags = dto.tags?.map((item) => item.trim()).filter(Boolean) ?? [];
 
     if (!title && !contentText) {
-      throw new HttpException('请先输入标题或正文，再使用 AI 建议', HttpStatus.BAD_REQUEST);
+      throw new HttpException('请先输入标题或正文，再使用整理建议', HttpStatus.BAD_REQUEST);
     }
 
     const [titleOutput, summaryOutput, tagsOutput] = await Promise.all([
@@ -150,4 +154,24 @@ export class AiJobsService {
     };
   }
 
+  private async ensureAiPlusMember(userId: bigint) {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        id: userId,
+        deletedAt: null,
+      },
+      select: {
+        membershipType: true,
+        membershipExpireAt: true,
+      },
+    });
+
+    const isAiPlus =
+      user?.membershipType === MembershipType.ai_plus &&
+      (!user.membershipExpireAt || user.membershipExpireAt.getTime() > Date.now());
+
+    if (!isAiPlus) {
+      throw new ForbiddenException('AI 功能仅对 AI 会员开放');
+    }
+  }
 }
