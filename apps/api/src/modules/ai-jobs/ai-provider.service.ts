@@ -13,6 +13,8 @@ type OpenAiCompatibleResponse = {
   choices?: Array<{ message?: { content?: string } }>;
 };
 
+const PUBLIC_AI_UNAVAILABLE_MESSAGE = '智能整理暂时不可用，请手动填写标题、摘要或标签后继续。';
+
 @Injectable()
 export class AiProviderService {
   private readonly logger = new Logger(AiProviderService.name);
@@ -131,7 +133,8 @@ export class AiProviderService {
     const model = process.env.AI_MODEL;
 
     if (!apiKey || !baseUrl || !model) {
-      throw new BadGatewayException('AI 服务配置缺失，请检查 AI_API_KEY、AI_BASE_URL 和 AI_MODEL');
+      this.logger.warn('AI provider configuration is incomplete');
+      throw new BadGatewayException(PUBLIC_AI_UNAVAILABLE_MESSAGE);
     }
 
     const timeoutMs = Number(process.env.AI_TIMEOUT_MS ?? 30000);
@@ -171,25 +174,28 @@ export class AiProviderService {
 
       const responseText = await response.text();
       if (!response.ok) {
-        const detail = this.extractProviderError(responseText, apiKey);
-        throw new BadGatewayException(`AI 服务调用失败：HTTP ${response.status}${detail ? `，${detail}` : ''}`);
+        this.logger.warn(`AI provider request failed: HTTP ${response.status}${this.extractProviderErrorForLog(responseText, apiKey)}`);
+        throw new BadGatewayException(PUBLIC_AI_UNAVAILABLE_MESSAGE);
       }
 
       let payload: OpenAiCompatibleResponse;
       try {
         payload = JSON.parse(responseText) as OpenAiCompatibleResponse;
       } catch {
-        throw new BadGatewayException('AI 服务返回格式异常');
+        this.logger.warn('AI provider returned invalid response JSON');
+        throw new BadGatewayException(PUBLIC_AI_UNAVAILABLE_MESSAGE);
       }
       const content = payload.choices?.[0]?.message?.content;
       if (!content) {
-        throw new BadGatewayException('AI 服务未返回内容');
+        this.logger.warn('AI provider response is missing message content');
+        throw new BadGatewayException(PUBLIC_AI_UNAVAILABLE_MESSAGE);
       }
 
       return this.normalizeProviderOutput(this.parseJsonContent(content));
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new BadGatewayException('AI 服务调用超时');
+        this.logger.warn('AI provider request timed out');
+        throw new BadGatewayException(PUBLIC_AI_UNAVAILABLE_MESSAGE);
       }
       throw error;
     } finally {
@@ -219,18 +225,20 @@ export class AiProviderService {
     } catch {
       const match = content.match(/\{[\s\S]*\}/);
       if (!match) {
-        throw new BadGatewayException('AI 服务返回内容不是有效 JSON');
+        this.logger.warn('AI provider message content is not JSON');
+        throw new BadGatewayException(PUBLIC_AI_UNAVAILABLE_MESSAGE);
       }
 
       try {
         return JSON.parse(match[0]);
       } catch {
-        throw new BadGatewayException('AI 服务返回内容不是有效 JSON');
+        this.logger.warn('AI provider embedded JSON is invalid');
+        throw new BadGatewayException(PUBLIC_AI_UNAVAILABLE_MESSAGE);
       }
     }
   }
 
-  private extractProviderError(responseText: string, apiKey: string): string {
+  private extractProviderErrorForLog(responseText: string, apiKey: string): string {
     const sanitize = (value: string) => value.replaceAll(apiKey, '<redacted>').slice(0, 240);
     try {
       const parsed = JSON.parse(responseText) as {
@@ -243,9 +251,10 @@ export class AiProviderService {
       };
       const error = parsed.error;
       const detail = [error?.code, error?.message || parsed.message || error?.type].filter(Boolean).join('：');
-      return detail ? sanitize(detail) : '';
+      return detail ? ` ${sanitize(detail)}` : '';
     } catch {
-      return sanitize(responseText.trim());
+      const detail = sanitize(responseText.trim());
+      return detail ? ` ${detail}` : '';
     }
   }
 }

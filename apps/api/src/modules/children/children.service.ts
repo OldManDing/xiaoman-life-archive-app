@@ -33,13 +33,21 @@ export class ChildrenService {
         childId,
         status: MEDIA_STATUS_READY,
       },
-      select: { objectKey: true },
+      select: { objectKey: true, thumbnailObjectKey: true },
     });
     if (!media) return null;
 
+    const objectKey = media.thumbnailObjectKey ?? media.objectKey;
     try {
-      return (await this.storageService.createAccessUrl(media.objectKey)).access_url;
+      return (await this.storageService.createAccessUrl(objectKey)).access_url;
     } catch {
+      if (objectKey !== media.objectKey) {
+        try {
+          return (await this.storageService.createAccessUrl(media.objectKey)).access_url;
+        } catch {
+          return null;
+        }
+      }
       return null;
     }
   }
@@ -99,6 +107,7 @@ export class ChildrenService {
       owner_user_no: user.userNo,
       name: child.name,
       avatar_url: await this.resolveAvatarUrl(child.id, child.avatarUrl),
+      avatar_media_no: parseMediaReference(child.avatarUrl),
       birthday: toDateOnly(child.birthday),
       gender: child.gender,
       birth_place: child.birthPlace,
@@ -125,15 +134,17 @@ export class ChildrenService {
         },
       },
       orderBy: { createdAt: 'desc' },
-      include: { owner: true },
+      include: { owner: true, family: true },
     });
 
     return {
       list: await Promise.all(children.map(async (child) => ({
         child_no: child.childNo,
+        family_no: child.family.familyNo,
         owner_user_no: child.owner.userNo,
         name: child.name,
         avatar_url: await this.resolveAvatarUrl(child.id, child.avatarUrl),
+        avatar_media_no: parseMediaReference(child.avatarUrl),
         birthday: toDateOnly(child.birthday),
         gender: child.gender,
         birth_place: child.birthPlace,
@@ -157,6 +168,7 @@ export class ChildrenService {
       owner_user_no: owner.userNo,
       name: child.name,
       avatar_url: await this.resolveAvatarUrl(child.id, child.avatarUrl),
+      avatar_media_no: parseMediaReference(child.avatarUrl),
       birthday: toDateOnly(child.birthday),
       gender: child.gender,
       birth_place: child.birthPlace,
@@ -189,6 +201,7 @@ export class ChildrenService {
       owner_user_no: updated.owner.userNo,
       name: updated.name,
       avatar_url: await this.resolveAvatarUrl(updated.id, updated.avatarUrl),
+      avatar_media_no: parseMediaReference(updated.avatarUrl),
       birthday: toDateOnly(updated.birthday),
       gender: updated.gender,
       birth_place: updated.birthPlace,

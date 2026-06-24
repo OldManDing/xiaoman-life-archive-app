@@ -73,6 +73,7 @@ const apiEnv = {
 
 const frontendEnv = {
   ...cleanEnv(process.env),
+  VITE_E2E: process.env.VITE_E2E ?? 'true',
   VITE_API_PROXY_TARGET: process.env.VITE_API_PROXY_TARGET ?? `http://127.0.0.1:${apiPort}`,
 };
 

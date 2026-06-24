@@ -8,6 +8,7 @@ export interface UserProfile {
   user_no: string;
   nickname: string;
   avatar_url: string | null;
+  avatar_media_no?: string | null;
   mobile?: string | null;
   membership_type: string;
   membership_expire_at?: string | null;
@@ -33,6 +34,53 @@ export interface UserPreferencesResponse {
   updated_at: string | null;
 }
 
+export interface UserNotificationItem {
+  notification_no: string;
+  notification_type: string;
+  title: string;
+  body: string;
+  family_no: string;
+  actor_user_no: string | null;
+  actor_nickname: string | null;
+  target_type: string | null;
+  target_no: string | null;
+  read_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserNotificationsResponse {
+  list: UserNotificationItem[];
+  page: number;
+  page_size: number;
+  total: number;
+  has_more: boolean;
+}
+
+export interface NotificationUnreadCountResponse {
+  unread_count: number;
+}
+
+export interface NotificationMutationResponse {
+  success: boolean;
+  notification_no?: string;
+  read_at?: string | null;
+  updated_count?: number;
+}
+
+export interface AppUpdateCheckResponse {
+  platform: 'android';
+  current_version: string;
+  current_build_number: number;
+  latest_version: string;
+  latest_build_number: number;
+  release_notes: string;
+  apk_url: string | null;
+  update_available: boolean;
+  force_update: boolean;
+  checked_at: string;
+}
+
 export interface FeedbackResponse {
   feedback_no: string;
   ticket_no?: string;
@@ -41,11 +89,44 @@ export interface FeedbackResponse {
   created_at: string;
 }
 
+export interface FeedbackTicketItem {
+  feedback_no: string;
+  ticket_no: string;
+  category: string;
+  topic: string | null;
+  content: string;
+  contact: string | null;
+  status: 'submitted' | 'processing' | 'resolved' | 'closed';
+  priority: string;
+  handled_at: string | null;
+  handle_note: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FeedbackTicketsListResponse {
+  list: FeedbackTicketItem[];
+}
+
 export interface MembershipBookRequestResponse {
   request_no: string;
+  year: number;
   status: 'submitted';
   message: string;
   created_at: string;
+}
+
+export interface MembershipBookRequestItem {
+  request_no: string;
+  year: number;
+  status: 'submitted' | 'processing' | 'completed' | 'rejected';
+  contact: string | null;
+  note: string | null;
+  created_at: string;
+}
+
+export interface MembershipBookRequestsListResponse {
+  list: MembershipBookRequestItem[];
 }
 
 export interface ArchiveExportRequestResponse {
@@ -123,6 +204,7 @@ export interface ChildRecord {
   owner_user_no?: string;
   name: string;
   avatar_url: string | null;
+  avatar_media_no?: string | null;
   birthday: string;
   gender: string;
   birth_place?: string | null;
@@ -211,6 +293,7 @@ export interface UploadTokenResponse {
 export interface MediaAccessUrlResponse {
   media_no: string;
   access_url: string;
+  thumbnail_url?: string | null;
   expires_in: number;
   expire_at?: string;
 }
@@ -244,6 +327,8 @@ export interface LocationsSearchResponse {
 export interface FamilyMemberItem {
   user_no: string;
   nickname: string;
+  avatar_url: string | null;
+  avatar_media_no?: string | null;
   mobile_masked: string | null;
   role: string;
   status: number;
@@ -254,6 +339,25 @@ export interface FamilyMemberItem {
 export interface FamilyMembersResponse {
   family_no: string;
   list: FamilyMemberItem[];
+}
+
+export interface FamilyMemberOperationItem {
+  operation_no: string;
+  action: string;
+  family_no: string;
+  target_user_no: string | null;
+  target_nickname: string | null;
+  before_role: string | null;
+  after_role: string | null;
+  operator_user_id: string | null;
+  record_no?: string | null;
+  record_title?: string | null;
+  created_at: string;
+}
+
+export interface FamilyMemberOperationsResponse {
+  family_no: string;
+  list: FamilyMemberOperationItem[];
 }
 
 export interface FamilyInviteResponse {

@@ -9,21 +9,33 @@ import {
   RECORD_STATUS_PUBLISHED,
   USER_ACTIVE_STATUS,
 } from '../../shared/constants';
+import {
+  getMobileApkUrl,
+  getMobileForceUpdate,
+  getMobileLatestBuildNumber,
+  getMobileLatestVersion,
+  getMobileReleaseNotes,
+} from '../../shared/env-config';
 import { parseMediaReference } from '../../shared/media-reference';
 import { AccessControlService } from '../../shared/services/access-control.service';
 import { AuditLogService } from '../../shared/services/audit-log.service';
+import { NotificationService } from '../../shared/services/notification.service';
 import { StorageService } from '../../shared/services/storage.service';
 import { generateBizNo, maskMobile } from '../../shared/utils';
 import { ArchiveExportSummaryDto } from './dto/archive-export-summary.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { CheckAppUpdateDto } from './dto/check-app-update.dto';
 import { CreateArchiveExportRequestDto } from './dto/create-archive-export-request.dto';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { CreateMembershipBookRequestDto } from './dto/create-membership-book-request.dto';
 import { DeleteMeDto } from './dto/delete-me.dto';
 import { ListArchiveExportRequestsDto } from './dto/list-archive-export-requests.dto';
+import { ListNotificationsDto } from './dto/list-notifications.dto';
 import { UpdatePreferencesDto } from './dto/update-preferences.dto';
 import { UpdateMeDto } from './dto/update-me.dto';
 
 const USER_PREFERENCES_ACTION = 'user.preferences_updated';
+const MEMBERSHIP_BOOK_REQUEST_ACTION = 'user.membership_book_requested';
 const DEFAULT_USER_PREFERENCES = {
   allow_mobile_search: true,
   show_history_to_new_members: true,
@@ -62,6 +74,7 @@ export class UsersService {
     private readonly accessControlService: AccessControlService,
     private readonly auditLogService: AuditLogService,
     private readonly storageService: StorageService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async me(userId: bigint) {
@@ -76,10 +89,67 @@ export class UsersService {
       data: {
         nickname: dto.nickname,
         avatarUrl: dto.avatar_url,
+        mobile: dto.mobile,
       },
     });
 
     return this.toUserProfile(updated);
+  }
+
+  async changePassword(userId: bigint, dto: ChangePasswordDto, meta: AuditRequestMeta = {}) {
+    const user = await this.findUserOrThrow(userId);
+    if (dto.new_password !== dto.new_password_confirm) {
+      throw new BadRequestException('两次新密码不一致');
+    }
+    if (dto.new_password === dto.current_password) {
+      throw new BadRequestException('新密码不能与当前密码相同');
+    }
+
+    const authAccount = await this.prisma.userAuthAccount.findFirst({
+      where: {
+        userId: user.id,
+        authType: AuthType.password,
+        status: USER_ACTIVE_STATUS,
+      },
+      select: { id: true, credentialHash: true },
+    });
+
+    if (!authAccount?.credentialHash) {
+      throw new BadRequestException('当前账号不支持密码修改');
+    }
+
+    const validPassword = await bcrypt.compare(dto.current_password, authAccount.credentialHash);
+    if (!validPassword) {
+      throw new BadRequestException('当前密码不正确');
+    }
+
+    const nextHash = await bcrypt.hash(dto.new_password, 10);
+    const updatedAt = new Date();
+    await this.prisma.userAuthAccount.update({
+      where: { id: authAccount.id },
+      data: { credentialHash: nextHash },
+    });
+
+    try {
+      await this.auditLogService.create({
+        actor_type: ActorType.user,
+        actor_id: user.id,
+        action: 'user.password_changed',
+        target_type: 'user',
+        target_id: user.id,
+        ip_address: meta.ip_address,
+        user_agent: meta.user_agent,
+        metadata: { user_no: user.userNo },
+      });
+    } catch (error) {
+      this.logger.warn(`Password changed but audit log failed for user ${user.userNo}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+
+    return {
+      success: true,
+      updated_at: updatedAt.toISOString(),
+      message: '登录密码已更新',
+    };
   }
 
   async preferences(userId: bigint) {
@@ -124,6 +194,48 @@ export class UsersService {
     return {
       ...next,
       updated_at: updatedAt.toISOString(),
+    };
+  }
+
+  async listNotifications(userId: bigint, dto: ListNotificationsDto) {
+    await this.findUserOrThrow(userId);
+    return this.notificationService.listUserNotifications(userId, dto.page, dto.page_size);
+  }
+
+  async notificationUnreadCount(userId: bigint) {
+    await this.findUserOrThrow(userId);
+    return this.notificationService.unreadCount(userId);
+  }
+
+  async markNotificationRead(userId: bigint, notificationNo: string) {
+    await this.findUserOrThrow(userId);
+    return this.notificationService.markNotificationRead(userId, notificationNo);
+  }
+
+  async markAllNotificationsRead(userId: bigint) {
+    await this.findUserOrThrow(userId);
+    return this.notificationService.markAllRead(userId);
+  }
+
+  async checkAppUpdate(userId: bigint, dto: CheckAppUpdateDto) {
+    await this.findUserOrThrow(userId);
+    const latestVersion = getMobileLatestVersion();
+    const latestBuildNumber = getMobileLatestBuildNumber();
+    const currentVersion = dto.version.trim();
+    const currentBuildNumber = Number.isFinite(dto.build_number) ? Math.max(0, Math.floor(dto.build_number)) : 0;
+    const updateAvailable = currentBuildNumber < latestBuildNumber || currentVersion !== latestVersion;
+
+    return {
+      platform: dto.platform,
+      current_version: currentVersion,
+      current_build_number: currentBuildNumber,
+      latest_version: latestVersion,
+      latest_build_number: latestBuildNumber,
+      release_notes: getMobileReleaseNotes(),
+      apk_url: getMobileApkUrl(),
+      update_available: updateAvailable,
+      force_update: updateAvailable && getMobileForceUpdate(),
+      checked_at: new Date().toISOString(),
     };
   }
 
@@ -172,6 +284,50 @@ export class UsersService {
     };
   }
 
+  async listFeedback(userId: bigint) {
+    await this.findUserOrThrow(userId);
+    const list = await this.prisma.supportTicket.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    });
+
+    return {
+      list: list.map((item) => ({
+        feedback_no: item.ticketNo,
+        ticket_no: item.ticketNo,
+        category: item.category,
+        topic: item.topic,
+        content: item.content,
+        contact: item.contact,
+        status: item.status,
+        priority: item.priority,
+        handled_at: item.handledAt?.toISOString() ?? null,
+        handle_note: item.handleNote,
+        created_at: item.createdAt.toISOString(),
+        updated_at: item.updatedAt.toISOString(),
+      })),
+    };
+  }
+
+  async listMembershipBookRequests(userId: bigint) {
+    await this.findUserOrThrow(userId);
+    const list = await this.prisma.auditLog.findMany({
+      where: {
+        actorType: ActorType.user,
+        actorId: userId,
+        action: MEMBERSHIP_BOOK_REQUEST_ACTION,
+        targetType: 'membership_book_request',
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+    });
+
+    return {
+      list: list.map((item) => this.toMembershipBookRequestItem(item.metadata, item.createdAt)),
+    };
+  }
+
   async requestMembershipBook(userId: bigint, dto: CreateMembershipBookRequestDto, meta: AuditRequestMeta = {}) {
     const user = await this.findUserOrThrow(userId);
     const requestNo = generateBizNo('book');
@@ -180,7 +336,7 @@ export class UsersService {
     await this.auditLogService.create({
       actor_type: ActorType.user,
       actor_id: user.id,
-      action: 'user.membership_book_requested',
+      action: MEMBERSHIP_BOOK_REQUEST_ACTION,
       target_type: 'membership_book_request',
       target_id: user.id,
       ip_address: meta.ip_address,
@@ -188,6 +344,7 @@ export class UsersService {
       metadata: {
         request_no: requestNo,
         year: dto.year ?? new Date().getFullYear(),
+        status: 'submitted',
         contact: dto.contact || null,
         note: dto.note || null,
         user_no: user.userNo,
@@ -197,6 +354,7 @@ export class UsersService {
 
     return {
       request_no: requestNo,
+      year: dto.year ?? new Date().getFullYear(),
       status: 'submitted',
       message: '纪念册申领已提交，我们会核对会员权益后联系你。',
       created_at: createdAt.toISOString(),
@@ -766,6 +924,26 @@ export class UsersService {
     };
   }
 
+  private toMembershipBookRequestItem(metadata: Prisma.JsonValue | null, createdAt: Date) {
+    const value = metadata && typeof metadata === 'object' && !Array.isArray(metadata) ? (metadata as Record<string, unknown>) : {};
+    const parsedYear =
+      typeof value.year === 'number'
+        ? value.year
+        : typeof value.year === 'string'
+          ? Number.parseInt(value.year, 10)
+          : createdAt.getFullYear();
+    const status = typeof value.status === 'string' && ['submitted', 'processing', 'completed', 'rejected'].includes(value.status) ? value.status : 'submitted';
+
+    return {
+      request_no: typeof value.request_no === 'string' && value.request_no.trim() ? value.request_no : `book_${createdAt.getTime()}`,
+      year: Number.isFinite(parsedYear) ? parsedYear : createdAt.getFullYear(),
+      status,
+      contact: typeof value.contact === 'string' && value.contact ? value.contact : null,
+      note: typeof value.note === 'string' && value.note ? value.note : null,
+      created_at: createdAt.toISOString(),
+    };
+  }
+
   private async resolveAvatarUrl(userId: bigint, avatarUrl: string | null) {
     const mediaNo = parseMediaReference(avatarUrl);
     if (!mediaNo) return avatarUrl;
@@ -776,13 +954,21 @@ export class UsersService {
         uploaderUserId: userId,
         status: MEDIA_STATUS_READY,
       },
-      select: { objectKey: true },
+      select: { objectKey: true, thumbnailObjectKey: true },
     });
     if (!media) return null;
 
+    const objectKey = media.thumbnailObjectKey ?? media.objectKey;
     try {
-      return (await this.storageService.createAccessUrl(media.objectKey)).access_url;
+      return (await this.storageService.createAccessUrl(objectKey)).access_url;
     } catch {
+      if (objectKey !== media.objectKey) {
+        try {
+          return (await this.storageService.createAccessUrl(media.objectKey)).access_url;
+        } catch {
+          return null;
+        }
+      }
       return null;
     }
   }
@@ -801,6 +987,7 @@ export class UsersService {
       user_no: user.userNo,
       nickname: user.nickname,
       avatar_url: await this.resolveAvatarUrl(user.id, user.avatarUrl),
+      avatar_media_no: parseMediaReference(user.avatarUrl),
       mobile: maskMobile(user.mobile),
       membership_type: user.membershipType,
       membership_expire_at: user.membershipExpireAt?.toISOString() ?? null,

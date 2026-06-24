@@ -13,17 +13,17 @@ export class RegisterDto {
   credential!: string;
 
   @IsString()
-  @Length(8, 72)
+  @Length(8, 12, { message: '密码需为 8 到 12 位' })
   password!: string;
 
   @ValidateIf((dto: RegisterDto) => dto.password_confirm !== undefined || dto.passwordConfirm === undefined)
   @IsString()
-  @Length(8, 72)
+  @Length(8, 12, { message: '确认密码需为 8 到 12 位' })
   password_confirm?: string;
 
   @ValidateIf((dto: RegisterDto) => dto.password_confirm === undefined)
   @IsString()
-  @Length(8, 72)
+  @Length(8, 12, { message: '确认密码需为 8 到 12 位' })
   passwordConfirm?: string;
 
   @ValidateIf((dto: RegisterDto) => shouldValidateOptionalString(dto.invite_code))

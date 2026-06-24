@@ -6,12 +6,12 @@ export const apiBaseURL = process.env.E2E_API_BASE_URL ?? `http://127.0.0.1:${pr
 
 export async function loginWeb(page: Page) {
   await page.goto(`${webBaseURL}/auth/login`);
-  await page.getByPlaceholder('请输入账号').fill('xiaoman_parent');
-  await page.getByPlaceholder('请输入密码').fill('DemoUser123!');
+  await page.getByPlaceholder('账号').fill('xiaoman_parent');
+  await page.getByPlaceholder('密码').fill('DemoUser123!');
   await page.getByRole('checkbox', { name: '我已阅读并同意《用户协议》和《隐私政策》' }).check();
   await page.getByRole('button', { name: '进入年轮' }).click();
   await expect(page).toHaveURL(/\/home$/);
-  await expect(page.getByText('成长时间线')).toBeVisible();
+  await expect(page.getByText('小满的成长记录')).toBeVisible();
 }
 
 export async function loginAdmin(page: Page) {

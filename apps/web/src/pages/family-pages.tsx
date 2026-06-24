@@ -1,16 +1,17 @@
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+﻿import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Calendar, Camera, ChevronRight, Clock, Copy, FileText, Heart, Image as ImageIcon, Mic, PlayCircle, Plus, ShieldAlert, UserMinus, UserPlus, UserRound } from 'lucide-react';
+import { Calendar, Camera, ChevronRight, Clock, Copy, FileText, Image as ImageIcon, Mic, PlayCircle, Plus, ShieldAlert, UserMinus, UserPlus } from 'lucide-react';
 
 import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
-import type { ChildRecord, FamilyInviteResponse, FamilyMemberItem, RecordSummary } from '../shared/api/types';
+import type { ChildRecord, FamilyInviteResponse, FamilyMemberItem, FamilyMemberOperationItem, RecordSummary } from '../shared/api/types';
 import { useAsyncData, useStoredMediaUrl } from '../shared/hooks';
 import { childStatusLabel, familyMemberStatusLabel, familyRoleLabel, genderLabel, recordTypeLabel } from '../shared/labels';
-import { createPersistableAvatarPreview, resolveMediaPreviewUrl, saveLocalMediaPreview, saveRuntimeMediaPreview, toStoredMediaReference } from '../shared/localMediaPreview';
+import { createPersistableAvatarPreview, saveLocalMediaPreview, saveRuntimeMediaPreview, toStoredMediaReference } from '../shared/localMediaPreview';
 import { loadLocalSettings } from '../shared/localSettings';
 import { isSupportedImageFile, resolveFileMimeType, withResolvedFileMimeType } from '../shared/mediaFiles';
-import { AppSegmentedControl, Field, PageShell, Panel, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle, textareaStyle } from '../shared/ui';
+import { useCachedMediaUrl } from '../shared/useCachedMediaUrl';
+import { AppSegmentedControl, Field, PageShell, Panel, compactPrimaryButtonStyle, compactSecondaryButtonStyle, dateControlStyle, helperTextStyle, hiddenNativeDateInputStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle, textareaStyle } from '../shared/ui';
 import { EmptyState, buttonRowStyle, formSubmitSpacingStyle, rowStyle } from './shared';
 import { RefAvatar, RefSectionTitle, isReferencePlaceholderAvatar, refCardStyle, refMutedTextStyle, refPageStyle, refSoftCardStyle, referenceAssets } from './reference-ui';
 
@@ -51,8 +52,8 @@ const uploadChildAvatarImage = async (childNo: string, file: File, previewUrl?: 
   return toStoredMediaReference(uploadToken.media_no);
 };
 
-const ChildAvatarPreview = ({ src, label }: { src?: string | null; label: string }) => {
-  const resolvedSrc = useStoredMediaUrl(src);
+const ChildAvatarPreview = ({ src, mediaNo, label }: { src?: string | null; mediaNo?: string | null; label: string }) => {
+  const resolvedSrc = useStoredMediaUrl(src, mediaNo);
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
 
   useEffect(() => {
@@ -60,23 +61,14 @@ const ChildAvatarPreview = ({ src, label }: { src?: string | null; label: string
   }, [resolvedSrc]);
 
   if (resolvedSrc && failedSrc !== resolvedSrc) {
-    return <img src={resolvedSrc} alt={label} decoding="async" onError={() => setFailedSrc(resolvedSrc)} style={{ width: '72px', height: '72px', borderRadius: '8px', objectFit: 'cover', border: '1px solid var(--nl-border)', background: 'linear-gradient(135deg, rgba(var(--nl-primary-rgb),0.22), rgba(var(--nl-accent-rgb),0.12)), var(--nl-surface-soft)' }} />;
+    return <img src={resolvedSrc} alt={label} decoding="async" onError={() => setFailedSrc(resolvedSrc)} style={{ width: '72px', height: '72px', borderRadius: '8px', objectFit: 'cover', border: '1px solid var(--nl-border-image)', background: 'var(--nl-surface-soft)', boxShadow: '0 12px 26px rgba(var(--nl-shadow-rgb),0.18)' }} />;
   }
 
-  return (
-    <div style={{ width: '72px', height: '72px', borderRadius: '8px', border: '1px solid var(--nl-border)', background: 'linear-gradient(135deg, rgba(var(--nl-primary-rgb),0.22), rgba(var(--nl-accent-rgb),0.12)), var(--nl-surface-soft)', display: 'grid', placeItems: 'center', color: 'var(--nl-muted-strong)', fontSize: '24px', fontWeight: 700 }}>
-      {label.slice(0, 1) || '宝'}
-    </div>
-  );
+  return <img src={referenceAssets.childAvatar} alt={label} decoding="async" style={{ width: '72px', height: '72px', borderRadius: '8px', objectFit: 'cover', border: '1px solid var(--nl-border-image)', background: 'var(--nl-surface-soft)', boxShadow: '0 12px 26px rgba(var(--nl-shadow-rgb),0.18)' }} />;
 };
 
-const resolveReferenceAvatar = (src: string | null | undefined, fallbackSrc: string) => {
-  if (!src || isReferencePlaceholderAvatar(src)) return fallbackSrc;
-  return src;
-};
-
-const FamilyAvatar = ({ src, label, size = 42, radius = '999px', fallbackSrc }: { src?: string | null; label: string; size?: number; radius?: string; fallbackSrc?: string }) => {
-  const resolvedSrc = useStoredMediaUrl(src && !isReferencePlaceholderAvatar(src) ? src : null);
+const FamilyAvatar = ({ src, mediaNo, label, size = 42, radius = '999px', fallbackSrc = referenceAssets.momAvatar }: { src?: string | null; mediaNo?: string | null; label: string; size?: number; radius?: string; fallbackSrc?: string | null }) => {
+  const resolvedSrc = useStoredMediaUrl(src && !isReferencePlaceholderAvatar(src) ? src : null, mediaNo);
   const displaySrc = resolvedSrc && !isReferencePlaceholderAvatar(resolvedSrc) ? resolvedSrc : fallbackSrc;
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
 
@@ -85,17 +77,26 @@ const FamilyAvatar = ({ src, label, size = 42, radius = '999px', fallbackSrc }: 
   }, [displaySrc]);
 
   if (displaySrc && failedSrc !== displaySrc) {
-    return <img src={displaySrc} alt={label} decoding="async" onError={() => setFailedSrc(displaySrc)} style={{ width: `${size}px`, height: `${size}px`, borderRadius: radius, objectFit: 'cover', border: '1px solid var(--nl-border)', background: 'linear-gradient(135deg, rgba(var(--nl-primary-rgb),0.2), rgba(var(--nl-accent-rgb),0.1)), var(--nl-surface-soft)', flexShrink: 0, boxShadow: '0 10px 24px rgba(var(--nl-shadow-rgb),0.32)' }} />;
+    return <img src={displaySrc} alt={label} decoding="async" onError={() => setFailedSrc(displaySrc)} style={{ width: `${size}px`, height: `${size}px`, borderRadius: radius, objectFit: 'cover', border: '1px solid var(--nl-border-image)', background: 'var(--nl-surface-soft)', flexShrink: 0, boxShadow: '0 10px 22px rgba(var(--nl-shadow-rgb),0.18)' }} />;
   }
 
-  return (
-    <div style={{ width: `${size}px`, height: `${size}px`, borderRadius: radius, background: 'linear-gradient(135deg, rgba(var(--nl-primary-rgb),0.22), rgba(var(--nl-accent-rgb),0.12)), var(--nl-surface-soft)', border: '1px solid var(--nl-border)', display: 'grid', placeItems: 'center', color: 'var(--nl-muted-strong)', fontWeight: 700, flexShrink: 0, boxShadow: '0 10px 24px rgba(var(--nl-shadow-rgb),0.28)' }}>
-      {label.slice(0, 1) || '?'}
-    </div>
-  );
+  return <img src={fallbackSrc ?? referenceAssets.momAvatar} alt={label} decoding="async" style={{ width: `${size}px`, height: `${size}px`, borderRadius: radius, objectFit: 'cover', border: '1px solid var(--nl-border-image)', background: 'var(--nl-surface-soft)', flexShrink: 0, boxShadow: '0 10px 22px rgba(var(--nl-shadow-rgb),0.18)' }} />;
 };
 
-const getFamilyRecordCoverUrl = (record: RecordSummary) => resolveMediaPreviewUrl(record.cover_media_no, record.cover_url);
+const resolveFamilyMemberAvatarSrc = (member: FamilyMemberItem, currentUser: { user_no: string; avatar_url: string | null; avatar_media_no?: string | null } | null) => {
+  const avatarUrl = member.avatar_url && !isReferencePlaceholderAvatar(member.avatar_url) ? member.avatar_url : null;
+  if (avatarUrl) return avatarUrl;
+  if (currentUser?.user_no === member.user_no && currentUser.avatar_url && !isReferencePlaceholderAvatar(currentUser.avatar_url)) {
+    return currentUser.avatar_url;
+  }
+  return null;
+};
+
+const resolveFamilyMemberAvatarMediaNo = (member: FamilyMemberItem, currentUser: { user_no: string; avatar_media_no?: string | null } | null) => {
+  if (member.avatar_media_no) return member.avatar_media_no;
+  if (currentUser?.user_no === member.user_no) return currentUser.avatar_media_no ?? null;
+  return null;
+};
 
 const getFamilyRecordMediaKind = (record: RecordSummary) =>
   record.cover_media_type ?? (record.record_type === 'audio' || record.record_type === 'video' ? record.record_type : null);
@@ -104,7 +105,7 @@ const getFamilyRecordActionLabel = (record: RecordSummary) => {
   const mediaKind = getFamilyRecordMediaKind(record);
   if (mediaKind === 'video') return '上传了视频记录';
   if (mediaKind === 'audio') return '记录了一段语音';
-  if (getFamilyRecordCoverUrl(record)) return '上传了照片';
+  if (record.cover_url) return '上传了照片';
   return `记录了${recordTypeLabel(record.record_type, record.is_milestone)}`;
 };
 
@@ -112,15 +113,97 @@ const getFamilyMemberDisplayName = (member: FamilyMemberItem) =>
   /^native_delete_/i.test(member.nickname.trim()) ? '已移除成员' :
   /^native_parent_\d+$/i.test(member.nickname.trim()) ? '家人' : member.nickname;
 
+const isVisibleFamilyMember = (member: FamilyMemberItem) =>
+  member.status === 1 && !/^native_delete_/i.test(member.nickname.trim());
+
+const emptyFamilyOperations = (familyNo: string) => ({ family_no: familyNo, list: [] as FamilyMemberOperationItem[] });
+
+const getFamilyMemberOperationTargetName = (operation: FamilyMemberOperationItem) => operation.target_nickname?.trim() || operation.target_user_no || '成员';
+
+const getFamilyMemberOperationRoleText = (role: string | null) => {
+  if (!role) return '未知';
+  if (role === 'owner') return '创建者';
+  return familyRoleLabel(role);
+};
+
+const getFamilyMemberOperationText = (operation: FamilyMemberOperationItem) => {
+  const targetName = getFamilyMemberOperationTargetName(operation);
+  if (operation.action === 'family.member_removed') {
+    return `${targetName} 已被移出家庭`;
+  }
+  if (operation.action === 'family.member_role_updated') {
+    return `${targetName} 权限从 ${getFamilyMemberOperationRoleText(operation.before_role)} 调整为 ${getFamilyMemberOperationRoleText(operation.after_role)}`;
+  }
+  if (operation.action === 'family.record_published') {
+    return `${targetName} 发布了「${operation.record_title?.trim() || '未命名记录'}」`;
+  }
+  return `${targetName} 的成员操作已记录`;
+};
+
 const rolePermissionItems = [
-  { role: '管理员', detail: '管理成员、导出档案、调整权限' },
+  { role: '管理员', detail: '管理成员、维护档案、调整权限' },
   { role: '可编辑', detail: '查看记录、补充记录、参与整理' },
   { role: '只读', detail: '查看家庭可见内容，不修改档案' },
 ];
 
+const RecentFamilyRecord = ({ record, index, onClick }: { record: RecordSummary; index: number; onClick: () => void }) => {
+  const mediaKind = getFamilyRecordMediaKind(record);
+  const cachedCoverUrl = useCachedMediaUrl(record.cover_media_no, record.cover_url, mediaKind ?? 'image', {
+    cacheRemote: mediaKind !== 'audio',
+  });
+  const coverUrl = cachedCoverUrl ?? (index % 2 ? referenceAssets.parkPhoto : referenceAssets.childPhoto);
+
+  return (
+    <button type="button" aria-label={`查看家庭动态：${record.title ?? '未命名记录'}`} onClick={onClick} style={{ border: 'none', background: 'transparent', padding: 0, display: 'grid', gap: 10, textAlign: 'left', cursor: 'pointer', position: 'relative' }}>
+      <span style={{ display: 'flex', gap: 10, alignItems: 'center', color: 'var(--nl-ink)', minWidth: 0 }}>
+        <RefAvatar src={index === 0 ? referenceAssets.momAvatar : referenceAssets.childAvatar} label={record.creator_name} size={32} />
+        <span style={{ minWidth: 0, display: 'grid', gap: 2 }}>
+          <strong style={{ fontSize: 14, lineHeight: 1.16, fontWeight: 700, color: 'var(--nl-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{record.creator_name} {getFamilyRecordActionLabel(record)}</strong>
+          <span style={{ color: 'var(--nl-muted)', fontSize: 11, fontWeight: 520 }}>{new Date(record.event_time).toLocaleString('zh-CN', { month: 'numeric', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+        </span>
+      </span>
+      {coverUrl && mediaKind !== 'audio' ? (
+        <span style={{ position: 'relative', display: 'block', width: '100%', height: 158 }}>
+          <img src={coverUrl} alt={record.title ?? '家庭动态图片'} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', borderRadius: 8, objectFit: 'cover', border: '1px solid var(--nl-border-muted)', display: 'block', boxShadow: '0 18px 42px rgba(var(--nl-shadow-rgb),0.26)' }} />
+          {mediaKind === 'video' ? (
+            <span aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: 'var(--nl-on-primary)' }}>
+              <PlayCircle size={40} fill="var(--nl-on-dark-soft)" strokeWidth={1.8} />
+            </span>
+          ) : null}
+        </span>
+      ) : mediaKind === 'audio' ? (
+        <div style={{ maxWidth: 230, borderRadius: '8px', border: '1px solid var(--nl-border-muted)', background: 'transparent', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 9, color: 'var(--nl-muted-strong)' }}>
+          <Mic size={15} />
+          <span style={{ fontSize: 13, fontWeight: 700 }}>语音记录</span>
+        </div>
+      ) : (
+        <img src={index % 2 ? referenceAssets.parkPhoto : referenceAssets.childPhoto} alt={record.title ?? '家庭动态图片'} loading="lazy" decoding="async" style={{ width: '100%', height: 158, borderRadius: 8, objectFit: 'cover', border: '1px solid var(--nl-border-muted)', boxShadow: '0 18px 42px rgba(var(--nl-shadow-rgb),0.26)' }} />
+      )}
+    </button>
+  );
+};
+
+const FamilyMemberOperations = ({ operations }: { operations: FamilyMemberOperationItem[] }) => {
+  if (!operations.length) return null;
+
+  return (
+    <section style={{ borderTop: '1px solid var(--nl-border-muted)', paddingTop: 12, display: 'grid', gap: 8 }}>
+      <strong style={{ color: 'var(--nl-ink)', fontSize: 14, fontWeight: 660 }}>最近操作</strong>
+      <div style={{ display: 'grid', gap: 0, borderTop: '1px solid var(--nl-border-muted)' }}>
+        {operations.slice(0, 4).map((operation) => (
+          <div key={operation.operation_no} style={{ minHeight: 44, borderBottom: '1px solid var(--nl-border-muted)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, padding: '9px 0' }}>
+            <span style={{ minWidth: 0, color: 'var(--nl-ink)', fontSize: 12, fontWeight: 560, lineHeight: 1.45, overflowWrap: 'anywhere' }}>{getFamilyMemberOperationText(operation)}</span>
+            <span style={{ flexShrink: 0, color: 'var(--nl-muted)', fontSize: 10, fontWeight: 600 }}>{new Date(operation.created_at).toLocaleDateString('zh-CN', { month: 'numeric', day: '2-digit' })}</span>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+};
+
 export const FamilyPage = () => {
   const navigate = useNavigate();
-  const { activeChild } = useAuth();
+  const { activeChild, user } = useAuth();
   const { data: membersResponse, loading: membersLoading, error: membersError } = useAsyncData(
     async () => {
       if (!activeChild?.family_no) return null;
@@ -137,29 +220,30 @@ export const FamilyPage = () => {
     [activeChild?.child_no],
   );
 
-  const memberCount = membersResponse?.list.length ?? 0;
-  const recentMembers = membersResponse?.list.slice(0, 4) ?? [];
+  const visibleFamilyMembers = membersResponse?.list.filter(isVisibleFamilyMember) ?? [];
+  const memberCount = visibleFamilyMembers.length;
+  const recentMembers = visibleFamilyMembers.slice(0, 4);
   const recentFamilyRecords = familyRecords?.slice(0, 1) ?? [];
   const activeChildName = activeChild?.name?.trim() || '孩子';
 
   return (
     <div style={refPageStyle}>
-      <header style={{ padding: 'calc(24px + env(safe-area-inset-top)) 20px 8px', background: 'transparent' }}>
-        <h1 style={{ margin: 0, color: 'var(--nl-ink)', fontSize: 22, fontWeight: 950 }}>家庭</h1>
+      <header style={{ padding: 'calc(30px + env(safe-area-inset-top)) 22px 10px', background: 'transparent' }}>
+        <h1 style={{ margin: 0, color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: 32, lineHeight: 1.08, fontWeight: 800 }}>家庭</h1>
       </header>
 
-      <main style={{ display: 'flex', flexDirection: 'column', gap: 10, minHeight: 'calc(var(--nl-page-min-height, 100dvh) - 68px)', boxSizing: 'border-box', padding: '0 20px 44px' }}>
-      <section style={{ ...refSoftCardStyle, padding: 13, minHeight: 76 }}>
+      <main style={{ display: 'flex', flexDirection: 'column', gap: 20, minHeight: 'calc(var(--nl-page-min-height, 100dvh) - 68px)', boxSizing: 'border-box', padding: '0 22px 48px' }}>
+      <section style={{ padding: '18px 0 22px', minHeight: 92, borderBottom: '1px solid var(--nl-border-soft)' }}>
           {activeChild ? (
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 14, alignItems: 'center' }}>
-              <div style={{ display: 'flex', gap: 13, alignItems: 'center', minWidth: 0, flex: '1 1 auto' }}>
-                <RefAvatar src={resolveReferenceAvatar(activeChild.avatar_url, referenceAssets.childPhoto)} label={activeChildName} size={46} radius="15px" fallbackSrc={referenceAssets.childPhoto} />
+              <div style={{ display: 'flex', gap: 14, alignItems: 'center', minWidth: 0, flex: '1 1 auto' }}>
+                <RefAvatar src={activeChild.avatar_url && !isReferencePlaceholderAvatar(activeChild.avatar_url) ? activeChild.avatar_url : referenceAssets.childPhoto} mediaNo={activeChild.avatar_media_no} label={activeChildName} size={60} radius="12px" fallbackSrc={referenceAssets.childPhoto} />
                 <div style={{ minWidth: 0, flex: '1 1 auto' }}>
-                  <h2 style={{ margin: 0, color: 'var(--nl-ink)', fontSize: 17, fontWeight: 950, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeChildName}的家庭</h2>
-                  <p style={{ ...refMutedTextStyle, marginTop: 3, fontSize: 12 }}>已有 {membersLoading ? '…' : memberCount} 位家人加入记录</p>
+                  <h2 style={{ margin: 0, color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: 22, lineHeight: 1.12, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeChildName}的家庭</h2>
+                  <p style={{ ...refMutedTextStyle, marginTop: 5, fontSize: 12 }}>{membersLoading ? '同步中' : `${memberCount} 位家人`}</p>
                 </div>
               </div>
-          <Link to="/family/invite" aria-label="邀请成员" title="邀请成员" style={{ width: 42, height: 42, borderRadius: '15px', background: 'var(--nl-primary)', color: '#ffffff', display: 'grid', placeItems: 'center', textDecoration: 'none', flexShrink: 0, boxShadow: '0 8px 18px rgba(var(--nl-shadow-rgb),0.22)', border: '1px solid rgba(245,205,140,0.5)' }}>
+          <Link to="/family/invite" aria-label="邀请成员" title="邀请成员" style={{ width: 42, height: 42, border: 'none', borderRadius: 0, background: 'transparent', color: 'var(--nl-primary-2)', display: 'grid', placeItems: 'center', textDecoration: 'none', flexShrink: 0, boxShadow: 'none' }}>
                 <UserPlus size={19} />
               </Link>
             </div>
@@ -168,20 +252,20 @@ export const FamilyPage = () => {
         </section>
 
         <section>
-          <RefSectionTitle style={{ color: 'var(--nl-ink)', fontSize: 15 }}>家庭成员</RefSectionTitle>
-          <div style={{ ...refCardStyle, borderRadius: 20, overflow: 'hidden' }}>
+          <RefSectionTitle>家庭成员</RefSectionTitle>
+          <div style={{ borderTop: '1px solid var(--nl-border-soft)', background: 'transparent', overflow: 'hidden' }}>
             {recentMembers.length ? recentMembers.map((member, index) => {
               const memberName = getFamilyMemberDisplayName(member);
               return (
-              <button key={member.user_no} type="button" onClick={() => navigate(`/family/members/${member.user_no}`)} style={{ width: '100%', minHeight: 56, border: 'none', borderBottom: index === recentMembers.length - 1 ? 'none' : '1px solid var(--nl-border)', background: 'rgba(var(--nl-surface-rgb),0.72)', padding: '9px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, textAlign: 'left', cursor: 'pointer' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 11, minWidth: 0, flex: '1 1 auto' }}>
-                  <FamilyAvatar label={memberName} size={34} fallbackSrc={index === 0 ? referenceAssets.momAvatar : undefined} />
+              <button key={member.user_no} type="button" onClick={() => navigate(`/family/members/${member.user_no}`)} style={{ width: '100%', minHeight: 78, border: 'none', borderBottom: index === recentMembers.length - 1 ? 'none' : '1px solid var(--nl-border-soft)', background: 'transparent', padding: '14px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, textAlign: 'left', cursor: 'pointer' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0, flex: '1 1 auto' }}>
+                  <FamilyAvatar src={resolveFamilyMemberAvatarSrc(member, user)} mediaNo={resolveFamilyMemberAvatarMediaNo(member, user)} label={memberName} size={52} />
                   <span style={{ minWidth: 0, flex: 1 }}>
-                    <span style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: 7, alignItems: 'center', minWidth: 0, width: '100%' }}>
-                      <strong style={{ color: 'var(--nl-ink)', fontSize: 13, lineHeight: 1.18, fontWeight: 900, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflowWrap: 'anywhere', minWidth: 0 }}>{memberName}</strong>
-                      <span style={{ color: member.role === 'owner' ? 'var(--nl-primary-2)' : member.role === 'editor' ? 'var(--nl-accent)' : 'var(--nl-muted-strong)', background: member.role === 'owner' ? 'rgba(var(--nl-primary-rgb),0.16)' : member.role === 'editor' ? 'rgba(var(--nl-accent-rgb),0.15)' : 'rgba(var(--nl-surface-rgb),0.74)', border: '1px solid var(--nl-border)', borderRadius: 7, padding: '2px 6px', fontSize: 8, fontWeight: 900, whiteSpace: 'nowrap', flexShrink: 0 }}>{familyRoleLabel(member.role)}</span>
+                    <span style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: 8, alignItems: 'center', minWidth: 0, width: '100%' }}>
+                      <strong style={{ color: 'var(--nl-ink)', fontSize: 15, lineHeight: 1.18, fontWeight: 720, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflowWrap: 'anywhere', minWidth: 0 }}>{memberName}</strong>
+                      <span style={{ color: 'var(--nl-muted)', background: 'transparent', border: 'none', padding: 0, fontSize: 10, fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0 }}>{familyRoleLabel(member.role)}</span>
                     </span>
-                    <span style={{ display: 'block', marginTop: 3, color: 'var(--nl-muted)', fontSize: 10, fontWeight: 700 }}>{member.status === 1 ? '已加入家庭记录' : familyMemberStatusLabel(member.status)}</span>
+                    {member.status !== 1 ? <span style={{ display: 'block', marginTop: 3, color: 'var(--nl-muted)', fontSize: 10, fontWeight: 500 }}>{familyMemberStatusLabel(member.status)}</span> : null}
                   </span>
                 </span>
                 <ChevronRight size={17} color="var(--nl-muted)" />
@@ -190,70 +274,31 @@ export const FamilyPage = () => {
             }) : (
               <div style={{ padding: 18, display: 'grid', gap: 12, justifyItems: 'center' }}>
                 <EmptyState message="暂无家庭成员信息。" />
-                <button type="button" onClick={() => navigate('/family/invite')} style={{ minHeight: 38, border: '1px solid rgba(245,205,140,0.5)', borderRadius: '999px', background: 'var(--nl-primary)', color: '#ffffff', padding: '8px 16px', fontSize: 13, fontWeight: 800, cursor: 'pointer', boxShadow: '0 8px 18px rgba(var(--nl-shadow-rgb),0.22)' }}>邀请家人</button>
+                <button type="button" onClick={() => navigate('/family/invite')} style={compactPrimaryButtonStyle}>邀请家人</button>
               </div>
             )}
           </div>
         </section>
 
         <section>
-          <RefSectionTitle style={{ color: 'var(--nl-ink)', fontSize: 15 }}>最近家庭动态</RefSectionTitle>
+          <RefSectionTitle>家庭动态</RefSectionTitle>
           {recordsLoading ? <EmptyState message="正在加载家庭动态…" /> : null}
           {recordsError ? <EmptyState message={`家庭动态加载失败：${recordsError}`} /> : null}
           {!recordsLoading && !recordsError && recentFamilyRecords.length ? (
-            <div style={{ position: 'relative', display: 'grid', gap: 9, paddingLeft: 24, marginLeft: 12 }}>
-              <span aria-hidden="true" style={{ position: 'absolute', left: 0, top: 8, bottom: 8, width: 1, background: 'linear-gradient(180deg, transparent, rgba(var(--nl-accent-rgb),0.62), rgba(var(--nl-primary-rgb),0.24), transparent)' }} />
-              {recentFamilyRecords.map((record, index) => {
-                const coverUrl = getFamilyRecordCoverUrl(record) ?? (index % 2 ? referenceAssets.parkPhoto : referenceAssets.childPhoto);
-                const mediaKind = getFamilyRecordMediaKind(record);
-                return (
-                  <button key={record.record_no} type="button" aria-label={`查看家庭动态：${record.title ?? '未命名记录'}`} onClick={() => navigate(`/record/${record.record_no}`)} style={{ border: 'none', background: 'transparent', padding: 0, display: 'grid', gap: 5, textAlign: 'left', cursor: 'pointer', position: 'relative' }}>
-                    <span aria-hidden="true" style={{ position: 'absolute', left: -34, top: 0, width: 28, height: 28, borderRadius: '999px', background: 'rgba(var(--nl-surface-rgb),0.96)', border: '1px solid var(--nl-border)', display: 'grid', placeItems: 'center', boxShadow: '0 10px 22px rgba(var(--nl-shadow-rgb),0.12)' }}>
-                      <RefAvatar src={index === 0 ? referenceAssets.momAvatar : referenceAssets.childAvatar} label={record.creator_name} size={26} />
-                    </span>
-                    <span style={{ display: 'flex', gap: 7, alignItems: 'baseline', color: 'var(--nl-ink)' }}>
-                      <strong style={{ fontSize: 12, fontWeight: 900 }}>{record.creator_name}</strong>
-                      <span style={{ fontSize: 11, fontWeight: 700 }}>{getFamilyRecordActionLabel(record)}</span>
-                    </span>
-                    <span style={{ color: 'var(--nl-muted)', fontSize: 10, fontWeight: 700 }}>{new Date(record.event_time).toLocaleString('zh-CN', { month: 'numeric', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false })}</span>
-                    {coverUrl && mediaKind !== 'audio' ? (
-                      <span style={{ position: 'relative', display: 'block', width: 'min(100%, 220px)', height: 84 }}>
-                        <img src={coverUrl} alt={record.title ?? '家庭动态图片'} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', borderRadius: 15, objectFit: 'cover', border: '1px solid var(--nl-border)', display: 'block' }} />
-                        {mediaKind === 'video' ? (
-                          <span aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: '#ffffff' }}>
-                            <PlayCircle size={40} fill="rgba(255,255,255,0.34)" strokeWidth={1.8} />
-                          </span>
-                        ) : null}
-                      </span>
-                    ) : mediaKind === 'audio' ? (
-                      <div style={{ maxWidth: 230, borderRadius: '999px', border: '1px solid var(--nl-border)', background: 'rgba(var(--nl-surface-rgb),0.72)', padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 9, color: 'var(--nl-muted-strong)' }}>
-                        <Mic size={15} />
-                        <span style={{ fontSize: 13, fontWeight: 700 }}>语音记录</span>
-                      </div>
-                    ) : (
-                      <img src={index % 2 ? referenceAssets.parkPhoto : referenceAssets.childPhoto} alt={record.title ?? '家庭动态图片'} loading="lazy" decoding="async" style={{ width: 'min(100%, 232px)', height: 148, borderRadius: 16, objectFit: 'cover', border: '1px solid var(--nl-border)' }} />
-                    )}
-                  </button>
-                );
-              })}
+            <div style={{ position: 'relative', display: 'grid', gap: 9, paddingLeft: 0, marginLeft: 0 }}>
+              {recentFamilyRecords.map((record, index) => (
+                <RecentFamilyRecord key={record.record_no} record={record} index={index} onClick={() => navigate(`/record/${record.record_no}`)} />
+              ))}
             </div>
           ) : null}
           {!recordsLoading && !recordsError && !recentFamilyRecords.length ? (
-            <section style={{ ...refSoftCardStyle, padding: 16, display: 'grid', gap: 10 }}>
-              <strong style={{ color: 'var(--nl-ink)', fontSize: 14, fontWeight: 900 }}>还没有家庭动态</strong>
-              <p style={{ ...refMutedTextStyle, margin: 0 }}>家人发布照片、文字或语音后，这里会按时间展示最近协作内容。</p>
-              <button type="button" onClick={() => navigate('/record/create')} style={{ minHeight: 40, borderRadius: '999px', border: '1px solid var(--nl-border)', background: 'rgba(var(--nl-surface-rgb),0.72)', color: 'var(--nl-muted-strong)', fontSize: 12, fontWeight: 850, cursor: 'pointer' }}>去记录一刻</button>
+            <section style={{ borderTop: '1px solid var(--nl-border-muted)', padding: '14px 0 0', display: 'grid', gap: 10 }}>
+              <strong style={{ color: 'var(--nl-ink)', fontSize: 14, fontWeight: 600 }}>还没有家庭动态</strong>
+              <button type="button" onClick={() => navigate('/record/create')} style={{ ...compactSecondaryButtonStyle, width: 'fit-content' }}>去记录一刻</button>
             </section>
           ) : null}
         </section>
 
-      <section style={{ ...refSoftCardStyle, marginTop: 'auto', background: 'rgba(var(--nl-primary-rgb),0.08)', borderColor: 'var(--nl-border)', padding: 14, position: 'relative', overflow: 'hidden' }}>
-          <Heart size={58} strokeWidth={1.2} style={{ position: 'absolute', right: -10, bottom: -14, color: 'rgba(var(--nl-primary-rgb),0.14)' }} />
-          <div style={{ position: 'relative', display: 'grid', gap: 5 }}>
-            <h2 style={{ margin: 0, color: 'var(--nl-ink)', fontSize: 14, fontWeight: 950 }}>家人寄语</h2>
-            <p style={{ margin: 0, color: 'var(--nl-muted-strong)', fontSize: 12, lineHeight: 1.55, fontWeight: 650 }}>“宝贝，愿你慢慢长大，全家人都会陪你，把这一段时光一件一件收好。”</p>
-          </div>
-        </section>
       </main>
     </div>
   );
@@ -331,7 +376,7 @@ export const FamilyChildPage = () => {
     const previewUrl = typeof URL.createObjectURL === 'function' ? URL.createObjectURL(uploadFile) : null;
     setAvatarPreviewUrl(previewUrl);
     setAvatarUploading(true);
-    setMessage('头像本地预览已显示，正在保存到档案…');
+    setMessage('头像保存中…');
     try {
       const avatarUrl = await uploadChildAvatarImage(activeChild.child_no, uploadFile, previewUrl);
       const updated = await webApi.updateChild(activeChild.child_no, { avatar_url: avatarUrl });
@@ -349,19 +394,17 @@ export const FamilyChildPage = () => {
   };
 
   return (
-    <PageShell title="孩子资料" description="查看并编辑当前孩子的基础资料。" backTo="/family">
-      <Panel>
+    <PageShell title="孩子资料" backTo="/family">
+      <Panel style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }}>
         {loading ? <EmptyState message="正在加载孩子资料…" /> : null}
         {error ? <EmptyState message={`加载失败：${error}`} /> : null}
         {!loading && !error && data ? (
           <form onSubmit={onSubmit} style={rowStyle}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-              <ChildAvatarPreview src={avatarPreviewUrl ?? (form.avatar_url || data.avatar_url)} label={form.name || data.name} />
+              <ChildAvatarPreview src={avatarPreviewUrl ?? (form.avatar_url || data.avatar_url)} mediaNo={data.avatar_media_no} label={form.name || data.name} />
               <label
                 style={{
-                  ...secondaryButtonStyle,
-                  minHeight: '40px',
-                  borderRadius: '999px',
+                  ...compactSecondaryButtonStyle,
                   cursor: avatarUploading ? 'not-allowed' : 'pointer',
                   opacity: avatarUploading ? 0.68 : 1,
                 }}
@@ -371,21 +414,20 @@ export const FamilyChildPage = () => {
                 <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" disabled={avatarUploading} onChange={(event) => void onAvatarChange(event)} style={{ display: 'none' }} />
               </label>
             </div>
-            <p style={helperTextStyle}>档案状态：{childStatusLabel(data.status)}</p>
-            <p style={helperTextStyle}>当前性别：{genderLabel(data.gender)}</p>
+            <p style={helperTextStyle}>状态：{childStatusLabel(data.status)} · 性别：{genderLabel(data.gender)}</p>
             <Field label="孩子姓名">
               <input style={inputStyle} value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} />
             </Field>
             <Field label="生日">
-              <span style={{ ...inputStyle, position: 'relative', display: 'flex', alignItems: 'center', padding: '0 14px', color: form.birthday ? 'var(--nl-ink)' : 'var(--nl-muted)', fontWeight: 600 }}>
+              <span style={{ ...dateControlStyle, color: form.birthday ? 'var(--nl-ink)' : 'var(--nl-muted)' }}>
                 <input
-                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
+                  style={hiddenNativeDateInputStyle}
                   type="date"
                   value={form.birthday}
                   onChange={(event) => setForm((current) => ({ ...current, birthday: event.target.value }))}
                 />
                 <span style={{ pointerEvents: 'none', flex: 1 }}>{form.birthday ? form.birthday.replace(/-/g, '/') : '年/月/日'}</span>
-                <Calendar size={17} color="#cbd5e1" style={{ pointerEvents: 'none' }} />
+                <Calendar size={17} color="var(--nl-muted-strong)" style={{ pointerEvents: 'none', opacity: 0.82 }} />
               </span>
             </Field>
             <Field label="性别">
@@ -409,10 +451,7 @@ export const FamilyChildPage = () => {
       {message ? <p style={{ ...helperTextStyle, color: isPositiveStatusMessage(message) ? 'var(--nl-success)' : 'var(--nl-danger)' }}>{message}</p> : null}
             <div style={{ ...buttonRowStyle, ...formSubmitSpacingStyle }}>
               <button type="submit" style={primaryButtonStyle} disabled={saving}>
-                {saving ? '保存中…' : '保存孩子资料'}
-              </button>
-              <button type="button" style={secondaryButtonStyle} onClick={() => navigate('/family')}>
-                返回家庭页
+                {saving ? '保存中…' : '保存'}
               </button>
             </div>
           </form>
@@ -425,6 +464,7 @@ export const FamilyChildPage = () => {
 export const FamilyMembersPage = () => {
   const { activeChild } = useAuth();
   const [members, setMembers] = useState<FamilyMemberItem[]>([]);
+  const [operations, setOperations] = useState<FamilyMemberOperationItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -434,13 +474,18 @@ export const FamilyMembersPage = () => {
 
   useEffect(() => {
     const loadMembers = async () => {
-      if (!activeChild?.family_no) return;
+      const familyNo = activeChild?.family_no;
+      if (!familyNo) return;
       setLoading(true);
       setError(null);
       setMessage(null);
       try {
-        const response = await webApi.listFamilyMembers(activeChild.family_no);
-        setMembers(response.list);
+        const [membersResponse, operationsResponse] = await Promise.all([
+          webApi.listFamilyMembers(familyNo),
+          webApi.listFamilyMemberOperations(familyNo).catch(() => emptyFamilyOperations(familyNo)),
+        ]);
+        setMembers(membersResponse.list.filter(isVisibleFamilyMember));
+        setOperations(operationsResponse.list);
       } catch (err) {
         setError(err instanceof Error ? err.message : '加载成员失败');
       } finally {
@@ -452,12 +497,15 @@ export const FamilyMembersPage = () => {
   }, [activeChild?.family_no]);
 
   const onChangeRole = async (userNo: string, role: 'viewer' | 'editor') => {
-    if (!activeChild?.family_no) return;
+    const familyNo = activeChild?.family_no;
+    if (!familyNo) return;
     setUpdatingUserNo(userNo);
     setMessage(null);
     try {
-      await webApi.updateFamilyMemberRole(activeChild.family_no, userNo, { role });
+      await webApi.updateFamilyMemberRole(familyNo, userNo, { role });
       setMembers((current) => current.map((item) => (item.user_no === userNo ? { ...item, role } : item)));
+      const operationsResponse = await webApi.listFamilyMemberOperations(familyNo).catch(() => emptyFamilyOperations(familyNo));
+      setOperations(operationsResponse.list);
       setMessage('成员角色已更新');
     } catch (err) {
       setMessage(err instanceof Error ? err.message : '角色更新失败');
@@ -469,71 +517,66 @@ export const FamilyMembersPage = () => {
   const hiddenMemberCount = Math.max(members.length - visibleMembers.length, 0);
 
   return (
-    <PageShell title="家庭成员管理" description="查看成员、邀请来源和角色信息。" backTo="/family">
-      <Panel>
+    <PageShell title="家庭成员" backTo="/family">
+      <Panel style={{ padding: 0, background: 'transparent', border: 'none', boxShadow: 'none' }}>
         {!activeChild?.family_no ? <EmptyState message="当前孩子尚未关联家庭编号。" /> : null}
         {loading ? <EmptyState message="正在加载家庭成员…" /> : null}
         {error ? <EmptyState message={`加载失败：${error}`} /> : null}
-              {message ? <p style={{ ...helperTextStyle, color: message === '成员角色已更新' ? 'var(--nl-success)' : 'var(--nl-danger)' }}>{message}</p> : null}
+        {message ? <p style={{ ...helperTextStyle, color: message === '成员角色已更新' ? 'var(--nl-success)' : 'var(--nl-danger)' }}>{message}</p> : null}
         {members.length ? (
-          <div style={{ display: 'grid', gap: '12px' }}>
-            <section style={{ borderRadius: '16px', border: '1px solid var(--nl-border)', background: 'rgba(var(--nl-surface-rgb),0.66)', padding: '13px', display: 'grid', gap: '10px' }}>
-              <strong style={{ color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 900 }}>权限说明</strong>
-              <div style={{ display: 'grid', gap: '8px' }}>
+          <div style={{ display: 'grid', gap: '16px' }}>
+            <section style={{ borderRadius: 0, border: 'none', borderBottom: '1px solid var(--nl-border-muted)', background: 'transparent', padding: '0 0 14px', display: 'grid', gap: '10px' }}>
+              <strong style={{ color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 700 }}>权限说明</strong>
+              <div style={{ display: 'grid', gap: '10px' }}>
                 {rolePermissionItems.map((item) => (
-                  <div key={item.role} style={{ display: 'grid', gridTemplateColumns: '64px minmax(0, 1fr)', gap: '8px', alignItems: 'start' }}>
-                    <span style={{ borderRadius: '999px', border: '1px solid var(--nl-border)', background: 'rgba(var(--nl-accent-rgb),0.12)', color: 'var(--nl-accent)', padding: '5px 8px', fontSize: '11px', fontWeight: 900, textAlign: 'center' }}>{item.role}</span>
-                    <span style={{ color: 'var(--nl-muted-strong)', fontSize: '12px', lineHeight: 1.55, fontWeight: 650 }}>{item.detail}</span>
+                  <div key={item.role} style={{ display: 'grid', gridTemplateColumns: '70px minmax(0, 1fr)', gap: '10px', alignItems: 'start' }}>
+                    <span style={{ borderLeft: '2px solid rgba(var(--nl-primary-rgb),0.28)', color: 'var(--nl-muted-strong)', padding: '2px 0 2px 9px', fontSize: '11px', fontWeight: 620, textAlign: 'left' }}>{item.role}</span>
+                    <span style={{ color: 'var(--nl-muted-strong)', fontSize: '12px', lineHeight: 1.58, fontWeight: 500 }}>{item.detail}</span>
                   </div>
                 ))}
               </div>
             </section>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center' }}>
-              <p style={{ ...helperTextStyle, color: 'var(--nl-muted-strong)' }}>共 {members.length} 位成员，优先显示最近需要管理的账号。</p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', alignItems: 'center' }}>
               {hiddenMemberCount ? (
-                <button type="button" style={{ ...secondaryButtonStyle, minHeight: '38px', padding: '8px 12px', borderRadius: '999px', boxShadow: 'none', flexShrink: 0 }} onClick={() => setShowAllMembers(true)}>
+                <button type="button" style={{ ...compactSecondaryButtonStyle, minHeight: '36px', padding: '7px 12px', fontSize: '12px', flexShrink: 0 }} onClick={() => setShowAllMembers(true)}>
                   展开全部
                 </button>
               ) : showAllMembers && members.length > 6 ? (
-                <button type="button" style={{ ...secondaryButtonStyle, minHeight: '38px', padding: '8px 12px', borderRadius: '999px', boxShadow: 'none', flexShrink: 0 }} onClick={() => setShowAllMembers(false)}>
+                <button type="button" style={{ ...compactSecondaryButtonStyle, minHeight: '36px', padding: '7px 12px', fontSize: '12px', flexShrink: 0 }} onClick={() => setShowAllMembers(false)}>
                   收起
                 </button>
               ) : null}
             </div>
             {visibleMembers.map((member) => (
-              <section key={member.user_no} style={{ border: '1px solid var(--nl-border)', borderRadius: '16px', padding: '14px', background: 'rgba(var(--nl-surface-rgb),0.72)', display: 'grid', gap: '12px' }}>
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', minWidth: 0 }}>
-                  <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(var(--nl-accent-rgb),0.14)', display: 'grid', placeItems: 'center', color: 'var(--nl-accent)', flexShrink: 0 }}>
-                    <UserRound size={20} strokeWidth={2.1} />
-                  </div>
+              <section key={member.user_no} style={{ border: 'none', borderBottom: '1px solid var(--nl-border-muted)', borderRadius: 0, padding: '0 0 16px', background: 'transparent', display: 'grid', gap: '12px' }}>
+                <div style={{ display: 'flex', gap: '13px', alignItems: 'center', minWidth: 0 }}>
+                  <FamilyAvatar src={member.avatar_url} mediaNo={member.avatar_media_no} label={getFamilyMemberDisplayName(member)} size={48} radius="8px" />
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                      <strong style={{ minWidth: 0, maxWidth: '100%', fontSize: '15px', color: 'var(--nl-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflowWrap: 'anywhere' }}>{getFamilyMemberDisplayName(member)}</strong>
-          <span style={{ fontSize: '11px', fontWeight: 700, color: member.role === 'owner' ? 'var(--nl-primary-2)' : 'var(--nl-success)', background: member.role === 'owner' ? 'rgba(var(--nl-primary-rgb),0.16)' : 'rgba(var(--nl-success-rgb),0.14)', border: '1px solid var(--nl-border)', padding: '2px 8px', borderRadius: '7px', whiteSpace: 'nowrap' }}>
+                      <strong style={{ minWidth: 0, maxWidth: '100%', fontSize: '16px', color: 'var(--nl-ink)', fontWeight: 720, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflowWrap: 'anywhere' }}>{getFamilyMemberDisplayName(member)}</strong>
+                      <span style={{ fontSize: '11px', fontWeight: 660, color: member.role === 'owner' ? 'var(--nl-primary-2)' : 'var(--nl-muted-strong)', background: 'transparent', border: '1px solid var(--nl-border-soft)', padding: '3px 8px', borderRadius: '7px', whiteSpace: 'nowrap' }}>
                         {familyRoleLabel(member.role)}
                       </span>
                     </div>
-                    <p style={{ ...helperTextStyle, marginTop: '3px' }}>{member.role === 'owner' ? '家庭档案管理员' : '共同记录成员'}</p>
                   </div>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px' }}>
-                  <p style={{ ...helperTextStyle, borderRadius: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--nl-border)', padding: '8px' }}>手机号：{settings.hideMobileMask ? '已隐藏' : member.mobile_masked ?? '未提供'}</p>
-                  <p style={{ ...helperTextStyle, borderRadius: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid var(--nl-border)', padding: '8px' }}>状态：{familyMemberStatusLabel(member.status)}</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px', padding: '1px 0 0' }}>
+                  <p style={{ ...helperTextStyle, margin: 0, fontSize: '12px', fontWeight: 560 }}>手机号：{settings.hideMobileMask ? '已隐藏' : member.mobile_masked ?? '未提供'}</p>
+                  <p style={{ ...helperTextStyle, margin: 0, fontSize: '12px', fontWeight: 560 }}>状态：{familyMemberStatusLabel(member.status)}</p>
                 </div>
-                <p style={helperTextStyle}>来源：{member.invited_by_user_no ? '家人邀请加入' : '系统创建 / 当前管理员'}</p>
                 {member.role !== 'owner' ? (
-                  <div style={{ ...buttonRowStyle, marginTop: '2px' }}>
-                    <button style={secondaryButtonStyle} onClick={() => void onChangeRole(member.user_no, 'viewer')} disabled={updatingUserNo === member.user_no || member.role === 'viewer'}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px', marginTop: '2px', borderTop: '1px solid var(--nl-border-soft)', paddingTop: '10px' }}>
+                    <button type="button" style={{ ...compactSecondaryButtonStyle, minHeight: '36px', padding: '7px 10px', fontSize: '12px', borderColor: member.role === 'viewer' ? 'var(--nl-primary-border)' : 'var(--nl-border-soft)', background: member.role === 'viewer' ? 'var(--nl-primary-soft)' : 'var(--nl-control-bg)', color: member.role === 'viewer' ? 'var(--nl-primary-2)' : 'var(--nl-muted-strong)', cursor: updatingUserNo === member.user_no || member.role === 'viewer' ? 'not-allowed' : 'pointer', opacity: updatingUserNo === member.user_no ? 0.64 : 1 }} onClick={() => void onChangeRole(member.user_no, 'viewer')} disabled={updatingUserNo === member.user_no || member.role === 'viewer'}>
                       {updatingUserNo === member.user_no && member.role !== 'viewer' ? '处理中…' : '设为只读'}
                     </button>
-                    <button style={secondaryButtonStyle} onClick={() => void onChangeRole(member.user_no, 'editor')} disabled={updatingUserNo === member.user_no || member.role === 'editor'}>
+                    <button type="button" style={{ ...compactSecondaryButtonStyle, minHeight: '36px', padding: '7px 10px', fontSize: '12px', borderColor: member.role === 'editor' ? 'var(--nl-primary-border)' : 'var(--nl-border-soft)', background: member.role === 'editor' ? 'var(--nl-primary-soft)' : 'var(--nl-control-bg)', color: member.role === 'editor' ? 'var(--nl-primary-2)' : 'var(--nl-muted-strong)', cursor: updatingUserNo === member.user_no || member.role === 'editor' ? 'not-allowed' : 'pointer', opacity: updatingUserNo === member.user_no ? 0.64 : 1 }} onClick={() => void onChangeRole(member.user_no, 'editor')} disabled={updatingUserNo === member.user_no || member.role === 'editor'}>
                       {updatingUserNo === member.user_no && member.role !== 'editor' ? '处理中…' : '设为可编辑'}
                     </button>
                   </div>
                 ) : null}
               </section>
             ))}
-            {hiddenMemberCount ? <p style={{ ...helperTextStyle, textAlign: 'center' }}>已收起 {hiddenMemberCount} 位低频成员，展开后可继续调整权限。</p> : null}
+            <FamilyMemberOperations operations={operations} />
           </div>
         ) : null}
         {!loading && !error && !members.length && activeChild?.family_no ? <EmptyState message="当前家庭还没有更多成员。" /> : null}
@@ -545,28 +588,37 @@ export const FamilyMembersPage = () => {
 export const FamilyMemberDetailPage = () => {
   const navigate = useNavigate();
   const { user_no: userNo } = useParams();
-  const { activeChild } = useAuth();
+  const { activeChild, user } = useAuth();
   const [members, setMembers] = useState<FamilyMemberItem[]>([]);
   const [records, setRecords] = useState<RecordSummary[]>([]);
+  const [operations, setOperations] = useState<FamilyMemberOperationItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [updating, setUpdating] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  const [confirmingRemove, setConfirmingRemove] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
 
     const loadDetail = async () => {
-      if (!activeChild?.family_no || !activeChild?.child_no) return;
+      const familyNo = activeChild?.family_no;
+      const childNo = activeChild?.child_no;
+      if (!familyNo || !childNo) return;
       setLoading(true);
       setMessage(null);
       try {
-        const [membersResponse, recordsResponse] = await Promise.all([
-          webApi.listFamilyMembers(activeChild.family_no),
-          webApi.listRecords({ child_no: activeChild.child_no, page: 1, page_size: 30 }),
+        const [membersResponse, recordsResponse, operationsResponse] = await Promise.all([
+          webApi.listFamilyMembers(familyNo),
+          webApi.listRecords({ child_no: childNo, page: 1, page_size: 30 }),
+          webApi
+            .listFamilyMemberOperations(familyNo, userNo ? { user_no: userNo } : undefined)
+            .catch(() => emptyFamilyOperations(familyNo)),
         ]);
         if (!cancelled) {
-          setMembers(membersResponse.list);
+          setMembers(membersResponse.list.filter(isVisibleFamilyMember));
           setRecords(recordsResponse.list);
+          setOperations(operationsResponse.list);
         }
       } catch (err) {
         if (!cancelled) setMessage(err instanceof Error ? err.message : '家人资料加载失败');
@@ -579,7 +631,7 @@ export const FamilyMemberDetailPage = () => {
     return () => {
       cancelled = true;
     };
-  }, [activeChild?.child_no, activeChild?.family_no]);
+  }, [activeChild?.child_no, activeChild?.family_no, userNo]);
 
   const member = userNo ? members.find((item) => item.user_no === userNo) ?? null : null;
   const memberName = member ? getFamilyMemberDisplayName(member) : '';
@@ -593,18 +645,23 @@ export const FamilyMemberDetailPage = () => {
     ? Math.max(1, Math.ceil((Date.now() - new Date(member.joined_at).getTime()) / (24 * 60 * 60 * 1000)))
     : null;
 
-  const changeRole = async () => {
-    if (!member || !activeChild?.family_no || member.role === 'owner') {
+  const changeRole = async (nextRole: 'viewer' | 'editor') => {
+    const familyNo = activeChild?.family_no;
+    if (!member || !familyNo || member.role === 'owner') {
       setMessage('家庭创建者权限不可在这里修改。');
       return;
     }
+    if (member.role === nextRole) return;
 
-    const nextRole = member.role === 'editor' ? 'viewer' : 'editor';
     setUpdating(true);
     setMessage(null);
     try {
-      await webApi.updateFamilyMemberRole(activeChild.family_no, member.user_no, { role: nextRole });
+      await webApi.updateFamilyMemberRole(familyNo, member.user_no, { role: nextRole });
       setMembers((current) => current.map((item) => (item.user_no === member.user_no ? { ...item, role: nextRole } : item)));
+      const operationsResponse = await webApi
+        .listFamilyMemberOperations(familyNo, { user_no: member.user_no })
+        .catch(() => emptyFamilyOperations(familyNo));
+      setOperations(operationsResponse.list);
       setMessage('角色权限已更新');
     } catch (err) {
       setMessage(err instanceof Error ? err.message : '角色权限更新失败');
@@ -613,45 +670,64 @@ export const FamilyMemberDetailPage = () => {
     }
   };
 
-  const roleColor = member?.role === 'owner' ? 'var(--nl-primary-2)' : member?.role === 'editor' ? 'var(--nl-accent)' : 'var(--nl-muted-strong)';
-  const roleBg = member?.role === 'owner' ? 'rgba(var(--nl-primary-rgb),0.16)' : member?.role === 'editor' ? 'rgba(var(--nl-accent-rgb),0.14)' : 'rgba(var(--nl-surface-rgb),0.74)';
-  const currentRoleDescription =
-    member?.role === 'owner'
-      ? '管理员可以维护家庭成员、发起档案导出和处理关键设置。'
-      : member?.role === 'editor'
-        ? '可编辑成员可以查看家庭记录，也可以补充新的成长内容。'
-        : '只读成员可以查看家庭可见内容，不能修改档案和成员权限。';
+  const removeMember = async () => {
+    const familyNo = activeChild?.family_no;
+    if (!member || !familyNo || member.role === 'owner') {
+      setMessage('家庭创建者不能被移出。');
+      return;
+    }
 
+    setRemoving(true);
+    setMessage(null);
+    try {
+      await webApi.deleteFamilyMember(familyNo, member.user_no);
+      const operationsResponse = await webApi
+        .listFamilyMemberOperations(familyNo, { user_no: member.user_no })
+        .catch(() => emptyFamilyOperations(familyNo));
+      setOperations(operationsResponse.list);
+      setMembers((current) => current.filter((item) => item.user_no !== member.user_no));
+      setMessage('成员已移出家庭');
+      navigate('/family/members');
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : '移出家庭失败');
+    } finally {
+      setRemoving(false);
+      setConfirmingRemove(false);
+    }
+  };
+
+  const roleColor = member?.role === 'owner' ? 'var(--nl-primary-2)' : member?.role === 'editor' ? 'var(--nl-muted-strong)' : 'var(--nl-muted-strong)';
+  const roleBg = 'transparent';
   return (
     <PageShell title="家人资料" backTo="/family">
       {loading ? <Panel><EmptyState message="正在加载家人资料…" /></Panel> : null}
       {!loading && !member ? <Panel><EmptyState message="未找到该家庭成员。" /></Panel> : null}
       {member ? (
         <>
-          <Panel style={{ display: 'grid', justifyItems: 'center', gap: '13px', padding: '22px 18px', borderRadius: '18px', boxShadow: 'var(--nl-shadow-sm)' }}>
-            <FamilyAvatar label={memberName} size={72} fallbackSrc={referenceAssets.momAvatar} />
-            <div style={{ display: 'grid', justifyItems: 'center', gap: '7px' }}>
-              <h2 style={{ margin: 0, maxWidth: '100%', color: 'var(--nl-ink)', fontSize: '20px', lineHeight: 1.22, fontWeight: 800, textAlign: 'center', overflowWrap: 'anywhere' }}>{memberName}</h2>
-              <span style={{ borderRadius: '999px', background: roleBg, color: roleColor, border: '1px solid var(--nl-border)', padding: '4px 10px', fontSize: '11px', fontWeight: 800, whiteSpace: 'nowrap' }}>{familyRoleLabel(member.role)}</span>
+          <Panel style={{ display: 'grid', justifyItems: 'center', gap: '15px', padding: '24px 18px', borderRadius: '8px', background: 'transparent', border: 'none', boxShadow: 'none' }}>
+            <FamilyAvatar src={resolveFamilyMemberAvatarSrc(member, user)} mediaNo={resolveFamilyMemberAvatarMediaNo(member, user)} label={memberName} size={82} />
+            <div style={{ display: 'grid', justifyItems: 'center', gap: '8px' }}>
+              <h2 style={{ margin: 0, maxWidth: '100%', color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '28px', lineHeight: 1.08, fontWeight: 800, textAlign: 'center', overflowWrap: 'anywhere' }}>{memberName}</h2>
+              <span style={{ borderRadius: 0, background: roleBg, color: roleColor, border: 'none', borderBottom: '1px solid var(--nl-border-muted)', padding: '0 0 4px', fontSize: '11px', fontWeight: 600, whiteSpace: 'nowrap' }}>{familyRoleLabel(member.role)}</span>
             </div>
             <div style={{ width: '100%', display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
-              <div style={{ borderRadius: '14px', border: '1px solid var(--nl-border)', background: 'rgba(var(--nl-surface-rgb),0.72)', padding: '12px', textAlign: 'center' }}>
-                <strong style={{ display: 'block', color: 'var(--nl-ink)', fontSize: '19px', lineHeight: 1 }}>{memberRecords.length}</strong>
-                <span style={{ display: 'block', marginTop: '7px', color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 700 }}>发布记录</span>
+              <div style={{ borderRadius: 0, border: 'none', borderTop: '1px solid var(--nl-border-soft)', borderBottom: '1px solid var(--nl-border-soft)', background: 'transparent', padding: '13px', textAlign: 'center', boxShadow: 'none' }}>
+                <strong style={{ display: 'block', color: 'var(--nl-ink)', fontSize: '21px', lineHeight: 1, fontWeight: 760 }}>{memberRecords.length}</strong>
+                <span style={{ display: 'block', marginTop: '7px', color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 620 }}>发布记录</span>
               </div>
-              <div style={{ borderRadius: '14px', border: '1px solid var(--nl-border)', background: 'rgba(var(--nl-surface-rgb),0.72)', padding: '12px', textAlign: 'center' }}>
-                <strong style={{ display: 'block', color: 'var(--nl-ink)', fontSize: '19px', lineHeight: 1 }}>{memberJoinedDays ?? '-'}</strong>
-                <span style={{ display: 'block', marginTop: '7px', color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 700 }}>加入天数</span>
+              <div style={{ borderRadius: 0, border: 'none', borderTop: '1px solid var(--nl-border-soft)', borderBottom: '1px solid var(--nl-border-soft)', background: 'transparent', padding: '13px', textAlign: 'center', boxShadow: 'none' }}>
+                <strong style={{ display: 'block', color: 'var(--nl-ink)', fontSize: '21px', lineHeight: 1, fontWeight: 760 }}>{memberJoinedDays ?? '-'}</strong>
+                <span style={{ display: 'block', marginTop: '7px', color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 620 }}>加入天数</span>
               </div>
             </div>
           </Panel>
 
           <section>
-            <h2 style={{ margin: '0 0 12px 4px', color: 'var(--nl-ink)', fontSize: '15px', fontWeight: 800 }}>TA的记录</h2>
+            <h2 style={{ margin: '0 0 12px 2px', color: 'var(--nl-ink)', fontSize: '15px', fontWeight: 720 }}>记录</h2>
             <div style={{ display: 'grid', gap: '10px' }}>
               {memberRecords.length ? memberRecords.map((record) => (
-                <button key={record.record_no} type="button" onClick={() => navigate(`/record/${record.record_no}`)} style={{ width: '100%', minHeight: '60px', border: '1px solid var(--nl-border)', borderRadius: '14px', background: 'rgba(var(--nl-surface-rgb),0.72)', padding: '11px 13px', display: 'flex', alignItems: 'center', gap: '11px', textAlign: 'left', cursor: 'pointer', boxShadow: 'var(--nl-shadow-sm)' }}>
-                  <span style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'rgba(var(--nl-accent-rgb),0.14)', color: 'var(--nl-accent)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                <button key={record.record_no} type="button" onClick={() => navigate(`/record/${record.record_no}`)} style={{ width: '100%', minHeight: '62px', border: 'none', borderBottom: '1px solid var(--nl-border-muted)', borderRadius: 0, background: 'transparent', padding: '11px 0', display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left', cursor: 'pointer', boxShadow: 'none' }}>
+                  <span style={{ width: '38px', height: '38px', borderRadius: '8px', background: 'transparent', color: 'var(--nl-primary-2)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
                     {record.cover_url ? <ImageIcon size={16} /> : <FileText size={16} />}
                   </span>
                   <span style={{ minWidth: 0, flex: 1 }}>
@@ -664,34 +740,55 @@ export const FamilyMemberDetailPage = () => {
           </section>
 
           <section>
-            <h2 style={{ margin: '0 0 12px 4px', color: 'var(--nl-ink)', fontSize: '15px', fontWeight: 800 }}>权限管理</h2>
-            <Panel style={{ padding: 0, overflow: 'hidden', borderRadius: '18px', boxShadow: 'var(--nl-shadow-sm)' }}>
-              <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--nl-border)', background: 'rgba(var(--nl-surface-rgb),0.72)', display: 'grid', gap: '5px' }}>
-                <strong style={{ color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 850 }}>当前角色：{familyRoleLabel(member.role)}</strong>
-                <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.65 }}>{currentRoleDescription}</p>
+            <h2 style={{ margin: '0 0 12px 2px', color: 'var(--nl-ink)', fontSize: '15px', fontWeight: 720 }}>权限</h2>
+            <Panel style={{ padding: 0, overflow: 'hidden', borderRadius: 0, background: 'transparent', border: 'none', borderTop: '1px solid var(--nl-border-muted)', boxShadow: 'none' }}>
+              <div style={{ padding: '14px 0', borderBottom: '1px solid var(--nl-border-muted)', background: 'transparent', display: 'grid', gap: '5px' }}>
+                <strong style={{ color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 700 }}>当前角色：{familyRoleLabel(member.role)}</strong>
               </div>
-              <button type="button" onClick={() => void changeRole()} disabled={!canEditRole || updating} style={{ width: '100%', minHeight: '56px', border: 'none', borderBottom: '1px solid var(--nl-border)', background: 'rgba(var(--nl-surface-rgb),0.72)', padding: '13px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', textAlign: 'left', cursor: canEditRole ? 'pointer' : 'default', opacity: canEditRole ? 1 : 0.68 }}>
+              <div style={{ borderBottom: '1px solid var(--nl-border-muted)', background: 'transparent', padding: '13px 0', display: 'grid', gap: '10px' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 700 }}>
-                  <span style={{ width: '32px', height: '32px', borderRadius: '999px', background: 'rgba(var(--nl-accent-rgb),0.14)', color: 'var(--nl-accent)', display: 'grid', placeItems: 'center' }}><ShieldAlert size={15} /></span>
-                  {updating ? '正在修改权限' : '修改角色权限'}
+                  <span style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'transparent', color: 'var(--nl-primary-2)', display: 'grid', placeItems: 'center' }}><ShieldAlert size={15} /></span>
+                  权限调整
                 </span>
-                <ChevronRight size={16} color="var(--nl-muted)" />
-              </button>
-              <div style={{ minHeight: '56px', borderBottom: '1px solid var(--nl-border)', padding: '13px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', background: 'rgba(var(--nl-surface-rgb),0.72)' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px', borderTop: '1px solid var(--nl-border-soft)', paddingTop: '10px' }}>
+                  <button type="button" onClick={() => void changeRole('viewer')} disabled={!canEditRole || updating || member.role === 'viewer'} style={{ ...compactSecondaryButtonStyle, minHeight: 38, padding: '8px 10px', borderColor: member.role === 'viewer' ? 'var(--nl-primary-border)' : 'var(--nl-border-soft)', background: member.role === 'viewer' ? 'var(--nl-primary-soft)' : 'var(--nl-control-bg)', color: member.role === 'viewer' ? 'var(--nl-primary-2)' : 'var(--nl-muted-strong)', cursor: !canEditRole || updating || member.role === 'viewer' ? 'not-allowed' : 'pointer', opacity: !canEditRole ? 0.56 : 1 }}>
+                    {updating && member.role !== 'viewer' ? '处理中…' : '设为只读'}
+                  </button>
+                  <button type="button" onClick={() => void changeRole('editor')} disabled={!canEditRole || updating || member.role === 'editor'} style={{ ...compactSecondaryButtonStyle, minHeight: 38, padding: '8px 10px', borderColor: member.role === 'editor' ? 'var(--nl-primary-border)' : 'var(--nl-border-soft)', background: member.role === 'editor' ? 'var(--nl-primary-soft)' : 'var(--nl-control-bg)', color: member.role === 'editor' ? 'var(--nl-primary-2)' : 'var(--nl-muted-strong)', cursor: !canEditRole || updating || member.role === 'editor' ? 'not-allowed' : 'pointer', opacity: !canEditRole ? 0.56 : 1 }}>
+                    {updating && member.role !== 'editor' ? '处理中…' : '设为可编辑'}
+                  </button>
+                </div>
+              </div>
+              <div style={{ minHeight: '56px', borderBottom: '1px solid var(--nl-border-muted)', padding: '13px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', background: 'transparent' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 700 }}>
-                  <span style={{ width: '32px', height: '32px', borderRadius: '999px', background: 'rgba(var(--nl-primary-rgb),0.14)', color: 'var(--nl-primary-2)', display: 'grid', placeItems: 'center' }}><Clock size={15} /></span>
+                  <span style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'transparent', color: 'var(--nl-primary-2)', display: 'grid', placeItems: 'center' }}><Clock size={15} /></span>
                   加入时间
                 </span>
                 <span style={{ color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 700 }}>{member.joined_at ? new Date(member.joined_at).toLocaleDateString('zh-CN') : '未记录'}</span>
               </div>
-              <button type="button" onClick={() => navigate(`/profile/help?topic=family-remove&member=${encodeURIComponent(member.user_no)}`)} style={{ width: '100%', minHeight: '56px', border: 'none', background: 'rgba(var(--nl-surface-rgb),0.72)', padding: '13px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', textAlign: 'left', cursor: 'pointer' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--nl-danger)', fontSize: '14px', fontWeight: 700 }}>
-                  <span style={{ width: '32px', height: '32px', borderRadius: '999px', background: 'rgba(255,107,139,0.14)', color: 'var(--nl-danger)', display: 'grid', placeItems: 'center' }}><UserMinus size={15} /></span>
-                  移出家庭
-                </span>
-              </button>
+              {member.role !== 'owner' ? (
+                confirmingRemove ? (
+                  <div style={{ padding: '13px 0', display: 'grid', gap: 10, background: 'transparent' }}>
+                    <span style={{ color: 'var(--nl-danger)', fontSize: 13, fontWeight: 700 }}>确认移出 {memberName}</span>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
+                      <button type="button" onClick={() => setConfirmingRemove(false)} disabled={removing} style={{ ...secondaryButtonStyle, minHeight: 40, borderRadius: '8px' }}>取消</button>
+                      <button type="button" onClick={() => void removeMember()} disabled={removing} style={{ ...secondaryButtonStyle, minHeight: 40, borderRadius: '8px', borderColor: 'var(--nl-danger-border)', color: 'var(--nl-danger)' }}>
+                        {removing ? '处理中…' : '确认移出'}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button type="button" onClick={() => setConfirmingRemove(true)} disabled={removing} style={{ width: '100%', minHeight: '56px', border: 'none', background: 'transparent', padding: '13px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', textAlign: 'left', cursor: 'pointer' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--nl-danger)', fontSize: '14px', fontWeight: 700 }}>
+                      <span style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--nl-danger-soft)', color: 'var(--nl-danger)', display: 'grid', placeItems: 'center' }}><UserMinus size={15} /></span>
+                      移出家庭
+                    </span>
+                  </button>
+                )
+              ) : null}
             </Panel>
           </section>
+          <FamilyMemberOperations operations={operations} />
         </>
       ) : null}
       {message ? <p style={{ ...helperTextStyle, color: isPositiveStatusMessage(message) ? 'var(--nl-success)' : 'var(--nl-danger)' }}>{message}</p> : null}
@@ -733,7 +830,7 @@ export const FamilyInvitePage = () => {
         ...(mobile ? { mobile } : {}),
       });
       setInviteResult(result);
-      setMessage('邀请码已生成，可直接复制后发送给家人。');
+      setMessage('邀请码已生成。');
     } catch (err) {
       setError(err instanceof Error ? err.message : '邀请创建失败');
     } finally {
@@ -742,15 +839,15 @@ export const FamilyInvitePage = () => {
   };
 
   return (
-    <PageShell title="邀请家庭成员" description="创建邀请码后，被邀请人可用它注册账号并加入家庭。" backTo="/family">
-      <Panel>
+    <PageShell title="邀请家庭成员" backTo="/family">
+      <Panel style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }}>
         <form onSubmit={onSubmit} style={rowStyle}>
-          <Field label="绑定手机号（可选）">
+          <Field label="绑定手机号">
             <input
               style={inputStyle}
               value={form.mobile}
               onChange={(event) => setForm((current) => ({ ...current, mobile: event.target.value }))}
-              placeholder="不填写则生成通用邀请码"
+              placeholder="手机号"
             />
           </Field>
           <Field label="邀请角色">
@@ -764,6 +861,14 @@ export const FamilyInvitePage = () => {
               ]}
             />
           </Field>
+          <section aria-label="邀请权限说明" style={{ borderRadius: 0, border: 'none', borderTop: '1px solid var(--nl-border-muted)', borderBottom: '1px solid var(--nl-border-muted)', background: 'transparent', padding: '12px 0', display: 'grid', gap: '8px' }}>
+            <strong style={{ color: 'var(--nl-ink)', fontSize: '13px', fontWeight: 700 }}>权限说明</strong>
+            {rolePermissionItems.filter((item) => item.role !== '管理员').map((item) => (
+              <p key={item.role} style={{ ...helperTextStyle, margin: 0, lineHeight: 1.6 }}>
+                <strong style={{ color: 'var(--nl-muted-strong)' }}>{item.role}：</strong>{item.detail}
+              </p>
+            ))}
+          </section>
         {error ? <p style={{ ...helperTextStyle, color: 'var(--nl-danger)' }}>{error}</p> : null}
         {message ? <p style={{ ...helperTextStyle, color: isPositiveStatusMessage(message) ? 'var(--nl-success)' : 'var(--nl-danger)' }}>{message}</p> : null}
           <button type="submit" style={primaryButtonStyle} disabled={submitting || !activeChild?.family_no}>
@@ -773,14 +878,13 @@ export const FamilyInvitePage = () => {
       </Panel>
 
       {inviteResult ? (
-        <Panel>
+        <Panel style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }}>
           <div style={rowStyle}>
             <strong>邀请码已生成</strong>
-            <p style={helperTextStyle}>邀请编号：{inviteResult.invite_no}</p>
-            <div style={{ border: '1px solid var(--nl-border)', borderRadius: '16px', background: 'rgba(var(--nl-surface-rgb),0.72)', padding: '14px', display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center' }}>
+            <div style={{ border: '1px solid var(--nl-border-muted)', borderRadius: '8px', background: 'rgba(var(--nl-surface-rgb),0.14)', padding: '14px', display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center' }}>
               <div style={{ minWidth: 0 }}>
                 <span style={{ display: 'block', color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 700 }}>邀请码</span>
-                <strong style={{ display: 'block', marginTop: '4px', color: 'var(--nl-ink)', fontSize: '20px', letterSpacing: 0, wordBreak: 'break-all' }}>{inviteResult.invite_token}</strong>
+                <strong style={{ display: 'block', marginTop: '4px', color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '22px', lineHeight: 1.1, letterSpacing: 0, wordBreak: 'break-all' }}>{inviteResult.invite_token}</strong>
               </div>
               <button type="button" aria-label="复制到剪贴板" style={{ ...secondaryButtonStyle, minWidth: '44px', padding: '10px' }} onClick={() => void copyText(inviteResult.invite_token, '邀请码已复制')}>
                 <Copy size={16} strokeWidth={2.2} />
@@ -788,13 +892,6 @@ export const FamilyInvitePage = () => {
             </div>
             <p style={helperTextStyle}>邀请角色：{familyRoleLabel(inviteResult.role)}</p>
             <p style={helperTextStyle}>失效时间：{new Date(inviteResult.expires_at).toLocaleString('zh-CN')}</p>
-            <p style={helperTextStyle}>把邀请码发送给家人，对方在注册页填写后会自动加入家庭；登录时只需要账号和密码。</p>
-            <div style={buttonRowStyle}>
-              <button type="button" style={secondaryButtonStyle} onClick={() => void copyText(inviteResult.invite_token, '邀请码已复制')}>
-                <Copy size={15} strokeWidth={2.2} />
-                复制邀请码
-              </button>
-            </div>
           </div>
         </Panel>
       ) : null}

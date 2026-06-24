@@ -1,5 +1,5 @@
 ﻿import { useEffect, useMemo, useRef, useState, type ChangeEvent, type CSSProperties, type FormEvent } from 'react';
-import { AlertCircle, BookOpen, Check, CheckCircle2, ChevronRight, Clock, Eye, FileAudio, Image, ImagePlus, MapPin, Maximize2, Mic, PlayCircle, Ruler, Sparkles, Star, Tag, Video, X } from 'lucide-react';
+import { AlertCircle, BookOpen, CheckCircle2, Clock, Eye, FileAudio, Image, ImagePlus, MapPin, Mic, PlayCircle, Ruler, Sparkles, Star, Tag, Video, X } from 'lucide-react';
 import { Camera, CameraResultType, CameraSource, type GalleryPhoto, type Photo } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 import type { ReactNode } from 'react';
@@ -9,10 +9,11 @@ import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
 import type { AiJobDetail, LocationSuggestion, RecordDetail } from '../shared/api/types';
 import { useAsyncData } from '../shared/hooks';
-import { aiJobStatusLabel, mediaTypeLabel, recordStatusLabel, recordTypeLabel, visibilityScopeLabel } from '../shared/labels';
+import { aiJobStatusLabel, recordStatusLabel, recordTypeLabel, visibilityScopeLabel } from '../shared/labels';
 import { createPersistableMediaPreview, removeRuntimeMediaPreview, resolveMediaPreviewUrl, resolveStoredMediaUrl, saveLocalMediaPreview, saveRuntimeMediaPreview } from '../shared/localMediaPreview';
+import { useCachedMediaUrl } from '../shared/useCachedMediaUrl';
 import { getCurrentDeviceLocation } from '../shared/deviceLocation';
-import { AppSelect, AppTopBar, PageShell, Panel, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle } from '../shared/ui';
+import { AppSelect, AppTopBar, PageShell, Panel, compactSecondaryButtonStyle, dateControlStyle, helperTextStyle, hiddenNativeDateInputStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle } from '../shared/ui';
 import { EmptyState, buttonRowStyle, formSubmitSpacingStyle, formatDateTimeLocal, rowStyle } from './shared';
 import { referenceAssets } from './reference-ui';
 import { deriveMediaType, normalizeMimeType, resolveFileMimeType, withResolvedFileMimeType } from '../shared/mediaFiles';
@@ -33,11 +34,6 @@ type NativeImageAsset = Pick<Photo | GalleryPhoto, 'webPath' | 'format'>;
 const tagOptions = ['生日纪念', '户外日常', '语言发育', '大动作发展', '睡前时光', '亲子陪伴', '第一次', '家庭日常', '身高记录', '体重记录'];
 
 const locationOptions = ['家里', '小区', '公园', '学校', '医院', '游乐场', '爷爷奶奶家', '外婆家'];
-const storyStarterOptions = [
-  { title: '第一次尝试', content: '今天第一次尝试了新事情，虽然还有点生疏，但愿意开始就是很珍贵的一步。' },
-  { title: '今天学会了', content: '今天突然发现一个新本领，家人都看见了这个小小的进步。' },
-  { title: '和家人在一起', content: '和家人在一起的这一刻很普通，但以后回看一定会觉得温柔。' },
-];
 const PERSISTABLE_NON_IMAGE_PREVIEW_BYTES = 4_200_000;
 
 const hasAiPlusAccess = (user: { membership_type?: string; membership_expire_at?: string | null } | null | undefined) => {
@@ -46,6 +42,17 @@ const hasAiPlusAccess = (user: { membership_type?: string; membership_expire_at?
 
   const expireAt = Date.parse(user.membership_expire_at);
   return Number.isFinite(expireAt) && expireAt > Date.now();
+};
+
+const AI_UNAVAILABLE_MESSAGE = '智能整理暂时不可用，请手动填写标题、摘要或标签后继续。';
+const AI_ERROR_DETAIL_PATTERN = /AI\s*服务调用失败|HTTP\s*\d+|key|token|secret|provider|Forbidden|InvalidEndpoint|NotFound|所属分组|completions/i;
+
+const normalizeAiErrorMessage = (message: string | null | undefined, fallback = AI_UNAVAILABLE_MESSAGE) => {
+  const normalized = message?.trim();
+  if (!normalized) return fallback;
+  if (AI_ERROR_DETAIL_PATTERN.test(normalized)) return fallback;
+  if (normalized.includes('智能整理暂时不可用')) return fallback;
+  return normalized;
 };
 
 const createPendingMediaNo = () => {
@@ -76,9 +83,10 @@ const normalizeMetricInput = (value: string) => value.replace(/[^\d.]/g, '').rep
 
 const metadataSelectStyle = {
   minHeight: '44px',
-  borderRadius: '999px',
-  background: 'rgba(var(--nl-surface-rgb),0.82)',
-  border: '1px solid var(--nl-border)',
+  borderRadius: '8px',
+  background: 'linear-gradient(180deg, rgba(var(--nl-surface-strong-rgb),0.78), rgba(var(--nl-surface-rgb),0.48))',
+  border: '1px solid var(--nl-border-strong)',
+  boxShadow: 'inset 0 1px 0 var(--nl-inset-highlight)',
 } as const;
 
 const metadataIconSelectStyle = {
@@ -86,66 +94,65 @@ const metadataIconSelectStyle = {
   paddingLeft: '36px',
 } as const;
 
-const compactPillButtonStyle = {
-  ...secondaryButtonStyle,
+const compactChoiceButtonStyle = {
+  ...compactSecondaryButtonStyle,
   minHeight: '44px',
   padding: '8px 13px',
-  borderRadius: '999px',
   fontSize: '12px',
-  boxShadow: 'none',
 } as const;
 
 const selectedChipButtonStyle = {
   minHeight: '44px',
-  border: '1px solid var(--nl-border)',
-  borderRadius: '999px',
-  background: 'rgba(var(--nl-surface-rgb),0.74)',
+  border: '1px solid var(--nl-border-strong)',
+  borderRadius: '8px',
+  background: 'linear-gradient(180deg, rgba(var(--nl-surface-strong-rgb),0.72), rgba(var(--nl-surface-rgb),0.38))',
   color: 'var(--nl-muted-strong)',
   padding: '7px 11px',
   fontSize: '12px',
-  fontWeight: 700,
+  fontWeight: 560,
   display: 'inline-flex',
   alignItems: 'center',
   gap: '5px',
   cursor: 'pointer',
-  boxShadow: 'none',
+  boxShadow: 'inset 0 1px 0 var(--nl-inset-highlight)',
 } as const;
 
 const mediaActionButtonStyle: CSSProperties = {
-  minHeight: '50px',
+  minHeight: '58px',
   width: '100%',
   minWidth: 0,
   boxSizing: 'border-box',
-  borderRadius: '13px',
-  border: '1px solid var(--nl-border)',
-  background: 'rgba(var(--nl-surface-rgb),0.78)',
-  color: 'var(--nl-ink)',
-  padding: '6px 4px',
+  borderRadius: '8px',
+  border: '1px solid transparent',
+  background: 'transparent',
+  color: 'var(--nl-muted-strong)',
+  padding: '7px 2px',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
-  gap: '5px',
+  gap: '6px',
   textAlign: 'center',
   cursor: 'pointer',
   boxShadow: 'none',
-  transition: 'transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease',
+  transition: 'transform 0.18s ease, border-color 0.18s ease, background 0.18s ease',
 };
 
 const mediaActionIconStyle: CSSProperties = {
-  width: '22px',
-  height: '22px',
-  borderRadius: '9px',
-  background: 'rgba(var(--nl-accent-rgb),0.14)',
-  color: 'var(--nl-accent)',
+  width: '34px',
+  height: '30px',
+  borderRadius: '8px',
+  background: 'transparent',
+  color: 'var(--nl-primary-2)',
   display: 'grid',
   placeItems: 'center',
   flexShrink: 0,
+  boxShadow: 'none',
 };
 
 const mediaActionLabelStyle: CSSProperties = {
-  fontSize: '10.5px',
-  fontWeight: 800,
+  fontSize: '12px',
+  fontWeight: 620,
   lineHeight: 1.2,
   letterSpacing: 0,
   overflow: 'hidden',
@@ -157,7 +164,6 @@ const MediaActionButton = ({
   icon,
   label,
   displayLabel,
-  description,
   onClick,
   disabled,
   style,
@@ -165,7 +171,6 @@ const MediaActionButton = ({
   icon: ReactNode;
   label: string;
   displayLabel?: string;
-  description: string;
   onClick: () => void;
   disabled?: boolean;
   style?: CSSProperties;
@@ -180,7 +185,6 @@ const MediaActionButton = ({
       opacity: disabled ? 0.65 : 1,
       ...style,
     }}
-    title={description}
   >
     <span style={mediaActionIconStyle}>{icon}</span>
     <span style={mediaActionLabelStyle}>{displayLabel ?? label}</span>
@@ -198,18 +202,18 @@ const NoticeDialog = ({
 }) => {
   const Icon = tone === 'error' ? AlertCircle : CheckCircle2;
   const color = tone === 'error' ? 'var(--nl-danger)' : 'var(--nl-success)';
-  const background = tone === 'error' ? 'rgba(255,118,148,0.14)' : 'rgba(var(--nl-success-rgb),0.14)';
+  const background = tone === 'error' ? 'var(--nl-danger-soft)' : 'rgba(var(--nl-success-rgb),0.14)';
 
   return (
     <div
       role="dialog"
       aria-modal="true"
-      aria-label="操作提示"
+      aria-label="状态"
       style={{
         position: 'fixed',
         inset: 0,
         zIndex: 30,
-        background: 'rgba(17,18,16,0.58)',
+        background: 'var(--nl-overlay-scrim)',
         display: 'grid',
         placeItems: 'center',
         padding: '24px',
@@ -218,21 +222,21 @@ const NoticeDialog = ({
       <section
         style={{
           width: 'min(100%, 340px)',
-          borderRadius: '22px',
+          borderRadius: '8px',
           background: 'var(--nl-surface-strong)',
-          border: '1px solid var(--nl-border)',
-          boxShadow: 'var(--nl-shadow-float)',
+          border: '1px solid var(--nl-border-muted)',
+          boxShadow: 'var(--nl-shadow-md)',
           padding: '18px',
           display: 'grid',
           gap: '14px',
         }}
       >
         <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-          <span style={{ width: 38, height: 38, borderRadius: '999px', background, color, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+          <span style={{ width: 38, height: 38, borderRadius: '8px', background, color, display: 'grid', placeItems: 'center', flexShrink: 0 }}>
             <Icon size={19} strokeWidth={2.3} />
           </span>
           <div style={{ display: 'grid', gap: '5px', minWidth: 0, flex: 1 }}>
-            <strong style={{ color: 'var(--nl-ink)', fontSize: '16px', fontWeight: 900 }}>操作提示</strong>
+            <strong style={{ color: 'var(--nl-ink)', fontSize: '16px', fontWeight: 760 }}>状态</strong>
             <p style={{ margin: 0, color: 'var(--nl-muted-strong)', fontSize: '14px', lineHeight: 1.65, fontWeight: 650 }}>{normalizePromptMessage(message)}</p>
           </div>
         </div>
@@ -241,13 +245,14 @@ const NoticeDialog = ({
           onClick={onClose}
           style={{
             minHeight: '44px',
-            border: '1px solid rgba(245,205,140,0.52)',
-            borderRadius: '16px',
-            background: 'var(--nl-primary)',
-            color: '#ffffff',
+            border: '1px solid var(--nl-primary-border)',
+            borderRadius: '8px',
+            background: 'var(--nl-primary-gradient)',
+            color: 'var(--nl-on-primary)',
             fontSize: '14px',
-            fontWeight: 900,
+            fontWeight: 750,
             cursor: 'pointer',
+            boxShadow: '0 10px 20px rgba(var(--nl-primary-rgb),0.09), inset 0 1px 0 var(--nl-inset-highlight-faint)',
           }}
         >
           知道了
@@ -256,6 +261,132 @@ const NoticeDialog = ({
     </div>
   );
 };
+
+const ConfirmActionDialog = ({
+  ariaLabel,
+  tone,
+  title,
+  message,
+  cancelLabel = '取消',
+  confirmLabel,
+  confirmingLabel,
+  confirming,
+  error,
+  onCancel,
+  onConfirm,
+}: {
+  ariaLabel: string;
+  tone: 'danger' | 'warning';
+  title: string;
+  message: ReactNode;
+  cancelLabel?: string;
+  confirmLabel: string;
+  confirmingLabel?: string;
+  confirming?: boolean;
+  error?: string | null;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) => {
+  const isDanger = tone === 'danger';
+  const iconColor = isDanger ? 'var(--nl-danger)' : 'var(--nl-primary-2)';
+  const iconBackground = isDanger ? 'var(--nl-danger-soft)' : 'rgba(var(--nl-primary-rgb),0.14)';
+  const confirmBackground = isDanger ? 'var(--nl-danger)' : 'var(--nl-primary-gradient)';
+
+  return (
+  <div
+    role="dialog"
+    aria-modal="true"
+    aria-label={ariaLabel}
+    style={{
+      position: 'fixed',
+      inset: 0,
+      zIndex: 70,
+      background: 'var(--nl-overlay-scrim)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '24px',
+      boxSizing: 'border-box',
+    }}
+  >
+    <section
+      style={{
+        width: 'min(100%, 340px)',
+        boxSizing: 'border-box',
+        borderRadius: '8px',
+        background: 'rgb(var(--nl-surface-strong-rgb))',
+        border: '1px solid var(--nl-border-muted)',
+        boxShadow: 'var(--nl-shadow-md)',
+        padding: '18px',
+        display: 'grid',
+        gap: '16px',
+        isolation: 'isolate',
+      }}
+    >
+      <div style={{ display: 'grid', gridTemplateColumns: '38px minmax(0, 1fr)', gap: '12px', alignItems: 'start' }}>
+        <span style={{ width: 38, height: 38, borderRadius: '8px', background: iconBackground, color: iconColor, display: 'grid', placeItems: 'center' }}>
+          <AlertCircle size={19} strokeWidth={2.3} />
+        </span>
+        <div style={{ display: 'grid', gap: '6px', minWidth: 0, flex: 1 }}>
+          <strong style={{ color: 'var(--nl-ink)', fontSize: '16px', lineHeight: 1.35, fontWeight: 760 }}>{title}</strong>
+          <p style={{ margin: 0, color: 'var(--nl-muted-strong)', fontSize: '14px', lineHeight: 1.65, fontWeight: 650 }}>
+            {message}
+          </p>
+          {error ? <p style={{ ...helperTextStyle, margin: 0, color: 'var(--nl-danger)' }}>{error}</p> : null}
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+        <button type="button" style={{ ...secondaryButtonStyle, justifyContent: 'center', minHeight: '44px' }} onClick={onCancel} disabled={confirming}>
+          {cancelLabel}
+        </button>
+        <button type="button" style={{ ...primaryButtonStyle, justifyContent: 'center', minHeight: '44px', background: confirmBackground }} onClick={onConfirm} disabled={confirming}>
+          {confirming ? confirmingLabel ?? confirmLabel : confirmLabel}
+        </button>
+      </div>
+    </section>
+  </div>
+  );
+};
+
+const DeleteRecordConfirmDialog = ({
+  recordTitle,
+  deleting,
+  error,
+  onCancel,
+  onConfirm,
+}: {
+  recordTitle: string;
+  deleting: boolean;
+  error?: string | null;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) => (
+  <ConfirmActionDialog
+    ariaLabel="删除记录确认"
+    tone="danger"
+    title="确认删除这条记录？"
+    message={`「${recordTitle}」删除后会从时间轴中移除，已关联的媒体也不会再作为记录展示。`}
+    confirmLabel="确认删除"
+    confirmingLabel="删除中…"
+    confirming={deleting}
+    error={error}
+    onCancel={onCancel}
+    onConfirm={onConfirm}
+  />
+);
+
+const DiscardDraftConfirmDialog = ({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) => (
+  <ConfirmActionDialog
+    ariaLabel="离开记录编辑确认"
+    tone="warning"
+    title="当前记录还没有保存"
+    message="离开后这些内容不会自动保留。如需保留，请先返回并保存草稿。"
+    cancelLabel="继续编辑"
+    confirmLabel="直接离开"
+    onCancel={onCancel}
+    onConfirm={onConfirm}
+  />
+);
 
 type RenderableMediaPreview = {
   media_no: string;
@@ -278,26 +409,14 @@ const mediaPreviewLabel = (mediaType: string) => {
   return '照片预览';
 };
 
-const mediaPreviewHelp = (mediaType: string) => {
-  if (mediaType === 'video') return '可直接播放确认画面和声音';
-  if (mediaType === 'audio') return '可直接播放确认录音内容';
-  return '可放大查看构图和清晰度';
-};
-
-const mediaFullscreenActionLabel = (mediaType: string) => {
-  if (mediaType === 'video') return '全屏查看视频';
-  if (mediaType === 'audio') return '全屏播放语音';
-  return '全屏查看照片';
-};
-
 const mediaPreviewCardBaseStyle: CSSProperties = {
   position: 'relative',
   minHeight: '156px',
-  borderRadius: '18px',
+  borderRadius: '8px',
   overflow: 'hidden',
-  border: '1px solid var(--nl-border)',
-  background: 'var(--nl-surface-soft)',
-  boxShadow: '0 8px 22px rgba(var(--nl-shadow-rgb),0.24)',
+  border: '1px solid var(--nl-border-soft)',
+  background: 'rgba(var(--nl-surface-rgb),0.08)',
+  boxShadow: '0 22px 58px rgba(var(--nl-shadow-rgb),0.22)',
 };
 
 const MediaPreviewTile = ({
@@ -311,104 +430,109 @@ const MediaPreviewTile = ({
   onRemove?: (mediaNo: string) => void;
   onOpen?: (media: FullscreenMediaPreview) => void;
 }) => {
-  const mediaUrl = resolveMediaPreviewUrl(media.media_no, media.preview_url ?? media.access_url ?? null) ?? media.preview_url ?? media.access_url ?? '';
+  const mediaUrl = useCachedMediaUrl(media.media_no, media.preview_url ?? media.access_url ?? null, media.media_type, {
+    cacheRemote: media.media_type === 'image' || !compact,
+  }) ?? media.preview_url ?? media.access_url ?? '';
   const label = mediaPreviewLabel(media.media_type);
+  const canOpenFullscreen = Boolean(onOpen && mediaUrl && media.media_type !== 'audio');
   const statusLabel = media.upload_status === 'uploading' ? '上传中' : media.upload_status === 'failed' ? '上传失败' : null;
+  const openFullscreen = () => {
+    if (!onOpen || !mediaUrl) return;
+    onOpen({ ...media, preview_url: mediaUrl });
+  };
 
   return (
     <div
       aria-label={label}
-      title={mediaPreviewHelp(media.media_type)}
+      role={canOpenFullscreen ? 'button' : undefined}
+      tabIndex={canOpenFullscreen ? 0 : undefined}
+      onClick={canOpenFullscreen ? openFullscreen : undefined}
+      onKeyDown={
+        canOpenFullscreen
+          ? (event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                openFullscreen();
+              }
+            }
+          : undefined
+      }
       style={{
         ...mediaPreviewCardBaseStyle,
-        minHeight: compact ? '132px' : media.media_type === 'audio' ? '156px' : '168px',
-        height: compact ? '132px' : media.media_type === 'audio' ? '156px' : '168px',
-        borderRadius: compact ? '14px' : '18px',
+        minHeight: compact ? '136px' : media.media_type === 'audio' ? '156px' : '176px',
+        height: compact ? '136px' : media.media_type === 'audio' ? '156px' : '176px',
+        borderRadius: '8px',
+        cursor: canOpenFullscreen ? 'pointer' : 'default',
       }}
     >
       {media.media_type === 'image' && mediaUrl ? (
-        <img src={mediaUrl} alt={media.original_name ?? '已上传照片'} loading={compact ? 'lazy' : 'eager'} decoding="async" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+        <img
+          src={mediaUrl}
+          alt={media.original_name ?? '已上传照片'}
+          loading={compact ? 'lazy' : 'eager'}
+          decoding="async"
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: canOpenFullscreen ? 'none' : 'auto' }}
+        />
       ) : null}
       {media.media_type === 'video' && mediaUrl ? (
         <>
-          <video src={mediaUrl} muted playsInline preload="none" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', background: 'var(--nl-surface-soft)' }} />
+          <video
+            src={mediaUrl}
+            muted
+            playsInline
+            preload="none"
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', background: 'var(--nl-surface-soft)', pointerEvents: canOpenFullscreen ? 'none' : 'auto' }}
+          />
           <span aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: 'var(--nl-ink)', pointerEvents: 'none' }}>
             <PlayCircle size={compact ? 34 : 42} strokeWidth={1.8} fill="rgba(var(--nl-primary-rgb),0.18)" />
           </span>
         </>
       ) : null}
       {media.media_type === 'audio' && mediaUrl ? (
-        <div style={{ width: '100%', height: '100%', minHeight: compact ? '132px' : '156px', display: 'grid', alignContent: 'center', gap: '12px', padding: compact ? '14px' : '16px', background: 'var(--nl-surface-soft)', boxSizing: 'border-box' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '9px', color: 'var(--nl-muted-strong)', fontSize: compact ? '12px' : '13px', fontWeight: 800, minWidth: 0 }}>
+        <div style={{ width: '100%', height: '100%', minHeight: compact ? '136px' : '156px', display: 'grid', alignContent: 'center', gap: '12px', padding: compact ? '14px' : '16px', background: 'var(--nl-surface-soft)', boxSizing: 'border-box' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '9px', color: 'var(--nl-muted-strong)', fontSize: compact ? '12px' : '13px', fontWeight: 650, minWidth: 0 }}>
             <PlayCircle size={19} strokeWidth={2.2} />
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{media.original_name ?? '语音记录'}</span>
           </div>
           <audio src={mediaUrl} controls style={{ width: '100%', height: '32px' }} />
-          {media.duration_seconds ? <span style={{ fontSize: '12px', color: '#a8a29e' }}>{media.duration_seconds} 秒</span> : null}
+          {media.duration_seconds ? <span style={{ fontSize: '12px', color: 'var(--nl-muted)' }}>{media.duration_seconds} 秒</span> : null}
         </div>
       ) : null}
       {!mediaUrl || !['image', 'video', 'audio'].includes(media.media_type) ? (
-        <div style={{ minHeight: compact ? '132px' : '156px', display: 'grid', placeItems: 'center', color: 'var(--nl-muted)', padding: '14px', boxSizing: 'border-box' }}>
-          <div style={{ display: 'grid', justifyItems: 'center', gap: '8px', textAlign: 'center' }}>
-            <Image size={28} strokeWidth={1.8} />
-            <span style={{ fontSize: '12px', fontWeight: 800 }}>{mediaTypeLabel(media.media_type)}</span>
-          </div>
+        <div style={{ minHeight: compact ? '136px' : '156px', display: 'grid', placeItems: 'center', color: 'var(--nl-muted)', padding: '14px', boxSizing: 'border-box' }}>
+          <Image size={28} strokeWidth={1.8} />
         </div>
       ) : null}
-      {media.media_type !== 'audio' && mediaUrl ? (
-        <span style={{ position: 'absolute', left: '10px', bottom: '10px', borderRadius: '999px', background: 'rgba(var(--nl-surface-rgb),0.9)', border: '1px solid var(--nl-border)', color: 'var(--nl-muted-strong)', padding: '6px 10px', fontSize: '11px', fontWeight: 800 }}>
-          {label}
-        </span>
-      ) : null}
       {statusLabel ? (
-        <span style={{ position: 'absolute', right: '10px', bottom: '10px', borderRadius: '999px', background: media.upload_status === 'failed' ? 'rgba(255,118,148,0.14)' : 'rgba(var(--nl-success-rgb),0.14)', color: media.upload_status === 'failed' ? 'var(--nl-danger)' : 'var(--nl-success)', border: '1px solid var(--nl-border)', padding: '6px 10px', fontSize: '11px', fontWeight: 850 }}>
+        <span style={{ position: 'absolute', right: '10px', bottom: '10px', borderRadius: '8px', background: media.upload_status === 'failed' ? 'var(--nl-danger-soft)' : 'rgba(var(--nl-success-rgb),0.14)', color: media.upload_status === 'failed' ? 'var(--nl-danger)' : 'var(--nl-success)', border: '1px solid var(--nl-border-muted)', padding: '6px 10px', fontSize: '11px', fontWeight: 700 }}>
           {statusLabel}
         </span>
       ) : null}
       {media.upload_status === 'failed' && media.error_message ? (
-        <span style={{ position: 'absolute', left: '10px', right: '10px', top: '10px', borderRadius: '12px', background: 'rgba(255,118,148,0.16)', color: 'var(--nl-danger)', border: '1px solid rgba(255,118,148,0.24)', padding: '7px 9px', fontSize: '11px', lineHeight: 1.45, fontWeight: 750 }}>
-          {media.error_message}
+        <span style={{ position: 'absolute', left: '10px', right: '10px', top: '10px', borderRadius: '12px', background: 'var(--nl-danger-soft)', color: 'var(--nl-danger)', border: '1px solid var(--nl-danger-line)', padding: '7px 9px', fontSize: '11px', lineHeight: 1.45, fontWeight: 750 }}>
+          {media.error_message} 请移除后重新选择素材。
         </span>
-      ) : null}
-      {mediaUrl && onOpen ? (
-          <button
-            type="button"
-            aria-label={mediaFullscreenActionLabel(media.media_type)}
-            onClick={() => onOpen({ ...media, preview_url: mediaUrl })}
-            style={{
-              position: 'absolute',
-              top: '8px',
-              left: '8px',
-              width: '44px',
-              height: '44px',
-              borderRadius: '999px',
-              border: '1px solid var(--nl-border)',
-              background: 'rgba(var(--nl-surface-rgb),0.9)',
-              color: 'var(--nl-ink)',
-              display: 'grid',
-              placeItems: 'center',
-              cursor: 'pointer',
-              padding: 0,
-            }}
-          >
-          <Maximize2 size={15} strokeWidth={2.4} />
-        </button>
       ) : null}
       {onRemove ? (
           <button
             type="button"
             aria-label="移除媒体"
-            onClick={() => onRemove(media.media_no)}
+            onClick={(event) => {
+              event.stopPropagation();
+              onRemove(media.media_no);
+            }}
             style={{
               position: 'absolute',
-              top: '8px',
-              right: '8px',
-              width: '44px',
-              height: '44px',
-              borderRadius: '999px',
-              border: '1px solid var(--nl-border)',
-              background: 'rgba(var(--nl-surface-rgb),0.9)',
+              top: '10px',
+              right: '10px',
+              width: '38px',
+              height: '38px',
+              borderRadius: '8px',
+              border: '1px solid var(--nl-border-strong)',
+              background: 'var(--nl-surface-soft)',
               color: 'var(--nl-ink)',
+              WebkitBackdropFilter: 'blur(10px)',
+              backdropFilter: 'blur(10px)',
               display: 'grid',
               placeItems: 'center',
               cursor: 'pointer',
@@ -429,11 +553,25 @@ const MediaFullscreenDialog = ({
   media: FullscreenMediaPreview | null;
   onClose: () => void;
 }) => {
-  const mediaUrl = media ? resolveMediaPreviewUrl(media.media_no, media.preview_url ?? media.access_url ?? null) ?? media.preview_url ?? media.access_url ?? '' : '';
+  const mediaUrl = useCachedMediaUrl(media?.media_no, media?.preview_url ?? media?.access_url ?? null, media?.media_type, {
+    cacheRemote: true,
+  }) ?? media?.preview_url ?? media?.access_url ?? '';
   const label = media ? mediaPreviewLabel(media.media_type) : '媒体预览';
 
   useEffect(() => {
     if (!media) return undefined;
+    const scrollY = window.scrollY;
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousBodyPosition = document.body.style.position;
+    const previousBodyTop = document.body.style.top;
+    const previousBodyWidth = document.body.style.width;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose();
@@ -442,6 +580,14 @@ const MediaFullscreenDialog = ({
 
     return () => {
       window.removeEventListener('keydown', onKeyDown);
+      document.documentElement.style.overflow = previousHtmlOverflow;
+      document.body.style.overflow = previousBodyOverflow;
+      document.body.style.position = previousBodyPosition;
+      document.body.style.top = previousBodyTop;
+      document.body.style.width = previousBodyWidth;
+      if (!/jsdom/i.test(navigator.userAgent)) {
+        window.scrollTo(0, scrollY);
+      }
     };
   }, [media, onClose]);
 
@@ -457,10 +603,12 @@ const MediaFullscreenDialog = ({
         position: 'fixed',
         inset: 0,
         zIndex: 80,
-        background: 'rgba(17,18,16,0.94)',
+        background: 'var(--nl-media-overlay-bg)',
         display: 'grid',
         placeItems: 'center',
         padding: 'calc(42px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom))',
+        overscrollBehavior: 'contain',
+        touchAction: 'none',
       }}
     >
       <button
@@ -473,9 +621,9 @@ const MediaFullscreenDialog = ({
           right: '12px',
           width: '44px',
           height: '44px',
-          borderRadius: '999px',
-          border: '1px solid var(--nl-border)',
-          background: 'rgba(var(--nl-surface-rgb),0.74)',
+          borderRadius: '8px',
+          border: '1px solid var(--nl-border-muted)',
+          background: 'rgba(var(--nl-surface-rgb),0.62)',
           color: 'var(--nl-ink)',
           display: 'grid',
           placeItems: 'center',
@@ -488,12 +636,18 @@ const MediaFullscreenDialog = ({
       <div
         onClick={(event) => event.stopPropagation()}
         style={{
-          width: '100%',
-          height: '100%',
+          width: 'min(100%, 390px)',
+          height: 'min(72dvh, 620px)',
           display: 'grid',
           placeItems: 'center',
-          padding: '42px 0 10px',
+          padding: '8px',
           boxSizing: 'border-box',
+          borderRadius: '8px',
+          border: '1px solid var(--nl-border-muted)',
+          background: 'rgba(var(--nl-surface-rgb),0.38)',
+          overflow: 'hidden',
+          overscrollBehavior: 'contain',
+          touchAction: media.media_type === 'video' ? 'auto' : 'none',
         }}
       >
         {media.media_type === 'image' ? (
@@ -501,7 +655,7 @@ const MediaFullscreenDialog = ({
             src={mediaUrl}
             alt={media.original_name ?? label}
             decoding="async"
-            style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block', borderRadius: '10px' }}
+            style={{ width: '100%', height: '100%', maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block', borderRadius: '8px' }}
           />
         ) : null}
         {media.media_type === 'video' ? (
@@ -511,13 +665,13 @@ const MediaFullscreenDialog = ({
             autoPlay
             playsInline
             preload="auto"
-            style={{ width: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block', background: '#000000', borderRadius: '10px' }}
+            style={{ width: '100%', height: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block', background: 'var(--nl-media-black)', borderRadius: '8px' }}
           />
         ) : null}
         {media.media_type === 'audio' ? (
-          <div style={{ width: 'min(100%, 420px)', display: 'grid', gap: '16px', color: '#ffffff', textAlign: 'center' }}>
+          <div style={{ width: 'min(100%, 420px)', display: 'grid', gap: '16px', color: 'var(--nl-on-primary)', textAlign: 'center' }}>
             <FileAudio size={44} strokeWidth={1.8} style={{ justifySelf: 'center' }} />
-            <strong style={{ fontSize: '16px', fontWeight: 850 }}>{media.original_name ?? label}</strong>
+            <strong style={{ fontSize: '16px', fontWeight: 720 }}>{media.original_name ?? label}</strong>
             <audio src={mediaUrl} controls autoPlay style={{ width: '100%' }} />
           </div>
         ) : null}
@@ -645,6 +799,26 @@ const normalizeRecordFormInitialValue = (value: RecordFormInitialValue): RecordF
   };
 };
 
+const buildRecordDraftSignature = (
+  value: RecordFormInitialValue,
+  mediaNos: string[],
+  metricState: { heightValue: string; weightValue: string; metricNote: string },
+) =>
+  JSON.stringify({
+    record_type: value.record_type,
+    title: value.title,
+    content_text: value.content_text,
+    media_nos: mediaNos,
+    tags: value.tags,
+    location_text: value.location_text,
+    visibility_scope: value.visibility_scope,
+    event_time: value.event_time,
+    status: value.status,
+    heightValue: metricState.heightValue,
+    weightValue: metricState.weightValue,
+    metricNote: metricState.metricNote,
+  });
+
 const RecordForm = ({
   mode,
   initialValue,
@@ -679,7 +853,6 @@ const RecordForm = ({
   const [pendingAction, setPendingAction] = useState<'publish' | 'draft' | null>(null);
   const [uploading, setUploading] = useState(false);
   const [selectorMessage, setSelectorMessage] = useState<string | null>(null);
-  const [visibilityOpen, setVisibilityOpen] = useState(false);
   const [tagSelectValue, setTagSelectValue] = useState('');
   const [poiSuggestions, setPoiSuggestions] = useState<LocationSuggestion[]>([]);
   const [poiLoading, setPoiLoading] = useState(false);
@@ -694,6 +867,7 @@ const RecordForm = ({
   const [mediaNos, setMediaNos] = useState<string[]>(normalizedInitialValue.media_nos);
   const [mediaPreviews, setMediaPreviews] = useState<MediaPreview[]>(normalizedInitialValue.media_items);
   const [fullscreenMedia, setFullscreenMedia] = useState<FullscreenMediaPreview | null>(null);
+  const [discardConfirmOpen, setDiscardConfirmOpen] = useState(false);
   const mediaPreviewsRef = useRef<MediaPreview[]>(normalizedInitialValue.media_items);
   const titleInputRef = useRef<HTMLInputElement | null>(null);
   const contentInputRef = useRef<HTMLTextAreaElement | null>(null);
@@ -704,6 +878,7 @@ const RecordForm = ({
   const audioCaptureInputRef = useRef<HTMLInputElement | null>(null);
   const audioLibraryInputRef = useRef<HTMLInputElement | null>(null);
   const selectedChildNoRef = useRef('');
+  const allowNavigationWithoutPromptRef = useRef(false);
 
   const currentChild = children.find((child) => child.child_no === form.child_no) ?? activeChild ?? children[0] ?? null;
   const currentChildName = currentChild?.name?.trim() || '请选择孩子';
@@ -711,6 +886,43 @@ const RecordForm = ({
   const selectedTags = splitTags(form.tags);
   const isHeightRecord = mode === 'create' && initialMetricMode === 'height';
   const canUseAi = hasAiPlusAccess(user);
+  const initialDraftSignature = useMemo(
+    () =>
+      buildRecordDraftSignature(normalizedInitialValue, normalizedInitialValue.media_nos, {
+        heightValue: '',
+        weightValue: '',
+        metricNote: '',
+      }),
+    [normalizedInitialValue],
+  );
+  const currentDraftSignature = useMemo(
+    () =>
+      buildRecordDraftSignature(form, mediaNos, {
+        heightValue,
+        weightValue,
+        metricNote,
+      }),
+    [form, heightValue, mediaNos, metricNote, weightValue],
+  );
+  const hasUnsavedChanges = currentDraftSignature !== initialDraftSignature && !submitting;
+
+  const leaveAfterDiscard = () => {
+    setDiscardConfirmOpen(false);
+    allowNavigationWithoutPromptRef.current = true;
+    if (mode === 'create') {
+      navigate('/home');
+      return;
+    }
+    navigate(-1);
+  };
+
+  const leaveRecordForm = () => {
+    if (!hasUnsavedChanges || allowNavigationWithoutPromptRef.current) {
+      leaveAfterDiscard();
+      return;
+    }
+    setDiscardConfirmOpen(true);
+  };
 
   useEffect(() => {
     if (!form.child_no && currentChild?.child_no) {
@@ -736,6 +948,7 @@ const RecordForm = ({
 
   useEffect(() => {
     const nextInitialValue = normalizeRecordFormInitialValue(initialValue);
+    allowNavigationWithoutPromptRef.current = false;
     setForm(nextInitialValue);
     setMediaNos(nextInitialValue.media_nos);
     setMediaPreviews(nextInitialValue.media_items);
@@ -800,6 +1013,29 @@ const RecordForm = ({
   }, [initialFocus]);
 
   useEffect(() => {
+    if (!hasUnsavedChanges || allowNavigationWithoutPromptRef.current) return undefined;
+
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  useEffect(() => {
+    const onNativeBack = (event: Event) => {
+      if (!hasUnsavedChanges || allowNavigationWithoutPromptRef.current) return;
+      event.preventDefault();
+      setDiscardConfirmOpen(true);
+    };
+
+    window.addEventListener('nianlun:native-back-button', onNativeBack);
+    return () => window.removeEventListener('nianlun:native-back-button', onNativeBack);
+  }, [hasUnsavedChanges]);
+
+  useEffect(() => {
     return () => {
       mediaPreviewsRef.current.forEach((item) => {
         if (item.is_local) {
@@ -826,10 +1062,10 @@ const RecordForm = ({
     setSelectorMessage(`已切换为 ${nextChild.name}`);
   };
 
-  const triggerMediaInput = (input: HTMLInputElement | null, message?: string) => {
+  const triggerMediaInput = (input: HTMLInputElement | null) => {
     if (uploading || !input) return;
     setError(null);
-    setSelectorMessage(message ?? null);
+    setSelectorMessage(null);
     input.value = '';
     input.click();
   };
@@ -974,14 +1210,13 @@ const RecordForm = ({
 
   const openNativePhotoCapture = async () => {
     if (!isNativeAppRuntime()) {
-      triggerMediaInput(photoCaptureInputRef.current, '请在系统相机中拍照，保存后会自动加入记录。');
+      triggerMediaInput(photoCaptureInputRef.current);
       return;
     }
 
     if (uploading) return;
 
     setError(null);
-    setSelectorMessage('正在打开系统相机…');
     try {
       const photo = await Camera.getPhoto({
         quality: 86,
@@ -997,27 +1232,23 @@ const RecordForm = ({
         promptLabelPhoto: '从相册选择',
       });
       await uploadNativeImage(photo, 'camera');
-      setSelectorMessage('已从系统相机加入照片。');
     } catch (err) {
       if (isNativePickerCancelled(err)) {
-        setSelectorMessage(null);
         return;
       }
       setError(err instanceof Error ? `无法打开系统相机：${err.message}` : '无法打开系统相机，请检查相机权限后重试。');
-      setSelectorMessage('也可以从相册选择已有照片。');
     }
   };
 
   const openNativeGalleryImages = async () => {
     if (!isNativeAppRuntime()) {
-      triggerMediaInput(galleryInputRef.current, '请从相册选择照片或视频素材。');
+      triggerMediaInput(galleryInputRef.current);
       return;
     }
 
     if (uploading) return;
 
     setError(null);
-    setSelectorMessage('正在打开系统相册…');
     try {
       const result = await Camera.pickImages({
         quality: 86,
@@ -1026,20 +1257,16 @@ const RecordForm = ({
         presentationStyle: 'fullscreen',
       });
       if (!result.photos.length) {
-        setSelectorMessage(null);
         return;
       }
       for (const photo of result.photos) {
         await uploadNativeImage(photo, 'gallery');
       }
-      setSelectorMessage(`已从系统相册加入 ${result.photos.length} 张照片。`);
     } catch (err) {
       if (isNativePickerCancelled(err)) {
-        setSelectorMessage(null);
         return;
       }
       setError(err instanceof Error ? `无法打开系统相册：${err.message}` : '无法打开系统相册，请检查照片权限后重试。');
-      setSelectorMessage('如果需要添加视频，请使用“拍摄视频”或系统文件选择入口。');
     }
   };
 
@@ -1077,7 +1304,7 @@ const RecordForm = ({
 
   const submitRecord = async (nextStatus = form.status) => {
     if (uploading) {
-      setError('媒体还在上传，请等预览标记为完成后再发布。');
+      setError('媒体还在上传，请完成后再发布。');
       return;
     }
 
@@ -1122,6 +1349,7 @@ const RecordForm = ({
     setSubmitting(true);
     setPendingAction(nextStatus === 'draft' ? 'draft' : 'publish');
     setError(null);
+    allowNavigationWithoutPromptRef.current = true;
     try {
       const nextRecordType = isHeightRecord ? 'text' : form.record_type === 'mixed' && mediaNos.length === 0 ? 'text' : form.record_type;
       const nextMediaNos = nextRecordType === 'text' ? [] : mediaNos;
@@ -1140,6 +1368,7 @@ const RecordForm = ({
         status: nextStatus,
       });
     } catch (err) {
+      allowNavigationWithoutPromptRef.current = false;
       setError(err instanceof Error ? err.message : '保存失败');
     } finally {
       setSubmitting(false);
@@ -1164,7 +1393,7 @@ const RecordForm = ({
 
   const generateAiPreview = async () => {
     if (!canUseAi) {
-      setError('智能整理仅对 AI 会员开放');
+      setError('当前账号暂未启用 AI 整理权限');
       return;
     }
 
@@ -1189,9 +1418,8 @@ const RecordForm = ({
       }));
       setAiPreviewSummary(preview.summary);
       setAiPreviewTags(preview.tags);
-      setSelectorMessage('已生成标题建议、摘要和标签，可继续编辑后发布。');
     } catch (err) {
-      setError(err instanceof Error ? err.message : '整理建议生成失败');
+      setError(normalizeAiErrorMessage(err instanceof Error ? err.message : null, '整理建议暂时不可用，请手动填写内容后继续。'));
     } finally {
       setAiPreviewLoading(false);
     }
@@ -1226,16 +1454,9 @@ const RecordForm = ({
     form.record_type === 'video'
       ? 'video/*,video/mp4,video/webm,video/quicktime,video/3gpp'
       : 'image/*,video/*,image/jpeg,image/png,image/webp,image/heic,image/heif,video/mp4,video/webm,video/quicktime,video/3gpp';
-  const mediaHint =
-    form.record_type === 'video'
-      ? '支持常见视频格式'
-      : form.record_type === 'audio'
-        ? '支持常见音频格式'
-        : form.record_type === 'mixed'
-          ? '可选，支持图片、视频和语音'
-          : '支持图片、视频和语音';
-  const emptyMediaPreviewLabel = form.record_type === 'mixed' ? '可不添加' : '尚未添加';
   const noticeMessage = error ?? selectorMessage;
+  const isDraftRecord = form.status === 'draft';
+  const primarySubmitLabel = mode === 'create' || isDraftRecord ? '发布' : '保存';
 
   const useCurrentLocation = async () => {
     setLocationLoading(true);
@@ -1272,7 +1493,7 @@ const RecordForm = ({
         minHeight: '100dvh',
         background: 'var(--nl-page-bg)',
         color: 'var(--nl-ink)',
-        padding: '0 16px calc(118px + env(safe-area-inset-bottom))',
+        padding: '0 18px calc(124px + env(safe-area-inset-bottom))',
         boxSizing: 'border-box',
         overflowX: 'hidden',
       }}
@@ -1281,20 +1502,13 @@ const RecordForm = ({
           title={isHeightRecord ? '记录身高' : mode === 'create' ? '记录时光' : '编辑记录'}
           backLabel={mode === 'create' ? '取消' : '返回'}
           backVariant={mode === 'create' ? 'text' : 'icon'}
-          onBack={() => {
-            if (mode === 'create') {
-              navigate('/home');
-              return;
-            }
-            navigate(-1);
-          }}
-          background="rgba(17, 18, 16, 0.88)"
-          style={{ position: 'relative', top: 'auto', margin: '0 -16px 8px', padding: 'calc(28px + env(safe-area-inset-top)) 16px 10px' }}
+          onBack={leaveRecordForm}
+          style={{ position: 'relative', top: 'auto', margin: '0 -18px 12px', padding: 'calc(30px + env(safe-area-inset-top)) 18px 12px' }}
           action={
             <button
               type="submit"
               form="record-form"
-              aria-label={mode === 'create' ? '发布' : '保存'}
+              aria-label={primarySubmitLabel}
               style={{
                 minHeight: '44px',
                 border: 'none',
@@ -1302,23 +1516,23 @@ const RecordForm = ({
                 color: 'var(--nl-primary)',
                 padding: '0 2px',
                 fontSize: '15px',
-                fontWeight: 850,
+                fontWeight: 560,
                 cursor: submitting || uploading ? 'not-allowed' : 'pointer',
                 opacity: submitting || uploading ? 0.72 : 1,
               }}
               disabled={submitting || uploading}
             >
-              {pendingAction === 'publish' ? (mode === 'create' ? '发布中…' : '保存中…') : mode === 'create' ? '发布' : '保存'}
+              {pendingAction === 'publish' ? `${primarySubmitLabel}中…` : primarySubmitLabel}
             </button>
           }
         />
-        <form id="record-form" onSubmit={handleSubmit} style={{ ...rowStyle, gap: '10px', width: '100%', maxWidth: '100%', overflowX: 'hidden' }}>
+        <form id="record-form" onSubmit={handleSubmit} style={{ ...rowStyle, gap: '14px', width: '100%', maxWidth: '100%', overflowX: 'hidden' }}>
           <section
             style={{
               order: 0,
-              padding: '0 2px 9px',
+              padding: '0 2px 12px',
               background: 'transparent',
-              borderBottom: '1px solid var(--nl-border)',
+              borderBottom: '1px solid var(--nl-border-muted)',
               display: 'grid',
               gridTemplateColumns: 'minmax(0, 1fr) auto',
               alignItems: 'center',
@@ -1347,12 +1561,12 @@ const RecordForm = ({
                   width: '38px',
                   height: '38px',
                   borderRadius: '999px',
-                  background: currentChildAvatar ? 'var(--nl-surface-soft)' : 'rgba(var(--nl-accent-rgb),0.14)',
-                  border: '1px solid var(--nl-border)',
+                  background: currentChildAvatar ? 'var(--nl-surface-soft)' : 'rgba(var(--nl-primary-rgb),0.1)',
+                  border: '1px solid var(--nl-border-muted)',
                   display: 'grid',
                   placeItems: 'center',
-                  color: 'var(--nl-accent)',
-                  fontWeight: 800,
+                  color: 'var(--nl-primary-2)',
+                  fontWeight: 560,
                   flexShrink: 0,
                   overflow: 'hidden',
                 }}
@@ -1360,24 +1574,20 @@ const RecordForm = ({
                 {currentChildAvatar ? <img src={currentChildAvatar} alt={currentChildName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (currentChild?.name?.slice(0, 1) ?? '宝')}
               </div>
               <span style={{ display: 'grid', gap: '2px', minWidth: 0 }}>
-                <strong style={{ fontSize: '15px', color: 'var(--nl-ink)', fontWeight: 900, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{currentChildName}</strong>
-                <span style={{ fontSize: '12px', color: 'var(--nl-muted)', lineHeight: 1.4, fontWeight: 650 }}>记录对象</span>
+                <strong style={{ fontSize: '15px', color: 'var(--nl-ink)', fontWeight: 680, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{currentChildName}</strong>
               </span>
             </button>
             <label
               style={{
-                position: 'relative',
-                minHeight: '44px',
-                borderRadius: '999px',
-                border: '1px solid var(--nl-border)',
-                background: 'rgba(var(--nl-surface-rgb),0.74)',
-                display: 'flex',
-                alignItems: 'center',
+                ...dateControlStyle,
+                minHeight: '38px',
                 gap: '7px',
-                padding: '0 10px',
-                boxSizing: 'border-box',
-                overflow: 'hidden',
-                cursor: 'pointer',
+                padding: '0 0 5px',
+                border: 'none',
+                borderBottom: '1px solid var(--nl-border-muted)',
+                borderRadius: 0,
+                background: 'transparent',
+                boxShadow: 'none',
               }}
               onClick={() => {
                 const picker = timeInputRef.current as (HTMLInputElement & { showPicker?: () => void }) | null;
@@ -1392,7 +1602,7 @@ const RecordForm = ({
                 ref={timeInputRef}
                 className="app-date-time-input"
                 aria-label="发生时间 *"
-                style={{ position: 'fixed', left: '-100vw', top: 0, width: 1, height: 1, opacity: 0, pointerEvents: 'none', colorScheme: 'light', background: 'transparent' }}
+                style={hiddenNativeDateInputStyle}
                 type="datetime-local"
                 value={form.event_time}
                 onChange={(event) => {
@@ -1401,7 +1611,7 @@ const RecordForm = ({
                 }}
               />
               <Clock size={14} strokeWidth={2.2} color="var(--nl-muted)" />
-              <span style={{ flex: 1, minWidth: 0, color: form.event_time ? 'var(--nl-ink)' : 'var(--nl-muted)', fontSize: '12px', fontWeight: 800, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', pointerEvents: 'none' }}>
+              <span style={{ flex: 1, minWidth: 0, color: form.event_time ? 'var(--nl-ink)' : 'var(--nl-muted)', fontSize: '12px', fontWeight: 520, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', pointerEvents: 'none' }}>
                 {form.event_time ? formatDateTimeDisplay(form.event_time) : '选择时间'}
               </span>
             </label>
@@ -1413,24 +1623,24 @@ const RecordForm = ({
                 order: 1,
                 display: 'grid',
                 gap: '13px',
-                borderRadius: '20px',
-                border: '1px solid var(--nl-border)',
-                background: 'var(--nl-surface)',
-                padding: '15px 16px 16px',
+                borderRadius: 0,
+                border: 'none',
+                borderBottom: '1px solid var(--nl-border-muted)',
+                background: 'transparent',
+                padding: '8px 0 18px',
               }}
             >
               <div style={{ display: 'flex', gap: '11px', alignItems: 'center' }}>
-                <span style={{ width: '34px', height: '34px', borderRadius: '13px', background: 'rgba(var(--nl-accent-rgb),0.14)', color: 'var(--nl-accent)', display: 'grid', placeItems: 'center', flexShrink: 0, boxShadow: '0 0 18px rgba(var(--nl-accent-rgb),0.18)' }}>
+                <span style={{ width: '34px', height: '34px', borderRadius: '8px', background: 'rgba(var(--nl-primary-rgb),0.12)', color: 'var(--nl-primary-2)', display: 'grid', placeItems: 'center', flexShrink: 0, boxShadow: 'none' }}>
                   <Ruler size={18} strokeWidth={2.3} />
                 </span>
                 <span style={{ minWidth: 0, display: 'grid', gap: '3px' }}>
-                  <strong style={{ color: 'var(--nl-ink)', fontSize: '15px', fontWeight: 900 }}>身高记录</strong>
-                  <span style={{ color: 'var(--nl-muted)', fontSize: '12px', lineHeight: 1.45, fontWeight: 650 }}>记录本次测量结果，发布后会进入最近记录和时间轴。</span>
+                  <strong style={{ color: 'var(--nl-ink)', fontSize: '15px', fontWeight: 620 }}>身高记录</strong>
                 </span>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
                 <label style={{ display: 'grid', gap: '7px', minWidth: 0 }}>
-                  <span style={{ color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 850 }}>身高 cm</span>
+                  <span style={{ color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 520 }}>身高 cm</span>
                   <input
                     aria-label="身高 cm"
                     inputMode="decimal"
@@ -1440,11 +1650,11 @@ const RecordForm = ({
                       setHeightValue(normalizeMetricInput(event.target.value));
                     }}
                     placeholder="例如 92.5"
-                    style={{ ...inputStyle, minHeight: '48px', borderRadius: '16px', fontWeight: 850 }}
+                    style={{ ...inputStyle, minHeight: '48px', borderRadius: '8px', fontWeight: 520 }}
                   />
                 </label>
                 <label style={{ display: 'grid', gap: '7px', minWidth: 0 }}>
-                  <span style={{ color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 850 }}>体重 kg</span>
+                  <span style={{ color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 520 }}>体重 kg</span>
                   <input
                     aria-label="体重 kg"
                     inputMode="decimal"
@@ -1453,13 +1663,12 @@ const RecordForm = ({
                       setError(null);
                       setWeightValue(normalizeMetricInput(event.target.value));
                     }}
-                    placeholder="可选"
-                    style={{ ...inputStyle, minHeight: '48px', borderRadius: '16px', fontWeight: 850 }}
+                    style={{ ...inputStyle, minHeight: '48px', borderRadius: '8px', fontWeight: 520 }}
                   />
                 </label>
               </div>
               <label style={{ display: 'grid', gap: '7px' }}>
-                <span style={{ color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 850 }}>备注</span>
+                <span style={{ color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 520 }}>备注</span>
                 <textarea
                   aria-label="身高记录备注"
                   value={metricNote}
@@ -1467,8 +1676,8 @@ const RecordForm = ({
                     setError(null);
                     setMetricNote(event.target.value);
                   }}
-                  placeholder="例如早晨测量、穿薄衣、最近长高很明显"
-                  style={{ ...inputStyle, minHeight: '82px', resize: 'none', lineHeight: 1.65, borderRadius: '16px' }}
+                  placeholder="备注"
+                  style={{ ...inputStyle, minHeight: '82px', resize: 'none', lineHeight: 1.65, borderRadius: '8px' }}
                 />
               </label>
             </section>
@@ -1477,83 +1686,72 @@ const RecordForm = ({
           {showMediaSection ? (
             <section
               style={{
-                order: 2,
+                order: 1,
                 display: 'grid',
-                gap: '8px',
-                borderRadius: '20px',
-                border: '1px solid var(--nl-border)',
-                background: 'rgba(var(--nl-surface-rgb),0.72)',
-                padding: '11px',
+                gap: '10px',
+                borderRadius: 0,
+                border: 'none',
+                borderBottom: '1px solid var(--nl-border-muted)',
+                background: 'transparent',
+                padding: '3px 0 16px',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '12px' }}>
-                <strong style={{ color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 900 }}>{form.record_type === 'mixed' ? '素材（可选）' : '素材'}</strong>
-                <span style={{ minWidth: 0, color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 750, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{uploading ? '正在上传…' : mediaHint}</span>
+                <strong style={{ color: 'var(--nl-ink)', fontSize: '15px', fontWeight: 660 }}>媒体</strong>
+                {uploading ? <span style={{ minWidth: 0, color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>正在上传…</span> : null}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: showPhotoVideoAction && showAudioAction ? 'repeat(5, minmax(0, 1fr))' : 'repeat(2, minmax(0, 1fr))', gap: '6px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: showPhotoVideoAction && showAudioAction ? 'repeat(auto-fit, minmax(58px, 1fr))' : 'repeat(2, minmax(0, 1fr))', gap: '4px', borderRadius: 0, borderTop: '1px solid var(--nl-border-soft)', borderBottom: '1px solid var(--nl-border-soft)', background: 'transparent', padding: '6px 0' }}>
                 {showPhotoVideoAction ? (
                   form.record_type === 'video' ? (
                     <>
-                      <MediaActionButton icon={<Video size={17} strokeWidth={2.2} />} label="拍摄视频" displayLabel="视频" description="打开系统相机录制" onClick={() => triggerMediaInput(videoCaptureInputRef.current, '请在系统相机中完成拍摄，保存后会自动加入记录。')} disabled={uploading} />
-                      <MediaActionButton icon={<ImagePlus size={17} strokeWidth={2.2} />} label="从相册选择" displayLabel="相册" description="导入已有视频素材" onClick={() => triggerMediaInput(galleryInputRef.current, '请从相册选择视频素材。')} disabled={uploading} />
+                      <MediaActionButton icon={<Video size={17} strokeWidth={2.2} />} label="拍摄视频" displayLabel="视频" onClick={() => triggerMediaInput(videoCaptureInputRef.current)} disabled={uploading} />
+                      <MediaActionButton icon={<ImagePlus size={17} strokeWidth={2.2} />} label="从相册选择" displayLabel="相册" onClick={() => triggerMediaInput(galleryInputRef.current)} disabled={uploading} />
                     </>
                   ) : (
                     <>
-                      <MediaActionButton icon={<ImagePlus size={17} strokeWidth={2.2} />} label="拍照记录" displayLabel="拍照" description="打开原生相机拍照" onClick={() => void openNativePhotoCapture()} disabled={uploading} />
-                      <MediaActionButton icon={<Image size={17} strokeWidth={2.2} />} label="从相册添加" displayLabel="相册" description="原生相册多选照片" onClick={() => void openNativeGalleryImages()} disabled={uploading} />
-                      <MediaActionButton icon={<Video size={17} strokeWidth={2.2} />} label="拍摄视频" displayLabel="视频" description="打开系统相机录像" onClick={() => triggerMediaInput(videoCaptureInputRef.current, '请在系统相机中完成拍摄，保存后会自动加入记录。')} disabled={uploading} />
+                      <MediaActionButton icon={<ImagePlus size={17} strokeWidth={2.2} />} label="拍照记录" displayLabel="拍照" onClick={() => void openNativePhotoCapture()} disabled={uploading} />
+                      <MediaActionButton icon={<Image size={17} strokeWidth={2.2} />} label="从相册添加" displayLabel="相册" onClick={() => void openNativeGalleryImages()} disabled={uploading} />
+                      <MediaActionButton icon={<Video size={17} strokeWidth={2.2} />} label="拍摄视频" displayLabel="视频" onClick={() => triggerMediaInput(videoCaptureInputRef.current)} disabled={uploading} />
                     </>
                   )
                 ) : null}
                 {showAudioAction ? (
                   <>
-                    <MediaActionButton icon={<Mic size={17} strokeWidth={2.2} />} label="录制语音" displayLabel="录音" description="打开系统录音入口" onClick={() => triggerMediaInput(audioCaptureInputRef.current, '请使用系统录音入口录制，保存后会自动加入记录。')} disabled={uploading} />
-                    <MediaActionButton icon={<FileAudio size={17} strokeWidth={2.2} />} label="上传语音" displayLabel="上传" description="选择已有录音或音频" onClick={() => triggerMediaInput(audioLibraryInputRef.current, '请选择已有录音或音频文件。')} disabled={uploading} />
+                    <MediaActionButton icon={<Mic size={17} strokeWidth={2.2} />} label="录制语音" displayLabel="录音" onClick={() => triggerMediaInput(audioCaptureInputRef.current)} disabled={uploading} />
+                    <MediaActionButton icon={<FileAudio size={17} strokeWidth={2.2} />} label="上传语音" displayLabel="上传" onClick={() => triggerMediaInput(audioLibraryInputRef.current)} disabled={uploading} />
                   </>
                 ) : null}
               </div>
 
-              <section
-                aria-label="媒体预览"
-                style={{
-                  borderRadius: '14px',
-                  border: mediaPreviews.length ? '1px solid var(--nl-border)' : 'none',
-                  background: mediaPreviews.length ? 'rgba(var(--nl-surface-rgb),0.58)' : 'transparent',
-                  padding: mediaPreviews.length ? '8px' : 0,
-                  display: 'grid',
-                  gap: '8px',
-                }}
-              >
-                {mediaPreviews.length ? (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
-                    {mediaPreviews.map((media) => (
-                      <MediaPreviewTile key={media.media_no} media={media} compact onRemove={removeMedia} onOpen={setFullscreenMedia} />
-                    ))}
-                  </div>
-                ) : (
-                  <div
-                    data-testid="record-media-preview-empty"
-                    style={{
-                      minHeight: '42px',
-                      borderRadius: '12px',
-                      border: '1px dashed var(--nl-border)',
-                      background: 'rgba(var(--nl-surface-rgb),0.52)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: '10px',
-                      padding: '0 12px',
-                      color: 'var(--nl-muted)',
-                    }}
-                  >
-                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', fontSize: '12px', fontWeight: 800 }}>
-                      <ImagePlus size={15} strokeWidth={2.2} />
-                      媒体预览
-                    </span>
-                    <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: '11px', fontWeight: 650 }}>{mediaPreviews.length ? `${mediaPreviews.length} 个素材` : emptyMediaPreviewLabel}</span>
-                  </div>
-                )}
-              </section>
+              {mediaPreviews.length ? (
+                <section
+                  aria-label="媒体预览"
+                  style={{
+                    borderRadius: '8px',
+                    border: '1px solid var(--nl-border-soft)',
+                    background: 'rgba(var(--nl-surface-rgb),0.08)',
+                    padding: '7px',
+                    display: 'grid',
+                    gap: '10px',
+                    maxWidth: '100%',
+                    boxShadow: '0 18px 46px rgba(var(--nl-shadow-rgb),0.14)',
+                  }}
+                >
+                  {mediaPreviews.length === 1 ? (
+                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                      <div style={{ width: 'min(164px, 100%)' }}>
+                        <MediaPreviewTile key={mediaPreviews[0].media_no} media={mediaPreviews[0]} compact onRemove={removeMedia} onOpen={setFullscreenMedia} />
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px', maxWidth: '100%' }}>
+                      {mediaPreviews.map((media) => (
+                        <MediaPreviewTile key={media.media_no} media={media} compact onRemove={removeMedia} onOpen={setFullscreenMedia} />
+                      ))}
+                    </div>
+                  )}
+                </section>
+              ) : null}
 
               <input ref={photoCaptureInputRef} aria-label="拍照记录" type="file" accept="image/*,image/jpeg,image/png,image/webp,image/heic,image/heif" capture="environment" onChange={(event) => void onFileChange(event)} disabled={uploading} style={{ display: 'none' }} />
               <input ref={videoCaptureInputRef} aria-label="拍摄视频" type="file" accept="video/*,video/mp4,video/webm,video/quicktime,video/3gpp" capture="environment" onChange={(event) => void onFileChange(event)} disabled={uploading} style={{ display: 'none' }} />
@@ -1564,26 +1762,26 @@ const RecordForm = ({
           ) : null}
 
           {!isHeightRecord ? (
-          <div className="record-editor-card" style={{ order: 1, display: 'grid', gap: '10px', borderRadius: '20px', border: '1px solid var(--nl-border)', background: 'rgba(var(--nl-surface-rgb),0.72)', padding: '13px 15px 14px' }}>
-            <div className="record-editor-title-row" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', alignItems: 'center', gap: '10px', borderBottom: '1px solid var(--nl-border)', paddingBottom: '10px' }}>
+          <div className="record-editor-card" style={{ order: 2, display: 'grid', gap: '12px', borderRadius: 0, border: 'none', background: 'transparent', padding: '0 0 4px', boxShadow: 'none' }}>
+            <div className="record-editor-title-row" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', alignItems: 'center', gap: '10px', borderBottom: '1px solid var(--nl-border-soft)', padding: '0 0 14px' }}>
               <input
                 ref={titleInputRef}
                 className="record-title-input"
                 style={{
                   width: '100%',
                   minWidth: 0,
-                  minHeight: '36px',
+                  minHeight: '42px',
                   border: 'none',
-                  padding: '6px 0',
-                  fontSize: '16px',
-                  fontWeight: 800,
-                  lineHeight: 1.35,
+                  padding: '4px 0 2px',
+                  fontSize: '20px',
+                  fontWeight: 760,
+                  lineHeight: 1.22,
                   color: 'var(--nl-ink)',
                   outline: 'none',
                   background: 'transparent',
                   boxSizing: 'border-box',
                 }}
-                placeholder="给这一刻起个名字"
+                placeholder="标题"
                 value={form.title}
                 onChange={(event) => {
                   setError(null);
@@ -1593,26 +1791,19 @@ const RecordForm = ({
               {canUseAi ? (
                 <button
                   type="button"
-                  aria-label="会员整理建议"
+                  aria-label="智能整理建议"
                   onClick={() => void generateAiPreview()}
                   disabled={aiPreviewLoading}
                   style={{
+                    ...compactSecondaryButtonStyle,
                     minHeight: '34px',
-                    border: '1px solid var(--nl-border)',
-                    borderRadius: '999px',
-                    background: 'rgba(var(--nl-surface-rgb),0.74)',
-                    color: 'var(--nl-ink)',
                     padding: '7px 10px',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
                     gap: '5px',
-                    fontSize: '12px',
-                    fontWeight: 800,
+                    fontSize: '11.5px',
+                    fontWeight: 620,
                     whiteSpace: 'nowrap',
                     cursor: aiPreviewLoading ? 'not-allowed' : 'pointer',
                     opacity: aiPreviewLoading ? 0.72 : 1,
-                    boxShadow: 'none',
                   }}
                 >
                   <Sparkles size={14} strokeWidth={2.2} />
@@ -1620,97 +1811,64 @@ const RecordForm = ({
                 </button>
               ) : null}
             </div>
-            <textarea
-              ref={contentInputRef}
-              className="record-body-input"
-              style={{
-                width: '100%',
-                minHeight: '104px',
-                border: 'none',
-                outline: 'none',
-                resize: 'none',
-                background: 'transparent',
-                padding: 0,
-                fontSize: '15px',
-                lineHeight: 1.9,
-                color: 'var(--nl-muted-strong)',
-                boxSizing: 'border-box',
-              }}
-              placeholder="在想什么呢？记录一下这一刻发生的故事…"
+              <textarea
+                ref={contentInputRef}
+                className="record-body-input"
+                style={{
+                  width: '100%',
+                  minHeight: '188px',
+                  border: 'none',
+                  outline: 'none',
+                  resize: 'none',
+                  background: 'transparent',
+                  padding: '2px 0 0',
+                  fontSize: '16.5px',
+                  lineHeight: 1.88,
+                  color: 'var(--nl-muted-strong)',
+                  boxSizing: 'border-box',
+                }}
+                placeholder="正文"
               value={form.content_text}
               onChange={(event) => {
                 setError(null);
                 setForm((current) => ({ ...current, content_text: event.target.value }));
               }}
             />
-            <div style={{ display: 'grid', gap: '8px' }}>
-              <span style={{ color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 800 }}>不知道怎么写时，可以先选一个起笔</span>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '7px' }}>
-                {storyStarterOptions.map((starter) => (
-                  <button
-                    key={starter.title}
-                    type="button"
-                    onClick={() => {
-                      setError(null);
-                      setForm((current) => ({
-                        ...current,
-                        title: current.title.trim() ? current.title : starter.title,
-                        content_text: current.content_text.trim() ? current.content_text : starter.content,
-                      }));
-                    }}
-                    style={{
-                      minHeight: '42px',
-                      borderRadius: '14px',
-                      border: '1px solid var(--nl-border)',
-                      background: 'rgba(var(--nl-surface-rgb),0.58)',
-                      color: 'var(--nl-muted-strong)',
-                      padding: '8px 6px',
-                      fontSize: '11px',
-                      lineHeight: 1.2,
-                      fontWeight: 850,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {starter.title}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {canUseAi ? (
-              <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.6 }}>
-                AI 会员可生成标题、摘要和标签建议；发布前内容始终由你确认。
-              </p>
-            ) : null}
-            {canUseAi && (aiPreviewSummary || aiPreviewTags.length) ? (
-              <section
-                style={{
-                  borderRadius: '18px',
-                  background: 'rgba(var(--nl-primary-rgb),0.14)',
-                  border: '1px solid var(--nl-border)',
-                  padding: '14px 14px 13px',
-                  display: 'grid',
-                  gap: '10px',
-                  position: 'relative',
-                  overflow: 'hidden',
-                }}
-              >
-                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: 'var(--nl-primary)' }} />
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingLeft: '2px' }}>
-                  <span style={{ width: '28px', height: '28px', borderRadius: '999px', background: 'rgba(var(--nl-accent-rgb),0.14)', color: 'var(--nl-accent)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-                    <Sparkles size={15} strokeWidth={2.2} />
-                  </span>
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <strong style={{ display: 'block', marginBottom: '4px', color: 'var(--nl-ink)', fontSize: '12px', fontWeight: 800 }}>整理建议</strong>
-                    {aiPreviewSummary ? <p style={{ margin: 0, color: 'var(--nl-muted-strong)', fontSize: '13px', lineHeight: 1.7 }}>{aiPreviewSummary}</p> : null}
+              {canUseAi ? (
+                <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.58, fontSize: '11.5px' }}>
+                  AI 仅提供标题、摘要和标签建议。
+                </p>
+              ) : null}
+              {canUseAi && (aiPreviewSummary || aiPreviewTags.length) ? (
+                <section
+                  style={{
+                    borderRadius: 0,
+                    background: 'transparent',
+                    border: 'none',
+                    borderTop: '1px solid var(--nl-border-soft)',
+                    padding: '12px 0 0',
+                    display: 'grid',
+                    gap: '10px',
+                    position: 'relative',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                    <span style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'rgba(var(--nl-primary-rgb),0.1)', color: 'var(--nl-primary-2)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
+                      <Sparkles size={15} strokeWidth={2.2} />
+                    </span>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <strong style={{ display: 'block', marginBottom: '4px', color: 'var(--nl-ink)', fontSize: '12px', fontWeight: 620 }}>整理建议</strong>
+                      {aiPreviewSummary ? <p style={{ margin: 0, color: 'var(--nl-muted-strong)', fontSize: '13px', lineHeight: 1.72 }}>{aiPreviewSummary}</p> : null}
+                    </div>
                   </div>
-                </div>
-                {aiPreviewTags.length ? (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px', paddingLeft: '38px' }}>
-                    {aiPreviewTags.map((tag, index) => (
-                      <span key={`${tag}-${index}`} style={{ borderRadius: '999px', background: 'rgba(var(--nl-surface-rgb),0.72)', border: '1px solid var(--nl-border)', color: 'var(--nl-accent)', padding: '5px 9px', fontSize: '11px', fontWeight: 700 }}>
-                        #{tag}
-                      </span>
-                    ))}
+                  {aiPreviewTags.length ? (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px', paddingLeft: '38px' }}>
+                      {aiPreviewTags.map((tag, index) => (
+                        <span key={`${tag}-${index}`} style={{ borderRadius: '8px', background: 'transparent', border: '1px solid var(--nl-border-muted)', color: 'var(--nl-primary-2)', padding: '5px 9px', fontSize: '11px', fontWeight: 540 }}>
+                          #{tag}
+                        </span>
+                      ))}
                   </div>
                 ) : null}
               </section>
@@ -1718,95 +1876,19 @@ const RecordForm = ({
           </div>
           ) : null}
 
-          <div style={{ order: 3, display: 'grid', gap: '8px', borderRadius: '20px', border: '1px solid var(--nl-border)', background: 'rgba(var(--nl-surface-rgb),0.72)', padding: '12px 13px 13px' }}>
+          <div style={{ order: 3, display: 'grid', gap: '8px', borderRadius: 0, border: 'none', borderBottom: '1px solid var(--nl-border-muted)', background: 'transparent', padding: '2px 0 13px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-              <span style={{ color: 'var(--nl-ink)', fontSize: '15px', fontWeight: 850 }}>更多设置</span>
-              <span style={{ color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 750 }}>可选</span>
+              <span style={{ color: 'var(--nl-ink)', fontSize: '15px', fontWeight: 620 }}>设置</span>
             </div>
-            <button
-              type="button"
-              aria-expanded={visibilityOpen}
-              onClick={() => {
-                setVisibilityOpen((current) => !current);
-                setSelectorMessage(null);
-              }}
-              style={{
-                minHeight: '44px',
-                borderRadius: '15px',
-                border: '1px solid var(--nl-border)',
-                background: visibilityOpen ? 'rgba(var(--nl-primary-rgb),0.14)' : 'rgba(var(--nl-surface-rgb),0.74)',
-                padding: '0 12px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: '12px',
-                cursor: 'pointer',
-                textAlign: 'left',
-                boxShadow: 'none',
-              }}
-            >
-              <span style={{ display: 'flex', alignItems: 'center', gap: '9px', color: 'var(--nl-ink)', fontSize: '13px', fontWeight: 800 }}>
-                <Eye size={16} strokeWidth={2.2} />
-                可见范围
-              </span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: 'var(--nl-ink)', fontSize: '13px', fontWeight: 800 }}>
-                家庭成员可见
-                <ChevronRight size={16} strokeWidth={2.2} style={{ transform: visibilityOpen ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.16s ease' }} />
-              </span>
-            </button>
-            {visibilityOpen ? (
-              <div
-                style={{
-                  borderRadius: '16px',
-                  border: '1px solid var(--nl-border)',
-                  background: 'rgba(var(--nl-surface-rgb),0.58)',
-                  padding: '10px',
-                  display: 'grid',
-                  gap: '10px',
-                }}
-              >
-                <button
-                  type="button"
-                  aria-pressed="true"
-                  style={{
-                    width: '100%',
-                    border: '1px solid var(--nl-border)',
-                    borderRadius: '14px',
-                    background: 'rgba(var(--nl-surface-rgb),0.74)',
-                    color: 'var(--nl-ink)',
-                    padding: '12px 13px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '12px',
-                    fontSize: '14px',
-                    fontWeight: 700,
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                    boxShadow: 'none',
-                  }}
-                  onClick={() => {
-                    setForm((current) => ({ ...current, visibility_scope: 'family' }));
-                    setSelectorMessage('已设为家庭成员可见。');
-                  }}
-                >
-                  <span style={{ display: 'grid', gap: '3px' }}>
-                    <span>家庭成员可见</span>
-                    <span style={{ color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 600 }}>与后台权限保持一致，家庭成员可查看这条记录。</span>
-                  </span>
-                  <Check size={18} strokeWidth={2.5} color="var(--nl-accent)" />
-                </button>
-                <p style={{ ...helperTextStyle, lineHeight: 1.65 }}>当前记录默认仅对家庭成员可见，和家庭成员角色权限保持一致。</p>
-              </div>
-            ) : null}
 
             <section style={{ display: 'grid', gap: '8px' }}>
               <div
                 style={{
                   minHeight: '46px',
-                  borderRadius: '15px',
-                  border: '1px solid var(--nl-border)',
-                  background: 'rgba(var(--nl-surface-rgb),0.66)',
+                  borderRadius: 0,
+                  border: 'none',
+                  borderBottom: '1px solid var(--nl-border-soft)',
+                  background: 'transparent',
                   display: 'grid',
                   gridTemplateColumns: 'minmax(0, 1fr) auto',
                   alignItems: 'stretch',
@@ -1828,7 +1910,7 @@ const RecordForm = ({
                       padding: '0 10px 0 38px',
                       boxSizing: 'border-box',
                       fontSize: '13px',
-                      fontWeight: 800,
+                      fontWeight: 650,
                     }}
                     value={form.location_text}
                     onChange={(event) => {
@@ -1846,16 +1928,16 @@ const RecordForm = ({
                     minWidth: '68px',
                     minHeight: '46px',
                     border: 'none',
-                    borderLeft: '1px solid var(--nl-border)',
+                    borderLeft: '1px solid var(--nl-border-soft)',
                     background: 'transparent',
-                    color: 'var(--nl-accent)',
+                    color: 'var(--nl-primary-2)',
                     padding: '0 12px',
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '5px',
                     fontSize: '12px',
-                    fontWeight: 850,
+                    fontWeight: 560,
                     cursor: locationLoading ? 'not-allowed' : 'pointer',
                     opacity: locationLoading ? 0.72 : 1,
                   }}
@@ -1873,7 +1955,7 @@ const RecordForm = ({
                     <button
                       type="button"
                       aria-label={`使用手动地点：${manualLocationText}`}
-                      style={{ ...compactPillButtonStyle, minHeight: '36px', padding: '6px 10px', fontSize: '11px' }}
+                      style={{ ...compactChoiceButtonStyle, minHeight: '36px', padding: '6px 10px', fontSize: '11px' }}
                       onClick={() => {
                         setForm((current) => ({ ...current, location_text: manualLocationText }));
                         setSelectorMessage(
@@ -1890,7 +1972,7 @@ const RecordForm = ({
                     <button
                       key={location.id}
                       type="button"
-                      style={{ ...compactPillButtonStyle, minHeight: '36px', padding: '6px 10px', fontSize: '11px' }}
+                      style={{ ...compactChoiceButtonStyle, minHeight: '36px', padding: '6px 10px', fontSize: '11px' }}
                       title={[location.name, location.district, location.address].filter(Boolean).join(' · ')}
                       onClick={() => {
                         setForm((current) => ({ ...current, location_text: formatLocationText(location) }));
@@ -1916,12 +1998,13 @@ const RecordForm = ({
                   selectStyle={{
                     ...metadataIconSelectStyle,
                     minHeight: '46px',
-                    borderRadius: '15px',
-                    border: '1px solid var(--nl-border)',
-                    background: 'rgba(var(--nl-surface-rgb),0.66)',
+                    borderRadius: 0,
+                    border: 'none',
+                    borderBottom: '1px solid var(--nl-border-soft)',
+                    background: 'transparent',
                     padding: '0 13px 0 38px',
                     fontSize: '13px',
-                    fontWeight: 800,
+                      fontWeight: 520,
                     boxShadow: 'none',
                   }}
                 >
@@ -1955,10 +2038,12 @@ const RecordForm = ({
               order: 4,
               width: '100%',
               minHeight: '50px',
-              border: form.record_type === 'milestone' ? '1px solid rgba(var(--nl-primary-rgb),0.42)' : '1px solid var(--nl-border)',
-              borderRadius: '18px',
-              background: form.record_type === 'milestone' ? 'rgba(var(--nl-primary-rgb),0.16)' : 'var(--nl-surface)',
-              padding: '8px 12px',
+              border: 'none',
+              borderTop: '1px solid var(--nl-border-soft)',
+              borderBottom: '1px solid var(--nl-border-soft)',
+              borderRadius: 0,
+              background: 'transparent',
+              padding: '9px 0',
               display: 'flex',
               alignItems: 'center',
               gap: '12px',
@@ -1972,35 +2057,36 @@ const RecordForm = ({
               style={{
                 width: '32px',
                 height: '32px',
-                borderRadius: '12px',
-                background: form.record_type === 'milestone' ? 'rgba(var(--nl-primary-rgb),0.2)' : 'rgba(var(--nl-surface-rgb),0.74)',
+                borderRadius: '8px',
+                background: 'transparent',
                 display: 'grid',
                 placeItems: 'center',
                 color: form.record_type === 'milestone' ? 'var(--nl-primary-2)' : 'var(--nl-muted)',
                 flexShrink: 0,
-                boxShadow: form.record_type === 'milestone' ? 'inset 0 -1px 0 rgba(var(--nl-primary-rgb),0.18)' : 'none',
+                boxShadow: 'none',
               }}
             >
               <Star size={18} strokeWidth={2.3} fill={form.record_type === 'milestone' ? 'currentColor' : 'none'} />
             </span>
             <span style={{ display: 'grid', gap: '3px', minWidth: 0, flex: 1 }}>
-              <span style={{ fontSize: '13px', fontWeight: 850, color: 'var(--nl-ink)' }}>里程碑</span>
+              <span style={{ fontSize: '13px', fontWeight: 700, color: 'var(--nl-ink)' }}>里程碑</span>
             </span>
             <span
               aria-hidden="true"
               style={{
                 minWidth: '58px',
-                minHeight: '32px',
-                borderRadius: '999px',
-                background: form.record_type === 'milestone' ? 'var(--nl-primary)' : 'rgba(var(--nl-surface-rgb),0.74)',
-                color: form.record_type === 'milestone' ? '#ffffff' : 'var(--nl-muted)',
-                border: form.record_type === 'milestone' ? '1px solid var(--nl-primary)' : '1px solid var(--nl-border)',
-                padding: '7px 10px',
+                minHeight: '30px',
+                borderRadius: 0,
+                background: 'transparent',
+                color: form.record_type === 'milestone' ? 'var(--nl-primary-2)' : 'var(--nl-muted)',
+                border: 'none',
+                borderBottom: form.record_type === 'milestone' ? '1px solid rgba(var(--nl-primary-rgb),0.26)' : '1px solid var(--nl-border-soft)',
+                padding: '3px 0',
                 display: 'inline-flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontSize: '12px',
-                fontWeight: 850,
+                fontWeight: 620,
                 flexShrink: 0,
               }}
             >
@@ -2008,8 +2094,16 @@ const RecordForm = ({
             </span>
           </button>
 
-          {mediaNos.length ? <p style={{ ...helperTextStyle, order: 5 }}>已选择 {mediaNos.length} 个媒体，将随记录一起保存。</p> : null}
-          {uploading ? <p style={{ ...helperTextStyle, order: 5 }}>正在上传媒体…</p> : null}
+          {mode === 'create' || isDraftRecord ? (
+            <button
+              type="button"
+              style={{ ...secondaryButtonStyle, order: 6, width: '100%', minHeight: '48px', justifyContent: 'center' }}
+              onClick={() => void submitRecord('draft')}
+              disabled={submitting || uploading}
+            >
+              {pendingAction === 'draft' ? '保存草稿中…' : '保存草稿'}
+            </button>
+          ) : null}
 
         </form>
         {noticeMessage ? (
@@ -2023,6 +2117,12 @@ const RecordForm = ({
               }
               setSelectorMessage(null);
             }}
+          />
+        ) : null}
+        {discardConfirmOpen ? (
+          <DiscardDraftConfirmDialog
+            onCancel={() => setDiscardConfirmOpen(false)}
+            onConfirm={leaveAfterDiscard}
           />
         ) : null}
         <MediaFullscreenDialog media={fullscreenMedia} onClose={() => setFullscreenMedia(null)} />
@@ -2084,6 +2184,7 @@ export const ViewRecordPage = () => {
   const [aiActionLabel, setAiActionLabel] = useState('摘要');
   const [aiError, setAiError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [fullscreenMedia, setFullscreenMedia] = useState<FullscreenMediaPreview | null>(null);
 
@@ -2104,7 +2205,7 @@ export const ViewRecordPage = () => {
         }
       } catch (err) {
         if (!cancelled) {
-          setAiError(err instanceof Error ? err.message : '整理状态查询失败');
+          setAiError(normalizeAiErrorMessage(err instanceof Error ? err.message : null, '整理状态暂时无法更新，请稍后再试。'));
         }
       }
     }, 1500);
@@ -2122,7 +2223,7 @@ export const ViewRecordPage = () => {
   ) => {
     if (!data || !params.record_no) return;
     if (!canUseAi) {
-      setAiError('智能整理仅对 AI 会员开放');
+      setAiError('当前账号暂未启用 AI 整理权限');
       return;
     }
     setAiLoading(true);
@@ -2132,7 +2233,7 @@ export const ViewRecordPage = () => {
       const result = await webApi.createAiJob(params.record_no, { job_types: [jobType] });
       setAiJob(result.list[0] ?? null);
     } catch (err) {
-      setAiError(err instanceof Error ? err.message : fallbackError);
+      setAiError(normalizeAiErrorMessage(err instanceof Error ? err.message : null, fallbackError));
     } finally {
       setAiLoading(false);
     }
@@ -2140,13 +2241,11 @@ export const ViewRecordPage = () => {
 
   const onDelete = async () => {
     if (!data) return;
-    const confirmed = window.confirm('确认删除这条记录吗？删除后将从时间轴中移除。');
-    if (!confirmed) return;
-
     setDeleting(true);
     setDeleteError(null);
     try {
       await webApi.deleteRecord(data.record_no);
+      setDeleteConfirmOpen(false);
       navigate('/timeline', { replace: true });
     } catch (err) {
       setDeleteError(err instanceof Error ? err.message : '删除失败');
@@ -2156,8 +2255,10 @@ export const ViewRecordPage = () => {
   };
 
   const primaryMedia = data?.media_list[0] ?? null;
-  const primaryMediaUrl = primaryMedia ? resolveMediaPreviewUrl(primaryMedia.media_no, primaryMedia.access_url) ?? primaryMedia.access_url : null;
-  const primaryFullscreenMedia = primaryMedia && primaryMediaUrl ? { ...primaryMedia, preview_url: primaryMediaUrl } : null;
+  const primaryMediaUrl = useCachedMediaUrl(primaryMedia?.media_no, primaryMedia?.access_url ?? null, primaryMedia?.media_type, {
+    cacheRemote: Boolean(primaryMedia),
+  });
+  const primaryMediaOpenable = Boolean(primaryMedia && primaryMediaUrl && primaryMedia.media_type !== 'audio');
   const canUseAi = hasAiPlusAccess(user);
   const aiJobSuggestedTitle =
     aiJob?.status === 'success' && aiJob.job_type === 'record_title' && typeof aiJob.output_json?.suggested_title === 'string'
@@ -2166,6 +2267,7 @@ export const ViewRecordPage = () => {
   const generatedTitle = canUseAi ? data?.ai_generated_title?.trim() || aiJobSuggestedTitle || null : null;
   const displayTitle = data ? (data.title?.trim() || generatedTitle || '未命名记录') : '未命名记录';
   const aiJobProcessing = aiJob?.status === 'pending' || aiJob?.status === 'processing';
+  const secondaryMediaList = data?.media_list.slice(primaryMedia ? 1 : 0) ?? [];
 
   return (
     <PageShell
@@ -2182,112 +2284,65 @@ export const ViewRecordPage = () => {
       {loading ? <Panel><EmptyState message="正在加载记录详情…" /></Panel> : null}
       {error ? <Panel><EmptyState message={`加载失败：${error}`} /></Panel> : null}
       {data ? (
-        <article style={{ display: 'grid', gap: '16px' }}>
-          <section style={{ borderRadius: '24px', border: '1px solid var(--nl-border)', background: 'var(--nl-surface)', overflow: 'hidden', boxShadow: 'var(--nl-shadow-sm)' }}>
+        <article style={{ display: 'grid', gap: '18px', paddingBottom: '10px' }}>
+          <section style={{ borderRadius: 0, border: 'none', background: 'transparent', overflow: 'visible', boxShadow: 'none', padding: 0 }}>
             {primaryMedia && primaryMediaUrl ? (
               primaryMedia.media_type === 'audio' ? (
-                <div data-testid="record-primary-media-preview" style={{ padding: '14px', background: 'var(--nl-surface-soft)' }}>
+                <div data-testid="record-primary-media-preview" style={{ padding: 0, borderRadius: 8, background: 'transparent', border: 'none' }}>
                   <MediaPreviewTile media={{ ...primaryMedia, preview_url: primaryMediaUrl }} onOpen={setFullscreenMedia} />
                 </div>
               ) : (
-                <div data-testid="record-primary-media-preview" style={{ position: 'relative', background: 'var(--nl-surface-soft)' }}>
+                <div
+                  data-testid="record-primary-media-preview"
+                  aria-label={mediaPreviewLabel(primaryMedia.media_type)}
+                  role={primaryMediaOpenable ? 'button' : undefined}
+                  tabIndex={primaryMediaOpenable ? 0 : undefined}
+                  onClick={primaryMediaOpenable ? () => setFullscreenMedia({ ...primaryMedia, preview_url: primaryMediaUrl }) : undefined}
+                  onKeyDown={
+                    primaryMediaOpenable
+                      ? (event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            setFullscreenMedia({ ...primaryMedia, preview_url: primaryMediaUrl });
+                          }
+                        }
+                      : undefined
+                  }
+                  style={{ position: 'relative', background: 'var(--nl-surface-soft)', cursor: primaryMediaOpenable ? 'pointer' : 'default', borderRadius: 8, overflow: 'hidden', border: '1px solid var(--nl-border-soft)', boxShadow: '0 28px 72px rgba(var(--nl-shadow-rgb),0.36)' }}
+                >
                   {primaryMedia.media_type === 'video' ? (
-        <video src={primaryMediaUrl} controls playsInline preload="none" style={{ width: '100%', aspectRatio: '16 / 10', objectFit: 'cover', display: 'block', background: 'var(--nl-surface-soft)' }} />
+                    <video src={primaryMediaUrl} controls playsInline preload="none" style={{ width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', display: 'block', background: 'var(--nl-surface-soft)', pointerEvents: primaryMediaOpenable ? 'none' : 'auto' }} />
                   ) : (
-                    <img src={primaryMediaUrl} alt={displayTitle || primaryMedia.original_name || '记录封面'} loading="eager" decoding="async" style={{ width: '100%', aspectRatio: '16 / 10', objectFit: 'cover', display: 'block' }} />
+                    <img src={primaryMediaUrl} alt={displayTitle || primaryMedia.original_name || '记录封面'} loading="eager" decoding="async" style={{ width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', display: 'block', pointerEvents: primaryMediaOpenable ? 'none' : 'auto' }} />
                   )}
-                  {primaryFullscreenMedia ? (
-                    <button
-                      type="button"
-                      aria-label={mediaFullscreenActionLabel(primaryMedia.media_type)}
-                      onClick={() => setFullscreenMedia(primaryFullscreenMedia)}
-                      style={{
-                        position: 'absolute',
-                        top: '14px',
-                        right: '14px',
-                        width: '44px',
-                        height: '44px',
-                        borderRadius: '999px',
-                        border: '1px solid rgba(245,205,140,0.46)',
-                        background: 'rgba(17,18,16,0.74)',
-                        color: 'var(--nl-ink)',
-                        display: 'grid',
-                        placeItems: 'center',
-                        cursor: 'pointer',
-                        padding: 0,
-                      }}
-                    >
-                      <Maximize2 size={16} strokeWidth={2.4} />
-                    </button>
-                  ) : null}
-                  <span style={{ position: 'absolute', left: '14px', bottom: '14px', borderRadius: '999px', background: 'rgba(17,18,16,0.74)', color: 'var(--nl-ink)', padding: '6px 10px', fontSize: '12px', fontWeight: 700, border: '1px solid rgba(245,205,140,0.38)', backdropFilter: 'blur(12px)' }}>
-                    {mediaPreviewLabel(primaryMedia.media_type)}
-                  </span>
                 </div>
               )
             ) : null}
-            <div style={{ padding: '18px', display: 'grid', gap: '14px' }}>
+            <div style={{ padding: primaryMedia && primaryMediaUrl ? '18px 2px 0' : '0', display: 'grid', gap: '15px' }}>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: '999px', background: data.is_milestone ? 'rgba(var(--nl-primary-rgb),0.18)' : 'rgba(var(--nl-surface-rgb),0.72)', color: data.is_milestone ? 'var(--nl-primary-2)' : 'var(--nl-muted-strong)', border: '1px solid var(--nl-border)', padding: '6px 10px', fontSize: '12px', fontWeight: 700 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: 0, background: 'transparent', color: data.is_milestone ? 'var(--nl-primary-2)' : 'var(--nl-muted)', border: 'none', borderBottom: data.is_milestone ? '1px solid rgba(var(--nl-primary-rgb),0.28)' : '1px solid var(--nl-border-soft)', padding: '0 0 5px', fontSize: '11px', fontWeight: 520 }}>
                   {data.is_milestone ? <Star size={13} fill="currentColor" /> : null}
                   {recordTypeLabel(data.record_type, data.is_milestone)}
                 </span>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: '999px', background: 'rgba(var(--nl-surface-rgb),0.72)', color: 'var(--nl-muted-strong)', border: '1px solid var(--nl-border)', padding: '6px 10px', fontSize: '12px', fontWeight: 700 }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: 0, background: 'transparent', color: 'var(--nl-muted)', border: 'none', borderBottom: '1px solid var(--nl-border-soft)', padding: '0 0 5px', fontSize: '11px', fontWeight: 520 }}>
                   {recordStatusLabel(data.status)}
                 </span>
               </div>
-              <div style={{ display: 'grid', gap: '8px' }}>
-                <h2 style={{ margin: 0, color: 'var(--nl-ink)', fontSize: '23px', lineHeight: 1.28, fontWeight: 800 }}>{displayTitle}</h2>
-                <p style={{ margin: 0, color: 'var(--nl-muted-strong)', fontSize: '15px', lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{data.content_text ?? '暂无正文'}</p>
+              <div style={{ display: 'grid', gap: '10px' }}>
+                <h2 style={{ margin: 0, color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '30px', lineHeight: 1.12, fontWeight: 800 }}>{displayTitle}</h2>
+                <p style={{ margin: 0, color: 'var(--nl-muted-strong)', fontSize: '15px', lineHeight: 1.86, fontWeight: 460, whiteSpace: 'pre-wrap' }}>{data.content_text ?? '暂无正文'}</p>
               </div>
-              {canUseAi ? (
-              <section style={{ borderRadius: '20px', background: 'rgba(var(--nl-primary-rgb),0.1)', border: '1px solid var(--nl-border)', padding: '14px 14px 13px', display: 'grid', gap: '12px', position: 'relative', overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '4px', background: 'linear-gradient(180deg, var(--nl-primary), var(--nl-primary-2))' }} />
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', paddingLeft: '2px' }}>
-                  <span style={{ width: '28px', height: '28px', borderRadius: '999px', background: 'rgba(var(--nl-accent-rgb),0.14)', color: 'var(--nl-accent)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-                    <Sparkles size={15} strokeWidth={2.2} />
-                  </span>
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <strong style={{ display: 'block', marginBottom: '4px', color: 'var(--nl-ink)', fontSize: '12px', fontWeight: 800 }}>智能整理</strong>
-                    <p style={{ margin: 0, color: 'var(--nl-muted-strong)', fontSize: '13px', lineHeight: 1.7 }}>
-                      {data.ai_summary ?? (aiJobProcessing ? `${aiActionLabel}正在处理中，请稍候…` : generatedTitle ? '标题建议已生成，可以继续生成摘要或标签。' : '当前还没有整理摘要，可以点击下方按钮生成标题、摘要或标签。')}
-                    </p>
-                    {generatedTitle ? (
-                      <p style={{ margin: '6px 0 0', color: 'var(--nl-ink)', fontSize: '13px', lineHeight: 1.65, fontWeight: 700 }}>
-                        建议标题：{generatedTitle}
-                      </p>
-                    ) : null}
-                    {data.ai_status ? <p style={{ ...helperTextStyle, marginTop: '6px', color: 'var(--nl-accent)' }}>整理状态：{aiJobStatusLabel(data.ai_status)}</p> : null}
-                    {aiJob?.status === 'success' ? <p style={{ ...helperTextStyle, marginTop: '6px', color: '#0f766e' }}>{aiActionLabel}已生成并同步到记录详情。</p> : null}
-        {aiJob?.status === 'failed' ? <p style={{ ...helperTextStyle, marginTop: '6px', color: 'var(--nl-danger)' }}>整理失败：{aiJob.error_message ?? '未知错误'}</p> : null}
-        {aiError ? <p style={{ ...helperTextStyle, marginTop: '6px', color: 'var(--nl-danger)' }}>{aiError}</p> : null}
-                  </div>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px' }}>
-                  <button style={{ ...secondaryButtonStyle, minHeight: '36px', justifyContent: 'center', borderRadius: '999px', minWidth: 0, paddingInline: '6px', fontSize: '12px', background: 'rgba(var(--nl-surface-rgb),0.72)' }} onClick={() => void onGenerateAi('record_title', '标题', '标题建议生成失败')} disabled={aiLoading || aiJob?.status === 'pending' || aiJob?.status === 'processing'}>
-                    {aiLoading && aiActionLabel === '标题' ? '生成中…' : '标题'}
-                  </button>
-                  <button style={{ ...secondaryButtonStyle, minHeight: '36px', justifyContent: 'center', borderRadius: '999px', minWidth: 0, paddingInline: '6px', fontSize: '12px', background: 'rgba(var(--nl-surface-rgb),0.72)' }} onClick={() => void onGenerateAi('record_summary', '摘要', '摘要建议生成失败')} disabled={aiLoading || aiJob?.status === 'pending' || aiJob?.status === 'processing'}>
-                    {aiLoading && aiActionLabel === '摘要' ? '生成中…' : '摘要'}
-                  </button>
-                  <button style={{ ...secondaryButtonStyle, minHeight: '36px', justifyContent: 'center', borderRadius: '999px', minWidth: 0, paddingInline: '6px', fontSize: '12px', background: 'rgba(var(--nl-surface-rgb),0.72)' }} onClick={() => void onGenerateAi('record_tags', '标签', '标签建议生成失败')} disabled={aiLoading || aiJob?.status === 'pending' || aiJob?.status === 'processing'}>
-                    {aiLoading && aiActionLabel === '标签' ? '生成中…' : '标签'}
-                  </button>
-                </div>
-              </section>
-              ) : null}
               <div style={{ display: 'grid', gap: '8px' }}>
-                <p style={helperTextStyle}>媒体数量：{data.media_list.length}</p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: '999px', background: 'rgba(var(--nl-surface-rgb),0.72)', border: '1px solid var(--nl-border)', padding: '7px 10px', color: 'var(--nl-muted-strong)', fontSize: '12px', fontWeight: 700 }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: 0, background: 'transparent', border: 'none', padding: '2px 0', color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 500 }}>
                     <Clock size={13} />
                     {new Date(data.event_time).toLocaleString('zh-CN', { hour12: false })}
                   </span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: '999px', background: 'rgba(var(--nl-surface-rgb),0.72)', border: '1px solid var(--nl-border)', padding: '7px 10px', color: 'var(--nl-muted-strong)', fontSize: '12px', fontWeight: 700 }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: 0, background: 'transparent', border: 'none', padding: '2px 0', color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 500 }}>
                     <Eye size={13} />
                     {visibilityScopeLabel(data.visibility_scope)}
                   </span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: '999px', background: 'rgba(var(--nl-surface-rgb),0.72)', border: '1px solid var(--nl-border)', padding: '7px 10px', color: 'var(--nl-muted-strong)', fontSize: '12px', fontWeight: 700 }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: 0, background: 'transparent', border: 'none', padding: '2px 0', color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 500 }}>
                     <MapPin size={13} />
                     {normalizeLocationText(data.location_text) || '未填写地点'}
                   </span>
@@ -2295,7 +2350,7 @@ export const ViewRecordPage = () => {
                 {data.tags.length ? (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px' }}>
                     {data.tags.map((tag, index) => (
-                      <span key={`${data.record_no}-${tag}-${index}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: '10px', background: 'rgba(var(--nl-surface-rgb),0.72)', border: '1px solid var(--nl-border)', padding: '5px 8px', color: 'var(--nl-muted-strong)', fontSize: '11px', fontWeight: 700 }}>
+                      <span key={`${data.record_no}-${tag}-${index}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: 0, background: 'transparent', border: 'none', borderBottom: '1px solid var(--nl-border-soft)', padding: '0 0 4px', color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 500 }}>
                         <Tag size={10} />
                         {tag}
                       </span>
@@ -2306,34 +2361,79 @@ export const ViewRecordPage = () => {
             </div>
           </section>
 
-          {data.media_list.length ? (
-            <Panel>
-              <div style={{ display: 'grid', gap: '12px' }}>
-                <div style={{ display: 'grid', gap: '3px' }}>
-                  <strong style={{ color: 'var(--nl-ink)' }}>全部媒体预览</strong>
-                  <span style={{ color: 'var(--nl-muted-strong)', fontSize: '12px', lineHeight: 1.6 }}>照片、视频和语音都可以在这里直接查看或播放。</span>
+              {canUseAi ? (
+              <section style={{ borderRadius: 0, background: 'transparent', border: 'none', borderTop: '1px solid var(--nl-border-muted)', padding: '15px 0 0', display: 'grid', gap: '11px', boxShadow: 'none' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '28px minmax(0, 1fr)', alignItems: 'start', gap: '10px' }}>
+                  <span style={{ width: '28px', height: '28px', borderRadius: 0, background: 'transparent', color: 'var(--nl-primary-2)', display: 'grid', placeItems: 'center' }}>
+                    <Sparkles size={15} strokeWidth={2.2} />
+                  </span>
+                  <div style={{ minWidth: 0, display: 'grid', gap: '5px' }}>
+                    <strong style={{ color: 'var(--nl-ink)', fontSize: '13px', fontWeight: 600 }}>智能整理</strong>
+                    <p style={{ margin: 0, color: 'var(--nl-muted-strong)', fontSize: '13px', lineHeight: 1.62 }}>
+                      {data.ai_summary ?? (aiJobProcessing ? `${aiActionLabel}正在处理中，请稍候…` : generatedTitle ? '标题建议已生成。' : '当前还没有整理摘要。')}
+                    </p>
+                    <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.6 }}>AI 仅作整理建议，失败不影响记录。</p>
+                    {generatedTitle ? (
+                      <p style={{ margin: 0, color: 'var(--nl-ink)', fontSize: '13px', lineHeight: 1.6, fontWeight: 560 }}>
+                        建议标题：{generatedTitle}
+                      </p>
+                    ) : null}
+                    {data.ai_status ? <p style={{ ...helperTextStyle, color: 'var(--nl-primary-2)' }}>整理状态：{aiJobStatusLabel(data.ai_status)}</p> : null}
+                    {aiJob?.status === 'success' ? <p style={{ ...helperTextStyle, color: 'var(--nl-success)' }}>{aiActionLabel}已生成并同步到记录详情。</p> : null}
+                    {aiJob?.status === 'failed' ? <p style={{ ...helperTextStyle, color: 'var(--nl-danger)' }}>整理失败：{normalizeAiErrorMessage(aiJob.error_message)}</p> : null}
+                    {aiError ? <p style={{ ...helperTextStyle, color: 'var(--nl-danger)' }}>{aiError}</p> : null}
+                  </div>
                 </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px' }}>
+                  <button type="button" style={{ ...compactSecondaryButtonStyle, minHeight: '38px', justifyContent: 'center', minWidth: 0, padding: '8px 10px', fontSize: '12px', cursor: aiLoading || aiJob?.status === 'pending' || aiJob?.status === 'processing' ? 'not-allowed' : 'pointer', opacity: aiLoading || aiJob?.status === 'pending' || aiJob?.status === 'processing' ? 0.64 : 1 }} onClick={() => void onGenerateAi('record_title', '标题', '标题建议生成失败')} disabled={aiLoading || aiJob?.status === 'pending' || aiJob?.status === 'processing'}>
+                    {aiLoading && aiActionLabel === '标题' ? '生成中…' : '标题'}
+                  </button>
+                  <button type="button" style={{ ...compactSecondaryButtonStyle, minHeight: '38px', justifyContent: 'center', minWidth: 0, padding: '8px 10px', fontSize: '12px', cursor: aiLoading || aiJob?.status === 'pending' || aiJob?.status === 'processing' ? 'not-allowed' : 'pointer', opacity: aiLoading || aiJob?.status === 'pending' || aiJob?.status === 'processing' ? 0.64 : 1 }} onClick={() => void onGenerateAi('record_summary', '摘要', '摘要建议生成失败')} disabled={aiLoading || aiJob?.status === 'pending' || aiJob?.status === 'processing'}>
+                    {aiLoading && aiActionLabel === '摘要' ? '生成中…' : '摘要'}
+                  </button>
+                  <button type="button" style={{ ...compactSecondaryButtonStyle, minHeight: '38px', justifyContent: 'center', minWidth: 0, padding: '8px 10px', fontSize: '12px', cursor: aiLoading || aiJob?.status === 'pending' || aiJob?.status === 'processing' ? 'not-allowed' : 'pointer', opacity: aiLoading || aiJob?.status === 'pending' || aiJob?.status === 'processing' ? 0.64 : 1 }} onClick={() => void onGenerateAi('record_tags', '标签', '标签建议生成失败')} disabled={aiLoading || aiJob?.status === 'pending' || aiJob?.status === 'processing'}>
+                    {aiLoading && aiActionLabel === '标签' ? '生成中…' : '标签'}
+                  </button>
+                </div>
+              </section>
+              ) : null}
+
+          {secondaryMediaList.length ? (
+            <Panel style={{ padding: '15px 0 0', borderRadius: 0, border: 'none', borderTop: '1px solid var(--nl-border-muted)', background: 'transparent', boxShadow: 'none' }}>
+              <div style={{ display: 'grid', gap: '10px' }}>
+                <strong style={{ color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 660 }}>更多媒体</strong>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
-                  {data.media_list.map((media) => {
-                    const mediaUrl = resolveMediaPreviewUrl(media.media_no, media.access_url) ?? media.access_url;
-                    return (
-                      <MediaPreviewTile key={media.media_no} media={{ ...media, preview_url: mediaUrl }} compact onOpen={setFullscreenMedia} />
-                    );
-                  })}
+                  {secondaryMediaList.map((media) => (
+                    <MediaPreviewTile key={media.media_no} media={media} compact onOpen={setFullscreenMedia} />
+                  ))}
                 </div>
               </div>
             </Panel>
           ) : null}
 
-          <div style={{ ...buttonRowStyle, paddingBottom: '10px' }}>
-            <button style={primaryButtonStyle} onClick={() => navigate(`/record/${data.record_no}/edit`)}>
+          <div style={{ ...buttonRowStyle, gridTemplateColumns: 'minmax(0, 1fr)', gap: '9px' }}>
+            <button type="button" style={{ ...primaryButtonStyle, width: '100%', minWidth: 0, minHeight: '48px', justifyContent: 'center' }} onClick={() => navigate(`/record/${data.record_no}/edit`)}>
               编辑记录
             </button>
-          <button style={{ ...secondaryButtonStyle, color: 'var(--nl-danger)' }} onClick={() => void onDelete()} disabled={deleting}>
+            <button type="button" style={{ ...secondaryButtonStyle, width: '100%', minWidth: 0, minHeight: '42px', justifyContent: 'center', color: 'var(--nl-danger)', borderColor: 'var(--nl-danger-border)', fontSize: '14px', cursor: deleting ? 'not-allowed' : 'pointer', opacity: deleting ? 0.64 : 1 }} onClick={() => {
+              setDeleteError(null);
+              setDeleteConfirmOpen(true);
+            }} disabled={deleting}>
               {deleting ? '删除中…' : '删除记录'}
             </button>
           </div>
         </article>
+      ) : null}
+      {data && deleteConfirmOpen ? (
+        <DeleteRecordConfirmDialog
+          recordTitle={displayTitle}
+          deleting={deleting}
+          error={deleteError}
+          onCancel={() => {
+            if (!deleting) setDeleteConfirmOpen(false);
+          }}
+          onConfirm={() => void onDelete()}
+        />
       ) : null}
       <MediaFullscreenDialog media={fullscreenMedia} onClose={() => setFullscreenMedia(null)} />
     </PageShell>
@@ -2375,7 +2475,7 @@ export const EditRecordPage = () => {
 
   if (loading) {
     return (
-      <PageShell title="编辑记录" description="正在加载记录详情。" backTo={params.record_no ? `/record/${params.record_no}` : '/timeline'}>
+      <PageShell title="编辑记录" backTo={params.record_no ? `/record/${params.record_no}` : '/timeline'}>
         <Panel>
           <EmptyState message="加载中…" />
         </Panel>
@@ -2385,7 +2485,7 @@ export const EditRecordPage = () => {
 
   if (error || !data || !initialValue) {
     return (
-      <PageShell title="编辑记录" description="记录加载失败。" backTo="/timeline">
+      <PageShell title="编辑记录" backTo="/timeline">
         <Panel>
           <EmptyState message={error ?? '记录不存在'} />
         </Panel>

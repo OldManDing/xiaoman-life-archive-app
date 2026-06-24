@@ -3,71 +3,130 @@
 }
 
 :root {
-  --nl-bg: #111210;
-  --nl-bg-warm: #191713;
-  --nl-page-bg: linear-gradient(180deg, #111210 0%, #191713 52%, #10110f 100%);
-  --nl-surface: rgba(31, 31, 27, 0.78);
-  --nl-surface-strong: rgba(38, 36, 31, 0.94);
-  --nl-surface-soft: rgba(43, 39, 32, 0.84);
-  --nl-glass-surface: linear-gradient(180deg, rgba(48, 45, 38, 0.68), rgba(25, 25, 21, 0.52));
-  --nl-glass-strong: linear-gradient(180deg, rgba(54, 50, 42, 0.78), rgba(20, 20, 17, 0.64));
-  --nl-glass-soft: linear-gradient(180deg, rgba(50, 47, 40, 0.52), rgba(25, 25, 22, 0.38));
-  --nl-glass-accent: rgba(196, 122, 61, 0.78);
-  --nl-glass-border: rgba(245, 205, 140, 0.24);
-  --nl-glass-highlight: rgba(255, 255, 255, 0.1);
-  --nl-glass-shadow: 0 18px 42px rgba(var(--nl-shadow-rgb), 0.28), inset 0 1px 0 var(--nl-glass-highlight);
-  --nl-ink: #f7f0e5;
-  --nl-muted: #aa9f90;
-  --nl-muted-strong: #e2d7c5;
-  --nl-border: rgba(219, 171, 100, 0.28);
-  --nl-primary: #c47a3d;
-  --nl-primary-2: #e2b46c;
-  --nl-accent: #5bc0ad;
-  --nl-blue: #7ea1c2;
-  --nl-success: #78d494;
-  --nl-danger: #ef7777;
-  --nl-warning: #e8bd66;
-  --nl-surface-rgb: 31, 31, 27;
-  --nl-surface-strong-rgb: 38, 36, 31;
-  --nl-primary-rgb: 196, 122, 61;
-  --nl-accent-rgb: 91, 192, 173;
-  --nl-blue-rgb: 126, 161, 194;
-  --nl-success-rgb: 120, 212, 148;
-  --nl-shadow-rgb: 0, 0, 0;
-  --nl-glow: 0 0 38px rgba(var(--nl-primary-rgb), 0.18);
-  --nl-shadow-sm: 0 14px 30px rgba(var(--nl-shadow-rgb), 0.24);
-  --nl-shadow-md: 0 22px 48px rgba(var(--nl-shadow-rgb), 0.32);
-  --nl-shadow-float: 0 28px 64px rgba(var(--nl-shadow-rgb), 0.42);
-  color-scheme: dark;
+  --nl-bg: #fffdf9;
+  --nl-bg-warm: #f6efe5;
+  --nl-page-bg: linear-gradient(180deg, #fffdf9 0%, #fffbf6 100%);
+  --nl-surface: rgba(82, 60, 42, 0.022);
+  --nl-surface-strong: rgba(82, 60, 42, 0.036);
+  --nl-surface-soft: rgba(255, 255, 252, 0.9);
+  --nl-glass-surface: rgba(255, 253, 249, 0.88);
+  --nl-glass-strong: rgba(255, 254, 251, 0.98);
+  --nl-glass-soft: rgba(255, 255, 253, 0.76);
+  --nl-glass-accent: #70533a;
+  --nl-glass-border: rgba(89, 64, 43, 0.075);
+  --nl-glass-highlight: rgba(255, 255, 255, 0.7);
+  --nl-glass-shadow: 0 22px 56px rgba(var(--nl-shadow-rgb), 0.085), inset 0 1px 0 rgba(255, 255, 255, 0.68);
+  --nl-border-soft: rgba(89, 64, 43, 0.035);
+  --nl-border-muted: rgba(89, 64, 43, 0.048);
+  --nl-border-strong: rgba(89, 64, 43, 0.078);
+  --nl-border-image: rgba(255, 255, 252, 0.86);
+  --nl-inset-highlight: rgba(255, 255, 255, 0.6);
+  --nl-inset-highlight-soft: rgba(255, 255, 255, 0.16);
+  --nl-inset-highlight-faint: rgba(255, 255, 255, 0.08);
+  --nl-card-bg: linear-gradient(180deg, rgba(var(--nl-surface-strong-rgb), 0.2), rgba(var(--nl-surface-rgb), 0.06));
+  --nl-card-bg-strong: linear-gradient(180deg, rgba(var(--nl-surface-strong-rgb), 0.28), rgba(var(--nl-surface-rgb), 0.1));
+  --nl-control-bg: rgba(var(--nl-surface-rgb), 0.08);
+  --nl-control-bg-active: rgba(var(--nl-surface-rgb), 0.12);
+  --nl-topbar-bg: var(--nl-bg);
+  --nl-nav-bg: rgba(255, 253, 248, 0.96);
+  --nl-primary-soft: rgba(var(--nl-primary-rgb), 0.075);
+  --nl-primary-line: rgba(var(--nl-primary-rgb), 0.15);
+  --nl-primary-border: rgba(var(--nl-primary-rgb), 0.22);
+  --nl-primary-gradient: linear-gradient(180deg, #8d7054 0%, #765a42 100%);
+  --nl-on-primary: #fffaf1;
+  --nl-on-dark: #ffffff;
+  --nl-on-dark-muted: rgba(255, 255, 255, 0.88);
+  --nl-on-dark-soft: rgba(255, 255, 255, 0.3);
+  --nl-on-dark-faint: rgba(255, 255, 255, 0.04);
+  --nl-overlay-scrim: rgba(18, 14, 10, 0.54);
+  --nl-media-scrim: rgba(16, 17, 15, 0.66);
+  --nl-media-overlay-bg: rgba(17, 18, 16, 0.94);
+  --nl-media-black: #000000;
+  --nl-mask-fill: #000000;
+  --nl-text-shadow-hero: 0 2px 12px rgba(0, 0, 0, 0.34);
+  --nl-photo-gradient: linear-gradient(180deg, rgba(16, 17, 15, 0) 0%, rgba(16, 17, 15, 0.05) 68%, rgba(16, 17, 15, 0.18) 100%);
+  --nl-photo-hero-scrim: linear-gradient(180deg, rgba(17, 18, 16, 0.08), rgba(17, 18, 16, 0.64));
+  --nl-auth-photo-scrim: linear-gradient(180deg, rgba(20, 18, 15, 0.04) 30%, rgba(20, 18, 15, 0.56) 100%);
+  --nl-boot-ring-light: rgba(255, 255, 255, 0.24);
+  --nl-danger-soft: rgba(200, 87, 87, 0.12);
+  --nl-danger-line: rgba(200, 87, 87, 0.24);
+  --nl-danger-border: rgba(200, 87, 87, 0.34);
+  --nl-ink: #251b13;
+  --nl-muted: #857769;
+  --nl-muted-placeholder: rgba(165, 153, 138, 0.64);
+  --nl-muted-disabled: rgba(165, 153, 138, 0.4);
+  --nl-muted-strong: #554739;
+  --nl-border: rgba(89, 64, 43, 0.088);
+  --nl-primary: #765a42;
+  --nl-primary-2: #836a50;
+  --nl-accent: #788973;
+  --nl-blue: #7c7b70;
+  --nl-success: #5b8a68;
+  --nl-danger: #c85757;
+  --nl-warning: #805a2d;
+  --nl-surface-rgb: 253, 249, 243;
+  --nl-surface-strong-rgb: 245, 237, 227;
+  --nl-primary-rgb: 118, 90, 66;
+  --nl-accent-rgb: 120, 137, 115;
+  --nl-blue-rgb: 124, 123, 112;
+  --nl-success-rgb: 91, 138, 104;
+  --nl-shadow-rgb: 74, 57, 40;
+  --nl-glow: 0 0 0 1px rgba(89, 64, 43, 0.014), 0 22px 56px rgba(var(--nl-shadow-rgb), 0.065);
+  --nl-shadow-sm: 0 12px 28px rgba(var(--nl-shadow-rgb), 0.052), inset 0 1px 0 rgba(255, 255, 255, 0.48);
+  --nl-shadow-md: 0 20px 48px rgba(var(--nl-shadow-rgb), 0.075), inset 0 1px 0 rgba(255, 255, 255, 0.54);
+  --nl-shadow-float: 0 30px 72px rgba(var(--nl-shadow-rgb), 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  --nl-font-display: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", "SimSun", serif;
+  --nl-font-sans: "HarmonyOS Sans SC", "MiSans", "PingFang SC", "Source Han Sans SC", "Microsoft YaHei", "Noto Sans CJK SC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color-scheme: light;
 }
 
 html {
   -webkit-text-size-adjust: 100%;
   background: var(--nl-bg);
+  background-color: var(--nl-bg);
+  height: 100%;
+  min-height: 100%;
   scrollbar-width: none;
-  scroll-behavior: smooth;
+  scroll-behavior: auto;
   scroll-padding-bottom: 180px;
 }
 
 body {
   margin: 0;
   min-width: 320px;
+  height: 100%;
+  min-height: 100%;
   background: var(--nl-page-bg), var(--nl-bg);
+  background-color: var(--nl-bg);
   color: var(--nl-ink);
   scrollbar-width: none;
   overflow-x: hidden;
   overscroll-behavior-y: contain;
   scroll-padding-bottom: 180px;
   -webkit-font-smoothing: antialiased;
-  font-family:
-    "PingFang SC",
-    "Microsoft YaHei",
-    "Noto Sans CJK SC",
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    sans-serif;
+  text-rendering: geometricPrecision;
+  font-family: var(--nl-font-sans);
+  letter-spacing: 0;
+}
+
+#root {
+  height: 100%;
+  min-height: 100dvh;
+  background: var(--nl-page-bg), var(--nl-bg);
+  background-color: var(--nl-bg);
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 60;
+  height: env(safe-area-inset-top);
+  min-height: env(safe-area-inset-top);
+  background: var(--nl-topbar-bg), var(--nl-bg);
+  pointer-events: none;
 }
 
 body::before {
@@ -76,11 +135,13 @@ body::before {
   inset: 0;
   z-index: -2;
   pointer-events: none;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 44px 44px;
-  opacity: 0.08;
+  display: block;
+  background:
+    linear-gradient(0deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0.32)),
+    repeating-linear-gradient(0deg, rgba(89, 64, 43, 0.006) 0 1px, transparent 1px 5px),
+    repeating-linear-gradient(90deg, rgba(89, 64, 43, 0.004) 0 1px, transparent 1px 6px);
+  background-size: 100% 100%;
+  opacity: 0.12;
 }
 
 html::-webkit-scrollbar,
@@ -126,7 +187,7 @@ textarea {
   background: transparent !important;
   border: 0 !important;
   color: transparent !important;
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 .app-date-time-input::-webkit-calendar-picker-indicator {
@@ -170,7 +231,7 @@ button:not(:disabled):active {
 @media (hover: hover) {
   button:not(:disabled):hover,
   a:hover {
-    filter: saturate(1.03);
+    filter: brightness(1.015) saturate(1);
   }
 
   button:not(:disabled):hover {
@@ -185,13 +246,13 @@ button:disabled {
 
 select option {
   color: var(--nl-ink);
-  background: #26241f;
+  background: #f8f1e7;
 }
 
 img,
 video,
 audio {
-  transition: filter 0.18s ease, transform 0.18s ease;
+  content-visibility: auto;
 }
 
 .record-title-input::placeholder {
@@ -209,17 +270,16 @@ audio {
 .record-editor-card {
   transition:
     border-color 0.18s ease,
-    box-shadow 0.18s ease,
     background-color 0.18s ease;
 }
 
 .record-editor-card:focus-within {
-  border-color: rgba(var(--nl-accent-rgb), 0.38) !important;
-  box-shadow: 0 0 0 4px rgba(var(--nl-accent-rgb), 0.08);
+  border-color: transparent !important;
+  box-shadow: none;
 }
 
 .record-editor-title-row:focus-within {
-  border-bottom-color: rgba(var(--nl-accent-rgb), 0.26) !important;
+  border-bottom-color: rgba(var(--nl-primary-rgb), 0.18) !important;
 }
 
 .record-title-input:focus,
@@ -249,6 +309,9 @@ select:focus {
 
 .app-layout {
   isolation: isolate;
+  min-height: 100dvh;
+  background: var(--nl-page-bg), var(--nl-bg);
+  background-color: var(--nl-bg);
 }
 
 .app-layout::before {
@@ -260,11 +323,29 @@ select:focus {
   z-index: -1;
   width: min(430px, 100vw);
   transform: translateX(-50%);
-  background: var(--nl-page-bg), var(--nl-bg);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.26), transparent 22%),
+    var(--nl-page-bg),
+    var(--nl-bg);
   box-shadow:
-    -1px 0 0 rgba(219, 171, 100, 0.12),
-    1px 0 0 rgba(219, 171, 100, 0.12),
-    0 28px 90px rgba(var(--nl-shadow-rgb), 0.44);
+    -1px 0 0 rgba(89, 64, 43, 0.032),
+    1px 0 0 rgba(89, 64, 43, 0.032),
+    0 30px 92px rgba(var(--nl-shadow-rgb), 0.075);
+}
+
+.app-layout::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  left: 50%;
+  z-index: -1;
+  width: min(430px, 100vw);
+  transform: translateX(-50%);
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.28), transparent 18%),
+    linear-gradient(90deg, rgba(89, 64, 43, 0.01), transparent 18%, transparent 82%, rgba(89, 64, 43, 0.01));
+  opacity: 0.14;
 }
 
 .app-bottom-nav-link {
@@ -279,20 +360,41 @@ select:focus {
 }
 
 .app-bottom-nav-link[aria-current="page"] {
-  color: #ffffff;
+  color: var(--nl-ink);
+}
+
+.app-bottom-nav-link::before {
+  content: "";
+  position: absolute;
+  top: -4px;
+  width: 16px;
+  height: 2px;
+  border-radius: 2px;
+  background: transparent;
+  transition: background-color 0.18s ease, transform 0.18s ease;
+}
+
+.app-bottom-nav-link.is-active::before {
+  background: linear-gradient(90deg, var(--nl-primary-2), var(--nl-primary));
+  transform: translateY(1px);
 }
 
 .app-bottom-nav-link.is-active .app-bottom-nav-icon {
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 .app-bottom-nav-link.is-active .app-bottom-nav-label {
-  color: #ffffff;
-  text-shadow: 0 0 18px rgba(var(--nl-primary-rgb), 0.45);
+  color: var(--nl-ink);
+  text-shadow: none;
 }
 
-.app-bottom-nav-link.is-featured .app-bottom-nav-icon {
-  animation: app-create-idle 3.8s ease-in-out infinite;
+.nl-premium-section {
+  border-top: 1px solid rgba(89, 64, 43, 0.055);
+  padding-top: 16px;
+}
+
+.nl-premium-media {
+  box-shadow: 0 34px 92px rgba(var(--nl-shadow-rgb), 0.18);
 }
 
 .nl-pressable {
@@ -325,8 +427,8 @@ select:focus {
   background: var(--nl-glass-surface);
   border: 1px solid var(--nl-glass-border);
   box-shadow: var(--nl-glass-shadow);
-  -webkit-backdrop-filter: blur(20px) saturate(1.18);
-  backdrop-filter: blur(20px) saturate(1.18);
+  -webkit-backdrop-filter: blur(18px) saturate(1.12);
+  backdrop-filter: blur(18px) saturate(1.12);
 }
 
 .home-hero-card {
@@ -339,9 +441,7 @@ select:focus {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background:
-    linear-gradient(135deg, rgba(var(--nl-primary-rgb), 0.16), transparent 54%),
-    linear-gradient(180deg, transparent 45%, rgba(var(--nl-shadow-rgb), 0.18));
+  background: transparent;
 }
 
 .home-hero-photo {
@@ -400,18 +500,6 @@ select:focus {
 
   100% {
     box-shadow: 0 0 0 12px rgba(var(--nl-primary-rgb), 0);
-  }
-}
-
-@keyframes app-create-idle {
-  0%,
-  72%,
-  100% {
-    transform: translateY(0);
-  }
-
-  82% {
-    transform: translateY(-3px);
   }
 }
 

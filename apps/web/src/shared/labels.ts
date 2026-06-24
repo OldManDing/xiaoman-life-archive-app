@@ -5,12 +5,12 @@ const fallbackLabel = (value: string | number | null | undefined, labels: Record
 
 export const membershipTypeLabel = (value: string | null | undefined) =>
   fallbackLabel(value, {
-    basic: '基础会员',
-    free: '基础会员',
-    family_member: '家庭会员',
-    ai_plus: 'AI 增强会员',
-    premium: '高级会员',
-    family: '家庭会员',
+    basic: '基础账号',
+    free: '基础账号',
+    family_member: '家庭协作',
+    ai_plus: 'AI 增强权限',
+    premium: '高级权限',
+    family: '家庭协作',
   });
 
 export const familyRoleLabel = (value: string | null | undefined) =>

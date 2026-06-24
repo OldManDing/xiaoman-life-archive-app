@@ -46,10 +46,10 @@ describe('extractApiErrorMessage', () => {
       extractApiErrorMessage({
         message: '参数校验失败',
         data: {
-          fields: [{ field: 'password', reason: '密码需为 8 到 72 位' }],
+          fields: [{ field: 'password', reason: '密码需为 8 到 12 位' }],
         },
       }),
-    ).toBe('密码需为 8 到 72 位');
+    ).toBe('密码需为 8 到 12 位');
   });
 
   it('maps older class-validator text to Chinese when the backend still returns raw reasons', () => {

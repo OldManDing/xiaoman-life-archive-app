@@ -1,4 +1,4 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
+﻿import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { expect, test, type ElementHandle, type Page } from '@playwright/test';
@@ -73,12 +73,12 @@ const appRoutes = [
   '/profile/legal',
 ];
 
-const destructiveActionPattern = /(删除记录|确认注销账号|移出家庭|退出登录|完成创建|保存资料|保存孩子资料|保存昵称|保存主页|更新记录|^保存$|完成发布|存草稿|提交反馈|提交打包申请|成年移交准备|免费申领本年度纪念册)/;
-const routeNavigationPattern = /^返回$|^查看$|查看全部|去创建第一条记录/;
+const destructiveActionPattern = /(删除记录|确认注销账号|移出家庭|退出登录|完成创建|保存资料|保存孩子资料|保存昵称|保存主页|更新记录|^保存$|完成发布|存草稿|提交反馈|打包申请|成年移交|免费申领本年度纪念册)/;
+const routeNavigationPattern = /^返回$|^查看$|全部|记录/;
 const hiddenNativeCapturePattern = /(关闭采集|使用这张照片|重新拍摄)/;
 const nativeFileChooserPattern = /^(拍照记录|拍摄视频|录制语音|从相册添加|从相册选择|上传语音)$/;
 const auditOutputPath = join(process.cwd(), 'artifacts', 'app-live-audit', 'app-interaction-audit-20260529.json');
-const benignRuntimeErrorPattern = /WebSocket connection to 'ws:\/\/127\.0\.0\.1:5176\/\?token=.*ERR_NO_BUFFER_SPACE|Failed to load resource: net::ERR_NO_BUFFER_SPACE|Failed to load resource: the server responded with a status of 400 \(Bad Request\)/;
+const benignRuntimeErrorPattern = /WebSocket connection to 'ws:\/\/127\.0\.0\.1:5176\/\?token=.*ERR_NO_BUFFER_SPACE|Failed to load resource: net::ERR_NO_BUFFER_SPACE|Failed to load resource: the server responded with a status of 400 \(Bad Request\)|Failed to load resource: the server responded with a status of 404 \(Not Found\)/;
 const benignFailedRequestPattern = /net::ERR_ABORTED|net::ERR_NO_BUFFER_SPACE/;
 const tinyPng = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=',
@@ -87,6 +87,37 @@ const tinyPng = Buffer.from(
 
 const waitForSettledUi = async (page: Page, timeout = 1_200) => {
   await page.waitForLoadState('networkidle', { timeout }).catch(() => undefined);
+};
+
+const isCurrentAuditRoute = (page: Page, route: string) => {
+  const current = new URL(page.url());
+  const expected = new URL(`${webBaseURL}${route}`);
+  return current.origin === expected.origin && current.pathname === expected.pathname && current.search === expected.search;
+};
+
+const gotoAuditRoute = async (page: Page, route: string) => {
+  const url = `${webBaseURL}${route}`;
+  if (isCurrentAuditRoute(page, route)) return;
+
+  let lastError: unknown = null;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      await page.goto(url);
+      return;
+    } catch (error) {
+      lastError = error;
+      const message = error instanceof Error ? error.message : String(error);
+      if (!/net::ERR_ABORTED/i.test(message)) throw error;
+      await page.waitForTimeout(350);
+    }
+  }
+
+  const message = lastError instanceof Error ? lastError.message : String(lastError);
+  if (!/net::ERR_ABORTED/i.test(message)) throw lastError;
+  await page.evaluate((nextRoute) => {
+    window.history.pushState({}, '', nextRoute);
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  }, route);
 };
 
 const isElementUsable = async (handle: ElementHandle<Element>) =>
@@ -179,6 +210,41 @@ const fillVisibleControls = async (page: Page) => {
   return touched;
 };
 
+const chooseVisibleComboboxOptions = async (page: Page) => {
+  let touched = 0;
+  const comboboxes = page.locator('[role="combobox"]');
+  const count = await comboboxes.count();
+
+  for (let index = 0; index < count; index += 1) {
+    const combobox = comboboxes.nth(index);
+    if (!(await combobox.isVisible().catch(() => false)) || !(await combobox.isEnabled().catch(() => false))) continue;
+
+    await combobox.scrollIntoViewIfNeeded().catch(() => undefined);
+    await combobox.click({ timeout: 1_500, noWaitAfter: true }).catch(() => undefined);
+    await page.waitForTimeout(120);
+
+    const options = page.locator('[role="listbox"] [role="option"]:not([disabled])');
+    const optionCount = await options.count();
+    let selected = false;
+    for (let optionIndex = 0; optionIndex < optionCount; optionIndex += 1) {
+      const option = options.nth(optionIndex);
+      const label = ((await option.textContent().catch(() => '')) ?? '').replace(/\s+/g, ' ').trim();
+      if (!label || /^添加|^请选择/.test(label)) continue;
+      await option.scrollIntoViewIfNeeded().catch(() => undefined);
+      await option.click({ timeout: 1_500, noWaitAfter: true }).catch(() => undefined);
+      touched += 1;
+      selected = true;
+      await page.waitForTimeout(120);
+      await page.keyboard.press('Escape').catch(() => undefined);
+      break;
+    }
+
+    if (!selected) await page.keyboard.press('Escape').catch(() => undefined);
+  }
+
+  return touched;
+};
+
 const collectButtonCandidates = async (page: Page): Promise<ButtonCandidate[]> =>
   page.evaluate(
     ({ destructivePattern, nativePattern, navigationPattern, nativeFilePattern }) => {
@@ -242,6 +308,7 @@ const collectButtonCandidates = async (page: Page): Promise<ButtonCandidate[]> =
       const nativeFileRe = new RegExp(nativeFilePattern);
 
       return Array.from(document.querySelectorAll('button, [role="button"]'))
+        .filter((element) => !['option', 'combobox'].includes(element.getAttribute('role') ?? ''))
         .map((element, index) => {
           const rect = element.getBoundingClientRect();
           const text = label(element, index);
@@ -422,10 +489,11 @@ const clickRouteButtons = async (page: Page, route: string, issues: AuditIssue[]
   const visitedKeys = new Set<string>();
 
   for (let safety = 0; safety < 14; safety += 1) {
-    if (!page.url().startsWith(`${webBaseURL}${route}`)) {
-      await page.goto(`${webBaseURL}${route}`);
+    if (!isCurrentAuditRoute(page, route)) {
+      await gotoAuditRoute(page, route);
       await waitForSettledUi(page, 1_000);
       await fillVisibleControls(page);
+      await chooseVisibleComboboxOptions(page);
     }
 
     const allCandidates = await collectButtonCandidates(page);
@@ -610,6 +678,9 @@ test.describe('App exhaustive interaction audit', () => {
       failedRequests.push(message);
     });
     page.on('response', (response) => {
+      if (response.status() === 404) {
+        failedRequests.push(`404 ${response.url()}`);
+      }
       if (response.url().includes('/api/') && response.status() >= 500) {
         failedRequests.push(`${response.status()} ${response.url()}`);
       }
@@ -673,6 +744,9 @@ test.describe('App exhaustive interaction audit', () => {
       failedRequests.push(message);
     });
     page.on('response', (response) => {
+      if (response.status() === 404) {
+        failedRequests.push(`404 ${response.url()}`);
+      }
       if (response.url().includes('/api/') && response.status() >= 500) {
         failedRequests.push(`${response.status()} ${response.url()}`);
       }
@@ -685,9 +759,9 @@ test.describe('App exhaustive interaction audit', () => {
     await loginWeb(page);
 
     for (const route of appRoutes) {
-      await page.goto(`${webBaseURL}${route}`);
+      await gotoAuditRoute(page, route);
       await waitForSettledUi(page, 3_000);
-      const inputsTouched = await fillVisibleControls(page);
+      const inputsTouched = (await fillVisibleControls(page)) + (await chooseVisibleComboboxOptions(page));
       issues.push(...(await collectStyleIssues(page, route, 'mobile-before-clicks')));
       const clickResult = route === '/search'
         ? await auditSearchRouteButtons(page, route, skipped)
@@ -695,7 +769,7 @@ test.describe('App exhaustive interaction audit', () => {
           ? await auditCreateRecordRouteButtons(page, route, skipped)
           : await clickRouteButtons(page, route, issues, skipped);
       clicks.push(...clickResult.clickedLabels.map((label) => ({ route, label })));
-      await page.goto(`${webBaseURL}${route}`);
+      await gotoAuditRoute(page, route);
       await waitForSettledUi(page, 3_000);
       issues.push(...(await collectStyleIssues(page, route, 'mobile-after-clicks')));
       routeSummaries.push({

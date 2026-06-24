@@ -19,8 +19,97 @@ const androidMainActivityPath = path.join(
   'nianlun',
   'MainActivity.java',
 );
+const androidNativeExportPluginPath = path.join(
+  repoRoot,
+  'apps',
+  'mobile',
+  'android',
+  'app',
+  'src',
+  'main',
+  'java',
+  'com',
+  'xmlga',
+  'nianlun',
+  'NativeExportPlugin.java',
+);
+const androidBuildGradlePath = path.join(repoRoot, 'apps', 'mobile', 'android', 'app', 'build.gradle');
+const androidActivityLayoutPath = path.join(repoRoot, 'apps', 'mobile', 'android', 'app', 'src', 'main', 'res', 'layout', 'activity_main.xml');
+const androidStylesPath = path.join(repoRoot, 'apps', 'mobile', 'android', 'app', 'src', 'main', 'res', 'values', 'styles.xml');
+const iosAppDelegatePath = path.join(repoRoot, 'apps', 'mobile', 'ios', 'App', 'App', 'AppDelegate.swift');
+const iosInfoPlistPath = path.join(repoRoot, 'apps', 'mobile', 'ios', 'App', 'App', 'Info.plist');
+const iosProjectPath = path.join(repoRoot, 'apps', 'mobile', 'ios', 'App', 'App.xcodeproj', 'project.pbxproj');
+const iosLaunchScreenPath = path.join(repoRoot, 'apps', 'mobile', 'ios', 'App', 'App', 'Base.lproj', 'LaunchScreen.storyboard');
 const mobileApiBaseUrl = process.env.VITE_MOBILE_API_BASE_URL ?? 'https://webapi.xmlga.top/api/v1';
+const mobilePackage = JSON.parse(fs.readFileSync(path.join(repoRoot, 'apps', 'mobile', 'package.json'), 'utf8'));
+const androidBuildGradle = fs.existsSync(androidBuildGradlePath)
+  ? fs.readFileSync(androidBuildGradlePath, 'utf8')
+  : '';
+const androidVersionCode = /versionCode\s+(\d+)/.exec(androidBuildGradle)?.[1] ?? '';
+const configuredBuildNumber = mobilePackage.buildNumber === undefined ? '' : String(mobilePackage.buildNumber);
+const appVersion = process.env.VITE_APP_VERSION ?? mobilePackage.version ?? '2.0.1';
+const appBuildNumber = process.env.VITE_APP_BUILD_NUMBER ?? (configuredBuildNumber || androidVersionCode);
+const appBuildTime = process.env.VITE_APP_BUILD_TIME ?? new Date().toISOString();
+const nativeBuildNumber = Number.parseInt(appBuildNumber, 10);
+const hasNativeBuildNumber = Number.isFinite(nativeBuildNumber) && nativeBuildNumber > 0;
 const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const appDarkColor = '#F1E9DC';
+
+const writeIfChanged = (filePath, nextSource, label) => {
+  const currentSource = fs.readFileSync(filePath, 'utf8');
+  if (nextSource === currentSource) return false;
+  fs.writeFileSync(filePath, nextSource);
+  console.log(`${label}: ${filePath}`);
+  return true;
+};
+
+const writeFileIfChanged = (filePath, nextSource, label) => {
+  const currentSource = fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : '';
+  if (nextSource === currentSource) return false;
+  fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  fs.writeFileSync(filePath, nextSource);
+  console.log(`${label}: ${filePath}`);
+  return true;
+};
+
+const ensureAndroidStyleItems = (source, styleName, items) =>
+  source.replace(
+    new RegExp(`(<style name="${styleName}"[\\s\\S]*?>)([\\s\\S]*?)(\\n\\s*</style>)`),
+    (styleBlock, styleOpen, styleBody, styleClose) => {
+      let nextBody = styleBody;
+      for (const [name] of items) {
+        const itemPattern = new RegExp(`\\n\\s*<item name="${name}">[\\s\\S]*?</item>`, 'g');
+        nextBody = nextBody.replace(itemPattern, '');
+      }
+
+      const itemLines = items.map(([name, value]) => `        <item name="${name}">${value}</item>`).join('\n');
+      return `${styleOpen}${nextBody}\n${itemLines}${styleClose}`;
+    },
+  );
+
+const patchAndroidNativeVersion = () => {
+  if (!fs.existsSync(androidBuildGradlePath)) return;
+
+  const currentSource = fs.readFileSync(androidBuildGradlePath, 'utf8');
+  let nextSource = currentSource.replace(/versionName\s+"[^"]+"/, `versionName "${appVersion}"`);
+  if (hasNativeBuildNumber) {
+    nextSource = nextSource.replace(/versionCode\s+\d+/, `versionCode ${nativeBuildNumber}`);
+  }
+
+  writeIfChanged(androidBuildGradlePath, nextSource, 'Android app version patched');
+};
+
+const patchIosNativeVersion = () => {
+  if (!fs.existsSync(iosProjectPath)) return;
+
+  const currentSource = fs.readFileSync(iosProjectPath, 'utf8');
+  let nextSource = currentSource.replace(/MARKETING_VERSION = [^;]+;/g, `MARKETING_VERSION = ${appVersion};`);
+  if (hasNativeBuildNumber) {
+    nextSource = nextSource.replace(/CURRENT_PROJECT_VERSION = \d+;/g, `CURRENT_PROJECT_VERSION = ${nativeBuildNumber};`);
+  }
+
+  writeIfChanged(iosProjectPath, nextSource, 'iOS app version patched');
+};
 
 const patchAndroidSystemBars = () => {
   if (!fs.existsSync(androidMainActivityPath)) return;
@@ -31,12 +120,31 @@ const patchAndroidSystemBars = () => {
   if (!nextSource.includes('import android.view.WindowInsetsController;')) {
     nextSource = nextSource.replace('import android.view.Window;\n', 'import android.view.Window;\nimport android.view.WindowInsetsController;\n');
   }
+  if (!nextSource.includes('import android.view.WindowManager;')) {
+    nextSource = nextSource.replace('import android.view.WindowInsetsController;\n', 'import android.view.WindowInsetsController;\nimport android.view.WindowManager;\n');
+  }
+
+  if (!nextSource.includes('APP_STATUS_BAR_COLOR')) {
+    nextSource = nextSource.replace(
+      'public class MainActivity extends BridgeActivity {\n',
+      `public class MainActivity extends BridgeActivity {
+    private static final int APP_STATUS_BAR_COLOR = Color.parseColor("${appDarkColor}");
+    private static final int APP_NAVIGATION_BAR_COLOR = Color.parseColor("${appDarkColor}");
+
+`,
+    );
+  }
 
   nextSource = nextSource
-    .replace('window.setNavigationBarColor(Color.parseColor("#fffaf2"));', 'window.setNavigationBarColor(Color.parseColor("#050918"));')
-    .replace('window.setNavigationBarColor(Color.parseColor("#050a1a"));', 'window.setNavigationBarColor(Color.parseColor("#050918"));')
-    .replace('flags |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;', 'flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;')
-    .replace('flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;', 'flags &= ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;')
+    .replace(/Color\.parseColor\("#(?:111210|050918|15110D|10110F|0D0B08)"\)/gi, `Color.parseColor("${appDarkColor}")`)
+    .replace('window.setNavigationBarColor(Color.parseColor("#fffaf2"));', 'window.setNavigationBarColor(APP_NAVIGATION_BAR_COLOR);')
+    .replace('window.setNavigationBarColor(Color.parseColor("#050a1a"));', 'window.setNavigationBarColor(APP_NAVIGATION_BAR_COLOR);')
+    .replace('window.setStatusBarColor(Color.TRANSPARENT);', 'window.setStatusBarColor(APP_STATUS_BAR_COLOR);')
+    .replace(`window.setStatusBarColor(Color.parseColor("${appDarkColor}"));`, 'window.setStatusBarColor(APP_STATUS_BAR_COLOR);')
+    .replace(`window.setNavigationBarColor(Color.parseColor("${appDarkColor}"));`, 'window.setNavigationBarColor(APP_NAVIGATION_BAR_COLOR);')
+    .replace('flags &= ~View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;', 'flags |= View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR;')
+    .replace('flags &= ~View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;', 'flags |= View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR;')
+    .replace('window.getInsetsController().setSystemBarsAppearance(0, lightSystemBars);', 'window.getInsetsController().setSystemBarsAppearance(lightSystemBars, lightSystemBars);')
     .replace(
       `            int lightSystemBars =
                     WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
@@ -46,7 +154,7 @@ const patchAndroidSystemBars = () => {
       `            int lightSystemBars =
                     WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
                             | WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
-            window.getInsetsController().setSystemBarsAppearance(0, lightSystemBars);
+            window.getInsetsController().setSystemBarsAppearance(lightSystemBars, lightSystemBars);
 `,
     );
 
@@ -59,15 +167,324 @@ const patchAndroidSystemBars = () => {
             int lightSystemBars =
                     WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS
                             | WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS;
-            window.getInsetsController().setSystemBarsAppearance(0, lightSystemBars);
+            window.getInsetsController().setSystemBarsAppearance(lightSystemBars, lightSystemBars);
         }
 `,
     );
   }
 
-  if (nextSource !== currentSource) {
-    fs.writeFileSync(androidMainActivityPath, nextSource);
-    console.log(`Android system bars patched for dark UI: ${androidMainActivityPath}`);
+  if (!nextSource.includes('window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(APP_STATUS_BAR_COLOR));')) {
+    nextSource = nextSource.replace(
+      '        Window window = getWindow();\n',
+      '        Window window = getWindow();\n        window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(APP_STATUS_BAR_COLOR));\n',
+    );
+  }
+  nextSource = nextSource.replace('window.setDecorFitsSystemWindows(true);', 'window.setDecorFitsSystemWindows(false);');
+
+  if (!nextSource.includes('window.setDecorFitsSystemWindows(false);')) {
+    nextSource = nextSource.replace(
+      '        Window window = getWindow();\n',
+      '        Window window = getWindow();\n        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {\n            window.setDecorFitsSystemWindows(false);\n        }\n',
+    );
+  }
+  if (!nextSource.includes('FLAG_TRANSLUCENT_STATUS')) {
+    nextSource = nextSource.replace(
+      '        Window window = getWindow();\n',
+      '        Window window = getWindow();\n        window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS | WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);\n        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);\n',
+    );
+  }
+
+  if (!nextSource.includes('webView.setBackgroundColor(APP_STATUS_BAR_COLOR);')) {
+    nextSource = nextSource.replace(
+      '        WebView webView = getBridge().getWebView();\n',
+      '        WebView webView = getBridge().getWebView();\n        webView.setBackgroundColor(APP_STATUS_BAR_COLOR);\n',
+    );
+  }
+  if (!nextSource.includes('webView.getRootView().setBackgroundColor(APP_STATUS_BAR_COLOR);')) {
+    nextSource = nextSource.replace(
+      '        webView.setBackgroundColor(APP_STATUS_BAR_COLOR);\n',
+      '        webView.setBackgroundColor(APP_STATUS_BAR_COLOR);\n        webView.getRootView().setBackgroundColor(APP_STATUS_BAR_COLOR);\n',
+    );
+  }
+
+  if (!nextSource.includes('configureSystemBars();\n        registerPlugin(NativeLocationPlugin.class);')) {
+    nextSource = nextSource.replace(
+      '        registerPlugin(NativeLocationPlugin.class);\n',
+      '        configureSystemBars();\n        registerPlugin(NativeLocationPlugin.class);\n',
+    );
+  }
+
+  nextSource = nextSource.replace('protected void onResume()', 'public void onResume()');
+
+  if (!nextSource.includes('void onResume()')) {
+    nextSource = nextSource.replace(
+      '\n    private void configureSystemBars() {',
+      `
+    @Override
+    public void onResume() {
+        super.onResume();
+        configureSystemBars();
+
+        if (getBridge() != null && getBridge().getWebView() != null) {
+            WebView webView = getBridge().getWebView();
+            webView.setBackgroundColor(APP_STATUS_BAR_COLOR);
+            webView.getRootView().setBackgroundColor(APP_STATUS_BAR_COLOR);
+        }
+    }
+
+    private void configureSystemBars() {`,
+    );
+  }
+
+  if (!nextSource.includes('View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN')) {
+    nextSource = nextSource.replace(
+      '        window.getDecorView().setSystemUiVisibility(flags);\n',
+      '        flags |= View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;\n        window.getDecorView().setSystemUiVisibility(flags);\n',
+    );
+  }
+
+  writeIfChanged(androidMainActivityPath, nextSource, 'Android system bars patched for light UI');
+};
+
+const patchAndroidNativeExportPlugin = () => {
+  if (!fs.existsSync(androidMainActivityPath)) return;
+
+  const pluginSource = `package com.xmlga.nianlun;
+
+import android.content.ContentResolver;
+import android.content.ContentValues;
+import android.net.Uri;
+import android.os.Build;
+import android.os.Environment;
+import android.provider.MediaStore;
+
+import com.getcapacitor.JSObject;
+import com.getcapacitor.Plugin;
+import com.getcapacitor.PluginCall;
+import com.getcapacitor.PluginMethod;
+import com.getcapacitor.annotation.CapacitorPlugin;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+
+@CapacitorPlugin(name = "NativeExport")
+public class NativeExportPlugin extends Plugin {
+    private static final String DEFAULT_FILE_NAME = "nianlun-export-summary.txt";
+
+    @PluginMethod
+    public void saveTextFile(PluginCall call) {
+        String content = call.getString("content");
+        if (content == null) {
+            call.reject("content required");
+            return;
+        }
+
+        String rawFileName = call.getString("fileName");
+        String fileName = sanitizeFileName(rawFileName == null ? DEFAULT_FILE_NAME : rawFileName);
+        String mimeType = call.getString("mimeType");
+        if (mimeType == null || mimeType.trim().isEmpty()) {
+            mimeType = "text/plain";
+        }
+
+        try {
+            JSObject result = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
+                    ? saveWithMediaStore(fileName, content, mimeType)
+                    : saveLegacy(fileName, content);
+            call.resolve(result);
+        } catch (Exception exception) {
+            call.reject("save text file failed: " + exception.getMessage());
+        }
+    }
+
+    private JSObject saveWithMediaStore(String fileName, String content, String mimeType) throws Exception {
+        ContentResolver resolver = getContext().getContentResolver();
+        ContentValues values = new ContentValues();
+        values.put(MediaStore.MediaColumns.DISPLAY_NAME, fileName);
+        values.put(MediaStore.MediaColumns.MIME_TYPE, mimeType);
+        values.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
+        values.put(MediaStore.MediaColumns.IS_PENDING, 1);
+
+        Uri uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+        if (uri == null) {
+            throw new IllegalStateException("download uri unavailable");
+        }
+
+        try (OutputStream outputStream = resolver.openOutputStream(uri)) {
+            if (outputStream == null) {
+                throw new IllegalStateException("download output stream unavailable");
+            }
+            outputStream.write(content.getBytes(StandardCharsets.UTF_8));
+            outputStream.flush();
+        }
+
+        values.clear();
+        values.put(MediaStore.MediaColumns.IS_PENDING, 0);
+        resolver.update(uri, values, null, null);
+
+        JSObject result = new JSObject();
+        result.put("saved", true);
+        result.put("fileName", fileName);
+        result.put("uri", uri.toString());
+        result.put("directory", Environment.DIRECTORY_DOWNLOADS);
+        return result;
+    }
+
+    private JSObject saveLegacy(String fileName, String content) throws Exception {
+        File downloadsDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+        if (!downloadsDir.exists() && !downloadsDir.mkdirs()) {
+            throw new IllegalStateException("downloads directory unavailable");
+        }
+
+        File outputFile = new File(downloadsDir, fileName);
+        try (FileOutputStream outputStream = new FileOutputStream(outputFile, false)) {
+            outputStream.write(content.getBytes(StandardCharsets.UTF_8));
+            outputStream.flush();
+        }
+
+        JSObject result = new JSObject();
+        result.put("saved", true);
+        result.put("fileName", fileName);
+        result.put("path", outputFile.getAbsolutePath());
+        result.put("directory", Environment.DIRECTORY_DOWNLOADS);
+        return result;
+    }
+
+    private String sanitizeFileName(String fileName) {
+        String safeFileName = fileName.replaceAll("[\\\\\\\\/:*?\\\"<>|\\\\r\\\\n]+", "-").trim();
+        return safeFileName.isEmpty() ? DEFAULT_FILE_NAME : safeFileName;
+    }
+}
+`;
+
+  writeFileIfChanged(androidNativeExportPluginPath, pluginSource, 'Android native export plugin patched');
+
+  const currentSource = fs.readFileSync(androidMainActivityPath, 'utf8');
+  if (currentSource.includes('registerPlugin(NativeExportPlugin.class);')) return;
+  const nextSource = currentSource.replace(
+    '        registerPlugin(NativeLocationPlugin.class);\n',
+    '        registerPlugin(NativeLocationPlugin.class);\n        registerPlugin(NativeExportPlugin.class);\n',
+  );
+  writeIfChanged(androidMainActivityPath, nextSource, 'Android native export plugin registered');
+};
+
+const patchAndroidWindowBackgrounds = () => {
+  if (fs.existsSync(androidActivityLayoutPath)) {
+    let nextLayout = fs.readFileSync(androidActivityLayoutPath, 'utf8');
+    nextLayout = nextLayout.replace(/android:background="#(?:111210|050918|15110d|10110f|0d0b08)"/gi, `android:background="${appDarkColor}"`);
+    if (!nextLayout.includes(`android:background="${appDarkColor}"`)) {
+      nextLayout = nextLayout.replace(
+        '    android:layout_height="match_parent"\n    tools:context=".MainActivity">',
+        `    android:layout_height="match_parent"\n    android:background="${appDarkColor}"\n    tools:context=".MainActivity">`,
+      );
+    }
+    nextLayout = nextLayout.replace(
+      /(<WebView[\s\S]*?android:layout_height="match_parent")\s*\/>/,
+      `$1\n        android:background="${appDarkColor}" />`,
+    );
+    writeIfChanged(androidActivityLayoutPath, nextLayout, 'Android root background patched for light UI');
+  }
+
+  if (fs.existsSync(androidStylesPath)) {
+    let nextStyles = fs.readFileSync(androidStylesPath, 'utf8');
+    nextStyles = nextStyles
+      .replace(/#(?:10110F|15110D|111210|050918|0D0B08)/gi, appDarkColor)
+      .replace(/<item name="android:windowLightStatusBar">false<\/item>/g, '<item name="android:windowLightStatusBar">true</item>')
+      .replace(/<item name="android:windowLightNavigationBar">false<\/item>/g, '<item name="android:windowLightNavigationBar">true</item>');
+    nextStyles = ensureAndroidStyleItems(nextStyles, 'AppTheme.NoActionBar', [
+      ['android:background', appDarkColor],
+      ['android:windowBackground', appDarkColor],
+      ['android:colorBackground', appDarkColor],
+      ['android:statusBarColor', appDarkColor],
+      ['android:navigationBarColor', appDarkColor],
+      ['android:windowLightStatusBar', 'true'],
+      ['android:windowLightNavigationBar', 'true'],
+      ['android:forceDarkAllowed', 'false'],
+      ['android:windowDrawsSystemBarBackgrounds', 'true'],
+      ['android:enforceStatusBarContrast', 'false'],
+      ['android:enforceNavigationBarContrast', 'false'],
+      ['android:windowOptOutEdgeToEdgeEnforcement', 'true'],
+    ]);
+    nextStyles = ensureAndroidStyleItems(nextStyles, 'AppTheme.NoActionBarLaunch', [
+      ['android:background', '@drawable/splash_dark'],
+      ['windowSplashScreenBackground', appDarkColor],
+      ['android:windowBackground', appDarkColor],
+      ['android:colorBackground', appDarkColor],
+      ['android:statusBarColor', appDarkColor],
+      ['android:navigationBarColor', appDarkColor],
+      ['android:windowLightStatusBar', 'true'],
+      ['android:windowLightNavigationBar', 'true'],
+      ['android:forceDarkAllowed', 'false'],
+      ['android:windowDrawsSystemBarBackgrounds', 'true'],
+      ['android:enforceStatusBarContrast', 'false'],
+      ['android:enforceNavigationBarContrast', 'false'],
+      ['android:windowOptOutEdgeToEdgeEnforcement', 'true'],
+    ]);
+    writeIfChanged(androidStylesPath, nextStyles, 'Android theme background patched for light UI');
+  }
+};
+
+const patchIosWindowBackgrounds = () => {
+  if (fs.existsSync(iosInfoPlistPath)) {
+    let nextPlist = fs.readFileSync(iosInfoPlistPath, 'utf8');
+    nextPlist = nextPlist.replace('<key>UIViewControllerBasedStatusBarAppearance</key>\n\t<true/>', '<key>UIViewControllerBasedStatusBarAppearance</key>\n\t<false/>');
+    nextPlist = nextPlist.replace('UIStatusBarStyleLightContent', 'UIStatusBarStyleDarkContent');
+    if (!nextPlist.includes('<key>UIStatusBarStyle</key>')) {
+      nextPlist = nextPlist.replace(
+        '<key>UIViewControllerBasedStatusBarAppearance</key>\n\t<false/>',
+        '<key>UIViewControllerBasedStatusBarAppearance</key>\n\t<false/>\n\t<key>UIStatusBarStyle</key>\n\t<string>UIStatusBarStyleDarkContent</string>',
+      );
+    }
+    writeIfChanged(iosInfoPlistPath, nextPlist, 'iOS status bar patched for light UI');
+  }
+
+  if (fs.existsSync(iosAppDelegatePath)) {
+    let nextDelegate = fs.readFileSync(iosAppDelegatePath, 'utf8');
+    if (!nextDelegate.includes('appBackgroundColor')) {
+      nextDelegate = nextDelegate.replace(
+        '    var window: UIWindow?\n',
+        '    var window: UIWindow?\n    private let appBackgroundColor = UIColor(red: 241 / 255, green: 233 / 255, blue: 220 / 255, alpha: 1)\n',
+      );
+    }
+    nextDelegate = nextDelegate
+      .replace(/private let appBackgroundColor = UIColor\(red: \d+ \/ 255, green: \d+ \/ 255, blue: \d+ \/ 255, alpha: 1\)/, 'private let appBackgroundColor = UIColor(red: 241 / 255, green: 233 / 255, blue: 220 / 255, alpha: 1)')
+      .replace('UIApplication.shared.statusBarStyle = .lightContent', 'UIApplication.shared.statusBarStyle = .darkContent')
+      .replace('window?.overrideUserInterfaceStyle = .dark', 'window?.overrideUserInterfaceStyle = .light');
+    nextDelegate = nextDelegate.replace(
+      '        // Override point for customization after application launch.\n        return true',
+      '        configureWindowAppearance()\n        return true',
+    );
+    nextDelegate = nextDelegate.replace(
+      '        // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.',
+      '        configureWindowAppearance()',
+    );
+    if (!nextDelegate.includes('private func configureWindowAppearance()')) {
+      nextDelegate = nextDelegate.replace(
+        '\n}\n',
+        `
+    private func configureWindowAppearance() {
+        window?.backgroundColor = appBackgroundColor
+        window?.rootViewController?.view.backgroundColor = appBackgroundColor
+        UIApplication.shared.statusBarStyle = .darkContent
+        if #available(iOS 13.0, *) {
+            window?.overrideUserInterfaceStyle = .light
+        }
+    }
+}
+`,
+      );
+    }
+    writeIfChanged(iosAppDelegatePath, nextDelegate, 'iOS window background patched for light UI');
+  }
+
+  if (fs.existsSync(iosLaunchScreenPath)) {
+    let nextLaunchScreen = fs.readFileSync(iosLaunchScreenPath, 'utf8');
+    nextLaunchScreen = nextLaunchScreen
+      .replace('<color key="backgroundColor" systemColor="systemBackgroundColor"/>', '<color key="backgroundColor" red="0.9450980392156862" green="0.9137254901960784" blue="0.8627450980392157" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>')
+      .replace(/<color key="backgroundColor" red="0\.062745098039215685" green="0\.066666666666666666" blue="0\.058823529411764705" alpha="1" colorSpace="custom" customColorSpace="sRGB"\/>/, '<color key="backgroundColor" red="0.9450980392156862" green="0.9137254901960784" blue="0.8627450980392157" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>')
+      .replace(/\n        <systemColor name="systemBackgroundColor">\n            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"\/>\n        <\/systemColor>/, '');
+    writeIfChanged(iosLaunchScreenPath, nextLaunchScreen, 'iOS launch background patched for light UI');
   }
 };
 
@@ -78,6 +495,9 @@ const buildResult = spawnSync(npmCommand, ['run', 'build', '-w', 'apps/web'], {
   env: {
     ...process.env,
     VITE_API_BASE_URL: mobileApiBaseUrl,
+    VITE_APP_VERSION: appVersion,
+    VITE_APP_BUILD_NUMBER: appBuildNumber,
+    VITE_APP_BUILD_TIME: appBuildTime,
   },
 });
 
@@ -97,6 +517,11 @@ if (!fs.existsSync(sourceDir)) {
 fs.rmSync(targetDir, { recursive: true, force: true });
 fs.mkdirSync(targetDir, { recursive: true });
 fs.cpSync(sourceDir, targetDir, { recursive: true });
+patchAndroidNativeVersion();
+patchIosNativeVersion();
 patchAndroidSystemBars();
+patchAndroidNativeExportPlugin();
+patchAndroidWindowBackgrounds();
+patchIosWindowBackgrounds();
 
-console.log(`Mobile web assets prepared with ${mobileApiBaseUrl}: ${targetDir}`);
+console.log(`Mobile web assets prepared with ${mobileApiBaseUrl}, version ${appVersion} (${appBuildNumber || 'dev'}): ${targetDir}`);

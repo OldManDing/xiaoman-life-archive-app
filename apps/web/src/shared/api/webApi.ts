@@ -10,19 +10,26 @@ import type {
   LoginResponse,
   LocationsSearchResponse,
   FeedbackResponse,
+  FeedbackTicketsListResponse,
+  FamilyMemberOperationsResponse,
   DeletionCheckResponse,
+  MembershipBookRequestResponse,
+  MembershipBookRequestsListResponse,
   ArchiveExportRequestResponse,
   ArchiveExportRequestsListResponse,
   ArchiveExportSummaryResponse,
   AiJobDetail,
   AiPreviewResponse,
   AiJobType,
+  AppUpdateCheckResponse,
   MediaAccessUrlResponse,
-  MembershipBookRequestResponse,
+  NotificationMutationResponse,
+  NotificationUnreadCountResponse,
   RecordDetail,
   RecordsListResponse,
   SendCodeResponse,
   UploadTokenResponse,
+  UserNotificationsResponse,
   UserPreferencesResponse,
   UserProfile,
 } from './types';
@@ -61,11 +68,18 @@ export interface UpdateChildPayload {
 export interface UpdateMePayload {
   nickname?: string;
   avatar_url?: string;
+  mobile?: string;
 }
 
 export interface DeleteMePayload {
   password: string;
   confirm_text: string;
+}
+
+export interface ChangePasswordPayload {
+  current_password: string;
+  new_password: string;
+  new_password_confirm: string;
 }
 
 export interface UpdatePreferencesPayload {
@@ -80,16 +94,16 @@ export interface SubmitFeedbackPayload {
   topic?: string;
 }
 
-export interface MembershipBookRequestPayload {
-  year?: number;
-  contact?: string;
-  note?: string;
-}
-
 export interface ArchiveExportRequestPayload {
   child_no: string;
   export_type?: 'all' | 'media' | 'text';
   purpose?: 'backup' | 'adult_handoff';
+  contact?: string;
+  note?: string;
+}
+
+export interface MembershipBookRequestPayload {
+  year?: number;
   contact?: string;
   note?: string;
 }
@@ -153,6 +167,9 @@ export interface SearchLocationsQuery {
 
 let refreshSessionPromise: Promise<LoginResponse> | null = null;
 
+const isMissingEndpointError = (error: unknown, pathHint: string) =>
+  error instanceof Error && /Cannot\s+(GET|POST|PUT|DELETE|PATCH)\s+/i.test(error.message) && error.message.includes(pathHint);
+
 export const webApi = {
   async sendCode(mobile: string) {
     const response = await http.post<ApiEnvelope<SendCodeResponse>>('/auth/send-code', { mobile });
@@ -207,6 +224,11 @@ export const webApi = {
     return response.data.data;
   },
 
+  async changePassword(payload: ChangePasswordPayload) {
+    const response = await http.post<ApiEnvelope<{ success: boolean; updated_at: string; message: string }>>('/users/me/password', payload);
+    return response.data.data;
+  },
+
   async preferences() {
     const response = await http.get<ApiEnvelope<UserPreferencesResponse>>('/users/me/preferences');
     return response.data.data;
@@ -217,14 +239,65 @@ export const webApi = {
     return response.data.data;
   },
 
+  async listNotifications(params?: { page?: number; page_size?: number }) {
+    const response = await http.get<ApiEnvelope<UserNotificationsResponse>>('/users/me/notifications', { params });
+    return response.data.data;
+  },
+
+  async notificationUnreadCount() {
+    const response = await http.get<ApiEnvelope<NotificationUnreadCountResponse>>('/users/me/notifications/unread-count');
+    return response.data.data;
+  },
+
+  async markNotificationRead(notificationNo: string) {
+    const response = await http.patch<ApiEnvelope<NotificationMutationResponse>>(
+      `/users/me/notifications/${encodeURIComponent(notificationNo)}/read`,
+    );
+    return response.data.data;
+  },
+
+  async markAllNotificationsRead() {
+    const response = await http.patch<ApiEnvelope<NotificationMutationResponse>>('/users/me/notifications/read-all');
+    return response.data.data;
+  },
+
+  async checkAppUpdate(params: { platform: 'android'; version: string; build_number: number }) {
+    const response = await http.get<ApiEnvelope<AppUpdateCheckResponse>>('/users/me/app-update', { params });
+    return response.data.data;
+  },
+
   async submitFeedback(payload: SubmitFeedbackPayload) {
     const response = await http.post<ApiEnvelope<FeedbackResponse>>('/users/me/feedback', payload);
     return response.data.data;
   },
 
+  async listFeedback() {
+    try {
+      const response = await http.get<ApiEnvelope<FeedbackTicketsListResponse>>('/users/me/feedback');
+      return response.data.data;
+    } catch (error) {
+      if (isMissingEndpointError(error, '/users/me/feedback')) {
+        return { list: [] };
+      }
+      throw error;
+    }
+  },
+
   async requestMembershipBook(payload: MembershipBookRequestPayload) {
     const response = await http.post<ApiEnvelope<MembershipBookRequestResponse>>('/users/me/membership-book-requests', payload);
     return response.data.data;
+  },
+
+  async listMembershipBookRequests() {
+    try {
+      const response = await http.get<ApiEnvelope<MembershipBookRequestsListResponse>>('/users/me/membership-book-requests');
+      return response.data.data;
+    } catch (error) {
+      if (isMissingEndpointError(error, '/users/me/membership-book-requests')) {
+        return { list: [] };
+      }
+      throw error;
+    }
   },
 
   async requestArchiveExport(payload: ArchiveExportRequestPayload) {
@@ -340,6 +413,25 @@ export const webApi = {
     const response = await http.put<ApiEnvelope<{ family_no: string; user_no: string; role: string; updated_at: string }>>(
       `/families/${familyNo}/members/${userNo}/role`,
       payload,
+    );
+    return response.data.data;
+  },
+
+  async listFamilyMemberOperations(familyNo: string, params?: { user_no?: string }) {
+    try {
+      const response = await http.get<ApiEnvelope<FamilyMemberOperationsResponse>>(`/families/${familyNo}/member-operations`, { params });
+      return response.data.data;
+    } catch (error) {
+      if (isMissingEndpointError(error, 'member-operations')) {
+        return { family_no: familyNo, list: [] };
+      }
+      throw error;
+    }
+  },
+
+  async deleteFamilyMember(familyNo: string, userNo: string) {
+    const response = await http.delete<ApiEnvelope<{ family_no: string; user_no: string; removed: boolean; removed_at: string }>>(
+      `/families/${familyNo}/members/${userNo}`,
     );
     return response.data.data;
   },

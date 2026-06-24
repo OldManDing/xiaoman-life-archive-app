@@ -31,12 +31,12 @@ const formatValidationReason = (field: string, constraint: string, rawReason: st
 
   if (field === 'password') {
     if (constraint === 'isString') return '密码不能为空';
-    return '密码需为 8 到 72 位';
+    return '密码需为 8 到 12 位';
   }
 
   if (field === 'password_confirm' || field === 'passwordConfirm') {
     if (constraint === 'isString') return '确认密码不能为空';
-    return '确认密码需为 8 到 72 位';
+    return '确认密码需为 8 到 12 位';
   }
 
   if (field === 'invite_code' || field === 'inviteCode') {

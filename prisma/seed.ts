@@ -31,6 +31,11 @@ const SHARE_ACTIVE_STATUS = 1;
 const DEFAULT_ADMIN_PASSWORD = 'ChangeMe123!';
 const DEFAULT_DEMO_USER_PASSWORD = 'DemoUser123!';
 const DEMO_INVITE_CODE = 'demo-invite-001';
+const FAMILY_MEMBER_OPERATION_ACTIONS = [
+  'family.member_role_updated',
+  'family.member_removed',
+  'family.record_published',
+];
 const DEMO_PARENT_AVATAR_URL =
   'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 80 80%22%3E%3Crect width=%2280%22 height=%2280%22 fill=%22%23986b55%22/%3E%3Ccircle cx=%2240%22 cy=%2230%22 r=%2217%22 fill=%22%23f0c7a7%22/%3E%3Cpath d=%22M10 80c8-24 52-24 60 0%22 fill=%22%23292524%22/%3E%3C/svg%3E';
 const DEMO_CHILD_AVATAR_URL =
@@ -529,6 +534,61 @@ async function main() {
       tagName: '语言',
       source: RecordTagSource.user,
     },
+  });
+
+  await prisma.auditLog.deleteMany({
+    where: {
+      targetType: 'family',
+      targetId: family.id,
+      action: { in: FAMILY_MEMBER_OPERATION_ACTIONS },
+    },
+  });
+
+  await prisma.auditLog.createMany({
+    data: [
+      {
+        actorType: ActorType.user,
+        actorId: demoUser.id,
+        action: 'family.record_published',
+        targetType: 'family',
+        targetId: family.id,
+        ipAddress: '127.0.0.1',
+        userAgent: 'prisma-seed',
+        metadata: {
+          family_no: family.familyNo,
+          child_no: child.childNo,
+          child_name: child.name,
+          record_no: secondRecord.recordNo,
+          record_title: secondRecord.title,
+          event_time: secondRecord.eventTime.toISOString(),
+          target_user_no: demoUser.userNo,
+          target_nickname: demoUser.nickname,
+          operator_user_id: demoUser.id.toString(),
+        },
+        createdAt: now,
+      },
+      {
+        actorType: ActorType.user,
+        actorId: demoUser.id,
+        action: 'family.record_published',
+        targetType: 'family',
+        targetId: family.id,
+        ipAddress: '127.0.0.1',
+        userAgent: 'prisma-seed',
+        metadata: {
+          family_no: family.familyNo,
+          child_no: child.childNo,
+          child_name: child.name,
+          record_no: firstRecord.recordNo,
+          record_title: firstRecord.title,
+          event_time: firstRecord.eventTime.toISOString(),
+          target_user_no: demoUser.userNo,
+          target_nickname: demoUser.nickname,
+          operator_user_id: demoUser.id.toString(),
+        },
+        createdAt: yesterday,
+      },
+    ],
   });
 
   await prisma.memberInvite.upsert({

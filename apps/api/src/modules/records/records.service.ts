@@ -1,9 +1,11 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { FamilyMemberRole, Prisma, RecordTagSource, VisibilityScope } from '@prisma/client';
+import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { ActorType, FamilyMemberRole, Prisma, RecordTagSource, VisibilityScope } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
 import { MEDIA_STATUS_READY, RECORD_STATUS_DRAFT, RECORD_STATUS_PUBLISHED } from '../../shared/constants';
 import { AccessControlService } from '../../shared/services/access-control.service';
+import { AuditLogService } from '../../shared/services/audit-log.service';
+import { NotificationService } from '../../shared/services/notification.service';
 import { StorageService } from '../../shared/services/storage.service';
 import { ageDisplay, generateBizNo, normalizePage, normalizePageSize, statusToRecordLabel, toDateOnly } from '../../shared/utils';
 import { CreateRecordDto } from './dto/create-record.dto';
@@ -12,6 +14,7 @@ import { UpdateRecordDto } from './dto/update-record.dto';
 
 const uniqueTagNames = (tags: Array<{ tagName: string }>) => Array.from(new Set(tags.map((item) => item.tagName).filter(Boolean)));
 const coordinateLocationPattern = /^(?:手机定位|当前位置)?\s*(?:[·:：-]\s*)?[-+]?\d{1,2}(?:\.\d{3,})?\s*,\s*[-+]?\d{1,3}(?:\.\d{3,})?$/;
+const FAMILY_RECORD_PUBLISHED_ACTION = 'family.record_published';
 
 const normalizeRecordLocationText = (value?: string | null) => {
   if (value === undefined) return undefined;
@@ -56,10 +59,14 @@ const keywordEventTimeRange = (keyword: string) => {
 
 @Injectable()
 export class RecordsService {
+  private readonly logger = new Logger(RecordsService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly accessControlService: AccessControlService,
     private readonly storageService: StorageService,
+    private readonly auditLogService: AuditLogService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async create(userId: bigint, dto: CreateRecordDto) {
@@ -137,6 +144,10 @@ export class RecordsService {
 
       return created;
     });
+
+    if (record.status === RECORD_STATUS_PUBLISHED) {
+      await this.logRecordPublished(userId, record.id, child.id);
+    }
 
     return this.detail(userId, record.recordNo);
   }
@@ -229,6 +240,8 @@ export class RecordsService {
       eventTime: dto.event_time ?? record.eventTime.toISOString(),
     });
 
+    const shouldLogPublish = record.status !== RECORD_STATUS_PUBLISHED && dto.status === 'published';
+
     await this.prisma.$transaction(async (tx) => {
       const nextMediaNos = dto.media_nos;
       if (nextMediaNos) {
@@ -289,6 +302,10 @@ export class RecordsService {
         }
       }
     });
+
+    if (shouldLogPublish) {
+      await this.logRecordPublished(userId, record.id, record.childId);
+    }
 
     return this.detail(userId, recordNo);
   }
@@ -393,6 +410,66 @@ export class RecordsService {
       record_type: record.recordType,
       status: statusToRecordLabel(record.status),
     };
+  }
+
+  private async logRecordPublished(userId: bigint, recordId: bigint, childId: bigint) {
+    const [record, child, user] = await Promise.all([
+      this.prisma.record.findUnique({
+        where: { id: recordId },
+        select: {
+          recordNo: true,
+          title: true,
+          familyId: true,
+          eventTime: true,
+        },
+      }),
+      this.prisma.child.findUnique({
+        where: { id: childId },
+        include: { family: true },
+      }),
+      this.prisma.user.findUnique({
+        where: { id: userId },
+        select: { userNo: true, nickname: true },
+      }),
+    ]);
+
+    if (!record || !child || !user) return;
+
+    await this.auditLogService.create({
+      actor_type: ActorType.user,
+      actor_id: userId,
+      action: FAMILY_RECORD_PUBLISHED_ACTION,
+      target_type: 'family',
+      target_id: record.familyId,
+      metadata: {
+        family_no: child.family.familyNo,
+        child_no: child.childNo,
+        child_name: child.name,
+        record_no: record.recordNo,
+        record_title: record.title,
+        event_time: record.eventTime.toISOString(),
+        target_user_no: user.userNo,
+        target_nickname: user.nickname,
+        operator_user_id: userId.toString(),
+      },
+    });
+
+    try {
+      await this.notificationService.createRecordPublishedNotifications({
+        record_no: record.recordNo,
+        record_title: record.title,
+        record_event_time: record.eventTime,
+        family_id: record.familyId,
+        family_no: child.family.familyNo,
+        child_no: child.childNo,
+        child_name: child.name,
+        actor_user_id: userId,
+        actor_user_no: user.userNo,
+        actor_nickname: user.nickname,
+      });
+    } catch (error) {
+      this.logger.warn(`Failed to create record notifications for ${record.recordNo}: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
 
   private async toRecordDetail(

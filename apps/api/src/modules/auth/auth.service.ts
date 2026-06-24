@@ -234,6 +234,7 @@ export class AuthService {
     const childCount = await this.countAccessibleChildren(session.user.id);
 
     const avatarUrl = await this.resolveUserAvatarUrl(session.user.id, session.user.avatarUrl);
+    const avatarMediaNo = parseMediaReference(session.user.avatarUrl);
 
     return {
       access_token: accessToken,
@@ -243,6 +244,7 @@ export class AuthService {
         user_no: session.user.userNo,
         nickname: session.user.nickname,
         avatar_url: avatarUrl,
+        avatar_media_no: avatarMediaNo,
         membership_type: session.user.membershipType,
       },
       need_create_child: childCount === 0,
@@ -271,6 +273,7 @@ export class AuthService {
 
     const childCount = await this.countAccessibleChildren(user.id);
     const avatarUrl = await this.resolveUserAvatarUrl(user.id, user.avatarUrl);
+    const avatarMediaNo = parseMediaReference(user.avatarUrl);
 
     return {
       access_token: accessToken,
@@ -280,6 +283,7 @@ export class AuthService {
         user_no: user.userNo,
         nickname: user.nickname,
         avatar_url: avatarUrl,
+        avatar_media_no: avatarMediaNo,
         membership_type: user.membershipType,
       },
       need_create_child: childCount === 0,
@@ -335,13 +339,21 @@ export class AuthService {
         uploaderUserId: userId,
         status: MEDIA_STATUS_READY,
       },
-      select: { objectKey: true },
+      select: { objectKey: true, thumbnailObjectKey: true },
     });
     if (!media) return null;
 
+    const objectKey = media.thumbnailObjectKey ?? media.objectKey;
     try {
-      return (await this.storageService.createAccessUrl(media.objectKey)).access_url;
+      return (await this.storageService.createAccessUrl(objectKey)).access_url;
     } catch {
+      if (objectKey !== media.objectKey) {
+        try {
+          return (await this.storageService.createAccessUrl(media.objectKey)).access_url;
+        } catch {
+          return null;
+        }
+      }
       return null;
     }
   }

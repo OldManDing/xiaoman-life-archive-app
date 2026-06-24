@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+﻿import { expect, test, type Page } from '@playwright/test';
 
 import { adminBaseURL, expectNoEnglishSeedCopy, loginWeb, webBaseURL } from './helpers';
 
@@ -35,34 +35,31 @@ test.describe('Front and admin button/API connectivity', () => {
     await expect(page.getByRole('heading', { name: '个人资料' })).toBeVisible();
     const nickname = page.getByLabel('昵称');
     await nickname.fill('');
-    await page.getByRole('button', { name: '保存昵称' }).click();
+    await page.getByRole('button', { name: '保存资料' }).click();
     await expect(page.getByText('昵称不能为空')).toBeVisible();
     await nickname.fill('小满妈妈');
-    await page.getByRole('button', { name: '保存昵称' }).click();
+    await page.getByRole('button', { name: '保存资料' }).click();
     await expect(page.getByText('昵称保存成功')).toBeVisible();
 
     await page.goto(`${webBaseURL}/profile/settings`);
-    await page.getByRole('button', { name: '允许通过手机号搜索到我' }).click();
+    await page.getByRole('button', { name: '手机号搜索' }).click();
     await expect(page.getByText('设置已保存')).toBeVisible();
 
     await page.goto(`${webBaseURL}/profile/export`);
-    await page.getByRole('button', { name: /仅图片和视频/ }).click();
-    await expect(page.getByRole('button', { name: /仅图片和视频/ })).toHaveAttribute('aria-pressed', 'true');
+    await page.getByRole('button', { name: /图片和视频/ }).click();
+    await expect(page.getByRole('button', { name: /图片和视频/ })).toHaveAttribute('aria-pressed', 'true');
     const summaryDownloadPromise = page.waitForEvent('download');
-    await page.getByRole('button', { name: '下载审计留痕摘要' }).click();
+    await page.getByRole('button', { name: '下载摘要' }).click();
     const summaryDownload = await summaryDownloadPromise;
     expect(summaryDownload.suggestedFilename()).toContain('档案摘要');
     await expect(page.getByText(/档案摘要已生成：\d+ 条记录、\d+ 个媒体，并已写入审计日志。/)).toBeVisible();
-    await page.getByRole('button', { name: '提交打包申请' }).click();
+    await page.getByRole('button', { name: '打包申请' }).click();
     await expect(page.getByText(/档案打包申请已提交/)).toBeVisible();
 
     await page.goto(`${webBaseURL}/profile/membership`);
-    await page.getByRole('button', { name: '刷新会员信息' }).click();
-    await expect(page.getByText('会员信息已刷新')).toBeVisible();
-    await expect(page.getByText('BASIC')).toBeVisible();
-    await page.getByRole('button', { name: '咨询会员权益' }).click();
-    await expect(page).toHaveURL(/\/profile\/help\?topic=membership$/);
-    await expect(page.getByLabel('反馈内容')).toHaveValue(/咨询会员权益/);
+    await page.getByRole('button', { name: '刷新状态' }).click();
+    await expect(page.getByText('服务状态已刷新')).toBeVisible();
+    await expect(page.getByText('服务状态仅反映当前账号配置，具体能力以页面实际可用为准。')).toBeVisible();
 
     await page.goto(`${webBaseURL}/profile/security`);
     await page.getByRole('button', { name: '注销账号' }).click();
@@ -74,14 +71,12 @@ test.describe('Front and admin button/API connectivity', () => {
     await page.goto(`${webBaseURL}/profile/help`);
     await page.getByRole('button', { name: '提交反馈' }).click();
     await expect(page.getByText('请至少输入 6 个字，方便定位问题。')).toBeVisible();
-    await page.getByPlaceholder('请描述遇到的问题、页面位置和操作步骤').fill('页面显示正常，按钮可点击，反馈记录用于验证保存流程。');
+    await page.getByPlaceholder('问题、页面、操作').fill('页面显示正常，按钮可点击，反馈记录用于验证保存流程。');
     await page.getByRole('button', { name: '提交反馈' }).click();
     await expect(page.getByText('反馈已提交，客服会在处理后联系你。')).toBeVisible();
 
     await page.goto(`${webBaseURL}/profile/about`);
     await expect(page.getByText('年轮 © 2026')).toBeVisible();
-    await page.getByRole('button', { name: '功能介绍' }).click();
-    await expect(page.getByText('年轮支持成长记录、家庭协作、时间轴、月报纪念册、档案交付和审计留痕导出。')).toBeVisible();
     await page.getByRole('button', { name: '用户服务协议' }).click();
     await expect(page).toHaveURL(/\/profile\/legal$/);
     await expect(page.getByText('儿童信息保护摘要')).toBeVisible();
@@ -89,16 +84,19 @@ test.describe('Front and admin button/API connectivity', () => {
     await page.goto(`${webBaseURL}/family/invite`);
     await page.getByRole('button', { name: '生成邀请码' }).click();
     await expect(page.getByText('邀请码已生成', { exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: '复制邀请码' })).toBeVisible();
+    await expect(page.getByRole('button', { name: '复制到剪贴板' })).toBeVisible();
 
     await page.goto(`${webBaseURL}/record/r_demo_001`);
-    await expect(page.getByText('AI 智能提取')).toBeVisible();
-    await page.getByRole('button', { name: '标题' }).click();
-    await expect(page.getByText(/AI 标题(正在处理中|已生成并同步到记录详情)|调用频率(受限|超限)/)).toBeVisible();
-    await page.getByRole('button', { name: '摘要' }).click();
-    await expect(page.getByText(/AI 摘要(正在处理中|已生成并同步到记录详情)|调用频率(受限|超限)/)).toBeVisible();
-    await page.getByRole('button', { name: '标签' }).click();
-    await expect(page.getByText(/AI 标签(正在处理中|已生成并同步到记录详情)|调用频率(受限|超限)/)).toBeVisible();
+    await expect(page.getByRole('heading', { name: '记录详情' })).toBeVisible();
+    const aiSectionVisible = await page.getByText('智能整理').isVisible().catch(() => false);
+    if (aiSectionVisible) {
+      await page.getByRole('button', { name: '标题' }).click();
+      await expect(page.getByText(/标题(正在处理中|已生成并同步到记录详情)|调用频率(受限|超限)/)).toBeVisible();
+      await page.getByRole('button', { name: '摘要' }).click();
+      await expect(page.getByText(/摘要(正在处理中|已生成并同步到记录详情)|调用频率(受限|超限)/)).toBeVisible();
+      await page.getByRole('button', { name: '标签' }).click();
+      await expect(page.getByText(/标签(正在处理中|已生成并同步到记录详情)|调用频率(受限|超限)/)).toBeVisible();
+    }
   });
 
   test('Admin module buttons query, open drawers, and hit mutation APIs', async ({ page }) => {

@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import { clearAccessToken, getAccessToken, hasStoredSessionHint, setAccessToken as persistAccessToken } from './auth/tokenMemory';
 import type { ChildRecord, UserProfile } from './api/types';
@@ -41,6 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [childrenList, setChildrenList] = useState<ChildRecord[]>([]);
   const [activeChild, setActiveChildState] = useState<ChildRecord | null>(null);
+  const bootstrapRunRef = useRef(0);
 
   const setAccessToken = useCallback((token: string | null) => {
     persistAccessToken(token);
@@ -86,20 +87,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const bootstrap = useCallback(async () => {
+    const bootstrapRun = bootstrapRunRef.current;
+    const isCurrentBootstrapRun = () => bootstrapRun === bootstrapRunRef.current;
+
     try {
       const persistedToken = getAccessToken();
       if (persistedToken) {
         try {
           const profile = await webApi.me();
+          if (!isCurrentBootstrapRun()) return;
           setAccessToken(persistedToken);
           setUser(profile);
           const nextChildren = await refreshChildren();
+          if (!isCurrentBootstrapRun()) return;
           setNeedsOnboarding(nextChildren.length === 0);
         } catch {
           const session = await webApi.refresh();
+          if (!isCurrentBootstrapRun()) return;
           await hydrateAfterAuth(session);
         }
       } else if (shouldSkipAnonymousRefresh()) {
+        if (!isCurrentBootstrapRun()) return;
         clearAccessToken();
         setAccessTokenState(null);
         setUser(null);
@@ -108,9 +116,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setActiveChildState(null);
       } else {
         const session = await webApi.refresh();
+        if (!isCurrentBootstrapRun()) return;
         await hydrateAfterAuth(session);
       }
     } catch {
+      if (!isCurrentBootstrapRun()) return;
       clearAccessToken();
       setAccessTokenState(null);
       setUser(null);
@@ -143,12 +153,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const clearSession = useCallback(() => {
+    bootstrapRunRef.current += 1;
     clearAccessToken();
     setAccessTokenState(null);
     setUser(null);
     setNeedsOnboarding(false);
     setChildrenList([]);
     setActiveChildState(null);
+    setIsBootstrapping(false);
   }, []);
 
   const logout = useCallback(async () => {

@@ -16,7 +16,18 @@ describe('Auth session flow', () => {
   let app: INestApplication;
   let jwtService: JwtService;
 
-  const user = {
+  const user: {
+    id: bigint;
+    userNo: string;
+    nickname: string;
+    avatarUrl: string | null;
+    membershipType: string;
+    membershipExpireAt: Date | null;
+    mobile: string | null;
+    status: number;
+    createdAt: Date;
+    deletedAt: Date | null;
+  } = {
     id: BigInt(1),
     userNo: 'u_001',
     nickname: '测试用户',
@@ -152,9 +163,12 @@ describe('Auth session flow', () => {
             update: txUserAuthAccountUpdate,
           },
           user: {
-            update: jest.fn().mockImplementation(async ({ data }: { data: { nickname?: string; status?: number; deletedAt?: Date | null } }) => {
+            update: jest.fn().mockImplementation(async ({ data }: { data: { nickname?: string; mobile?: string | null; status?: number; deletedAt?: Date | null } }) => {
               if (typeof data.nickname === 'string') {
                 user.nickname = data.nickname;
+              }
+              if (data.mobile !== undefined) {
+                user.mobile = data.mobile;
               }
               if (typeof data.status === 'number') {
                 user.status = data.status;
@@ -355,9 +369,12 @@ describe('Auth session flow', () => {
       create: jest.fn().mockResolvedValue({ id: BigInt(1) }),
     },
     user: {
-      update: jest.fn().mockImplementation(async ({ data }: { data: { nickname?: string; status?: number; deletedAt?: Date | null } }) => {
+      update: jest.fn().mockImplementation(async ({ data }: { data: { nickname?: string; mobile?: string | null; status?: number; deletedAt?: Date | null } }) => {
         if (typeof data.nickname === 'string') {
           user.nickname = data.nickname;
+        }
+        if (data.mobile !== undefined) {
+          user.mobile = data.mobile;
         }
         if (typeof data.status === 'number') {
           user.status = data.status;
@@ -581,11 +598,11 @@ describe('Auth session flow', () => {
     expect(registerResponse.body.message).toBe('参数校验失败');
     expect(registerResponse.body.data.fields).toContainEqual({
       field: 'password',
-      reason: '密码需为 8 到 72 位',
+      reason: '密码需为 8 到 12 位',
     });
   });
 
-  it('updates nickname through users/me patch', async () => {
+  it('updates profile fields through users/me patch', async () => {
     user.status = 1;
     const accessToken = await jwtService.signAsync(
       { type: 'user', sub: user.id.toString(), user_no: user.userNo },
@@ -595,10 +612,11 @@ describe('Auth session flow', () => {
     const updateResponse = await request(app.getHttpServer())
       .patch('/api/v1/users/me')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send({ nickname: '新昵称' })
+      .send({ nickname: '新昵称', mobile: '13912345678' })
       .expect(200);
 
     expect(updateResponse.body.data.nickname).toBe('新昵称');
+    expect(updateResponse.body.data.mobile).toBe('139****5678');
   });
 
   it('rejects admin-scoped tokens on user endpoints', async () => {

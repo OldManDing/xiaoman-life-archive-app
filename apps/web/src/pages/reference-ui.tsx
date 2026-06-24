@@ -30,60 +30,58 @@ export const refPageStyle: CSSProperties = {
 };
 
 export const refContentStyle: CSSProperties = {
-  padding: '0 20px 28px',
+  padding: '0 22px 34px',
   display: 'grid',
   gridTemplateColumns: 'minmax(0, 1fr)',
-  gap: '18px',
+  gap: '22px',
 };
 
 export const refCardStyle: CSSProperties = {
-  borderRadius: '20px',
-  border: '1px solid var(--nl-glass-border)',
-  background: 'var(--nl-glass-surface)',
-  boxShadow: 'var(--nl-glass-shadow)',
-  WebkitBackdropFilter: 'blur(20px) saturate(1.18)',
-  backdropFilter: 'blur(20px) saturate(1.18)',
+  borderRadius: '8px',
+  border: '1px solid var(--nl-border-soft)',
+  background: 'var(--nl-card-bg)',
+  boxShadow: 'var(--nl-shadow-sm)',
+  WebkitBackdropFilter: 'blur(16px) saturate(1.02)',
+  backdropFilter: 'blur(16px) saturate(1.02)',
 };
 
 export const refSoftCardStyle: CSSProperties = {
   ...refCardStyle,
-  borderRadius: '26px',
+  borderRadius: '8px',
 };
 
 export const refPrimaryButtonStyle: CSSProperties = {
-  minHeight: '46px',
-  border: '1px solid rgba(245,205,140,0.52)',
-  borderRadius: '999px',
-  background: 'var(--nl-glass-accent)',
-  color: '#ffffff',
+  minHeight: '48px',
+  border: '1px solid var(--nl-primary-border)',
+  borderRadius: '8px',
+  background: 'var(--nl-primary-gradient)',
+  color: 'var(--nl-on-primary)',
   padding: '12px 18px',
-  fontSize: '14px',
-  fontWeight: 850,
+  fontSize: '15px',
+  fontWeight: 700,
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
   gap: '8px',
   cursor: 'pointer',
-  boxShadow: '0 12px 28px rgba(var(--nl-shadow-rgb),0.24), inset 0 1px 0 rgba(255,255,255,0.18)',
-  WebkitBackdropFilter: 'blur(16px) saturate(1.12)',
-  backdropFilter: 'blur(16px) saturate(1.12)',
-  transition: 'transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease',
+  boxShadow: '0 12px 24px rgba(var(--nl-primary-rgb),0.1), inset 0 1px 0 var(--nl-inset-highlight-faint)',
+  transition: 'transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease',
 };
 
 export const refSecondaryButtonStyle: CSSProperties = {
   ...refPrimaryButtonStyle,
-  border: '1px solid var(--nl-glass-border)',
-  background: 'var(--nl-glass-soft)',
+  border: '1px solid var(--nl-border-soft)',
+  background: 'var(--nl-control-bg)',
   color: 'var(--nl-muted-strong)',
-  boxShadow: '0 10px 24px rgba(var(--nl-shadow-rgb),0.2), inset 0 1px 0 rgba(255,255,255,0.08)',
+  boxShadow: 'inset 0 1px 0 var(--nl-inset-highlight)',
 };
 
 export const refMutedTextStyle: CSSProperties = {
   margin: 0,
   color: 'var(--nl-muted)',
-  fontSize: '12px',
-  lineHeight: 1.55,
-  fontWeight: 600,
+  fontSize: '13px',
+  lineHeight: 1.58,
+  fontWeight: 520,
 };
 
 export const RefTopBar = ({
@@ -117,56 +115,57 @@ export const RefTopBar = ({
         position: 'sticky',
         top: 0,
         zIndex: 4,
-        height: '52px',
-        padding: 'calc(30px + env(safe-area-inset-top)) 14px 0',
-        borderBottom: '1px solid var(--nl-glass-border)',
-        background: 'var(--nl-glass-strong)',
-        WebkitBackdropFilter: 'blur(24px) saturate(1.16)',
-        backdropFilter: 'blur(24px) saturate(1.16)',
+        minHeight: '52px',
+        padding: 'calc(18px + env(safe-area-inset-top)) 16px 10px',
+      borderBottom: '1px solid transparent',
+      background: 'var(--nl-topbar-bg)',
+      WebkitBackdropFilter: 'blur(16px) saturate(1.01)',
+      backdropFilter: 'blur(16px) saturate(1.01)',
+      boxShadow: 'none',
         display: 'grid',
         gridTemplateColumns: '52px minmax(0, 1fr) 52px',
         alignItems: 'center',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center' }}>{backNode}</div>
-      <h1 style={{ margin: 0, textAlign: 'center', color: 'var(--nl-ink)', fontSize: '17px', fontWeight: 850, lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</h1>
+      <h1 style={{ margin: 0, textAlign: 'center', color: 'var(--nl-ink)', fontSize: '17px', fontWeight: 760, lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</h1>
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>{action ?? <span />}</div>
     </header>
   );
 };
 
 const topBackButtonStyle: CSSProperties = {
-  width: '44px',
-  minWidth: '44px',
-  height: '44px',
-  border: '1px solid var(--nl-glass-border)',
-  borderRadius: '999px',
-  background: 'var(--nl-glass-soft)',
-  color: 'var(--nl-ink)',
+  width: '40px',
+  minWidth: '40px',
+  height: '40px',
+  border: 'none',
+  borderRadius: 0,
+  background: 'transparent',
+  color: 'var(--nl-muted-strong)',
   display: 'grid',
   placeItems: 'center',
   textDecoration: 'none',
   cursor: 'pointer',
-  boxShadow: '0 8px 18px rgba(var(--nl-shadow-rgb),0.18), inset 0 1px 0 rgba(255,255,255,0.08)',
-  WebkitBackdropFilter: 'blur(16px) saturate(1.12)',
-  backdropFilter: 'blur(16px) saturate(1.12)',
+  boxShadow: 'none',
 };
 
 export const RefAvatar = ({
   src = referenceAssets.momAvatar,
+  mediaNo,
   label,
   size = 44,
   radius = '999px',
   fallbackSrc = referenceAssets.momAvatar,
 }: {
-  src?: string;
+  src?: string | null;
+  mediaNo?: string | null;
   label: string;
   size?: number;
   radius?: string;
   fallbackSrc?: string;
 }) => {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
-  const resolvedSrc = useStoredMediaUrl(src);
+  const resolvedSrc = useStoredMediaUrl(src, mediaNo);
   const effectiveSrc = resolvedSrc && !isReferencePlaceholderAvatar(resolvedSrc) ? resolvedSrc : fallbackSrc;
   const displaySrc = failedSrc === effectiveSrc ? fallbackSrc : effectiveSrc;
 
@@ -187,17 +186,17 @@ export const RefAvatar = ({
         height: `${size}px`,
         borderRadius: radius,
         objectFit: 'cover',
-        border: '2px solid rgba(231,234,255,0.9)',
-        boxShadow: '0 16px 34px rgba(var(--nl-shadow-rgb),0.32), 0 0 0 5px rgba(var(--nl-primary-rgb),0.12)',
+        border: '1px solid var(--nl-border-image)',
+        boxShadow: '0 14px 30px rgba(var(--nl-shadow-rgb),0.22)',
         flexShrink: 0,
-        background: 'linear-gradient(135deg, rgba(var(--nl-primary-rgb),0.22), rgba(var(--nl-accent-rgb),0.12)), var(--nl-surface-soft)',
+        background: 'var(--nl-surface-soft)',
       }}
     />
   );
 };
 
 export const RefSectionTitle = ({ children, style }: { children: ReactNode; style?: CSSProperties }) => (
-  <h2 style={{ margin: '0 0 12px 2px', color: 'var(--nl-ink)', fontSize: '15px', fontWeight: 900, ...style }}>{children}</h2>
+  <h2 style={{ margin: '0 0 12px 2px', color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '20px', lineHeight: 1.14, fontWeight: 800, ...style }}>{children}</h2>
 );
 
 export const RefListRow = ({
@@ -220,11 +219,11 @@ export const RefListRow = ({
     onClick={onClick}
     style={{
       width: '100%',
-      minHeight: '54px',
+      minHeight: '66px',
       border: 'none',
-      borderBottom: isLast ? 'none' : '1px solid var(--nl-glass-border)',
-      background: 'var(--nl-glass-soft)',
-      padding: '11px 15px',
+      borderBottom: isLast ? 'none' : '1px solid var(--nl-border-soft)',
+      background: 'transparent',
+      padding: '16px 0',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
@@ -233,17 +232,15 @@ export const RefListRow = ({
       cursor: onClick ? 'pointer' : 'default',
       color: danger ? 'var(--nl-danger)' : 'var(--nl-ink)',
       transition: 'background-color 0.18s ease, transform 0.18s ease',
-      WebkitBackdropFilter: 'blur(16px) saturate(1.12)',
-      backdropFilter: 'blur(16px) saturate(1.12)',
     }}
   >
     <span style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: '1 1 auto' }}>
-      {icon ? <span style={{ width: '30px', height: '30px', borderRadius: '11px', background: danger ? 'rgba(229,95,105,0.12)' : 'rgba(var(--nl-primary-rgb),0.12)', color: danger ? 'var(--nl-danger)' : 'var(--nl-primary)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>{icon}</span> : null}
-      <span style={{ fontSize: '14px', fontWeight: 760, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{title}</span>
+      {icon ? <span style={{ width: '30px', height: '34px', borderRadius: '8px', background: danger ? 'var(--nl-danger-soft)' : 'transparent', border: '1px solid transparent', color: danger ? 'var(--nl-danger)' : 'var(--nl-muted-strong)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>{icon}</span> : null}
+      <span style={{ fontSize: '15.5px', fontWeight: 680, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{title}</span>
     </span>
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: danger ? 'var(--nl-danger)' : 'var(--nl-muted)', fontSize: '12px', fontWeight: 700, flexShrink: 0 }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: danger ? 'var(--nl-danger)' : 'var(--nl-muted)', fontSize: '11.5px', fontWeight: 520, flexShrink: 0 }}>
       {value}
-      {onClick ? <ChevronRight size={16} color="rgba(226,215,197,0.62)" /> : null}
+      {onClick ? <ChevronRight size={16} color="var(--nl-muted)" /> : null}
     </span>
   </button>
 );
@@ -251,20 +248,18 @@ export const RefListRow = ({
 export const RefChip = ({ children, active }: { children: ReactNode; active?: boolean }) => (
   <span
     style={{
-      minHeight: '44px',
-      borderRadius: '999px',
-      padding: '10px 15px',
+      minHeight: '38px',
+      borderRadius: '8px',
+      padding: '8px 12px',
       display: 'inline-flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: active ? 'var(--nl-glass-accent)' : 'var(--nl-glass-soft)',
-      color: active ? '#ffffff' : 'var(--nl-muted)',
-      border: active ? '1px solid rgba(245,205,140,0.52)' : '1px solid var(--nl-glass-border)',
-      boxShadow: active ? '0 8px 18px rgba(var(--nl-shadow-rgb),0.22)' : '0 8px 18px rgba(var(--nl-shadow-rgb),0.22)',
-      WebkitBackdropFilter: 'blur(16px) saturate(1.12)',
-      backdropFilter: 'blur(16px) saturate(1.12)',
-      fontSize: '13px',
-      fontWeight: 800,
+      background: active ? 'var(--nl-primary-soft)' : 'transparent',
+      color: active ? 'var(--nl-primary-2)' : 'var(--nl-muted-strong)',
+      border: active ? '1px solid var(--nl-primary-line)' : '1px solid var(--nl-border-muted)',
+      boxShadow: 'none',
+      fontSize: '12px',
+      fontWeight: active ? 620 : 540,
       whiteSpace: 'nowrap',
     }}
   >

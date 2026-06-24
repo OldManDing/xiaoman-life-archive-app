@@ -1,12 +1,15 @@
-import { useEffect, useState, type CSSProperties, type ChangeEvent, type FormEvent } from 'react';
+﻿import { useEffect, useRef, useState, type CSSProperties, type ChangeEvent, type FocusEvent, type FormEvent, type KeyboardEvent, type RefObject } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Calendar, Camera, CheckCircle2 } from 'lucide-react';
+import { Calendar, Camera, ChevronLeft } from 'lucide-react';
 
 import { useAuth } from '../shared/AuthContext';
+import { BrandBootMotion } from '../components/BrandBootMotion';
 import { webApi } from '../shared/api/webApi';
 import { createPersistableAvatarPreview } from '../shared/localMediaPreview';
 import { isSupportedImageFile, withResolvedFileMimeType } from '../shared/mediaFiles';
-import { Field, PageShell, Panel, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle } from '../shared/ui';
+import { Field, PageShell, Panel, dateControlStyle, helperTextStyle, hiddenNativeDateInputStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle } from '../shared/ui';
+import { markWelcomeIntroSeen } from '../shared/welcome';
+import { referenceAssets } from './reference-ui';
 import { rowStyle } from './shared';
 
 type AuthMode = 'login' | 'register';
@@ -131,8 +134,8 @@ const validateCredential = (credential: string) => {
   return null;
 };
 
-const validatePassword = (password: string, label = '密码') => {
-  if (password.length < 8 || password.length > 72) return `${label}需为 8 到 72 位`;
+const validatePassword = (password: string, label = '密码', maxLength = 72) => {
+  if (password.length < 8 || password.length > maxLength) return `${label}需为 8 到 ${maxLength} 位`;
   return null;
 };
 
@@ -154,68 +157,56 @@ const authPageContentStyle: CSSProperties = {
   margin: '0 auto',
   display: 'grid',
   alignContent: 'start',
-  gap: '14px',
-  padding: 'calc(42px + env(safe-area-inset-top)) 0 24px',
+  gap: '18px',
+  padding: 'calc(34px + env(safe-area-inset-top)) 2px 28px',
 };
 
 const authHeroStyle: CSSProperties = {
   display: 'grid',
   justifyItems: 'center',
-  gap: '8px',
+  gap: '10px',
   textAlign: 'center',
 };
 
 const authLogoStyle: CSSProperties = {
-  width: '72px',
-  height: '72px',
-  borderRadius: '20px',
-  boxShadow: '0 14px 30px rgba(var(--nl-shadow-rgb),0.28), 0 0 0 5px rgba(var(--nl-primary-rgb),0.1)',
+  width: '68px',
+  height: '68px',
+  borderRadius: '8px',
+  boxShadow: '0 20px 42px rgba(var(--nl-shadow-rgb),0.28), inset 0 1px 0 var(--nl-inset-highlight)',
 };
 
 const authTitleStyle: CSSProperties = {
   margin: 0,
   color: 'var(--nl-ink)',
-  fontSize: '26px',
-  fontWeight: 950,
-  lineHeight: 1.18,
+  fontFamily: 'var(--nl-font-display)',
+  fontSize: '32px',
+  fontWeight: 800,
+  lineHeight: 1.1,
 };
 
-const authSubtitleStyle: CSSProperties = {
-  margin: '7px auto 0',
-  maxWidth: '300px',
+const authBackButtonStyle: CSSProperties = {
+  minHeight: '42px',
+  border: 'none',
+  background: 'transparent',
   color: 'var(--nl-muted-strong)',
-  fontSize: '13px',
-  lineHeight: 1.58,
-  fontWeight: 750,
-};
-
-const authTrustGridStyle: CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-  gap: '8px',
-};
-
-const authTrustItemStyle: CSSProperties = {
-  minHeight: '58px',
-  borderRadius: '18px',
-  border: '1px solid var(--nl-glass-border)',
-  background: 'var(--nl-glass-soft)',
-  color: 'var(--nl-muted-strong)',
-  display: 'grid',
-  placeItems: 'center',
+  padding: 0,
+  display: 'inline-flex',
+  alignItems: 'center',
   gap: '4px',
-  padding: '8px 4px',
-  textAlign: 'center',
-  fontSize: '11px',
-  lineHeight: 1.25,
-  fontWeight: 850,
-  WebkitBackdropFilter: 'blur(14px) saturate(1.12)',
-  backdropFilter: 'blur(14px) saturate(1.12)',
+  fontSize: '14px',
+  fontWeight: 560,
+  cursor: 'pointer',
+  justifySelf: 'start',
 };
 
 const authPanelStyle: CSSProperties = {
-  padding: '16px',
-  borderRadius: '20px',
+  padding: '18px 16px',
+  borderRadius: '8px',
+  border: '1px solid var(--nl-border-soft)',
+  background: 'linear-gradient(180deg, rgba(var(--nl-surface-strong-rgb),0.3), rgba(var(--nl-surface-rgb),0.1))',
+  boxShadow: '0 18px 46px rgba(var(--nl-shadow-rgb),0.14), inset 0 1px 0 var(--nl-inset-highlight)',
+  WebkitBackdropFilter: 'blur(16px) saturate(1.02)',
+  backdropFilter: 'blur(16px) saturate(1.02)',
 };
 
 const authFormStyle: CSSProperties = {
@@ -243,7 +234,7 @@ const authCheckboxStyle = (checked: boolean): CSSProperties => ({
   margin: '2px 0 0',
   flex: '0 0 auto',
   borderRadius: '7px',
-  border: checked ? '1px solid rgba(245, 205, 140, 0.68)' : '1px solid var(--nl-border)',
+  border: checked ? '1px solid var(--nl-primary-border)' : '1px solid var(--nl-border-strong)',
   backgroundColor: checked ? 'var(--nl-primary)' : 'rgba(var(--nl-surface-rgb), 0.92)',
   backgroundImage: checked
     ? 'url("data:image/svg+xml,%3Csvg width=\'14\' height=\'14\' viewBox=\'0 0 14 14\' fill=\'none\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M3 7.1L5.6 9.7L11 4.3\' stroke=\'white\' stroke-width=\'2.2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'/%3E%3C/svg%3E")'
@@ -251,7 +242,9 @@ const authCheckboxStyle = (checked: boolean): CSSProperties => ({
   backgroundPosition: 'center',
   backgroundRepeat: 'no-repeat',
   backgroundSize: '14px 14px',
-  boxShadow: checked ? '0 8px 18px rgba(var(--nl-primary-rgb), 0.2)' : 'inset 0 0 0 1px rgba(255, 255, 255, 0.04)',
+  boxShadow: checked
+    ? '0 8px 18px rgba(var(--nl-primary-rgb),0.18), inset 0 1px 0 var(--nl-inset-highlight-faint)'
+    : 'inset 0 1px 0 var(--nl-inset-highlight)',
   cursor: 'pointer',
 });
 
@@ -260,51 +253,50 @@ const authAgreementTextStyle: CSSProperties = {
   minWidth: 0,
 };
 
-const onboardingStepStyle = (active: boolean): CSSProperties => ({
-  display: 'grid',
-  gridTemplateColumns: '24px minmax(0, 1fr)',
-  gap: '10px',
-  alignItems: 'start',
-  color: active ? 'var(--nl-ink)' : 'var(--nl-muted-strong)',
-  fontSize: '13px',
-  lineHeight: 1.45,
-  fontWeight: 750,
-});
-
-const onboardingStepDotStyle = (active: boolean): CSSProperties => ({
-  width: '24px',
-  height: '24px',
-  borderRadius: '999px',
-  display: 'grid',
-  placeItems: 'center',
-  background: active ? 'rgba(var(--nl-success-rgb),0.16)' : 'rgba(var(--nl-surface-rgb),0.74)',
-  color: active ? 'var(--nl-success)' : 'var(--nl-muted)',
-  border: '1px solid var(--nl-border)',
-  fontSize: '11px',
-  fontWeight: 900,
-});
-
 const disabledSubmitButtonStyle: CSSProperties = {
   ...primaryButtonStyle,
-  background: 'rgba(var(--nl-surface-rgb),0.62)',
+  background: 'linear-gradient(180deg, rgba(var(--nl-surface-strong-rgb),0.64), rgba(var(--nl-surface-rgb),0.42))',
   color: 'var(--nl-muted)',
   boxShadow: 'none',
   cursor: 'not-allowed',
   opacity: 1,
 };
 
-export const SplashPage = () => (
-  <PageShell title="正在进入年轮" description="系统正在检查登录状态，并会自动前往合适的页面。">
-    <Panel style={{ textAlign: 'center', display: 'grid', justifyItems: 'center', gap: 14, padding: '28px 20px' }}>
-      <img src="/brand/nianlun-logo-192.png" alt="年轮" width={64} height={64} style={{ ...authLogoStyle, width: 64, height: 64, borderRadius: 18 }} />
-      <div style={{ display: 'grid', gap: 6 }}>
-        <strong style={{ color: 'var(--nl-ink)', fontSize: 18, fontWeight: 950 }}>正在同步家庭档案</strong>
-        <p style={{ ...helperTextStyle, margin: 0 }}>正在检查登录状态、孩子档案和最近记录。</p>
-      </div>
-      <span aria-hidden="true" style={{ width: '100%', height: 8, borderRadius: '999px', background: 'linear-gradient(90deg, rgba(var(--nl-surface-rgb),0.52), rgba(var(--nl-primary-rgb),0.32), rgba(var(--nl-surface-rgb),0.52))' }} />
-    </Panel>
-  </PageShell>
-);
+export const SplashPage = () => <BrandBootMotion />;
+
+export const WelcomePage = () => {
+  const navigate = useNavigate();
+
+  const continueToLogin = () => {
+    markWelcomeIntroSeen();
+    navigate('/auth/login', { replace: true });
+  };
+
+  return (
+    <main style={{ minHeight: '100dvh', boxSizing: 'border-box', display: 'grid', gridTemplateRows: 'minmax(0, 1fr) auto', gap: 16, padding: 'calc(18px + env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom))' }}>
+      <section style={{ display: 'grid', alignContent: 'start', gap: 18, minHeight: 0 }}>
+        <div style={{ position: 'relative', aspectRatio: '4 / 5', borderRadius: 8, overflow: 'hidden', border: '1px solid var(--nl-border-strong)', background: 'var(--nl-surface-soft)', boxShadow: 'var(--nl-shadow-md)' }}>
+          <img src={referenceAssets.childPhoto} alt="成长时间线" decoding="async" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+          <div style={{ position: 'absolute', inset: 0, background: 'var(--nl-auth-photo-scrim)' }} />
+          <div style={{ position: 'absolute', left: 16, right: 16, bottom: 16, display: 'grid', gap: 8 }}>
+            <strong style={{ color: 'var(--nl-on-primary)', fontSize: 28, lineHeight: 1.08, fontWeight: 760 }}>年轮</strong>
+            <span style={{ color: 'var(--nl-on-dark-muted)', fontSize: 14, lineHeight: 1.55, fontWeight: 560 }}>把照片、语音和文字整理成孩子的家庭时间线。</span>
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <img src={referenceAssets.roomPhoto} alt="生活记录" decoding="async" style={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', borderRadius: 8, border: '1px solid var(--nl-border-strong)', boxShadow: 'var(--nl-shadow-sm)' }} />
+          <img src={referenceAssets.parkPhoto} alt="家庭瞬间" decoding="async" style={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', borderRadius: 8, border: '1px solid var(--nl-border-strong)', boxShadow: 'var(--nl-shadow-sm)' }} />
+        </div>
+      </section>
+
+      <section style={{ display: 'grid', gap: 10 }}>
+        <button type="button" onClick={continueToLogin} style={primaryButtonStyle}>开始使用</button>
+        <button type="button" onClick={continueToLogin} style={{ ...secondaryButtonStyle, justifyContent: 'center' }}>跳过</button>
+      </section>
+    </main>
+  );
+};
 
 export const LoginPage = () => {
   const navigate = useNavigate();
@@ -315,6 +307,10 @@ export const LoginPage = () => {
   const [acceptedAgreement, setAcceptedAgreement] = useState(initialDraft.acceptedAgreement);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const credentialInputRef = useRef<HTMLInputElement>(null);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
+  const passwordConfirmInputRef = useRef<HTMLInputElement>(null);
+  const inviteCodeInputRef = useRef<HTMLInputElement>(null);
   const canSubmit =
     acceptedAgreement &&
     form.credential.trim().length > 0 &&
@@ -353,6 +349,14 @@ export const LoginPage = () => {
     navigate('/legal');
   };
 
+  const goBackFromLogin = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate('/splash', { replace: true });
+  };
+
   useEffect(() => {
     if (isAuthenticated) {
       navigate(needsOnboarding ? '/onboarding/child' : '/home', { replace: true });
@@ -367,8 +371,25 @@ export const LoginPage = () => {
     });
   }, [acceptedAgreement, form, mode]);
 
-  const onSubmit = async (event: FormEvent) => {
+  const scrollInputIntoView = (input: HTMLInputElement | null) => {
+    window.setTimeout(() => {
+      input?.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
+    }, 120);
+  };
+
+  const onInputFocus = (event: FocusEvent<HTMLInputElement>) => {
+    scrollInputIntoView(event.currentTarget);
+  };
+
+  const focusNextInputOnEnter = (event: KeyboardEvent<HTMLInputElement>, nextInputRef: RefObject<HTMLInputElement>) => {
+    if (event.key !== 'Enter') return;
     event.preventDefault();
+    nextInputRef.current?.focus();
+    scrollInputIntoView(nextInputRef.current);
+  };
+
+  const submitAuth = async () => {
+    if (submitting) return;
     if (!acceptedAgreement) {
       setError('请先阅读并同意用户协议和隐私政策');
       return;
@@ -383,7 +404,7 @@ export const LoginPage = () => {
         return;
       }
 
-      const passwordError = validatePassword(form.password);
+      const passwordError = validatePassword(form.password, '密码', mode === 'login' ? 72 : 12);
       if (passwordError) {
         setError(passwordError);
         return;
@@ -397,7 +418,7 @@ export const LoginPage = () => {
         });
         clearLoginFormDraft();
       } else {
-        const passwordConfirmError = validatePassword(form.password_confirm, '确认密码');
+        const passwordConfirmError = validatePassword(form.password_confirm, '确认密码', 12);
         if (passwordConfirmError) {
           setError(passwordConfirmError);
           return;
@@ -433,26 +454,40 @@ export const LoginPage = () => {
     }
   };
 
+  const submitOnEnter = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    void submitAuth();
+  };
+
+  const onPasswordKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (mode === 'login') {
+      submitOnEnter(event);
+      return;
+    }
+    focusNextInputOnEnter(event, passwordConfirmInputRef);
+  };
+
+  const onSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    void submitAuth();
+  };
+
   return (
     <PageShell title="登录注册" hideHeader>
       <div style={authPageContentStyle}>
+        <button type="button" aria-label="返回" onClick={goBackFromLogin} style={authBackButtonStyle}>
+          <ChevronLeft size={18} strokeWidth={2.4} />
+          返回
+        </button>
         <section style={authHeroStyle} aria-label="年轮品牌">
           <img src="/brand/nianlun-logo-192.png" alt="年轮" width={72} height={72} style={authLogoStyle} />
           <div>
             <h1 style={authTitleStyle}>登录注册</h1>
-            <p style={authSubtitleStyle}>为孩子长期保存照片、文字、语音和家人的共同记忆。</p>
           </div>
         </section>
-        <section aria-label="年轮价值" style={authTrustGridStyle}>
-          {['成长时间线', '家庭协作', '长期可导出'].map((item) => (
-            <span key={item} style={authTrustItemStyle}>
-              <CheckCircle2 size={15} color="var(--nl-accent)" />
-              {item}
-            </span>
-          ))}
-        </section>
         <Panel style={authPanelStyle}>
-          <form onSubmit={onSubmit} style={authFormStyle}>
+          <form onSubmit={onSubmit} style={authFormStyle} noValidate>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
             <button
               type="button"
@@ -471,44 +506,74 @@ export const LoginPage = () => {
           </div>
           <Field label="账号">
             <input
+              ref={credentialInputRef}
               style={inputStyle}
               value={form.credential}
               onChange={(event) => updateFormField('credential', event.target.value)}
-              placeholder="请输入账号"
+              onFocus={onInputFocus}
+              onKeyDown={(event) => focusNextInputOnEnter(event, passwordInputRef)}
+              placeholder="账号"
               autoComplete="username"
+              inputMode="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              enterKeyHint="next"
             />
           </Field>
           <Field label="密码">
             <input
+              ref={passwordInputRef}
               style={inputStyle}
               type="password"
               value={form.password}
               onChange={(event) => updateFormField('password', event.target.value)}
-              placeholder="请输入密码"
+              onFocus={onInputFocus}
+              onKeyDown={onPasswordKeyDown}
+              placeholder="密码"
               autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              enterKeyHint={mode === 'login' ? 'done' : 'next'}
+              maxLength={mode === 'login' ? 72 : 12}
             />
           </Field>
           {mode === 'register' ? (
             <>
               <Field label="确认密码">
                 <input
+                  ref={passwordConfirmInputRef}
                   style={inputStyle}
                   type="password"
                   value={form.password_confirm}
                   onChange={(event) => updateFormField('password_confirm', event.target.value)}
-                  placeholder="请再次输入密码"
+                  onFocus={onInputFocus}
+                  onKeyDown={(event) => focusNextInputOnEnter(event, inviteCodeInputRef)}
+                  placeholder="确认密码"
                   autoComplete="new-password"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  enterKeyHint="next"
+                  maxLength={12}
                 />
               </Field>
-              <Field label="邀请码（选填）">
+              <Field label="邀请码">
                 <input
+                  ref={inviteCodeInputRef}
                   style={inputStyle}
                   value={form.invite_code}
                   onChange={(event) => updateFormField('invite_code', event.target.value)}
-                  placeholder="已有家庭邀请码可填写，没有也能注册"
+                  onFocus={onInputFocus}
+                  onKeyDown={submitOnEnter}
+                  placeholder="邀请码"
                   autoComplete="one-time-code"
+                  autoCapitalize="characters"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  enterKeyHint="done"
                 />
-                <p style={{ ...helperTextStyle, margin: '6px 0 0' }}>没有邀请码会先创建自己的家庭档案，之后可邀请家人加入。</p>
               </Field>
             </>
           ) : null}
@@ -525,7 +590,7 @@ export const LoginPage = () => {
           </label>
         {error ? <p style={{ ...helperTextStyle, color: 'var(--nl-danger)' }}>{error}</p> : null}
           <button type="button" style={{ ...secondaryButtonStyle, justifyContent: 'center' }} onClick={openLegalPage}>
-            查看完整协议与隐私政策
+            协议与隐私
           </button>
           <button type="submit" style={submitting || !canSubmit ? disabledSubmitButtonStyle : primaryButtonStyle} disabled={submitting || !canSubmit}>
             {submitting ? (mode === 'login' ? '登录中…' : '注册中…') : mode === 'login' ? '进入年轮' : '注册并进入'}
@@ -616,48 +681,21 @@ export const OnboardingChildPage = () => {
   return (
     <PageShell title={isAddingChild ? '添加宝宝档案' : '完善宝宝信息'} backTo={isAddingChild ? '/profile' : undefined}>
       <form onSubmit={onSubmit} style={{ ...rowStyle, gap: '22px' }}>
-        <Panel style={{ padding: '16px 16px 14px', borderRadius: '20px' }}>
-          <div style={{ display: 'grid', gap: '10px' }}>
-            <div>
-              <strong style={{ display: 'block', color: 'var(--nl-ink)', fontSize: '15px', fontWeight: 900 }}>开始使用的三步</strong>
-              <p style={{ ...helperTextStyle, marginTop: '4px' }}>先建档，再留下第一条记录，最后邀请家人一起维护同一份成长档案。</p>
-            </div>
-            <div style={{ display: 'grid', gap: '9px' }}>
-              {[
-                { title: '完善宝宝信息', done: true },
-                { title: '记录第一条成长瞬间', done: false },
-                { title: '邀请家人加入协作', done: false },
-              ].map((item, index) => (
-                <div key={item.title} style={onboardingStepStyle(item.done)}>
-                  <span style={onboardingStepDotStyle(item.done)}>{item.done ? <CheckCircle2 size={14} strokeWidth={2.5} /> : index + 1}</span>
-                  <span>
-                    <strong style={{ display: 'block', fontSize: '13px', fontWeight: 850, color: 'inherit' }}>{item.title}</strong>
-                    <span style={{ display: 'block', marginTop: '2px', color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 650 }}>
-                      {index === 0 ? '填写头像、生日和基础资料，后面内容会更完整。' : index === 1 ? '从相册或拍照开始，先留下真实的一刻。' : '家人权限可控，协作边界会保持清楚。'}
-                    </span>
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </Panel>
-        <div style={{ display: 'grid', justifyItems: 'center', gap: '10px', paddingTop: '6px' }}>
-          <label style={{ width: '96px', height: '96px', borderRadius: '999px', border: '1px solid var(--nl-border)', background: 'var(--nl-surface-soft)', display: 'grid', placeItems: 'center', color: 'var(--nl-muted)', position: 'relative', cursor: 'pointer', overflow: 'hidden', boxShadow: '0 16px 34px rgba(var(--nl-shadow-rgb),0.32), 0 0 0 5px rgba(var(--nl-primary-rgb),0.14)' }}>
+        <div style={{ display: 'grid', justifyItems: 'center', gap: '9px', paddingTop: '2px' }}>
+          <label style={{ width: '96px', height: '96px', borderRadius: '8px', border: '1px solid var(--nl-border-muted)', background: 'linear-gradient(180deg, rgba(var(--nl-surface-strong-rgb),0.42), rgba(var(--nl-surface-rgb),0.18))', display: 'grid', placeItems: 'center', color: 'var(--nl-muted)', position: 'relative', cursor: 'pointer', overflow: 'hidden', boxShadow: '0 14px 30px rgba(var(--nl-shadow-rgb),0.18)' }}>
             {childAvatarPreviewSrc && !avatarPreviewFailed ? <img src={childAvatarPreviewSrc} alt="宝宝头像预览" decoding="async" onError={() => setAvatarPreviewFailed(true)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Camera size={34} strokeWidth={1.9} />}
-            <span style={{ position: 'absolute', right: '0', bottom: '0', width: '30px', height: '30px', borderRadius: '999px', background: 'var(--nl-primary)', color: '#ffffff', display: 'grid', placeItems: 'center', fontSize: '19px', fontWeight: 700, border: '1px solid rgba(245,205,140,0.52)', lineHeight: 1 }}>+</span>
             <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" onChange={(event) => void onAvatarChange(event)} style={{ display: 'none' }} />
           </label>
-          <span style={{ color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 700 }}>设置头像</span>
         </div>
 
-        <Panel style={{ padding: 0, borderRadius: '24px', overflow: 'hidden', boxShadow: 'var(--nl-shadow-sm)' }}>
+        <Panel style={{ padding: 0, borderRadius: '8px', overflow: 'hidden', background: 'rgba(var(--nl-surface-rgb),0.12)', border: '1px solid var(--nl-border-muted)', boxShadow: 'inset 0 1px 0 var(--nl-inset-highlight)' }}>
           <div style={{ display: 'grid' }}>
-            <div style={{ padding: '16px', borderBottom: '1px solid var(--nl-border)' }}>
+            <div style={{ padding: '16px', borderBottom: '1px solid var(--nl-border-muted)' }}>
             <Field label="宝宝小名">
-              <input style={{ ...inputStyle, border: 'none', padding: 0, minHeight: '44px' }} value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="请输入宝宝小名" />
+              <input style={{ ...inputStyle, border: 'none', padding: 0, minHeight: '44px' }} value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="小名" />
             </Field>
             </div>
-            <div style={{ padding: '16px', borderBottom: '1px solid var(--nl-border)' }}>
+            <div style={{ padding: '16px', borderBottom: '1px solid var(--nl-border-muted)' }}>
             <Field label="性别">
               <div role="radiogroup" aria-label="性别" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
                 {[
@@ -674,36 +712,36 @@ export const OnboardingChildPage = () => {
                       onClick={() => setForm((current) => ({ ...current, gender: item.value }))}
                       style={{
                         minHeight: '44px',
-                        borderRadius: '14px',
-                        border: selected ? '1px solid rgba(245,205,140,0.58)' : '1px solid var(--nl-border)',
-                        background: selected ? 'rgba(var(--nl-primary-rgb),0.24)' : 'rgba(var(--nl-surface-rgb),0.72)',
+                        borderRadius: '8px',
+                        border: selected ? '1px solid var(--nl-primary-line)' : '1px solid var(--nl-border-muted)',
+                        background: selected ? 'rgba(var(--nl-primary-rgb),0.12)' : 'rgba(var(--nl-surface-rgb),0.14)',
                         color: selected ? 'var(--nl-ink)' : 'var(--nl-muted-strong)',
                         fontSize: '13px',
-                        fontWeight: 800,
+                        fontWeight: 700,
                         cursor: 'pointer',
                       }}
                     >
-                      {item.label} {item.value === 'male' ? '👦' : '👧'}
+                      {item.label}
                     </button>
                   );
                 })}
               </div>
             </Field>
             </div>
-            <div style={{ padding: '16px', position: 'relative' }}>
+            <div style={{ padding: '16px' }}>
             <Field label="出生日期">
-              <span style={{ position: 'relative', minHeight: '44px', paddingRight: '28px', display: 'flex', alignItems: 'center', color: form.birthday ? 'var(--nl-ink)' : 'var(--nl-muted)', fontSize: '14px', fontWeight: 600 }}>
+              <span style={{ ...dateControlStyle, color: form.birthday ? 'var(--nl-ink)' : 'var(--nl-muted)', fontSize: '14px' }}>
                 <input
-                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
+                  style={hiddenNativeDateInputStyle}
                   type="date"
                   aria-label="出生日期"
                   value={form.birthday}
                   onChange={(event) => setForm((current) => ({ ...current, birthday: event.target.value }))}
                 />
-                <span style={{ pointerEvents: 'none' }}>{form.birthday ? form.birthday.replace(/-/g, '/') : '年/月/日'}</span>
+                <span style={{ pointerEvents: 'none', flex: 1 }}>{form.birthday ? form.birthday.replace(/-/g, '/') : '年/月/日'}</span>
+                <Calendar size={17} color="var(--nl-muted-strong)" style={{ pointerEvents: 'none', opacity: 0.82 }} />
               </span>
             </Field>
-              <Calendar size={18} color="var(--nl-muted)" style={{ position: 'absolute', right: '16px', bottom: '20px', pointerEvents: 'none' }} />
             </div>
           </div>
         </Panel>

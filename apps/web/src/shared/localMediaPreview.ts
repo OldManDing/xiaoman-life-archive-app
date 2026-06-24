@@ -1,6 +1,7 @@
 const STORAGE_KEY_PREFIX = 'nianlun-local-media-preview:';
 const LOCAL_MEDIA_REFERENCE_PREFIX = 'local-media:';
 const STORED_MEDIA_REFERENCE_PREFIX = 'media:';
+const MEDIA_NO_PATTERN = /^(m|media)_[a-z0-9][a-z0-9_-]*$/i;
 const MAX_PREVIEW_BYTES = 4_200_000;
 const IMAGE_PREVIEW_MAX_SIDE = 1280;
 const RAW_BROWSER_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
@@ -149,6 +150,9 @@ export const getStoredMediaReferenceNo = (value: string | null | undefined) => {
   if (normalizedValue.startsWith(STORED_MEDIA_REFERENCE_PREFIX)) {
     return normalizedValue.slice(STORED_MEDIA_REFERENCE_PREFIX.length) || null;
   }
+  if (!/^(https?:|data:|blob:|\/)/i.test(normalizedValue) && MEDIA_NO_PATTERN.test(normalizedValue)) {
+    return normalizedValue;
+  }
   return null;
 };
 
@@ -160,6 +164,9 @@ export const resolveStoredMediaUrl = (value: string | null | undefined) => {
   }
   if (normalizedValue.startsWith(STORED_MEDIA_REFERENCE_PREFIX)) {
     return resolveMediaPreviewUrl(normalizedValue.slice(STORED_MEDIA_REFERENCE_PREFIX.length), null);
+  }
+  if (!/^(https?:|data:|blob:|\/)/i.test(normalizedValue) && MEDIA_NO_PATTERN.test(normalizedValue)) {
+    return resolveMediaPreviewUrl(normalizedValue, null);
   }
   return normalizedValue;
 };

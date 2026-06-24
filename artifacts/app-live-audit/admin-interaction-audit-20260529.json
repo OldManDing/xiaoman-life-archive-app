@@ -35,7 +35,187 @@
     },
     {
       "route": "/users",
+      "label": "重置密码"
+    },
+    {
+      "route": "/users",
+      "label": "调整权益"
+    },
+    {
+      "route": "/users",
+      "label": "详情"
+    },
+    {
+      "route": "/users",
+      "label": "冻结"
+    },
+    {
+      "route": "/users",
+      "label": "重置密码"
+    },
+    {
+      "route": "/users",
+      "label": "调整权益"
+    },
+    {
+      "route": "/users",
+      "label": "详情"
+    },
+    {
+      "route": "/users",
+      "label": "冻结"
+    },
+    {
+      "route": "/users",
+      "label": "重置密码"
+    },
+    {
+      "route": "/users",
+      "label": "调整权益"
+    },
+    {
+      "route": "/users",
+      "label": "详情"
+    },
+    {
+      "route": "/users",
+      "label": "冻结"
+    },
+    {
+      "route": "/users",
+      "label": "重置密码"
+    },
+    {
+      "route": "/users",
+      "label": "调整权益"
+    },
+    {
+      "route": "/users",
+      "label": "详情"
+    },
+    {
+      "route": "/users",
+      "label": "冻结"
+    },
+    {
+      "route": "/users",
+      "label": "重置密码"
+    },
+    {
+      "route": "/users",
+      "label": "调整权益"
+    },
+    {
+      "route": "/users",
+      "label": "详情"
+    },
+    {
+      "route": "/users",
+      "label": "冻结"
+    },
+    {
+      "route": "/users",
+      "label": "重置密码"
+    },
+    {
+      "route": "/users",
+      "label": "调整权益"
+    },
+    {
+      "route": "/users",
+      "label": "详情"
+    },
+    {
+      "route": "/users",
+      "label": "冻结"
+    },
+    {
+      "route": "/users",
+      "label": "重置密码"
+    },
+    {
+      "route": "/users",
+      "label": "调整权益"
+    },
+    {
+      "route": "/users",
+      "label": "详情"
+    },
+    {
+      "route": "/users",
+      "label": "冻结"
+    },
+    {
+      "route": "/users",
+      "label": "重置密码"
+    },
+    {
+      "route": "/users",
+      "label": "调整权益"
+    },
+    {
+      "route": "/users",
+      "label": "详情"
+    },
+    {
+      "route": "/users",
+      "label": "冻结"
+    },
+    {
+      "route": "/users",
+      "label": "重置密码"
+    },
+    {
+      "route": "/users",
+      "label": "调整权益"
+    },
+    {
+      "route": "/users",
+      "label": "详情"
+    },
+    {
+      "route": "/users",
+      "label": "冻结"
+    },
+    {
+      "route": "/users",
+      "label": "重置密码"
+    },
+    {
+      "route": "/users",
+      "label": "调整权益"
+    },
+    {
+      "route": "/users",
+      "label": "详情"
+    },
+    {
+      "route": "/users",
+      "label": "冻结"
+    },
+    {
+      "route": "/users",
+      "label": "重置密码"
+    },
+    {
+      "route": "/users",
+      "label": "调整权益"
+    },
+    {
+      "route": "/users",
+      "label": "详情"
+    },
+    {
+      "route": "/users",
+      "label": "冻结"
+    },
+    {
+      "route": "/users",
       "label": "查询"
+    },
+    {
+      "route": "/users",
+      "label": "清空"
     },
     {
       "route": "/families",
@@ -48,6 +228,10 @@
     {
       "route": "/invites",
       "label": "下一页"
+    },
+    {
+      "route": "/invites",
+      "label": "撤销"
     },
     {
       "route": "/invites",
@@ -111,95 +295,11 @@
     },
     {
       "route": "/ai-jobs",
-      "label": "详情"
-    },
-    {
-      "route": "/ai-jobs",
-      "label": "详情"
-    },
-    {
-      "route": "/ai-jobs",
-      "label": "详情"
-    },
-    {
-      "route": "/ai-jobs",
-      "label": "详情"
-    },
-    {
-      "route": "/ai-jobs",
-      "label": "详情"
-    },
-    {
-      "route": "/ai-jobs",
-      "label": "详情"
-    },
-    {
-      "route": "/ai-jobs",
-      "label": "详情"
-    },
-    {
-      "route": "/ai-jobs",
-      "label": "详情"
-    },
-    {
-      "route": "/ai-jobs",
-      "label": "详情"
-    },
-    {
-      "route": "/ai-jobs",
-      "label": "详情"
-    },
-    {
-      "route": "/ai-jobs",
-      "label": "详情"
-    },
-    {
-      "route": "/ai-jobs",
-      "label": "详情"
-    },
-    {
-      "route": "/ai-jobs",
-      "label": "详情"
-    },
-    {
-      "route": "/ai-jobs",
-      "label": "详情"
-    },
-    {
-      "route": "/ai-jobs",
-      "label": "详情"
-    },
-    {
-      "route": "/ai-jobs",
-      "label": "详情"
-    },
-    {
-      "route": "/ai-jobs",
-      "label": "详情"
-    },
-    {
-      "route": "/ai-jobs",
-      "label": "详情"
-    },
-    {
-      "route": "/ai-jobs",
-      "label": "详情"
-    },
-    {
-      "route": "/ai-jobs",
       "label": "查询"
     },
     {
-      "route": "/ai-jobs",
-      "label": "清空"
-    },
-    {
       "route": "/content-risks",
-      "label": "下一页"
-    },
-    {
-      "route": "/content-risks",
-      "label": "清空"
+      "label": "查询"
     },
     {
       "route": "/content-risks",
@@ -231,14 +331,6 @@
     },
     {
       "route": "/archive-export-requests",
-      "label": "下一页"
-    },
-    {
-      "route": "/archive-export-requests",
-      "label": "查询"
-    },
-    {
-      "route": "/archive-export-requests",
       "label": "全部类型"
     },
     {
@@ -275,10 +367,6 @@
     },
     {
       "route": "/audit-logs",
-      "label": "清空"
-    },
-    {
-      "route": "/audit-logs",
       "label": "全部动作"
     },
     {
@@ -300,8 +388,8 @@
     {
       "route": "/users",
       "inputsTouched": 1,
-      "buttonCandidates": 10,
-      "buttonsClicked": 9
+      "buttonCandidates": 54,
+      "buttonsClicked": 54
     },
     {
       "route": "/families",
@@ -312,8 +400,8 @@
     {
       "route": "/invites",
       "inputsTouched": 3,
-      "buttonCandidates": 18,
-      "buttonsClicked": 3
+      "buttonCandidates": 6,
+      "buttonsClicked": 4
     },
     {
       "route": "/children",
@@ -336,26 +424,26 @@
     {
       "route": "/ai-jobs",
       "inputsTouched": 1,
-      "buttonCandidates": 22,
-      "buttonsClicked": 22
+      "buttonCandidates": 3,
+      "buttonsClicked": 2
     },
     {
       "route": "/content-risks",
       "inputsTouched": 1,
-      "buttonCandidates": 6,
-      "buttonsClicked": 5
+      "buttonCandidates": 5,
+      "buttonsClicked": 4
     },
     {
       "route": "/support-tickets",
       "inputsTouched": 2,
-      "buttonCandidates": 74,
+      "buttonCandidates": 73,
       "buttonsClicked": 4
     },
     {
       "route": "/archive-export-requests",
       "inputsTouched": 1,
-      "buttonCandidates": 78,
-      "buttonsClicked": 4
+      "buttonCandidates": 2,
+      "buttonsClicked": 2
     },
     {
       "route": "/ops-readiness",
@@ -373,7 +461,7 @@
       "route": "/audit-logs",
       "inputsTouched": 3,
       "buttonCandidates": 15,
-      "buttonsClicked": 5
+      "buttonsClicked": 4
     }
   ],
   "runtimeErrors": [],

@@ -159,6 +159,8 @@ model User {
   requestedAiJobs       AiJob[]            @relation("AiJobRequester")
   archiveExportRequests ArchiveExportRequest[] @relation("ArchiveExportRequester")
   supportTickets        SupportTicket[]    @relation("SupportTicketReporter")
+  receivedNotifications UserNotification[] @relation("NotificationRecipient")
+  sentNotifications     UserNotification[] @relation("NotificationActor")
   sessions              UserSession[]
 
   @@index([mobile], map: "idx_mobile")
@@ -235,6 +237,7 @@ model Family {
   shareLinks   ShareLink[]
   aiJobs       AiJob[]
   archiveExportRequests ArchiveExportRequest[]
+  notifications UserNotification[]
 
   @@index([ownerUserId], map: "idx_owner_user_id")
   @@map("families")
@@ -471,6 +474,33 @@ model AdminUser {
 
   @@index([status], map: "idx_status")
   @@map("admin_users")
+}
+
+model UserNotification {
+  id               BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  notificationNo   String    @unique(map: "uk_notification_no") @map("notification_no") @db.VarChar(32)
+  userId           BigInt    @map("user_id") @db.UnsignedBigInt
+  familyId         BigInt    @map("family_id") @db.UnsignedBigInt
+  actorUserId      BigInt?   @map("actor_user_id") @db.UnsignedBigInt
+  notificationType String    @map("notification_type") @db.VarChar(64)
+  title            String    @db.VarChar(128)
+  body             String    @db.VarChar(255)
+  targetType       String?   @map("target_type") @db.VarChar(32)
+  targetNo         String?   @map("target_no") @db.VarChar(32)
+  readAt           DateTime? @map("read_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  deletedAt        DateTime? @map("deleted_at")
+
+  user   User   @relation("NotificationRecipient", fields: [userId], references: [id])
+  actor  User?  @relation("NotificationActor", fields: [actorUserId], references: [id])
+  family Family @relation(fields: [familyId], references: [id])
+
+  @@index([userId, readAt, createdAt], map: "idx_user_read_created_at")
+  @@index([familyId, createdAt], map: "idx_family_created_at")
+  @@index([notificationType, targetType, targetNo], map: "idx_notification_target")
+  @@index([actorUserId], map: "idx_actor_user_id")
+  @@map("user_notifications")
 }
 
 model SystemConfig {

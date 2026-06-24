@@ -4,6 +4,8 @@ import { AiJobStatus, AiJobType, RecordAiStatus, RecordTagSource } from '@prisma
 import { PrismaService } from '../../prisma/prisma.service';
 import { AiProviderService } from './ai-provider.service';
 
+const PUBLIC_AI_JOB_ERROR_MESSAGE = '智能整理暂时不可用，请稍后重试或手动填写内容。';
+
 @Injectable()
 export class AiJobsProcessor {
   private readonly logger = new Logger(AiJobsProcessor.name);
@@ -113,7 +115,7 @@ export class AiJobsProcessor {
         data: {
           status: AiJobStatus.failed,
           retryCount,
-          errorMessage: error instanceof Error ? error.message : '整理失败',
+          errorMessage: PUBLIC_AI_JOB_ERROR_MESSAGE,
           finishedAt: new Date(),
         },
       });

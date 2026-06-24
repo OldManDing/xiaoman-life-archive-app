@@ -178,9 +178,15 @@ export class MediaService {
     if (media.status !== MEDIA_STATUS_READY) {
       throw new ConflictException('媒体尚未就绪');
     }
+    const accessUrl = await this.storageService.createAccessUrl(media.objectKey);
+    const thumbnailAccessUrl = media.thumbnailObjectKey
+      ? await this.storageService.createAccessUrl(media.thumbnailObjectKey).catch(() => null)
+      : null;
+
     return {
       media_no: media.mediaNo,
-      ...(await this.storageService.createAccessUrl(media.objectKey)),
+      ...accessUrl,
+      ...(thumbnailAccessUrl?.access_url ? { thumbnail_url: thumbnailAccessUrl.access_url } : {}),
     };
   }
 }

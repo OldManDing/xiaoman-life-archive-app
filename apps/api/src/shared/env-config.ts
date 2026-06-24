@@ -117,6 +117,29 @@ function readPositiveInteger(env: EnvSource, name: string, fallback: number): nu
   return value;
 }
 
+function readNonNegativeInteger(env: EnvSource, name: string, fallback: number): number {
+  const configured = readEnvValue(env, name);
+  if (!configured) return fallback;
+
+  const value = Number(configured);
+  if (!Number.isInteger(value) || value < 0) {
+    throw new Error(`Invalid ${name} value: ${configured}`);
+  }
+
+  return value;
+}
+
+function readBoolean(env: EnvSource, name: string, fallback: boolean): boolean {
+  const configured = readEnvValue(env, name);
+  if (!configured) return fallback;
+
+  const normalized = configured.toLowerCase();
+  if (['1', 'true', 'yes', 'on'].includes(normalized)) return true;
+  if (['0', 'false', 'no', 'off'].includes(normalized)) return false;
+
+  throw new Error(`Invalid ${name} value: ${configured}`);
+}
+
 export function getAuthRateLimitWindowMs(env: EnvSource = process.env): number {
   return readPositiveInteger(env, 'AUTH_RATE_LIMIT_WINDOW_MS', DEFAULT_AUTH_RATE_LIMIT_WINDOW_MS);
 }
@@ -157,6 +180,40 @@ export function getAlertContactName(env: EnvSource = process.env): string | null
 
 export function getAlertContactChannel(env: EnvSource = process.env): string | null {
   return readEnvValue(env, 'ALERT_CONTACT_CHANNEL') ?? null;
+}
+
+export function getMobileLatestVersion(env: EnvSource = process.env): string {
+  return readEnvValue(env, 'MOBILE_LATEST_VERSION') ?? '2.0.2';
+}
+
+export function getMobileLatestBuildNumber(env: EnvSource = process.env): number {
+  return readNonNegativeInteger(env, 'MOBILE_LATEST_BUILD_NUMBER', 0);
+}
+
+export function getMobileReleaseNotes(env: EnvSource = process.env): string {
+  return readEnvValue(env, 'MOBILE_RELEASE_NOTES') ?? '暂无更新说明。';
+}
+
+export function getMobileApkUrl(env: EnvSource = process.env): string | null {
+  const configured = readEnvValue(env, 'MOBILE_APK_URL');
+  if (!configured) return null;
+
+  let parsed: URL;
+  try {
+    parsed = new URL(configured);
+  } catch {
+    throw new Error(`Invalid MOBILE_APK_URL value: ${configured}`);
+  }
+
+  if (!['http:', 'https:'].includes(parsed.protocol)) {
+    throw new Error('MOBILE_APK_URL must use http or https');
+  }
+
+  return parsed.toString();
+}
+
+export function getMobileForceUpdate(env: EnvSource = process.env): boolean {
+  return readBoolean(env, 'MOBILE_FORCE_UPDATE', false);
 }
 
 export function resolveCorsOrigins(env: EnvSource = process.env): true | string[] {

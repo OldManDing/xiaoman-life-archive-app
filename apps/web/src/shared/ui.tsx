@@ -5,10 +5,10 @@ import { Check, ChevronDown, ChevronLeft } from 'lucide-react';
 const pageShellStyle: CSSProperties = {
   display: 'grid',
   alignContent: 'start',
-  gap: '18px',
-  minHeight: '100dvh',
+  gap: '22px',
+  minHeight: 'var(--nl-page-min-height, 100dvh)',
   gridTemplateColumns: 'minmax(0, 1fr)',
-  padding: '0 20px calc(72px + env(safe-area-inset-bottom))',
+  padding: '0 22px calc(40px + env(safe-area-inset-bottom))',
   background: 'var(--nl-page-bg)',
   color: 'var(--nl-ink)',
   overflowX: 'hidden',
@@ -16,28 +16,30 @@ const pageShellStyle: CSSProperties = {
 };
 
 const cardStyle: CSSProperties = {
-  background: 'var(--nl-surface)',
-  borderRadius: '20px',
+  background: 'var(--nl-card-bg)',
+  borderRadius: '8px',
   padding: '18px',
-  border: '1px solid var(--nl-border)',
+  border: '1px solid var(--nl-border-soft)',
   boxShadow: 'var(--nl-shadow-sm)',
-  backdropFilter: 'blur(18px)',
+  WebkitBackdropFilter: 'blur(16px) saturate(1.02)',
+  backdropFilter: 'blur(16px) saturate(1.02)',
 };
 
 const headingStyle: CSSProperties = {
   margin: 0,
   color: 'var(--nl-ink)',
-  fontSize: '22px',
-  fontWeight: 850,
-  lineHeight: 1.3,
+  fontFamily: 'var(--nl-font-display)',
+  fontSize: '31px',
+  fontWeight: 800,
+  lineHeight: 1.08,
 };
 
 const backControlStyle: CSSProperties = {
   minHeight: '44px',
-  borderRadius: '999px',
-  border: '1px solid var(--nl-border)',
-  background: 'rgba(var(--nl-surface-rgb), 0.74)',
-  color: 'var(--nl-ink)',
+  borderRadius: '8px',
+  border: '1px solid transparent',
+  background: 'transparent',
+  color: 'var(--nl-muted-strong)',
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -45,8 +47,8 @@ const backControlStyle: CSSProperties = {
   padding: '0 12px 0 10px',
   textDecoration: 'none',
   fontSize: '13px',
-  fontWeight: 700,
-  boxShadow: 'var(--nl-shadow-sm)',
+  fontWeight: 620,
+  boxShadow: 'none',
   cursor: 'pointer',
 };
 
@@ -64,20 +66,22 @@ const topBarBackStyle = (variant: 'icon' | 'pill' | 'text'): CSSProperties => {
       padding: 0,
       textDecoration: 'none',
       fontSize: '15px',
-      fontWeight: 600,
+      fontWeight: 560,
       cursor: 'pointer',
     };
   }
 
   if (variant === 'icon') {
     return {
-      minHeight: '44px',
-      width: '44px',
+      minHeight: '38px',
+      width: '38px',
+      height: '38px',
       padding: 0,
       gap: 0,
       border: 'none',
       background: 'transparent',
-      color: 'var(--nl-ink)',
+      borderRadius: 0,
+      color: 'var(--nl-muted-strong)',
       display: 'inline-flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -92,13 +96,12 @@ const topBarBackStyle = (variant: 'icon' | 'pill' | 'text'): CSSProperties => {
 
 export const AppTopBar = ({
   title,
-  description,
   backTo,
   backLabel = '返回',
   backVariant = 'icon',
   onBack,
   action,
-  background = 'rgba(17, 18, 16, 0.88)',
+  background = 'var(--nl-glass-strong)',
   style,
 }: {
   title: string;
@@ -125,10 +128,12 @@ export const AppTopBar = ({
         position: 'sticky',
         top: 0,
         zIndex: 3,
-        padding: 'calc(30px + env(safe-area-inset-top)) 20px 11px',
-        background,
-        borderBottom: '1px solid var(--nl-border)',
-        backdropFilter: 'blur(18px)',
+        padding: 'calc(18px + env(safe-area-inset-top)) 22px 10px',
+        background: background === 'var(--nl-glass-strong)' ? 'var(--nl-topbar-bg)' : background,
+        borderBottom: '1px solid transparent',
+        WebkitBackdropFilter: 'blur(16px) saturate(1.01)',
+        backdropFilter: 'blur(16px) saturate(1.01)',
+        boxShadow: 'none',
         ...style,
       }}
     >
@@ -159,7 +164,7 @@ export const AppTopBar = ({
             minWidth: 0,
             textAlign: 'center',
             fontSize: '17px',
-            fontWeight: 850,
+            fontWeight: 760,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
@@ -169,20 +174,6 @@ export const AppTopBar = ({
         </h1>
         <div style={{ display: 'flex', justifyContent: 'flex-end', minWidth: 0 }}>{action ?? <span aria-hidden="true" />}</div>
       </div>
-      {description ? (
-        <p
-          style={{
-            margin: '9px auto 0',
-            maxWidth: '320px',
-            color: 'var(--nl-muted)',
-            lineHeight: 1.55,
-            fontSize: '13px',
-            textAlign: 'center',
-          }}
-        >
-          {description}
-        </p>
-      ) : null}
     </header>
   );
 };
@@ -207,11 +198,11 @@ export const PageShell = ({
   <section style={pageShellStyle}>
     {!hideHeader ? (
       backTo || onBack ? (
-        <AppTopBar title={title} description={description} backTo={backTo} onBack={onBack} backLabel={backLabel} style={{ margin: '0 -20px' }} />
+        <AppTopBar title={title} description={description} backTo={backTo} onBack={onBack} backLabel={backLabel} style={{ margin: '0 -22px' }} />
       ) : (
-        <header style={{ padding: 'calc(42px + env(safe-area-inset-top)) 0 8px', display: 'grid', gap: '8px' }}>
-          <h1 style={{ ...headingStyle, fontSize: '24px', fontWeight: 700 }}>{title}</h1>
-          {description ? <p style={{ margin: '8px 0 0', color: 'var(--nl-muted)', lineHeight: 1.6, fontSize: '14px' }}>{description}</p> : null}
+        <header style={{ padding: 'calc(34px + env(safe-area-inset-top)) 0 4px', display: 'grid', gap: '8px' }}>
+          <h1 style={{ ...headingStyle, fontSize: '32px' }}>{title}</h1>
+          {description ? <p style={{ margin: '4px 0 0', color: 'var(--nl-muted)', lineHeight: 1.6, fontSize: '13px', fontWeight: 500 }}>{description}</p> : null}
         </header>
       )
     ) : null}
@@ -224,7 +215,7 @@ export const Panel = ({ children, style }: { children: ReactNode; style?: CSSPro
 );
 
 export const Field = ({ label, children }: { label: string; children: ReactNode }) => (
-  <label style={{ display: 'grid', gap: '8px', fontSize: '12px', color: 'var(--nl-muted)', fontWeight: 850 }}>
+  <label style={{ display: 'grid', gap: '7px', fontSize: '12px', color: 'var(--nl-muted)', fontWeight: 580 }}>
     <span>{label}</span>
     {children}
   </label>
@@ -234,32 +225,59 @@ export const inputStyle: CSSProperties = {
   width: '100%',
   boxSizing: 'border-box',
   minHeight: '48px',
-  borderRadius: '18px',
-  border: '1px solid var(--nl-border)',
-  padding: '12px 14px',
-  fontSize: '14px',
+  borderRadius: '8px',
+  border: '1px solid var(--nl-border-soft)',
+  padding: '13px 14px',
+  fontSize: '15px',
   color: 'var(--nl-ink)',
-  background: 'rgba(var(--nl-surface-rgb), 0.82)',
+  background: 'var(--nl-control-bg)',
   outline: 'none',
-  boxShadow: 'none',
+  boxShadow: 'inset 0 1px 0 var(--nl-inset-highlight)',
   transition: 'border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease',
+};
+
+export const dateControlStyle: CSSProperties = {
+  ...inputStyle,
+  position: 'relative',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '10px',
+  padding: '0 14px',
+  color: 'var(--nl-ink)',
+  fontWeight: 520,
+  cursor: 'pointer',
+  overflow: 'hidden',
+  WebkitAppearance: 'none',
+  appearance: 'none',
+};
+
+export const hiddenNativeDateInputStyle: CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  width: '100%',
+  height: '100%',
+  opacity: 0,
+  cursor: 'pointer',
+  colorScheme: 'light',
+  border: 'none',
+  padding: 0,
 };
 
 export const selectControlStyle: CSSProperties = {
   width: '100%',
   minHeight: '44px',
-  borderRadius: '18px',
-  border: '1px solid var(--nl-border)',
+  borderRadius: '8px',
+  border: '1px solid var(--nl-border-soft)',
   padding: '10px 13px',
   boxSizing: 'border-box',
   color: 'var(--nl-ink)',
-  background: 'rgba(var(--nl-surface-rgb), 0.82)',
+  background: 'var(--nl-control-bg)',
   fontSize: '14px',
   lineHeight: 1.35,
-  fontWeight: 600,
+  fontWeight: 560,
   cursor: 'pointer',
   outline: 'none',
-  boxShadow: 'none',
+  boxShadow: 'inset 0 1px 0 var(--nl-inset-highlight)',
   transition: 'border-color 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease',
 };
 
@@ -365,14 +383,14 @@ export const AppSelect = ({
           minHeight: props.disabled ? selectControlStyle.minHeight : selectControlStyle.minHeight,
           opacity: props.disabled ? 0.55 : 1,
           cursor: props.disabled ? 'not-allowed' : 'pointer',
-          color: placeholder ? 'rgba(170,159,144,0.68)' : 'var(--nl-ink)',
+          color: placeholder ? 'var(--nl-muted-placeholder)' : 'var(--nl-ink)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           gap: '8px',
           textAlign: 'left',
           ...selectStyle,
-          ...(open ? { border: '1px solid rgba(var(--nl-accent-rgb),0.46)', background: 'rgba(var(--nl-surface-strong-rgb),0.96)', boxShadow: '0 0 0 4px rgba(var(--nl-accent-rgb),0.12)' } : {}),
+          ...(open ? { border: '1px solid var(--nl-primary-border)', background: 'var(--nl-control-bg-active)', boxShadow: '0 0 0 3px rgba(var(--nl-primary-rgb),0.055)' } : {}),
         }}
       >
         <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedOption?.label ?? ''}</span>
@@ -383,6 +401,7 @@ export const AppSelect = ({
           id={listboxId}
           role="listbox"
           aria-label={props['aria-label']}
+          onPointerDown={(event) => event.stopPropagation()}
           style={{
             position: 'absolute',
             left: 0,
@@ -391,11 +410,12 @@ export const AppSelect = ({
             zIndex: 30,
             maxHeight: '220px',
             overflowY: 'auto',
-            borderRadius: '20px',
-            border: '1px solid var(--nl-border)',
-            background: 'rgba(var(--nl-surface-strong-rgb),0.98)',
-            boxShadow: '0 18px 42px rgba(var(--nl-shadow-rgb),0.42)',
-            backdropFilter: 'blur(18px)',
+            borderRadius: '8px',
+            border: '1px solid var(--nl-border-strong)',
+            background: 'var(--nl-glass-strong)',
+            boxShadow: 'var(--nl-shadow-md)',
+            WebkitBackdropFilter: 'blur(12px)',
+            backdropFilter: 'blur(12px)',
             padding: '7px',
           }}
         >
@@ -408,14 +428,20 @@ export const AppSelect = ({
                 role="option"
                 aria-selected={selected}
                 disabled={option.disabled}
-                onClick={() => emitChange(option.value)}
+                onPointerDown={(event) => {
+                  event.stopPropagation();
+                }}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  emitChange(option.value);
+                }}
                 style={{
                   width: '100%',
                   minHeight: '44px',
                   border: 'none',
-                  borderRadius: '13px',
-                  background: selected ? 'rgba(var(--nl-primary-rgb),0.2)' : 'transparent',
-                  color: option.disabled ? 'rgba(170,159,144,0.44)' : 'var(--nl-ink)',
+                  borderRadius: '8px',
+                  background: selected ? 'var(--nl-primary-soft)' : 'transparent',
+                  color: option.disabled ? 'var(--nl-muted-disabled)' : 'var(--nl-ink)',
                   padding: '7px 32px 7px 9px',
                   display: 'flex',
                   alignItems: 'center',
@@ -423,7 +449,7 @@ export const AppSelect = ({
                   position: 'relative',
                   textAlign: 'left',
                   fontSize: '14px',
-                  fontWeight: selected ? 700 : 600,
+                  fontWeight: selected ? 620 : 520,
                   cursor: option.disabled ? 'not-allowed' : 'pointer',
                 }}
               >
@@ -458,9 +484,10 @@ export const AppSegmentedControl = ({
       display: 'flex',
       gap: '6px',
       padding: '4px',
-      borderRadius: '999px',
-      background: 'rgba(var(--nl-surface-rgb), 0.72)',
-      border: '1px solid var(--nl-border)',
+      borderRadius: '8px',
+      background: 'var(--nl-control-bg)',
+      border: '1px solid var(--nl-border-soft)',
+      boxShadow: 'inset 0 1px 0 var(--nl-inset-highlight)',
       ...style,
     }}
   >
@@ -478,11 +505,11 @@ export const AppSegmentedControl = ({
             minWidth: 0,
             minHeight: '44px',
             border: 'none',
-            borderRadius: '999px',
-            background: selected ? 'var(--nl-primary)' : 'transparent',
-            color: selected ? '#ffffff' : 'var(--nl-muted)',
+            borderRadius: '6px',
+            background: selected ? 'var(--nl-primary-soft)' : 'transparent',
+            color: selected ? 'var(--nl-primary-2)' : 'var(--nl-muted)',
             fontSize: options.length > 4 ? '12px' : '13px',
-            fontWeight: 700,
+            fontWeight: selected ? 660 : 540,
             cursor: 'pointer',
             whiteSpace: 'nowrap',
             transition: 'background-color 0.16s ease, color 0.16s ease',
@@ -502,14 +529,14 @@ export const textareaStyle: CSSProperties = {
 };
 
 export const primaryButtonStyle: CSSProperties = {
-  minHeight: '46px',
-  border: '1px solid rgba(245,205,140,0.52)',
-  borderRadius: '999px',
+  minHeight: '48px',
+  border: '1px solid var(--nl-primary-border)',
+  borderRadius: '8px',
   padding: '12px 18px',
-  background: 'var(--nl-primary)',
-  color: '#ffffff',
-  fontSize: '14px',
-  fontWeight: 850,
+  background: 'var(--nl-primary-gradient)',
+  color: 'var(--nl-on-primary)',
+  fontSize: '15px',
+  fontWeight: 700,
   cursor: 'pointer',
   display: 'inline-flex',
   alignItems: 'center',
@@ -517,20 +544,38 @@ export const primaryButtonStyle: CSSProperties = {
   gap: '8px',
   lineHeight: 1.2,
   textDecoration: 'none',
-  boxShadow: '0 8px 18px rgba(var(--nl-shadow-rgb),0.22)',
+  boxShadow: '0 12px 24px rgba(var(--nl-primary-rgb),0.1), inset 0 1px 0 var(--nl-inset-highlight-faint)',
   transition: 'transform 0.14s ease, box-shadow 0.16s ease, background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, opacity 0.16s ease',
 };
 
 export const secondaryButtonStyle: CSSProperties = {
   ...primaryButtonStyle,
-  border: '1px solid var(--nl-border)',
-  background: 'rgba(var(--nl-surface-rgb), 0.74)',
+  border: '1px solid var(--nl-border-soft)',
+  background: 'var(--nl-control-bg)',
   color: 'var(--nl-muted-strong)',
-  boxShadow: '0 8px 22px rgba(var(--nl-shadow-rgb),0.22)',
+  boxShadow: 'inset 0 1px 0 var(--nl-inset-highlight)',
+};
+
+export const compactPrimaryButtonStyle: CSSProperties = {
+  ...primaryButtonStyle,
+  minHeight: '40px',
+  padding: '8px 14px',
+  fontSize: '13px',
+  fontWeight: 700,
+  boxShadow: '0 9px 18px rgba(var(--nl-primary-rgb),0.085), inset 0 1px 0 var(--nl-inset-highlight-faint)',
+};
+
+export const compactSecondaryButtonStyle: CSSProperties = {
+  ...secondaryButtonStyle,
+  minHeight: '40px',
+  padding: '8px 13px',
+  fontSize: '13px',
+  fontWeight: 650,
 };
 
 export const helperTextStyle: CSSProperties = {
   margin: 0,
-  fontSize: '13px',
+  fontSize: '12px',
+  lineHeight: 1.55,
   color: 'var(--nl-muted)',
 };

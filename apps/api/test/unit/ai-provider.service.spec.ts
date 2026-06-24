@@ -57,7 +57,7 @@ describe('AiProviderService', () => {
     });
   });
 
-  it('surfaces provider HTTP failures without leaking the API key', async () => {
+  it('returns a public failure message without leaking provider details', async () => {
     global.fetch = jest.fn().mockResolvedValue({
       ok: false,
       status: 404,
@@ -77,7 +77,7 @@ describe('AiProviderService', () => {
         title: '公园观察',
         existingTags: [],
       }),
-    ).rejects.toThrow('AI 服务调用失败：HTTP 404，InvalidEndpointOrModel.NotFound：model not found for key <redacted>');
+    ).rejects.toThrow('智能整理暂时不可用，请手动填写标题、摘要或标签后继续。');
   });
 
   it('falls back to local suggestions in production when the provider returns 403', async () => {
@@ -115,7 +115,7 @@ describe('AiProviderService', () => {
     });
   });
 
-  it('rejects missing OpenAI-compatible configuration with an actionable message', async () => {
+  it('rejects missing OpenAI-compatible configuration with a public message', async () => {
     process.env = {
       ...originalEnv,
       APP_ENV: 'test',
@@ -133,6 +133,6 @@ describe('AiProviderService', () => {
         title: '公园观察',
         existingTags: [],
       }),
-    ).rejects.toThrow('AI 服务配置缺失，请检查 AI_API_KEY、AI_BASE_URL 和 AI_MODEL');
+    ).rejects.toThrow('智能整理暂时不可用，请手动填写标题、摘要或标签后继续。');
   });
 });

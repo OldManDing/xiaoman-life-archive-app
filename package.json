@@ -11,7 +11,7 @@
     "build:api": "npm run build -w apps/api",
     "build:web": "npm run build -w apps/web",
     "build:admin": "npm run build -w apps/admin",
-    "build:mobile": "npm run build -w apps/mobile",
+    "build:mobile": "npm run copy -w apps/mobile",
     "start:api": "npm run start -w apps/api",
     "regression:baseline": "npm run prisma:generate && npm run typecheck:api && npm run test:api && npm run smoke:test:api && npm run typecheck:web && npm run test:web && npm run typecheck:admin && npm run test:admin && npm run lint -w apps/admin",
     "typecheck:api": "npm run typecheck -w apps/api",

@@ -4,13 +4,15 @@ import { helperTextStyle } from '../shared/ui';
 
 export const rowStyle = {
   display: 'grid',
-  gap: '12px',
+  gap: '14px',
 } as const;
 
 export const buttonRowStyle = {
-  display: 'flex',
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(0, 1fr))',
   gap: '12px',
-  flexWrap: 'wrap' as const,
+  width: '100%',
+  alignItems: 'stretch',
 };
 
 export const formSubmitSpacingStyle = {
@@ -27,8 +29,9 @@ export const EmptyState = ({ message }: { message: string }) => <p style={helper
 
 export const sectionTitleStyle = {
   margin: 0,
-  fontSize: '16px',
-  fontWeight: 700,
+  fontSize: '18px',
+  fontWeight: 720,
+  fontFamily: 'var(--nl-font-display)',
   color: 'var(--nl-ink)',
 } as const;
 
@@ -37,22 +40,22 @@ export const mutedChipStyle = {
   alignItems: 'center',
   gap: '6px',
   padding: '6px 12px',
-  borderRadius: '999px',
-  background: 'rgba(var(--nl-surface-rgb),0.74)',
-  border: '1px solid var(--nl-border)',
+  borderRadius: '8px',
+  background: 'transparent',
+  border: '1px solid var(--nl-border-muted)',
   color: 'var(--nl-muted-strong)',
   fontSize: '12px',
-  fontWeight: 600,
+  fontWeight: 540,
 } as const;
 
 export const listCardStyle = {
   textAlign: 'left' as const,
-  border: '1px solid var(--nl-border)',
+  border: '1px solid var(--nl-border-muted)',
   borderRadius: '8px',
   padding: '16px',
-  background: 'var(--nl-surface)',
+  background: 'var(--nl-control-bg)',
   cursor: 'pointer',
-  boxShadow: '0 6px 20px rgba(15, 23, 42, 0.04)',
+  boxShadow: 'inset 0 1px 0 var(--nl-inset-highlight)',
 } as const;
 
 export const HubLink = ({ to, title, description }: { to: string; title: string; description: string }) => (
@@ -61,12 +64,13 @@ export const HubLink = ({ to, title, description }: { to: string; title: string;
     style={{
       display: 'grid',
       gap: '6px',
-      padding: '16px',
+      padding: '18px 2px',
       borderRadius: '8px',
-      border: '1px solid var(--nl-border)',
+      border: 'none',
+      borderBottom: '1px solid var(--nl-border-muted)',
       color: 'var(--nl-ink)',
       textDecoration: 'none',
-      background: 'var(--nl-surface)',
+      background: 'transparent',
     }}
   >
     <strong>{title}</strong>

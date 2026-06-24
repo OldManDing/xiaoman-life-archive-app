@@ -14,4 +14,10 @@ export class UpdateMeDto {
   @IsString()
   @MaxLength(512)
   avatar_url?: string;
+
+  @IsOptional()
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @IsString()
+  @Matches(/^1\d{10}$/, { message: '手机号格式不正确' })
+  mobile?: string;
 }
