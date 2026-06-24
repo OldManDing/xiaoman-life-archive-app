@@ -1110,6 +1110,9 @@ describe('App', () => {
     await waitFor(() => {
       expect(testAiSettingsMock).toHaveBeenCalled();
     });
-    expect(await screen.findByText('连接成功')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getAllByText('连接成功').length).toBeGreaterThan(0);
+    });
+    expect(screen.getAllByText('AI 服务连接成功，当前供应商、模型和 Key 可以完成一次轻量调用。').length).toBeGreaterThan(0);
   });
 });

@@ -232,7 +232,7 @@ export const AiSettingsPage = () => {
     try {
       const result = await adminApi.testAiSettings();
       setTestResult(result);
-      setMessage(result.status === 'success' ? 'AI 服务连接测试通过' : 'AI 服务连接测试未通过，请按测试结果修正配置');
+      setMessage(result.status === 'success' ? 'AI 服务连接测试通过' : `AI 服务连接测试未通过：${result.message}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'AI 服务连接测试失败');
     } finally {
@@ -250,7 +250,20 @@ export const AiSettingsPage = () => {
 
       {message ? (
         <Panel>
-          <p style={{ ...mutedTextStyle, margin: 0 }}>{message}</p>
+          {testResult ? (
+            <div className={`admin-ai-settings-inline-result admin-ai-settings-inline-result-${testResult.status}`}>
+              {testResult.status === 'success' ? <CheckCircle2 size={20} /> : <XCircle size={20} />}
+              <div>
+                <strong>{testResult.status === 'success' ? '连接成功' : '连接失败'}</strong>
+                <p>{testResult.message}</p>
+                <span>
+                  {testResult.provider} / {testResult.model ?? '-'} / {testResult.latency_ms}ms
+                </span>
+              </div>
+            </div>
+          ) : (
+            <p style={{ ...mutedTextStyle, margin: 0 }}>{message}</p>
+          )}
         </Panel>
       ) : null}
 

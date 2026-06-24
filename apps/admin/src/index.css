@@ -1708,6 +1708,50 @@ table {
   gap: 7px;
 }
 
+.admin-ai-settings-inline-result {
+  border: 1px solid #dbe3df;
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  background: #f8faf9;
+}
+
+.admin-ai-settings-inline-result-success {
+  border-color: #b8e2c8;
+  background: #edf8f2;
+  color: #0d7f56;
+}
+
+.admin-ai-settings-inline-result-failed {
+  border-color: #efc4bc;
+  background: #fff7f5;
+  color: #b42318;
+}
+
+.admin-ai-settings-inline-result strong {
+  display: block;
+  color: #13211e;
+  font-size: 15px;
+}
+
+.admin-ai-settings-inline-result p {
+  margin: 5px 0 0;
+  color: #46534f;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.admin-ai-settings-inline-result span {
+  display: block;
+  margin-top: 6px;
+  color: #66736f;
+  font-size: 12px;
+  font-weight: 800;
+}
+
 .admin-ai-settings-test-card,
 .admin-ai-settings-safety {
   display: grid;
