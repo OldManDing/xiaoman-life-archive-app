@@ -1,4 +1,5 @@
 export { DashboardPage } from './dashboard-page';
+export { AiSettingsPage } from './ai-settings-page';
 export { InvitesPage } from './invites-page';
 export { LoginPage } from './login-page';
 export { ContentRisksPage } from './content-risk-page';

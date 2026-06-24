@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { Request } from 'express';
 
@@ -64,6 +64,14 @@ export class AdminController {
   @Get('system-configs')
   systemConfigs(@CurrentUser() admin: AuthenticatedAdmin, @Req() request: Request) {
     return this.adminService.listSystemConfigs(admin, request);
+  }
+
+  @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
+  @AdminRoles(AdminRole.super_admin, AdminRole.operator)
+  @HttpCode(HttpStatus.OK)
+  @Post('ai-settings/test')
+  testAiSettings(@CurrentUser() admin: AuthenticatedAdmin, @Req() request: Request) {
+    return this.adminService.testAiSettings(admin, request);
   }
 
   @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)

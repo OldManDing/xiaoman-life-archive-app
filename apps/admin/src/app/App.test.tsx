@@ -12,6 +12,7 @@ vi.mock('../shared/request', () => ({
     opsReadiness: vi.fn(),
     listSystemConfigs: vi.fn(),
     updateSystemConfig: vi.fn(),
+    testAiSettings: vi.fn(),
     listUsers: vi.fn(),
     listFamilies: vi.fn(),
     getFamilyDetail: vi.fn(),
@@ -50,6 +51,7 @@ const dashboardMock = vi.mocked(adminApi.dashboard);
 const opsReadinessMock = vi.mocked(adminApi.opsReadiness);
 const listSystemConfigsMock = vi.mocked(adminApi.listSystemConfigs);
 const updateSystemConfigMock = vi.mocked(adminApi.updateSystemConfig);
+const testAiSettingsMock = vi.mocked(adminApi.testAiSettings);
 const listUsersMock = vi.mocked(adminApi.listUsers);
 const listFamiliesMock = vi.mocked(adminApi.listFamilies);
 const getFamilyDetailMock = vi.mocked(adminApi.getFamilyDetail);
@@ -78,6 +80,7 @@ describe('App', () => {
     opsReadinessMock.mockReset();
     listSystemConfigsMock.mockReset();
     updateSystemConfigMock.mockReset();
+    testAiSettingsMock.mockReset();
     listUsersMock.mockReset();
     listFamiliesMock.mockReset();
     getFamilyDetailMock.mockReset();
@@ -189,8 +192,49 @@ describe('App', () => {
       ],
     });
     listSystemConfigsMock.mockResolvedValue({
-      total: 5,
+      total: 8,
       list: [
+        {
+          config_key: 'ai_provider',
+          category: 'ai_provider',
+          label: 'AI 供应商',
+          value: 'openai-compatible',
+          display_value: 'openai-compatible',
+          value_type: 'select',
+          description: '控制标题、摘要和标签生成使用的 AI provider。',
+          source: 'environment',
+          options: [
+            { value: 'openai-compatible', label: 'OpenAI 兼容服务' },
+            { value: 'openai', label: 'OpenAI 服务' },
+            { value: 'mock', label: '本地模拟服务' },
+          ],
+          updated_by_name: null,
+          updated_at: null,
+        },
+        {
+          config_key: 'ai_base_url',
+          category: 'ai_provider',
+          label: 'AI 接口地址',
+          value: 'https://api.example.com/v1',
+          display_value: 'https://api.example.com/v1',
+          value_type: 'url',
+          description: '兼容 /chat/completions 的 API 根地址。',
+          source: 'environment',
+          updated_by_name: null,
+          updated_at: null,
+        },
+        {
+          config_key: 'ai_model',
+          category: 'ai_provider',
+          label: 'AI 模型',
+          value: 'gpt-5-mini',
+          display_value: 'gpt-5-mini',
+          value_type: 'text',
+          description: '用于成长记录标题、摘要和标签生成的模型名称。',
+          source: 'environment',
+          updated_by_name: null,
+          updated_at: null,
+        },
         {
           config_key: 'backup_retention_days',
           category: 'backup_recovery',
@@ -226,7 +270,40 @@ describe('App', () => {
           updated_by_name: null,
           updated_at: null,
         },
+        {
+          config_key: 'ai_timeout_ms',
+          category: 'ai_provider',
+          label: 'AI 超时时间',
+          value: '30000',
+          display_value: '30000',
+          value_type: 'number',
+          description: 'AI 请求超时时间，单位毫秒。',
+          source: 'environment',
+          updated_by_name: null,
+          updated_at: null,
+        },
+        {
+          config_key: 'ai_daily_limit_per_user',
+          category: 'ai_provider',
+          label: '单用户每日 AI 上限',
+          value: '20',
+          display_value: '20',
+          value_type: 'number',
+          description: '每个用户每天最多触发的 AI 任务数。',
+          source: 'environment',
+          updated_by_name: null,
+          updated_at: null,
+        },
       ],
+    });
+    testAiSettingsMock.mockResolvedValue({
+      status: 'success',
+      provider: 'openai-compatible',
+      model: 'gpt-5-mini',
+      base_url: 'https://api.example.com/v1',
+      latency_ms: 420,
+      checked_at: '2026-05-27T00:00:00.000Z',
+      message: 'AI 服务连接成功，当前供应商、模型和 Key 可以完成一次轻量调用。',
     });
   });
 
@@ -959,8 +1036,7 @@ describe('App', () => {
       expect(listSystemConfigsMock).toHaveBeenCalled();
     });
     expect(await screen.findByText('备份保留周期')).toBeInTheDocument();
-    expect(screen.getByText('AI API Key')).toBeInTheDocument();
-    expect(screen.getByText('已配置（不回显）')).toBeInTheDocument();
+    expect(screen.queryByText('AI API Key')).not.toBeInTheDocument();
     expect(screen.getAllByText('环境变量').length).toBeGreaterThan(0);
 
     fireEvent.click(screen.getAllByRole('button', { name: '调整' })[0]);
@@ -975,5 +1051,65 @@ describe('App', () => {
       });
     });
     expect(await screen.findByText('已更新备份保留周期，后台和运行中服务会优先使用新的配置。')).toBeInTheDocument();
+  });
+
+  it('manages AI settings from a dedicated page', async () => {
+    loginMock.mockResolvedValue({
+      access_token: 'admin-token',
+      expires_in: 7200,
+      admin: {
+        username: 'admin',
+        display_name: 'Smoke Test',
+        role: 'operator',
+      },
+    });
+    updateSystemConfigMock.mockImplementation(async (configKey, payload) => ({
+      config_key: configKey,
+      category: 'ai_provider',
+      label: configKey === 'ai_model' ? 'AI 模型' : 'AI 设置',
+      value: payload.value,
+      display_value: payload.value,
+      value_type: configKey === 'ai_timeout_ms' || configKey === 'ai_daily_limit_per_user' ? 'number' : 'text',
+      description: 'AI 设置',
+      source: 'admin',
+      updated_by_name: 'Smoke Test',
+      updated_at: '2026-05-27T00:00:00.000Z',
+      changed: true,
+    }));
+
+    renderWithRouter('/login');
+
+    fireEvent.change(screen.getByPlaceholderText('请输入用户名'), { target: { value: 'admin' } });
+    fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
+    fireEvent.click(screen.getByRole('button', { name: '进入管理后台' }));
+
+    const aiSettingsLink = (await screen.findAllByRole('link')).find((link) => link.getAttribute('href') === '/ai-settings');
+    expect(aiSettingsLink).toBeTruthy();
+    fireEvent.click(aiSettingsLink!);
+
+    expect(await screen.findByRole('heading', { name: 'AI 服务设置' })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(listSystemConfigsMock).toHaveBeenCalled();
+    });
+    expect(screen.getAllByText('OpenAI 兼容服务').length).toBeGreaterThan(0);
+    expect(screen.getByText('Key 已配置')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('留空保留当前密钥')).toHaveValue('');
+
+    fireEvent.change(screen.getByLabelText('模型名称'), { target: { value: 'gpt-5.4-mini' } });
+    fireEvent.change(screen.getByLabelText('操作原因'), { target: { value: '线上切换模型验证' } });
+    fireEvent.click(screen.getByRole('button', { name: '保存 AI 设置' }));
+
+    await waitFor(() => {
+      expect(updateSystemConfigMock).toHaveBeenCalledWith('ai_model', {
+        value: 'gpt-5.4-mini',
+        reason: '线上切换模型验证',
+      });
+    });
+
+    fireEvent.click(await screen.findByRole('button', { name: '测试连接' }));
+    await waitFor(() => {
+      expect(testAiSettingsMock).toHaveBeenCalled();
+    });
+    expect(await screen.findByText('连接成功')).toBeInTheDocument();
   });
 });

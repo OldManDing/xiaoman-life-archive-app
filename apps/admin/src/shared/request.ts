@@ -182,6 +182,16 @@ export interface AdminSystemConfigUpdateResponse extends AdminSystemConfigItem {
   changed: boolean;
 }
 
+export interface AdminAiSettingsTestResponse {
+  status: 'success' | 'failed';
+  provider: string;
+  model: string | null;
+  base_url: string | null;
+  latency_ms: number;
+  checked_at: string;
+  message: string;
+}
+
 export interface AdminUserStatusUpdateResponse {
   user_no: string;
   status: 'active' | 'disabled';
@@ -559,6 +569,11 @@ export const adminApi = {
 
   async updateSystemConfig(configKey: string, payload: { value: string; reason: string }) {
     const response = await request.patch<ApiEnvelope<AdminSystemConfigUpdateResponse>>(`/admin/system-configs/${configKey}`, payload);
+    return unwrap(response);
+  },
+
+  async testAiSettings() {
+    const response = await request.post<ApiEnvelope<AdminAiSettingsTestResponse>>('/admin/ai-settings/test');
     return unwrap(response);
   },
 

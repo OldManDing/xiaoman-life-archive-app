@@ -6,6 +6,7 @@ import { AdminLayout } from '../layouts/AdminLayout';
 import { useAdminAuth } from '../shared/useAdminAuth';
 import {
   AIJobsPage,
+  AiSettingsPage,
   ArchiveExportRequestsPage,
   AuditLogsPage,
   ChildrenPage,
@@ -42,6 +43,7 @@ export const AppRouter = () => {
           <Route path="/records" element={<RecordsPage />} />
           <Route path="/media" element={<MediaPage />} />
           <Route path="/ai-jobs" element={<AIJobsPage />} />
+          <Route path="/ai-settings" element={<AiSettingsPage />} />
           <Route path="/content-risks" element={<ContentRisksPage />} />
           <Route path="/support-tickets" element={<SupportTicketsPage />} />
           <Route path="/archive-export-requests" element={<ArchiveExportRequestsPage />} />

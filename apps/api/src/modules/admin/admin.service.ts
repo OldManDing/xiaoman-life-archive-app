@@ -9,7 +9,7 @@ import { resolve } from 'node:path';
 import { AiJobsQueue } from '../ai-jobs/ai-jobs.queue';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditLogService } from '../../shared/services/audit-log.service';
-import { RuntimeConfigService } from '../../shared/services/runtime-config.service';
+import { RuntimeAiConfig, RuntimeConfigService } from '../../shared/services/runtime-config.service';
 import { StorageService } from '../../shared/services/storage.service';
 import {
   getAdminInitialPassword,
@@ -153,6 +153,15 @@ type AdminSystemConfigItem = {
   secret_configured?: boolean;
   updated_by_name: string | null;
   updated_at: string | null;
+};
+type AdminAiSettingsTestResult = {
+  status: 'success' | 'failed';
+  provider: string;
+  model: string | null;
+  base_url: string | null;
+  latency_ms: number;
+  checked_at: string;
+  message: string;
 };
 
 const CONTENT_RISK_KEYWORDS: Array<{ keyword: string; severity: ContentRiskSeverity; reason: string }> = [
@@ -1658,6 +1667,33 @@ export class AdminService {
     };
   }
 
+  async testAiSettings(admin: AuthenticatedAdmin, request: Request): Promise<AdminAiSettingsTestResult> {
+    const checkedAt = new Date();
+    const startedAt = Date.now();
+    const config = await this.runtimeConfigService.getAiConfig();
+    const result = await this.performAiSettingsTest(config, startedAt, checkedAt);
+
+    await this.auditLogService.create({
+      actor_type: ActorType.admin,
+      actor_id: admin.id,
+      action: 'admin_test_ai_settings',
+      target_type: 'system_config',
+      target_id: null,
+      ip_address: request.ip,
+      user_agent: request.headers['user-agent'] ?? null,
+      metadata: {
+        provider: result.provider,
+        model: result.model,
+        base_url: result.base_url,
+        status: result.status,
+        latency_ms: result.latency_ms,
+        message: result.message,
+      },
+    });
+
+    return result;
+  }
+
   async opsReadiness(admin: AuthenticatedAdmin, request: Request) {
     const now = new Date();
     const [
@@ -2793,6 +2829,139 @@ export class AdminService {
       updated_by_name: row?.updatedByAdmin?.displayName ?? null,
       updated_at: row?.updatedAt.toISOString() ?? null,
     };
+  }
+
+  private async performAiSettingsTest(
+    config: RuntimeAiConfig,
+    startedAt: number,
+    checkedAt: Date,
+  ): Promise<AdminAiSettingsTestResult> {
+    const baseResult = {
+      provider: config.provider,
+      model: config.model,
+      base_url: config.baseUrl,
+      checked_at: checkedAt.toISOString(),
+    };
+
+    const elapsed = () => Date.now() - startedAt;
+
+    if (config.provider === 'mock') {
+      return {
+        ...baseResult,
+        status: 'success',
+        latency_ms: elapsed(),
+        message: '当前使用 mock AI 服务，不会请求外部供应商。',
+      };
+    }
+
+    if (!config.apiKey || !config.baseUrl || !config.model) {
+      return {
+        ...baseResult,
+        status: 'failed',
+        latency_ms: elapsed(),
+        message: 'AI 配置不完整，请确认 API Key、接口地址和模型名称都已填写。',
+      };
+    }
+
+    const timeoutMs = Math.min(Math.max(config.timeoutMs, 1000), 15_000);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const response = await fetch(`${config.baseUrl.replace(/\/$/, '')}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${config.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: config.model,
+          temperature: 0,
+          max_tokens: 8,
+          messages: [
+            {
+              role: 'system',
+              content: 'Reply with the word ok.',
+            },
+            {
+              role: 'user',
+              content: 'ping',
+            },
+          ],
+        }),
+        signal: controller.signal,
+      });
+
+      const responseText = await response.text();
+      if (!response.ok) {
+        return {
+          ...baseResult,
+          status: 'failed',
+          latency_ms: elapsed(),
+          message: `AI 服务返回 HTTP ${response.status}${this.summarizeAiSettingsTestResponse(responseText, config.apiKey)}`,
+        };
+      }
+
+      if (!this.isChatCompletionLikeResponse(responseText)) {
+        return {
+          ...baseResult,
+          status: 'failed',
+          latency_ms: elapsed(),
+          message: 'AI 服务已响应，但返回结构不是 Chat Completions 格式，请检查接口地址和供应商类型。',
+        };
+      }
+
+      return {
+        ...baseResult,
+        status: 'success',
+        latency_ms: elapsed(),
+        message: 'AI 服务连接成功，当前供应商、模型和 Key 可以完成一次轻量调用。',
+      };
+    } catch (error) {
+      const isAbort = error instanceof Error && error.name === 'AbortError';
+      return {
+        ...baseResult,
+        status: 'failed',
+        latency_ms: elapsed(),
+        message: isAbort ? `AI 服务测试超时，已等待 ${timeoutMs}ms。` : `AI 服务测试失败：${this.safeAiSettingsTestError(error, config.apiKey)}`,
+      };
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  private isChatCompletionLikeResponse(responseText: string) {
+    try {
+      const parsed = JSON.parse(responseText) as { choices?: Array<{ message?: { content?: unknown } }> };
+      return Array.isArray(parsed.choices) && parsed.choices.some((item) => typeof item.message?.content === 'string');
+    } catch {
+      return false;
+    }
+  }
+
+  private summarizeAiSettingsTestResponse(responseText: string, apiKey: string) {
+    const sanitize = (value: string) => value.replaceAll(apiKey, '<redacted>').slice(0, 220);
+    try {
+      const parsed = JSON.parse(responseText) as {
+        error?: {
+          code?: string;
+          message?: string;
+          type?: string;
+        };
+        message?: string;
+      };
+      const error = parsed.error;
+      const detail = [error?.code, error?.message || parsed.message || error?.type].filter(Boolean).join('：');
+      return detail ? `：${sanitize(detail)}` : '';
+    } catch {
+      const detail = sanitize(responseText.trim());
+      return detail ? `：${detail}` : '';
+    }
+  }
+
+  private safeAiSettingsTestError(error: unknown, apiKey: string) {
+    const message = error instanceof Error ? error.message : String(error);
+    return message.replaceAll(apiKey, '<redacted>').slice(0, 220);
   }
 
   private async logListAudit(admin: AuthenticatedAdmin, action: string, request: Request) {

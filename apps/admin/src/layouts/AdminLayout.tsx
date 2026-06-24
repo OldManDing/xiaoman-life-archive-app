@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { Archive, BarChart3, Bot, Database, FileText, House, Image, KeyRound, LogOut, MessageSquareText, ServerCog, Settings2, ShieldAlert, ShieldCheck, UsersRound, type LucideIcon } from 'lucide-react';
+import { Archive, BarChart3, Bot, Database, FileText, House, Image, KeyRound, LogOut, MessageSquareText, ServerCog, Settings2, ShieldAlert, ShieldCheck, SlidersHorizontal, UsersRound, type LucideIcon } from 'lucide-react';
 
 import { useAdminAuth } from '../shared/useAdminAuth';
 import { adminRoleLabel } from '../shared/labels';
@@ -15,6 +15,7 @@ const navItems: Array<{ to: string; label: string; icon: LucideIcon }> = [
   { to: '/records', label: '成长记录', icon: FileText },
   { to: '/media', label: '媒体库', icon: Image },
   { to: '/ai-jobs', label: 'AI 任务', icon: Bot },
+  { to: '/ai-settings', label: 'AI 设置', icon: SlidersHorizontal },
   { to: '/content-risks', label: '内容风险', icon: ShieldAlert },
   { to: '/support-tickets', label: '客服反馈', icon: MessageSquareText },
   { to: '/archive-export-requests', label: '档案交付', icon: Archive },

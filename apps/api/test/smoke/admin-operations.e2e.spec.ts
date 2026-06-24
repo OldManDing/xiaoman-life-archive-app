@@ -709,6 +709,49 @@ describe('Admin operations contract', () => {
     );
   });
 
+  it('tests AI settings without exposing API keys', async () => {
+    const token = await adminToken();
+    prismaMock.systemConfig.findMany.mockResolvedValueOnce([
+      { configKey: 'ai_provider', value: 'mock' },
+      { configKey: 'ai_api_key', value: 'super-secret-ai-key' },
+      { configKey: 'ai_base_url', value: 'https://api.example.com/v1' },
+      { configKey: 'ai_model', value: 'gpt-5-mini' },
+      { configKey: 'ai_timeout_ms', value: '30000' },
+      { configKey: 'ai_daily_limit_per_user', value: '20' },
+    ]);
+
+    const response = await request(app.getHttpServer())
+      .post('/api/v1/admin/ai-settings/test')
+      .set('Authorization', `Bearer ${token}`)
+      .expect(200);
+
+    expect(response.body.data).toMatchObject({
+      status: 'success',
+      provider: 'mock',
+      model: 'gpt-5-mini',
+      base_url: 'https://api.example.com/v1',
+      message: '当前使用 mock AI 服务，不会请求外部供应商。',
+    });
+    expect(response.body.data.latency_ms).toEqual(expect.any(Number));
+    expect(JSON.stringify(response.body)).not.toContain('super-secret-ai-key');
+    expect(prismaMock.auditLog.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          action: 'admin_test_ai_settings',
+          targetType: 'system_config',
+          metadata: expect.objectContaining({
+            provider: 'mock',
+            model: 'gpt-5-mini',
+            base_url: 'https://api.example.com/v1',
+            status: 'success',
+          }),
+        }),
+      }),
+    );
+    const auditPayload = prismaMock.auditLog.create.mock.calls.at(-1)?.[0];
+    expect(JSON.stringify(auditPayload?.data?.metadata)).not.toContain('super-secret-ai-key');
+  });
+
   it('lists families and returns family detail for operations', async () => {
     const token = await adminToken();
     prismaMock.family.count.mockClear();

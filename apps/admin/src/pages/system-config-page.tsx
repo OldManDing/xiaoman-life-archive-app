@@ -102,7 +102,9 @@ export const SystemConfigPage = () => {
     }
   };
 
-  const rows = configs.map((item) => [
+  const visibleConfigs = configs.filter((item) => item.category !== 'ai_provider');
+
+  const rows = visibleConfigs.map((item) => [
     <span key={`${item.config_key}-label`} style={{ display: 'grid', gap: '5px' }}>
       <strong style={{ color: '#16211f' }}>{item.label}</strong>
       <span style={{ color: '#66736f', fontSize: '12px' }}>{item.description}</span>
@@ -118,7 +120,7 @@ export const SystemConfigPage = () => {
   ]);
 
   return (
-    <PageShell title="系统配置" description="运营可维护 AI 服务、备份恢复和告警值班配置。密钥不会明文回显，所有调整都会写入审计日志。">
+    <PageShell title="系统配置" description="维护备份恢复和告警值班等通用运维配置。AI 供应商、模型和 Key 请在「AI 设置」中集中管理。">
       {error ? <Panel><EmptyState title="操作失败" message={error} /></Panel> : null}
       {message ? <Panel><p style={{ ...mutedTextStyle, margin: 0 }}>{message}</p></Panel> : null}
 
