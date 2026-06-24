@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Save, Settings2 } from 'lucide-react';
 
 import { adminApi, type AdminSystemConfigItem } from '../shared/request';
-import { AdminDateInput, Badge, EmptyState, PageShell, Panel } from '../shared/ui';
+import { AdminDateInput, AdminSelect, Badge, EmptyState, PageShell, Panel } from '../shared/ui';
 import { inputStyle, mutedTextStyle, primaryButtonStyle, secondaryButtonStyle } from '../shared/uiStyles';
 import { useAdminAuth } from '../shared/useAdminAuth';
 import { TableShell } from './shared';
@@ -11,6 +11,7 @@ const formatDateTime = (value: string | null | undefined) => (value ? new Date(v
 
 const categoryLabel = (value: AdminSystemConfigItem['category']) =>
   ({
+    ai_provider: 'AI 服务',
     backup_recovery: '备份恢复',
     alerting: '告警值班',
   })[value];
@@ -21,13 +22,21 @@ const valueTypeLabel = (value: AdminSystemConfigItem['value_type']) =>
     url: '链接',
     datetime: '时间',
     text: '文本',
+    secret: '密钥',
+    select: '选项',
   })[value];
 
 const toEditableValue = (item: AdminSystemConfigItem) => {
+  if (item.value_type === 'secret') return '';
   if (item.value_type === 'datetime' && item.value) {
     return item.value.slice(0, 16);
   }
   return item.value;
+};
+
+const displayValue = (item: AdminSystemConfigItem) => {
+  const value = item.display_value ?? item.value;
+  return value ? value : '未配置';
 };
 
 export const SystemConfigPage = () => {
@@ -85,7 +94,7 @@ export const SystemConfigPage = () => {
       setEditing(updated);
       setValue(toEditableValue(updated));
       setReason('');
-      setMessage(`已更新${updated.label}，系统运维页会使用新的后台配置。`);
+      setMessage(`已更新${updated.label}，后台和运行中服务会优先使用新的配置。`);
     } catch (err) {
       setError(err instanceof Error ? err.message : '系统配置保存失败');
     } finally {
@@ -99,7 +108,7 @@ export const SystemConfigPage = () => {
       <span style={{ color: '#66736f', fontSize: '12px' }}>{item.description}</span>
     </span>,
     <Badge key={`${item.config_key}-category`} tone="info">{categoryLabel(item.category)}</Badge>,
-    item.value ? item.value : '未配置',
+    displayValue(item),
     <Badge key={`${item.config_key}-source`} tone={item.source === 'admin' ? 'success' : 'warning'}>{item.source === 'admin' ? '后台配置' : '环境变量'}</Badge>,
     valueTypeLabel(item.value_type),
     item.updated_by_name ? `${item.updated_by_name} / ${formatDateTime(item.updated_at)}` : '—',
@@ -109,7 +118,7 @@ export const SystemConfigPage = () => {
   ]);
 
   return (
-    <PageShell title="系统配置" description="运营可维护备份恢复和告警值班配置，所有调整都会写入审计日志，减少上线后对开发手工改环境变量的依赖。">
+    <PageShell title="系统配置" description="运营可维护 AI 服务、备份恢复和告警值班配置。密钥不会明文回显，所有调整都会写入审计日志。">
       {error ? <Panel><EmptyState title="操作失败" message={error} /></Panel> : null}
       {message ? <Panel><p style={{ ...mutedTextStyle, margin: 0 }}>{message}</p></Panel> : null}
 
@@ -134,7 +143,19 @@ export const SystemConfigPage = () => {
             </div>
             <label style={{ display: 'grid', gap: '6px', color: '#33413d', fontWeight: 700 }}>
               配置值
-              {editing.value_type === 'datetime' ? (
+              {editing.value_type === 'select' ? (
+                <AdminSelect
+                  value={value}
+                  onChange={(event) => setValue(event.target.value)}
+                  disabled={!canEdit || saving}
+                >
+                  {(editing.options ?? []).map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </AdminSelect>
+              ) : editing.value_type === 'datetime' ? (
                 <AdminDateInput
                   type="datetime-local"
                   value={value}
@@ -144,14 +165,20 @@ export const SystemConfigPage = () => {
               ) : (
                 <input
                   style={inputStyle}
-                  type={editing.value_type === 'number' ? 'number' : 'text'}
+                  type={editing.value_type === 'number' ? 'number' : editing.value_type === 'secret' ? 'password' : 'text'}
                   min={editing.value_type === 'number' ? 1 : undefined}
-                  max={editing.value_type === 'number' ? 3650 : undefined}
                   value={value}
                   onChange={(event) => setValue(event.target.value)}
+                  placeholder={editing.value_type === 'secret' ? '输入新的密钥，保存后不再回显' : undefined}
+                  autoComplete={editing.value_type === 'secret' ? 'new-password' : undefined}
                   disabled={!canEdit || saving}
                 />
               )}
+              {editing.value_type === 'secret' ? (
+                <span style={{ color: '#66736f', fontSize: '12px', fontWeight: 600 }}>
+                  当前状态：{editing.secret_configured ? '已配置密钥' : '未配置密钥'}。保存时必须输入完整新密钥。
+                </span>
+              ) : null}
             </label>
             <label style={{ display: 'grid', gap: '6px', color: '#33413d', fontWeight: 700 }}>
               操作原因
@@ -164,7 +191,7 @@ export const SystemConfigPage = () => {
               />
             </label>
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-              <button type="submit" style={primaryButtonStyle} disabled={!canEdit || saving || reason.trim().length < 2}>
+              <button type="submit" style={primaryButtonStyle} disabled={!canEdit || saving || reason.trim().length < 2 || (editing.value_type === 'secret' && !value.trim())}>
                 <Save size={16} />
                 {saving ? '保存中…' : '保存配置'}
               </button>

@@ -3,7 +3,7 @@ import { AiJobStatus, AiJobType, FamilyMemberRole, MembershipType } from '@prism
 
 import { PrismaService } from '../../prisma/prisma.service';
 import { AccessControlService } from '../../shared/services/access-control.service';
-import { getAiProviderName } from '../../shared/env-config';
+import { RuntimeConfigService } from '../../shared/services/runtime-config.service';
 import { generateBizNo } from '../../shared/utils';
 import { AiJobsQueue } from './ai-jobs.queue';
 import { AiProviderService } from './ai-provider.service';
@@ -17,6 +17,7 @@ export class AiJobsService {
     private readonly accessControlService: AccessControlService,
     private readonly aiJobsQueue: AiJobsQueue,
     private readonly aiProviderService: AiProviderService,
+    private readonly runtimeConfigService: RuntimeConfigService,
   ) {}
 
   async create(userId: bigint, recordNo: string, dto: CreateAiJobDto) {
@@ -34,14 +35,14 @@ export class AiJobsService {
         createdAt: { gte: startOfDay },
       },
     });
-    const dailyLimit = Number(process.env.AI_DAILY_LIMIT_PER_USER ?? 20);
+    const dailyLimit = await this.runtimeConfigService.getAiDailyLimitPerUser();
     if (countToday + dto.job_types.length > dailyLimit) {
       throw new HttpException('调用频率超限', HttpStatus.TOO_MANY_REQUESTS);
     }
 
+    const provider = await this.runtimeConfigService.getAiProviderName();
     const jobs = await this.prisma.$transaction(async (tx) => {
       const createdJobs = [] as Array<{ id: bigint; jobNo: string; jobType: AiJobType }>;
-      const provider = getAiProviderName();
       for (const jobType of dto.job_types) {
         const job = await tx.aiJob.create({
           data: {
@@ -150,7 +151,7 @@ export class AiJobsService {
       suggested_title: titleOutput.suggested_title ?? null,
       summary: summaryOutput.summary ?? null,
       tags: tagsOutput.tags ?? [],
-      provider: getAiProviderName(),
+      provider: await this.runtimeConfigService.getAiProviderName(),
     };
   }
 

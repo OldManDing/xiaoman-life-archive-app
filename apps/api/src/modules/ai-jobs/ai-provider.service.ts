@@ -1,7 +1,8 @@
 import { BadGatewayException, Injectable, Logger } from '@nestjs/common';
 import { AiJobType } from '@prisma/client';
 
-import { getAiProviderName, isStrictEnvironment } from '../../shared/env-config';
+import { isStrictEnvironment } from '../../shared/env-config';
+import { RuntimeAiConfig, RuntimeConfigService } from '../../shared/services/runtime-config.service';
 
 export type AiProviderOutput = {
   suggested_title?: string;
@@ -19,18 +20,21 @@ const PUBLIC_AI_UNAVAILABLE_MESSAGE = '智能整理暂时不可用，请手动�
 export class AiProviderService {
   private readonly logger = new Logger(AiProviderService.name);
 
+  constructor(private readonly runtimeConfigService: RuntimeConfigService) {}
+
   async run(params: {
     jobType: AiJobType;
     contentText: string;
     title: string;
     existingTags: string[];
   }): Promise<AiProviderOutput> {
-    const provider = getAiProviderName();
+    const config = await this.runtimeConfigService.getAiConfig();
+    const provider = config.provider;
     const plainText = params.contentText.trim() || params.title.trim() || '成长记录';
 
     if (provider === 'openai' || provider === 'openai-compatible') {
       try {
-        return await this.runOpenAiCompatible(params, plainText);
+        return await this.runOpenAiCompatible(params, plainText, config);
       } catch (error) {
         if (!isStrictEnvironment()) throw error;
 
@@ -127,17 +131,18 @@ export class AiProviderService {
       existingTags: string[];
     },
     plainText: string,
+    config: RuntimeAiConfig,
   ): Promise<AiProviderOutput> {
-    const apiKey = process.env.AI_API_KEY;
-    const baseUrl = process.env.AI_BASE_URL;
-    const model = process.env.AI_MODEL;
+    const apiKey = config.apiKey;
+    const baseUrl = config.baseUrl;
+    const model = config.model;
 
     if (!apiKey || !baseUrl || !model) {
       this.logger.warn('AI provider configuration is incomplete');
       throw new BadGatewayException(PUBLIC_AI_UNAVAILABLE_MESSAGE);
     }
 
-    const timeoutMs = Number(process.env.AI_TIMEOUT_MS ?? 30000);
+    const timeoutMs = config.timeoutMs;
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
 

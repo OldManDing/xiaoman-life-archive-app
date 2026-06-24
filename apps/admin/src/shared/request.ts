@@ -160,12 +160,15 @@ export interface AdminOpsReadinessResponse {
 
 export interface AdminSystemConfigItem {
   config_key: string;
-  category: 'backup_recovery' | 'alerting';
+  category: 'backup_recovery' | 'alerting' | 'ai_provider';
   label: string;
   value: string;
-  value_type: 'number' | 'url' | 'datetime' | 'text';
+  display_value?: string;
+  value_type: 'number' | 'url' | 'datetime' | 'text' | 'secret' | 'select';
   description: string;
   source: 'admin' | 'environment';
+  options?: Array<{ value: string; label: string }>;
+  secret_configured?: boolean;
   updated_by_name: string | null;
   updated_at: string | null;
 }

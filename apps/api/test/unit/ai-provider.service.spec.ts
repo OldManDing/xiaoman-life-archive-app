@@ -1,10 +1,34 @@
 import { AiJobType } from '@prisma/client';
 
 import { AiProviderService } from '../../src/modules/ai-jobs/ai-provider.service';
+import type {
+  RuntimeAiConfig,
+  RuntimeConfigService,
+} from '../../src/shared/services/runtime-config.service';
 
 describe('AiProviderService', () => {
   const originalEnv = process.env;
   const originalFetch = global.fetch;
+
+  const createRuntimeConfigService = (
+    overrides: Partial<RuntimeAiConfig> = {},
+  ) =>
+    ({
+      getAiConfig: jest.fn().mockResolvedValue({
+        provider:
+          (process.env.AI_PROVIDER as RuntimeAiConfig['provider']) ??
+          'openai-compatible',
+        apiKey: process.env.AI_API_KEY?.trim() || null,
+        baseUrl: process.env.AI_BASE_URL?.trim() || null,
+        model: process.env.AI_MODEL?.trim() || null,
+        timeoutMs: Number(process.env.AI_TIMEOUT_MS ?? 30000),
+        dailyLimitPerUser: Number(process.env.AI_DAILY_LIMIT_PER_USER ?? 20),
+        ...overrides,
+      }),
+    }) as unknown as RuntimeConfigService;
+
+  const createService = (overrides: Partial<RuntimeAiConfig> = {}) =>
+    new AiProviderService(createRuntimeConfigService(overrides));
 
   beforeEach(() => {
     process.env = {
@@ -44,7 +68,7 @@ describe('AiProviderService', () => {
     }) as unknown as typeof fetch;
 
     await expect(
-      new AiProviderService().run({
+      createService().run({
         jobType: AiJobType.record_summary,
         contentText: '今天孩子认真观察公园里的花草。',
         title: '公园观察',
@@ -71,7 +95,7 @@ describe('AiProviderService', () => {
     }) as unknown as typeof fetch;
 
     await expect(
-      new AiProviderService().run({
+      createService().run({
         jobType: AiJobType.record_summary,
         contentText: '今天孩子认真观察公园里的花草。',
         title: '公园观察',
@@ -104,7 +128,7 @@ describe('AiProviderService', () => {
     }) as unknown as typeof fetch;
 
     await expect(
-      new AiProviderService().run({
+      createService().run({
         jobType: AiJobType.record_tags,
         contentText: '今天孩子认真观察公园里的花草，主动分享自己的发现。',
         title: '',
@@ -127,7 +151,7 @@ describe('AiProviderService', () => {
     };
 
     await expect(
-      new AiProviderService().run({
+      createService().run({
         jobType: AiJobType.record_summary,
         contentText: '今天孩子认真观察公园里的花草。',
         title: '公园观察',

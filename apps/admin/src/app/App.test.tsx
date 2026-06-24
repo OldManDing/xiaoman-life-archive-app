@@ -213,6 +213,19 @@ describe('App', () => {
           updated_by_name: '系统管理员',
           updated_at: '2026-05-27T00:00:00.000Z',
         },
+        {
+          config_key: 'ai_api_key',
+          category: 'ai_provider',
+          label: 'AI API Key',
+          value: '',
+          display_value: '已配置（不回显）',
+          value_type: 'secret',
+          description: 'AI 服务调用密钥。后台只允许覆盖保存，不会明文回显。',
+          source: 'environment',
+          secret_configured: true,
+          updated_by_name: null,
+          updated_at: null,
+        },
       ],
     });
   });
@@ -946,7 +959,9 @@ describe('App', () => {
       expect(listSystemConfigsMock).toHaveBeenCalled();
     });
     expect(await screen.findByText('备份保留周期')).toBeInTheDocument();
-    expect(screen.getByText('环境变量')).toBeInTheDocument();
+    expect(screen.getByText('AI API Key')).toBeInTheDocument();
+    expect(screen.getByText('已配置（不回显）')).toBeInTheDocument();
+    expect(screen.getAllByText('环境变量').length).toBeGreaterThan(0);
 
     fireEvent.click(screen.getAllByRole('button', { name: '调整' })[0]);
     fireEvent.change(screen.getByLabelText('配置值'), { target: { value: '120' } });
@@ -959,6 +974,6 @@ describe('App', () => {
         reason: '上线前把备份保留周期提高到 120 天',
       });
     });
-    expect(await screen.findByText('已更新备份保留周期，系统运维页会使用新的后台配置。')).toBeInTheDocument();
+    expect(await screen.findByText('已更新备份保留周期，后台和运行中服务会优先使用新的配置。')).toBeInTheDocument();
   });
 });

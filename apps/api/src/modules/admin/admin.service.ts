@@ -9,6 +9,7 @@ import { resolve } from 'node:path';
 import { AiJobsQueue } from '../ai-jobs/ai-jobs.queue';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditLogService } from '../../shared/services/audit-log.service';
+import { RuntimeConfigService } from '../../shared/services/runtime-config.service';
 import { StorageService } from '../../shared/services/storage.service';
 import {
   getAdminInitialPassword,
@@ -121,14 +122,18 @@ type AdminContentRiskItem = {
   action_to: string;
   created_at: string;
 };
-type SystemConfigValueType = 'number' | 'url' | 'datetime' | 'text';
+type SystemConfigCategory = 'backup_recovery' | 'alerting' | 'ai_provider';
+type SystemConfigValueType = 'number' | 'url' | 'datetime' | 'text' | 'secret' | 'select';
 type SystemConfigDefinition = {
   key: string;
-  category: 'backup_recovery' | 'alerting';
+  category: SystemConfigCategory;
   label: string;
   value_type: SystemConfigValueType;
   description: string;
   envValue: () => string;
+  options?: Array<{ value: string; label: string }>;
+  min?: number;
+  max?: number;
 };
 type SystemConfigWithUpdater = Prisma.SystemConfigGetPayload<{
   include: {
@@ -137,12 +142,15 @@ type SystemConfigWithUpdater = Prisma.SystemConfigGetPayload<{
 }>;
 type AdminSystemConfigItem = {
   config_key: string;
-  category: SystemConfigDefinition['category'];
+  category: SystemConfigCategory;
   label: string;
   value: string;
+  display_value: string;
   value_type: SystemConfigValueType;
   description: string;
   source: 'admin' | 'environment';
+  options?: Array<{ value: string; label: string }>;
+  secret_configured?: boolean;
   updated_by_name: string | null;
   updated_at: string | null;
 };
@@ -158,7 +166,69 @@ const CONTENT_RISK_KEYWORDS: Array<{ keyword: string; severity: ContentRiskSever
   { keyword: '删除', severity: 'p2', reason: '可能涉及内容删除诉求' },
 ];
 
+const readEnvString = (name: string) => process.env[name]?.trim() ?? '';
+const secretDisplayValue = (value: string) => (value.trim() ? '已配置（不回显）' : '未配置');
+const auditConfigValue = (definition: SystemConfigDefinition, value: string) =>
+  definition.value_type === 'secret' ? secretDisplayValue(value) : value;
+
 const SYSTEM_CONFIG_DEFINITIONS: SystemConfigDefinition[] = [
+  {
+    key: 'ai_provider',
+    category: 'ai_provider',
+    label: 'AI 供应商',
+    value_type: 'select',
+    description: '控制标题、摘要和标签生成使用的 AI provider。生产环境应使用 OpenAI 或 OpenAI 兼容服务。',
+    envValue: () => getAiProviderName(),
+    options: [
+      { value: 'openai-compatible', label: 'OpenAI 兼容服务' },
+      { value: 'openai', label: 'OpenAI 服务' },
+      { value: 'mock', label: '本地模拟服务' },
+    ],
+  },
+  {
+    key: 'ai_base_url',
+    category: 'ai_provider',
+    label: 'AI 接口地址',
+    value_type: 'url',
+    description: '兼容 /chat/completions 的 API 根地址，例如 https://api.example.com/v1。',
+    envValue: () => readEnvString('AI_BASE_URL'),
+  },
+  {
+    key: 'ai_model',
+    category: 'ai_provider',
+    label: 'AI 模型',
+    value_type: 'text',
+    description: '用于成长记录标题、摘要和标签生成的模型名称。',
+    envValue: () => readEnvString('AI_MODEL'),
+  },
+  {
+    key: 'ai_api_key',
+    category: 'ai_provider',
+    label: 'AI API Key',
+    value_type: 'secret',
+    description: 'AI 服务调用密钥。后台只允许覆盖保存，不会明文回显。',
+    envValue: () => readEnvString('AI_API_KEY'),
+  },
+  {
+    key: 'ai_timeout_ms',
+    category: 'ai_provider',
+    label: 'AI 超时时间',
+    value_type: 'number',
+    description: 'AI 请求超时时间，单位毫秒。建议 5000 到 60000。',
+    envValue: () => readEnvString('AI_TIMEOUT_MS') || '30000',
+    min: 1000,
+    max: 120000,
+  },
+  {
+    key: 'ai_daily_limit_per_user',
+    category: 'ai_provider',
+    label: '单用户每日 AI 上限',
+    value_type: 'number',
+    description: '每个用户每天最多触发的 AI 任务数，用于控制成本和异常调用。',
+    envValue: () => readEnvString('AI_DAILY_LIMIT_PER_USER') || '20',
+    min: 1,
+    max: 1000,
+  },
   {
     key: 'backup_retention_days',
     category: 'backup_recovery',
@@ -166,6 +236,8 @@ const SYSTEM_CONFIG_DEFINITIONS: SystemConfigDefinition[] = [
     value_type: 'number',
     description: '生产备份至少建议保留 90 天，用于长期家庭档案恢复窗口。',
     envValue: () => String(getBackupRetentionDays()),
+    min: 1,
+    max: 3650,
   },
   {
     key: 'backup_runbook_url',
@@ -266,7 +338,8 @@ const createRegistrationInviteToken = () => `NL-${generateSecureToken(3).toUpper
 
 const getSystemConfigDefinition = (key: string) => SYSTEM_CONFIG_DEFINITIONS.find((item) => item.key === key);
 
-const systemConfigCategoryLabel = (category: SystemConfigDefinition['category']) => {
+const systemConfigCategoryLabel = (category: SystemConfigCategory) => {
+  if (category === 'ai_provider') return 'AI 服务';
   if (category === 'backup_recovery') return '备份恢复';
   return '告警值班';
 };
@@ -569,6 +642,7 @@ export class AdminService {
     private readonly jwtService: JwtService,
     private readonly auditLogService: AuditLogService,
     private readonly aiJobsQueue: AiJobsQueue,
+    private readonly runtimeConfigService: RuntimeConfigService,
     private readonly storageService: StorageService,
   ) {}
 
@@ -1572,8 +1646,8 @@ export class AdminService {
         config_key: configKey,
         category: definition.category,
         category_label: systemConfigCategoryLabel(definition.category),
-        before_value: before?.value ?? definition.envValue(),
-        after_value: updated.value,
+        before_value: auditConfigValue(definition, before?.value ?? definition.envValue()),
+        after_value: auditConfigValue(definition, updated.value),
         reason: dto.reason,
       },
     });
@@ -1638,7 +1712,7 @@ export class AdminService {
     const appEnv = getAppEnv();
     const strictEnvironment = isStrictEnvironment();
     const storageProvider = getStorageProviderName();
-    const aiProvider = getAiProviderName();
+    const aiProvider = await this.runtimeConfigService.getAiProviderName();
     const mapProvider = getMapProviderName();
     const smsEnabled = isSmsEnabled();
     const smsProvider = smsEnabled ? getSmsProviderName() : 'disabled';
@@ -2620,16 +2694,37 @@ export class AdminService {
 
   private normalizeSystemConfigValue(definition: SystemConfigDefinition, value: string) {
     const trimmed = value.trim();
-    if (!trimmed && definition.value_type !== 'number') {
+    if (!trimmed && !['number', 'select', 'secret'].includes(definition.value_type)) {
       return '';
     }
 
     if (definition.value_type === 'number') {
       const parsed = Number(trimmed);
-      if (!Number.isInteger(parsed) || parsed <= 0 || parsed > 3650) {
-        throw new BadRequestException(`${definition.label}必须是 1 到 3650 之间的整数`);
+      const min = definition.min ?? 1;
+      const max = definition.max ?? 3650;
+      if (!Number.isInteger(parsed) || parsed < min || parsed > max) {
+        throw new BadRequestException(`${definition.label}必须是 ${min} 到 ${max} 之间的整数`);
       }
       return String(parsed);
+    }
+
+    if (definition.value_type === 'select') {
+      const normalized = trimmed.toLowerCase();
+      const allowed = definition.options?.map((item) => item.value) ?? [];
+      if (!allowed.includes(normalized)) {
+        throw new BadRequestException(`${definition.label}必须是允许的选项`);
+      }
+      return normalized;
+    }
+
+    if (definition.value_type === 'secret') {
+      if (!trimmed) {
+        throw new BadRequestException(`请填写新的${definition.label}`);
+      }
+      if (trimmed.length > 1000) {
+        throw new BadRequestException(`${definition.label}不能超过 1000 个字符`);
+      }
+      return trimmed;
     }
 
     if (definition.value_type === 'url') {
@@ -2682,14 +2777,19 @@ export class AdminService {
   }
 
   private toSystemConfigItem(definition: SystemConfigDefinition, row?: SystemConfigWithUpdater | null): AdminSystemConfigItem {
+    const rawValue = row?.value ?? definition.envValue();
+    const isSecret = definition.value_type === 'secret';
     return {
       config_key: definition.key,
       category: definition.category,
       label: definition.label,
-      value: row?.value ?? definition.envValue(),
+      value: isSecret ? '' : rawValue,
+      display_value: isSecret ? secretDisplayValue(rawValue) : rawValue,
       value_type: definition.value_type,
       description: definition.description,
       source: row ? 'admin' : 'environment',
+      options: definition.options,
+      secret_configured: isSecret ? Boolean(rawValue.trim()) : undefined,
       updated_by_name: row?.updatedByAdmin?.displayName ?? null,
       updated_at: row?.updatedAt.toISOString() ?? null,
     };

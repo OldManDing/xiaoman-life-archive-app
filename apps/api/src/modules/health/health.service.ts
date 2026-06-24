@@ -1,11 +1,15 @@
 import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from '../../prisma/prisma.service';
-import { getAiProviderName, getAppEnv, getMapProviderName, getSmsProviderName, getStorageProviderName, isSmsEnabled } from '../../shared/env-config';
+import { getAppEnv, getMapProviderName, getSmsProviderName, getStorageProviderName, isSmsEnabled } from '../../shared/env-config';
+import { RuntimeConfigService } from '../../shared/services/runtime-config.service';
 
 @Injectable()
 export class HealthService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly runtimeConfigService: RuntimeConfigService,
+  ) {}
 
   async getHealth() {
     let database = 'up';
@@ -24,7 +28,7 @@ export class HealthService {
       providers: {
         sms: isSmsEnabled() ? getSmsProviderName() : 'disabled',
         storage: getStorageProviderName(),
-        ai: getAiProviderName(),
+        ai: await this.runtimeConfigService.getAiProviderName(),
         map: getMapProviderName(),
       },
       timestamp: new Date().toISOString(),
