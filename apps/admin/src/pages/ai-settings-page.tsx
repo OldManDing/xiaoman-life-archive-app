@@ -89,14 +89,19 @@ const ConfigSignal = ({
 const Field = ({
   label,
   helper,
+  required = false,
   children,
 }: {
   label: string;
   helper?: string;
+  required?: boolean;
   children: ReactNode;
 }) => (
   <label className="admin-ai-settings-field">
-    <span>{label}</span>
+    <span className="admin-ai-settings-field-label">
+      {label}
+      {required ? <em>必填</em> : null}
+    </span>
     {children}
     {helper ? <small>{helper}</small> : null}
   </label>
@@ -110,7 +115,9 @@ export const AiSettingsPage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<AdminAiSettingsTestResponse | null>(null);
 
@@ -145,7 +152,24 @@ export const AiSettingsPage = () => {
     setForm((current) => ({ ...current, [key]: event.target.value }));
     setMessage(null);
     setError(null);
+    setFormError(null);
     setTestResult(null);
+  };
+
+  const openEditor = () => {
+    setForm(buildForm(configs));
+    setFormError(null);
+    setError(null);
+    setMessage(null);
+    setTestResult(null);
+    setIsEditing(true);
+  };
+
+  const closeEditor = () => {
+    if (saving) return;
+    setForm(buildForm(configs));
+    setFormError(null);
+    setIsEditing(false);
   };
 
   useEffect(() => {
@@ -193,12 +217,13 @@ export const AiSettingsPage = () => {
     event.preventDefault();
     const validationError = validateForm();
     if (validationError) {
-      setError(validationError);
+      setFormError(validationError);
       return;
     }
 
     setSaving(true);
     setError(null);
+    setFormError(null);
     setMessage(null);
     setTestResult(null);
     try {
@@ -212,9 +237,10 @@ export const AiSettingsPage = () => {
       }
       setConfigs(nextConfigs);
       setForm(buildForm(nextConfigs));
+      setIsEditing(false);
       setMessage('AI 服务设置已保存。新的配置会被后台和运行中服务优先使用，请继续执行连接测试。');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'AI 设置保存失败，请刷新后确认是否有部分配置已保存');
+      setFormError(err instanceof Error ? err.message : 'AI 设置保存失败，请刷新后确认是否有部分配置已保存');
     } finally {
       setSaving(false);
     }
@@ -314,83 +340,47 @@ export const AiSettingsPage = () => {
       </section>
 
       <Panel>
-        <form className="admin-ai-settings-form" onSubmit={onSubmit}>
+        <div className="admin-ai-settings-form">
           <div className="admin-ai-settings-form-head">
             <div>
               <h2>运行配置</h2>
-              <p>一次保存一组 AI 配置，避免在通用表格里逐项调整后遗漏字段。</p>
+              <p>这里只展示当前已保存配置。修改供应商、模型或 Key 时会进入弹框，并要求填写必填项和操作原因。</p>
             </div>
-            {hasChanges ? <Badge tone="warning">有未保存修改</Badge> : <Badge tone="success">配置已同步</Badge>}
+            <Badge tone="success">配置已同步</Badge>
           </div>
 
-          <div className="admin-ai-settings-fields">
-            <Field label="AI 供应商">
-              <AdminSelect aria-label="AI 供应商" value={form.provider} onChange={patchForm('provider')} disabled={!canEdit || saving}>
-                <option value="openai-compatible">OpenAI 兼容服务</option>
-                <option value="openai">OpenAI 服务</option>
-                <option value="mock">本地模拟服务</option>
-              </AdminSelect>
-            </Field>
-            <Field label="接口地址" helper={`当前来源：${sourceLabel(baseUrlConfig?.source)}`}>
-              <input aria-label="接口地址" style={inputStyle} value={form.baseUrl} onChange={patchForm('baseUrl')} placeholder="https://api.example.com/v1" disabled={!canEdit || saving} />
-            </Field>
-            <Field label="模型名称" helper={`当前来源：${sourceLabel(modelConfig?.source)}`}>
-              <input aria-label="模型名称" style={inputStyle} value={form.model} onChange={patchForm('model')} placeholder="gpt-5-mini" disabled={!canEdit || saving} />
-            </Field>
-            <Field label="API Key" helper={hasSecret ? '留空表示保留当前密钥；填写后会覆盖保存。' : '当前未配置 Key，请填写完整密钥。'}>
-              <input
-                style={inputStyle}
-                aria-label="API Key"
-                type="password"
-                value={form.apiKey}
-                onChange={patchForm('apiKey')}
-                placeholder={hasSecret ? '留空保留当前密钥' : '请输入 API Key'}
-                autoComplete="new-password"
-                disabled={!canEdit || saving}
-              />
-            </Field>
-            <Field label="请求超时（毫秒）" helper={`当前来源：${sourceLabel(timeoutConfig?.source)}`}>
-              <input aria-label="请求超时（毫秒）" style={inputStyle} type="number" min={1000} max={120000} value={form.timeoutMs} onChange={patchForm('timeoutMs')} disabled={!canEdit || saving} />
-            </Field>
-            <Field label="单用户每日 AI 上限" helper={`当前来源：${sourceLabel(dailyLimitConfig?.source)}`}>
-              <input
-                style={inputStyle}
-                aria-label="单用户每日 AI 上限"
-                type="number"
-                min={1}
-                max={1000}
-                value={form.dailyLimitPerUser}
-                onChange={patchForm('dailyLimitPerUser')}
-                disabled={!canEdit || saving}
-              />
-            </Field>
-          </div>
-
-          <Field label="操作原因" helper="会写入审计日志，便于之后追踪是谁因为什么调整了 AI 服务。">
-            <textarea
-              style={{ ...inputStyle, minHeight: '86px', resize: 'vertical' }}
-              aria-label="操作原因"
-              value={form.reason}
-              onChange={patchForm('reason')}
-              placeholder="例如：切换供应商或更新过期 Key"
-              disabled={!canEdit || saving}
+          <div className="admin-ai-settings-readonly-grid">
+            <ConfigSignal
+              label="接口地址"
+              value={editableValue(baseUrlConfig) || '-'}
+              helper={`来源：${sourceLabel(baseUrlConfig?.source)}`}
+              tone={baseUrlConfig?.source === 'admin' ? 'success' : 'neutral'}
             />
-          </Field>
+            <ConfigSignal
+              label="请求超时"
+              value={`${editableValue(timeoutConfig) || '30000'} ms`}
+              helper={`来源：${sourceLabel(timeoutConfig?.source)}`}
+              tone={timeoutConfig?.source === 'admin' ? 'success' : 'neutral'}
+            />
+            <ConfigSignal
+              label="每日额度"
+              value={editableValue(dailyLimitConfig) || '20'}
+              helper={`来源：${sourceLabel(dailyLimitConfig?.source)}`}
+              tone={dailyLimitConfig?.source === 'admin' ? 'success' : 'neutral'}
+            />
+          </div>
 
           <div className="admin-ai-settings-actions">
-            <button type="submit" style={primaryButtonStyle} disabled={!canEdit || saving || !hasChanges || form.reason.trim().length < 2}>
+            <button type="button" style={primaryButtonStyle} disabled={!canEdit || loading} onClick={openEditor}>
               <Save size={16} />
-              {saving ? '保存中...' : '保存 AI 设置'}
+              修改 AI 设置
             </button>
-            <button type="button" style={secondaryButtonStyle} disabled={saving || testing} onClick={() => setForm(buildForm(configs))}>
-              放弃修改
-            </button>
-            <button type="button" style={secondaryButtonStyle} disabled={!canEdit || saving || testing || hasChanges || loading} onClick={testConnection}>
+            <button type="button" style={secondaryButtonStyle} disabled={!canEdit || saving || testing || isEditing || loading} onClick={testConnection}>
               <FlaskConical size={16} />
               {testing ? '测试中...' : '测试连接'}
             </button>
           </div>
-        </form>
+        </div>
       </Panel>
 
       <section className="admin-ai-settings-bottom-grid">
@@ -444,6 +434,131 @@ export const AiSettingsPage = () => {
           </div>
         </Panel>
       </section>
+
+      {isEditing ? (
+        <div className="admin-modal-overlay" role="presentation">
+          <section className="admin-modal admin-ai-settings-modal" role="dialog" aria-modal="true" aria-labelledby="admin-ai-settings-dialog-title">
+            <form className="admin-ai-settings-form" onSubmit={onSubmit}>
+              <div className="admin-modal-header">
+                <div>
+                  <span>AI 服务管理</span>
+                  <h2 id="admin-ai-settings-dialog-title">修改 AI 设置</h2>
+                  <p className="admin-ai-settings-dialog-copy">带“必填”的字段保存前必须完整填写；API Key 留空会保留当前密钥。</p>
+                </div>
+                <button type="button" className="admin-modal-close" onClick={closeEditor} aria-label="关闭 AI 设置弹窗">
+                  ×
+                </button>
+              </div>
+
+              <div className="admin-ai-settings-required-note">
+                <span>*</span>
+                所有必填项都会在保存前校验，操作原因会写入审计日志。
+              </div>
+
+              <div className="admin-ai-settings-fields">
+                <Field label="AI 供应商" required>
+                  <AdminSelect aria-label="AI 供应商" value={form.provider} onChange={patchForm('provider')} disabled={!canEdit || saving} required>
+                    <option value="openai-compatible">OpenAI 兼容服务</option>
+                    <option value="openai">OpenAI 服务</option>
+                    <option value="mock">本地模拟服务</option>
+                  </AdminSelect>
+                </Field>
+                <Field label="接口地址" helper={`当前来源：${sourceLabel(baseUrlConfig?.source)}`} required={form.provider !== 'mock'}>
+                  <input
+                    aria-label="接口地址"
+                    aria-required={form.provider !== 'mock'}
+                    required={form.provider !== 'mock'}
+                    style={inputStyle}
+                    value={form.baseUrl}
+                    onChange={patchForm('baseUrl')}
+                    placeholder="https://api.example.com/v1"
+                    disabled={!canEdit || saving}
+                  />
+                </Field>
+                <Field label="模型名称" helper={`当前来源：${sourceLabel(modelConfig?.source)}`} required={form.provider !== 'mock'}>
+                  <input
+                    aria-label="模型名称"
+                    aria-required={form.provider !== 'mock'}
+                    required={form.provider !== 'mock'}
+                    style={inputStyle}
+                    value={form.model}
+                    onChange={patchForm('model')}
+                    placeholder="gpt-5-mini"
+                    disabled={!canEdit || saving}
+                  />
+                </Field>
+                <Field label="API Key" helper={hasSecret ? '留空表示保留当前密钥；填写后会覆盖保存。' : '当前未配置 Key，请填写完整密钥。'} required={!hasSecret && form.provider !== 'mock'}>
+                  <input
+                    style={inputStyle}
+                    aria-label="API Key"
+                    aria-required={!hasSecret && form.provider !== 'mock'}
+                    required={!hasSecret && form.provider !== 'mock'}
+                    type="password"
+                    value={form.apiKey}
+                    onChange={patchForm('apiKey')}
+                    placeholder={hasSecret ? '留空保留当前密钥' : '请输入 API Key'}
+                    autoComplete="new-password"
+                    disabled={!canEdit || saving}
+                  />
+                </Field>
+                <Field label="请求超时（毫秒）" helper={`当前来源：${sourceLabel(timeoutConfig?.source)}`} required>
+                  <input
+                    aria-label="请求超时（毫秒）"
+                    aria-required="true"
+                    required
+                    style={inputStyle}
+                    type="number"
+                    min={1000}
+                    max={120000}
+                    value={form.timeoutMs}
+                    onChange={patchForm('timeoutMs')}
+                    disabled={!canEdit || saving}
+                  />
+                </Field>
+                <Field label="单用户每日 AI 上限" helper={`当前来源：${sourceLabel(dailyLimitConfig?.source)}`} required>
+                  <input
+                    style={inputStyle}
+                    aria-label="单用户每日 AI 上限"
+                    aria-required="true"
+                    required
+                    type="number"
+                    min={1}
+                    max={1000}
+                    value={form.dailyLimitPerUser}
+                    onChange={patchForm('dailyLimitPerUser')}
+                    disabled={!canEdit || saving}
+                  />
+                </Field>
+              </div>
+
+              <Field label="操作原因" helper="会写入审计日志，便于之后追踪是谁因为什么调整了 AI 服务。" required>
+                <textarea
+                  style={{ ...inputStyle, minHeight: '86px', resize: 'vertical' }}
+                  aria-label="操作原因"
+                  aria-required="true"
+                  required
+                  value={form.reason}
+                  onChange={patchForm('reason')}
+                  placeholder="例如：切换供应商或更新过期 Key"
+                  disabled={!canEdit || saving}
+                />
+              </Field>
+
+              {formError ? <p className="admin-modal-error">{formError}</p> : null}
+
+              <div className="admin-modal-actions">
+                <button type="button" style={secondaryButtonStyle} disabled={saving} onClick={closeEditor}>
+                  取消
+                </button>
+                <button type="submit" style={primaryButtonStyle} disabled={!canEdit || saving || !hasChanges}>
+                  <Save size={16} />
+                  {saving ? '保存中...' : '保存 AI 设置'}
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      ) : null}
     </PageShell>
   );
 };

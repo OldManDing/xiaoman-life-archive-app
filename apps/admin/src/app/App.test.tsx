@@ -1093,6 +1093,12 @@ describe('App', () => {
     });
     expect(screen.getAllByText('OpenAI 兼容服务').length).toBeGreaterThan(0);
     expect(screen.getByText('Key 已配置')).toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: '修改 AI 设置' })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '修改 AI 设置' }));
+
+    expect(await screen.findByRole('dialog', { name: '修改 AI 设置' })).toBeInTheDocument();
+    expect(screen.getAllByText('必填').length).toBeGreaterThanOrEqual(6);
     expect(screen.getByPlaceholderText('留空保留当前密钥')).toHaveValue('');
 
     fireEvent.change(screen.getByLabelText('模型名称'), { target: { value: 'gpt-5.4-mini' } });
@@ -1104,6 +1110,9 @@ describe('App', () => {
         value: 'gpt-5.4-mini',
         reason: '线上切换模型验证',
       });
+    });
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: '修改 AI 设置' })).not.toBeInTheDocument();
     });
 
     fireEvent.click(await screen.findByRole('button', { name: '测试连接' }));
