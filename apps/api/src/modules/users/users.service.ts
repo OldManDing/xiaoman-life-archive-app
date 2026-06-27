@@ -281,7 +281,9 @@ export class UsersService {
     const latestBuildNumber = mobileConfig.latestBuildNumber;
     const currentVersion = dto.version.trim();
     const currentBuildNumber = Number.isFinite(dto.build_number) ? Math.max(0, Math.floor(dto.build_number)) : 0;
-    const updateAvailable = this.isMobileUpdateAvailable(currentVersion, currentBuildNumber, latestVersion, latestBuildNumber);
+    const versionBehind = this.isMobileUpdateAvailable(currentVersion, currentBuildNumber, latestVersion, latestBuildNumber);
+    const canDownloadUpdate = Boolean(mobileConfig.apkUrl);
+    const updateAvailable = versionBehind && canDownloadUpdate;
 
     return {
       platform: dto.platform,
