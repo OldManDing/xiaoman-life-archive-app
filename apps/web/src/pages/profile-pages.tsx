@@ -2032,7 +2032,7 @@ export const AboutPage = () => {
                 下载 APK
               </a>
             ) : null}
-            {updateResult.update_available && !updateResult.apk_url ? <p style={{ ...helperTextStyle, margin: 0, color: 'var(--nl-danger)' }}>暂无下载地址。</p> : null}
+            {updateResult.update_available && !updateResult.apk_url ? <p style={{ ...helperTextStyle, margin: 0 }}>新版本已准备，应用市场审核后开放更新。</p> : null}
           </div>
         ) : null}
       </Panel>

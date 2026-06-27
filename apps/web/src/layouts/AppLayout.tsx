@@ -45,9 +45,9 @@ const AppUpdateNotice = ({ bottomOffset }: { bottomOffset: string }) => {
     };
   }, []);
 
-  if (!update?.update_available || dismissed) return null;
+  if (!update?.update_available || dismissed || !update.apk_url) return null;
 
-  const downloadAction = update.apk_url ? (
+  const downloadAction = (
     <a
       href={update.apk_url}
       target="_blank"
@@ -62,8 +62,6 @@ const AppUpdateNotice = ({ bottomOffset }: { bottomOffset: string }) => {
     >
       下载更新
     </a>
-  ) : (
-    <span style={{ color: 'var(--nl-danger)', fontSize: '12px', fontWeight: 650 }}>暂无下载地址</span>
   );
 
   if (update.force_update) {
