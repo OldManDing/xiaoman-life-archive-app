@@ -1962,7 +1962,7 @@ const AboutMenuLink = ({
   </button>
 );
 
-const appVersion = import.meta.env.VITE_APP_VERSION ?? '2.0.2';
+const appVersion = import.meta.env.VITE_APP_VERSION ?? '2.0.3';
 const appBuildNumber = import.meta.env.VITE_APP_BUILD_NUMBER ?? 'dev';
 const appBuildNumberValue = Number.isFinite(Number(appBuildNumber)) ? Number(appBuildNumber) : 0;
 const appBuildTime = import.meta.env.VITE_APP_BUILD_TIME ?? null;

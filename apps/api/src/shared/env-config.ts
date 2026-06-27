@@ -187,11 +187,11 @@ export function getAlertContactChannel(env: EnvSource = process.env): string | n
 }
 
 export function getMobileLatestVersion(env: EnvSource = process.env): string {
-  return readEnvValue(env, 'MOBILE_LATEST_VERSION') ?? '2.0.2';
+  return readEnvValue(env, 'MOBILE_LATEST_VERSION') ?? '2.0.3';
 }
 
 export function getMobileLatestBuildNumber(env: EnvSource = process.env): number {
-  return readNonNegativeInteger(env, 'MOBILE_LATEST_BUILD_NUMBER', 0);
+  return readNonNegativeInteger(env, 'MOBILE_LATEST_BUILD_NUMBER', 9);
 }
 
 export function getMobileReleaseNotes(env: EnvSource = process.env): string {

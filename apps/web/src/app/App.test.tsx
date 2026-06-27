@@ -195,9 +195,9 @@ describe('App Shell', () => {
     checkAppUpdateMock.mockReset();
     checkAppUpdateMock.mockResolvedValue({
       platform: 'android',
-      current_version: '2.0.2',
+      current_version: '2.0.3',
       current_build_number: 0,
-      latest_version: '2.0.2',
+      latest_version: '2.0.3',
       latest_build_number: 0,
       release_notes: '暂无更新说明。',
       apk_url: null,
@@ -2106,7 +2106,7 @@ describe('App Shell', () => {
     fireEvent.click(screen.getByRole('button', { name: /关于我们/ }));
 
     expect(await screen.findByRole('heading', { name: 'nianlun' })).toBeDefined();
-    expect(screen.getByText(/版本 2\.0\.2（构建/)).toBeDefined();
+    expect(screen.getByText(/版本 2\.0\.3（构建/)).toBeDefined();
     expect(screen.queryByRole('button', { name: /应用反馈/ })).toBeNull();
     expect(screen.queryByRole('heading', { name: '孩子的人生档案馆' })).toBeNull();
     expect(screen.queryByText(/familyarchive\.com/)).toBeNull();

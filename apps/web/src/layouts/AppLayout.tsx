@@ -5,7 +5,7 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import { webApi } from '../shared/api/webApi';
 import type { AppUpdateCheckResponse } from '../shared/api/types';
 
-const appVersion = import.meta.env.VITE_APP_VERSION ?? '2.0.2';
+const appVersion = import.meta.env.VITE_APP_VERSION ?? '2.0.3';
 const appBuildNumberRaw = import.meta.env.VITE_APP_BUILD_NUMBER ?? 'dev';
 const appBuildNumber = Number.isFinite(Number(appBuildNumberRaw)) ? Number(appBuildNumberRaw) : 0;
 
