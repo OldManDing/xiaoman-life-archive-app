@@ -1,5 +1,5 @@
 import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { ActorType, FamilyMemberRole, Prisma, RecordTagSource, VisibilityScope } from '@prisma/client';
+import { ActorType, FamilyMemberRole, Prisma, RecordTagSource, RecordType, VisibilityScope } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
 import { MEDIA_STATUS_READY, RECORD_STATUS_DRAFT, RECORD_STATUS_PUBLISHED } from '../../shared/constants';
@@ -15,6 +15,9 @@ import { UpdateRecordDto } from './dto/update-record.dto';
 const uniqueTagNames = (tags: Array<{ tagName: string }>) => Array.from(new Set(tags.map((item) => item.tagName).filter(Boolean)));
 const coordinateLocationPattern = /^(?:手机定位|当前位置)?\s*(?:[·:：-]\s*)?[-+]?\d{1,2}(?:\.\d{3,})?\s*,\s*[-+]?\d{1,3}(?:\.\d{3,})?$/;
 const FAMILY_RECORD_PUBLISHED_ACTION = 'family.record_published';
+
+export const normalizeRecordTypeForMedia = (recordType: RecordType, mediaNos: string[]): RecordType =>
+  recordType === RecordType.text && mediaNos.length > 0 ? RecordType.mixed : recordType;
 
 const normalizeRecordLocationText = (value?: string | null) => {
   if (value === undefined) return undefined;
@@ -75,16 +78,17 @@ export class RecordsService {
       throw new ForbiddenException('无权限创建记录');
     }
 
-    this.ensureRecordPayload(dto.content_text, dto.media_nos, dto.visibility_scope);
+    const mediaNos = dto.media_nos ?? [];
+    const recordType = normalizeRecordTypeForMedia(dto.record_type, mediaNos);
+    this.ensureRecordPayload(dto.content_text, mediaNos, dto.visibility_scope);
     this.ensureRecordPublishPayload({
       status: dto.status,
-      recordType: dto.record_type,
+      recordType,
       title: dto.title,
       contentText: dto.content_text,
-      mediaNos: dto.media_nos ?? [],
+      mediaNos,
       eventTime: dto.event_time,
     });
-    const mediaNos = dto.media_nos ?? [];
 
     const record = await this.prisma.$transaction(async (tx) => {
       const media = mediaNos.length
@@ -108,7 +112,7 @@ export class RecordsService {
           childId: child.id,
           familyId: child.familyId,
           creatorUserId: userId,
-          recordType: dto.record_type,
+          recordType,
           title: dto.title,
           contentText: dto.content_text,
           eventTime: dto.event_time ? new Date(dto.event_time) : new Date(),
@@ -230,10 +234,11 @@ export class RecordsService {
   async update(userId: bigint, recordNo: string, dto: UpdateRecordDto) {
     const { record } = await this.accessControlService.ensureRecordEditable(userId, recordNo);
     const mergedMediaNos = dto.media_nos ?? record.media.map((item) => item.mediaNo);
+    const recordType = normalizeRecordTypeForMedia(dto.record_type ?? record.recordType, mergedMediaNos);
     this.ensureRecordPayload(dto.content_text ?? record.contentText, mergedMediaNos, dto.visibility_scope ?? 'family');
     this.ensureRecordPublishPayload({
       status: dto.status,
-      recordType: dto.record_type ?? record.recordType,
+      recordType,
       title: dto.title ?? record.title,
       contentText: dto.content_text ?? record.contentText,
       mediaNos: mergedMediaNos,
@@ -275,7 +280,7 @@ export class RecordsService {
       await tx.record.update({
         where: { id: record.id },
         data: {
-          recordType: dto.record_type,
+          recordType,
           title: dto.title,
           contentText: dto.content_text,
           eventTime: dto.event_time ? new Date(dto.event_time) : undefined,
@@ -347,10 +352,6 @@ export class RecordsService {
     mediaNos: string[];
     eventTime?: string | null;
   }) {
-    if (recordType === 'text' && mediaNos.length > 0) {
-      throw new BadRequestException('文字记录不能关联媒体');
-    }
-
     if (status !== 'published') return;
 
     if (!title?.trim()) {

@@ -4,8 +4,9 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 
 import { PrismaService } from '../../../prisma/prisma.service';
 import { ADMIN_ACTIVE_STATUS } from '../../../shared/constants';
-import { getJwtAccessSecret } from '../../../shared/env-config';
+import { getAdminJwtAccessSecret } from '../../../shared/env-config';
 import { AdminJwtPayload } from '../../../shared/types';
+import { hashToken } from '../../../shared/utils';
 
 @Injectable()
 export class AdminJwtStrategy extends PassportStrategy(Strategy, 'admin-jwt') {
@@ -13,7 +14,7 @@ export class AdminJwtStrategy extends PassportStrategy(Strategy, 'admin-jwt') {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: getJwtAccessSecret(),
+      secretOrKey: getAdminJwtAccessSecret(),
     });
   }
 
@@ -35,6 +36,27 @@ export class AdminJwtStrategy extends PassportStrategy(Strategy, 'admin-jwt') {
 
     if (!admin) {
       throw new UnauthorizedException('管理员不存在');
+    }
+
+    if (!payload.jti) {
+      throw new UnauthorizedException('后台登录状态已失效');
+    }
+
+    if (admin.tokenInvalidBefore && payload.iat && payload.iat * 1000 < admin.tokenInvalidBefore.getTime()) {
+      throw new UnauthorizedException('后台登录状态已失效');
+    }
+
+    const session = await this.prisma.adminSession.findFirst({
+      where: {
+        adminId: admin.id,
+        accessTokenJtiHash: hashToken(payload.jti),
+        revokedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+      select: { id: true },
+    });
+    if (!session) {
+      throw new UnauthorizedException('后台登录状态已失效');
     }
 
     return {

@@ -123,6 +123,47 @@ export class StorageService {
     }
   }
 
+  async headObject(objectKey: string) {
+    if (!this.s3Client) {
+      return {
+        exists: true,
+        content_length: null,
+        content_type: null,
+        etag: null,
+        last_modified: null,
+      };
+    }
+
+    try {
+      const result = await this.s3Client.send(
+        new HeadObjectCommand({
+          Bucket: this.bucket,
+          Key: objectKey,
+        }),
+      );
+      return {
+        exists: true,
+        content_length: typeof result.ContentLength === 'number' ? result.ContentLength : null,
+        content_type: result.ContentType ?? null,
+        etag: result.ETag?.replace(/^"|"$/g, '') ?? null,
+        last_modified: result.LastModified?.toISOString() ?? null,
+      };
+    } catch (error) {
+      const statusCode = (error as { $metadata?: { httpStatusCode?: number } })?.$metadata?.httpStatusCode;
+      const errorName = (error as { name?: string })?.name;
+      if (statusCode === 404 || errorName === 'NotFound' || errorName === 'NoSuchKey') {
+        return {
+          exists: false,
+          content_length: null,
+          content_type: null,
+          etag: null,
+          last_modified: null,
+        };
+      }
+      throw error;
+    }
+  }
+
   private createMockImageDataUrl(_objectKey: string) {
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="720" viewBox="0 0 960 720">
       <rect width="960" height="720" fill="#f7efe4"/>

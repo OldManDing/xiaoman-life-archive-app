@@ -2,6 +2,7 @@ export interface UserJwtPayload {
   type: 'user';
   sub: string;
   user_no: string;
+  iat?: number;
 }
 
 export interface AdminJwtPayload {
@@ -9,6 +10,8 @@ export interface AdminJwtPayload {
   sub: string;
   username: string;
   role: string;
+  jti?: string;
+  iat?: number;
 }
 
 export interface AuthenticatedUser {

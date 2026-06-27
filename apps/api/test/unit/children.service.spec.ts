@@ -47,4 +47,66 @@ describe('ChildrenService', () => {
       include: { owner: true, family: true },
     }));
   });
+
+  it('rejects a future birthday before updating a child profile', async () => {
+    const prisma = {
+      recordMedia: {
+        findFirst: jest.fn(),
+      },
+    };
+    const accessControlService = {
+      ensureChildOwner: jest.fn().mockResolvedValue({
+        child: {
+          id: BigInt(30),
+          childNo: 'c_001',
+        },
+      }),
+    };
+    const service = new ChildrenService(prisma as never, accessControlService as never, {} as never);
+
+    await expect(service.update(BigInt(1), 'c_001', {
+      birthday: '2999-01-01',
+    })).rejects.toThrow('生日不能晚于今天');
+  });
+
+  it('rejects media avatar references before creating a child profile', async () => {
+    const prisma = {
+      user: {
+        findUniqueOrThrow: jest.fn(),
+      },
+      child: {
+        create: jest.fn(),
+      },
+    };
+    const service = new ChildrenService(prisma as never, {} as never, {} as never);
+
+    await expect(service.create(BigInt(1), {
+      name: '小满',
+      birthday: '2021-05-01',
+      avatar_url: 'media:m_avatar',
+    })).rejects.toThrow('请先创建孩子档案后再上传头像');
+    expect(prisma.user.findUniqueOrThrow).not.toHaveBeenCalled();
+    expect(prisma.child.create).not.toHaveBeenCalled();
+  });
+
+  it('rejects avatar media references that do not belong to the child', async () => {
+    const prisma = {
+      recordMedia: {
+        findFirst: jest.fn().mockResolvedValue(null),
+      },
+    };
+    const accessControlService = {
+      ensureChildOwner: jest.fn().mockResolvedValue({
+        child: {
+          id: BigInt(30),
+          childNo: 'c_001',
+        },
+      }),
+    };
+    const service = new ChildrenService(prisma as never, accessControlService as never, {} as never);
+
+    await expect(service.update(BigInt(1), 'c_001', {
+      avatar_url: 'media:m_other_child',
+    })).rejects.toThrow('头像媒体不存在或不属于当前孩子');
+  });
 });

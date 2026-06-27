@@ -227,14 +227,16 @@ export const AiSettingsPage = () => {
     setMessage(null);
     setTestResult(null);
     try {
-      let nextConfigs = configs;
-      for (const update of updates) {
-        const updated = await adminApi.updateSystemConfig(update.key, {
-          value: update.value,
-          reason: form.reason.trim(),
-        });
-        nextConfigs = nextConfigs.map((item) => (item.config_key === updated.config_key ? updated : item));
-      }
+      const saved = await adminApi.updateAiSettings({
+        provider: form.provider as 'openai-compatible' | 'openai' | 'mock',
+        base_url: form.baseUrl.trim(),
+        model: form.model.trim(),
+        api_key: form.apiKey.trim() || undefined,
+        timeout_ms: Number(form.timeoutMs.trim()),
+        daily_limit_per_user: Number(form.dailyLimitPerUser.trim()),
+        reason: form.reason.trim(),
+      });
+      const nextConfigs = configs.map((item) => saved.list.find((updated) => updated.config_key === item.config_key) ?? item);
       setConfigs(nextConfigs);
       setForm(buildForm(nextConfigs));
       setIsEditing(false);

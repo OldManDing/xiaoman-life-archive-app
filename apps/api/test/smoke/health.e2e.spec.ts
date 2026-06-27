@@ -13,6 +13,9 @@ describe('Health smoke', () => {
   const previousAppEnv = process.env.APP_ENV;
   const previousStorageProvider = process.env.STORAGE_PROVIDER;
   const previousAiProvider = process.env.AI_PROVIDER;
+  const previousAiApiKey = process.env.AI_API_KEY;
+  const previousAiBaseUrl = process.env.AI_BASE_URL;
+  const previousAiModel = process.env.AI_MODEL;
   const previousMapProvider = process.env.MAP_PROVIDER;
   const previousMapApiKey = process.env.MAP_API_KEY;
 
@@ -23,6 +26,10 @@ describe('Health smoke', () => {
       .overrideProvider(PrismaService)
       .useValue({
         $queryRaw: jest.fn().mockResolvedValue([{ '?column?': 1 }]),
+        systemConfig: {
+          findUnique: jest.fn().mockResolvedValue(null),
+          findMany: jest.fn().mockResolvedValue([]),
+        },
       })
       .compile();
 
@@ -49,6 +56,21 @@ describe('Health smoke', () => {
       delete process.env.AI_PROVIDER;
     } else {
       process.env.AI_PROVIDER = previousAiProvider;
+    }
+    if (previousAiApiKey === undefined) {
+      delete process.env.AI_API_KEY;
+    } else {
+      process.env.AI_API_KEY = previousAiApiKey;
+    }
+    if (previousAiBaseUrl === undefined) {
+      delete process.env.AI_BASE_URL;
+    } else {
+      process.env.AI_BASE_URL = previousAiBaseUrl;
+    }
+    if (previousAiModel === undefined) {
+      delete process.env.AI_MODEL;
+    } else {
+      process.env.AI_MODEL = previousAiModel;
     }
     if (previousMapProvider === undefined) {
       delete process.env.MAP_PROVIDER;
@@ -97,6 +119,9 @@ describe('Health smoke', () => {
     process.env.APP_ENV = 'production';
     process.env.STORAGE_PROVIDER = 'minio';
     process.env.AI_PROVIDER = 'openai-compatible';
+    process.env.AI_API_KEY = 'test-ai-key';
+    process.env.AI_BASE_URL = 'https://api.example.com/v1';
+    process.env.AI_MODEL = 'gpt-test';
     process.env.MAP_PROVIDER = 'amap';
     process.env.MAP_API_KEY = 'test-map-key';
 

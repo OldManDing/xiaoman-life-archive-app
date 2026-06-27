@@ -95,6 +95,10 @@ describe('AI jobs async contract', () => {
         return aiJobs.find((job) => job.jobNo === where.jobNo) ?? null;
       }),
     },
+    systemConfig: {
+      findUnique: jest.fn().mockResolvedValue(null),
+      findMany: jest.fn().mockResolvedValue([]),
+    },
     $transaction: jest.fn(async (input: unknown) => {
       if (typeof input === 'function') {
         return (input as (tx: typeof transactionClient) => unknown)(transactionClient);

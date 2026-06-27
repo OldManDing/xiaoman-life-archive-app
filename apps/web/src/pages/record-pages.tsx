@@ -28,6 +28,30 @@ type MediaPreview = {
   error_message?: string | null;
 };
 
+const refreshAiRecordDetail = async (
+  recordNo: string,
+  onRefresh: (detail: RecordDetail) => void,
+  onError?: (message: string) => void,
+) => {
+  try {
+    const refreshed = await webApi.detailRecord(recordNo);
+    onRefresh(refreshed);
+    window.setTimeout(() => {
+      void webApi.detailRecord(recordNo)
+        .then(onRefresh)
+        .catch((err) => {
+          if (onError) {
+            onError(normalizeAiErrorMessage(err instanceof Error ? err.message : null, '整理状态暂时无法更新，请稍后再试。'));
+          }
+        });
+    }, 1200);
+  } catch (err) {
+    if (onError) {
+      onError(normalizeAiErrorMessage(err instanceof Error ? err.message : null, '整理状态暂时无法更新，请稍后再试。'));
+    }
+  }
+};
+
 type MediaType = MediaPreview['media_type'];
 type NativeImageAsset = Pick<Photo | GalleryPhoto, 'webPath' | 'format'>;
 
@@ -223,9 +247,9 @@ const NoticeDialog = ({
         style={{
           width: 'min(100%, 340px)',
           borderRadius: '8px',
-          background: 'var(--nl-surface-strong)',
-          border: '1px solid var(--nl-border-muted)',
-          boxShadow: 'var(--nl-shadow-md)',
+          background: 'var(--nl-dialog-bg)',
+          border: '1px solid var(--nl-border-strong)',
+          boxShadow: 'var(--nl-dialog-shadow)',
           padding: '18px',
           display: 'grid',
           gap: '14px',
@@ -314,9 +338,9 @@ const ConfirmActionDialog = ({
         width: 'min(100%, 340px)',
         boxSizing: 'border-box',
         borderRadius: '8px',
-        background: 'rgb(var(--nl-surface-strong-rgb))',
-        border: '1px solid var(--nl-border-muted)',
-        boxShadow: 'var(--nl-shadow-md)',
+        background: 'var(--nl-dialog-bg)',
+        border: '1px solid var(--nl-border-strong)',
+        boxShadow: 'var(--nl-dialog-shadow)',
         padding: '18px',
         display: 'grid',
         gap: '16px',
@@ -443,6 +467,7 @@ const MediaPreviewTile = ({
 
   return (
     <div
+      className="nl-media-interaction"
       aria-label={label}
       role={canOpenFullscreen ? 'button' : undefined}
       tabIndex={canOpenFullscreen ? 0 : undefined}
@@ -463,6 +488,7 @@ const MediaPreviewTile = ({
         height: compact ? '136px' : media.media_type === 'audio' ? '156px' : '176px',
         borderRadius: '8px',
         cursor: canOpenFullscreen ? 'pointer' : 'default',
+        WebkitTapHighlightColor: 'transparent',
       }}
     >
       {media.media_type === 'image' && mediaUrl ? (
@@ -471,7 +497,7 @@ const MediaPreviewTile = ({
           alt={media.original_name ?? '已上传照片'}
           loading={compact ? 'lazy' : 'eager'}
           decoding="async"
-          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: canOpenFullscreen ? 'none' : 'auto' }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: canOpenFullscreen ? 'none' : 'auto', WebkitTapHighlightColor: 'transparent' }}
         />
       ) : null}
       {media.media_type === 'video' && mediaUrl ? (
@@ -481,7 +507,7 @@ const MediaPreviewTile = ({
             muted
             playsInline
             preload="none"
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', background: 'var(--nl-surface-soft)', pointerEvents: canOpenFullscreen ? 'none' : 'auto' }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', background: 'var(--nl-surface-soft)', pointerEvents: canOpenFullscreen ? 'none' : 'auto', WebkitTapHighlightColor: 'transparent' }}
           />
           <span aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: 'var(--nl-ink)', pointerEvents: 'none' }}>
             <PlayCircle size={compact ? 34 : 42} strokeWidth={1.8} fill="rgba(var(--nl-primary-rgb),0.18)" />
@@ -595,6 +621,7 @@ const MediaFullscreenDialog = ({
 
   return (
     <div
+      className="nl-media-interaction"
       role="dialog"
       aria-modal="true"
       aria-label={`全屏${label}`}
@@ -606,48 +633,25 @@ const MediaFullscreenDialog = ({
         background: 'var(--nl-media-overlay-bg)',
         display: 'grid',
         placeItems: 'center',
-        padding: 'calc(42px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom))',
+        padding: 'calc(24px + env(safe-area-inset-top)) 12px calc(24px + env(safe-area-inset-bottom))',
         overscrollBehavior: 'contain',
         touchAction: 'none',
+        WebkitTapHighlightColor: 'transparent',
       }}
     >
-      <button
-        type="button"
-        aria-label="关闭全屏预览"
-        onClick={onClose}
-        style={{
-          position: 'absolute',
-          top: 'calc(42px + env(safe-area-inset-top))',
-          right: '12px',
-          width: '44px',
-          height: '44px',
-          borderRadius: '8px',
-          border: '1px solid var(--nl-border-muted)',
-          background: 'rgba(var(--nl-surface-rgb),0.62)',
-          color: 'var(--nl-ink)',
-          display: 'grid',
-          placeItems: 'center',
-          cursor: 'pointer',
-          padding: 0,
-        }}
-      >
-        <X size={20} strokeWidth={2.4} />
-      </button>
       <div
         onClick={(event) => event.stopPropagation()}
         style={{
-          width: 'min(100%, 390px)',
-          height: 'min(72dvh, 620px)',
-          display: 'grid',
+          display: 'inline-grid',
           placeItems: 'center',
-          padding: '8px',
+          padding: 0,
           boxSizing: 'border-box',
-          borderRadius: '8px',
-          border: '1px solid var(--nl-border-muted)',
-          background: 'rgba(var(--nl-surface-rgb),0.38)',
-          overflow: 'hidden',
+          border: 'none',
+          background: 'transparent',
+          overflow: 'visible',
           overscrollBehavior: 'contain',
           touchAction: media.media_type === 'video' ? 'auto' : 'none',
+          WebkitTapHighlightColor: 'transparent',
         }}
       >
         {media.media_type === 'image' ? (
@@ -655,7 +659,16 @@ const MediaFullscreenDialog = ({
             src={mediaUrl}
             alt={media.original_name ?? label}
             decoding="async"
-            style={{ width: '100%', height: '100%', maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block', borderRadius: '8px' }}
+            style={{
+              width: 'auto',
+              height: 'auto',
+              maxWidth: 'calc(100vw - 24px)',
+              maxHeight: 'calc(100dvh - 48px - env(safe-area-inset-top) - env(safe-area-inset-bottom))',
+              objectFit: 'contain',
+              display: 'block',
+              borderRadius: 0,
+              WebkitTapHighlightColor: 'transparent',
+            }}
           />
         ) : null}
         {media.media_type === 'video' ? (
@@ -665,7 +678,16 @@ const MediaFullscreenDialog = ({
             autoPlay
             playsInline
             preload="auto"
-            style={{ width: '100%', height: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block', background: 'var(--nl-media-black)', borderRadius: '8px' }}
+            style={{
+              width: 'auto',
+              height: 'auto',
+              maxWidth: 'calc(100vw - 24px)',
+              maxHeight: 'calc(100dvh - 48px - env(safe-area-inset-top) - env(safe-area-inset-bottom))',
+              objectFit: 'contain',
+              display: 'block',
+              background: 'transparent',
+              borderRadius: 0,
+            }}
           />
         ) : null}
         {media.media_type === 'audio' ? (
@@ -1150,6 +1172,7 @@ const RecordForm = ({
 
       await webApi.confirmUpload({ media_no: uploadToken.media_no });
       setForm((current) => {
+        if (current.record_type === 'text' || current.record_type === 'milestone') return { ...current, record_type: 'mixed' };
         if (mediaType === 'audio') return { ...current, record_type: 'audio' };
         if (mediaType === 'video') return { ...current, record_type: 'video' };
         if (current.record_type === 'text' || current.record_type === 'audio' || current.record_type === 'video') {
@@ -1282,6 +1305,13 @@ const RecordForm = ({
     });
   };
 
+  const resolveSubmitRecordType = () => {
+    if (isHeightRecord) return 'text';
+    if (mediaNos.length === 0) return form.record_type === 'mixed' ? 'text' : form.record_type;
+    if (form.record_type === 'text') return 'mixed';
+    return form.record_type;
+  };
+
   const buildHeightRecordPayload = () => {
     const heightText = formatMetricNumber(heightValue);
     const weightText = formatMetricNumber(weightValue);
@@ -1351,7 +1381,7 @@ const RecordForm = ({
     setError(null);
     allowNavigationWithoutPromptRef.current = true;
     try {
-      const nextRecordType = isHeightRecord ? 'text' : form.record_type === 'mixed' && mediaNos.length === 0 ? 'text' : form.record_type;
+      const nextRecordType = resolveSubmitRecordType();
       const nextMediaNos = nextRecordType === 'text' ? [] : mediaNos;
       const locationText = normalizeLocationText(form.location_text);
       await onSubmit({
@@ -1447,7 +1477,7 @@ const RecordForm = ({
       const locationText = formatLocationText(location);
       return locationText === manualLocationText || location.name.trim() === manualLocationText;
     });
-  const showMediaSection = !isHeightRecord && form.record_type !== 'text';
+  const showMediaSection = !isHeightRecord && (form.record_type !== 'text' || mode === 'edit' || mediaNos.length > 0);
   const showPhotoVideoAction = showMediaSection && form.record_type !== 'audio';
   const showAudioAction = showMediaSection && form.record_type !== 'video';
   const photoVideoAccept =
@@ -2198,9 +2228,8 @@ export const ViewRecordPage = () => {
         if (cancelled) return;
         setAiJob(next);
         if (next.status === 'success' && params.record_no) {
-          const refreshed = await webApi.detailRecord(params.record_no);
           if (!cancelled) {
-            setData(refreshed);
+            await refreshAiRecordDetail(params.record_no, setData, setAiError);
           }
         }
       } catch (err) {
@@ -2231,7 +2260,11 @@ export const ViewRecordPage = () => {
     setAiError(null);
     try {
       const result = await webApi.createAiJob(params.record_no, { job_types: [jobType] });
-      setAiJob(result.list[0] ?? null);
+      const nextJob = result.list[0] ?? null;
+      setAiJob(nextJob);
+      if (nextJob?.status === 'success') {
+        await refreshAiRecordDetail(params.record_no, setData, setAiError);
+      }
     } catch (err) {
       setAiError(normalizeAiErrorMessage(err instanceof Error ? err.message : null, fallbackError));
     } finally {
@@ -2293,6 +2326,7 @@ export const ViewRecordPage = () => {
                 </div>
               ) : (
                 <div
+                  className="nl-media-interaction"
                   data-testid="record-primary-media-preview"
                   aria-label={mediaPreviewLabel(primaryMedia.media_type)}
                   role={primaryMediaOpenable ? 'button' : undefined}
@@ -2308,12 +2342,12 @@ export const ViewRecordPage = () => {
                         }
                       : undefined
                   }
-                  style={{ position: 'relative', background: 'var(--nl-surface-soft)', cursor: primaryMediaOpenable ? 'pointer' : 'default', borderRadius: 8, overflow: 'hidden', border: '1px solid var(--nl-border-soft)', boxShadow: '0 28px 72px rgba(var(--nl-shadow-rgb),0.36)' }}
+                  style={{ position: 'relative', background: 'var(--nl-surface-soft)', cursor: primaryMediaOpenable ? 'pointer' : 'default', borderRadius: 8, overflow: 'hidden', border: '1px solid var(--nl-border-soft)', boxShadow: '0 28px 72px rgba(var(--nl-shadow-rgb),0.36)', WebkitTapHighlightColor: 'transparent' }}
                 >
                   {primaryMedia.media_type === 'video' ? (
-                    <video src={primaryMediaUrl} controls playsInline preload="none" style={{ width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', display: 'block', background: 'var(--nl-surface-soft)', pointerEvents: primaryMediaOpenable ? 'none' : 'auto' }} />
+                    <video src={primaryMediaUrl} controls playsInline preload="none" style={{ width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', display: 'block', background: 'var(--nl-surface-soft)', pointerEvents: primaryMediaOpenable ? 'none' : 'auto', WebkitTapHighlightColor: 'transparent' }} />
                   ) : (
-                    <img src={primaryMediaUrl} alt={displayTitle || primaryMedia.original_name || '记录封面'} loading="eager" decoding="async" style={{ width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', display: 'block', pointerEvents: primaryMediaOpenable ? 'none' : 'auto' }} />
+                    <img src={primaryMediaUrl} alt={displayTitle || primaryMedia.original_name || '记录封面'} loading="eager" decoding="async" style={{ width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', display: 'block', pointerEvents: primaryMediaOpenable ? 'none' : 'auto', WebkitTapHighlightColor: 'transparent' }} />
                   )}
                 </div>
               )

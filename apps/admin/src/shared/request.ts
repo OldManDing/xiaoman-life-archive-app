@@ -160,7 +160,7 @@ export interface AdminOpsReadinessResponse {
 
 export interface AdminSystemConfigItem {
   config_key: string;
-  category: 'backup_recovery' | 'alerting' | 'ai_provider';
+  category: 'backup_recovery' | 'alerting' | 'ai_provider' | 'mobile_release';
   label: string;
   value: string;
   display_value?: string;
@@ -173,6 +173,20 @@ export interface AdminSystemConfigItem {
   updated_at: string | null;
 }
 
+export type AdminMediaListParams = {
+  keyword?: string;
+  page?: number;
+  page_size?: number;
+  media_type?: string;
+  status?: string;
+  child_no?: string;
+  family_no?: string;
+  uploader_user_no?: string;
+  linked?: string;
+  start_time?: string;
+  end_time?: string;
+};
+
 export interface AdminSystemConfigResponse {
   list: AdminSystemConfigItem[];
   total: number;
@@ -183,7 +197,7 @@ export interface AdminSystemConfigUpdateResponse extends AdminSystemConfigItem {
 }
 
 export interface AdminAiSettingsTestResponse {
-  status: 'success' | 'failed';
+  status: 'success' | 'failed' | 'skipped';
   provider: string;
   model: string | null;
   base_url: string | null;
@@ -244,12 +258,20 @@ export interface AdminInviteRevokeResponse {
 export interface AdminChildItem {
   child_no: string;
   family_no: string;
+  family_name?: string | null;
   owner_user_no: string;
+  owner_name?: string | null;
   name: string;
+  avatar_url?: string | null;
+  avatar_media_no?: string | null;
   birthday: string;
+  current_age_display?: string | null;
   gender: string;
+  birth_place?: string | null;
+  remark?: string | null;
   status: string;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface AdminRecordItem {
@@ -277,10 +299,21 @@ export interface AdminMediaItem {
   original_name?: string | null;
   mime_type: string | null;
   size_bytes: number | null;
-  object_key: string;
+  object_key: string | null;
+  access_url?: string | null;
+  thumbnail_url?: string | null;
+  width?: number | null;
+  height?: number | null;
+  duration_seconds?: number | null;
   record_no?: string | null;
   record_title?: string | null;
+  uploader_mobile?: string | null;
+  upload_session_expires_at?: string | null;
+  upload_expired?: boolean;
+  failure_reason?: string | null;
+  retry_count?: number;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface AdminAiJobItem {
@@ -328,6 +361,9 @@ export interface AdminArchiveExportRequestItem {
   processed_by_name: string | null;
   processed_at: string | null;
   process_note: string | null;
+  download_url?: string | null;
+  file_sha256?: string | null;
+  delivery_evidence?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -437,12 +473,15 @@ export interface AdminChildDetail extends AdminChildItem {
   family_name: string | null;
   owner_name: string;
   avatar_url: string | null;
+  avatar_media_no: string | null;
   birth_place: string | null;
   remark: string | null;
   updated_at: string;
   family_members: Array<{
     user_no: string;
     nickname: string;
+    avatar_url: string | null;
+    avatar_media_no: string | null;
     mobile: string | null;
     role: string;
     status: string;
@@ -453,14 +492,21 @@ export interface AdminChildDetail extends AdminChildItem {
     title: string | null;
     record_type: string;
     status: string;
+    creator_user_no: string;
+    creator_name: string | null;
+    media_count: number;
+    cover_url: string | null;
     event_time: string;
+    created_at: string;
+    published_at: string | null;
   }>;
 }
 
 export interface AdminMediaDetail extends AdminMediaItem {
   storage_provider: string;
-  bucket: string;
+  bucket: string | null;
   access_url: string | null;
+  thumbnail_url?: string | null;
   original_name: string | null;
   width: number | null;
   height: number | null;
@@ -572,6 +618,19 @@ export const adminApi = {
     return unwrap(response);
   },
 
+  async updateAiSettings(payload: {
+    provider: 'openai-compatible' | 'openai' | 'mock';
+    base_url: string;
+    model: string;
+    api_key?: string;
+    timeout_ms: number;
+    daily_limit_per_user: number;
+    reason: string;
+  }) {
+    const response = await request.patch<ApiEnvelope<{ changed: boolean; list: AdminSystemConfigItem[] }>>('/admin/ai-settings', payload);
+    return unwrap(response);
+  },
+
   async testAiSettings() {
     const response = await request.post<ApiEnvelope<AdminAiSettingsTestResponse>>('/admin/ai-settings/test');
     return unwrap(response);
@@ -607,7 +666,7 @@ export const adminApi = {
     return unwrap(response);
   },
 
-  async updateUserStatus(userNo: string, payload: { status: 'active' | 'disabled'; reason?: string }) {
+  async updateUserStatus(userNo: string, payload: { status: 'active' | 'disabled'; reason: string }) {
     const response = await request.patch<ApiEnvelope<AdminUserStatusUpdateResponse>>(`/admin/users/${userNo}/status`, payload);
     return unwrap(response);
   },
@@ -647,12 +706,12 @@ export const adminApi = {
     return unwrap(response);
   },
 
-  async updateRecordStatus(recordNo: string, payload: { status: 'published' | 'draft'; reason?: string }) {
+  async updateRecordStatus(recordNo: string, payload: { status: 'published' | 'draft'; reason: string }) {
     const response = await request.patch<ApiEnvelope<AdminStatusActionResponse>>(`/admin/records/${recordNo}/status`, payload);
     return unwrap(response);
   },
 
-  async listMedia(params: { keyword?: string; page?: number; page_size?: number }) {
+  async listMedia(params: AdminMediaListParams) {
     const response = await request.get<ApiEnvelope<AdminListResponse<AdminMediaItem>>>('/admin/media', { params });
     return unwrap(response);
   },
@@ -662,7 +721,7 @@ export const adminApi = {
     return unwrap(response);
   },
 
-  async updateMediaStatus(mediaNo: string, payload: { status: 'ready' | 'failed' | 'removed'; reason?: string }) {
+  async updateMediaStatus(mediaNo: string, payload: { status: 'ready' | 'failed' | 'removed'; reason: string }) {
     const response = await request.patch<ApiEnvelope<AdminStatusActionResponse>>(`/admin/media/${mediaNo}/status`, payload);
     return unwrap(response);
   },
@@ -682,12 +741,12 @@ export const adminApi = {
     return unwrap(response);
   },
 
-  async retryAiJob(jobNo: string, payload: { reason?: string }) {
+  async retryAiJob(jobNo: string, payload: { reason: string }) {
     const response = await request.post<ApiEnvelope<AdminStatusActionResponse>>(`/admin/ai-jobs/${jobNo}/retry`, payload);
     return unwrap(response);
   },
 
-  async cancelAiJob(jobNo: string, payload: { reason?: string }) {
+  async cancelAiJob(jobNo: string, payload: { reason: string }) {
     const response = await request.post<ApiEnvelope<AdminStatusActionResponse>>(`/admin/ai-jobs/${jobNo}/cancel`, payload);
     return unwrap(response);
   },
@@ -697,7 +756,7 @@ export const adminApi = {
     return unwrap(response);
   },
 
-  async updateSupportTicketStatus(ticketNo: string, payload: { status: 'processing' | 'resolved' | 'closed'; note?: string }) {
+  async updateSupportTicketStatus(ticketNo: string, payload: { status: 'processing' | 'resolved' | 'closed'; note: string }) {
     const response = await request.patch<ApiEnvelope<AdminSupportTicketItem & { changed: boolean }>>(`/admin/support-tickets/${ticketNo}/status`, payload);
     return unwrap(response);
   },
@@ -707,7 +766,13 @@ export const adminApi = {
     return unwrap(response);
   },
 
-  async updateArchiveExportRequestStatus(requestNo: string, payload: { status: 'processing' | 'completed' | 'rejected'; note?: string }) {
+  async updateArchiveExportRequestStatus(requestNo: string, payload: {
+    status: 'processing' | 'completed' | 'rejected';
+    note: string;
+    download_url?: string;
+    file_sha256?: string;
+    delivery_evidence?: string;
+  }) {
     const response = await request.patch<ApiEnvelope<AdminArchiveExportRequestItem & { changed: boolean }>>(`/admin/archive-export-requests/${requestNo}/status`, payload);
     return unwrap(response);
   },

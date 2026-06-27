@@ -60,6 +60,11 @@ vi.mock('../shared/deviceLocation', () => ({
   getCurrentDeviceLocation: vi.fn(),
 }));
 
+vi.mock('../shared/nativeNotifications', () => ({
+  registerNativeNotificationTapHandler: vi.fn(() => () => undefined),
+  scheduleNativeNotificationsForNewItems: vi.fn(),
+}));
+
 import { webApi } from '../shared/api/webApi';
 import { getCurrentDeviceLocation } from '../shared/deviceLocation';
 
@@ -272,6 +277,9 @@ describe('App Shell', () => {
     render(<App />);
 
     expect(await screen.findByRole('button', { name: '开始使用' })).toBeDefined();
+    expect(screen.getByAltText('年轮成长时间线介绍海报').getAttribute('src')).toBe('/posters/welcome-growth-timeline.png');
+    expect(screen.getByAltText('年轮智能整理介绍海报').getAttribute('src')).toBe('/posters/welcome-ai-organize.png');
+    expect(screen.getByAltText('年轮家庭协作介绍海报').getAttribute('src')).toBe('/posters/welcome-family-notice.png');
     expect(window.location.pathname).toBe('/welcome');
 
     fireEvent.click(screen.getByRole('button', { name: '开始使用' }));
@@ -694,6 +702,45 @@ describe('App Shell', () => {
     expect(screen.queryByText('第一次在草地上奔跑')).toBeNull();
   });
 
+  it('does not render default photos for text-only records on home', async () => {
+    window.history.pushState({}, '', '/home');
+    mockAuthenticatedSession();
+    listRecordsMock.mockImplementation(async (query) => {
+      if (query.start_time || query.end_time) {
+        return { list: [], page: 1, page_size: 1, total: 0, has_more: false };
+      }
+      return {
+        list: [
+          {
+            record_no: 'r_text_only_home',
+            cover_media_no: null,
+            cover_media_type: null,
+            cover_url: null,
+            title: '只写了一段文字',
+            summary: '今天记录了一件小事。',
+            event_time: '2026-05-28T10:00:00.000Z',
+            location_text: null,
+            tags: [],
+            creator_name: '测试用户',
+            is_milestone: false,
+            record_type: 'text',
+            status: 'published' as const,
+          },
+        ],
+        page: 1,
+        page_size: 5,
+        total: 1,
+        has_more: false,
+      };
+    });
+
+    render(<App />);
+
+    expect(await screen.findByText('只写了一段文字')).toBeDefined();
+    expect(screen.queryByAltText('只写了一段文字')).toBeNull();
+    expect(screen.queryByAltText('成长记录')).toBeNull();
+  });
+
   it('shows the one-year-ago card only from the anniversary records API result', async () => {
     window.history.pushState({}, '', '/home');
     mockAuthenticatedSession();
@@ -778,10 +825,10 @@ describe('App Shell', () => {
     expect(drawer.style.display).toBe('grid');
     const rail = recentPhotoSection.querySelector('[data-photo-index-rail="true"]') as HTMLElement;
     expect(rail).toBeDefined();
-    expect(rail.style.width).toBe('150px');
+    expect(rail.style.width).toBe('164px');
     expect((recentPhotoSection.querySelector('[data-photo-index="0"]') as HTMLElement).style.transform).toContain('translate3d(0px');
-    expect((recentPhotoSection.querySelector('[data-photo-index="1"]') as HTMLElement).style.transform).toContain('translate3d(28px');
-    expect((recentPhotoSection.querySelector('[data-photo-index="2"]') as HTMLElement).style.transform).toContain('translate3d(-28px');
+    expect((recentPhotoSection.querySelector('[data-photo-index="1"]') as HTMLElement).style.transform).toContain('translate3d(43px');
+    expect((recentPhotoSection.querySelector('[data-photo-index="2"]') as HTMLElement).style.transform).toContain('translate3d(-43px');
     expect(recentPhotoSection.querySelectorAll('[data-photo-index]').length).toBe(3);
   });
 
@@ -819,8 +866,8 @@ describe('App Shell', () => {
     await waitFor(() => expect(recentPhotoSection.querySelectorAll('[data-photo-index]').length).toBe(4));
     expect(stage.style.touchAction).toBe('pan-y');
     expect(drawer.style.overflowX).toBe('hidden');
-    expect((recentPhotoSection.querySelector('[data-photo-index="1"]') as HTMLElement).style.transform).toContain('translate3d(28px');
-    expect((recentPhotoSection.querySelector('[data-photo-index="2"]') as HTMLElement).style.transform).toContain('translate3d(56px');
+    expect((recentPhotoSection.querySelector('[data-photo-index="1"]') as HTMLElement).style.transform).toContain('translate3d(43px');
+    expect((recentPhotoSection.querySelector('[data-photo-index="2"]') as HTMLElement).style.transform).toContain('translate3d(86px');
 
     fireEvent.click(screen.getByRole('button', { name: '选择照片：第四张' }));
 
@@ -1024,6 +1071,126 @@ describe('App Shell', () => {
         status: 'published',
       }));
     });
+  });
+
+  it('keeps the default text create route free of media actions', async () => {
+    window.history.pushState({}, '', '/record/create?type=text');
+    mockAuthenticatedSession();
+
+    render(<App />);
+
+    expect(await screen.findByPlaceholderText('标题')).toBeDefined();
+    expect(screen.queryByRole('button', { name: '拍照记录' })).toBeNull();
+    expect(screen.queryByRole('button', { name: '从相册添加' })).toBeNull();
+    expect(screen.queryByRole('button', { name: '拍摄视频' })).toBeNull();
+  });
+
+  it('allows editing a text record by adding media and saving it as mixed', async () => {
+    window.history.pushState({}, '', '/record/r_text_edit/edit');
+    mockAuthenticatedSession();
+    const originalCreateObjectURL = URL.createObjectURL;
+    const originalRevokeObjectURL = URL.revokeObjectURL;
+    const originalFetch = globalThis.fetch;
+    Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: vi.fn(() => 'blob:text-edit-photo') });
+    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: vi.fn() });
+    Object.defineProperty(globalThis, 'fetch', { configurable: true, value: vi.fn().mockResolvedValue({ ok: true }) });
+
+    const textRecord = {
+      record_no: 'r_text_edit',
+      child_no: 'c_001',
+      creator_user_no: 'u_001',
+      creator_name: '测试用户',
+      record_type: 'text',
+      title: '原文字记录',
+      content_text: '原来只有文字，现在要补一张照片。',
+      media_list: [],
+      tags: [],
+      event_time: '2026-05-28T10:00:00.000Z',
+      location_text: null,
+      visibility_scope: 'family',
+      is_milestone: false,
+      ai_generated_title: null,
+      ai_summary: null,
+      ai_status: null,
+      status: 'published',
+      created_at: '2026-05-28T10:00:00.000Z',
+      updated_at: '2026-05-28T10:00:00.000Z',
+    };
+    detailRecordMock.mockResolvedValue(textRecord);
+    createUploadTokenMock.mockResolvedValue({
+      media_no: 'm_text_edit_photo',
+      object_key: 'mock/text-edit-photo.png',
+      upload_url: 'https://upload.example/text-edit-photo.png',
+      method: 'PUT',
+      headers: {},
+      mock_upload: false,
+      expires_in: 600,
+    });
+    confirmUploadMock.mockResolvedValue({
+      media_no: 'm_text_edit_photo',
+      status: 'ready',
+      width: null,
+      height: null,
+      duration_seconds: null,
+      created_at: '2026-05-28T10:00:00.000Z',
+      updated_at: '2026-05-28T10:00:00.000Z',
+    });
+    vi.mocked(webApi.updateRecord).mockResolvedValue({
+      ...textRecord,
+      record_type: 'mixed',
+      media_list: [
+        {
+          media_no: 'm_text_edit_photo',
+          media_type: 'image',
+          access_url: '',
+          original_name: 'text-edit-photo.png',
+          mime_type: 'image/png',
+          size_bytes: 8,
+          width: null,
+          height: null,
+          duration_seconds: null,
+        },
+      ],
+    });
+
+    try {
+      render(<App />);
+      const fileInput = await waitFor(() => {
+        const input = document.querySelector('input[aria-label="拍照记录"]');
+        expect(input).not.toBeNull();
+        return input as HTMLInputElement;
+      });
+
+      fireEvent.change(fileInput, {
+        target: { files: [new File(['photo'], 'text-edit-photo.png', { type: 'image/png' })] },
+      });
+      await waitFor(() => expect(confirmUploadMock).toHaveBeenCalled());
+      fireEvent.click(screen.getByRole('button', { name: '保存' }));
+
+      await waitFor(() => {
+        expect(webApi.updateRecord).toHaveBeenCalledWith('r_text_edit', expect.objectContaining({
+          record_type: 'mixed',
+          media_nos: ['m_text_edit_photo'],
+          status: 'published',
+        }));
+      });
+    } finally {
+      if (originalCreateObjectURL) {
+        Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: originalCreateObjectURL });
+      } else {
+        Reflect.deleteProperty(URL, 'createObjectURL');
+      }
+      if (originalRevokeObjectURL) {
+        Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: originalRevokeObjectURL });
+      } else {
+        Reflect.deleteProperty(URL, 'revokeObjectURL');
+      }
+      if (originalFetch) {
+        Object.defineProperty(globalThis, 'fetch', { configurable: true, value: originalFetch });
+      } else {
+        Reflect.deleteProperty(globalThis, 'fetch');
+      }
+    }
   });
 
   it('saves a record draft without requiring publish fields', async () => {
@@ -1543,6 +1710,11 @@ describe('App Shell', () => {
       fireEvent.click(primaryPreview);
       const fullscreenDialog = await screen.findByRole('dialog');
       expect(fullscreenDialog.querySelector('img')?.getAttribute('src')).toMatch(/^(data:image\/png;base64,|blob:record-photo-preview$)/);
+      expect(screen.queryByRole('button', { name: '关闭全屏预览' })).toBeNull();
+      fireEvent.click(fullscreenDialog.querySelector('img')!);
+      expect(screen.getByRole('dialog')).toBeDefined();
+      fireEvent.click(fullscreenDialog);
+      await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     } finally {
       if (originalCreateObjectURL) {
         Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: originalCreateObjectURL });
@@ -1652,6 +1824,11 @@ describe('App Shell', () => {
       const fullscreenDialog = await screen.findByRole('dialog');
       expect(fullscreenDialog.querySelector('video')?.getAttribute('src')).toBe('blob:record-video-preview');
       expect(fullscreenDialog.querySelector('video')?.getAttribute('preload')).toBe('auto');
+      expect(screen.queryByRole('button', { name: '关闭全屏预览' })).toBeNull();
+      fireEvent.click(fullscreenDialog.querySelector('video')!);
+      expect(screen.getByRole('dialog')).toBeDefined();
+      fireEvent.click(fullscreenDialog);
+      await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     } finally {
       if (originalCreateObjectURL) {
         Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: originalCreateObjectURL });
@@ -2046,6 +2223,56 @@ describe('App Shell', () => {
     render(<App />);
 
     expect(await screen.findByText('测试用户 发布了「第一次独立骑车」')).toBeDefined();
+  });
+
+  it('does not render default photos for text-only records in family activity', async () => {
+    window.history.pushState({}, '', '/family');
+    mockAuthenticatedSession();
+    listFamilyMembersMock.mockResolvedValue({
+      family_no: 'f_001',
+      list: [
+        {
+          user_no: 'u_001',
+          nickname: '测试用户',
+          avatar_url: null,
+          mobile_masked: '138****0000',
+          role: 'owner',
+          status: 1,
+          joined_at: '2026-04-21T00:00:00.000Z',
+          invited_by_user_no: null,
+        },
+      ],
+    });
+    listRecordsMock.mockResolvedValue({
+      list: [
+        {
+          record_no: 'r_text_family',
+          cover_media_no: null,
+          cover_media_type: null,
+          cover_url: null,
+          title: '家庭里的文字记录',
+          summary: '这是一条没有图片的家庭动态。',
+          event_time: '2026-06-21T10:00:00.000Z',
+          location_text: null,
+          tags: [],
+          creator_user_no: 'u_001',
+          creator_name: '测试用户',
+          is_milestone: false,
+          record_type: 'text',
+          status: 'published',
+        },
+      ],
+      page: 1,
+      page_size: 3,
+      total: 1,
+      has_more: false,
+    });
+
+    render(<App />);
+
+    expect(await screen.findByText('家庭里的文字记录')).toBeDefined();
+    expect(screen.queryByAltText('家庭里的文字记录')).toBeNull();
+    expect(screen.queryByAltText('家庭动态图片')).toBeNull();
   });
 
   it('explains invite role permissions before creating a family invite', async () => {

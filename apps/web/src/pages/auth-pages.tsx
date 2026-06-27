@@ -264,6 +264,24 @@ const disabledSubmitButtonStyle: CSSProperties = {
 
 export const SplashPage = () => <BrandBootMotion />;
 
+const welcomePosters = [
+  {
+    src: '/posters/welcome-growth-timeline.png',
+    alt: '年轮成长时间线介绍海报',
+    label: '成长时间线',
+  },
+  {
+    src: '/posters/welcome-ai-organize.png',
+    alt: '年轮智能整理介绍海报',
+    label: '智能整理',
+  },
+  {
+    src: '/posters/welcome-family-notice.png',
+    alt: '年轮家庭协作介绍海报',
+    label: '家庭协作',
+  },
+];
+
 export const WelcomePage = () => {
   const navigate = useNavigate();
 
@@ -273,24 +291,67 @@ export const WelcomePage = () => {
   };
 
   return (
-    <main style={{ minHeight: '100dvh', boxSizing: 'border-box', display: 'grid', gridTemplateRows: 'minmax(0, 1fr) auto', gap: 16, padding: 'calc(18px + env(safe-area-inset-top)) 20px max(24px, env(safe-area-inset-bottom))' }}>
-      <section style={{ display: 'grid', alignContent: 'start', gap: 18, minHeight: 0 }}>
-        <div style={{ position: 'relative', aspectRatio: '4 / 5', borderRadius: 8, overflow: 'hidden', border: '1px solid var(--nl-border-strong)', background: 'var(--nl-surface-soft)', boxShadow: 'var(--nl-shadow-md)' }}>
-          <img src={referenceAssets.childPhoto} alt="成长时间线" decoding="async" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-          <div style={{ position: 'absolute', inset: 0, background: 'var(--nl-auth-photo-scrim)' }} />
-          <div style={{ position: 'absolute', left: 16, right: 16, bottom: 16, display: 'grid', gap: 8 }}>
-            <strong style={{ color: 'var(--nl-on-primary)', fontSize: 28, lineHeight: 1.08, fontWeight: 760 }}>年轮</strong>
-            <span style={{ color: 'var(--nl-on-dark-muted)', fontSize: 14, lineHeight: 1.55, fontWeight: 560 }}>把照片、语音和文字整理成孩子的家庭时间线。</span>
-          </div>
+    <main style={{ minHeight: '100dvh', boxSizing: 'border-box', display: 'grid', gridTemplateRows: 'minmax(0, 1fr) auto', gap: 16, padding: 'calc(16px + env(safe-area-inset-top)) 0 max(24px, env(safe-area-inset-bottom))', overflow: 'hidden' }}>
+      <section style={{ display: 'grid', alignContent: 'center', gap: 14, minHeight: 0 }}>
+        <div
+          aria-label="年轮介绍海报"
+          style={{
+            display: 'grid',
+            gridAutoFlow: 'column',
+            gridAutoColumns: 'minmax(284px, 82vw)',
+            gap: 14,
+            overflowX: 'auto',
+            overscrollBehaviorX: 'contain',
+            scrollSnapType: 'x mandatory',
+            scrollbarWidth: 'none',
+            padding: '0 20px 2px',
+            WebkitOverflowScrolling: 'touch',
+          }}
+        >
+          {welcomePosters.map((poster, index) => (
+            <article
+              key={poster.src}
+              aria-label={poster.label}
+              style={{
+                position: 'relative',
+                scrollSnapAlign: 'center',
+                aspectRatio: '9 / 16',
+                minHeight: 0,
+                maxHeight: 'min(68dvh, 640px)',
+                borderRadius: 10,
+                overflow: 'hidden',
+                border: '1px solid var(--nl-border-soft)',
+                background: 'var(--nl-surface-soft)',
+                boxShadow: index === 0 ? '0 30px 70px rgba(var(--nl-shadow-rgb),0.18)' : '0 18px 42px rgba(var(--nl-shadow-rgb),0.12)',
+              }}
+            >
+              <img
+                src={poster.src}
+                alt={poster.alt}
+                decoding={index === 0 ? 'sync' : 'async'}
+                loading={index === 0 ? 'eager' : 'lazy'}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
+            </article>
+          ))}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          <img src={referenceAssets.roomPhoto} alt="生活记录" decoding="async" style={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', borderRadius: 8, border: '1px solid var(--nl-border-strong)', boxShadow: 'var(--nl-shadow-sm)' }} />
-          <img src={referenceAssets.parkPhoto} alt="家庭瞬间" decoding="async" style={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', borderRadius: 8, border: '1px solid var(--nl-border-strong)', boxShadow: 'var(--nl-shadow-sm)' }} />
+        <div aria-hidden="true" style={{ display: 'flex', justifyContent: 'center', gap: 6 }}>
+          {welcomePosters.map((poster, index) => (
+            <span
+              key={poster.src}
+              style={{
+                width: index === 0 ? 18 : 6,
+                height: 6,
+                borderRadius: 99,
+                background: index === 0 ? 'rgba(var(--nl-primary-rgb),0.58)' : 'rgba(var(--nl-muted-rgb),0.28)',
+              }}
+            />
+          ))}
         </div>
       </section>
 
-      <section style={{ display: 'grid', gap: 10 }}>
+      <section style={{ display: 'grid', gap: 10, padding: '0 20px' }}>
         <button type="button" onClick={continueToLogin} style={primaryButtonStyle}>开始使用</button>
         <button type="button" onClick={continueToLogin} style={{ ...secondaryButtonStyle, justifyContent: 'center' }}>跳过</button>
       </section>

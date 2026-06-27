@@ -37,6 +37,10 @@ export class UserJwtStrategy extends PassportStrategy(Strategy, 'user-jwt') {
       throw new UnauthorizedException('用户不存在');
     }
 
+    if (user.tokenInvalidBefore && payload.iat && payload.iat * 1000 < user.tokenInvalidBefore.getTime()) {
+      throw new UnauthorizedException('用户登录状态已失效');
+    }
+
     return {
       id: user.id,
       user_no: user.userNo,

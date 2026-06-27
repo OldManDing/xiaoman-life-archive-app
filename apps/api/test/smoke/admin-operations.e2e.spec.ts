@@ -11,6 +11,7 @@ import { AiJobsQueue } from '../../src/modules/ai-jobs/ai-jobs.queue';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { ApiExceptionFilter } from '../../src/shared/api-exception.filter';
 import { ApiResponseInterceptor } from '../../src/shared/api-response.interceptor';
+import { hashToken } from '../../src/shared/utils';
 
 describe('Admin operations contract', () => {
   let app: INestApplication;
@@ -262,7 +263,7 @@ describe('Admin operations contract', () => {
     ...child,
     family: { ...family, members: [familyMember] },
     owner: user,
-    records: [record],
+    records: [{ ...record, creator: user, media: [media], _count: { media: 1 } }],
   };
 
   const recordWithRelations = {
@@ -317,6 +318,9 @@ describe('Admin operations contract', () => {
         const matchesStatus = where.status === undefined || where.status === adminSuper.status;
         return where.id === adminSuper.id && matchesStatus ? adminSuper : null;
       }),
+    },
+    adminSession: {
+      findFirst: jest.fn().mockResolvedValue({ id: BigInt(120) }),
     },
     user: {
       count: jest.fn().mockResolvedValue(1),
@@ -470,6 +474,7 @@ describe('Admin operations contract', () => {
   };
 
   beforeAll(async () => {
+    process.env.ADMIN_JWT_ACCESS_SECRET = 'test_admin_access_secret_that_is_long_enough';
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
     })
@@ -535,8 +540,8 @@ describe('Admin operations contract', () => {
 
   const adminToken = async () =>
     jwtService.signAsync(
-      { type: 'admin', sub: adminSuper.id.toString(), username: adminSuper.username, role: adminSuper.role },
-      { secret: process.env.JWT_ACCESS_SECRET },
+      { type: 'admin', sub: adminSuper.id.toString(), username: adminSuper.username, role: adminSuper.role, jti: 'admin-smoke-jti' },
+      { secret: process.env.ADMIN_JWT_ACCESS_SECRET },
     );
 
   it('returns dashboard statistics and recent audit logs', async () => {
@@ -726,11 +731,11 @@ describe('Admin operations contract', () => {
       .expect(200);
 
     expect(response.body.data).toMatchObject({
-      status: 'success',
+      status: 'skipped',
       provider: 'mock',
       model: 'gpt-5-mini',
       base_url: 'https://api.example.com/v1',
-      message: '当前使用 mock AI 服务，不会请求外部供应商。',
+      message: '当前使用 mock AI 服务，未进行真实供应商连通性测试。',
     });
     expect(response.body.data.latency_ms).toEqual(expect.any(Number));
     expect(JSON.stringify(response.body)).not.toContain('super-secret-ai-key');
@@ -743,7 +748,7 @@ describe('Admin operations contract', () => {
             provider: 'mock',
             model: 'gpt-5-mini',
             base_url: 'https://api.example.com/v1',
-            status: 'success',
+            status: 'skipped',
           }),
         }),
       }),
@@ -1537,7 +1542,13 @@ describe('Admin operations contract', () => {
     await request(app.getHttpServer())
       .patch(`/api/v1/admin/archive-export-requests/${archiveExportRequest.requestNo}/status`)
       .set('Authorization', `Bearer ${token}`)
-      .send({ status: 'completed', note: '交付包已生成并完成移交确认' })
+      .send({
+        status: 'completed',
+        note: '交付包已生成并完成移交确认',
+        download_url: 'https://download.example.com/archive.zip',
+        file_sha256: 'a'.repeat(64),
+        delivery_evidence: '客服工单 #XM-1001 已完成交付确认',
+      })
       .expect(200)
       .expect((response) => {
         expect(response.body.data).toMatchObject({

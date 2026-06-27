@@ -21,7 +21,7 @@ import { AccessControlService } from '../../shared/services/access-control.servi
 import { AuditLogService } from '../../shared/services/audit-log.service';
 import { NotificationService } from '../../shared/services/notification.service';
 import { StorageService } from '../../shared/services/storage.service';
-import { generateBizNo, maskMobile } from '../../shared/utils';
+import { generateBizNo, hashToken, maskMobile } from '../../shared/utils';
 import { ArchiveExportSummaryDto } from './dto/archive-export-summary.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CheckAppUpdateDto } from './dto/check-app-update.dto';
@@ -31,6 +31,7 @@ import { CreateMembershipBookRequestDto } from './dto/create-membership-book-req
 import { DeleteMeDto } from './dto/delete-me.dto';
 import { ListArchiveExportRequestsDto } from './dto/list-archive-export-requests.dto';
 import { ListNotificationsDto } from './dto/list-notifications.dto';
+import { RegisterDeviceTokenDto } from './dto/register-device-token.dto';
 import { UpdatePreferencesDto } from './dto/update-preferences.dto';
 import { UpdateMeDto } from './dto/update-me.dto';
 
@@ -84,12 +85,18 @@ export class UsersService {
 
   async updateMe(userId: bigint, dto: UpdateMeDto) {
     const user = await this.findUserOrThrow(userId);
+    if (dto.mobile && dto.mobile !== user.mobile) {
+      throw new BadRequestException('手机号暂不支持直接修改，请通过手机号验证流程绑定');
+    }
+    if (dto.avatar_url !== undefined) {
+      await this.assertUserAvatarReference(user.id, dto.avatar_url);
+    }
+
     const updated = await this.prisma.user.update({
       where: { id: user.id },
       data: {
         nickname: dto.nickname,
         avatarUrl: dto.avatar_url,
-        mobile: dto.mobile,
       },
     });
 
@@ -125,10 +132,20 @@ export class UsersService {
 
     const nextHash = await bcrypt.hash(dto.new_password, 10);
     const updatedAt = new Date();
-    await this.prisma.userAuthAccount.update({
-      where: { id: authAccount.id },
-      data: { credentialHash: nextHash },
-    });
+    await this.prisma.$transaction([
+      this.prisma.userAuthAccount.update({
+        where: { id: authAccount.id },
+        data: { credentialHash: nextHash },
+      }),
+      this.prisma.user.update({
+        where: { id: user.id },
+        data: { tokenInvalidBefore: updatedAt },
+      }),
+      this.prisma.userSession.updateMany({
+        where: { userId: user.id, revokedAt: null },
+        data: { revokedAt: updatedAt },
+      }),
+    ]);
 
     try {
       await this.auditLogService.create({
@@ -217,13 +234,54 @@ export class UsersService {
     return this.notificationService.markAllRead(userId);
   }
 
+  async registerDeviceToken(userId: bigint, dto: RegisterDeviceTokenDto) {
+    await this.findUserOrThrow(userId);
+    const now = new Date();
+    const tokenHash = hashToken(dto.push_token);
+    const row = await this.prisma.userDeviceToken.upsert({
+      where: {
+        provider_tokenHash: {
+          provider: dto.provider,
+          tokenHash,
+        },
+      },
+      update: {
+        userId,
+        platform: dto.platform,
+        pushToken: dto.push_token,
+        deviceLabel: dto.device_label ?? null,
+        status: USER_ACTIVE_STATUS,
+        lastSeenAt: now,
+        deletedAt: null,
+      },
+      create: {
+        userId,
+        platform: dto.platform,
+        provider: dto.provider,
+        tokenHash,
+        pushToken: dto.push_token,
+        deviceLabel: dto.device_label ?? null,
+        status: USER_ACTIVE_STATUS,
+        lastSeenAt: now,
+      },
+    });
+
+    return {
+      success: true,
+      provider: row.provider,
+      platform: row.platform,
+      registered_at: row.updatedAt.toISOString(),
+    };
+  }
+
   async checkAppUpdate(userId: bigint, dto: CheckAppUpdateDto) {
     await this.findUserOrThrow(userId);
-    const latestVersion = getMobileLatestVersion();
-    const latestBuildNumber = getMobileLatestBuildNumber();
+    const mobileConfig = await this.getMobileUpdateConfig();
+    const latestVersion = mobileConfig.latestVersion;
+    const latestBuildNumber = mobileConfig.latestBuildNumber;
     const currentVersion = dto.version.trim();
     const currentBuildNumber = Number.isFinite(dto.build_number) ? Math.max(0, Math.floor(dto.build_number)) : 0;
-    const updateAvailable = currentBuildNumber < latestBuildNumber || currentVersion !== latestVersion;
+    const updateAvailable = this.isMobileUpdateAvailable(currentVersion, currentBuildNumber, latestVersion, latestBuildNumber);
 
     return {
       platform: dto.platform,
@@ -231,10 +289,10 @@ export class UsersService {
       current_build_number: currentBuildNumber,
       latest_version: latestVersion,
       latest_build_number: latestBuildNumber,
-      release_notes: getMobileReleaseNotes(),
-      apk_url: getMobileApkUrl(),
+      release_notes: mobileConfig.releaseNotes,
+      apk_url: mobileConfig.apkUrl,
       update_available: updateAvailable,
-      force_update: updateAvailable && getMobileForceUpdate(),
+      force_update: updateAvailable && mobileConfig.forceUpdate,
       checked_at: new Date().toISOString(),
     };
   }
@@ -798,6 +856,73 @@ export class UsersService {
     }
 
     return user;
+  }
+
+  private async assertUserAvatarReference(userId: bigint, avatarUrl?: string | null) {
+    const mediaNo = parseMediaReference(avatarUrl);
+    if (!mediaNo) return;
+
+    const media = await this.prisma.recordMedia.findFirst({
+      where: {
+        mediaNo,
+        uploaderUserId: userId,
+        status: MEDIA_STATUS_READY,
+        deletedAt: null,
+      },
+      select: { id: true },
+    });
+    if (!media) {
+      throw new BadRequestException('头像必须使用本人已上传且可用的媒体');
+    }
+  }
+
+  private async getMobileUpdateConfig() {
+    const rows = await this.prisma.systemConfig.findMany({
+      where: {
+        configKey: {
+          in: ['mobile_latest_version', 'mobile_latest_build_number', 'mobile_release_notes', 'mobile_apk_url', 'mobile_force_update'],
+        },
+      },
+      select: { configKey: true, value: true },
+    });
+    const values = new Map(rows.map((row) => [row.configKey, row.value.trim()]));
+    const latestBuildNumber = Number(values.get('mobile_latest_build_number'));
+
+    return {
+      latestVersion: values.get('mobile_latest_version') || getMobileLatestVersion(),
+      latestBuildNumber: Number.isInteger(latestBuildNumber) && latestBuildNumber >= 0 ? latestBuildNumber : getMobileLatestBuildNumber(),
+      releaseNotes: values.get('mobile_release_notes') || getMobileReleaseNotes(),
+      apkUrl: values.get('mobile_apk_url') || getMobileApkUrl(),
+      forceUpdate: this.parseBooleanConfig(values.get('mobile_force_update'), getMobileForceUpdate()),
+    };
+  }
+
+  private isMobileUpdateAvailable(currentVersion: string, currentBuildNumber: number, latestVersion: string, latestBuildNumber: number) {
+    if (latestBuildNumber > 0 || currentBuildNumber > 0) {
+      return currentBuildNumber < latestBuildNumber;
+    }
+
+    return this.compareSemver(currentVersion, latestVersion) < 0;
+  }
+
+  private compareSemver(left: string, right: string) {
+    const leftParts = left.split(/[.-]/).map((item) => Number.parseInt(item, 10));
+    const rightParts = right.split(/[.-]/).map((item) => Number.parseInt(item, 10));
+    const length = Math.max(leftParts.length, rightParts.length, 3);
+    for (let index = 0; index < length; index += 1) {
+      const leftValue = Number.isFinite(leftParts[index]) ? leftParts[index] : 0;
+      const rightValue = Number.isFinite(rightParts[index]) ? rightParts[index] : 0;
+      if (leftValue !== rightValue) return leftValue - rightValue;
+    }
+    return 0;
+  }
+
+  private parseBooleanConfig(value: string | undefined, fallback: boolean) {
+    if (!value) return fallback;
+    const normalized = value.toLowerCase();
+    if (['1', 'true', 'yes', 'on'].includes(normalized)) return true;
+    if (['0', 'false', 'no', 'off'].includes(normalized)) return false;
+    return fallback;
   }
 
   private async verifyDeletePassword(userId: bigint, password: string) {

@@ -12,6 +12,7 @@ vi.mock('../shared/request', () => ({
     opsReadiness: vi.fn(),
     listSystemConfigs: vi.fn(),
     updateSystemConfig: vi.fn(),
+    updateAiSettings: vi.fn(),
     testAiSettings: vi.fn(),
     listUsers: vi.fn(),
     listFamilies: vi.fn(),
@@ -51,6 +52,7 @@ const dashboardMock = vi.mocked(adminApi.dashboard);
 const opsReadinessMock = vi.mocked(adminApi.opsReadiness);
 const listSystemConfigsMock = vi.mocked(adminApi.listSystemConfigs);
 const updateSystemConfigMock = vi.mocked(adminApi.updateSystemConfig);
+const updateAiSettingsMock = vi.mocked(adminApi.updateAiSettings);
 const testAiSettingsMock = vi.mocked(adminApi.testAiSettings);
 const listUsersMock = vi.mocked(adminApi.listUsers);
 const listFamiliesMock = vi.mocked(adminApi.listFamilies);
@@ -80,6 +82,7 @@ describe('App', () => {
     opsReadinessMock.mockReset();
     listSystemConfigsMock.mockReset();
     updateSystemConfigMock.mockReset();
+    updateAiSettingsMock.mockReset();
     testAiSettingsMock.mockReset();
     listUsersMock.mockReset();
     listFamiliesMock.mockReset();
@@ -1063,18 +1066,83 @@ describe('App', () => {
         role: 'operator',
       },
     });
-    updateSystemConfigMock.mockImplementation(async (configKey, payload) => ({
-      config_key: configKey,
-      category: 'ai_provider',
-      label: configKey === 'ai_model' ? 'AI 模型' : 'AI 设置',
-      value: payload.value,
-      display_value: payload.value,
-      value_type: configKey === 'ai_timeout_ms' || configKey === 'ai_daily_limit_per_user' ? 'number' : 'text',
-      description: 'AI 设置',
-      source: 'admin',
-      updated_by_name: 'Smoke Test',
-      updated_at: '2026-05-27T00:00:00.000Z',
+    updateAiSettingsMock.mockImplementation(async (payload) => ({
       changed: true,
+      list: [
+        {
+          config_key: 'ai_provider',
+          category: 'ai_provider',
+          label: 'AI 供应商',
+          value: payload.provider,
+          display_value: 'OpenAI 兼容服务',
+          value_type: 'select',
+          description: 'AI 设置',
+          source: 'admin',
+          updated_by_name: 'Smoke Test',
+          updated_at: '2026-05-27T00:00:00.000Z',
+        },
+        {
+          config_key: 'ai_base_url',
+          category: 'ai_provider',
+          label: 'AI 接口地址',
+          value: payload.base_url,
+          display_value: payload.base_url,
+          value_type: 'url',
+          description: 'AI 设置',
+          source: 'admin',
+          updated_by_name: 'Smoke Test',
+          updated_at: '2026-05-27T00:00:00.000Z',
+        },
+        {
+          config_key: 'ai_model',
+          category: 'ai_provider',
+          label: 'AI 模型',
+          value: payload.model,
+          display_value: payload.model,
+          value_type: 'text',
+          description: 'AI 设置',
+          source: 'admin',
+          updated_by_name: 'Smoke Test',
+          updated_at: '2026-05-27T00:00:00.000Z',
+        },
+        {
+          config_key: 'ai_api_key',
+          category: 'ai_provider',
+          label: 'AI API Key',
+          value: '',
+          display_value: '已配置（加密保存，不回显）',
+          value_type: 'secret',
+          description: 'AI 设置',
+          source: 'admin',
+          secret_configured: true,
+          updated_by_name: 'Smoke Test',
+          updated_at: '2026-05-27T00:00:00.000Z',
+        },
+        {
+          config_key: 'ai_timeout_ms',
+          category: 'ai_provider',
+          label: 'AI 超时时间',
+          value: String(payload.timeout_ms),
+          display_value: String(payload.timeout_ms),
+          value_type: 'number',
+          description: 'AI 设置',
+          source: 'admin',
+          updated_by_name: 'Smoke Test',
+          updated_at: '2026-05-27T00:00:00.000Z',
+        },
+        {
+          config_key: 'ai_daily_limit_per_user',
+          category: 'ai_provider',
+          label: '单用户每日 AI 上限',
+          value: String(payload.daily_limit_per_user),
+          display_value: String(payload.daily_limit_per_user),
+          value_type: 'number',
+          description: 'AI 设置',
+          source: 'admin',
+          updated_by_name: 'Smoke Test',
+          updated_at: '2026-05-27T00:00:00.000Z',
+        },
+      ],
     }));
 
     renderWithRouter('/login');
@@ -1106,8 +1174,13 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: '保存 AI 设置' }));
 
     await waitFor(() => {
-      expect(updateSystemConfigMock).toHaveBeenCalledWith('ai_model', {
-        value: 'gpt-5.4-mini',
+      expect(updateAiSettingsMock).toHaveBeenCalledWith({
+        provider: 'openai-compatible',
+        base_url: 'https://api.example.com/v1',
+        model: 'gpt-5.4-mini',
+        api_key: undefined,
+        timeout_ms: 30000,
+        daily_limit_per_user: 20,
         reason: '线上切换模型验证',
       });
     });

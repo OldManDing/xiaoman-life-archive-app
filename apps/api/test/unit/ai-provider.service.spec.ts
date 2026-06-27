@@ -104,7 +104,7 @@ describe('AiProviderService', () => {
     ).rejects.toThrow('智能整理暂时不可用，请手动填写标题、摘要或标签后继续。');
   });
 
-  it('falls back to local suggestions in production when the provider returns 403', async () => {
+  it('fails explicitly in production when the provider returns 403', async () => {
     process.env = {
       ...originalEnv,
       APP_ENV: 'production',
@@ -134,9 +134,7 @@ describe('AiProviderService', () => {
         title: '',
         existingTags: ['成长'],
       }),
-    ).resolves.toEqual({
-      tags: expect.arrayContaining(['成长', '观察', '自然']),
-    });
+    ).rejects.toThrow('智能整理暂时不可用，请手动填写标题、摘要或标签后继续。');
   });
 
   it('rejects missing OpenAI-compatible configuration with a public message', async () => {

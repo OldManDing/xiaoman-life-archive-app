@@ -19,6 +19,11 @@ const REQUIRED_KEYS = [
   'REDIS_PORT',
   'JWT_ACCESS_SECRET',
   'JWT_REFRESH_SECRET',
+  'ADMIN_JWT_ACCESS_SECRET',
+  'SYSTEM_CONFIG_ENCRYPTION_SECRET',
+  'JWT_ACCESS_EXPIRES_IN',
+  'JWT_REFRESH_EXPIRES_IN',
+  'ADMIN_JWT_EXPIRES_IN',
   'AUTH_RATE_LIMIT_WINDOW_MS',
   'AUTH_RATE_LIMIT_MAX_ATTEMPTS',
   'STORAGE_PROVIDER',
@@ -154,7 +159,7 @@ function validateSecrets(env, allowPlaceholders) {
     fail('JWT_ACCESS_SECRET 和 JWT_REFRESH_SECRET 不能相同');
   }
 
-  const secretKeys = ['JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET'];
+  const secretKeys = ['JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET', 'ADMIN_JWT_ACCESS_SECRET', 'SYSTEM_CONFIG_ENCRYPTION_SECRET'];
   if (isEnabled(env.SMS_ENABLED)) {
     secretKeys.push('SMS_CODE_PEPPER');
   }
@@ -165,6 +170,10 @@ function validateSecrets(env, allowPlaceholders) {
     if (value.length < 32) {
       fail(`${key} 长度不足 32 个字符`);
     }
+  }
+
+  if (env.ADMIN_JWT_ACCESS_SECRET === env.JWT_ACCESS_SECRET || env.ADMIN_JWT_ACCESS_SECRET === env.JWT_REFRESH_SECRET) {
+    fail('ADMIN_JWT_ACCESS_SECRET must be different from user JWT secrets');
   }
 }
 

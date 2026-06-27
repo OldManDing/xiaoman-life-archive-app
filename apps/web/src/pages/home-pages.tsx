@@ -6,6 +6,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Edit3,
+  FileText,
   MapPin,
   PlayCircle,
   Search,
@@ -15,6 +16,7 @@ import {
 } from 'lucide-react';
 
 import { useAuth } from '../shared/AuthContext';
+import { formatAgeAtEvent } from '../shared/age';
 import { webApi } from '../shared/api/webApi';
 import type { RecordSummary } from '../shared/api/types';
 import { useAsyncData } from '../shared/hooks';
@@ -131,6 +133,24 @@ const HomeImage = ({
   );
 };
 
+const RecordTextThumbnail = ({ label = '文字', compact = false }: { label?: string; compact?: boolean }) => (
+  <span
+    aria-hidden="true"
+    style={{
+      width: '100%',
+      height: '100%',
+      display: 'grid',
+      placeItems: 'center',
+      gap: compact ? 3 : 5,
+      background: 'linear-gradient(180deg, rgba(var(--nl-surface-strong-rgb),0.46), rgba(var(--nl-surface-rgb),0.18))',
+      color: 'var(--nl-muted-strong)',
+    }}
+  >
+    <FileText size={compact ? 17 : 20} strokeWidth={1.8} />
+    <span style={{ fontSize: compact ? 9 : 10, lineHeight: 1, fontWeight: 620, letterSpacing: 0 }}>{label}</span>
+  </span>
+);
+
 const RecordSummaryCard = ({ record, onClick }: { record: RecordSummary; onClick: () => void }) => (
   <button type="button" onClick={onClick} style={{ width: '100%', minHeight: 82, border: '1px solid var(--nl-border-muted)', borderRadius: 8, background: 'rgba(var(--nl-surface-rgb),0.14)', padding: '12px', display: 'flex', gap: 13, alignItems: 'center', textAlign: 'left', cursor: 'pointer', boxShadow: 'inset 0 1px 0 var(--nl-inset-highlight)' }}>
     <span style={{ width: 42, display: 'grid', justifyItems: 'start', flexShrink: 0 }}>
@@ -151,6 +171,7 @@ const HomeTimelineCard = ({ record, onClick, index }: { record: RecordSummary; o
     cacheRemote: mediaKind !== 'audio',
   });
   const isMilestone = record.is_milestone || record.record_type === 'milestone';
+  const hasCover = hasVisualCover(record);
   const fallbackImage = index % 2 === 0 ? referenceAssets.childPhoto : referenceAssets.parkPhoto;
 
   return (
@@ -161,13 +182,15 @@ const HomeTimelineCard = ({ record, onClick, index }: { record: RecordSummary; o
             <span style={{ width: '100%', height: '100%', display: 'grid', placeItems: 'center', background: 'rgba(var(--nl-primary-rgb),0.1)', color: 'var(--nl-primary-2)' }}>
               <PlayCircle size={22} strokeWidth={2.2} />
             </span>
-          ) : (
+          ) : hasCover ? (
             <HomeImage src={coverUrl} fallbackSrc={fallbackImage} alt={record.title ?? '成长记录'} />
+          ) : (
+            <RecordTextThumbnail label={getRecordLabel(record)} compact />
           )}
           {isMilestone ? <span style={{ position: 'absolute', right: 5, top: 5, width: 20, height: 20, borderRadius: '6px', background: 'var(--nl-media-scrim)', color: 'var(--nl-primary-2)', display: 'grid', placeItems: 'center' }}><Star size={11} fill="currentColor" /></span> : null}
         </span>
         <span style={{ minWidth: 0, display: 'grid', gap: 5 }}>
-          <span style={{ color: 'var(--nl-muted)', fontSize: 11, lineHeight: 1.1, fontWeight: 520 }}>{formatDay(record.event_time)} {formatMonth(record.event_time)} · {getRecordLabel(record)}</span>
+          <span style={{ color: 'var(--nl-muted)', fontSize: 11, lineHeight: 1.1, fontWeight: 520 }}>{formatMonth(record.event_time)} {formatDay(record.event_time)} · {getRecordLabel(record)}</span>
           <strong style={{ color: 'var(--nl-ink)', fontSize: 15, lineHeight: 1.28, fontWeight: 720, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{record.title ?? '未命名记录'}</strong>
           <span style={{ color: 'var(--nl-muted-strong)', fontSize: 12, lineHeight: 1.48, fontWeight: 460, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{record.summary ?? `${record.creator_name} 留下的一条成长记录。`}</span>
         </span>
@@ -177,25 +200,6 @@ const HomeTimelineCard = ({ record, onClick, index }: { record: RecordSummary; o
 };
 
 const getRecordYear = (value: string) => String(new Date(value).getFullYear());
-
-const formatAgeAtEvent = (birthday?: string | null, eventTime?: string) => {
-  if (!birthday || !eventTime) return '';
-  const birth = new Date(birthday);
-  const event = new Date(eventTime);
-  if (Number.isNaN(birth.getTime()) || Number.isNaN(event.getTime()) || event < birth) return '';
-
-  let months = (event.getFullYear() - birth.getFullYear()) * 12 + event.getMonth() - birth.getMonth();
-  if (event.getDate() < birth.getDate()) months -= 1;
-  if (months <= 0) {
-    const days = Math.max(0, Math.floor((event.getTime() - birth.getTime()) / 86_400_000));
-    return `${days}天`;
-  }
-
-  const years = Math.floor(months / 12);
-  const restMonths = months % 12;
-  if (years > 0) return `${years}岁${restMonths > 0 ? `${restMonths}个月` : ''}`;
-  return `${months}个月`;
-};
 
 const TimelineRecordRow = ({
   record,
@@ -213,11 +217,12 @@ const TimelineRecordRow = ({
     cacheRemote: mediaKind !== 'audio',
   });
   const isMilestone = record.is_milestone || record.record_type === 'milestone';
-  const imageUrl = coverUrl ?? (index % 3 === 1 ? referenceAssets.parkPhoto : index % 3 === 2 ? referenceAssets.roomPhoto : referenceAssets.childPhoto);
+  const hasCover = hasVisualCover(record);
+  const fallbackImage = index % 3 === 1 ? referenceAssets.parkPhoto : index % 3 === 2 ? referenceAssets.roomPhoto : referenceAssets.childPhoto;
   return (
     <button type="button" onClick={onClick} className="nl-pressable" style={{ width: '100%', border: 'none', borderBottom: '1px solid var(--nl-border-soft)', borderRadius: 0, background: 'transparent', padding: '16px 0', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 86px', gap: 16, alignItems: 'center', textAlign: 'left', cursor: 'pointer', boxShadow: 'none' }}>
       <span style={{ minWidth: 0, display: 'grid', gap: 5 }}>
-        <span style={{ color: 'var(--nl-muted)', fontSize: 11, lineHeight: 1.15, fontWeight: 520 }}>{formatDay(record.event_time)} {formatMonth(record.event_time)} · {ageLabel || formatShortDate(record.event_time)} · {getRecordLabel(record)}</span>
+        <span style={{ color: 'var(--nl-muted)', fontSize: 11, lineHeight: 1.15, fontWeight: 520 }}>{formatMonth(record.event_time)} {formatDay(record.event_time)} · {ageLabel || formatShortDate(record.event_time)} · {getRecordLabel(record)}</span>
         <strong style={{ color: 'var(--nl-ink)', fontSize: 16, lineHeight: 1.25, fontWeight: 760, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{record.title ?? '未命名记录'}</strong>
         {mediaKind === 'audio' ? (
           <span style={{ width: '100%', maxWidth: 144, minHeight: 34, borderRadius: 8, background: 'transparent', border: '1px solid rgba(var(--nl-primary-rgb),0.2)', color: 'var(--nl-primary-2)', padding: '0 10px', display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 11, fontWeight: 520 }}>
@@ -232,7 +237,11 @@ const TimelineRecordRow = ({
         )}
       </span>
       <span style={{ position: 'relative', width: 86, height: 66, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--nl-border-muted)', background: 'var(--nl-surface-soft)', boxShadow: '0 12px 26px rgba(var(--nl-shadow-rgb),0.18)' }}>
-        <HomeImage src={imageUrl} fallbackSrc={index % 3 === 1 ? referenceAssets.parkPhoto : index % 3 === 2 ? referenceAssets.roomPhoto : referenceAssets.childPhoto} alt={record.title ?? '成长照片'} />
+        {hasCover ? (
+          <HomeImage src={coverUrl} fallbackSrc={fallbackImage} alt={record.title ?? '成长照片'} />
+        ) : (
+          <RecordTextThumbnail label={getRecordLabel(record)} />
+        )}
         {isMilestone ? <span style={{ position: 'absolute', right: 5, top: 5, width: 20, height: 20, borderRadius: '6px', background: 'var(--nl-media-scrim)', color: 'var(--nl-primary-2)', display: 'grid', placeItems: 'center' }}><Star size={11} fill="currentColor" /></span> : null}
       </span>
     </button>
@@ -243,6 +252,7 @@ type HomePhotoTile = {
   src: string;
   title: string;
   recordNo?: string;
+  meta?: string;
 };
 
 const homePhotoFallbacks = [referenceAssets.childPhoto, referenceAssets.roomPhoto, referenceAssets.parkPhoto];
@@ -339,9 +349,10 @@ const HomePhotoDrawer = ({ tiles, onOpen }: { tiles: HomePhotoTile[]; onOpen: (t
   return (
     <section aria-label="最近照片" style={{ display: 'grid', gap: 12, width: '100%', overflow: 'hidden', contain: 'layout paint' }}>
       <button
+        className="nl-media-interaction"
         type="button"
         onClick={() => onOpen(activeTile)}
-        style={{ position: 'relative', width: '100%', aspectRatio: '4 / 3', minHeight: 244, maxHeight: 318, borderRadius: 8, border: '1px solid var(--nl-border-muted)', background: 'var(--nl-surface-soft)', overflow: 'hidden', padding: 0, cursor: 'pointer', boxShadow: '0 30px 74px rgba(var(--nl-shadow-rgb),0.34)', textAlign: 'left' }}
+        style={{ position: 'relative', width: '100%', aspectRatio: '4 / 3', minHeight: 244, maxHeight: 318, borderRadius: 8, border: '1px solid var(--nl-border-muted)', background: 'var(--nl-surface-soft)', overflow: 'hidden', padding: 0, cursor: 'pointer', boxShadow: '0 30px 74px rgba(var(--nl-shadow-rgb),0.34)', textAlign: 'left', WebkitTapHighlightColor: 'transparent' }}
       >
         <HomeImage key={activeTile.src} src={activeTile.src} fallbackSrc={homePhotoFallbacks[activeTileIndex % homePhotoFallbacks.length]} alt={activeTile.title} loading="eager" style={{ transition: 'opacity 0.18s ease' }} />
       </button>
@@ -377,6 +388,7 @@ const HomePhotoDrawer = ({ tiles, onOpen }: { tiles: HomePhotoTile[]; onOpen: (t
             const scale = 1;
             return (
               <button
+                className="nl-media-interaction"
                 key={`${tile.recordNo ?? tile.title}-${index}`}
                 type="button"
                 data-photo-index={index}
@@ -384,6 +396,7 @@ const HomePhotoDrawer = ({ tiles, onOpen }: { tiles: HomePhotoTile[]; onOpen: (t
                 aria-pressed={active}
                 onClick={() => selectTile(index)}
                 style={{
+                  ['--nl-media-active-transform' as string]: `translate3d(${translateX}px, 0, ${active ? 22 : -absOffset * 18}px) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg) scale(${scale})`,
                   position: 'absolute',
                   left: `calc(50% - ${drawerTileWidth / 2}px)`,
                   top: translateY,
@@ -405,6 +418,7 @@ const HomePhotoDrawer = ({ tiles, onOpen }: { tiles: HomePhotoTile[]; onOpen: (t
                   willChange: 'transform, opacity',
                   backfaceVisibility: 'hidden',
                   transition: 'opacity 0.24s ease, transform 0.28s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.18s ease, top 0.24s ease',
+                  WebkitTapHighlightColor: 'transparent',
                 }}
               >
                 <HomeImage src={tile.src} fallbackSrc={homePhotoFallbacks[index % homePhotoFallbacks.length]} alt="" />
@@ -440,6 +454,7 @@ const HomePhotoDrawer = ({ tiles, onOpen }: { tiles: HomePhotoTile[]; onOpen: (t
               const active = index === activeIndex;
               return (
                 <button
+                  className="nl-media-interaction"
                   key={`${tile.recordNo ?? tile.title}-${index}`}
                   type="button"
                   data-photo-index={index}
@@ -447,6 +462,7 @@ const HomePhotoDrawer = ({ tiles, onOpen }: { tiles: HomePhotoTile[]; onOpen: (t
                   aria-pressed={active}
                   onClick={() => selectTile(index)}
                   style={{
+                    ['--nl-media-active-transform' as string]: active ? 'translateY(-1px) scale(1.04)' : 'translateY(0) scale(0.98)',
                     position: 'absolute',
                     left: index * centeredStride,
                     top: active ? 0 : 3,
@@ -464,6 +480,7 @@ const HomePhotoDrawer = ({ tiles, onOpen }: { tiles: HomePhotoTile[]; onOpen: (t
                     transform: active ? 'translateY(-1px) scale(1.04)' : 'translateY(0) scale(0.98)',
                     transformOrigin: 'center',
                     transition: 'opacity 0.16s ease, transform 0.16s ease, border-color 0.16s ease, top 0.16s ease',
+                    WebkitTapHighlightColor: 'transparent',
                   }}
                 >
                   <HomeImage src={tile.src} fallbackSrc={homePhotoFallbacks[index % homePhotoFallbacks.length]} alt="" />
@@ -484,11 +501,11 @@ const HomePhotoCarousel = ({ tiles, onOpen }: { tiles: HomePhotoTile[]; onOpen: 
   const interactionPauseUntilRef = useRef(0);
   const tileKey = tiles.map((tile) => `${tile.recordNo ?? ''}:${tile.src}`).join('|');
   const canLoop = tiles.length > 1;
-  const thumbWidth = 94;
-  const thumbHeight = 66;
-  const thumbStride = Math.round(thumbWidth * 0.3);
+  const thumbWidth = 78;
+  const thumbHeight = 56;
+  const thumbStride = Math.round(thumbWidth * 0.55);
   const visibleThumbCount = Math.min(tiles.length, 5);
-  const thumbRailWidth = visibleThumbCount > 0 ? Math.min(thumbWidth + thumbStride * (visibleThumbCount - 1), 206) : 0;
+  const thumbRailWidth = visibleThumbCount > 0 ? Math.min(thumbWidth + thumbStride * (visibleThumbCount - 1), 258) : 0;
 
   const normalizeIndex = (index: number) => {
     if (!tiles.length) return 0;
@@ -582,9 +599,10 @@ const HomePhotoCarousel = ({ tiles, onOpen }: { tiles: HomePhotoTile[]; onOpen: 
     <section
       aria-label="最近照片"
       data-photo-carousel="true"
-      style={{ display: 'grid', gap: 14, width: '100%', overflow: 'hidden', contain: 'layout paint' }}
+      style={{ display: 'grid', gap: 12, width: '100%', overflow: 'hidden', contain: 'layout paint' }}
     >
       <button
+        className="nl-media-interaction"
         type="button"
         data-photo-stage="true"
         onPointerDown={onCarouselPointerDown}
@@ -598,18 +616,19 @@ const HomePhotoCarousel = ({ tiles, onOpen }: { tiles: HomePhotoTile[]; onOpen: 
           position: 'relative',
           width: '100%',
           aspectRatio: '4 / 3',
-          minHeight: 256,
-          maxHeight: 326,
+          minHeight: 278,
+          maxHeight: 352,
           borderRadius: 8,
           border: '1px solid var(--nl-border-soft)',
-          background: 'var(--nl-surface-soft)',
+          background: 'rgba(var(--nl-surface-strong-rgb),0.64)',
           overflow: 'hidden',
-          padding: 0,
+          padding: 10,
           cursor: 'pointer',
-          boxShadow: '0 42px 104px rgba(var(--nl-shadow-rgb),0.48)',
+          boxShadow: '0 30px 76px rgba(var(--nl-shadow-rgb),0.16), inset 0 1px 0 rgba(255,255,255,0.62)',
           textAlign: 'left',
           touchAction: 'pan-y',
           contain: 'layout paint',
+          WebkitTapHighlightColor: 'transparent',
         }}
       >
         {tiles.map((tile, index) => {
@@ -623,13 +642,16 @@ const HomePhotoCarousel = ({ tiles, onOpen }: { tiles: HomePhotoTile[]; onOpen: 
               aria-hidden={!active}
               style={{
                 position: 'absolute',
-                inset: 0,
+                inset: '10px 10px 58px',
                 display: 'block',
+                borderRadius: 8,
+                overflow: 'hidden',
                 opacity: visible ? (active ? 1 : 0) : 0,
-                transform: `translate3d(${loopOffset * 28}px, 0, 0) scale(${active ? 1 : 1.025})`,
+                transform: `translate3d(${loopOffset * 22}px, 0, 0) scale(${active ? 1 : 1.01})`,
                 transition: 'opacity 0.42s ease, transform 0.48s cubic-bezier(0.22, 1, 0.36, 1)',
                 zIndex: active ? 2 : 1,
                 willChange: 'opacity, transform',
+                background: 'var(--nl-surface-soft)',
               }}
             >
               <HomeImage
@@ -645,12 +667,39 @@ const HomePhotoCarousel = ({ tiles, onOpen }: { tiles: HomePhotoTile[]; onOpen: 
           aria-hidden="true"
           style={{
             position: 'absolute',
-            inset: 0,
+            inset: '10px 10px 58px',
+            borderRadius: 8,
             zIndex: 3,
-            background: 'var(--nl-photo-gradient)',
+            background: 'linear-gradient(180deg, rgba(12,12,10,0) 62%, rgba(12,12,10,0.24) 100%)',
             pointerEvents: 'none',
           }}
         />
+        <span
+          style={{
+            position: 'absolute',
+            left: 18,
+            right: 18,
+            bottom: 17,
+            zIndex: 4,
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 1fr) minmax(34px, auto)',
+            gap: 10,
+            alignItems: 'end',
+            pointerEvents: 'none',
+          }}
+        >
+          <span style={{ minWidth: 0, display: 'grid', gap: 4 }}>
+            <span style={{ color: 'var(--nl-muted)', fontSize: 10, lineHeight: 1, fontWeight: 620 }}>
+              {activeTile.meta ?? `${activeTileIndex + 1} / ${tiles.length}`}
+            </span>
+            <strong style={{ color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: 19, lineHeight: 1.12, fontWeight: 780, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {activeTile.title}
+            </strong>
+          </span>
+          <span style={{ color: 'var(--nl-muted)', fontSize: 10, lineHeight: 1, fontWeight: 620 }}>
+            {String(activeTileIndex + 1).padStart(2, '0')} / {String(tiles.length).padStart(2, '0')}
+          </span>
+        </span>
       </button>
 
       <div
@@ -662,7 +711,7 @@ const HomePhotoCarousel = ({ tiles, onOpen }: { tiles: HomePhotoTile[]; onOpen: 
           overflowY: 'hidden',
           width: '100%',
           minHeight: thumbHeight + 18,
-          padding: '6px 0 10px',
+          padding: '0 0 8px',
           margin: 0,
           scrollbarWidth: 'none',
         }}
@@ -684,9 +733,10 @@ const HomePhotoCarousel = ({ tiles, onOpen }: { tiles: HomePhotoTile[]; onOpen: 
             const loopOffset = getLoopOffset(index);
             const absOffset = Math.abs(loopOffset);
             const visible = tiles.length <= 3 || absOffset <= 3;
-            const thumbScale = active ? 1.06 : absOffset === 1 ? 0.95 : absOffset === 2 ? 0.84 : 0.74;
+            const thumbScale = active ? 1.05 : absOffset === 1 ? 0.96 : absOffset === 2 ? 0.88 : 0.8;
             return (
               <button
+                className="nl-media-interaction"
                 key={`${tile.recordNo ?? tile.title}-${index}`}
                 type="button"
                 data-photo-index={index}
@@ -694,6 +744,7 @@ const HomePhotoCarousel = ({ tiles, onOpen }: { tiles: HomePhotoTile[]; onOpen: 
                 aria-pressed={active}
                 onClick={() => selectTile(index)}
                 style={{
+                  ['--nl-media-active-transform' as string]: `translate3d(${loopOffset * thumbStride}px, 0, 0) scale(${thumbScale})`,
                   position: 'absolute',
                   left: `calc(50% - ${thumbWidth / 2}px)`,
                   top: active ? 0 : absOffset === 1 ? 6 : 10,
@@ -707,11 +758,12 @@ const HomePhotoCarousel = ({ tiles, onOpen }: { tiles: HomePhotoTile[]; onOpen: 
                   cursor: 'pointer',
                   boxShadow: active ? '0 24px 48px rgba(var(--nl-shadow-rgb),0.34), 0 0 0 1px rgba(var(--nl-primary-rgb),0.1)' : '0 12px 24px rgba(var(--nl-shadow-rgb),0.2)',
                   zIndex: active ? tiles.length + 2 : tiles.length + 1 - absOffset,
-                  opacity: visible ? (active ? 1 : absOffset === 1 ? 0.78 : absOffset === 2 ? 0.48 : 0.24) : 0,
+                  opacity: visible ? (active ? 1 : absOffset === 1 ? 0.86 : absOffset === 2 ? 0.64 : 0.42) : 0,
                   pointerEvents: visible ? 'auto' : 'none',
                   transform: `translate3d(${loopOffset * thumbStride}px, 0, 0) scale(${thumbScale})`,
                   transformOrigin: 'center',
                   transition: 'opacity 0.3s ease, transform 0.38s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.18s ease, top 0.28s ease',
+                  WebkitTapHighlightColor: 'transparent',
                 }}
               >
                 <HomeImage src={tile.src} fallbackSrc={homePhotoFallbacks[index % homePhotoFallbacks.length]} alt="" />
@@ -819,11 +871,12 @@ export const HomePage = () => {
     src: heroPhotoUrls[index] ?? homePhotoFallbacks[index % homePhotoFallbacks.length],
     title: record.title ?? `成长照片 ${index + 1}`,
     recordNo: record.record_no,
+    meta: `${formatMonth(record.event_time)} ${formatDay(record.event_time)} · ${formatAgeAtEvent(activeChild?.birthday, record.event_time) || '成长片段'}`,
   }));
   const placeholderPhotoTiles = [
-    { src: referenceAssets.childPhoto, title: '最近照片' },
-    { src: referenceAssets.roomPhoto, title: '生活瞬间' },
-    { src: anniversaryCoverUrl ?? referenceAssets.parkPhoto, title: anniversaryRecord?.title ?? '成长片段', recordNo: anniversaryRecord?.record_no },
+    { src: referenceAssets.childPhoto, title: '最近照片', meta: 'PRIVATE ARCHIVE' },
+    { src: referenceAssets.roomPhoto, title: '生活瞬间', meta: 'FAMILY MOMENTS' },
+    { src: anniversaryCoverUrl ?? referenceAssets.parkPhoto, title: anniversaryRecord?.title ?? '成长片段', recordNo: anniversaryRecord?.record_no, meta: anniversaryRecord ? `${formatMonth(anniversaryRecord.event_time)} ${formatDay(anniversaryRecord.event_time)}` : 'MEMORY FILE' },
   ];
   const recentPhotoTiles = realPhotoTiles.length >= 3
     ? realPhotoTiles
@@ -855,7 +908,7 @@ export const HomePage = () => {
             </button>
           </div>
           <span style={{ color: 'var(--nl-muted-strong)', fontSize: 12, lineHeight: 1.45, fontWeight: 500 }}>
-            {recordCountText} · {activeChild?.current_age_display ?? '年龄待完善'} · 最近{timelinePreviewRecords[0] ? formatMonth(timelinePreviewRecords[0].event_time) : '暂无'}
+            {recordCountText} · {activeChild?.current_age_display ?? '年龄待完善'} · 最新 {timelinePreviewRecords[0] ? formatMonth(timelinePreviewRecords[0].event_time) : '暂无'}
           </span>
         </section>
 

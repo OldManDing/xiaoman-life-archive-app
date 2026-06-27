@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { ChildGender, FamilyMemberRole } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
@@ -22,6 +22,71 @@ export class ChildrenService {
     private readonly accessControlService: AccessControlService,
     private readonly storageService: StorageService,
   ) {}
+
+  private assertBirthdayInRange(birthday: string | undefined) {
+    if (!birthday) return;
+    const parsed = new Date(birthday);
+    if (Number.isNaN(parsed.getTime())) return;
+
+    const today = new Date();
+    const tomorrowUtc = Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() + 1);
+    const earliestUtc = Date.UTC(today.getUTCFullYear() - 30, today.getUTCMonth(), today.getUTCDate());
+    const birthdayUtc = Date.UTC(parsed.getUTCFullYear(), parsed.getUTCMonth(), parsed.getUTCDate());
+
+    if (birthdayUtc >= tomorrowUtc) {
+      throw new BadRequestException('生日不能晚于今天');
+    }
+
+    if (birthdayUtc < earliestUtc) {
+      throw new BadRequestException('孩子生日超出可维护范围');
+    }
+  }
+
+  private async assertAvatarBelongsToChild(childId: bigint, avatarUrl?: string | null) {
+    const mediaNo = parseMediaReference(avatarUrl);
+    if (!mediaNo) return;
+
+    const media = await this.prisma.recordMedia.findFirst({
+      where: {
+        mediaNo,
+        childId,
+        status: MEDIA_STATUS_READY,
+      },
+      select: { id: true },
+    });
+
+    if (!media) {
+      throw new BadRequestException('头像媒体不存在或不属于当前孩子');
+    }
+  }
+
+  private async assertMediaReferenceBelongsToChild(childId: bigint, value?: string | null) {
+    const mediaNo = parseMediaReference(value);
+    if (!mediaNo) return;
+
+    const media = await this.prisma.recordMedia.findFirst({
+      where: {
+        mediaNo,
+        childId,
+        status: MEDIA_STATUS_READY,
+      },
+      select: { id: true },
+    });
+
+    if (!media) {
+      throw new BadRequestException('媒体不存在或不属于当前孩子');
+    }
+  }
+
+  private assertAvatarUsableOnCreate(avatarUrl?: string | null) {
+    if (!parseMediaReference(avatarUrl)) return;
+    throw new BadRequestException('请先创建孩子档案后再上传头像');
+  }
+
+  private assertMediaReferenceUsableOnCreate(value?: string | null) {
+    if (!parseMediaReference(value)) return;
+    throw new BadRequestException('请先创建孩子档案后再上传并绑定媒体');
+  }
 
   private async resolveAvatarUrl(childId: bigint, avatarUrl: string | null) {
     const mediaNo = parseMediaReference(avatarUrl);
@@ -52,7 +117,64 @@ export class ChildrenService {
     }
   }
 
+  private normalizeInterestTags(tags?: string[] | null) {
+    if (!tags) return undefined;
+    return Array.from(new Set(tags.map((item) => item.trim()).filter(Boolean))).slice(0, 12);
+  }
+
+  private async toChildPayload(child: {
+    id: bigint;
+    childNo: string;
+    family: { familyNo: string };
+    owner: { userNo: string };
+    name: string;
+    avatarUrl: string | null;
+    coverUrl?: string | null;
+    nickname?: string | null;
+    birthday: Date;
+    gender: ChildGender;
+    birthPlace: string | null;
+    birthHospital?: string | null;
+    heightCm?: unknown;
+    weightKg?: unknown;
+    interestTags?: unknown;
+    privacyNote?: string | null;
+    remark: string | null;
+    status: number;
+    deletedAt: Date | null;
+    createdAt: Date;
+    updatedAt: Date;
+  }) {
+    return {
+      child_no: child.childNo,
+      family_no: child.family.familyNo,
+      owner_user_no: child.owner.userNo,
+      name: child.name,
+      nickname: child.nickname ?? null,
+      avatar_url: await this.resolveAvatarUrl(child.id, child.avatarUrl),
+      avatar_media_no: parseMediaReference(child.avatarUrl),
+      cover_url: await this.resolveAvatarUrl(child.id, child.coverUrl ?? null),
+      cover_media_no: parseMediaReference(child.coverUrl),
+      birthday: toDateOnly(child.birthday),
+      gender: child.gender,
+      birth_place: child.birthPlace,
+      birth_hospital: child.birthHospital ?? null,
+      height_cm: child.heightCm === null || child.heightCm === undefined ? null : Number(child.heightCm),
+      weight_kg: child.weightKg === null || child.weightKg === undefined ? null : Number(child.weightKg),
+      interest_tags: Array.isArray(child.interestTags) ? child.interestTags : [],
+      privacy_note: child.privacyNote ?? null,
+      remark: child.remark,
+      current_age_display: ageDisplay(child.birthday),
+      status: statusToChildLabel(child.status, child.deletedAt),
+      created_at: child.createdAt.toISOString(),
+      updated_at: child.updatedAt.toISOString(),
+    };
+  }
+
   async create(userId: bigint, dto: CreateChildDto) {
+    this.assertBirthdayInRange(dto.birthday);
+    this.assertAvatarUsableOnCreate(dto.avatar_url);
+    this.assertMediaReferenceUsableOnCreate(dto.cover_url);
     const user = await this.prisma.user.findUniqueOrThrow({ where: { id: userId } });
 
     const family = await this.prisma.$transaction(async (tx) => {
@@ -93,30 +215,22 @@ export class ChildrenService {
         ownerUserId: userId,
         name: dto.name,
         avatarUrl: dto.avatar_url,
+        coverUrl: dto.cover_url,
+        nickname: dto.nickname,
         birthday: new Date(dto.birthday),
         gender: dto.gender ?? ChildGender.unknown,
         birthPlace: dto.birth_place,
+        birthHospital: dto.birth_hospital,
+        heightCm: dto.height_cm,
+        weightKg: dto.weight_kg,
+        interestTags: this.normalizeInterestTags(dto.interest_tags),
+        privacyNote: dto.privacy_note,
         remark: dto.remark,
         status: CHILD_STATUS_NORMAL,
       },
+      include: { owner: true, family: true },
     });
-
-    return {
-      child_no: child.childNo,
-      family_no: family.familyNo,
-      owner_user_no: user.userNo,
-      name: child.name,
-      avatar_url: await this.resolveAvatarUrl(child.id, child.avatarUrl),
-      avatar_media_no: parseMediaReference(child.avatarUrl),
-      birthday: toDateOnly(child.birthday),
-      gender: child.gender,
-      birth_place: child.birthPlace,
-      remark: child.remark,
-      current_age_display: ageDisplay(child.birthday),
-      status: statusToChildLabel(child.status, child.deletedAt),
-      created_at: child.createdAt.toISOString(),
-      updated_at: child.updatedAt.toISOString(),
-    };
+    return this.toChildPayload(child);
   }
 
   async list(userId: bigint) {
@@ -138,22 +252,7 @@ export class ChildrenService {
     });
 
     return {
-      list: await Promise.all(children.map(async (child) => ({
-        child_no: child.childNo,
-        family_no: child.family.familyNo,
-        owner_user_no: child.owner.userNo,
-        name: child.name,
-        avatar_url: await this.resolveAvatarUrl(child.id, child.avatarUrl),
-        avatar_media_no: parseMediaReference(child.avatarUrl),
-        birthday: toDateOnly(child.birthday),
-        gender: child.gender,
-        birth_place: child.birthPlace,
-        remark: child.remark,
-        current_age_display: ageDisplay(child.birthday),
-        status: statusToChildLabel(child.status, child.deletedAt),
-        created_at: child.createdAt.toISOString(),
-        updated_at: child.updatedAt.toISOString(),
-      }))),
+      list: await Promise.all(children.map((child) => this.toChildPayload(child))),
     };
   }
 
@@ -162,54 +261,34 @@ export class ChildrenService {
     const owner = await this.prisma.user.findUniqueOrThrow({ where: { id: child.ownerUserId } });
     const family = await this.prisma.family.findUniqueOrThrow({ where: { id: child.familyId } });
 
-    return {
-      child_no: child.childNo,
-      family_no: family.familyNo,
-      owner_user_no: owner.userNo,
-      name: child.name,
-      avatar_url: await this.resolveAvatarUrl(child.id, child.avatarUrl),
-      avatar_media_no: parseMediaReference(child.avatarUrl),
-      birthday: toDateOnly(child.birthday),
-      gender: child.gender,
-      birth_place: child.birthPlace,
-      remark: child.remark,
-      current_age_display: ageDisplay(child.birthday),
-      status: statusToChildLabel(child.status, child.deletedAt),
-      created_at: child.createdAt.toISOString(),
-      updated_at: child.updatedAt.toISOString(),
-    };
+    return this.toChildPayload({ ...child, owner, family });
   }
 
   async update(userId: bigint, childNo: string, dto: UpdateChildDto) {
     const { child } = await this.accessControlService.ensureChildOwner(userId, childNo);
+    this.assertBirthdayInRange(dto.birthday);
+    await this.assertAvatarBelongsToChild(child.id, dto.avatar_url);
+    await this.assertMediaReferenceBelongsToChild(child.id, dto.cover_url);
     const updated = await this.prisma.child.update({
       where: { id: child.id },
       data: {
         name: dto.name,
         avatarUrl: dto.avatar_url,
+        coverUrl: dto.cover_url,
+        nickname: dto.nickname,
         birthday: dto.birthday ? new Date(dto.birthday) : undefined,
         gender: dto.gender,
         birthPlace: dto.birth_place,
+        birthHospital: dto.birth_hospital,
+        heightCm: dto.height_cm,
+        weightKg: dto.weight_kg,
+        interestTags: dto.interest_tags === undefined ? undefined : this.normalizeInterestTags(dto.interest_tags),
+        privacyNote: dto.privacy_note,
         remark: dto.remark,
       },
       include: { owner: true, family: true },
     });
 
-    return {
-      child_no: updated.childNo,
-      family_no: updated.family.familyNo,
-      owner_user_no: updated.owner.userNo,
-      name: updated.name,
-      avatar_url: await this.resolveAvatarUrl(updated.id, updated.avatarUrl),
-      avatar_media_no: parseMediaReference(updated.avatarUrl),
-      birthday: toDateOnly(updated.birthday),
-      gender: updated.gender,
-      birth_place: updated.birthPlace,
-      remark: updated.remark,
-      current_age_display: ageDisplay(updated.birthday),
-      status: statusToChildLabel(updated.status, updated.deletedAt),
-      created_at: updated.createdAt.toISOString(),
-      updated_at: updated.updatedAt.toISOString(),
-    };
+    return this.toChildPayload(updated);
   }
 }

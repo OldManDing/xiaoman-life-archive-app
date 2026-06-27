@@ -602,7 +602,7 @@ describe('Auth session flow', () => {
     });
   });
 
-  it('updates profile fields through users/me patch', async () => {
+  it('updates profile nickname through users/me patch', async () => {
     user.status = 1;
     const accessToken = await jwtService.signAsync(
       { type: 'user', sub: user.id.toString(), user_no: user.userNo },
@@ -612,11 +612,28 @@ describe('Auth session flow', () => {
     const updateResponse = await request(app.getHttpServer())
       .patch('/api/v1/users/me')
       .set('Authorization', `Bearer ${accessToken}`)
-      .send({ nickname: '新昵称', mobile: '13912345678' })
+      .send({ nickname: '新昵称' })
       .expect(200);
 
     expect(updateResponse.body.data.nickname).toBe('新昵称');
-    expect(updateResponse.body.data.mobile).toBe('139****5678');
+    expect(updateResponse.body.data.mobile).toBe('138****0000');
+  });
+
+  it('rejects direct mobile changes through users/me patch', async () => {
+    user.status = 1;
+    const accessToken = await jwtService.signAsync(
+      { type: 'user', sub: user.id.toString(), user_no: user.userNo },
+      { secret: process.env.JWT_ACCESS_SECRET },
+    );
+
+    await request(app.getHttpServer())
+      .patch('/api/v1/users/me')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({ mobile: '13912345678' })
+      .expect(400)
+      .expect((response) => {
+        expect(response.body.message).toContain('手机号暂不支持直接修改');
+      });
   });
 
   it('rejects admin-scoped tokens on user endpoints', async () => {

@@ -13,6 +13,7 @@ import {
   type AdminFamilyItem,
   type AdminMediaDetail,
   type AdminMediaItem,
+  type AdminMediaListParams,
   type AdminRecordDetail,
   type AdminRecordItem,
   type AdminSupportTicketItem,
@@ -118,6 +119,7 @@ const auditTargetTypeFilterOptions = ['list', 'admin_user', 'user', 'family', 'r
 const toIsoDateTime = (value: string) => (value ? new Date(value).toISOString() : undefined);
 const formatDateTime = (value: string | null | undefined) => (value ? new Date(value).toLocaleString('zh-CN', { hour12: false }) : '—');
 const formatDateOnly = (value: string | null | undefined) => (value ? new Date(value).toLocaleDateString('zh-CN') : '—');
+const optionalFilter = (value: string | undefined) => value?.trim() || undefined;
 
 const CompactText = ({ value, maxWidth = 220 }: { value: string | null | undefined; maxWidth?: number }) => (
   <span
@@ -173,6 +175,31 @@ const EntityTitle = ({ title, meta }: { title: ReactNode; meta?: ReactNode }) =>
     {meta ? <span style={{ color: '#66736f', fontSize: '12px', lineHeight: 1.4 }}>{meta}</span> : null}
   </span>
 );
+
+const AvatarThumb = ({ src, label, size = 44 }: { src?: string | null; label: string; size?: number }) => {
+  const initial = label.trim().slice(0, 1) || '?';
+  return (
+    <span className="admin-avatar-thumb" style={{ width: size, height: size, minWidth: size }}>
+      {src ? <img src={src} alt={label} loading="lazy" decoding="async" /> : <span>{initial}</span>}
+    </span>
+  );
+};
+
+const EntityWithAvatar = ({ avatarUrl, title, meta }: { avatarUrl?: string | null; title: ReactNode; meta?: ReactNode }) => (
+  <span className="admin-entity-avatar-line">
+    <AvatarThumb src={avatarUrl} label={typeof title === 'string' ? title : ''} />
+    <EntityTitle title={title} meta={meta} />
+  </span>
+);
+
+const MediaThumb = ({ item, size = 72 }: { item: AdminMediaItem; size?: number }) => {
+  const previewUrl = item.thumbnail_url ?? (item.media_type === 'image' ? item.access_url : null);
+  return (
+    <span className="admin-media-thumb" style={{ width: size, height: size, minWidth: size }}>
+      {previewUrl ? <img src={previewUrl} alt={item.original_name ?? item.media_no} loading="lazy" decoding="async" /> : <span>{mediaTypeLabel(item.media_type)}</span>}
+    </span>
+  );
+};
 
 const MediaReviewCell = ({ item }: { item: AdminMediaItem }) => {
   const needsReview = item.status === 'uploading' || item.status === 'failed';
@@ -231,6 +258,13 @@ type ArchiveExportRequestFilterOverride = {
   keyword?: string;
   purpose?: string;
   status?: string;
+};
+
+type ArchiveExportCompletionRequest = {
+  note: string;
+  download_url?: string;
+  file_sha256?: string;
+  delivery_evidence?: string;
 };
 
 type SupportTicketFilterOverride = {
@@ -307,6 +341,120 @@ const useOperationReasonDialog = () => {
   return { requestOperationReason, reasonDialog };
 };
 
+const useArchiveCompletionDialog = () => {
+  const resolverRef = useRef<((value: ArchiveExportCompletionRequest | null) => void) | null>(null);
+  const [dialog, setDialog] = useState<{
+    requestNo: string;
+    note: string;
+    downloadUrl: string;
+    fileSha256: string;
+    deliveryEvidence: string;
+    error: string | null;
+  } | null>(null);
+
+  const requestArchiveCompletion = (requestNo: string) =>
+    new Promise<ArchiveExportCompletionRequest | null>((resolve) => {
+      resolverRef.current?.(null);
+      resolverRef.current = resolve;
+      setDialog({ requestNo, note: '', downloadUrl: '', fileSha256: '', deliveryEvidence: '', error: null });
+    });
+
+  const closeDialog = (value: ArchiveExportCompletionRequest | null) => {
+    resolverRef.current?.(value);
+    resolverRef.current = null;
+    setDialog(null);
+  };
+
+  useEffect(() => () => resolverRef.current?.(null), []);
+
+  const completionDialog = dialog ? (
+    <div className="admin-modal-overlay" role="presentation">
+      <section className="admin-modal" role="dialog" aria-modal="true" aria-labelledby="admin-archive-completion-title">
+        <div className="admin-modal-header">
+          <div>
+            <span>档案交付确认</span>
+            <h2 id="admin-archive-completion-title">完成档案交付</h2>
+            <p style={{ margin: '6px 0 0', color: '#66736f', fontSize: '13px', lineHeight: 1.5 }}>{dialog.requestNo}</p>
+          </div>
+          <button type="button" className="admin-modal-close" onClick={() => closeDialog(null)} aria-label="关闭完成交付弹窗">
+            ×
+          </button>
+        </div>
+        <label className="admin-modal-field">
+          处理备注
+          <textarea
+            value={dialog.note}
+            onChange={(event) => setDialog((current) => (current ? { ...current, note: event.target.value, error: null } : current))}
+            placeholder="说明本次交付内容和核对结果"
+            autoFocus
+          />
+        </label>
+        <label className="admin-modal-field">
+          下载地址
+          <input
+            value={dialog.downloadUrl}
+            onChange={(event) => setDialog((current) => (current ? { ...current, downloadUrl: event.target.value, error: null } : current))}
+            placeholder="https://..."
+          />
+        </label>
+        <label className="admin-modal-field">
+          文件 SHA256
+          <input
+            value={dialog.fileSha256}
+            onChange={(event) => setDialog((current) => (current ? { ...current, fileSha256: event.target.value, error: null } : current))}
+            placeholder="64 位 SHA256"
+          />
+        </label>
+        <label className="admin-modal-field">
+          交付证据
+          <textarea
+            value={dialog.deliveryEvidence}
+            onChange={(event) => setDialog((current) => (current ? { ...current, deliveryEvidence: event.target.value, error: null } : current))}
+            placeholder="例如：交付单号、客服记录或对象存储路径"
+          />
+        </label>
+        {dialog.error ? <p className="admin-modal-error">{dialog.error}</p> : null}
+        <div className="admin-modal-actions">
+          <button type="button" style={secondaryButtonStyle} onClick={() => closeDialog(null)}>
+            取消
+          </button>
+          <button
+            type="button"
+            style={primaryButtonStyle}
+            onClick={() => {
+              const note = dialog.note.trim();
+              const downloadUrl = dialog.downloadUrl.trim();
+              const fileSha256 = dialog.fileSha256.trim().toLowerCase();
+              const deliveryEvidence = dialog.deliveryEvidence.trim();
+              if (note.length < 2) {
+                setDialog((current) => (current ? { ...current, error: '请填写处理备注' } : current));
+                return;
+              }
+              if (!/^https?:\/\//i.test(downloadUrl)) {
+                setDialog((current) => (current ? { ...current, error: '下载地址必须是 http 或 https 链接' } : current));
+                return;
+              }
+              if (!/^[a-f0-9]{64}$/i.test(fileSha256)) {
+                setDialog((current) => (current ? { ...current, error: '文件 SHA256 必须是 64 位十六进制字符串' } : current));
+                return;
+              }
+              if (deliveryEvidence.length < 2) {
+                setDialog((current) => (current ? { ...current, error: '请填写交付证据' } : current));
+                return;
+              }
+              closeDialog({ note, download_url: downloadUrl, file_sha256: fileSha256, delivery_evidence: deliveryEvidence });
+            }}
+          >
+            确认完成
+          </button>
+        </div>
+      </section>
+    </div>
+  ) : null;
+
+  return { requestArchiveCompletion, completionDialog };
+};
+
 type ResetPasswordRequest = {
   new_password: string;
   password_confirm: string;
@@ -359,7 +507,7 @@ const useResetPasswordDialog = () => {
             type="password"
             value={dialog.newPassword}
             onChange={(event) => setDialog((current) => (current ? { ...current, newPassword: event.target.value, error: null } : current))}
-            placeholder="8 到 72 位，交给用户下次登录使用"
+            placeholder="8 到 12 位，交给用户下次登录使用"
             autoComplete="new-password"
             autoFocus
           />
@@ -394,8 +542,8 @@ const useResetPasswordDialog = () => {
               const newPassword = dialog.newPassword;
               const passwordConfirm = dialog.passwordConfirm;
               const reason = dialog.reason.trim();
-              if (newPassword.length < 8 || newPassword.length > 72) {
-                setDialog((current) => (current ? { ...current, error: '新密码长度必须为 8 到 72 位' } : current));
+              if (newPassword.length < 8 || newPassword.length > 12) {
+                setDialog((current) => (current ? { ...current, error: '新密码长度必须为 8 到 12 位' } : current));
                 return;
               }
               if (newPassword !== passwordConfirm) {
@@ -765,32 +913,55 @@ const FamilyDetailContent = ({ data }: { data: AdminFamilyDetail }) => (
 const ChildDetailContent = ({ data }: { data: AdminChildDetail }) => (
   <>
     <DetailSection title="孩子资料">
+      <div className="admin-child-profile-head">
+        <AvatarThumb src={data.avatar_url} label={data.name} size={72} />
+        <div>
+          <h3>{data.name}</h3>
+          <p>{data.current_age_display ?? formatDateOnly(data.birthday)} · {genderLabel(data.gender)}</p>
+        </div>
+      </div>
       <DetailGrid
         items={[
           { label: '孩子编号', value: data.child_no },
-          { label: '姓名', value: data.name },
           { label: '生日', value: formatDateOnly(data.birthday) },
-          { label: '性别', value: genderLabel(data.gender) },
+          { label: '当前年龄', value: data.current_age_display },
           { label: '出生地', value: data.birth_place },
           { label: '档案状态', value: <Badge tone={badgeToneForStatus(data.status)}>{childStatusLabel(data.status)}</Badge> },
           { label: '家庭编号', value: data.family_no },
           { label: '家庭名称', value: data.family_name },
           { label: '拥有者', value: `${data.owner_name}（${data.owner_user_no}）` },
+          { label: '头像媒体', value: data.avatar_media_no },
           { label: '运营备注', value: data.remark },
         ]}
       />
     </DetailSection>
     <DetailSection title="家庭成员">
       <MiniTable
-        columns={['用户编号', '昵称', '手机号', '角色', '状态', '加入时间']}
-        rows={data.family_members.map((item) => [item.user_no, item.nickname, item.mobile, familyRoleLabel(item.role), userStatusLabel(item.status), formatDateTime(item.joined_at)])}
+        columns={['成员', '手机号', '角色', '状态', '加入时间']}
+        rows={data.family_members.map((item) => [
+          <EntityWithAvatar key={item.user_no} avatarUrl={item.avatar_url} title={item.nickname} meta={item.user_no} />,
+          item.mobile,
+          familyRoleLabel(item.role),
+          userStatusLabel(item.status),
+          formatDateTime(item.joined_at),
+        ])}
         emptyMessage="暂无家庭成员。"
       />
     </DetailSection>
     <DetailSection title="最近记录">
       <MiniTable
-        columns={['记录编号', '标题', '类型', '状态', '发生时间']}
-        rows={data.recent_records.map((item) => [item.record_no, item.title, recordTypeLabel(item.record_type), recordStatusLabel(item.status), formatDateTime(item.event_time)])}
+        columns={['记录', '类型', '状态', '媒体', '创建者', '发生时间']}
+        rows={data.recent_records.map((item) => [
+          <span key={item.record_no} className="admin-record-summary-line">
+            {item.cover_url ? <img src={item.cover_url} alt={item.title ?? item.record_no} loading="lazy" decoding="async" /> : <span className="admin-record-summary-placeholder">无封面</span>}
+            <EntityTitle title={item.title ?? '未命名记录'} meta={item.record_no} />
+          </span>,
+          recordTypeLabel(item.record_type),
+          recordStatusLabel(item.status),
+          `${item.media_count} 个`,
+          item.creator_name ?? item.creator_user_no,
+          formatDateTime(item.event_time),
+        ])}
         emptyMessage="暂无成长记录。"
       />
     </DetailSection>
@@ -919,7 +1090,7 @@ const MediaDetailContent = ({ data }: { data: AdminMediaDetail }) => (
           <strong>{data.original_name ?? data.media_no}</strong>
           <span>{mediaTypeLabel(data.media_type)}</span>
         </div>
-        <MediaPreview src={data.access_url} alt={data.original_name ?? data.media_no} mediaType={data.media_type} mimeType={data.mime_type} />
+        <MediaPreview src={data.thumbnail_url ?? data.access_url} alt={data.original_name ?? data.media_no} mediaType={data.media_type} mimeType={data.mime_type} />
         {data.access_url ? <a className="admin-media-preview-open" href={data.access_url} target="_blank" rel="noreferrer">打开原文件</a> : null}
       </div>
     </DetailSection>
@@ -1288,12 +1459,11 @@ export const ChildrenPage = () => {
   const currentChildren = state.result?.list ?? [];
   const activeChildren = currentChildren.filter((item) => item.status === 'active' || item.status === 'normal').length;
   const rows = formatListRows(currentChildren, (item) => [
-    item.child_no,
-    item.family_no,
-    item.owner_user_no,
-    item.name,
-    formatDateOnly(item.birthday),
-    genderLabel(item.gender),
+    <EntityWithAvatar key={`${item.child_no}-profile`} avatarUrl={item.avatar_url} title={item.name} meta={`${item.current_age_display ?? formatDateOnly(item.birthday)} · ${genderLabel(item.gender)}`} />,
+    <EntityTitle key={`${item.child_no}-family`} title={item.family_name ?? item.family_no} meta={item.family_no} />,
+    <EntityTitle key={`${item.child_no}-owner`} title={item.owner_name ?? item.owner_user_no} meta={item.owner_user_no} />,
+    item.birth_place ?? '—',
+    formatDateOnly(item.updated_at ?? item.created_at),
     <Badge key={item.child_no} tone={badgeToneForStatus(item.status)}>{childStatusLabel(item.status)}</Badge>,
     <ActionButton key={`${item.child_no}-detail`} icon={<Eye size={15} />} onClick={() => void detail.openDetail('孩子档案详情', item.child_no, () => adminApi.getChildDetail(item.child_no))}>详情</ActionButton>,
   ]);
@@ -1306,7 +1476,7 @@ export const ChildrenPage = () => {
         <SummaryStat label="状态正常" value={activeChildren} tone="success" />
       </ListSummary>
       {state.error ? <Panel><EmptyState message={`加载失败：${state.error}`} /></Panel> : null}
-      <TableShell columns={['孩子编号', '家庭编号', '拥有者', '姓名', '生日', '性别', '状态', '操作']} rows={rows} emptyMessage="暂无匹配孩子档案。可按孩子、家庭或拥有者重新查询。" loading={state.loading} />
+      <TableShell columns={['孩子', '家庭', '拥有者', '出生地', '更新时间', '状态', '操作']} rows={rows} emptyMessage="暂无匹配孩子档案。可按孩子、家庭或拥有者重新查询。" loading={state.loading} />
       {state.result ? <PaginationPanel page={state.result.page} pageSize={state.result.page_size} total={state.result.total} hasMore={state.result.has_more} loading={state.loading} onPrevPage={state.onPrevPage} onNextPage={state.onNextPage} /> : null}
       <DetailDrawer open={detail.state.open} title={detail.state.title} subtitle={detail.state.subtitle} loading={detail.state.loading} error={detail.state.error} onClose={detail.closeDetail}>
         {detail.state.data ? <ChildDetailContent data={detail.state.data} /> : null}
@@ -1386,11 +1556,82 @@ export const RecordsPage = () => {
 };
 
 export const MediaPage = () => {
-  const state = useAdminListPage<AdminMediaItem>(adminApi.listMedia);
   const detail = useDetailState<AdminMediaDetail>();
   const { requestOperationReason, reasonDialog } = useOperationReasonDialog();
+  const [keyword, setKeyword] = useState('');
+  const [mediaType, setMediaType] = useState('');
+  const [status, setStatus] = useState('');
+  const [linked, setLinked] = useState('');
+  const [childNo, setChildNo] = useState('');
+  const [familyNo, setFamilyNo] = useState('');
+  const [uploaderUserNo, setUploaderUserNo] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<Awaited<ReturnType<typeof adminApi.listMedia>> | null>(null);
+  const mediaAutoLoadedRef = useRef(false);
   const [updatingMediaNo, setUpdatingMediaNo] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+
+  const load = useCallback(async (nextPage = page, nextPageSize = pageSize, event?: FormEvent, override?: Partial<AdminMediaListParams>) => {
+    event?.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      const next = await adminApi.listMedia({
+        keyword: optionalFilter(override?.keyword ?? keyword),
+        media_type: optionalFilter(override?.media_type ?? mediaType),
+        status: optionalFilter(override?.status ?? status),
+        linked: optionalFilter(override?.linked ?? linked),
+        child_no: optionalFilter(override?.child_no ?? childNo),
+        family_no: optionalFilter(override?.family_no ?? familyNo),
+        uploader_user_no: optionalFilter(override?.uploader_user_no ?? uploaderUserNo),
+        start_time: override?.start_time ?? toIsoDateTime(startTime),
+        end_time: override?.end_time ?? toIsoDateTime(endTime),
+        page: nextPage,
+        page_size: nextPageSize,
+      });
+      setResult(next);
+      setPage(next.page);
+      setPageSize(next.page_size);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  }, [childNo, endTime, familyNo, keyword, linked, mediaType, page, pageSize, startTime, status, uploaderUserNo]);
+
+  useEffect(() => {
+    if (mediaAutoLoadedRef.current) return;
+    mediaAutoLoadedRef.current = true;
+    void load(1, pageSize);
+  }, [load, pageSize]);
+
+  const clearFilters = async () => {
+    setKeyword('');
+    setMediaType('');
+    setStatus('');
+    setLinked('');
+    setChildNo('');
+    setFamilyNo('');
+    setUploaderUserNo('');
+    setStartTime('');
+    setEndTime('');
+    await load(1, pageSize, undefined, {
+      keyword: '',
+      media_type: '',
+      status: '',
+      linked: '',
+      child_no: '',
+      family_no: '',
+      uploader_user_no: '',
+      start_time: undefined,
+      end_time: undefined,
+    });
+  };
 
   const updateStatus = async (media: AdminMediaItem, status: 'ready' | 'failed' | 'removed') => {
     const actionName = status === 'ready' ? '通过媒体审核' : status === 'removed' ? '下架媒体' : '标记媒体异常';
@@ -1401,7 +1642,7 @@ export const MediaPage = () => {
     setUpdatingMediaNo(media.media_no);
     try {
       const updated = await adminApi.updateMediaStatus(media.media_no, { status, reason });
-      state.updateResult((current) =>
+      setResult((current) =>
         current
           ? {
               ...current,
@@ -1417,11 +1658,14 @@ export const MediaPage = () => {
     }
   };
 
-  const currentMedia = state.result?.list ?? [];
+  const currentMedia = result?.list ?? [];
   const readyMedia = currentMedia.filter((item) => item.status === 'ready').length;
   const needsReviewMedia = currentMedia.filter((item) => item.status === 'uploading' || item.status === 'failed' || !item.record_no).length;
   const rows = formatListRows(currentMedia, (item) => [
-    <EntityTitle key={`${item.media_no}-file`} title={item.original_name ?? mediaTypeLabel(item.media_type)} meta={`${formatBytes(item.size_bytes)} · ${formatDateTime(item.created_at)}`} />,
+    <span key={`${item.media_no}-file`} className="admin-media-list-file">
+      <MediaThumb item={item} />
+      <EntityTitle title={item.original_name ?? mediaTypeLabel(item.media_type)} meta={`${formatBytes(item.size_bytes)} · ${formatDateTime(item.created_at)}`} />
+    </span>,
     <MediaReviewCell key={`${item.media_no}-review`} item={item} />,
     item.child_name ?? item.child_no ?? '未关联孩子',
     <CompactText key={`${item.media_no}-uploader`} value={item.uploader_name ?? item.uploader_user_no} maxWidth={150} />,
@@ -1436,15 +1680,56 @@ export const MediaPage = () => {
 
   return (
     <PageShell title="媒体列表" description="用于查看媒体上传记录、归属关系和类型。">
-      <SearchPanel {...state} />
-      <ListSummary total={state.result?.total} label="媒体库概览" description="默认展示媒体清单，优先识别异常、上传中和未关联素材。">
+      <Panel>
+        <form className="admin-audit-filter-form" onSubmit={(event) => void load(1, pageSize, event)} style={{ display: 'grid', gap: '12px' }}>
+          <div>
+            <strong style={{ display: 'block', color: '#16211f', marginBottom: '4px' }}>筛选条件</strong>
+            <p style={mutedTextStyle}>按媒体内容、状态、归属和上传时间定位素材。</p>
+          </div>
+          <div className="admin-audit-filter-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
+            <input style={inputStyle} value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="编号 / 文件 / 孩子 / 记录" />
+            <AdminSelect value={mediaType} onChange={(event) => setMediaType(event.target.value)}>
+              <option value="">全部类型</option>
+              <option value="image">图片</option>
+              <option value="video">视频</option>
+              <option value="audio">音频</option>
+            </AdminSelect>
+            <AdminSelect value={status} onChange={(event) => setStatus(event.target.value)}>
+              <option value="">全部状态</option>
+              <option value="uploading">上传中</option>
+              <option value="ready">可用</option>
+              <option value="failed">异常</option>
+              <option value="removed">已下架</option>
+            </AdminSelect>
+            <AdminSelect value={linked} onChange={(event) => setLinked(event.target.value)}>
+              <option value="">全部关联</option>
+              <option value="linked">已关联记录</option>
+              <option value="unlinked">未关联记录</option>
+            </AdminSelect>
+            <input style={inputStyle} value={childNo} onChange={(event) => setChildNo(event.target.value)} placeholder="孩子编号" />
+            <input style={inputStyle} value={familyNo} onChange={(event) => setFamilyNo(event.target.value)} placeholder="家庭编号" />
+            <input style={inputStyle} value={uploaderUserNo} onChange={(event) => setUploaderUserNo(event.target.value)} placeholder="上传者编号" />
+            <AdminDateInput type="datetime-local" value={startTime} onChange={(event) => setStartTime(event.target.value)} aria-label="开始时间" />
+            <AdminDateInput type="datetime-local" value={endTime} onChange={(event) => setEndTime(event.target.value)} aria-label="结束时间" />
+          </div>
+          <div className="admin-audit-filter-actions" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <button type="submit" style={primaryButtonStyle} disabled={loading}>
+              {loading ? '查询中…' : '查询'}
+            </button>
+            <button type="button" style={secondaryButtonStyle} disabled={loading} onClick={() => void clearFilters()}>
+              清空
+            </button>
+          </div>
+        </form>
+      </Panel>
+      <ListSummary total={result?.total} label="媒体库概览" description="默认展示媒体清单，优先识别异常、上传中和未关联素材。">
         <SummaryStat label="可用" value={readyMedia} tone="success" />
         <SummaryStat label="待处理" value={needsReviewMedia} tone={needsReviewMedia > 0 ? 'warning' : 'neutral'} />
       </ListSummary>
-      {state.error ? <Panel><EmptyState message={`加载失败：${state.error}`} /></Panel> : null}
+      {error ? <Panel><EmptyState message={`加载失败：${error}`} /></Panel> : null}
       {actionError ? <Panel><EmptyState message={`操作失败：${actionError}`} /></Panel> : null}
-      <TableShell columns={['媒体', '处理建议', '孩子', '上传者', '类型', '操作']} rows={rows} emptyMessage="暂无匹配媒体。可清空筛选，或优先查看上传中、异常、未关联媒体。" loading={state.loading} />
-      {state.result ? <PaginationPanel page={state.result.page} pageSize={state.result.page_size} total={state.result.total} hasMore={state.result.has_more} loading={state.loading} onPrevPage={state.onPrevPage} onNextPage={state.onNextPage} /> : null}
+      <TableShell columns={['媒体', '处理建议', '孩子', '上传者', '类型', '操作']} rows={rows} emptyMessage="暂无匹配媒体。可清空筛选，或优先查看上传中、异常、未关联媒体。" loading={loading} />
+      {result ? <PaginationPanel page={result.page} pageSize={result.page_size} total={result.total} hasMore={result.has_more} loading={loading} onPrevPage={() => load(page - 1, pageSize)} onNextPage={() => load(page + 1, pageSize)} /> : null}
       <DetailDrawer open={detail.state.open} title={detail.state.title} subtitle={detail.state.subtitle} loading={detail.state.loading} error={detail.state.error} onClose={detail.closeDetail}>
         {detail.state.data ? <MediaDetailContent data={detail.state.data} /> : null}
       </DetailDrawer>
@@ -1721,6 +2006,7 @@ export const ArchiveExportRequestsPage = () => {
   const detail = useDetailState<AdminArchiveExportRequestItem>();
   const { admin } = useAdminAuth();
   const { requestOperationReason, reasonDialog } = useOperationReasonDialog();
+  const { requestArchiveCompletion, completionDialog } = useArchiveCompletionDialog();
   const [keyword, setKeyword] = useState('');
   const [purpose, setPurpose] = useState('');
   const [status, setStatus] = useState('');
@@ -1776,13 +2062,18 @@ export const ArchiveExportRequestsPage = () => {
 
   const updateStatus = async (item: AdminArchiveExportRequestItem, nextStatus: 'processing' | 'completed' | 'rejected') => {
     const actionName = nextStatus === 'processing' ? '受理档案交付申请' : nextStatus === 'completed' ? '完成档案交付申请' : '驳回档案交付申请';
-    const reason = await requestOperationReason(actionName);
+    const completion = nextStatus === 'completed' ? await requestArchiveCompletion(item.request_no) : null;
+    const reason = nextStatus === 'completed' ? completion?.note ?? null : await requestOperationReason(actionName);
     if (!reason) return;
 
     setActionError(null);
     setUpdatingRequestNo(item.request_no);
     try {
-      const updated = await adminApi.updateArchiveExportRequestStatus(item.request_no, { status: nextStatus, note: reason });
+      const updated = await adminApi.updateArchiveExportRequestStatus(item.request_no, {
+        status: nextStatus,
+        note: reason,
+        ...(completion ?? {}),
+      });
       setResult((current) =>
         current
           ? {
@@ -1882,6 +2173,7 @@ export const ArchiveExportRequestsPage = () => {
         {detail.state.data ? <ArchiveExportRequestDetailContent data={detail.state.data} /> : null}
       </DetailDrawer>
       {reasonDialog}
+      {completionDialog}
     </PageShell>
   );
 };

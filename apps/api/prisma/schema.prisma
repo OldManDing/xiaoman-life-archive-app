@@ -141,6 +141,7 @@ model User {
   membershipType     MembershipType @default(free) @map("membership_type")
   membershipExpireAt DateTime?      @map("membership_expire_at")
   lastLoginAt        DateTime?      @map("last_login_at")
+  tokenInvalidBefore DateTime?      @map("token_invalid_before")
   createdAt          DateTime       @default(now()) @map("created_at")
   updatedAt          DateTime       @updatedAt @map("updated_at")
   deletedAt          DateTime?      @map("deleted_at")
@@ -162,6 +163,7 @@ model User {
   receivedNotifications UserNotification[] @relation("NotificationRecipient")
   sentNotifications     UserNotification[] @relation("NotificationActor")
   sessions              UserSession[]
+  deviceTokens          UserDeviceToken[]
 
   @@index([mobile], map: "idx_mobile")
   @@index([email], map: "idx_email")
@@ -273,9 +275,16 @@ model Child {
   ownerUserId BigInt      @map("owner_user_id") @db.UnsignedBigInt
   name        String      @db.VarChar(64)
   avatarUrl   String?     @map("avatar_url") @db.VarChar(512)
+  coverUrl    String?     @map("cover_url") @db.VarChar(512)
+  nickname    String?     @db.VarChar(64)
   birthday    DateTime    @db.Date
   gender      ChildGender @default(unknown)
   birthPlace  String?     @map("birth_place") @db.VarChar(128)
+  birthHospital String?   @map("birth_hospital") @db.VarChar(128)
+  heightCm    Decimal?    @map("height_cm") @db.Decimal(5, 2)
+  weightKg    Decimal?    @map("weight_kg") @db.Decimal(5, 2)
+  interestTags Json?      @map("interest_tags")
+  privacyNote String?     @map("privacy_note") @db.VarChar(500)
   remark      String?     @db.VarChar(255)
   status      Int         @default(1) @db.TinyInt
   createdAt   DateTime    @default(now()) @map("created_at")
@@ -350,6 +359,9 @@ model RecordMedia {
   durationSeconds    Int?      @map("duration_seconds") @db.UnsignedInt
   thumbnailObjectKey String?   @map("thumbnail_object_key") @db.VarChar(512)
   status             Int       @default(1) @db.TinyInt
+  uploadSessionExpiresAt DateTime? @map("upload_session_expires_at")
+  failureReason      String?   @map("failure_reason") @db.VarChar(255)
+  retryCount         Int       @default(0) @map("retry_count")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
   deletedAt          DateTime? @map("deleted_at")
@@ -463,6 +475,7 @@ model AdminUser {
   role          AdminRole
   status        Int       @default(1) @db.TinyInt
   lastLoginAt   DateTime? @map("last_login_at")
+  tokenInvalidBefore DateTime? @map("token_invalid_before")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
   deletedAt     DateTime? @map("deleted_at")
@@ -471,9 +484,50 @@ model AdminUser {
   processedArchiveExportRequests ArchiveExportRequest[] @relation("ArchiveExportProcessor")
   assignedSupportTickets SupportTicket[] @relation("SupportTicketAssignee")
   updatedSystemConfigs SystemConfig[] @relation("SystemConfigUpdater")
+  sessions      AdminSession[]
 
   @@index([status], map: "idx_status")
   @@map("admin_users")
+}
+
+model AdminSession {
+  id                 BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  adminId            BigInt    @map("admin_id") @db.UnsignedBigInt
+  accessTokenJtiHash String    @unique(map: "uk_admin_access_token_jti_hash") @map("access_token_jti_hash") @db.VarChar(128)
+  expiresAt          DateTime  @map("expires_at")
+  revokedAt          DateTime? @map("revoked_at")
+  ipAddress          String?   @map("ip_address") @db.VarChar(64)
+  userAgent          String?   @map("user_agent") @db.VarChar(512)
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  admin AdminUser @relation(fields: [adminId], references: [id])
+
+  @@index([adminId, revokedAt], map: "idx_admin_revoked")
+  @@index([expiresAt], map: "idx_expires_at")
+  @@map("admin_sessions")
+}
+
+model UserDeviceToken {
+  id          BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  userId      BigInt    @map("user_id") @db.UnsignedBigInt
+  platform    String    @db.VarChar(24)
+  provider    String    @db.VarChar(32)
+  tokenHash   String    @map("token_hash") @db.VarChar(128)
+  pushToken   String    @map("push_token") @db.VarChar(1024)
+  deviceLabel String?   @map("device_label") @db.VarChar(128)
+  status      Int       @default(1) @db.TinyInt
+  lastSeenAt  DateTime? @map("last_seen_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([provider, tokenHash], map: "uk_provider_token_hash")
+  @@index([userId, status], map: "idx_user_status")
+  @@index([lastSeenAt], map: "idx_last_seen_at")
+  @@map("user_device_tokens")
 }
 
 model UserNotification {
@@ -495,12 +549,35 @@ model UserNotification {
   user   User   @relation("NotificationRecipient", fields: [userId], references: [id])
   actor  User?  @relation("NotificationActor", fields: [actorUserId], references: [id])
   family Family @relation(fields: [familyId], references: [id])
+  deliveries NotificationDelivery[]
 
   @@index([userId, readAt, createdAt], map: "idx_user_read_created_at")
   @@index([familyId, createdAt], map: "idx_family_created_at")
   @@index([notificationType, targetType, targetNo], map: "idx_notification_target")
   @@index([actorUserId], map: "idx_actor_user_id")
   @@map("user_notifications")
+}
+
+model NotificationDelivery {
+  id             BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  notificationId BigInt    @map("notification_id") @db.UnsignedBigInt
+  userId         BigInt    @map("user_id") @db.UnsignedBigInt
+  channel        String    @db.VarChar(24)
+  provider       String?   @db.VarChar(32)
+  status         String    @default("queued") @db.VarChar(24)
+  attempts       Int       @default(0)
+  nextRetryAt    DateTime? @map("next_retry_at")
+  lastError      String?   @map("last_error") @db.VarChar(500)
+  deliveredAt    DateTime? @map("delivered_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  notification UserNotification @relation(fields: [notificationId], references: [id])
+
+  @@index([notificationId], map: "idx_notification_id")
+  @@index([userId, createdAt], map: "idx_user_created_at")
+  @@index([status, nextRetryAt], map: "idx_status_next_retry_at")
+  @@map("notification_deliveries")
 }
 
 model SystemConfig {
@@ -563,6 +640,9 @@ model ArchiveExportRequest {
   processedByAdminId BigInt?                    @map("processed_by_admin_id") @db.UnsignedBigInt
   processedAt        DateTime?                  @map("processed_at")
   processNote        String?                    @map("process_note") @db.VarChar(500)
+  downloadUrl        String?                    @map("download_url") @db.VarChar(512)
+  fileSha256         String?                    @map("file_sha256") @db.VarChar(64)
+  deliveryEvidence   String?                    @map("delivery_evidence") @db.VarChar(500)
   createdAt          DateTime                   @default(now()) @map("created_at")
   updatedAt          DateTime                   @updatedAt @map("updated_at")
 
@@ -603,6 +683,29 @@ model SupportTicket {
   @@index([status, createdAt], map: "idx_status_created_at")
   @@index([priority, status, createdAt], map: "idx_priority_status_created_at")
   @@map("support_tickets")
+}
+
+model ContentRisk {
+  id                BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  riskNo            String    @unique(map: "uk_content_risk_no") @map("risk_no") @db.VarChar(32)
+  targetType        String    @map("target_type") @db.VarChar(32)
+  targetNo          String?   @map("target_no") @db.VarChar(32)
+  familyId          BigInt?   @map("family_id") @db.UnsignedBigInt
+  userId            BigInt?   @map("user_id") @db.UnsignedBigInt
+  severity          String    @db.VarChar(16)
+  category          String    @db.VarChar(64)
+  reason            String    @db.VarChar(500)
+  status            String    @default("open") @db.VarChar(24)
+  resolvedByAdminId BigInt?   @map("resolved_by_admin_id") @db.UnsignedBigInt
+  resolvedAt        DateTime? @map("resolved_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+  updatedAt         DateTime  @updatedAt @map("updated_at")
+
+  @@index([targetType, targetNo], map: "idx_target")
+  @@index([severity, status, createdAt], map: "idx_severity_status_created_at")
+  @@index([familyId], map: "idx_family_id")
+  @@index([userId], map: "idx_user_id")
+  @@map("content_risks")
 }
 
 model AuditLog {

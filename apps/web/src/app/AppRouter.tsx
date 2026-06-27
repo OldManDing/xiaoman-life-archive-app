@@ -3,6 +3,8 @@ import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../shared/AuthContext';
+import { webApi } from '../shared/api/webApi';
+import { registerNativeNotificationTapHandler, scheduleNativeNotificationsForNewItems } from '../shared/nativeNotifications';
 import { markWelcomeIntroSeen } from '../shared/welcome';
 import { PublicLayout } from '../layouts/PublicLayout';
 import { AppLayout } from '../layouts/AppLayout';
@@ -71,6 +73,48 @@ const NativeBackButtonHandler = () => {
   return null;
 };
 
+const NativeNotificationBridge = () => {
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => registerNativeNotificationTapHandler(navigate), [navigate]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !Capacitor.isNativePlatform()) return undefined;
+
+    let cancelled = false;
+    let appStateRemove: (() => void) | undefined;
+    const syncNotifications = async () => {
+      try {
+        const notifications = await webApi.listNotifications({ page: 1, page_size: 5 });
+        if (!cancelled) await scheduleNativeNotificationsForNewItems(notifications.list);
+      } catch {
+        // In-app message center remains the source of truth if a background check fails.
+      }
+    };
+
+    void syncNotifications();
+    const timer = window.setInterval(() => void syncNotifications(), 60_000);
+    void CapacitorApp.addListener('appStateChange', ({ isActive }) => {
+      if (isActive) void syncNotifications();
+    }).then((handle) => {
+      if (cancelled) {
+        void handle.remove();
+        return;
+      }
+      appStateRemove = () => void handle.remove();
+    });
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+      appStateRemove?.();
+    };
+  }, [isAuthenticated]);
+
+  return null;
+};
+
 export const AppRouter = () => {
   const { isBootstrapping, isAuthenticated, needsOnboarding, clearSession } = useAuth();
   const [showBootRecovery, setShowBootRecovery] = useState(false);
@@ -112,6 +156,7 @@ export const AppRouter = () => {
   return (
     <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
       <NativeBackButtonHandler />
+      <NativeNotificationBridge />
       <Routes>
         <Route element={<PublicLayout />}>
           <Route path="/welcome" element={isAuthenticated ? <Navigate to={needsOnboarding ? '/onboarding/child' : '/home'} replace /> : <WelcomePage />} />

@@ -105,8 +105,13 @@ const getFamilyRecordActionLabel = (record: RecordSummary) => {
   const mediaKind = getFamilyRecordMediaKind(record);
   if (mediaKind === 'video') return '上传了视频记录';
   if (mediaKind === 'audio') return '记录了一段语音';
-  if (record.cover_url) return '上传了照片';
+  if (record.cover_media_no || record.cover_url) return '上传了照片';
   return `记录了${recordTypeLabel(record.record_type, record.is_milestone)}`;
+};
+
+const hasFamilyRecordVisualCover = (record: RecordSummary) => {
+  const mediaKind = getFamilyRecordMediaKind(record);
+  return mediaKind !== 'audio' && Boolean(record.cover_media_no || record.cover_url);
 };
 
 const getFamilyMemberDisplayName = (member: FamilyMemberItem) =>
@@ -151,7 +156,7 @@ const RecentFamilyRecord = ({ record, index, onClick }: { record: RecordSummary;
   const cachedCoverUrl = useCachedMediaUrl(record.cover_media_no, record.cover_url, mediaKind ?? 'image', {
     cacheRemote: mediaKind !== 'audio',
   });
-  const coverUrl = cachedCoverUrl ?? (index % 2 ? referenceAssets.parkPhoto : referenceAssets.childPhoto);
+  const hasCover = hasFamilyRecordVisualCover(record);
 
   return (
     <button type="button" aria-label={`查看家庭动态：${record.title ?? '未命名记录'}`} onClick={onClick} style={{ border: 'none', background: 'transparent', padding: 0, display: 'grid', gap: 10, textAlign: 'left', cursor: 'pointer', position: 'relative' }}>
@@ -162,10 +167,16 @@ const RecentFamilyRecord = ({ record, index, onClick }: { record: RecordSummary;
           <span style={{ color: 'var(--nl-muted)', fontSize: 11, fontWeight: 520 }}>{new Date(record.event_time).toLocaleString('zh-CN', { month: 'numeric', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false })}</span>
         </span>
       </span>
-      {coverUrl && mediaKind !== 'audio' ? (
+      {hasCover && mediaKind !== 'audio' ? (
         <span style={{ position: 'relative', display: 'block', width: '100%', height: 158 }}>
-          <img src={coverUrl} alt={record.title ?? '家庭动态图片'} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', borderRadius: 8, objectFit: 'cover', border: '1px solid var(--nl-border-muted)', display: 'block', boxShadow: '0 18px 42px rgba(var(--nl-shadow-rgb),0.26)' }} />
-          {mediaKind === 'video' ? (
+          {cachedCoverUrl ? (
+            <img src={cachedCoverUrl} alt={record.title ?? '家庭动态图片'} loading="lazy" decoding="async" style={{ width: '100%', height: '100%', borderRadius: 8, objectFit: 'cover', border: '1px solid var(--nl-border-muted)', display: 'block', boxShadow: '0 18px 42px rgba(var(--nl-shadow-rgb),0.26)' }} />
+          ) : (
+            <span style={{ width: '100%', height: '100%', borderRadius: 8, border: '1px solid var(--nl-border-muted)', background: 'var(--nl-surface-soft)', color: 'var(--nl-muted)', display: 'grid', placeItems: 'center' }}>
+              <ImageIcon size={24} />
+            </span>
+          )}
+          {cachedCoverUrl && mediaKind === 'video' ? (
             <span aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: 'var(--nl-on-primary)' }}>
               <PlayCircle size={40} fill="var(--nl-on-dark-soft)" strokeWidth={1.8} />
             </span>
@@ -177,7 +188,14 @@ const RecentFamilyRecord = ({ record, index, onClick }: { record: RecordSummary;
           <span style={{ fontSize: 13, fontWeight: 700 }}>语音记录</span>
         </div>
       ) : (
-        <img src={index % 2 ? referenceAssets.parkPhoto : referenceAssets.childPhoto} alt={record.title ?? '家庭动态图片'} loading="lazy" decoding="async" style={{ width: '100%', height: 158, borderRadius: 8, objectFit: 'cover', border: '1px solid var(--nl-border-muted)', boxShadow: '0 18px 42px rgba(var(--nl-shadow-rgb),0.26)' }} />
+        <div style={{ minHeight: 116, borderTop: '1px solid var(--nl-border-muted)', borderBottom: '1px solid var(--nl-border-muted)', background: 'transparent', padding: '16px 0', display: 'grid', gap: 8 }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--nl-primary-2)', fontSize: 12, fontWeight: 680 }}>
+            <FileText size={15} />
+            {recordTypeLabel(record.record_type, record.is_milestone)}
+          </span>
+          <strong style={{ color: 'var(--nl-ink)', fontSize: 17, lineHeight: 1.28, fontWeight: 780, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{record.title ?? '未命名记录'}</strong>
+          <span style={{ color: 'var(--nl-muted-strong)', fontSize: 13, lineHeight: 1.6, fontWeight: 460, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{record.summary ?? '这条记录还没有正文。'}</span>
+        </div>
       )}
     </button>
   );

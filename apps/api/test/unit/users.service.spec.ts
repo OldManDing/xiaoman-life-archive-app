@@ -43,6 +43,7 @@ describe('UsersService', () => {
     const prisma = {
       user: {
         findFirst: jest.fn().mockResolvedValue(user),
+        update: jest.fn().mockResolvedValue({}),
       },
       userAuthAccount: {
         findFirst: jest.fn().mockResolvedValue({
@@ -51,6 +52,10 @@ describe('UsersService', () => {
         }),
         update: jest.fn().mockResolvedValue({}),
       },
+      userSession: {
+        updateMany: jest.fn().mockResolvedValue({ count: 2 }),
+      },
+      $transaction: jest.fn().mockImplementation(async (operations: unknown[]) => Promise.all(operations)),
     };
     const auditLogService = {
       create: jest.fn().mockResolvedValue({}),
@@ -71,6 +76,14 @@ describe('UsersService', () => {
     expect(prisma.userAuthAccount.update).toHaveBeenCalledWith({
       where: { id: BigInt(10) },
       data: { credentialHash: expect.any(String) },
+    });
+    expect(prisma.user.update).toHaveBeenCalledWith({
+      where: { id: user.id },
+      data: { tokenInvalidBefore: expect.any(Date) },
+    });
+    expect(prisma.userSession.updateMany).toHaveBeenCalledWith({
+      where: { userId: user.id, revokedAt: null },
+      data: { revokedAt: expect.any(Date) },
     });
     const nextHash = prisma.userAuthAccount.update.mock.calls[0][0].data.credentialHash;
     expect(await bcrypt.compare('NewPass123', nextHash)).toBe(true);

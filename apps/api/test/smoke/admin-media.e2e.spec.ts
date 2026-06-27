@@ -68,6 +68,9 @@ describe('Admin RBAC and media contract', () => {
         return null;
       }),
     },
+    adminSession: {
+      findFirst: jest.fn().mockResolvedValue({ id: BigInt(120) }),
+    },
     auditLog: {
       count: jest.fn().mockResolvedValue(1),
       findMany: jest.fn().mockResolvedValue([
@@ -133,6 +136,7 @@ describe('Admin RBAC and media contract', () => {
 
   beforeAll(async () => {
     process.env.JWT_ACCESS_SECRET = 'test_access_secret';
+    process.env.ADMIN_JWT_ACCESS_SECRET = 'test_admin_access_secret_that_is_long_enough';
     process.env.STORAGE_PROVIDER = 'mock';
     process.env.UPLOAD_IMAGE_MAX_BYTES = '10485760';
 
@@ -159,8 +163,8 @@ describe('Admin RBAC and media contract', () => {
   it('denies audit log access to viewer admins', async () => {
     adminViewer.status = 1;
     const viewerToken = await jwtService.signAsync(
-      { type: 'admin', sub: adminViewer.id.toString(), username: adminViewer.username, role: adminViewer.role },
-      { secret: process.env.JWT_ACCESS_SECRET },
+      { type: 'admin', sub: adminViewer.id.toString(), username: adminViewer.username, role: adminViewer.role, jti: 'viewer-admin-jti' },
+      { secret: process.env.ADMIN_JWT_ACCESS_SECRET },
     );
 
     await request(app.getHttpServer())
@@ -172,8 +176,8 @@ describe('Admin RBAC and media contract', () => {
   it('rejects disabled admins with an existing access token', async () => {
     adminViewer.status = 2;
     const viewerToken = await jwtService.signAsync(
-      { type: 'admin', sub: adminViewer.id.toString(), username: adminViewer.username, role: adminViewer.role },
-      { secret: process.env.JWT_ACCESS_SECRET },
+      { type: 'admin', sub: adminViewer.id.toString(), username: adminViewer.username, role: adminViewer.role, jti: 'viewer-admin-jti' },
+      { secret: process.env.ADMIN_JWT_ACCESS_SECRET },
     );
 
     await request(app.getHttpServer())
@@ -187,8 +191,8 @@ describe('Admin RBAC and media contract', () => {
   it('allows super admin audit log access and returns upload token expiry fields', async () => {
     adminSuper.status = 1;
     const superToken = await jwtService.signAsync(
-      { type: 'admin', sub: adminSuper.id.toString(), username: adminSuper.username, role: adminSuper.role },
-      { secret: process.env.JWT_ACCESS_SECRET },
+      { type: 'admin', sub: adminSuper.id.toString(), username: adminSuper.username, role: adminSuper.role, jti: 'super-admin-jti' },
+      { secret: process.env.ADMIN_JWT_ACCESS_SECRET },
     );
     const userToken = await jwtService.signAsync(
       { type: 'user', sub: user.id.toString(), user_no: user.userNo },
@@ -277,11 +281,17 @@ describe('Admin RBAC and media contract', () => {
       { type: 'user', sub: user.id.toString(), user_no: user.userNo },
       { secret: process.env.JWT_ACCESS_SECRET },
     );
-    const objectExistsSpy = jest.spyOn(storageService, 'objectExists');
+    const headObjectSpy = jest.spyOn(storageService, 'headObject');
     prismaMock.recordMedia.update.mockClear();
 
     try {
-      objectExistsSpy.mockResolvedValueOnce(false);
+      headObjectSpy.mockResolvedValueOnce({
+        exists: false,
+        content_length: null,
+        content_type: null,
+        etag: null,
+        last_modified: null,
+      });
       prismaMock.recordMedia.findFirst.mockResolvedValueOnce({ ...media, status: 1 });
 
       await request(app.getHttpServer())
@@ -295,7 +305,13 @@ describe('Admin RBAC and media contract', () => {
 
       expect(prismaMock.recordMedia.update).not.toHaveBeenCalled();
 
-      objectExistsSpy.mockResolvedValueOnce(true);
+      headObjectSpy.mockResolvedValueOnce({
+        exists: true,
+        content_length: 1024,
+        content_type: 'image/jpeg',
+        etag: null,
+        last_modified: null,
+      });
       prismaMock.recordMedia.findFirst.mockResolvedValueOnce({ ...media, status: 1 });
 
       const response = await request(app.getHttpServer())
@@ -321,14 +337,14 @@ describe('Admin RBAC and media contract', () => {
         }),
       );
     } finally {
-      objectExistsSpy.mockRestore();
+      headObjectSpy.mockRestore();
     }
   });
 
   it('allows super admin to disable and re-enable a user with audit logging', async () => {
     const superToken = await jwtService.signAsync(
-      { type: 'admin', sub: adminSuper.id.toString(), username: adminSuper.username, role: adminSuper.role },
-      { secret: process.env.JWT_ACCESS_SECRET },
+      { type: 'admin', sub: adminSuper.id.toString(), username: adminSuper.username, role: adminSuper.role, jti: 'super-admin-jti' },
+      { secret: process.env.ADMIN_JWT_ACCESS_SECRET },
     );
 
     const disableResponse = await request(app.getHttpServer())

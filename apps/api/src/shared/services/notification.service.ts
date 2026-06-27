@@ -48,7 +48,8 @@ export class NotificationService {
       select: { userId: true },
     });
 
-    const recipientIds = Array.from(new Map(members.map((item) => [item.userId.toString(), item.userId])).values());
+    const recipientIds = Array.from(new Map(members.map((item) => [item.userId.toString(), item.userId])).values())
+      .filter((userId) => userId !== input.actor_user_id);
     if (!recipientIds.length) {
       return { created_count: 0 };
     }
@@ -65,7 +66,6 @@ export class NotificationService {
       select: { userId: true },
     });
     const existingRecipientIds = new Set(existing.map((item) => item.userId.toString()));
-    const now = new Date();
     const recordTitle = input.record_title?.trim() || '未命名记录';
     const rows = recipientIds
       .filter((userId) => !existingRecipientIds.has(userId.toString()))
@@ -79,14 +79,57 @@ export class NotificationService {
         body: `${input.actor_nickname} 发布了《${recordTitle}》`,
         targetType: 'record',
         targetNo: input.record_no,
-        readAt: userId === input.actor_user_id ? now : null,
+        readAt: null,
       }));
 
     if (!rows.length) {
       return { created_count: 0 };
     }
 
-    await this.prisma.userNotification.createMany({ data: rows });
+    await this.prisma.$transaction(async (tx) => {
+      await tx.userNotification.createMany({ data: rows });
+      const createdNotifications = await tx.userNotification.findMany({
+        where: {
+          userId: { in: rows.map((row) => row.userId) },
+          familyId: input.family_id,
+          notificationType: RECORD_PUBLISHED_NOTIFICATION_TYPE,
+          targetType: 'record',
+          targetNo: input.record_no,
+          deletedAt: null,
+        },
+        select: { id: true, userId: true },
+      });
+      const deviceTokens = await tx.userDeviceToken.findMany({
+        where: {
+          userId: { in: rows.map((row) => row.userId) },
+          status: 1,
+          deletedAt: null,
+        },
+        select: { userId: true, provider: true },
+      });
+      const providersByUserId = new Map<string, Set<string>>();
+      for (const token of deviceTokens) {
+        const key = token.userId.toString();
+        const providers = providersByUserId.get(key) ?? new Set<string>();
+        providers.add(token.provider);
+        providersByUserId.set(key, providers);
+      }
+      const deliveryRows = createdNotifications.flatMap((notification) => {
+        const providers = Array.from(providersByUserId.get(notification.userId.toString()) ?? []);
+        return providers.map((provider) => ({
+          notificationId: notification.id,
+          userId: notification.userId,
+          channel: 'push',
+          provider,
+          status: 'queued',
+          attempts: 0,
+          nextRetryAt: new Date(),
+        }));
+      });
+      if (deliveryRows.length) {
+        await tx.notificationDelivery.createMany({ data: deliveryRows });
+      }
+    });
     return { created_count: rows.length };
   }
 

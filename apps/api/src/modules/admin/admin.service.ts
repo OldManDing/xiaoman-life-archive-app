@@ -1,19 +1,28 @@
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
-import { ActorType, AdminRole, AiJobStatus, ArchiveExportRequestStatus, AuthType, MembershipType, Prisma, SupportTicketPriority, SupportTicketStatus } from '@prisma/client';
+import { ActorType, AdminRole, AiJobStatus, ArchiveExportRequestStatus, AuthType, MediaType, MembershipType, Prisma, SupportTicketPriority, SupportTicketStatus } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { Request } from 'express';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { randomUUID } from 'node:crypto';
 
 import { AiJobsQueue } from '../ai-jobs/ai-jobs.queue';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditLogService } from '../../shared/services/audit-log.service';
 import { RuntimeAiConfig, RuntimeConfigService } from '../../shared/services/runtime-config.service';
 import { StorageService } from '../../shared/services/storage.service';
+import { decryptSystemConfigSecret, encryptSystemConfigSecret } from '../../shared/system-config-secret';
 import {
+  getMobileApkUrl,
+  getMobileForceUpdate,
+  getMobileLatestBuildNumber,
+  getMobileLatestVersion,
+  getMobileReleaseNotes,
   getAdminInitialPassword,
   getAdminInitialUsername,
+  getAdminJwtAccessExpiresIn,
+  getAdminJwtAccessSecret,
   getAiProviderName,
   getAlertContactChannel,
   getAlertContactName,
@@ -23,7 +32,6 @@ import {
   getBackupRestoreDrillAt,
   getBackupRetentionDays,
   getBackupRunbookUrl,
-  getJwtAccessSecret,
   getMapProviderName,
   getSmsProviderName,
   getStorageProviderName,
@@ -47,19 +55,23 @@ import {
   RECORD_STATUS_PUBLISHED,
   USER_ACTIVE_STATUS,
 } from '../../shared/constants';
-import { generateBizNo, generateSecureToken, hashToken, normalizePage, normalizePageSize, statusToChildLabel, statusToRecordLabel, toDateOnly } from '../../shared/utils';
+import { ageDisplay, generateBizNo, generateSecureToken, hashToken, normalizePage, normalizePageSize, parseDurationToSeconds, statusToChildLabel, statusToRecordLabel, toDateOnly } from '../../shared/utils';
+import { parseMediaReference } from '../../shared/media-reference';
 import { AdminAiJobActionDto } from './dto/admin-ai-job-action.dto';
 import { AdminArchiveExportRequestListDto } from './dto/admin-archive-export-request-list.dto';
 import { AdminContentRiskListDto } from './dto/admin-content-risk-list.dto';
+import { AdminChangePasswordDto } from './dto/admin-change-password.dto';
 import { AdminCreateInviteDto } from './dto/admin-create-invite.dto';
 import { AdminListDto } from './dto/admin-list.dto';
 import { AdminAuditLogListDto } from './dto/admin-audit-log-list.dto';
 import { AdminLoginDto } from './dto/admin-login.dto';
+import { AdminMediaListDto } from './dto/admin-media-list.dto';
 import { AdminResetUserPasswordDto } from './dto/admin-reset-user-password.dto';
 import { AdminSupportTicketListDto } from './dto/admin-support-ticket-list.dto';
 import { AdminUpdateArchiveExportRequestStatusDto } from './dto/admin-update-archive-export-request-status.dto';
 import { AdminUpdateMediaStatusDto } from './dto/admin-update-media-status.dto';
 import { AdminUpdateSystemConfigDto } from './dto/admin-update-system-config.dto';
+import { AdminUpdateAiSettingsDto } from './dto/admin-update-ai-settings.dto';
 import { AdminUpdateUserMembershipDto } from './dto/admin-update-user-membership.dto';
 import { AdminUpdateRecordStatusDto } from './dto/admin-update-record-status.dto';
 import { AdminUpdateSupportTicketStatusDto } from './dto/admin-update-support-ticket-status.dto';
@@ -68,6 +80,7 @@ import { AdminUpdateUserStatusDto } from './dto/admin-update-user-status.dto';
 const USER_DISABLED_STATUS = 2;
 const DEFAULT_ACCESS_TOKEN_EXPIRES_IN = '2h';
 const DEFAULT_REGISTRATION_INVITE_EXPIRES_IN_HOURS = 168;
+const AI_SETTING_KEYS = ['ai_provider', 'ai_base_url', 'ai_model', 'ai_api_key', 'ai_timeout_ms', 'ai_daily_limit_per_user'] as const;
 const DEFAULT_LIVE_READINESS_REPORT_PATH = 'artifacts/app-live-audit/live-readiness-latest.json';
 const MAX_LIVE_READINESS_REPORT_AGE_HOURS = 24;
 type OpsReadinessStatus = 'ready' | 'warning' | 'blocked';
@@ -122,7 +135,7 @@ type AdminContentRiskItem = {
   action_to: string;
   created_at: string;
 };
-type SystemConfigCategory = 'backup_recovery' | 'alerting' | 'ai_provider';
+type SystemConfigCategory = 'backup_recovery' | 'alerting' | 'ai_provider' | 'mobile_release';
 type SystemConfigValueType = 'number' | 'url' | 'datetime' | 'text' | 'secret' | 'select';
 type SystemConfigDefinition = {
   key: string;
@@ -155,7 +168,7 @@ type AdminSystemConfigItem = {
   updated_at: string | null;
 };
 type AdminAiSettingsTestResult = {
-  status: 'success' | 'failed';
+  status: 'success' | 'failed' | 'skipped';
   provider: string;
   model: string | null;
   base_url: string | null;
@@ -176,7 +189,8 @@ const CONTENT_RISK_KEYWORDS: Array<{ keyword: string; severity: ContentRiskSever
 ];
 
 const readEnvString = (name: string) => process.env[name]?.trim() ?? '';
-const secretDisplayValue = (value: string) => (value.trim() ? '已配置（不回显）' : '未配置');
+const plainSecretValue = (value: string) => decryptSystemConfigSecret(value).trim();
+const secretDisplayValue = (value: string) => (plainSecretValue(value) ? '已配置（加密保存，不回显）' : '未配置');
 const auditConfigValue = (definition: SystemConfigDefinition, value: string) =>
   definition.value_type === 'secret' ? secretDisplayValue(value) : value;
 
@@ -237,6 +251,52 @@ const SYSTEM_CONFIG_DEFINITIONS: SystemConfigDefinition[] = [
     envValue: () => readEnvString('AI_DAILY_LIMIT_PER_USER') || '20',
     min: 1,
     max: 1000,
+  },
+  {
+    key: 'mobile_latest_version',
+    category: 'mobile_release',
+    label: '移动端最新版本',
+    value_type: 'text',
+    description: '关于页和启动静默检查使用的最新版本号。',
+    envValue: () => getMobileLatestVersion(),
+  },
+  {
+    key: 'mobile_latest_build_number',
+    category: 'mobile_release',
+    label: '移动端最新构建号',
+    value_type: 'number',
+    description: '用于判断是否需要更新；构建号越大代表版本越新。',
+    envValue: () => String(getMobileLatestBuildNumber()),
+    min: 0,
+    max: 1000000,
+  },
+  {
+    key: 'mobile_release_notes',
+    category: 'mobile_release',
+    label: '移动端更新说明',
+    value_type: 'text',
+    description: '展示给用户的版本更新内容。',
+    envValue: () => getMobileReleaseNotes(),
+  },
+  {
+    key: 'mobile_apk_url',
+    category: 'mobile_release',
+    label: 'APK 下载地址',
+    value_type: 'url',
+    description: '安卓应用检查更新返回的 APK 下载地址。',
+    envValue: () => getMobileApkUrl() ?? '',
+  },
+  {
+    key: 'mobile_force_update',
+    category: 'mobile_release',
+    label: '是否强制更新',
+    value_type: 'select',
+    description: '开启后旧版本检查更新会要求用户升级后继续使用。',
+    envValue: () => String(getMobileForceUpdate()),
+    options: [
+      { value: 'true', label: '强制更新' },
+      { value: 'false', label: '普通更新' },
+    ],
   },
   {
     key: 'backup_retention_days',
@@ -336,6 +396,13 @@ const mediaStatusToNumber = (status: AdminUpdateMediaStatusDto['status']) => {
   return MEDIA_STATUS_FAILED;
 };
 
+const mediaStatusFilterToNumber = (status: NonNullable<AdminMediaListDto['status']>) => {
+  if (status === 'ready') return MEDIA_STATUS_READY;
+  if (status === 'failed') return MEDIA_STATUS_FAILED;
+  if (status === 'removed') return MEDIA_STATUS_REMOVED;
+  return MEDIA_STATUS_UPLOADING;
+};
+
 const statusToInviteLabel = (status: number, expiresAt: Date): 'pending' | 'accepted' | 'revoked' | 'expired' => {
   if (status === MEMBER_INVITE_STATUS_ACCEPTED) return 'accepted';
   if (status === MEMBER_INVITE_STATUS_REVOKED) return 'revoked';
@@ -350,6 +417,7 @@ const getSystemConfigDefinition = (key: string) => SYSTEM_CONFIG_DEFINITIONS.fin
 const systemConfigCategoryLabel = (category: SystemConfigCategory) => {
   if (category === 'ai_provider') return 'AI 服务';
   if (category === 'backup_recovery') return '备份恢复';
+  if (category === 'mobile_release') return '版本更新';
   return '告警值班';
 };
 
@@ -666,10 +734,26 @@ export class AdminService {
       throw new UnauthorizedException('账号或密码错误');
     }
 
-    await this.prisma.adminUser.update({
-      where: { id: admin.id },
-      data: { lastLoginAt: new Date() },
-    });
+    const accessTokenJti = randomUUID();
+    const accessTokenExpiresIn = getAdminJwtAccessExpiresIn() || DEFAULT_ACCESS_TOKEN_EXPIRES_IN;
+    const accessTokenTtlSeconds = parseDurationToSeconds(accessTokenExpiresIn) || parseDurationToSeconds(DEFAULT_ACCESS_TOKEN_EXPIRES_IN);
+    const expiresAt = new Date(Date.now() + accessTokenTtlSeconds * 1000);
+
+    await this.prisma.$transaction([
+      this.prisma.adminUser.update({
+        where: { id: admin.id },
+        data: { lastLoginAt: new Date() },
+      }),
+      this.prisma.adminSession.create({
+        data: {
+          adminId: admin.id,
+          accessTokenJtiHash: hashToken(accessTokenJti),
+          expiresAt,
+          ipAddress: request.ip,
+          userAgent: String(request.headers['user-agent'] ?? '').slice(0, 512) || null,
+        },
+      }),
+    ]);
 
     await this.auditLogService.create({
       actor_type: ActorType.admin,
@@ -688,13 +772,14 @@ export class AdminService {
           sub: admin.id.toString(),
           username: admin.username,
           role: admin.role,
+          jti: accessTokenJti,
         },
         {
-          secret: getJwtAccessSecret(),
-          expiresIn: (process.env.JWT_ACCESS_EXPIRES_IN ?? DEFAULT_ACCESS_TOKEN_EXPIRES_IN) as JwtSignOptions['expiresIn'],
+          secret: getAdminJwtAccessSecret(),
+          expiresIn: accessTokenExpiresIn as JwtSignOptions['expiresIn'],
         },
       ),
-      expires_in: 7200,
+      expires_in: accessTokenTtlSeconds,
       admin: {
         username: admin.username,
         display_name: admin.displayName,
@@ -1099,10 +1184,14 @@ export class AdminService {
 
     const passwordHash = await bcrypt.hash(dto.new_password, 10);
     const now = new Date();
-    const [, revokedSessions] = await this.prisma.$transaction([
+    const [, , revokedSessions] = await this.prisma.$transaction([
       this.prisma.userAuthAccount.update({
         where: { id: passwordAccount.id },
         data: { credentialHash: passwordHash },
+      }),
+      this.prisma.user.update({
+        where: { id: user.id },
+        data: { tokenInvalidBefore: now },
       }),
       this.prisma.userSession.updateMany({
         where: {
@@ -1141,10 +1230,16 @@ export class AdminService {
   async listChildren(admin: AuthenticatedAdmin, dto: AdminListDto, request: Request) {
     const page = normalizePage(dto.page);
     const pageSize = normalizePageSize(dto.page_size);
-    const where = dto.keyword
+    const where: Prisma.ChildWhereInput = dto.keyword
       ? {
           deletedAt: null,
-          OR: [{ childNo: { contains: dto.keyword } }, { name: { contains: dto.keyword } }],
+          OR: [
+            { childNo: { contains: dto.keyword } },
+            { name: { contains: dto.keyword } },
+            { birthPlace: { contains: dto.keyword } },
+            { family: { is: { OR: [{ familyNo: { contains: dto.keyword } }, { name: { contains: dto.keyword } }] } } },
+            { owner: { is: { OR: [{ userNo: { contains: dto.keyword } }, { nickname: { contains: dto.keyword } }, { mobile: { contains: dto.keyword } }] } } },
+          ],
         }
       : { deletedAt: null };
 
@@ -1161,16 +1256,24 @@ export class AdminService {
 
     await this.logListAudit(admin, 'admin_list_children', request);
     return {
-      list: list.map((item) => ({
+      list: await Promise.all(list.map(async (item) => ({
         child_no: item.childNo,
         family_no: item.family.familyNo,
+        family_name: item.family.name,
         owner_user_no: item.owner.userNo,
+        owner_name: item.owner.nickname,
         name: item.name,
+        avatar_url: await this.resolveChildAvatarUrl(item.id, item.avatarUrl),
+        avatar_media_no: parseMediaReference(item.avatarUrl),
         birthday: toDateOnly(item.birthday),
+        current_age_display: ageDisplay(item.birthday),
         gender: item.gender,
+        birth_place: item.birthPlace,
+        remark: item.remark,
         status: statusToChildLabel(item.status, item.deletedAt),
         created_at: item.createdAt.toISOString(),
-      })),
+        updated_at: item.updatedAt.toISOString(),
+      }))),
       page,
       page_size: pageSize,
       total,
@@ -1220,22 +1323,37 @@ export class AdminService {
     };
   }
 
-  async listMedia(admin: AuthenticatedAdmin, dto: AdminListDto, request: Request) {
+  async listMedia(admin: AuthenticatedAdmin, dto: AdminMediaListDto, request: Request) {
     const page = normalizePage(dto.page);
     const pageSize = normalizePageSize(dto.page_size);
-    const where: Prisma.RecordMediaWhereInput = dto.keyword
-      ? {
-          deletedAt: null,
-          OR: [
-            { mediaNo: { contains: dto.keyword } },
-            { originalName: { contains: dto.keyword } },
-            { objectKey: { contains: dto.keyword } },
-            { record: { is: { OR: [{ recordNo: { contains: dto.keyword } }, { title: { contains: dto.keyword } }, { contentText: { contains: dto.keyword } }] } } },
-            { child: { is: { OR: [{ childNo: { contains: dto.keyword } }, { name: { contains: dto.keyword } }] } } },
-            { uploader: { is: { OR: [{ userNo: { contains: dto.keyword } }, { nickname: { contains: dto.keyword } }, { mobile: { contains: dto.keyword } }] } } },
-          ],
-        }
-      : { deletedAt: null };
+    const createdAt: Prisma.DateTimeFilter = {};
+    if (dto.start_time) createdAt.gte = new Date(dto.start_time);
+    if (dto.end_time) createdAt.lte = new Date(dto.end_time);
+
+    const where: Prisma.RecordMediaWhereInput = {
+      deletedAt: null,
+      ...(dto.media_type ? { mediaType: dto.media_type as MediaType } : {}),
+      ...(dto.status ? { status: mediaStatusFilterToNumber(dto.status) } : {}),
+      ...(dto.child_no ? { child: { is: { childNo: dto.child_no } } } : {}),
+      ...(dto.family_no ? { family: { is: { familyNo: dto.family_no } } } : {}),
+      ...(dto.uploader_user_no ? { uploader: { is: { userNo: dto.uploader_user_no } } } : {}),
+      ...(dto.linked === 'linked' ? { recordId: { not: null } } : {}),
+      ...(dto.linked === 'unlinked' ? { recordId: null } : {}),
+      ...(Object.keys(createdAt).length ? { createdAt } : {}),
+      ...(dto.keyword
+        ? {
+            OR: [
+              { mediaNo: { contains: dto.keyword } },
+              { originalName: { contains: dto.keyword } },
+              { objectKey: { contains: dto.keyword } },
+              { family: { is: { OR: [{ familyNo: { contains: dto.keyword } }, { name: { contains: dto.keyword } }] } } },
+              { record: { is: { OR: [{ recordNo: { contains: dto.keyword } }, { title: { contains: dto.keyword } }, { contentText: { contains: dto.keyword } }] } } },
+              { child: { is: { OR: [{ childNo: { contains: dto.keyword } }, { name: { contains: dto.keyword } }] } } },
+              { uploader: { is: { OR: [{ userNo: { contains: dto.keyword } }, { nickname: { contains: dto.keyword } }, { mobile: { contains: dto.keyword } }] } } },
+            ],
+          }
+        : {}),
+    };
 
     const [total, list] = await this.prisma.$transaction([
       this.prisma.recordMedia.count({ where }),
@@ -1250,23 +1368,7 @@ export class AdminService {
 
     await this.logListAudit(admin, 'admin_list_media', request);
     return {
-      list: list.map((item) => ({
-        media_no: item.mediaNo,
-        family_no: item.family.familyNo,
-        child_no: item.child?.childNo ?? null,
-        child_name: item.child?.name ?? null,
-        uploader_user_no: item.uploader.userNo,
-        media_type: item.mediaType,
-        status: statusToMediaLabel(item.status),
-        mime_type: item.mimeType,
-        size_bytes: item.sizeBytes ? Number(item.sizeBytes) : null,
-        object_key: item.objectKey,
-        original_name: item.originalName,
-        record_no: item.record?.recordNo ?? null,
-        record_title: item.record?.title ?? null,
-        uploader_name: item.uploader.nickname,
-        created_at: item.createdAt.toISOString(),
-      })),
+      list: await Promise.all(list.map((item) => this.toMediaListItem(item, admin))),
       page,
       page_size: pageSize,
       total,
@@ -1663,7 +1765,173 @@ export class AdminService {
 
     return {
       ...this.toSystemConfigItem(definition, updated),
-      changed: (before?.value ?? definition.envValue()) !== updated.value,
+      changed: this.systemConfigValuesDiffer(definition, before?.value ?? definition.envValue(), updated.value),
+    };
+  }
+
+  async updateAiSettings(admin: AuthenticatedAdmin, dto: AdminUpdateAiSettingsDto, request: Request) {
+    if (isStrictEnvironment() && dto.provider === 'mock') {
+      throw new BadRequestException('生产环境不能使用 mock AI 服务');
+    }
+    const beforeRows = await this.prisma.systemConfig.findMany({
+      where: { configKey: { in: AI_SETTING_KEYS as unknown as string[] } },
+    });
+    const beforeMap = new Map(beforeRows.map((item) => [item.configKey, item.value]));
+    const existingApiKey = beforeMap.get('ai_api_key') ?? readEnvString('AI_API_KEY');
+    const hasApiKey = Boolean(dto.api_key?.trim() || plainSecretValue(existingApiKey));
+    if (dto.provider !== 'mock' && (!dto.base_url || !dto.model || !hasApiKey)) {
+      throw new BadRequestException('AI 供应商、接口地址、模型和 API Key 都是必填项');
+    }
+
+    const values = new Map<(typeof AI_SETTING_KEYS)[number], string>([
+      ['ai_provider', dto.provider],
+      ['ai_base_url', dto.base_url],
+      ['ai_model', dto.model],
+      ['ai_timeout_ms', String(dto.timeout_ms)],
+      ['ai_daily_limit_per_user', String(dto.daily_limit_per_user)],
+    ]);
+    if (dto.api_key) values.set('ai_api_key', dto.api_key);
+
+    const definitions = AI_SETTING_KEYS.map((key) => {
+      const definition = getSystemConfigDefinition(key);
+      if (!definition) throw new BadRequestException(`AI 配置项缺失：${key}`);
+      return definition;
+    });
+    const updatedRows = await this.prisma.$transaction(
+      definitions
+        .filter((definition) => values.has(definition.key as (typeof AI_SETTING_KEYS)[number]))
+        .map((definition) => {
+          const value = values.get(definition.key as (typeof AI_SETTING_KEYS)[number]) ?? '';
+          const normalizedValue = this.normalizeSystemConfigValue(definition, value);
+          return this.prisma.systemConfig.upsert({
+            where: { configKey: definition.key },
+            update: {
+              category: definition.category,
+              label: definition.label,
+              value: normalizedValue,
+              valueType: definition.value_type,
+              description: definition.description,
+              updatedByAdminId: admin.id,
+            },
+            create: {
+              configKey: definition.key,
+              category: definition.category,
+              label: definition.label,
+              value: normalizedValue,
+              valueType: definition.value_type,
+              description: definition.description,
+              updatedByAdminId: admin.id,
+            },
+            include: { updatedByAdmin: true },
+          });
+        }),
+    );
+
+    await this.auditLogService.create({
+      actor_type: ActorType.admin,
+      actor_id: admin.id,
+      action: 'admin_update_ai_settings',
+      target_type: 'system_config',
+      target_id: null,
+      ip_address: request.ip,
+      user_agent: request.headers['user-agent'] ?? null,
+      metadata: {
+        keys: updatedRows.map((item) => item.configKey),
+        before: Object.fromEntries(
+          definitions.map((definition) => [
+            definition.key,
+            auditConfigValue(definition, beforeMap.get(definition.key) ?? definition.envValue()),
+          ]),
+        ),
+        after: Object.fromEntries(updatedRows.map((item) => [item.configKey, auditConfigValue(getSystemConfigDefinition(item.configKey)!, item.value)])),
+        reason: dto.reason,
+      },
+    });
+
+    const rowsByKey = new Map(updatedRows.map((item) => [item.configKey, item]));
+    return {
+      changed: updatedRows.some((item) => this.systemConfigValuesDiffer(getSystemConfigDefinition(item.configKey)!, beforeMap.get(item.configKey) ?? getSystemConfigDefinition(item.configKey)?.envValue() ?? '', item.value)),
+      list: definitions.map((definition) => this.toSystemConfigItem(definition, rowsByKey.get(definition.key))),
+    };
+  }
+
+  async logout(admin: AuthenticatedAdmin, request: Request) {
+    const jti = this.readBearerJwtId(request);
+    if (jti) {
+      await this.prisma.adminSession.updateMany({
+        where: {
+          adminId: admin.id,
+          accessTokenJtiHash: hashToken(jti),
+          revokedAt: null,
+        },
+        data: { revokedAt: new Date() },
+      });
+    }
+
+    await this.auditLogService.create({
+      actor_type: ActorType.admin,
+      actor_id: admin.id,
+      action: 'admin_logout',
+      target_type: 'admin_user',
+      target_id: admin.id,
+      ip_address: request.ip,
+      user_agent: request.headers['user-agent'] ?? null,
+    });
+
+    return { success: true };
+  }
+
+  async changePassword(admin: AuthenticatedAdmin, dto: AdminChangePasswordDto, request: Request) {
+    if (dto.new_password !== dto.new_password_confirm) {
+      throw new BadRequestException('两次输入的新密码不一致');
+    }
+    if (dto.current_password === dto.new_password) {
+      throw new BadRequestException('新密码不能与当前密码相同');
+    }
+
+    const current = await this.prisma.adminUser.findFirst({
+      where: { id: admin.id, status: ADMIN_ACTIVE_STATUS, deletedAt: null },
+    });
+    if (!current) {
+      throw new UnauthorizedException('后台登录状态已失效');
+    }
+
+    const valid = await bcrypt.compare(dto.current_password, current.passwordHash);
+    if (!valid) {
+      throw new BadRequestException('当前密码不正确');
+    }
+
+    const now = new Date();
+    const passwordHash = await bcrypt.hash(dto.new_password, 10);
+    const [, revokedSessions] = await this.prisma.$transaction([
+      this.prisma.adminUser.update({
+        where: { id: current.id },
+        data: {
+          passwordHash,
+          tokenInvalidBefore: now,
+        },
+      }),
+      this.prisma.adminSession.updateMany({
+        where: { adminId: current.id, revokedAt: null },
+        data: { revokedAt: now },
+      }),
+    ]);
+
+    await this.auditLogService.create({
+      actor_type: ActorType.admin,
+      actor_id: admin.id,
+      action: 'admin_change_password',
+      target_type: 'admin_user',
+      target_id: current.id,
+      ip_address: request.ip,
+      user_agent: request.headers['user-agent'] ?? null,
+      metadata: { revoked_sessions: revokedSessions.count },
+    });
+
+    return {
+      success: true,
+      revoked_sessions: revokedSessions.count,
+      changed_at: now.toISOString(),
     };
   }
 
@@ -2094,6 +2362,11 @@ export class AdminService {
           where: { deletedAt: null },
           orderBy: { eventTime: 'desc' },
           take: 5,
+          include: {
+            creator: true,
+            media: { where: { deletedAt: null }, orderBy: { createdAt: 'desc' }, take: 1 },
+            _count: { select: { media: true } },
+          },
         },
       },
     });
@@ -2111,29 +2384,39 @@ export class AdminService {
       owner_user_no: child.owner.userNo,
       owner_name: child.owner.nickname,
       name: child.name,
-      avatar_url: child.avatarUrl,
+      avatar_url: await this.resolveChildAvatarUrl(child.id, child.avatarUrl),
+      avatar_media_no: parseMediaReference(child.avatarUrl),
       birthday: toDateOnly(child.birthday),
+      current_age_display: ageDisplay(child.birthday),
       gender: child.gender,
       birth_place: child.birthPlace,
       remark: child.remark,
       status: statusToChildLabel(child.status, child.deletedAt),
       created_at: child.createdAt.toISOString(),
       updated_at: child.updatedAt.toISOString(),
-      family_members: child.family.members.map((member) => ({
+      family_members: await Promise.all(child.family.members.map(async (member) => ({
         user_no: member.user.userNo,
         nickname: member.user.nickname,
+        avatar_url: await this.resolveUserAvatarUrl(member.user.id, member.user.avatarUrl),
+        avatar_media_no: parseMediaReference(member.user.avatarUrl),
         mobile: member.user.mobile,
         role: member.role,
         status: member.status === USER_ACTIVE_STATUS ? 'active' : 'disabled',
         joined_at: member.joinedAt?.toISOString() ?? null,
-      })),
-      recent_records: child.records.map((record) => ({
+      }))),
+      recent_records: await Promise.all(child.records.map(async (record) => ({
         record_no: record.recordNo,
         title: record.title,
         record_type: record.recordType,
         status: statusToRecordLabel(record.status),
+        creator_user_no: record.creator.userNo,
+        creator_name: record.creator.nickname,
+        media_count: record._count.media,
+        cover_url: await this.resolveMediaThumbnailUrl(record.media[0] ?? null),
         event_time: record.eventTime.toISOString(),
-      })),
+        created_at: record.createdAt.toISOString(),
+        published_at: record.publishedAt?.toISOString() ?? null,
+      }))),
     };
   }
 
@@ -2186,6 +2469,12 @@ export class AdminService {
   async updateRecordStatus(admin: AuthenticatedAdmin, recordNo: string, dto: AdminUpdateRecordStatusDto, request: Request) {
     const record = await this.prisma.record.findFirst({
       where: { recordNo, deletedAt: null },
+      include: {
+        media: {
+          where: { deletedAt: null, status: MEDIA_STATUS_READY },
+          select: { id: true },
+        },
+      },
     });
 
     if (!record) {
@@ -2193,6 +2482,13 @@ export class AdminService {
     }
 
     const nextStatus = dto.status === 'published' ? RECORD_STATUS_PUBLISHED : RECORD_STATUS_DRAFT;
+    if (nextStatus === RECORD_STATUS_PUBLISHED) {
+      const hasText = Boolean(record.title?.trim() || record.contentText?.trim());
+      if (!hasText && record.media.length === 0) {
+        throw new BadRequestException('记录缺少正文、标题或可用媒体，不能发布');
+      }
+    }
+
     if (record.status === nextStatus) {
       return {
         record_no: record.recordNo,
@@ -2250,7 +2546,7 @@ export class AdminService {
     await this.logListAudit(admin, 'admin_view_media_detail', request);
 
     return {
-      ...(await this.toMediaItem(media)),
+      ...(await this.toMediaItem(media, admin)),
       family_no: media.family.familyNo,
       child_no: media.child?.childNo ?? null,
       child_name: media.child?.name ?? null,
@@ -2258,7 +2554,7 @@ export class AdminService {
       record_title: media.record?.title ?? null,
       uploader_user_no: media.uploader.userNo,
       uploader_name: media.uploader.nickname,
-      uploader_mobile: media.uploader.mobile,
+      uploader_mobile: this.canViewSensitiveMediaFields(admin) ? media.uploader.mobile : null,
     };
   }
 
@@ -2272,6 +2568,13 @@ export class AdminService {
     }
 
     const nextStatus = mediaStatusToNumber(dto.status);
+    if (nextStatus === MEDIA_STATUS_READY) {
+      const uploaded = await this.storageService.headObject(media.objectKey).catch(() => null);
+      if (!uploaded?.exists) {
+        throw new BadRequestException('媒体文件不存在，不能标记为可用');
+      }
+    }
+
     if (media.status === nextStatus) {
       return {
         media_no: media.mediaNo,
@@ -2282,7 +2585,11 @@ export class AdminService {
 
     const updated = await this.prisma.recordMedia.update({
       where: { id: media.id },
-      data: { status: nextStatus },
+      data: {
+        status: nextStatus,
+        failureReason: nextStatus === MEDIA_STATUS_READY ? null : dto.reason,
+        retryCount: nextStatus === MEDIA_STATUS_READY ? media.retryCount : { increment: 1 },
+      },
     });
 
     await this.auditLogService.create({
@@ -2297,7 +2604,7 @@ export class AdminService {
         media_no: updated.mediaNo,
         before_status: statusToMediaLabel(media.status),
         after_status: statusToMediaLabel(updated.status),
-        reason: dto.reason ?? null,
+        reason: dto.reason,
       },
     });
 
@@ -2608,13 +2915,20 @@ export class AdminService {
       throw new BadRequestException('已完结的交付申请不能回退处理状态');
     }
 
+    if (dto.status === ArchiveExportRequestStatus.completed && (!dto.download_url || !dto.file_sha256 || !dto.delivery_evidence)) {
+      throw new BadRequestException('完成交付必须填写下载地址、文件 SHA256 和交付证据');
+    }
+
     const updated = await this.prisma.archiveExportRequest.update({
       where: { id: current.id },
       data: {
         status: dto.status,
         processedByAdminId: admin.id,
         processedAt: new Date(),
-        processNote: dto.note ?? undefined,
+        processNote: dto.note,
+        downloadUrl: dto.download_url ?? undefined,
+        fileSha256: dto.file_sha256 ?? undefined,
+        deliveryEvidence: dto.delivery_evidence ?? undefined,
       },
       include: {
         user: true,
@@ -2640,7 +2954,10 @@ export class AdminService {
         export_type: updated.exportType,
         child_no: updated.child.childNo,
         user_no: updated.user.userNo,
-        note: dto.note ?? null,
+        note: dto.note,
+        download_url: dto.download_url ?? null,
+        file_sha256: dto.file_sha256 ?? null,
+        delivery_evidence: dto.delivery_evidence ?? null,
       },
     });
 
@@ -2760,7 +3077,7 @@ export class AdminService {
       if (trimmed.length > 1000) {
         throw new BadRequestException(`${definition.label}不能超过 1000 个字符`);
       }
-      return trimmed;
+      return encryptSystemConfigSecret(trimmed);
     }
 
     if (definition.value_type === 'url') {
@@ -2793,6 +3110,22 @@ export class AdminService {
     return trimmed;
   }
 
+  private readBearerJwtId(request: Request) {
+    const header = request.headers.authorization;
+    const token = typeof header === 'string' && header.toLowerCase().startsWith('bearer ') ? header.slice(7).trim() : '';
+    if (!token) return null;
+
+    try {
+      const [, payload] = token.split('.');
+      if (!payload) return null;
+      const normalizedPayload = payload.replace(/-/g, '+').replace(/_/g, '/');
+      const decoded = JSON.parse(Buffer.from(normalizedPayload, 'base64').toString('utf8')) as { jti?: unknown };
+      return typeof decoded.jti === 'string' && decoded.jti ? decoded.jti : null;
+    } catch {
+      return null;
+    }
+  }
+
   private systemConfigValue(rows: SystemConfigWithUpdater[], key: string) {
     const definition = getSystemConfigDefinition(key);
     if (!definition) return '';
@@ -2815,6 +3148,7 @@ export class AdminService {
   private toSystemConfigItem(definition: SystemConfigDefinition, row?: SystemConfigWithUpdater | null): AdminSystemConfigItem {
     const rawValue = row?.value ?? definition.envValue();
     const isSecret = definition.value_type === 'secret';
+    const secretConfigured = isSecret ? Boolean(plainSecretValue(rawValue)) : undefined;
     return {
       config_key: definition.key,
       category: definition.category,
@@ -2825,10 +3159,15 @@ export class AdminService {
       description: definition.description,
       source: row ? 'admin' : 'environment',
       options: definition.options,
-      secret_configured: isSecret ? Boolean(rawValue.trim()) : undefined,
+      secret_configured: secretConfigured,
       updated_by_name: row?.updatedByAdmin?.displayName ?? null,
       updated_at: row?.updatedAt.toISOString() ?? null,
     };
+  }
+
+  private systemConfigValuesDiffer(definition: SystemConfigDefinition, beforeValue: string, afterValue: string) {
+    if (definition.value_type !== 'secret') return beforeValue !== afterValue;
+    return plainSecretValue(beforeValue) !== plainSecretValue(afterValue);
   }
 
   private async performAiSettingsTest(
@@ -2846,11 +3185,20 @@ export class AdminService {
     const elapsed = () => Date.now() - startedAt;
 
     if (config.provider === 'mock') {
+      if (isStrictEnvironment()) {
+        return {
+          ...baseResult,
+          status: 'failed',
+          latency_ms: elapsed(),
+          message: '生产环境不能使用 mock AI 服务。',
+        };
+      }
+
       return {
         ...baseResult,
-        status: 'success',
+        status: 'skipped',
         latency_ms: elapsed(),
-        message: '当前使用 mock AI 服务，不会请求外部供应商。',
+        message: '当前使用 mock AI 服务，未进行真实供应商连通性测试。',
       };
     }
 
@@ -2863,7 +3211,7 @@ export class AdminService {
       };
     }
 
-    const timeoutMs = Math.min(Math.max(config.timeoutMs, 1000), 15_000);
+    const timeoutMs = Math.min(Math.max(config.timeoutMs, 1000), 120_000);
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -3019,6 +3367,9 @@ export class AdminService {
       processed_by_name: item.processedByAdmin?.displayName ?? null,
       processed_at: item.processedAt?.toISOString() ?? null,
       process_note: item.processNote,
+      download_url: item.downloadUrl,
+      file_sha256: item.fileSha256,
+      delivery_evidence: item.deliveryEvidence,
       created_at: item.createdAt.toISOString(),
       updated_at: item.updatedAt.toISOString(),
     };
@@ -3054,6 +3405,7 @@ export class AdminService {
     storageProvider: string;
     bucket: string;
     objectKey: string;
+    thumbnailObjectKey?: string | null;
     originalName: string | null;
     mimeType: string | null;
     sizeBytes: bigint | null;
@@ -3061,17 +3413,24 @@ export class AdminService {
     height: number | null;
     durationSeconds: number | null;
     status: number;
+    uploadSessionExpiresAt?: Date | null;
+    failureReason?: string | null;
+    retryCount?: number | null;
     createdAt: Date;
     updatedAt: Date;
-  }) {
+  }, admin?: AuthenticatedAdmin) {
     const access = item.status === MEDIA_STATUS_READY ? await this.storageService.createAccessUrl(item.objectKey) : null;
+    const thumbnailAccess = item.status === MEDIA_STATUS_READY ? await this.createThumbnailAccessUrl(item).catch(() => null) : null;
+    const canViewSensitive = admin ? this.canViewSensitiveMediaFields(admin) : true;
+    const uploadExpired = item.status === MEDIA_STATUS_UPLOADING && item.uploadSessionExpiresAt ? item.uploadSessionExpiresAt < new Date() : false;
     return {
       media_no: item.mediaNo,
       media_type: item.mediaType,
       storage_provider: item.storageProvider,
-      bucket: item.bucket,
-      object_key: item.objectKey,
+      bucket: canViewSensitive ? item.bucket : null,
+      object_key: canViewSensitive ? item.objectKey : null,
       access_url: access?.access_url ?? null,
+      thumbnail_url: thumbnailAccess,
       original_name: item.originalName,
       mime_type: item.mimeType,
       size_bytes: item.sizeBytes ? Number(item.sizeBytes) : null,
@@ -3079,9 +3438,101 @@ export class AdminService {
       height: item.height,
       duration_seconds: item.durationSeconds,
       status: statusToMediaLabel(item.status),
+      upload_session_expires_at: item.uploadSessionExpiresAt?.toISOString() ?? null,
+      upload_expired: uploadExpired,
+      failure_reason: item.failureReason ?? null,
+      retry_count: item.retryCount ?? 0,
       created_at: item.createdAt.toISOString(),
       updated_at: item.updatedAt.toISOString(),
     };
+  }
+
+  private async toMediaListItem(item: {
+    mediaNo: string;
+    mediaType: string;
+    storageProvider: string;
+    bucket: string;
+    objectKey: string;
+    thumbnailObjectKey: string | null;
+    originalName: string | null;
+    mimeType: string | null;
+    sizeBytes: bigint | null;
+    width: number | null;
+    height: number | null;
+    durationSeconds: number | null;
+    status: number;
+    uploadSessionExpiresAt?: Date | null;
+    failureReason?: string | null;
+    retryCount?: number | null;
+    createdAt: Date;
+    updatedAt: Date;
+    child?: { childNo: string; name: string } | null;
+    family: { familyNo: string };
+    uploader: { userNo: string; nickname: string; mobile?: string | null };
+    record?: { recordNo: string; title: string | null } | null;
+  }, admin?: AuthenticatedAdmin) {
+    return {
+      ...(await this.toMediaItem(item, admin)),
+      family_no: item.family.familyNo,
+      child_no: item.child?.childNo ?? null,
+      child_name: item.child?.name ?? null,
+      uploader_user_no: item.uploader.userNo,
+      uploader_name: item.uploader.nickname,
+      uploader_mobile: admin && this.canViewSensitiveMediaFields(admin) ? item.uploader.mobile ?? null : null,
+      record_no: item.record?.recordNo ?? null,
+      record_title: item.record?.title ?? null,
+    };
+  }
+
+  private async createThumbnailAccessUrl(item: { objectKey: string; thumbnailObjectKey?: string | null; mediaType?: string | null }) {
+    const objectKey = item.thumbnailObjectKey ?? item.objectKey;
+    try {
+      return (await this.storageService.createAccessUrl(objectKey)).access_url;
+    } catch {
+      if (objectKey !== item.objectKey) {
+        return (await this.storageService.createAccessUrl(item.objectKey)).access_url;
+      }
+      return null;
+    }
+  }
+
+  private canViewSensitiveMediaFields(admin: AuthenticatedAdmin) {
+    return admin.role === AdminRole.super_admin || admin.role === AdminRole.operator;
+  }
+
+  private async resolveMediaThumbnailUrl(media: { objectKey: string; thumbnailObjectKey?: string | null; status?: number } | null) {
+    if (!media || (media.status !== undefined && media.status !== MEDIA_STATUS_READY)) return null;
+    return this.createThumbnailAccessUrl(media);
+  }
+
+  private async resolveChildAvatarUrl(childId: bigint, avatarUrl: string | null) {
+    const mediaNo = parseMediaReference(avatarUrl);
+    if (!mediaNo) return avatarUrl;
+
+    const media = await this.prisma.recordMedia.findFirst({
+      where: {
+        mediaNo,
+        childId,
+        status: MEDIA_STATUS_READY,
+      },
+      select: { objectKey: true, thumbnailObjectKey: true },
+    });
+    return this.resolveMediaThumbnailUrl(media);
+  }
+
+  private async resolveUserAvatarUrl(userId: bigint, avatarUrl: string | null) {
+    const mediaNo = parseMediaReference(avatarUrl);
+    if (!mediaNo) return avatarUrl;
+
+    const media = await this.prisma.recordMedia.findFirst({
+      where: {
+        mediaNo,
+        uploaderUserId: userId,
+        status: MEDIA_STATUS_READY,
+      },
+      select: { objectKey: true, thumbnailObjectKey: true },
+    });
+    return this.resolveMediaThumbnailUrl(media);
   }
 
   private toAiJobItem(item: {

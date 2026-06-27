@@ -412,10 +412,8 @@ export const AppSelect = ({
             overflowY: 'auto',
             borderRadius: '8px',
             border: '1px solid var(--nl-border-strong)',
-            background: 'var(--nl-glass-strong)',
+            background: 'var(--nl-popover-bg)',
             boxShadow: 'var(--nl-shadow-md)',
-            WebkitBackdropFilter: 'blur(12px)',
-            backdropFilter: 'blur(12px)',
             padding: '7px',
           }}
         >

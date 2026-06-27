@@ -38,8 +38,8 @@ export class AiProviderService {
       } catch (error) {
         if (!isStrictEnvironment()) throw error;
 
-        this.logger.warn(`AI provider ${provider} failed, using local fallback: ${this.safeErrorMessage(error)}`);
-        return this.runLocalFallback(params, plainText);
+        this.logger.warn(`AI provider ${provider} failed: ${this.safeErrorMessage(error)}`);
+        throw error;
       }
     }
 

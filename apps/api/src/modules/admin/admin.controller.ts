@@ -11,13 +11,16 @@ import { AdminArchiveExportRequestListDto } from './dto/admin-archive-export-req
 import { AdminContentRiskListDto } from './dto/admin-content-risk-list.dto';
 import { AdminRoles } from './decorators/admin-roles.decorator';
 import { AdminAuditLogListDto } from './dto/admin-audit-log-list.dto';
+import { AdminChangePasswordDto } from './dto/admin-change-password.dto';
 import { AdminCreateInviteDto } from './dto/admin-create-invite.dto';
 import { AdminListDto } from './dto/admin-list.dto';
 import { AdminLoginDto } from './dto/admin-login.dto';
+import { AdminMediaListDto } from './dto/admin-media-list.dto';
 import { AdminResetUserPasswordDto } from './dto/admin-reset-user-password.dto';
 import { AdminUpdateMediaStatusDto } from './dto/admin-update-media-status.dto';
 import { AdminUpdateArchiveExportRequestStatusDto } from './dto/admin-update-archive-export-request-status.dto';
 import { AdminUpdateSystemConfigDto } from './dto/admin-update-system-config.dto';
+import { AdminUpdateAiSettingsDto } from './dto/admin-update-ai-settings.dto';
 import { AdminUpdateUserMembershipDto } from './dto/admin-update-user-membership.dto';
 import { AdminUpdateRecordStatusDto } from './dto/admin-update-record-status.dto';
 import { AdminSupportTicketListDto } from './dto/admin-support-ticket-list.dto';
@@ -47,6 +50,22 @@ export class AdminController {
 
   @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
   @AdminRoles(AdminRole.super_admin, AdminRole.operator, AdminRole.viewer)
+  @HttpCode(HttpStatus.OK)
+  @Post('auth/logout')
+  logout(@CurrentUser() admin: AuthenticatedAdmin, @Req() request: Request) {
+    return this.adminService.logout(admin, request);
+  }
+
+  @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
+  @AdminRoles(AdminRole.super_admin, AdminRole.operator, AdminRole.viewer)
+  @HttpCode(HttpStatus.OK)
+  @Post('auth/password')
+  changePassword(@CurrentUser() admin: AuthenticatedAdmin, @Body() dto: AdminChangePasswordDto, @Req() request: Request) {
+    return this.adminService.changePassword(admin, dto, request);
+  }
+
+  @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
+  @AdminRoles(AdminRole.super_admin, AdminRole.operator, AdminRole.viewer)
   @Get('dashboard')
   dashboard(@CurrentUser() admin: AuthenticatedAdmin, @Req() request: Request) {
     return this.adminService.dashboard(admin, request);
@@ -72,6 +91,13 @@ export class AdminController {
   @Post('ai-settings/test')
   testAiSettings(@CurrentUser() admin: AuthenticatedAdmin, @Req() request: Request) {
     return this.adminService.testAiSettings(admin, request);
+  }
+
+  @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
+  @AdminRoles(AdminRole.super_admin, AdminRole.operator)
+  @Patch('ai-settings')
+  updateAiSettings(@CurrentUser() admin: AuthenticatedAdmin, @Body() dto: AdminUpdateAiSettingsDto, @Req() request: Request) {
+    return this.adminService.updateAiSettings(admin, dto, request);
   }
 
   @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
@@ -214,7 +240,7 @@ export class AdminController {
   @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
   @AdminRoles(AdminRole.super_admin, AdminRole.operator, AdminRole.viewer)
   @Get('media')
-  media(@CurrentUser() admin: AuthenticatedAdmin, @Query() dto: AdminListDto, @Req() request: Request) {
+  media(@CurrentUser() admin: AuthenticatedAdmin, @Query() dto: AdminMediaListDto, @Req() request: Request) {
     return this.adminService.listMedia(admin, dto, request);
   }
 

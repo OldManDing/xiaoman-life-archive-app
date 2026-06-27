@@ -15,6 +15,7 @@ import { CreateMembershipBookRequestDto } from './dto/create-membership-book-req
 import { DeleteMeDto } from './dto/delete-me.dto';
 import { ListArchiveExportRequestsDto } from './dto/list-archive-export-requests.dto';
 import { ListNotificationsDto } from './dto/list-notifications.dto';
+import { RegisterDeviceTokenDto } from './dto/register-device-token.dto';
 import { UpdatePreferencesDto } from './dto/update-preferences.dto';
 import { UpdateMeDto } from './dto/update-me.dto';
 import { UsersService } from './users.service';
@@ -70,6 +71,12 @@ export class UsersController {
   @HttpCode(200)
   markNotificationRead(@CurrentUser() user: AuthenticatedUser, @Param('notification_no') notificationNo: string) {
     return this.usersService.markNotificationRead(user.id, notificationNo);
+  }
+
+  @Post('me/device-tokens')
+  @HttpCode(200)
+  registerDeviceToken(@CurrentUser() user: AuthenticatedUser, @Body() dto: RegisterDeviceTokenDto) {
+    return this.usersService.registerDeviceToken(user.id, dto);
   }
 
   @Get('me/app-update')

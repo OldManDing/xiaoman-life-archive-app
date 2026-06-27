@@ -3,6 +3,8 @@ const SECURE_COOKIE_ENVIRONMENTS = new Set(['production', 'prod']);
 const DEFAULT_ADMIN_PASSWORD = 'ChangeMe123!';
 const DEFAULT_ACCESS_SECRET = 'replace_me_access_secret';
 const DEFAULT_REFRESH_SECRET = 'replace_me_refresh_secret';
+const DEFAULT_ADMIN_ACCESS_SECRET = 'replace_me_admin_access_secret';
+const DEFAULT_SYSTEM_CONFIG_SECRET = 'replace_me_system_config_secret';
 const SMS_PROVIDER_VALUES = new Set(['mock', 'aliyun']);
 const STORAGE_PROVIDER_VALUES = new Set(['mock', 'minio', 's3', 'oss', 'cos', 'r2']);
 const AI_PROVIDER_VALUES = new Set(['mock', 'openai', 'openai-compatible']);
@@ -63,6 +65,8 @@ function resolveProviderValue(
 function isPlaceholderSecret(value: string, name: string): boolean {
   if (name === 'JWT_ACCESS_SECRET') return value === DEFAULT_ACCESS_SECRET;
   if (name === 'JWT_REFRESH_SECRET') return value === DEFAULT_REFRESH_SECRET;
+  if (name === 'ADMIN_JWT_ACCESS_SECRET') return value === DEFAULT_ADMIN_ACCESS_SECRET;
+  if (name === 'SYSTEM_CONFIG_ENCRYPTION_SECRET') return value === DEFAULT_SYSTEM_CONFIG_SECRET;
   return false;
 }
 
@@ -273,6 +277,30 @@ export function getJwtRefreshSecret(env: EnvSource = process.env): string {
   return requireEnvValue(env, 'JWT_REFRESH_SECRET');
 }
 
+export function getAdminJwtAccessSecret(env: EnvSource = process.env): string {
+  const configured = readEnvValue(env, 'ADMIN_JWT_ACCESS_SECRET');
+  if (configured) return configured;
+  if (isStrictEnvironment(env)) {
+    throw new Error('Missing required environment variable: ADMIN_JWT_ACCESS_SECRET');
+  }
+
+  return getJwtAccessSecret(env);
+}
+
+export function getAdminJwtAccessExpiresIn(env: EnvSource = process.env): string {
+  return readEnvValue(env, 'ADMIN_JWT_ACCESS_EXPIRES_IN') ?? readEnvValue(env, 'JWT_ACCESS_EXPIRES_IN') ?? '2h';
+}
+
+export function getSystemConfigEncryptionSecret(env: EnvSource = process.env): string {
+  const configured = readEnvValue(env, 'SYSTEM_CONFIG_ENCRYPTION_SECRET');
+  if (configured) return configured;
+  if (isStrictEnvironment(env)) {
+    throw new Error('Missing required environment variable: SYSTEM_CONFIG_ENCRYPTION_SECRET');
+  }
+
+  return getJwtRefreshSecret(env);
+}
+
 export function getAdminInitialUsername(env: EnvSource = process.env): string {
   return readEnvValue(env, 'ADMIN_INITIAL_USERNAME') ?? 'admin';
 }
@@ -374,6 +402,30 @@ function validateStrictJwtSecrets(accessSecret: string, refreshSecret: string) {
   }
 }
 
+function validateStrictAdminJwtSecret(adminAccessSecret: string, userAccessSecret: string) {
+  if (adminAccessSecret === userAccessSecret) {
+    throw new Error('ADMIN_JWT_ACCESS_SECRET and JWT_ACCESS_SECRET must be different outside local/test environments');
+  }
+
+  if (adminAccessSecret.length < 32) {
+    throw new Error('ADMIN_JWT_ACCESS_SECRET must be at least 32 characters outside local/test environments');
+  }
+}
+
+function validateStrictSystemConfigSecret(systemConfigSecret: string, accessSecret: string, refreshSecret: string) {
+  if (systemConfigSecret.length < 32) {
+    throw new Error('SYSTEM_CONFIG_ENCRYPTION_SECRET must be at least 32 characters outside local/test environments');
+  }
+
+  if (systemConfigSecret === accessSecret || systemConfigSecret === refreshSecret) {
+    throw new Error('SYSTEM_CONFIG_ENCRYPTION_SECRET must be different from JWT secrets outside local/test environments');
+  }
+
+  if (isPlaceholderSecret(systemConfigSecret, 'SYSTEM_CONFIG_ENCRYPTION_SECRET')) {
+    throw new Error('SYSTEM_CONFIG_ENCRYPTION_SECRET cannot use the placeholder value outside local/test environments');
+  }
+}
+
 export function validateRuntimeConfig(config: Record<string, unknown>): Record<string, unknown> {
   const accessSecret = getJwtAccessSecret(config);
   const refreshSecret = getJwtRefreshSecret(config);
@@ -401,6 +453,13 @@ export function validateRuntimeConfig(config: Record<string, unknown>): Record<s
     }
 
     validateStrictJwtSecrets(accessSecret, refreshSecret);
+    const adminAccessSecret = getAdminJwtAccessSecret(config);
+    if (isPlaceholderSecret(adminAccessSecret, 'ADMIN_JWT_ACCESS_SECRET')) {
+      throw new Error('ADMIN_JWT_ACCESS_SECRET cannot use the placeholder value outside local/test environments');
+    }
+    validateStrictAdminJwtSecret(adminAccessSecret, accessSecret);
+    const systemConfigSecret = getSystemConfigEncryptionSecret(config);
+    validateStrictSystemConfigSecret(systemConfigSecret, accessSecret, refreshSecret);
 
     if (isAdminBootstrapAllowed(config) && getAdminInitialPassword(config) === DEFAULT_ADMIN_PASSWORD) {
       throw new Error('ADMIN_INITIAL_PASSWORD cannot use the default value when admin bootstrap is enabled outside local/test environments');

@@ -59,28 +59,78 @@ export function statusToRecordLabel(status: number): 'draft' | 'published' {
   return status === RECORD_STATUS_DRAFT ? 'draft' : 'published';
 }
 
-export function ageDisplay(birthday: Date): string {
-  const today = new Date();
-  const birth = new Date(birthday);
-  let years = today.getFullYear() - birth.getFullYear();
-  let months = today.getMonth() - birth.getMonth();
-  let days = today.getDate() - birth.getDate();
+type CalendarDateParts = {
+  year: number;
+  month: number;
+  day: number;
+};
 
-  if (days < 0) {
-    months -= 1;
-    const previousMonthLastDay = new Date(today.getFullYear(), today.getMonth(), 0).getDate();
-    days += previousMonthLastDay;
+const APP_CALENDAR_TIME_ZONE = 'Asia/Shanghai';
+const MS_PER_DAY = 86_400_000;
+
+const getCalendarDateParts = (value: Date | string, timeZone = APP_CALENDAR_TIME_ZONE): CalendarDateParts | null => {
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+  }).formatToParts(date);
+  const getPart = (type: 'year' | 'month' | 'day') => Number(parts.find((part) => part.type === type)?.value);
+  const year = getPart('year');
+  const month = getPart('month');
+  const day = getPart('day');
+  if (![year, month, day].every(Number.isFinite)) return null;
+  return { year, month, day };
+};
+
+const compareCalendarDate = (left: CalendarDateParts, right: CalendarDateParts) => {
+  if (left.year !== right.year) return left.year - right.year;
+  if (left.month !== right.month) return left.month - right.month;
+  return left.day - right.day;
+};
+
+const daysInMonth = (year: number, month: number) => new Date(Date.UTC(year, month, 0)).getUTCDate();
+
+const addCalendarMonths = (date: CalendarDateParts, months: number): CalendarDateParts => {
+  const monthIndex = date.month - 1 + months;
+  const year = date.year + Math.floor(monthIndex / 12);
+  const month = ((monthIndex % 12) + 12) % 12 + 1;
+  const day = Math.min(date.day, daysInMonth(year, month));
+  return { year, month, day };
+};
+
+const calendarDateToUtcDay = (date: CalendarDateParts) => Date.UTC(date.year, date.month - 1, date.day) / MS_PER_DAY;
+
+const diffCalendarAge = (birthday: Date | string, target: Date | string) => {
+  const birth = getCalendarDateParts(birthday);
+  const end = getCalendarDateParts(target);
+  if (!birth || !end || compareCalendarDate(end, birth) < 0) {
+    return { years: 0, months: 0, days: 0 };
   }
 
-  if (months < 0) {
-    years -= 1;
-    months += 12;
+  let totalMonths = (end.year - birth.year) * 12 + end.month - birth.month;
+  if (compareCalendarDate(addCalendarMonths(birth, totalMonths), end) > 0) {
+    totalMonths -= 1;
   }
+
+  const anchor = addCalendarMonths(birth, Math.max(totalMonths, 0));
+  return {
+    years: Math.floor(Math.max(totalMonths, 0) / 12),
+    months: Math.max(totalMonths, 0) % 12,
+    days: Math.max(0, calendarDateToUtcDay(end) - calendarDateToUtcDay(anchor)),
+  };
+};
+
+export function ageDisplay(birthday: Date, today = new Date()): string {
+  const { years, months, days } = diffCalendarAge(birthday, today);
 
   const parts: string[] = [];
   if (years > 0) parts.push(`${years}岁`);
   if (months > 0 || years > 0) parts.push(`${months}月`);
-  parts.push(`${Math.max(days, 0)}天`);
+  parts.push(`${days}天`);
   return parts.join('');
 }
 

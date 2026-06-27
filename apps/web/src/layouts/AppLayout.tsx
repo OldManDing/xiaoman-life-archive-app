@@ -82,7 +82,7 @@ const AppUpdateNotice = ({ bottomOffset }: { bottomOffset: string }) => {
           padding: '20px',
         }}
       >
-        <section style={{ width: '100%', maxWidth: '390px', borderRadius: '8px', border: '1px solid var(--nl-border-strong)', background: 'var(--nl-glass-strong)', padding: '18px', display: 'grid', gap: '12px', boxShadow: 'var(--nl-shadow-float)', WebkitBackdropFilter: 'blur(18px) saturate(1.08)', backdropFilter: 'blur(18px) saturate(1.08)' }}>
+        <section style={{ width: '100%', maxWidth: '390px', borderRadius: '8px', border: '1px solid var(--nl-border-strong)', background: 'var(--nl-dialog-bg)', padding: '18px', display: 'grid', gap: '12px', boxShadow: 'var(--nl-dialog-shadow)' }}>
           <div style={{ display: 'grid', gap: '5px' }}>
             <strong style={{ color: 'var(--nl-ink)', fontSize: '17px', fontWeight: 780 }}>需要更新</strong>
             <span style={{ color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 600 }}>最新版本 {update.latest_version}（构建 {update.latest_build_number}）</span>
@@ -108,11 +108,9 @@ const AppUpdateNotice = ({ bottomOffset }: { bottomOffset: string }) => {
         zIndex: 30,
         borderRadius: '8px',
         border: '1px solid var(--nl-border-strong)',
-        background: 'var(--nl-glass-strong)',
+        background: 'var(--nl-dialog-bg)',
         padding: '14px',
-        boxShadow: 'var(--nl-shadow-float)',
-        WebkitBackdropFilter: 'blur(18px) saturate(1.08)',
-        backdropFilter: 'blur(18px) saturate(1.08)',
+        boxShadow: 'var(--nl-dialog-shadow)',
         display: 'grid',
         gap: '10px',
       }}

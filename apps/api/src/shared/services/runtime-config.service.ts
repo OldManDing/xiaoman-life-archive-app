@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 
 import { PrismaService } from '../../prisma/prisma.service';
-import { AiProviderName, getAiProviderName } from '../env-config';
+import { AiProviderName, getAiProviderName, isStrictEnvironment } from '../env-config';
+import { decryptSystemConfigSecret } from '../system-config-secret';
 
 const AI_CONFIG_KEYS = ['ai_provider', 'ai_api_key', 'ai_base_url', 'ai_model', 'ai_timeout_ms', 'ai_daily_limit_per_user'];
 const AI_PROVIDER_VALUES = new Set<AiProviderName>(['mock', 'openai', 'openai-compatible']);
@@ -44,16 +45,16 @@ export class RuntimeConfigService {
       select: { value: true },
     });
 
-    return normalizeAiProviderName(row?.value ?? null) ?? getAiProviderName();
+    return this.resolveAiProvider(normalizeAiProviderName(row?.value ?? null));
   }
 
   async getAiConfig(): Promise<RuntimeAiConfig> {
     const values = await this.getSystemConfigValues(AI_CONFIG_KEYS);
-    const provider = normalizeAiProviderName(values.get('ai_provider') ?? null) ?? getAiProviderName();
+    const provider = this.resolveAiProvider(normalizeAiProviderName(values.get('ai_provider') ?? null));
 
     return {
       provider,
-      apiKey: values.get('ai_api_key')?.trim() || readEnvValue('AI_API_KEY'),
+      apiKey: decryptSystemConfigSecret(values.get('ai_api_key'))?.trim() || readEnvValue('AI_API_KEY'),
       baseUrl: values.get('ai_base_url')?.trim() || readEnvValue('AI_BASE_URL'),
       model: values.get('ai_model')?.trim() || readEnvValue('AI_MODEL'),
       timeoutMs: readPositiveInteger(values.get('ai_timeout_ms')?.trim() || readEnvValue('AI_TIMEOUT_MS'), DEFAULT_AI_TIMEOUT_MS),
@@ -76,5 +77,16 @@ export class RuntimeConfigService {
     });
 
     return new Map(rows.map((row) => [row.configKey, row.value]));
+  }
+
+  private resolveAiProvider(configuredProvider: AiProviderName | null): AiProviderName {
+    const envProvider = getAiProviderName();
+    const provider = configuredProvider ?? envProvider;
+    if (isStrictEnvironment() && provider === 'mock') {
+      if (envProvider !== 'mock') return envProvider;
+      throw new Error('AI provider mock is not allowed outside local/test environments');
+    }
+
+    return provider;
   }
 }

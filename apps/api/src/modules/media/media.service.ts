@@ -51,6 +51,13 @@ const resolveUploadMimeType = (dto: Pick<CreateUploadTokenDto, 'file_name' | 'mi
   return mimeType;
 };
 
+const isCompatibleStoredContentType = (expected: string | null | undefined, actual: string | null) => {
+  if (!expected || !actual) return true;
+  return normalizeMimeType(expected) === normalizeMimeType(actual);
+};
+
+const uploadSessionTtlSeconds = () => Number(process.env.MEDIA_UPLOAD_SESSION_TTL_SECONDS ?? 3600);
+
 @Injectable()
 export class MediaService {
   constructor(
@@ -97,6 +104,7 @@ export class MediaService {
         mimeType,
         sizeBytes: BigInt(dto.size_bytes),
         status: MEDIA_STATUS_UPLOADING,
+        uploadSessionExpiresAt: new Date(now.getTime() + uploadSessionTtlSeconds() * 1000),
       },
     });
 
@@ -141,15 +149,31 @@ export class MediaService {
       throw new ConflictException('媒体状态不允许确认');
     }
 
-    let uploaded = false;
+    let uploaded: Awaited<ReturnType<StorageService['headObject']>>;
     try {
-      uploaded = await this.storageService.objectExists(media.objectKey);
+      uploaded = await this.storageService.headObject(media.objectKey);
     } catch (_error) {
       throw new ServiceUnavailableException('媒体存储暂时不可用，请稍后重试');
     }
 
-    if (!uploaded) {
+    if (!uploaded.exists) {
       throw new BadRequestException('媒体文件尚未上传完成，请上传成功后再确认');
+    }
+
+    if (typeof uploaded.content_length === 'number' && media.sizeBytes && uploaded.content_length !== Number(media.sizeBytes)) {
+      throw new BadRequestException('媒体文件大小与上传凭证不一致，请重新上传');
+    }
+
+    if (!isCompatibleStoredContentType(media.mimeType, uploaded.content_type)) {
+      throw new BadRequestException('媒体文件格式与上传凭证不一致，请重新上传');
+    }
+
+    if (media.mediaType === MediaType.image && (!dto.width || !dto.height)) {
+      throw new BadRequestException('图片需要提供宽高信息');
+    }
+
+    if (media.mediaType === MediaType.video && typeof dto.duration_seconds !== 'number') {
+      throw new BadRequestException('视频需要提供时长信息');
     }
 
     const updated = await this.prisma.recordMedia.update({

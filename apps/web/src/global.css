@@ -12,6 +12,8 @@
   --nl-glass-surface: rgba(255, 253, 249, 0.88);
   --nl-glass-strong: rgba(255, 254, 251, 0.98);
   --nl-glass-soft: rgba(255, 255, 253, 0.76);
+  --nl-dialog-bg: #fffaf2;
+  --nl-popover-bg: #fffaf2;
   --nl-glass-accent: #70533a;
   --nl-glass-border: rgba(89, 64, 43, 0.075);
   --nl-glass-highlight: rgba(255, 255, 255, 0.7);
@@ -38,7 +40,7 @@
   --nl-on-dark-muted: rgba(255, 255, 255, 0.88);
   --nl-on-dark-soft: rgba(255, 255, 255, 0.3);
   --nl-on-dark-faint: rgba(255, 255, 255, 0.04);
-  --nl-overlay-scrim: rgba(18, 14, 10, 0.54);
+  --nl-overlay-scrim: rgba(18, 14, 10, 0.62);
   --nl-media-scrim: rgba(16, 17, 15, 0.66);
   --nl-media-overlay-bg: rgba(17, 18, 16, 0.94);
   --nl-media-black: #000000;
@@ -75,6 +77,7 @@
   --nl-shadow-sm: 0 12px 28px rgba(var(--nl-shadow-rgb), 0.052), inset 0 1px 0 rgba(255, 255, 255, 0.48);
   --nl-shadow-md: 0 20px 48px rgba(var(--nl-shadow-rgb), 0.075), inset 0 1px 0 rgba(255, 255, 255, 0.54);
   --nl-shadow-float: 0 30px 72px rgba(var(--nl-shadow-rgb), 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  --nl-dialog-shadow: 0 34px 86px rgba(var(--nl-shadow-rgb), 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.78);
   --nl-font-display: "Source Han Serif SC", "Noto Serif CJK SC", "Songti SC", "STSong", "SimSun", serif;
   --nl-font-sans: "HarmonyOS Sans SC", "MiSans", "PingFang SC", "Source Han Sans SC", "Microsoft YaHei", "Noto Sans CJK SC", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color-scheme: light;
@@ -228,6 +231,29 @@ button:not(:disabled):active {
   transform: translateY(1px) scale(0.985);
 }
 
+.nl-media-interaction,
+.nl-media-interaction * {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nl-media-interaction {
+  outline: none;
+  user-select: none;
+}
+
+button.nl-media-interaction:not(:disabled):active,
+.nl-media-interaction:active,
+.nl-media-interaction:focus,
+.nl-media-interaction:focus-visible {
+  transform: var(--nl-media-active-transform, none);
+  outline: none !important;
+}
+
+.nl-media-interaction::after {
+  display: none !important;
+  opacity: 0 !important;
+}
+
 @media (hover: hover) {
   button:not(:disabled):hover,
   a:hover {
@@ -236,6 +262,11 @@ button:not(:disabled):active {
 
   button:not(:disabled):hover {
     box-shadow: var(--nl-shadow-sm);
+  }
+
+  button.nl-media-interaction:not(:disabled):hover,
+  .nl-media-interaction:hover {
+    filter: none !important;
   }
 }
 
