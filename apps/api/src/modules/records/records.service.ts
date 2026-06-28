@@ -166,7 +166,11 @@ export class RecordsService {
     const where: Prisma.RecordWhereInput = {
       childId: child.id,
       deletedAt: null,
-      ...(dto.status ? { status: dto.status === 'draft' ? RECORD_STATUS_DRAFT : RECORD_STATUS_PUBLISHED } : {}),
+      ...(dto.status === 'draft'
+        ? { status: RECORD_STATUS_DRAFT, creatorUserId: userId }
+        : dto.status === 'published'
+          ? { status: RECORD_STATUS_PUBLISHED }
+          : { OR: [{ status: RECORD_STATUS_PUBLISHED }, { status: RECORD_STATUS_DRAFT, creatorUserId: userId }] }),
       ...(dto.record_type ? { recordType: dto.record_type as never } : {}),
       ...(dto.start_time || dto.end_time
         ? {

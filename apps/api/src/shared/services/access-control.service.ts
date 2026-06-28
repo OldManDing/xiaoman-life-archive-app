@@ -6,7 +6,7 @@ import {
 import { FamilyMemberRole } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
-import { FAMILY_MEMBER_ACTIVE_STATUS, MEDIA_STATUS_READY } from '../constants';
+import { FAMILY_MEMBER_ACTIVE_STATUS, MEDIA_STATUS_READY, RECORD_STATUS_DRAFT } from '../constants';
 
 @Injectable()
 export class AccessControlService {
@@ -104,6 +104,10 @@ export class AccessControlService {
     });
 
     if (!membership) {
+      throw new ForbiddenException('无权限访问该记录');
+    }
+
+    if (record.status === RECORD_STATUS_DRAFT && record.creatorUserId !== userId) {
       throw new ForbiddenException('无权限访问该记录');
     }
 
