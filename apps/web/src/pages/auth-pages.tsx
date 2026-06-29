@@ -271,9 +271,9 @@ const welcomePosters = [
     label: '成长时间线',
   },
   {
-    src: '/posters/welcome-ai-organize.png',
-    alt: '年轮智能整理介绍海报',
-    label: '智能整理',
+    src: '/posters/welcome-media-archive.png',
+    alt: '年轮影像归档介绍海报',
+    label: '影像归档',
   },
   {
     src: '/posters/welcome-family-notice.png',

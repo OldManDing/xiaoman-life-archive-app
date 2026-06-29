@@ -724,7 +724,7 @@ describe('App', () => {
         reason: '年付套餐开通',
       });
     });
-    expect(await screen.findByText('已将 测试用户 的套餐权益调整为 AI 增强会员。')).toBeInTheDocument();
+    expect(await screen.findByText('已将 测试用户 的套餐权益调整为 增强整理会员。')).toBeInTheDocument();
   });
 
   it('generates a registration invite from the admin invite page', async () => {

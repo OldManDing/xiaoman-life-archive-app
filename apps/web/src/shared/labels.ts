@@ -8,7 +8,7 @@ export const membershipTypeLabel = (value: string | null | undefined) =>
     basic: '基础账号',
     free: '基础账号',
     family_member: '家庭协作',
-    ai_plus: 'AI 增强权限',
+    ai_plus: '增强整理权限',
     premium: '高级权限',
     family: '家庭协作',
   });

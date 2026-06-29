@@ -16,7 +16,7 @@ export const membershipTypeLabel = (value: string | null | undefined) =>
   fallbackLabel(value, {
     free: '基础会员',
     family_member: '家庭会员',
-    ai_plus: 'AI 增强会员',
+    ai_plus: '增强整理会员',
   });
 
 export const userStatusLabel = (value: string | null | undefined) =>

@@ -633,7 +633,7 @@ const useMembershipDialog = () => {
           >
             <option value="free">基础会员</option>
             <option value="family_member">家庭会员</option>
-            <option value="ai_plus">AI 增强会员</option>
+            <option value="ai_plus">增强整理会员</option>
           </AdminSelect>
         </label>
         <label className="admin-modal-field">

@@ -278,7 +278,7 @@ describe('App Shell', () => {
 
     expect(await screen.findByRole('button', { name: '开始使用' })).toBeDefined();
     expect(screen.getByAltText('年轮成长时间线介绍海报').getAttribute('src')).toBe('/posters/welcome-growth-timeline.png');
-    expect(screen.getByAltText('年轮智能整理介绍海报').getAttribute('src')).toBe('/posters/welcome-ai-organize.png');
+    expect(screen.getByAltText('年轮影像归档介绍海报').getAttribute('src')).toBe('/posters/welcome-media-archive.png');
     expect(screen.getByAltText('年轮家庭协作介绍海报').getAttribute('src')).toBe('/posters/welcome-family-notice.png');
     expect(window.location.pathname).toBe('/welcome');
 
@@ -1387,8 +1387,8 @@ describe('App Shell', () => {
     render(<App />);
 
     expect(await screen.findByPlaceholderText('标题')).toBeDefined();
-    expect(screen.queryByRole('button', { name: '智能整理建议' })).toBeNull();
-    expect(screen.queryByText('已启用 AI 整理权限，可生成标题、摘要和标签建议；发布前内容始终由你确认。')).toBeNull();
+    expect(screen.queryByRole('button', { name: '整理建议' })).toBeNull();
+    expect(screen.queryByText('整理建议仅作参考，失败不影响记录。')).toBeNull();
     expect(screen.queryByRole('button', { name: /可见范围/ })).toBeNull();
     expect(screen.queryByText('家庭成员可见')).toBeNull();
   });
@@ -1406,7 +1406,7 @@ describe('App Shell', () => {
     fireEvent.change(screen.getByPlaceholderText('正文'), {
       target: { value: '今天第一次主动把玩具放回盒子里。' },
     });
-    fireEvent.click(screen.getByRole('button', { name: '智能整理建议' }));
+    fireEvent.click(screen.getByRole('button', { name: '整理建议' }));
 
     expect(await screen.findByText('整理建议暂时不可用，请手动填写内容后继续。')).toBeDefined();
     expect(screen.queryByText(/HTTP 403|API Key|所属分组/)).toBeNull();
@@ -1952,7 +1952,7 @@ describe('App Shell', () => {
     render(<App />);
 
     expect(await screen.findByRole('heading', { name: '未命名记录' })).toBeDefined();
-    expect(screen.queryByText('智能整理')).toBeNull();
+    expect(screen.queryByText('整理建议')).toBeNull();
     expect(screen.queryByText('建议标题：第一次主动整理玩具')).toBeNull();
   });
 

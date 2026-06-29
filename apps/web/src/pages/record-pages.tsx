@@ -68,14 +68,14 @@ const hasAiPlusAccess = (user: { membership_type?: string; membership_expire_at?
   return Number.isFinite(expireAt) && expireAt > Date.now();
 };
 
-const AI_UNAVAILABLE_MESSAGE = '智能整理暂时不可用，请手动填写标题、摘要或标签后继续。';
+const AI_UNAVAILABLE_MESSAGE = '整理建议暂时不可用，请手动填写内容后继续。';
 const AI_ERROR_DETAIL_PATTERN = /AI\s*服务调用失败|HTTP\s*\d+|key|token|secret|provider|Forbidden|InvalidEndpoint|NotFound|所属分组|completions/i;
 
 const normalizeAiErrorMessage = (message: string | null | undefined, fallback = AI_UNAVAILABLE_MESSAGE) => {
   const normalized = message?.trim();
   if (!normalized) return fallback;
   if (AI_ERROR_DETAIL_PATTERN.test(normalized)) return fallback;
-  if (normalized.includes('智能整理暂时不可用')) return fallback;
+  if (normalized.includes('智能整理暂时不可用') || normalized.includes('整理建议暂时不可用')) return fallback;
   return normalized;
 };
 
@@ -1821,7 +1821,7 @@ const RecordForm = ({
               {canUseAi ? (
                 <button
                   type="button"
-                  aria-label="智能整理建议"
+                  aria-label="整理建议"
                   onClick={() => void generateAiPreview()}
                   disabled={aiPreviewLoading}
                   style={{
@@ -1866,7 +1866,7 @@ const RecordForm = ({
             />
               {canUseAi ? (
                 <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.58, fontSize: '11.5px' }}>
-                  AI 仅提供标题、摘要和标签建议。
+                  整理建议仅作参考，失败不影响记录。
                 </p>
               ) : null}
               {canUseAi && (aiPreviewSummary || aiPreviewTags.length) ? (
@@ -2252,7 +2252,7 @@ export const ViewRecordPage = () => {
   ) => {
     if (!data || !params.record_no) return;
     if (!canUseAi) {
-      setAiError('当前账号暂未启用 AI 整理权限');
+      setAiError('当前账号暂未启用整理建议权限');
       return;
     }
     setAiLoading(true);
@@ -2402,11 +2402,11 @@ export const ViewRecordPage = () => {
                     <Sparkles size={15} strokeWidth={2.2} />
                   </span>
                   <div style={{ minWidth: 0, display: 'grid', gap: '5px' }}>
-                    <strong style={{ color: 'var(--nl-ink)', fontSize: '13px', fontWeight: 600 }}>智能整理</strong>
+                    <strong style={{ color: 'var(--nl-ink)', fontSize: '13px', fontWeight: 600 }}>整理建议</strong>
                     <p style={{ margin: 0, color: 'var(--nl-muted-strong)', fontSize: '13px', lineHeight: 1.62 }}>
                       {data.ai_summary ?? (aiJobProcessing ? `${aiActionLabel}正在处理中，请稍候…` : generatedTitle ? '标题建议已生成。' : '当前还没有整理摘要。')}
                     </p>
-                    <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.6 }}>AI 仅作整理建议，失败不影响记录。</p>
+                    <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.6 }}>建议内容仅作参考，失败不影响记录。</p>
                     {generatedTitle ? (
                       <p style={{ margin: 0, color: 'var(--nl-ink)', fontSize: '13px', lineHeight: 1.6, fontWeight: 560 }}>
                         建议标题：{generatedTitle}

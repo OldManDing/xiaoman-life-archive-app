@@ -1328,7 +1328,7 @@ export const MembershipPage = () => {
   const [message, setMessage] = useState<string | null>(null);
   const membershipType = user?.membership_type ?? 'free';
   const hasEnhancedAccess = ['premium', 'family', 'family_member', 'ai_plus'].includes(membershipType);
-  const serviceBadge = hasEnhancedAccess ? (membershipType === 'ai_plus' ? 'AI 增强' : membershipType === 'premium' ? '高级权限' : '家庭协作') : '基础账号';
+  const serviceBadge = hasEnhancedAccess ? (membershipType === 'ai_plus' ? '增强整理' : membershipType === 'premium' ? '高级权限' : '家庭协作') : '基础账号';
   const serviceStatusText = '服务状态仅反映当前账号配置，具体能力以页面实际可用为准。';
   const membershipMessageIsError = message ? /失败|无法|暂时|错误/.test(message) : false;
 
