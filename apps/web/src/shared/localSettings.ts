@@ -3,11 +3,17 @@ const STORAGE_KEY = 'xiaoman-web-local-settings';
 export interface LocalSettings {
   hideMobileMask: boolean;
   autoRefreshHome: boolean;
+  notificationPushEnabled: boolean;
+  notificationFamilyEnabled: boolean;
+  notificationUpdateEnabled: boolean;
 }
 
 export const defaultLocalSettings: LocalSettings = {
   hideMobileMask: false,
   autoRefreshHome: true,
+  notificationPushEnabled: true,
+  notificationFamilyEnabled: true,
+  notificationUpdateEnabled: true,
 };
 
 export interface UserPreferenceSnapshot {
@@ -21,6 +27,7 @@ export const localSettingsToPreferences = (settings: LocalSettings) => ({
 });
 
 export const preferencesToLocalSettings = (preferences: UserPreferenceSnapshot): LocalSettings => ({
+  ...defaultLocalSettings,
   hideMobileMask:
     typeof preferences.allow_mobile_search === 'boolean'
       ? !preferences.allow_mobile_search

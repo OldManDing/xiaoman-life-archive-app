@@ -1,13 +1,13 @@
 ﻿import { useEffect, useRef, useState, type CSSProperties, type ChangeEvent, type FocusEvent, type FormEvent, type KeyboardEvent, type RefObject } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Calendar, Camera, ChevronLeft } from 'lucide-react';
+import { Camera, ChevronLeft } from 'lucide-react';
 
 import { useAuth } from '../shared/AuthContext';
 import { BrandBootMotion } from '../components/BrandBootMotion';
 import { webApi } from '../shared/api/webApi';
-import { createPersistableAvatarPreview } from '../shared/localMediaPreview';
+import { uploadChildAvatar } from '../shared/avatarUpload';
 import { isSupportedImageFile, withResolvedFileMimeType } from '../shared/mediaFiles';
-import { Field, PageShell, Panel, dateControlStyle, helperTextStyle, hiddenNativeDateInputStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle } from '../shared/ui';
+import { AppDateInput, Field, PageShell, Panel, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle } from '../shared/ui';
 import { markWelcomeIntroSeen } from '../shared/welcome';
 import { referenceAssets } from './reference-ui';
 import { rowStyle } from './shared';
@@ -171,8 +171,10 @@ const authHeroStyle: CSSProperties = {
 const authLogoStyle: CSSProperties = {
   width: '68px',
   height: '68px',
-  borderRadius: '8px',
-  boxShadow: '0 20px 42px rgba(var(--nl-shadow-rgb),0.28), inset 0 1px 0 var(--nl-inset-highlight)',
+  borderRadius: '22%',
+  boxSizing: 'border-box',
+  objectFit: 'contain',
+  boxShadow: '0 20px 42px rgba(var(--nl-shadow-rgb),0.18)',
 };
 
 const authTitleStyle: CSSProperties = {
@@ -200,13 +202,11 @@ const authBackButtonStyle: CSSProperties = {
 };
 
 const authPanelStyle: CSSProperties = {
-  padding: '18px 16px',
-  borderRadius: '8px',
-  border: '1px solid var(--nl-border-soft)',
-  background: 'linear-gradient(180deg, rgba(var(--nl-surface-strong-rgb),0.3), rgba(var(--nl-surface-rgb),0.1))',
-  boxShadow: '0 18px 46px rgba(var(--nl-shadow-rgb),0.14), inset 0 1px 0 var(--nl-inset-highlight)',
-  WebkitBackdropFilter: 'blur(16px) saturate(1.02)',
-  backdropFilter: 'blur(16px) saturate(1.02)',
+  padding: '4px 2px 0',
+  borderRadius: 0,
+  border: 'none',
+  background: 'transparent',
+  boxShadow: 'none',
 };
 
 const authFormStyle: CSSProperties = {
@@ -255,7 +255,7 @@ const authAgreementTextStyle: CSSProperties = {
 
 const disabledSubmitButtonStyle: CSSProperties = {
   ...primaryButtonStyle,
-  background: 'linear-gradient(180deg, rgba(var(--nl-surface-strong-rgb),0.64), rgba(var(--nl-surface-rgb),0.42))',
+  background: 'rgba(var(--nl-surface-strong-rgb),0.44)',
   color: 'var(--nl-muted)',
   boxShadow: 'none',
   cursor: 'not-allowed',
@@ -678,6 +678,7 @@ export const OnboardingChildPage = () => {
   });
   const [submitting, setSubmitting] = useState(false);
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreviewFailed, setAvatarPreviewFailed] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const childAvatarPreviewSrc = avatarPreviewUrl ?? form.avatar_url;
@@ -694,7 +695,7 @@ export const OnboardingChildPage = () => {
     };
   }, [avatarPreviewUrl]);
 
-  const onAvatarChange = async (event: ChangeEvent<HTMLInputElement>) => {
+  const onAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
@@ -706,15 +707,9 @@ export const OnboardingChildPage = () => {
     const uploadFile = withResolvedFileMimeType(file);
     const previewUrl = typeof URL.createObjectURL === 'function' ? URL.createObjectURL(uploadFile) : null;
     setAvatarPreviewUrl(previewUrl);
+    setAvatarFile(uploadFile);
     setAvatarPreviewFailed(false);
-    try {
-      const avatarUrl = await createPersistableAvatarPreview(uploadFile);
-      if (avatarUrl) setForm((current) => ({ ...current, avatar_url: avatarUrl }));
-      setError(null);
-    } catch {
-      setAvatarPreviewUrl(null);
-      setError('头像读取失败，请重新选择图片');
-    }
+    setError(null);
   };
 
   const onSubmit = async (event: FormEvent) => {
@@ -723,14 +718,23 @@ export const OnboardingChildPage = () => {
     setError(null);
     try {
       const child = await webApi.createChild(form);
+      let completedChild = child;
+      if (avatarFile) {
+        try {
+          const avatarUrl = await uploadChildAvatar(child.child_no, avatarFile, avatarPreviewUrl);
+          completedChild = await webApi.updateChild(child.child_no, { avatar_url: avatarUrl });
+        } catch (avatarError) {
+          console.warn('Child created without avatar because avatar upload failed', avatarError);
+        }
+      }
       if (needsOnboarding) {
-        completeOnboarding(child);
+        completeOnboarding(completedChild);
         navigate('/home', { replace: true });
         return;
       }
 
       await refreshChildren();
-      setActiveChild(child);
+      setActiveChild(completedChild);
       navigate('/family/child', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : '建档失败，请稍后重试');
@@ -743,9 +747,9 @@ export const OnboardingChildPage = () => {
     <PageShell title={isAddingChild ? '添加宝宝档案' : '完善宝宝信息'} backTo={isAddingChild ? '/profile' : undefined}>
       <form onSubmit={onSubmit} style={{ ...rowStyle, gap: '22px' }}>
         <div style={{ display: 'grid', justifyItems: 'center', gap: '9px', paddingTop: '2px' }}>
-          <label style={{ width: '96px', height: '96px', borderRadius: '8px', border: '1px solid var(--nl-border-muted)', background: 'linear-gradient(180deg, rgba(var(--nl-surface-strong-rgb),0.42), rgba(var(--nl-surface-rgb),0.18))', display: 'grid', placeItems: 'center', color: 'var(--nl-muted)', position: 'relative', cursor: 'pointer', overflow: 'hidden', boxShadow: '0 14px 30px rgba(var(--nl-shadow-rgb),0.18)' }}>
+          <label style={{ width: '96px', height: '96px', borderRadius: '8px', border: '1px solid var(--nl-border-muted)', background: 'rgba(var(--nl-surface-strong-rgb),0.3)', display: 'grid', placeItems: 'center', color: 'var(--nl-muted)', position: 'relative', cursor: 'pointer', overflow: 'hidden', boxShadow: '0 14px 30px rgba(var(--nl-shadow-rgb),0.18)' }}>
             {childAvatarPreviewSrc && !avatarPreviewFailed ? <img src={childAvatarPreviewSrc} alt="宝宝头像预览" decoding="async" onError={() => setAvatarPreviewFailed(true)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Camera size={34} strokeWidth={1.9} />}
-            <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" onChange={(event) => void onAvatarChange(event)} style={{ display: 'none' }} />
+            <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" onChange={onAvatarChange} style={{ display: 'none' }} />
           </label>
         </div>
 
@@ -791,17 +795,13 @@ export const OnboardingChildPage = () => {
             </div>
             <div style={{ padding: '16px' }}>
             <Field label="出生日期">
-              <span style={{ ...dateControlStyle, color: form.birthday ? 'var(--nl-ink)' : 'var(--nl-muted)', fontSize: '14px' }}>
-                <input
-                  style={hiddenNativeDateInputStyle}
-                  type="date"
-                  aria-label="出生日期"
-                  value={form.birthday}
-                  onChange={(event) => setForm((current) => ({ ...current, birthday: event.target.value }))}
-                />
-                <span style={{ pointerEvents: 'none', flex: 1 }}>{form.birthday ? form.birthday.replace(/-/g, '/') : '年/月/日'}</span>
-                <Calendar size={17} color="var(--nl-muted-strong)" style={{ pointerEvents: 'none', opacity: 0.82 }} />
-              </span>
+              <AppDateInput
+                aria-label="出生日期"
+                value={form.birthday}
+                displayValue={form.birthday ? form.birthday.replace(/-/g, '/') : undefined}
+                placeholder="年/月/日"
+                onChange={(event) => setForm((current) => ({ ...current, birthday: event.target.value }))}
+              />
             </Field>
             </div>
           </div>

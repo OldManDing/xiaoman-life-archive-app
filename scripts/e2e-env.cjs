@@ -1,7 +1,10 @@
 const { existsSync, readFileSync } = require('node:fs');
 const { join } = require('node:path');
 
-const defaultDatabaseUrl = 'mysql://xiaoman:password@localhost:3307/xiaoman_archive';
+// Use an explicit IPv4 loopback for the Docker-published MySQL port. On some
+// Windows/Node combinations `localhost` can resolve to an address family that
+// accepts the TCP probe but causes Prisma's native engine to be disconnected.
+const defaultDatabaseUrl = 'mysql://xiaoman:password@127.0.0.1:3307/xiaoman_archive';
 
 function readLocalEnv() {
   const envPath = join(process.cwd(), '.env.local');
@@ -32,7 +35,7 @@ function readLocalEnv() {
 }
 
 const localEnv = readLocalEnv();
-const localDatabaseUrl = localEnv.DATABASE_URL ?? defaultDatabaseUrl;
+const localDatabaseUrl = process.env.E2E_DATABASE_URL ?? defaultDatabaseUrl;
 
 const apiPort = process.env.E2E_API_PORT ?? '3001';
 const webPort = process.env.E2E_WEB_PORT ?? '5176';
@@ -50,7 +53,7 @@ const apiEnv = {
   NODE_ENV: process.env.NODE_ENV ?? 'development',
   APP_PORT: apiPort,
   APP_BASE_URL: process.env.APP_BASE_URL ?? `http://127.0.0.1:${apiPort}`,
-  DATABASE_URL: process.env.DATABASE_URL ?? localDatabaseUrl,
+  DATABASE_URL: process.env.E2E_DATABASE_URL ?? process.env.DATABASE_URL ?? localDatabaseUrl,
   JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET ?? 'local_access_secret_for_e2e',
   JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET ?? 'local_refresh_secret_for_e2e',
   JWT_ACCESS_EXPIRES_IN: process.env.JWT_ACCESS_EXPIRES_IN ?? '2h',
@@ -60,7 +63,8 @@ const apiEnv = {
   SMS_MOCK_CODE: process.env.SMS_MOCK_CODE ?? '123456',
   SMS_SEND_COOLDOWN_SECONDS: process.env.SMS_SEND_COOLDOWN_SECONDS ?? '0',
   SMS_DAILY_LIMIT_PER_MOBILE: process.env.SMS_DAILY_LIMIT_PER_MOBILE ?? '100',
-  STORAGE_PROVIDER: process.env.STORAGE_PROVIDER ?? 'mock',
+  // E2E must be deterministic by default. Opt into a real object store explicitly.
+  STORAGE_PROVIDER: process.env.E2E_STORAGE_PROVIDER ?? 'mock',
   AI_PROVIDER: process.env.AI_PROVIDER ?? 'mock',
   MAP_PROVIDER: process.env.MAP_PROVIDER ?? 'mock',
   AI_DAILY_LIMIT_PER_USER: process.env.AI_DAILY_LIMIT_PER_USER ?? '20',

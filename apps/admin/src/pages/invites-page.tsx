@@ -143,7 +143,7 @@ export const InvitesPage = () => {
         <form onSubmit={onCreateInvite} style={{ display: 'grid', gap: '14px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
             <div>
-              <strong style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#16211f', fontSize: '16px' }}>
+        <strong style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#221b12', fontSize: '16px' }}>
                 <KeyRound size={18} />
                 生成注册邀请码
               </strong>
@@ -155,11 +155,11 @@ export const InvitesPage = () => {
             </div>
           </div>
           <div className="admin-search-controls" style={{ display: 'grid', gridTemplateColumns: 'minmax(220px, 320px) minmax(160px, 220px) auto', gap: '10px', alignItems: 'end' }}>
-            <label style={{ display: 'grid', gap: '6px', color: '#263532', fontSize: '13px', fontWeight: 700 }}>
+        <label style={{ display: 'grid', gap: '6px', color: '#3d3323', fontSize: '13px', fontWeight: 700 }}>
               绑定手机号
               <input style={inputStyle} value={mobile} onChange={(event) => setMobile(event.target.value)} placeholder="可选，例如 13800000000" />
             </label>
-            <label style={{ display: 'grid', gap: '6px', color: '#263532', fontSize: '13px', fontWeight: 700 }}>
+        <label style={{ display: 'grid', gap: '6px', color: '#3d3323', fontSize: '13px', fontWeight: 700 }}>
               有效期（小时）
               <input style={inputStyle} type="number" min={1} max={720} value={expiresInHours} onChange={(event) => setExpiresInHours(Number(event.target.value) || 168)} />
             </label>

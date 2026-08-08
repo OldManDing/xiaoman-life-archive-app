@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 
 import { expect, test, type Page } from '@playwright/test';
 
-import { adminBaseURL, expectNoEnglishSeedCopy, expectNoTechnicalTestCopy, expectNoUnfinishedCopy, loginAdmin, loginWeb, webBaseURL } from './helpers';
+import { adminBaseURL, expectNoEnglishSeedCopy, expectNoTechnicalTestCopy, expectNoUnfinishedCopy, loginAdmin, loginWeb, openAdminMore, webBaseURL } from './helpers';
 
 const visualDir = resolve(process.cwd(), 'artifacts', 'visual-review-current');
 
@@ -15,13 +15,29 @@ async function expectNoPageOverflow(page: Page) {
 async function saveScreenshot(page: Page, name: string, fullPage = true) {
   await mkdir(visualDir, { recursive: true });
   await expect(page.getByText(/\?{3,}/)).toHaveCount(0);
-  await page.screenshot({ path: resolve(visualDir, name), fullPage });
+  const screenshotPath = resolve(visualDir, name);
+  const { rm } = await import('node:fs/promises');
+  await rm(screenshotPath, { force: true }).catch(() => undefined);
+  try {
+    await page.screenshot({ path: screenshotPath, fullPage });
+  } catch {
+    await page.waitForTimeout(300);
+    await rm(screenshotPath, { force: true }).catch(() => undefined);
+    await page.screenshot({ path: screenshotPath, fullPage });
+  }
 }
 
 test.describe('Visual review smoke', () => {
   test('captures App key screens without localized-copy regressions', async ({ page }) => {
     test.setTimeout(90_000);
     await page.setViewportSize({ width: 390, height: 844 });
+
+    await page.goto(`${webBaseURL}/welcome`);
+    await expect(page.getByRole('button', { name: '开始使用' })).toBeVisible();
+    await expect(page.getByRole('img', { name: '年轮成长时间线介绍海报' })).toBeVisible();
+    await expectNoPageOverflow(page);
+    await saveScreenshot(page, 'app-welcome-mobile.png');
+
     await page.goto(`${webBaseURL}/auth/login`);
 
     await expect(page.getByRole('heading', { name: '登录注册' })).toBeVisible();
@@ -39,7 +55,11 @@ test.describe('Visual review smoke', () => {
     await saveScreenshot(page, 'app-login-mobile.png');
 
     await loginWeb(page);
-    await expect(page.getByText('学会说谢谢').first()).toBeVisible();
+    await expect(page.getByText('成长封面')).toBeVisible();
+    await expect(page.getByText('正在同步')).toHaveCount(0);
+    await expect(page.getByText('暂未同步')).toHaveCount(0);
+    await expect(page.getByText(/[1-9]\d* 条记录/).first()).toBeVisible();
+    await expect(page.locator('[data-photo-layout]').first()).not.toHaveAttribute('data-photo-layout', 'empty');
     await expectNoEnglishSeedCopy(page);
     await expectNoTechnicalTestCopy(page);
     await expectNoUnfinishedCopy(page);
@@ -59,8 +79,9 @@ test.describe('Visual review smoke', () => {
     await saveScreenshot(page, 'app-search-mobile.png');
 
     await page.goto(`${webBaseURL}/timeline`);
-    await expect(page.getByRole('heading', { name: '时间轴' })).toBeVisible();
-    await expect(page.getByText('学会说谢谢').first()).toBeVisible();
+    await expect(page.getByText('TIMELINE')).toBeVisible();
+    await expect(page.getByText(/的成长时间线$/)).toBeVisible();
+    await expect(page.getByText(/第一次自己吃饭|生活瞬间|最近照片/).first()).toBeVisible();
     await expectNoEnglishSeedCopy(page);
     await expectNoTechnicalTestCopy(page);
     await expectNoUnfinishedCopy(page);
@@ -95,6 +116,12 @@ test.describe('Visual review smoke', () => {
     await expect(page.getByText('保存')).toBeVisible();
     await expectNoPageOverflow(page);
     await saveScreenshot(page, 'app-family-child-mobile-long.png');
+    await page.getByLabel('生日').click();
+    await expect(page.getByRole('dialog', { name: '生日' })).toBeVisible();
+    await expectNoPageOverflow(page);
+    await saveScreenshot(page, 'app-date-picker-mobile.png', false);
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog', { name: '生日' })).toHaveCount(0);
 
     await page.goto(`${webBaseURL}/family/members`);
     await expect(page.getByRole('heading', { name: '家庭成员' })).toBeVisible();
@@ -111,12 +138,34 @@ test.describe('Visual review smoke', () => {
     await saveScreenshot(page, 'app-record-selects-mobile.png', true);
 
     await page.goto(`${webBaseURL}/record/r_demo_001`);
-    await expect(page.getByRole('heading', { name: '记录详情' })).toBeVisible();
+    await expect(page.getByTestId('record-primary-media-preview')).toBeVisible();
+    await expect(page.getByText('第一次自己吃饭', { exact: true })).toBeVisible();
     await expect(page.getByText('已发布')).toBeVisible();
     await expect(page.getByTestId('record-primary-media-preview')).toBeVisible();
     await expectNoPageOverflow(page);
     await saveScreenshot(page, 'app-record-detail-mobile.png');
     await saveScreenshot(page, 'app-record-detail-mobile-long.png', true);
+
+    await page.getByTestId('record-primary-media-preview').click();
+    const mediaDialog = page.getByRole('dialog', { name: '全屏照片预览' });
+    const mediaImage = mediaDialog.locator('img');
+    await expect(mediaDialog).toBeVisible();
+    await expect(page.getByRole('button', { name: '关闭全屏预览' })).toHaveCount(0);
+    await mediaImage.dblclick({ position: { x: 84, y: 120 } });
+    await expect(mediaImage).toHaveAttribute('data-zoomed', 'true');
+    const imageBox = await mediaImage.boundingBox();
+    expect(imageBox).not.toBeNull();
+    const panBefore = Number(await mediaImage.getAttribute('data-pan-x'));
+    await page.mouse.move(imageBox!.x + imageBox!.width / 2, imageBox!.y + imageBox!.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(imageBox!.x + imageBox!.width / 2 + 56, imageBox!.y + imageBox!.height / 2 + 24, { steps: 4 });
+    await page.mouse.up();
+    await expect.poll(async () => Number(await mediaImage.getAttribute('data-pan-x'))).not.toBe(panBefore);
+    await saveScreenshot(page, 'app-media-image-zoom-mobile.png', false);
+    await mediaImage.dblclick({ position: { x: 84, y: 120 } });
+    await expect(mediaImage).toHaveAttribute('data-zoomed', 'false');
+    await mediaImage.click();
+    await expect(mediaDialog).toHaveCount(0);
 
     await page.getByRole('button', { name: '编辑记录' }).click();
     await expect(page.getByText('编辑记录')).toBeVisible();
@@ -132,7 +181,7 @@ test.describe('Visual review smoke', () => {
     await saveScreenshot(page, 'app-help-select-mobile.png');
 
     await page.goto(`${webBaseURL}/profile`);
-    await expect(page.getByText('我的孩子')).toBeVisible();
+    await expect(page.getByRole('heading', { name: '我的档案' })).toBeVisible();
     await expect(page.getByText('月报与纪念册')).toHaveCount(0);
     await expect(page.getByText('导出与备份')).toHaveCount(0);
     await expect(page.getByText('服务状态')).toHaveCount(0);
@@ -149,6 +198,13 @@ test.describe('Visual review smoke', () => {
     await expectNoPageOverflow(page);
     await saveScreenshot(page, 'app-messages-mobile.png');
 
+    await page.goto(`${webBaseURL}/profile/notifications`);
+    await expect(page.getByRole('heading', { name: '通知管理' })).toBeVisible();
+    await expect(page.getByText('手机通知状态')).toBeVisible();
+    await expect(page.getByText('通知偏好')).toBeVisible();
+    await expectNoPageOverflow(page);
+    await saveScreenshot(page, 'app-notifications-mobile.png');
+
     await page.goto(`${webBaseURL}/profile/account`);
     await expect(page.getByRole('heading', { name: '个人资料' })).toBeVisible();
     await expect(page.getByText('保存资料')).toBeVisible();
@@ -164,7 +220,7 @@ test.describe('Visual review smoke', () => {
     for (const removedRoute of ['/profile/reports', '/profile/export', '/profile/membership']) {
       await page.goto(`${webBaseURL}${removedRoute}`);
       await expect(page).toHaveURL(/\/profile$/);
-      await expect(page.getByText('我的孩子')).toBeVisible();
+      await expect(page.getByRole('heading', { name: '我的档案' })).toBeVisible();
       await expect(page.getByText('月报与纪念册')).toHaveCount(0);
       await expect(page.getByText('导出与备份')).toHaveCount(0);
       await expect(page.getByText('服务状态')).toHaveCount(0);
@@ -202,6 +258,13 @@ test.describe('Visual review smoke', () => {
     await expectNoPageOverflow(page);
     await saveScreenshot(page, 'app-about-mobile.png');
 
+    await page.goto(`${webBaseURL}/profile/contact`);
+    await expect(page.getByRole('heading', { name: '联系我们' })).toBeVisible();
+    await expect(page.getByText('服务邮箱')).toBeVisible();
+    await expect(page.getByText('隐私与数据保护')).toBeVisible();
+    await expectNoPageOverflow(page);
+    await saveScreenshot(page, 'app-contact-mobile.png');
+
     await page.goto(`${webBaseURL}/error`);
     await expect(page.getByRole('heading', { name: '页面暂时无法打开' })).toBeVisible();
     await expectNoPageOverflow(page);
@@ -225,10 +288,12 @@ test.describe('Visual review smoke', () => {
     await expectNoPageOverflow(page);
     await saveScreenshot(page, 'admin-dashboard.png');
 
-    await page.getByRole('link', { name: '媒体库', exact: true }).click();
-    await page.getByPlaceholder('输入关键字筛选').fill('第一次自己吃饭');
+    await openAdminMore(page);
+    await page.getByRole('link', { name: '系统运维', exact: true }).click();
+    await page.getByRole('link', { name: '技术媒体库', exact: true }).click();
+    await page.getByPlaceholder('编号 / 文件 / 孩子 / 记录').fill('第一次自己吃饭');
     await page.getByRole('button', { name: '查询' }).click();
-    await expect(page.getByRole('heading', { name: '媒体列表' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: '媒体库' })).toBeVisible();
     await expect(page.getByRole('row', { name: /第一次自己吃饭/ })).toBeVisible();
     await expect(page.getByRole('button', { name: '查询', exact: true })).toBeVisible();
     await expectNoEnglishSeedCopy(page);
@@ -236,6 +301,7 @@ test.describe('Visual review smoke', () => {
     await expectNoPageOverflow(page);
     await saveScreenshot(page, 'admin-media.png');
 
+    await openAdminMore(page);
     await page.getByRole('link', { name: '审计日志', exact: true }).click();
     await expect(page.getByRole('heading', { name: '审计日志' })).toBeVisible();
     await expect(page.getByRole('combobox').first()).toBeVisible();
@@ -269,18 +335,21 @@ test.describe('Visual review smoke', () => {
     await loginAdmin(page);
 
     await expect(page.getByRole('heading', { name: '后台总览' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: '下一步去哪' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: '待处理', exact: true })).toBeVisible();
     await expectNoUnfinishedCopy(page);
     await expectNoPageOverflow(page);
     await saveScreenshot(page, 'admin-dashboard-mobile-long.png');
 
-    await page.getByRole('link', { name: '媒体库', exact: true }).click();
-    await expect(page.getByRole('heading', { name: '媒体列表' })).toBeVisible();
+    await openAdminMore(page);
+    await page.getByRole('link', { name: '系统运维', exact: true }).click();
+    await page.getByRole('link', { name: '技术媒体库', exact: true }).click();
+    await expect(page.getByRole('heading', { name: '媒体库' })).toBeVisible();
     await expect(page.getByRole('button', { name: '查询', exact: true })).toBeVisible();
     await expectNoUnfinishedCopy(page);
     await expectNoPageOverflow(page);
     await saveScreenshot(page, 'admin-media-mobile-long.png');
 
+    await openAdminMore(page);
     await page.getByRole('link', { name: '审计日志', exact: true }).click();
     await expect(page.getByRole('heading', { name: '审计日志' })).toBeVisible();
     await expect(page.getByRole('button', { name: '查询', exact: true })).toBeVisible();

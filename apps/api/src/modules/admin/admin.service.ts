@@ -62,10 +62,11 @@ import { AdminArchiveExportRequestListDto } from './dto/admin-archive-export-req
 import { AdminContentRiskListDto } from './dto/admin-content-risk-list.dto';
 import { AdminChangePasswordDto } from './dto/admin-change-password.dto';
 import { AdminCreateInviteDto } from './dto/admin-create-invite.dto';
-import { AdminListDto } from './dto/admin-list.dto';
+import { AdminListDto, AdminRecordListDto } from './dto/admin-list.dto';
 import { AdminAuditLogListDto } from './dto/admin-audit-log-list.dto';
 import { AdminLoginDto } from './dto/admin-login.dto';
 import { AdminMediaListDto } from './dto/admin-media-list.dto';
+import { AdminNotificationListDto } from './dto/admin-notification-list.dto';
 import { AdminResetUserPasswordDto } from './dto/admin-reset-user-password.dto';
 import { AdminSupportTicketListDto } from './dto/admin-support-ticket-list.dto';
 import { AdminUpdateArchiveExportRequestStatusDto } from './dto/admin-update-archive-export-request-status.dto';
@@ -135,6 +136,14 @@ type AdminContentRiskItem = {
   action_to: string;
   created_at: string;
 };
+type NotificationWithRelations = Prisma.UserNotificationGetPayload<{
+  include: {
+    user: true;
+    family: true;
+    actor: true;
+    deliveries: true;
+  };
+}>;
 type SystemConfigCategory = 'backup_recovery' | 'alerting' | 'ai_provider' | 'mobile_release';
 type SystemConfigValueType = 'number' | 'url' | 'datetime' | 'text' | 'secret' | 'select';
 type SystemConfigDefinition = {
@@ -1281,21 +1290,53 @@ export class AdminService {
     };
   }
 
-  async listRecords(admin: AuthenticatedAdmin, dto: AdminListDto, request: Request) {
+  async listRecords(admin: AuthenticatedAdmin, dto: AdminRecordListDto, request: Request) {
     const page = normalizePage(dto.page);
     const pageSize = normalizePageSize(dto.page_size);
-    const where = dto.keyword
-      ? {
-          deletedAt: null,
-          OR: [{ recordNo: { contains: dto.keyword } }, { title: { contains: dto.keyword } }, { contentText: { contains: dto.keyword } }],
-        }
-      : { deletedAt: null };
+    const keyword = dto.keyword?.trim();
+    const filter = dto.record_filter ?? 'all';
+    const and: Prisma.RecordWhereInput[] = [{ deletedAt: null }];
+
+    if (keyword) {
+      and.push({
+        OR: [
+          { recordNo: { contains: keyword } },
+          { title: { contains: keyword } },
+          { contentText: { contains: keyword } },
+          { child: { is: { OR: [{ childNo: { contains: keyword } }, { name: { contains: keyword } }] } } },
+          { creator: { is: { OR: [{ userNo: { contains: keyword } }, { nickname: { contains: keyword } }, { mobile: { contains: keyword } }] } } },
+        ],
+      });
+    }
+
+    if (filter === 'image' || filter === 'video' || filter === 'audio') {
+      and.push({ media: { some: { deletedAt: null, mediaType: filter as MediaType } } });
+    }
+
+    if (filter === 'media_exception') {
+      and.push({ media: { some: { deletedAt: null, status: { in: [MEDIA_STATUS_UPLOADING, MEDIA_STATUS_FAILED] } } } });
+    }
+
+    if (filter === 'pending') {
+      and.push({
+        OR: [
+          { status: RECORD_STATUS_DRAFT },
+          { media: { some: { deletedAt: null, status: { in: [MEDIA_STATUS_UPLOADING, MEDIA_STATUS_FAILED] } } } },
+        ],
+      });
+    }
+
+    if (filter === 'risk') {
+      and.push({ OR: contentRiskKeywordWhere });
+    }
+
+    const where: Prisma.RecordWhereInput = { AND: and };
 
     const [total, list] = await this.prisma.$transaction([
       this.prisma.record.count({ where }),
       this.prisma.record.findMany({
         where,
-        include: { child: true, creator: true },
+        include: { child: true, creator: true, media: { where: { deletedAt: null } } },
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * pageSize,
         take: pageSize,
@@ -1304,18 +1345,28 @@ export class AdminService {
 
     await this.logListAudit(admin, 'admin_list_records', request);
     return {
-      list: list.map((item) => ({
-        record_no: item.recordNo,
-        child_no: item.child.childNo,
-        child_name: item.child.name,
-        creator_user_no: item.creator.userNo,
-        creator_name: item.creator.nickname,
-        title: item.title,
-        record_type: item.recordType,
-        visibility_scope: item.visibilityScope,
-        status: statusToRecordLabel(item.status),
-        created_at: item.createdAt.toISOString(),
-      })),
+      list: list.map((item) => {
+        const mediaTypes = Array.from(new Set(item.media.map((media) => media.mediaType)));
+        const pendingMedia = item.media.filter((media) => media.status === MEDIA_STATUS_UPLOADING || media.status === MEDIA_STATUS_FAILED);
+        const hasRiskFlag = Boolean(this.detectContentRisk(`${item.title ?? ''} ${item.contentText ?? ''}`));
+        return {
+          record_no: item.recordNo,
+          child_no: item.child.childNo,
+          child_name: item.child.name,
+          creator_user_no: item.creator.userNo,
+          creator_name: item.creator.nickname,
+          title: item.title,
+          record_type: item.recordType,
+          visibility_scope: item.visibilityScope,
+          status: statusToRecordLabel(item.status),
+          media_count: item.media.length,
+          media_types: mediaTypes,
+          pending_media_count: pendingMedia.length,
+          has_media_exception: pendingMedia.length > 0,
+          has_risk_flag: hasRiskFlag,
+          created_at: item.createdAt.toISOString(),
+        };
+      }),
       page,
       page_size: pageSize,
       total,
@@ -1603,6 +1654,65 @@ export class AdminService {
     await this.logListAudit(admin, 'admin_list_content_risks', request);
     return {
       list: filtered.slice(start, start + pageSize),
+      page,
+      page_size: pageSize,
+      total,
+      has_more: page * pageSize < total,
+    };
+  }
+
+  async listNotifications(admin: AuthenticatedAdmin, dto: AdminNotificationListDto, request: Request) {
+    const page = normalizePage(dto.page);
+    const pageSize = normalizePageSize(dto.page_size);
+    const keyword = dto.keyword?.trim();
+    const createdAt: Prisma.DateTimeFilter = {};
+    if (dto.start_time) createdAt.gte = new Date(dto.start_time);
+    if (dto.end_time) createdAt.lte = new Date(dto.end_time);
+
+    const where: Prisma.UserNotificationWhereInput = {
+      deletedAt: null,
+      ...(dto.read_state === 'read' ? { readAt: { not: null } } : {}),
+      ...(dto.read_state === 'unread' ? { readAt: null } : {}),
+      ...(dto.notification_type ? { notificationType: dto.notification_type } : {}),
+      ...(dto.delivery_status ? { deliveries: { some: { status: dto.delivery_status } } } : {}),
+      ...(Object.keys(createdAt).length ? { createdAt } : {}),
+      ...(keyword
+        ? {
+            OR: [
+              { notificationNo: { contains: keyword } },
+              { notificationType: { contains: keyword } },
+              { title: { contains: keyword } },
+              { body: { contains: keyword } },
+              { targetNo: { contains: keyword } },
+              { user: { is: { OR: [{ userNo: { contains: keyword } }, { nickname: { contains: keyword } }, { mobile: { contains: keyword } }] } } },
+              { actor: { is: { OR: [{ userNo: { contains: keyword } }, { nickname: { contains: keyword } }, { mobile: { contains: keyword } }] } } },
+              { family: { is: { OR: [{ familyNo: { contains: keyword } }, { name: { contains: keyword } }] } } },
+            ],
+          }
+        : {}),
+    };
+
+    const [total, list] = await this.prisma.$transaction([
+      this.prisma.userNotification.count({ where }),
+      this.prisma.userNotification.findMany({
+        where,
+        include: {
+          user: true,
+          family: true,
+          actor: true,
+          deliveries: {
+            orderBy: { createdAt: 'desc' },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+    ]);
+
+    await this.logListAudit(admin, 'admin_list_notifications', request);
+    return {
+      list: list.map((item) => this.toNotificationItem(item)),
       page,
       page_size: pageSize,
       total,
@@ -2450,7 +2560,7 @@ export class AdminService {
       title: record.title,
       content_text: record.contentText,
       tags: record.tags.map((tag) => ({ tag_name: tag.tagName, source: tag.source })),
-      media_list: await Promise.all(record.media.map((item) => this.toMediaItem(item))),
+      media_list: await Promise.all(record.media.map((item) => this.toMediaItem(item, admin))),
       ai_jobs: record.aiJobs.map((job) => this.toAiJobItem(job)),
       event_time: record.eventTime.toISOString(),
       location_text: record.locationText,
@@ -2568,7 +2678,9 @@ export class AdminService {
     }
 
     const nextStatus = mediaStatusToNumber(dto.status);
-    if (nextStatus === MEDIA_STATUS_READY) {
+    // Mock media is intentionally represented without a real object-store object.
+    // Production-backed media must still pass the storage existence check before approval.
+    if (nextStatus === MEDIA_STATUS_READY && media.storageProvider !== 'mock') {
       const uploaded = await this.storageService.headObject(media.objectKey).catch(() => null);
       if (!uploaded?.exists) {
         throw new BadRequestException('媒体文件不存在，不能标记为可用');
@@ -3375,6 +3487,82 @@ export class AdminService {
     };
   }
 
+  private toNotificationItem(item: NotificationWithRelations) {
+    const deliverySummary = item.deliveries.reduce(
+      (summary, delivery) => {
+        summary.total += 1;
+        summary.by_status[delivery.status] = (summary.by_status[delivery.status] ?? 0) + 1;
+        if (!summary.latest || delivery.createdAt > summary.latest.created_at) {
+          summary.latest = {
+            channel: delivery.channel,
+            provider: delivery.provider,
+            status: delivery.status,
+            attempts: delivery.attempts,
+            last_error: delivery.lastError,
+            delivered_at: delivery.deliveredAt?.toISOString() ?? null,
+            created_at: delivery.createdAt,
+          };
+        }
+        return summary;
+      },
+      {
+        total: 0,
+        by_status: {} as Record<string, number>,
+        latest: null as null | {
+          channel: string;
+          provider: string | null;
+          status: string;
+          attempts: number;
+          last_error: string | null;
+          delivered_at: string | null;
+          created_at: Date;
+        },
+      },
+    );
+
+    return {
+      notification_no: item.notificationNo,
+      notification_type: item.notificationType,
+      title: item.title,
+      body: item.body,
+      user_no: item.user.userNo,
+      user_name: item.user.nickname,
+      user_mobile: item.user.mobile,
+      family_no: item.family.familyNo,
+      family_name: item.family.name,
+      actor_user_no: item.actor?.userNo ?? null,
+      actor_name: item.actor?.nickname ?? null,
+      target_type: item.targetType,
+      target_no: item.targetNo,
+      read_at: item.readAt?.toISOString() ?? null,
+      created_at: item.createdAt.toISOString(),
+      delivery_total: deliverySummary.total,
+      delivery_status_counts: deliverySummary.by_status,
+      latest_delivery: deliverySummary.latest
+        ? {
+            channel: deliverySummary.latest.channel,
+            provider: deliverySummary.latest.provider,
+            status: deliverySummary.latest.status,
+            attempts: deliverySummary.latest.attempts,
+            last_error: deliverySummary.latest.last_error,
+            delivered_at: deliverySummary.latest.delivered_at,
+            created_at: deliverySummary.latest.created_at.toISOString(),
+          }
+        : null,
+      deliveries: item.deliveries.map((delivery) => ({
+        channel: delivery.channel,
+        provider: delivery.provider,
+        status: delivery.status,
+        attempts: delivery.attempts,
+        next_retry_at: delivery.nextRetryAt?.toISOString() ?? null,
+        last_error: delivery.lastError,
+        delivered_at: delivery.deliveredAt?.toISOString() ?? null,
+        created_at: delivery.createdAt.toISOString(),
+        updated_at: delivery.updatedAt.toISOString(),
+      })),
+    };
+  }
+
   private toAuditLogItem(item: {
     actorType: ActorType;
     actorId: bigint;
@@ -3419,9 +3607,11 @@ export class AdminService {
     createdAt: Date;
     updatedAt: Date;
   }, admin?: AuthenticatedAdmin) {
-    const access = item.status === MEDIA_STATUS_READY ? await this.storageService.createAccessUrl(item.objectKey) : null;
-    const thumbnailAccess = item.status === MEDIA_STATUS_READY ? await this.createThumbnailAccessUrl(item).catch(() => null) : null;
     const canViewSensitive = admin ? this.canViewSensitiveMediaFields(admin) : true;
+    const canInspectPendingMedia = Boolean(admin && canViewSensitive && item.status !== MEDIA_STATUS_REMOVED);
+    const canExposeMediaAccess = item.status === MEDIA_STATUS_READY || canInspectPendingMedia;
+    const access = canExposeMediaAccess ? await this.storageService.createAccessUrl(item.objectKey).catch(() => null) : null;
+    const thumbnailAccess = canExposeMediaAccess ? await this.createThumbnailAccessUrl(item).catch(() => null) : null;
     const uploadExpired = item.status === MEDIA_STATUS_UPLOADING && item.uploadSessionExpiresAt ? item.uploadSessionExpiresAt < new Date() : false;
     return {
       media_no: item.mediaNo,

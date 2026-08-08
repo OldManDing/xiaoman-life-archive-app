@@ -34,6 +34,12 @@ const androidNativeExportPluginPath = path.join(
   'NativeExportPlugin.java',
 );
 const androidBuildGradlePath = path.join(repoRoot, 'apps', 'mobile', 'android', 'app', 'build.gradle');
+const androidRootBuildGradlePath = path.join(repoRoot, 'apps', 'mobile', 'android', 'build.gradle');
+const androidManifestPath = path.join(repoRoot, 'apps', 'mobile', 'android', 'app', 'src', 'main', 'AndroidManifest.xml');
+const androidNativeSourceDir = path.join(repoRoot, 'apps', 'mobile', 'native', 'android');
+const androidHmsPushBridgePath = path.join(path.dirname(androidMainActivityPath), 'HmsPushBridgePlugin.java');
+const androidHmsMessageServicePath = path.join(path.dirname(androidMainActivityPath), 'NianlunHmsMessageService.java');
+const androidNotificationIconPath = path.join(repoRoot, 'apps', 'mobile', 'android', 'app', 'src', 'main', 'res', 'drawable', 'ic_stat_nianlun.xml');
 const androidActivityLayoutPath = path.join(repoRoot, 'apps', 'mobile', 'android', 'app', 'src', 'main', 'res', 'layout', 'activity_main.xml');
 const androidStylesPath = path.join(repoRoot, 'apps', 'mobile', 'android', 'app', 'src', 'main', 'res', 'values', 'styles.xml');
 const iosAppDelegatePath = path.join(repoRoot, 'apps', 'mobile', 'ios', 'App', 'App', 'AppDelegate.swift');
@@ -53,7 +59,7 @@ const appBuildTime = process.env.VITE_APP_BUILD_TIME ?? new Date().toISOString()
 const nativeBuildNumber = Number.parseInt(appBuildNumber, 10);
 const hasNativeBuildNumber = Number.isFinite(nativeBuildNumber) && nativeBuildNumber > 0;
 const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-const appDarkColor = '#F1E9DC';
+const appDarkColor = '#F8F4EC';
 
 const writeIfChanged = (filePath, nextSource, label) => {
   const currentSource = fs.readFileSync(filePath, 'utf8');
@@ -136,7 +142,9 @@ const patchAndroidSystemBars = () => {
   }
 
   nextSource = nextSource
-    .replace(/Color\.parseColor\("#(?:111210|050918|15110D|10110F|0D0B08)"\)/gi, `Color.parseColor("${appDarkColor}")`)
+    .replace(/private static final int APP_STATUS_BAR_COLOR = Color\.parseColor\("#[0-9A-Fa-f]{6}"\);/g, `private static final int APP_STATUS_BAR_COLOR = Color.parseColor("${appDarkColor}");`)
+    .replace(/private static final int APP_NAVIGATION_BAR_COLOR = Color\.parseColor\("#[0-9A-Fa-f]{6}"\);/g, `private static final int APP_NAVIGATION_BAR_COLOR = Color.parseColor("${appDarkColor}");`)
+    .replace(/Color\.parseColor\("#(?:F1E9DC|FFFDF9|111210|050918|15110D|10110F|0D0B08)"\)/gi, `Color.parseColor("${appDarkColor}")`)
     .replace('window.setNavigationBarColor(Color.parseColor("#fffaf2"));', 'window.setNavigationBarColor(APP_NAVIGATION_BAR_COLOR);')
     .replace('window.setNavigationBarColor(Color.parseColor("#050a1a"));', 'window.setNavigationBarColor(APP_NAVIGATION_BAR_COLOR);')
     .replace('window.setStatusBarColor(Color.TRANSPARENT);', 'window.setStatusBarColor(APP_STATUS_BAR_COLOR);')
@@ -369,10 +377,128 @@ public class NativeExportPlugin extends Plugin {
   writeIfChanged(androidMainActivityPath, nextSource, 'Android native export plugin registered');
 };
 
+const patchAndroidHuaweiPush = () => {
+  if (!fs.existsSync(androidMainActivityPath)) return;
+
+  for (const [templateName, targetPath] of [
+    ['HmsPushBridgePlugin.java', androidHmsPushBridgePath],
+    ['NianlunHmsMessageService.java', androidHmsMessageServicePath],
+    ['ic_stat_nianlun.xml', androidNotificationIconPath],
+  ]) {
+    const templatePath = path.join(androidNativeSourceDir, templateName);
+    if (!fs.existsSync(templatePath)) throw new Error(`Missing Android native template: ${templatePath}`);
+    writeFileIfChanged(targetPath, fs.readFileSync(templatePath, 'utf8'), `Android ${templateName} synced`);
+  }
+
+  let activitySource = fs.readFileSync(androidMainActivityPath, 'utf8');
+  if (!activitySource.includes('import android.app.NotificationChannel;')) {
+    activitySource = activitySource.replace(
+      'package com.xmlga.nianlun;\n\n',
+      'package com.xmlga.nianlun;\n\nimport android.app.NotificationChannel;\nimport android.app.NotificationManager;\nimport android.content.Context;\n',
+    );
+  }
+  if (!activitySource.includes('FAMILY_NOTIFICATION_CHANNEL_ID')) {
+    activitySource = activitySource.replace(
+      'public class MainActivity extends BridgeActivity {\n',
+      'public class MainActivity extends BridgeActivity {\n    private static final String FAMILY_NOTIFICATION_CHANNEL_ID = "nianlun_family_updates";\n',
+    );
+  }
+  if (!activitySource.includes('registerPlugin(HmsPushBridgePlugin.class);')) {
+    activitySource = activitySource.replace(
+      '        registerPlugin(NativeExportPlugin.class);\n',
+      '        registerPlugin(NativeExportPlugin.class);\n        registerPlugin(HmsPushBridgePlugin.class);\n',
+    );
+  }
+  if (!activitySource.includes('createFamilyNotificationChannel();')) {
+    activitySource = activitySource.replace(
+      '        super.onCreate(savedInstanceState);\n',
+      '        super.onCreate(savedInstanceState);\n        createFamilyNotificationChannel();\n',
+    );
+  }
+  if (!activitySource.includes('private void createFamilyNotificationChannel()')) {
+    activitySource = activitySource.replace(
+      '    private void hideSupportActionBar() {',
+      `    private void createFamilyNotificationChannel() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        if (manager == null) return;
+
+        NotificationChannel channel = new NotificationChannel(
+                FAMILY_NOTIFICATION_CHANNEL_ID,
+                "家庭动态",
+                NotificationManager.IMPORTANCE_HIGH
+        );
+        channel.setDescription("家庭成员发布记录时提醒");
+        channel.enableVibration(true);
+        channel.setLockscreenVisibility(android.app.Notification.VISIBILITY_PRIVATE);
+        manager.createNotificationChannel(channel);
+    }
+
+    private void hideSupportActionBar() {`,
+    );
+  }
+  writeIfChanged(androidMainActivityPath, activitySource, 'Android Huawei Push activity patched');
+
+  if (fs.existsSync(androidRootBuildGradlePath)) {
+    let rootGradle = fs.readFileSync(androidRootBuildGradlePath, 'utf8');
+    if (!rootGradle.includes("classpath 'com.huawei.agconnect:agcp:")) {
+      rootGradle = rootGradle.replace(
+        "        classpath 'com.google.gms:google-services:4.4.2'",
+        "        classpath 'com.google.gms:google-services:4.4.2'\n        classpath 'com.huawei.agconnect:agcp:1.9.3.300'",
+      );
+    }
+    if (!rootGradle.includes("maven { url 'https://developer.huawei.com/repo/' }")) {
+      rootGradle = rootGradle.replace(/(\s+)mavenCentral\(\)/g, "$&$1maven { url 'https://developer.huawei.com/repo/' }");
+    }
+    writeIfChanged(androidRootBuildGradlePath, rootGradle, 'Android Huawei repository patched');
+  }
+
+  if (fs.existsSync(androidBuildGradlePath)) {
+    let appGradle = fs.readFileSync(androidBuildGradlePath, 'utf8');
+    if (!appGradle.includes("implementation 'com.huawei.hms:push:")) {
+      appGradle = appGradle.replace(
+        "    implementation project(':capacitor-cordova-android-plugins')",
+        "    implementation project(':capacitor-cordova-android-plugins')\n    implementation 'com.huawei.hms:push:6.12.0.300'",
+      );
+    }
+    if (!appGradle.includes("apply plugin: 'com.huawei.agconnect'")) {
+      appGradle = appGradle.replace(
+        "try {\n    def servicesJSON",
+        "if (file('agconnect-services.json').exists()) {\n    apply plugin: 'com.huawei.agconnect'\n}\n\ntry {\n    def servicesJSON",
+      );
+    }
+    writeIfChanged(androidBuildGradlePath, appGradle, 'Android Huawei Push dependency patched');
+  }
+
+  if (fs.existsSync(androidManifestPath)) {
+    let manifest = fs.readFileSync(androidManifestPath, 'utf8');
+    if (!manifest.includes('.NianlunHmsMessageService')) {
+      manifest = manifest.replace(
+        '    </application>',
+        `        <service
+            android:name=".NianlunHmsMessageService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.huawei.push.action.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+    </application>`,
+      );
+    }
+    if (!manifest.includes('android.permission.POST_NOTIFICATIONS')) {
+      manifest = manifest.replace(
+        '</manifest>',
+        '    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\n</manifest>',
+      );
+    }
+    writeIfChanged(androidManifestPath, manifest, 'Android Huawei Push manifest patched');
+  }
+};
+
 const patchAndroidWindowBackgrounds = () => {
   if (fs.existsSync(androidActivityLayoutPath)) {
     let nextLayout = fs.readFileSync(androidActivityLayoutPath, 'utf8');
-    nextLayout = nextLayout.replace(/android:background="#(?:111210|050918|15110d|10110f|0d0b08)"/gi, `android:background="${appDarkColor}"`);
+    nextLayout = nextLayout.replace(/android:background="#(?:F8F8F4|F1E9DC|FFFDF9|111210|050918|15110d|10110f|0d0b08)"/gi, `android:background="${appDarkColor}"`);
     if (!nextLayout.includes(`android:background="${appDarkColor}"`)) {
       nextLayout = nextLayout.replace(
         '    android:layout_height="match_parent"\n    tools:context=".MainActivity">',
@@ -389,7 +515,7 @@ const patchAndroidWindowBackgrounds = () => {
   if (fs.existsSync(androidStylesPath)) {
     let nextStyles = fs.readFileSync(androidStylesPath, 'utf8');
     nextStyles = nextStyles
-      .replace(/#(?:10110F|15110D|111210|050918|0D0B08)/gi, appDarkColor)
+      .replace(/#(?:F8F8F4|10110F|15110D|111210|050918|0D0B08)/gi, appDarkColor)
       .replace(/<item name="android:windowLightStatusBar">false<\/item>/g, '<item name="android:windowLightStatusBar">true</item>')
       .replace(/<item name="android:windowLightNavigationBar">false<\/item>/g, '<item name="android:windowLightNavigationBar">true</item>');
     nextStyles = ensureAndroidStyleItems(nextStyles, 'AppTheme.NoActionBar', [
@@ -444,11 +570,11 @@ const patchIosWindowBackgrounds = () => {
     if (!nextDelegate.includes('appBackgroundColor')) {
       nextDelegate = nextDelegate.replace(
         '    var window: UIWindow?\n',
-        '    var window: UIWindow?\n    private let appBackgroundColor = UIColor(red: 241 / 255, green: 233 / 255, blue: 220 / 255, alpha: 1)\n',
+        '    var window: UIWindow?\n    private let appBackgroundColor = UIColor(red: 248 / 255, green: 244 / 255, blue: 236 / 255, alpha: 1)\n',
       );
     }
     nextDelegate = nextDelegate
-      .replace(/private let appBackgroundColor = UIColor\(red: \d+ \/ 255, green: \d+ \/ 255, blue: \d+ \/ 255, alpha: 1\)/, 'private let appBackgroundColor = UIColor(red: 241 / 255, green: 233 / 255, blue: 220 / 255, alpha: 1)')
+      .replace(/private let appBackgroundColor = UIColor\(red: \d+ \/ 255, green: \d+ \/ 255, blue: \d+ \/ 255, alpha: 1\)/, 'private let appBackgroundColor = UIColor(red: 248 / 255, green: 244 / 255, blue: 236 / 255, alpha: 1)')
       .replace('UIApplication.shared.statusBarStyle = .lightContent', 'UIApplication.shared.statusBarStyle = .darkContent')
       .replace('window?.overrideUserInterfaceStyle = .dark', 'window?.overrideUserInterfaceStyle = .light');
     nextDelegate = nextDelegate.replace(
@@ -521,6 +647,7 @@ patchAndroidNativeVersion();
 patchIosNativeVersion();
 patchAndroidSystemBars();
 patchAndroidNativeExportPlugin();
+patchAndroidHuaweiPush();
 patchAndroidWindowBackgrounds();
 patchIosWindowBackgrounds();
 

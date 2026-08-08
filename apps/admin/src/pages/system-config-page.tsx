@@ -1,9 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Save, Settings2 } from 'lucide-react';
+import { Save, Settings2, ShieldCheck } from 'lucide-react';
 
 import { adminApi, type AdminSystemConfigItem } from '../shared/request';
-import { AdminDateInput, AdminSelect, Badge, EmptyState, PageShell, Panel } from '../shared/ui';
-import { inputStyle, mutedTextStyle, primaryButtonStyle, secondaryButtonStyle } from '../shared/uiStyles';
+import { AdminButton, AdminDateInput, AdminSelect, Badge, EmptyState, PageShell, Panel } from '../shared/ui';
+import { inputStyle, mutedTextStyle } from '../shared/uiStyles';
 import { useAdminAuth } from '../shared/useAdminAuth';
 import { TableShell } from './shared';
 
@@ -14,6 +14,7 @@ const categoryLabel = (value: AdminSystemConfigItem['category']) =>
     ai_provider: 'AI 服务',
     backup_recovery: '备份恢复',
     alerting: '告警值班',
+    mobile_release: '版本更新',
   })[value];
 
 const valueTypeLabel = (value: AdminSystemConfigItem['value_type']) =>
@@ -103,20 +104,26 @@ export const SystemConfigPage = () => {
   };
 
   const visibleConfigs = configs.filter((item) => item.category !== 'ai_provider');
+  const configuredCount = visibleConfigs.filter((item) => displayValue(item) !== '未配置').length;
+  const adminManagedCount = visibleConfigs.filter((item) => item.source === 'admin').length;
 
   const rows = visibleConfigs.map((item) => [
-    <span key={`${item.config_key}-label`} style={{ display: 'grid', gap: '5px' }}>
-      <strong style={{ color: '#16211f' }}>{item.label}</strong>
-      <span style={{ color: '#66736f', fontSize: '12px' }}>{item.description}</span>
+    <span key={`${item.config_key}-label`} className="admin-system-config-name">
+      <strong>{item.label}</strong>
+      <span>{item.description}</span>
     </span>,
-    <Badge key={`${item.config_key}-category`} tone="info">{categoryLabel(item.category)}</Badge>,
-    displayValue(item),
-    <Badge key={`${item.config_key}-source`} tone={item.source === 'admin' ? 'success' : 'warning'}>{item.source === 'admin' ? '后台配置' : '环境变量'}</Badge>,
-    valueTypeLabel(item.value_type),
+    <span key={`${item.config_key}-status`} className="admin-system-config-status-cell">
+      <Badge tone="info">{categoryLabel(item.category)}</Badge>
+      <strong>{displayValue(item)}</strong>
+      <small>
+        <span>{item.source === 'admin' ? '后台配置' : '环境变量'}</span>
+        <span> · {valueTypeLabel(item.value_type)}</span>
+      </small>
+    </span>,
     item.updated_by_name ? `${item.updated_by_name} / ${formatDateTime(item.updated_at)}` : '—',
-    <button key={`${item.config_key}-action`} type="button" style={secondaryButtonStyle} disabled={!canEdit} onClick={() => startEdit(item)}>
+    <AdminButton key={`${item.config_key}-action`} type="button" tone="secondary" disabled={!canEdit} onClick={() => startEdit(item)}>
       调整
-    </button>,
+    </AdminButton>,
   ]);
 
   return (
@@ -124,27 +131,50 @@ export const SystemConfigPage = () => {
       {error ? <Panel><EmptyState title="操作失败" message={error} /></Panel> : null}
       {message ? <Panel><p style={{ ...mutedTextStyle, margin: 0 }}>{message}</p></Panel> : null}
 
-      <Panel>
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#16211f', fontWeight: 800 }}>
-            <Settings2 size={17} />
-            当前配置
+      <section className="admin-system-config-hero">
+        <div>
+          <span className="admin-system-config-eyebrow">
+            <Settings2 size={16} />
+            配置工作台
           </span>
-          <Badge tone={canEdit ? 'success' : 'warning'}>{canEdit ? '可调整' : '只读'}</Badge>
+          <h2>只保留运维必须修改的配置。</h2>
+          <p>备份、告警和值班参数集中在这里；AI 供应商相关内容继续放在 AI 设置，避免系统配置页变成杂项堆叠。</p>
         </div>
-      </Panel>
+        <div className="admin-system-config-status">
+          <div>
+            <span>可见配置</span>
+            <strong>{loading ? '—' : visibleConfigs.length}</strong>
+          </div>
+          <div>
+            <span>已配置</span>
+            <strong>{loading ? '—' : configuredCount}</strong>
+          </div>
+          <div>
+            <span>后台接管</span>
+            <strong>{loading ? '—' : adminManagedCount}</strong>
+          </div>
+        </div>
+        <Badge tone={canEdit ? 'success' : 'warning'}>{canEdit ? '可调整' : '只读'}</Badge>
+      </section>
 
-      <TableShell columns={['配置项', '分类', '当前值', '来源', '类型', '最后调整', '操作']} rows={rows} emptyMessage="暂无系统配置项。" loading={loading} />
+      <section className="admin-system-config-grid">
+        <div className="admin-system-config-list">
+          <TableShell columns={['配置项', '当前状态', '最后调整', '操作']} rows={rows} emptyMessage="暂无系统配置项。" loading={loading} />
+        </div>
 
-      {editing ? (
-        <Panel>
-          <form onSubmit={onSubmit} style={{ display: 'grid', gap: '12px' }}>
-            <div>
-              <h2 style={{ margin: 0, fontSize: '18px', color: '#16211f' }}>调整{editing.label}</h2>
-              <p style={mutedTextStyle}>{editing.description}</p>
+        <Panel className="admin-system-config-editor">
+          {editing ? (
+          <form onSubmit={onSubmit} className="admin-system-config-form">
+            <div className="admin-system-config-form-head">
+              <span>
+                <ShieldCheck size={16} />
+                正在调整
+              </span>
+              <h2>{editing.label}</h2>
+              <p>{editing.description}</p>
             </div>
-            <label style={{ display: 'grid', gap: '6px', color: '#33413d', fontWeight: 700 }}>
-              配置值
+            <label className="admin-system-config-field">
+              <span>配置值</span>
               {editing.value_type === 'select' ? (
                 <AdminSelect
                   value={value}
@@ -177,13 +207,13 @@ export const SystemConfigPage = () => {
                 />
               )}
               {editing.value_type === 'secret' ? (
-                <span style={{ color: '#66736f', fontSize: '12px', fontWeight: 600 }}>
+                <small>
                   当前状态：{editing.secret_configured ? '已配置密钥' : '未配置密钥'}。保存时必须输入完整新密钥。
-                </span>
+                </small>
               ) : null}
             </label>
-            <label style={{ display: 'grid', gap: '6px', color: '#33413d', fontWeight: 700 }}>
-              操作原因
+            <label className="admin-system-config-field">
+              <span>操作原因</span>
               <textarea
                 style={{ ...inputStyle, minHeight: '92px', resize: 'vertical' }}
                 value={reason}
@@ -192,18 +222,25 @@ export const SystemConfigPage = () => {
                 disabled={!canEdit || saving}
               />
             </label>
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-              <button type="submit" style={primaryButtonStyle} disabled={!canEdit || saving || reason.trim().length < 2 || (editing.value_type === 'secret' && !value.trim())}>
+            <div className="admin-system-config-actions">
+              <AdminButton type="submit" tone="primary" disabled={!canEdit || saving || reason.trim().length < 2 || (editing.value_type === 'secret' && !value.trim())}>
                 <Save size={16} />
                 {saving ? '保存中…' : '保存配置'}
-              </button>
-              <button type="button" style={secondaryButtonStyle} disabled={saving} onClick={() => setEditing(null)}>
+              </AdminButton>
+              <AdminButton type="button" tone="ghost" disabled={saving} onClick={() => setEditing(null)}>
                 取消
-              </button>
+              </AdminButton>
             </div>
           </form>
+          ) : (
+            <div className="admin-system-config-empty-editor">
+              <Settings2 size={22} />
+              <strong>选择一个配置项</strong>
+              <p>点击列表中的“调整”，右侧会显示编辑区。未选择前保持页面干净，避免表格和表单同时抢焦点。</p>
+            </div>
+          )}
         </Panel>
-      ) : null}
+      </section>
     </PageShell>
   );
 };

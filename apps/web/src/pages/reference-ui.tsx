@@ -6,7 +6,7 @@ import { useStoredMediaUrl } from '../shared/hooks';
 
 export const referenceAssets = {
   momAvatar: '/reference-ui/avatar-mom.png',
-  childAvatar: '/reference-ui/avatar-child.png',
+  childAvatar: '/reference-ui/avatar-child-hq.png',
   childPhoto: '/reference-ui/timeline-child.png',
   parkPhoto: '/reference-ui/park-photo.png',
   roomPhoto: '/reference-ui/room-photo.png',
@@ -30,10 +30,10 @@ export const refPageStyle: CSSProperties = {
 };
 
 export const refContentStyle: CSSProperties = {
-  padding: '0 22px 34px',
+  padding: '0 var(--nl-content-inline) 34px',
   display: 'grid',
   gridTemplateColumns: 'minmax(0, 1fr)',
-  gap: '22px',
+  gap: '20px',
 };
 
 export const refCardStyle: CSSProperties = {
@@ -41,8 +41,8 @@ export const refCardStyle: CSSProperties = {
   border: '1px solid var(--nl-border-soft)',
   background: 'var(--nl-card-bg)',
   boxShadow: 'var(--nl-shadow-sm)',
-  WebkitBackdropFilter: 'blur(16px) saturate(1.02)',
-  backdropFilter: 'blur(16px) saturate(1.02)',
+  WebkitBackdropFilter: 'none',
+  backdropFilter: 'none',
 };
 
 export const refSoftCardStyle: CSSProperties = {
@@ -54,7 +54,7 @@ export const refPrimaryButtonStyle: CSSProperties = {
   minHeight: '48px',
   border: '1px solid var(--nl-primary-border)',
   borderRadius: '8px',
-  background: 'var(--nl-primary-gradient)',
+  background: 'var(--nl-primary-2)',
   color: 'var(--nl-on-primary)',
   padding: '12px 18px',
   fontSize: '15px',
@@ -64,7 +64,7 @@ export const refPrimaryButtonStyle: CSSProperties = {
   justifyContent: 'center',
   gap: '8px',
   cursor: 'pointer',
-  boxShadow: '0 12px 24px rgba(var(--nl-primary-rgb),0.1), inset 0 1px 0 var(--nl-inset-highlight-faint)',
+  boxShadow: '0 10px 22px rgba(var(--nl-shadow-rgb),0.11)',
   transition: 'transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease',
 };
 
@@ -116,7 +116,7 @@ export const RefTopBar = ({
         top: 0,
         zIndex: 4,
         minHeight: '52px',
-        padding: 'calc(18px + env(safe-area-inset-top)) 16px 10px',
+        padding: 'calc(16px + env(safe-area-inset-top)) 16px 8px',
       borderBottom: '1px solid transparent',
       background: 'var(--nl-topbar-bg)',
       WebkitBackdropFilter: 'blur(16px) saturate(1.01)',
@@ -128,7 +128,7 @@ export const RefTopBar = ({
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center' }}>{backNode}</div>
-      <h1 style={{ margin: 0, textAlign: 'center', color: 'var(--nl-ink)', fontSize: '17px', fontWeight: 760, lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</h1>
+      <h1 style={{ margin: 0, textAlign: 'center', color: 'var(--nl-ink)', fontSize: '16px', fontWeight: 680, lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</h1>
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>{action ?? <span />}</div>
     </header>
   );
@@ -186,8 +186,9 @@ export const RefAvatar = ({
         height: `${size}px`,
         borderRadius: radius,
         objectFit: 'cover',
-        border: '1px solid var(--nl-border-image)',
-        boxShadow: '0 14px 30px rgba(var(--nl-shadow-rgb),0.22)',
+        border: '2px solid var(--nl-border-image)',
+        outline: '1px solid rgba(var(--nl-accent-rgb),0.1)',
+        boxShadow: '0 12px 26px rgba(var(--nl-shadow-rgb),0.15)',
         flexShrink: 0,
         background: 'var(--nl-surface-soft)',
       }}
@@ -196,7 +197,10 @@ export const RefAvatar = ({
 };
 
 export const RefSectionTitle = ({ children, style }: { children: ReactNode; style?: CSSProperties }) => (
-  <h2 style={{ margin: '0 0 12px 2px', color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '20px', lineHeight: 1.14, fontWeight: 800, ...style }}>{children}</h2>
+  <h2 style={{ margin: '0 0 10px', color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-sans)', fontSize: 'var(--nl-title-section-size)', lineHeight: 1.25, fontWeight: 680, letterSpacing: 0, display: 'flex', alignItems: 'center', gap: 9, ...style }}>
+    <span aria-hidden="true" style={{ width: 18, height: 1, borderRadius: 1, background: 'var(--nl-accent)', flexShrink: 0 }} />
+    <span>{children}</span>
+  </h2>
 );
 
 export const RefListRow = ({
@@ -219,26 +223,26 @@ export const RefListRow = ({
     onClick={onClick}
     style={{
       width: '100%',
-      minHeight: '66px',
+      minHeight: '64px',
       border: 'none',
-      borderBottom: isLast ? 'none' : '1px solid var(--nl-border-soft)',
+      borderBottom: isLast ? 'none' : '1px solid rgba(var(--nl-shadow-rgb),0.07)',
       background: 'transparent',
-      padding: '16px 0',
+      padding: '14px 0',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      gap: '12px',
+      gap: '14px',
       textAlign: 'left',
       cursor: onClick ? 'pointer' : 'default',
       color: danger ? 'var(--nl-danger)' : 'var(--nl-ink)',
       transition: 'background-color 0.18s ease, transform 0.18s ease',
     }}
   >
-    <span style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: '1 1 auto' }}>
-      {icon ? <span style={{ width: '30px', height: '34px', borderRadius: '8px', background: danger ? 'var(--nl-danger-soft)' : 'transparent', border: '1px solid transparent', color: danger ? 'var(--nl-danger)' : 'var(--nl-muted-strong)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>{icon}</span> : null}
-      <span style={{ fontSize: '15.5px', fontWeight: 680, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{title}</span>
+    <span style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: 0, flex: '1 1 auto' }}>
+      {icon ? <span style={{ width: '28px', height: '34px', borderRadius: 0, background: 'transparent', border: 'none', color: danger ? 'var(--nl-danger)' : 'var(--nl-primary-2)', display: 'grid', placeItems: 'center', flexShrink: 0, boxShadow: 'none' }}>{icon}</span> : null}
+      <span style={{ fontSize: '15px', fontWeight: 680, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{title}</span>
     </span>
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: danger ? 'var(--nl-danger)' : 'var(--nl-muted)', fontSize: '11.5px', fontWeight: 520, flexShrink: 0 }}>
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', color: danger ? 'var(--nl-danger)' : 'var(--nl-muted)', fontSize: '12px', fontWeight: 500, flexShrink: 0 }}>
       {value}
       {onClick ? <ChevronRight size={16} color="var(--nl-muted)" /> : null}
     </span>

@@ -5,4 +5,4 @@ export { LoginPage } from './login-page';
 export { ContentRisksPage } from './content-risk-page';
 export { OpsReadinessPage } from './ops-readiness-page';
 export { SystemConfigPage } from './system-config-page';
-export { AIJobsPage, ArchiveExportRequestsPage, AuditLogsPage, ChildrenPage, FamiliesPage, MediaPage, RecordsPage, SupportTicketsPage, UsersPage } from './list-pages';
+export { AIJobsPage, ArchiveExportRequestsPage, AuditLogsPage, ChildrenPage, FamiliesPage, MediaPage, NotificationsPage, RecordsPage, SupportTicketsPage, UsersPage } from './list-pages';

@@ -42,8 +42,8 @@ const badgeTone = (value: string) => {
 
 const RiskTitle = ({ item }: { item: AdminContentRiskItem }) => (
   <span style={{ display: 'grid', gap: '5px', minWidth: 0 }}>
-    <strong style={{ color: '#16211f' }}>{item.title}</strong>
-    <span style={{ color: '#66736f', fontSize: '12px' }}>{item.reason}</span>
+        <strong style={{ color: '#221b12' }}>{item.title}</strong>
+        <span style={{ color: '#7d7162', fontSize: '12px' }}>{item.reason}</span>
   </span>
 );
 
@@ -149,7 +149,7 @@ export const ContentRisksPage = () => {
         <form className="admin-search-form" onSubmit={onSearch} style={{ display: 'grid', gap: '12px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
             <div>
-              <strong style={{ display: 'block', color: '#16211f', marginBottom: '4px' }}>筛选条件</strong>
+          <strong style={{ display: 'block', color: '#221b12', marginBottom: '4px' }}>筛选条件</strong>
               <p style={mutedTextStyle}>支持按风险内容、编号、孩子、用户或处理来源筛选。</p>
             </div>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#9a3412', fontSize: '13px', fontWeight: 700 }}>
@@ -192,7 +192,7 @@ export const ContentRisksPage = () => {
 
       <Panel>
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#16211f', fontWeight: 800 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#221b12', fontWeight: 800 }}>
             <AlertTriangle size={17} />
             当前页风险概览
           </span>

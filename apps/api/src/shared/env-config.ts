@@ -187,11 +187,11 @@ export function getAlertContactChannel(env: EnvSource = process.env): string | n
 }
 
 export function getMobileLatestVersion(env: EnvSource = process.env): string {
-  return readEnvValue(env, 'MOBILE_LATEST_VERSION') ?? '2.0.3';
+  return readEnvValue(env, 'MOBILE_LATEST_VERSION') ?? '2.0.4';
 }
 
 export function getMobileLatestBuildNumber(env: EnvSource = process.env): number {
-  return readNonNegativeInteger(env, 'MOBILE_LATEST_BUILD_NUMBER', 9);
+  return readNonNegativeInteger(env, 'MOBILE_LATEST_BUILD_NUMBER', 10);
 }
 
 export function getMobileReleaseNotes(env: EnvSource = process.env): string {
@@ -218,6 +218,26 @@ export function getMobileApkUrl(env: EnvSource = process.env): string | null {
 
 export function getMobileForceUpdate(env: EnvSource = process.env): boolean {
   return readBoolean(env, 'MOBILE_FORCE_UPDATE', false);
+}
+
+export function isHuaweiPushEnabled(env: EnvSource = process.env): boolean {
+  return readBoolean(env, 'HUAWEI_PUSH_ENABLED', false);
+}
+
+export function getHuaweiPushAppId(env: EnvSource = process.env): string {
+  return isHuaweiPushEnabled(env) ? requireEnvValue(env, 'HUAWEI_PUSH_APP_ID') : readEnvValue(env, 'HUAWEI_PUSH_APP_ID') ?? '';
+}
+
+export function getHuaweiPushAppSecret(env: EnvSource = process.env): string {
+  return isHuaweiPushEnabled(env) ? requireEnvValue(env, 'HUAWEI_PUSH_APP_SECRET') : readEnvValue(env, 'HUAWEI_PUSH_APP_SECRET') ?? '';
+}
+
+export function getHuaweiPushAuthUrl(env: EnvSource = process.env): string {
+  return readEnvValue(env, 'HUAWEI_PUSH_AUTH_URL') ?? 'https://oauth-login.cloud.huawei.com/oauth2/v3/token';
+}
+
+export function getHuaweiPushApiUrl(env: EnvSource = process.env): string {
+  return readEnvValue(env, 'HUAWEI_PUSH_API_URL') ?? 'https://push-api.cloud.huawei.com/v1';
 }
 
 export function resolveCorsOrigins(env: EnvSource = process.env): true | string[] {
@@ -440,6 +460,12 @@ export function validateRuntimeConfig(config: Record<string, unknown>): Record<s
   getStorageProviderName(config);
   getAiProviderName(config);
   getMapProviderName(config);
+  if (isHuaweiPushEnabled(config)) {
+    getHuaweiPushAppId(config);
+    getHuaweiPushAppSecret(config);
+    new URL(getHuaweiPushAuthUrl(config));
+    new URL(getHuaweiPushApiUrl(config));
+  }
 
   if (isStrictEnvironment(config)) {
     validateStrictProviderConfig(config);

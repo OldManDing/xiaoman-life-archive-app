@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { AlertTriangle, ArchiveX, Ban, CheckCircle2, ClipboardCheck, Crown, Eye, LockKeyhole, RotateCcw, Snowflake, XCircle } from 'lucide-react';
+import { Children, cloneElement, isValidElement, useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { AlertTriangle, ArchiveX, AudioLines, Ban, CheckCircle2, ClipboardCheck, Crown, Eye, LockKeyhole, MoreHorizontal, RotateCcw, SlidersHorizontal, Snowflake, Video, XCircle } from 'lucide-react';
 
 import {
   adminApi,
@@ -14,7 +14,9 @@ import {
   type AdminMediaDetail,
   type AdminMediaItem,
   type AdminMediaListParams,
+  type AdminNotificationItem,
   type AdminRecordDetail,
+  type AdminRecordFilter,
   type AdminRecordItem,
   type AdminSupportTicketItem,
   type AdminUserDetail,
@@ -38,6 +40,9 @@ import {
   mediaStatusLabel,
   mediaTypeLabel,
   membershipTypeLabel,
+  notificationDeliveryStatusLabel,
+  notificationReadStateLabel,
+  notificationTypeLabel,
   recordStatusLabel,
   recordTypeLabel,
   supportTicketPriorityLabel,
@@ -45,7 +50,7 @@ import {
   userStatusLabel,
   visibilityScopeLabel,
 } from '../shared/labels';
-import { AdminDateInput, AdminSelect, Badge, EmptyState, PageShell, Panel } from '../shared/ui';
+import { AdminButton, AdminDateInput, AdminSelect, Badge, EmptyState, PageShell, Panel } from '../shared/ui';
 import { inputStyle, mutedTextStyle, primaryButtonStyle, secondaryButtonStyle, tableStyle, thTdStyle } from '../shared/uiStyles';
 import { useAdminAuth } from '../shared/useAdminAuth';
 import { DetailDrawer, DetailGrid, DetailList, DetailSection, JsonBlock, MediaPreview } from './detail-drawer';
@@ -60,6 +65,19 @@ const badgeToneForStatus = (value: string) => {
 };
 
 const getErrorMessage = (err: unknown) => (err instanceof Error ? err.message : '操作失败，请稍后重试');
+
+const recordFilterOptions: Array<{ key: AdminRecordFilter; label: string }> = [
+  { key: 'all', label: '全部记录' },
+  { key: 'image', label: '含图片' },
+  { key: 'video', label: '含视频' },
+  { key: 'audio', label: '含录音' },
+  { key: 'media_exception', label: '媒体异常' },
+  { key: 'pending', label: '待处理' },
+  { key: 'risk', label: '风险标记' },
+];
+
+const normalizeRecordFilter = (value: string | null | undefined): AdminRecordFilter =>
+  recordFilterOptions.some((item) => item.key === value) ? (value as AdminRecordFilter) : 'all';
 
 const formatBytes = (value: number | null | undefined) => {
   if (!value) return '—';
@@ -146,7 +164,6 @@ const SummaryStat = ({ label, value, tone = 'neutral' }: { label: string; value:
 const ListSummary = ({
   total,
   label,
-  description = '列表按运营处置设计：先识别状态，再执行详情、恢复、冻结、下架等动作。',
   children,
 }: {
   total?: number;
@@ -154,33 +171,33 @@ const ListSummary = ({
   description?: string;
   children?: ReactNode;
 }) => (
-  <Panel>
+  <section className="admin-list-summary-panel" aria-label={label}>
     <div className="admin-list-summary">
-      <div>
-        <strong>{label}</strong>
-        <p>{description}</p>
-      </div>
+      <strong>{label}</strong>
+      {children ? <div className="admin-list-summary-pills">{children}</div> : null}
       <div className="admin-list-summary-stat">
         <span>结果总数</span>
         <strong>{total ?? 0}</strong>
       </div>
-      {children ? <div className="admin-list-summary-pills">{children}</div> : null}
     </div>
-  </Panel>
+  </section>
 );
 
 const EntityTitle = ({ title, meta }: { title: ReactNode; meta?: ReactNode }) => (
-  <span style={{ display: 'grid', gap: '4px', minWidth: 0 }}>
-    <strong style={{ color: '#16211f', fontSize: '14px', fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</strong>
-    {meta ? <span style={{ color: '#66736f', fontSize: '12px', lineHeight: 1.4 }}>{meta}</span> : null}
+  <span className="admin-entity-title">
+    <strong>{title}</strong>
+    {meta ? <span>{meta}</span> : null}
   </span>
 );
 
 const AvatarThumb = ({ src, label, size = 44 }: { src?: string | null; label: string; size?: number }) => {
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const initial = label.trim().slice(0, 1) || '?';
+  const canLoad = Boolean(src && failedSrc !== src);
+
   return (
-    <span className="admin-avatar-thumb" style={{ width: size, height: size, minWidth: size }}>
-      {src ? <img src={src} alt={label} loading="lazy" decoding="async" /> : <span>{initial}</span>}
+    <span className={`admin-avatar-thumb ${canLoad ? '' : 'admin-avatar-thumb-fallback'}`} style={{ width: size, height: size, minWidth: size }}>
+      {canLoad ? <img src={src} alt={label} loading="lazy" decoding="async" onError={() => setFailedSrc(src)} /> : <span>{initial}</span>}
     </span>
   );
 };
@@ -193,11 +210,109 @@ const EntityWithAvatar = ({ avatarUrl, title, meta }: { avatarUrl?: string | nul
 );
 
 const MediaThumb = ({ item, size = 72 }: { item: AdminMediaItem; size?: number }) => {
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState(false);
   const previewUrl = item.thumbnail_url ?? (item.media_type === 'image' ? item.access_url : null);
-  return (
-    <span className="admin-media-thumb" style={{ width: size, height: size, minWidth: size }}>
-      {previewUrl ? <img src={previewUrl} alt={item.original_name ?? item.media_no} loading="lazy" decoding="async" /> : <span>{mediaTypeLabel(item.media_type)}</span>}
+  const canPreview = Boolean(previewUrl && failedSrc !== previewUrl);
+  const stateLabel = item.status !== 'ready' ? mediaStatusLabel(item.status) : mediaTypeLabel(item.media_type);
+  const previewStateLabel = failedSrc && failedSrc === previewUrl ? '预览不可用' : !previewUrl ? '暂无预览' : null;
+  const canExpand = Boolean(item.access_url && (item.media_type === 'image' || item.media_type === 'video'));
+
+  useEffect(() => {
+    if (!expanded) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setExpanded(false);
+    };
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, [expanded]);
+
+  if (item.media_type === 'audio') {
+    return (
+      <span
+        className={`admin-media-thumb admin-media-thumb-audio ${item.status !== 'ready' ? 'admin-media-thumb-muted' : ''}`}
+        style={{ width: size, height: size, minWidth: size }}
+        title={`${item.original_name ?? item.media_no} · ${stateLabel}`}
+      >
+        <AudioLines size={Math.max(22, Math.round(size * 0.36))} strokeWidth={2.2} />
+        <span>录音</span>
+      </span>
+    );
+  }
+
+  if (item.media_type === 'video' && !previewUrl) {
+    const thumb = (
+      <span
+        className={`admin-media-thumb admin-media-thumb-video ${item.status !== 'ready' ? 'admin-media-thumb-muted' : ''}`}
+        style={{ width: size, height: size, minWidth: size }}
+        title={`${item.original_name ?? item.media_no} · ${stateLabel}`}
+      >
+        <Video size={Math.max(22, Math.round(size * 0.36))} strokeWidth={2.2} />
+        <span>视频</span>
+      </span>
+    );
+
+    return (
+      <>
+        {canExpand ? (
+          <button type="button" className="admin-media-thumb-button" onClick={() => setExpanded(true)} aria-label="放大查看视频">
+            {thumb}
+          </button>
+        ) : (
+          thumb
+        )}
+        {expanded && item.access_url ? (
+          <div className="admin-media-lightbox" role="dialog" aria-modal="true" aria-label="视频预览" onClick={() => setExpanded(false)}>
+            <video src={item.access_url} controls autoPlay onClick={(event) => event.stopPropagation()}>
+              当前浏览器不支持视频预览。
+            </video>
+          </div>
+        ) : null}
+      </>
+    );
+  }
+
+  const thumb = (
+    <span
+      className={`admin-media-thumb ${canPreview ? '' : 'admin-media-thumb-empty'} ${failedSrc === previewUrl ? 'admin-media-thumb-failed' : ''}`}
+      style={{ width: size, height: size, minWidth: size }}
+      title={`${item.original_name ?? item.media_no} · ${previewStateLabel ?? stateLabel}`}
+    >
+      {canPreview ? (
+        <img
+          src={previewUrl}
+          alt={item.original_name ?? item.media_no}
+          loading="lazy"
+          decoding="async"
+          onError={() => setFailedSrc(previewUrl)}
+        />
+      ) : (
+        <span>{previewStateLabel ?? stateLabel}</span>
+      )}
     </span>
+  );
+
+  return (
+    <>
+      {canExpand ? (
+        <button type="button" className="admin-media-thumb-button" onClick={() => setExpanded(true)} aria-label={item.media_type === 'video' ? '放大查看视频' : '放大查看图片'}>
+          {thumb}
+        </button>
+      ) : (
+        thumb
+      )}
+      {expanded && item.access_url ? (
+        <div className="admin-media-lightbox" role="dialog" aria-modal="true" aria-label={item.media_type === 'video' ? '视频预览' : '图片预览'} onClick={() => setExpanded(false)}>
+          {item.media_type === 'video' ? (
+            <video src={item.access_url} controls autoPlay onClick={(event) => event.stopPropagation()}>
+              当前浏览器不支持视频预览。
+            </video>
+          ) : (
+            <img src={item.access_url} alt={item.original_name ?? item.media_no} onClick={(event) => event.stopPropagation()} />
+          )}
+        </div>
+      ) : null}
+    </>
   );
 };
 
@@ -207,13 +322,10 @@ const MediaReviewCell = ({ item }: { item: AdminMediaItem }) => {
   const tone = needsReview || isOrphan ? 'warning' : 'success';
 
   return (
-    <span style={{ display: 'grid', gap: '6px', minWidth: 0 }}>
-      <span style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-        <Badge tone={tone}>{needsReview ? '优先处理' : isOrphan ? '待关联' : '可归档'}</Badge>
+    <span className="admin-media-review-cell">
+      <span>
+        <Badge tone={tone}>{needsReview ? '需处理' : isOrphan ? '待关联' : '已关联'}</Badge>
         <Badge tone={badgeToneForStatus(item.status)}>{mediaStatusLabel(item.status)}</Badge>
-      </span>
-      <span style={{ color: '#66736f', fontSize: '12px', lineHeight: 1.45 }}>
-        {isOrphan ? '未关联成长记录，建议先确认是否为孤立上传。' : `关联：${item.record_title ?? '未命名记录'}`}
       </span>
     </span>
   );
@@ -246,6 +358,42 @@ const ActionButton = ({
 
 const ActionGroup = ({ children }: { children: ReactNode }) => <div className="admin-action-group">{children}</div>;
 
+const ActionMenu = ({ children }: { children: ReactNode }) => {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (!open) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, [open]);
+
+  const menuChildren = Children.map(children, (child) => {
+    if (!isValidElement<{ onClick?: () => void | Promise<void> }>(child)) return child;
+    return cloneElement(child, {
+      onClick: () => {
+        const action = child.props.onClick?.();
+        if (action && typeof action.then === 'function') {
+          void action.finally(() => setOpen(false));
+          return action;
+        }
+        setOpen(false);
+      },
+    });
+  });
+
+  return (
+    <div className="admin-action-menu">
+      <button type="button" className="admin-action-menu-trigger" aria-label="更多操作" title="更多操作" aria-expanded={open} onClick={() => setOpen((current) => !current)}>
+        <MoreHorizontal size={17} strokeWidth={2.2} />
+      </button>
+      {open ? <div className="admin-action-menu-popover">{menuChildren}</div> : null}
+    </div>
+  );
+};
+
 type AuditFilterOverride = {
   keyword?: string;
   action?: string;
@@ -258,6 +406,15 @@ type ArchiveExportRequestFilterOverride = {
   keyword?: string;
   purpose?: string;
   status?: string;
+};
+
+type NotificationFilterOverride = {
+  keyword?: string;
+  readState?: string;
+  notificationType?: string;
+  deliveryStatus?: string;
+  startTime?: string;
+  endTime?: string;
 };
 
 type ArchiveExportCompletionRequest = {
@@ -374,7 +531,7 @@ const useArchiveCompletionDialog = () => {
           <div>
             <span>档案交付确认</span>
             <h2 id="admin-archive-completion-title">完成档案交付</h2>
-            <p style={{ margin: '6px 0 0', color: '#66736f', fontSize: '13px', lineHeight: 1.5 }}>{dialog.requestNo}</p>
+          <p style={{ margin: '6px 0 0', color: '#7d7162', fontSize: '13px', lineHeight: 1.5 }}>{dialog.requestNo}</p>
           </div>
           <button type="button" className="admin-modal-close" onClick={() => closeDialog(null)} aria-label="关闭完成交付弹窗">
             ×
@@ -493,7 +650,7 @@ const useResetPasswordDialog = () => {
           <div>
             <span>账号安全操作</span>
             <h2 id="admin-reset-password-title">重置登录密码</h2>
-            <p style={{ margin: '6px 0 0', color: '#66736f', fontSize: '13px', lineHeight: 1.5 }}>
+            <p style={{ margin: '6px 0 0', color: '#7d7162', fontSize: '13px', lineHeight: 1.5 }}>
               {dialog.user.nickname}（{dialog.user.mobile ?? dialog.user.user_no}）
             </p>
           </div>
@@ -613,7 +770,7 @@ const useMembershipDialog = () => {
           <div>
             <span>套餐权益操作</span>
             <h2 id="admin-membership-title">调整用户套餐权益</h2>
-            <p style={{ margin: '6px 0 0', color: '#66736f', fontSize: '13px', lineHeight: 1.5 }}>
+            <p style={{ margin: '6px 0 0', color: '#7d7162', fontSize: '13px', lineHeight: 1.5 }}>
               {dialog.user.nickname}（{dialog.user.mobile ?? dialog.user.user_no}）
             </p>
           </div>
@@ -639,6 +796,7 @@ const useMembershipDialog = () => {
         <label className="admin-modal-field">
           到期日期
           <AdminDateInput
+            aria-label="到期日期"
             value={dialog.expireDate}
             disabled={dialog.membershipType === 'free'}
             onChange={(event) => setDialog((current) => (current ? { ...current, expireDate: event.target.value, error: null } : current))}
@@ -696,7 +854,7 @@ const MiniTable = ({ columns, rows, emptyMessage }: { columns: string[]; rows: A
         <thead>
           <tr>
             {columns.map((column) => (
-              <th key={column} style={{ ...thTdStyle, color: '#66736f', fontSize: '13px', background: '#f6f8f7' }}>
+          <th key={column} style={{ ...thTdStyle, color: '#7d7162', fontSize: '13px', background: '#f7efe1' }}>
                 {column}
               </th>
             ))}
@@ -968,65 +1126,71 @@ const ChildDetailContent = ({ data }: { data: AdminChildDetail }) => (
   </>
 );
 
-const RecordContentPreview = ({ data }: { data: AdminRecordDetail }) => {
-  const [visiblePreviews, setVisiblePreviews] = useState<Set<string>>(() => new Set());
+const RecordMediaPreview = ({
+  item,
+}: {
+  item: AdminRecordDetail['media_list'][number];
+}) => {
+  const previewSource = item.thumbnail_url ?? item.access_url;
 
-  const showPreview = (mediaNo: string) => {
-    setVisiblePreviews((current) => {
-      const next = new Set(current);
-      next.add(mediaNo);
-      return next;
-    });
-  };
+  if (!previewSource) {
+    return <div className="admin-media-preview-placeholder"><span>暂无预览地址</span></div>;
+  }
 
   return (
-    <DetailSection title="内容预览">
-      <div className="admin-content-preview">
-        <article className="admin-record-preview-text">
-          <div className="admin-record-preview-eyebrow">{recordTypeLabel(data.record_type)}</div>
-          <h4>{data.title ?? '未命名记录'}</h4>
-          {data.content_text ? <p>{data.content_text}</p> : <p className="admin-record-preview-muted">暂无文字内容</p>}
-        </article>
-        {data.media_list.length ? (
-          <div className="admin-media-preview-grid">
-            {data.media_list.map((item) => {
-              const isPreviewVisible = visiblePreviews.has(item.media_no);
-
-              return (
-                <article key={item.media_no} className="admin-media-preview-card">
-                  <div className="admin-media-preview-card-head">
-                    <strong>{item.original_name ?? item.media_no}</strong>
-                    <span>{mediaTypeLabel(item.media_type)}</span>
-                  </div>
-                  {isPreviewVisible ? (
-                    <MediaPreview
-                      src={item.access_url}
-                      alt={item.original_name ?? item.media_no}
-                      mediaType={item.media_type}
-                      mimeType={item.mime_type}
-                    />
-                  ) : (
-                    <div className="admin-media-preview-placeholder">
-                      <span>{item.access_url ? '点击后加载预览，避免一次性拉取大量媒体。' : '暂无预览地址'}</span>
-                      {item.access_url ? (
-                        <button type="button" className="admin-media-preview-load" onClick={() => showPreview(item.media_no)}>
-                          加载预览
-                        </button>
-                      ) : null}
-                    </div>
-                  )}
-                  {item.access_url ? <a className="admin-media-preview-open" href={item.access_url} target="_blank" rel="noreferrer">打开原文件</a> : null}
-                </article>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="admin-media-preview-empty">暂无图片或视频</div>
-        )}
-      </div>
-    </DetailSection>
+    <MediaPreview
+      src={previewSource}
+      fullSrc={item.access_url ?? previewSource}
+      alt={item.original_name ?? item.media_no}
+      mediaType={item.media_type}
+      mimeType={item.mime_type}
+    />
   );
 };
+
+const RecordContentPreview = ({ data }: { data: AdminRecordDetail }) => (
+  <DetailSection title="内容预览">
+    <div className="admin-content-preview">
+      <article className="admin-record-preview-text">
+        <div className="admin-record-preview-eyebrow">{recordTypeLabel(data.record_type)}</div>
+        <h4>{data.title ?? '未命名记录'}</h4>
+        {data.content_text ? <p>{data.content_text}</p> : <p className="admin-record-preview-muted">暂无文字内容</p>}
+      </article>
+      {data.media_list.length ? (
+        <div className="admin-media-preview-grid">
+          {data.media_list.map((item) => {
+            const diagnostics = [
+              item.status === 'uploading' ? '处理中' : null,
+              item.status === 'failed' ? '处理失败' : null,
+              item.upload_expired ? '会话过期' : null,
+              item.failure_reason ? item.failure_reason : null,
+            ].filter(Boolean);
+
+            return (
+              <article key={item.media_no} className="admin-media-preview-card">
+                <div className="admin-media-preview-card-head">
+                  <strong>{item.original_name ?? item.media_no}</strong>
+                  <span>{mediaTypeLabel(item.media_type)}</span>
+                </div>
+                <RecordMediaPreview item={item} />
+                <div className="admin-media-preview-meta">
+                  <Badge tone={badgeToneForStatus(item.status)}>{mediaStatusLabel(item.status)}</Badge>
+                  <span>{formatBytes(item.size_bytes)}</span>
+                  {item.width && item.height ? <span>{item.width}×{item.height}</span> : null}
+                  {item.duration_seconds ? <span>{Math.round(item.duration_seconds)} 秒</span> : null}
+                </div>
+                {diagnostics.length ? <div className="admin-media-preview-diagnostics">{diagnostics.map((text) => <span key={text}>{text}</span>)}</div> : null}
+                {item.access_url ? <a className="admin-media-preview-open" href={item.access_url} target="_blank" rel="noreferrer">打开原文件</a> : null}
+              </article>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="admin-media-preview-empty">暂无关联媒体</div>
+      )}
+    </div>
+  </DetailSection>
+);
 
 const RecordDetailContent = ({ data }: { data: AdminRecordDetail }) => (
   <>
@@ -1058,20 +1222,6 @@ const RecordDetailContent = ({ data }: { data: AdminRecordDetail }) => (
         ]}
       />
     </DetailSection>
-    <DetailSection title="媒体">
-      <MiniTable
-        columns={['媒体编号', '类型', '状态', '文件名', '大小', '预览']}
-        rows={data.media_list.map((item) => [
-          item.media_no,
-          mediaTypeLabel(item.media_type),
-          mediaStatusLabel(item.status),
-          item.original_name,
-          formatBytes(item.size_bytes),
-          item.access_url ? <a href={item.access_url} target="_blank" rel="noreferrer">打开原文件</a> : '—',
-        ])}
-        emptyMessage="暂无关联媒体。"
-      />
-    </DetailSection>
     <DetailSection title="AI 任务">
       <MiniTable
         columns={['任务编号', '类型', '状态', '错误信息', '重试次数', '创建时间']}
@@ -1082,15 +1232,33 @@ const RecordDetailContent = ({ data }: { data: AdminRecordDetail }) => (
   </>
 );
 
-const MediaDetailContent = ({ data }: { data: AdminMediaDetail }) => (
+const MediaDetailContent = ({ data }: { data: AdminMediaDetail }) => {
+  const previewSource = data.thumbnail_url ?? data.access_url;
+  const pendingDiagnostics = [
+    data.status === 'uploading' ? (data.access_url ? '后台审查地址已生成' : '后台审查地址未生成') : null,
+    data.status === 'uploading' ? (data.object_key ? '对象路径已记录' : '对象路径缺失') : null,
+    data.upload_expired ? '上传会话已过期' : null,
+    data.failure_reason ? `失败原因：${data.failure_reason}` : null,
+  ].filter(Boolean);
+
+  return (
   <>
     <DetailSection title="媒体预览">
       <div className="admin-media-preview-card">
         <div className="admin-media-preview-card-head">
           <strong>{data.original_name ?? data.media_no}</strong>
-          <span>{mediaTypeLabel(data.media_type)}</span>
+          <span>{mediaTypeLabel(data.media_type)} · {mediaStatusLabel(data.status)}</span>
         </div>
-        <MediaPreview src={data.thumbnail_url ?? data.access_url} alt={data.original_name ?? data.media_no} mediaType={data.media_type} mimeType={data.mime_type} />
+        <MediaPreview src={previewSource} fullSrc={data.access_url ?? previewSource} alt={data.original_name ?? data.media_no} mediaType={data.media_type} mimeType={data.mime_type} />
+        {pendingDiagnostics.length > 0 ? (
+          <div className="admin-media-preview-diagnostics">
+            {pendingDiagnostics.map((item) => <span key={item}>{item}</span>)}
+          </div>
+        ) : !previewSource ? (
+          <div className="admin-media-preview-diagnostics">
+            <span>无可用预览：未返回缩略图或访问地址</span>
+          </div>
+        ) : null}
         {data.access_url ? <a className="admin-media-preview-open" href={data.access_url} target="_blank" rel="noreferrer">打开原文件</a> : null}
       </div>
     </DetailSection>
@@ -1124,7 +1292,8 @@ const MediaDetailContent = ({ data }: { data: AdminMediaDetail }) => (
       />
     </DetailSection>
   </>
-);
+  );
+};
 
 const AiJobDetailContent = ({ data }: { data: AdminAiJobDetail }) => (
   <>
@@ -1173,6 +1342,75 @@ const AuditLogDetailContent = ({ data }: { data: AdminAuditLogItem }) => (
     </DetailSection>
     <DetailSection title="扩展数据">
       <JsonBlock value={data.metadata} />
+    </DetailSection>
+  </>
+);
+
+const NotificationDeliveryBadges = ({ item }: { item: AdminNotificationItem }) => {
+  const entries = Object.entries(item.delivery_status_counts);
+  if (!entries.length) return <Badge tone="neutral">暂无投递</Badge>;
+
+  return (
+    <span style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+      {entries.map(([status, count]) => (
+        <Badge key={status} tone={badgeToneForStatus(status)}>
+          {notificationDeliveryStatusLabel(status)} {count}
+        </Badge>
+      ))}
+    </span>
+  );
+};
+
+const NotificationDetailContent = ({ data }: { data: AdminNotificationItem }) => (
+  <>
+    <DetailSection title="通知内容">
+      <DetailGrid
+        items={[
+          { label: '通知编号', value: data.notification_no },
+          { label: '通知类型', value: notificationTypeLabel(data.notification_type) },
+          { label: '已读状态', value: <Badge tone={data.read_at ? 'success' : 'warning'}>{notificationReadStateLabel(data.read_at ? 'read' : 'unread')}</Badge> },
+          { label: '目标对象', value: data.target_no ? `${data.target_type ?? 'target'}（${data.target_no}）` : '—' },
+          { label: '创建时间', value: formatDateTime(data.created_at) },
+          { label: '已读时间', value: formatDateTime(data.read_at) },
+        ]}
+      />
+    </DetailSection>
+    <DetailSection title="接收人与家庭">
+      <DetailGrid
+        items={[
+          { label: '接收人', value: `${data.user_name}（${data.user_no}）` },
+          { label: '接收人手机号', value: data.user_mobile },
+          { label: '家庭', value: `${data.family_name ?? '未命名家庭'}（${data.family_no}）` },
+          { label: '触发人', value: data.actor_user_no ? `${data.actor_name ?? '未知用户'}（${data.actor_user_no}）` : '系统' },
+        ]}
+      />
+    </DetailSection>
+    <DetailSection title="标题与正文">
+      <DetailList
+        items={[
+          { label: '标题', value: data.title },
+          { label: '正文', value: data.body },
+        ]}
+      />
+    </DetailSection>
+    <DetailSection title="投递记录">
+      {data.deliveries.length ? (
+        <DetailList
+          items={data.deliveries.map((delivery, index) => ({
+            label: `${delivery.channel} · ${notificationDeliveryStatusLabel(delivery.status)} · #${index + 1}`,
+            value: [
+              `服务商：${delivery.provider ?? '—'}`,
+              `尝试次数：${delivery.attempts}`,
+              `送达时间：${formatDateTime(delivery.delivered_at)}`,
+              `下次重试：${formatDateTime(delivery.next_retry_at)}`,
+              `错误信息：${delivery.last_error ?? '—'}`,
+              `更新时间：${formatDateTime(delivery.updated_at)}`,
+            ].join('\n'),
+          }))}
+        />
+      ) : (
+        <EmptyState title="暂无投递记录" message="这条通知目前只有站内消息，没有生成推送投递任务。" />
+      )}
     </DetailSection>
   </>
 );
@@ -1426,7 +1664,7 @@ export const FamiliesPage = () => {
     <EntityTitle key={`${item.family_no}-owner`} title={item.owner_name} meta={item.owner_mobile ?? item.owner_user_no} />,
     <span key={`${item.family_no}-assets`} style={{ display: 'grid', gap: '4px' }}>
       <span>{item.children_count} 个孩子 / {item.members_count} 位成员</span>
-      <span style={{ color: '#66736f', fontSize: '12px' }}>{item.records_count} 条记录 / {item.media_count} 个媒体</span>
+        <span style={{ color: '#7d7162', fontSize: '12px' }}>{item.records_count} 条记录 / {item.media_count} 个媒体</span>
     </span>,
     item.archive_export_requests_count,
     <Badge key={`${item.family_no}-status`} tone={badgeToneForStatus(item.status)}>{familyStatusLabel(item.status)}</Badge>,
@@ -1458,6 +1696,7 @@ export const ChildrenPage = () => {
   const detail = useDetailState<AdminChildDetail>();
   const currentChildren = state.result?.list ?? [];
   const activeChildren = currentChildren.filter((item) => item.status === 'active' || item.status === 'normal').length;
+  const avatarReadyCount = currentChildren.filter((item) => Boolean(item.avatar_url)).length;
   const rows = formatListRows(currentChildren, (item) => [
     <EntityWithAvatar key={`${item.child_no}-profile`} avatarUrl={item.avatar_url} title={item.name} meta={`${item.current_age_display ?? formatDateOnly(item.birthday)} · ${genderLabel(item.gender)}`} />,
     <EntityTitle key={`${item.child_no}-family`} title={item.family_name ?? item.family_no} meta={item.family_no} />,
@@ -1472,6 +1711,7 @@ export const ChildrenPage = () => {
     <PageShell title="孩子列表" description="查询孩子档案、归属家庭与拥有者。">
       <SearchPanel {...state} />
       <ListSummary total={state.result?.total} label="孩子档案概览" description="默认展示档案归属和状态，发现异常时进入详情核查家庭关系。">
+        <SummaryStat label="头像可用" value={`${avatarReadyCount}/${currentChildren.length}`} tone={avatarReadyCount === currentChildren.length ? 'success' : 'warning'} />
         <SummaryStat label="当前页档案" value={currentChildren.length} />
         <SummaryStat label="状态正常" value={activeChildren} tone="success" />
       </ListSummary>
@@ -1486,11 +1726,13 @@ export const ChildrenPage = () => {
 };
 
 export const RecordsPage = () => {
-  const state = useAdminListPage<AdminRecordItem>(adminApi.listRecords);
+  const [recordFilter, setRecordFilter] = useState<AdminRecordFilter>(() => normalizeRecordFilter(new URLSearchParams(window.location.search).get('record_filter')));
+  const state = useAdminListPage<AdminRecordItem>((params) => adminApi.listRecords({ ...params, record_filter: recordFilter }));
   const detail = useDetailState<AdminRecordDetail>();
   const { requestOperationReason, reasonDialog } = useOperationReasonDialog();
   const [updatingRecordNo, setUpdatingRecordNo] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const filterLoadedRef = useRef(recordFilter);
 
   const updateStatus = async (record: AdminRecordItem) => {
     const nextStatus = record.status === 'published' ? 'draft' : 'published';
@@ -1518,13 +1760,27 @@ export const RecordsPage = () => {
     }
   };
 
+  useEffect(() => {
+    if (filterLoadedRef.current === recordFilter) return;
+    filterLoadedRef.current = recordFilter;
+    void state.load(1, state.pageSize);
+  }, [recordFilter, state]);
+
   const currentRecords = state.result?.list ?? [];
   const publishedRecords = currentRecords.filter((item) => item.status === 'published').length;
   const draftRecords = currentRecords.filter((item) => item.status === 'draft').length;
+  const mediaExceptionRecords = currentRecords.filter((item) => item.has_media_exception).length;
+  const riskFlagRecords = currentRecords.filter((item) => item.has_risk_flag).length;
   const rows = formatListRows(currentRecords, (item) => [
     <EntityTitle key={`${item.record_no}-title`} title={item.title ?? '未命名记录'} meta={`创建者：${item.creator_name ?? item.creator_user_no}`} />,
     item.child_name ?? item.child_no,
     <Badge key={`${item.record_no}-type`} tone="info">{recordTypeLabel(item.record_type)}</Badge>,
+    item.media_count ? (
+      <span key={`${item.record_no}-media`} className="admin-record-media-tags">
+        {(item.media_types ?? []).map((type) => <Badge key={`${item.record_no}-${type}`} tone="neutral">{mediaTypeLabel(type)}</Badge>)}
+        {item.has_media_exception ? <Badge tone="warning">异常 {item.pending_media_count ?? 0}</Badge> : null}
+      </span>
+    ) : '—',
     visibilityScopeLabel(item.visibility_scope),
     <Badge key={`${item.record_no}-status`} tone={badgeToneForStatus(item.status)}>{recordStatusLabel(item.status)}</Badge>,
     formatDateTime(item.created_at),
@@ -1537,15 +1793,36 @@ export const RecordsPage = () => {
   ]);
 
   return (
-    <PageShell title="记录列表" description="用于排查记录状态、归属孩子和创建者。">
+    <PageShell title="成长记录">
       <SearchPanel {...state} />
-      <ListSummary total={state.result?.total} label="成长记录概览" description="默认展示最近记录，先看发布状态和可见范围，再处理详情、下架或恢复。">
+      <Panel className="admin-record-filter-panel">
+        <div className="admin-record-filter-bar">
+          <div className="admin-record-filter-tabs" role="tablist" aria-label="成长记录筛选">
+            {recordFilterOptions.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                className={recordFilter === item.key ? 'is-active' : ''}
+                onClick={() => {
+                  setRecordFilter(item.key);
+                  window.history.replaceState(null, '', item.key === 'all' ? '/records' : `/records?record_filter=${item.key}`);
+                }}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </Panel>
+      <ListSummary total={state.result?.total} label="记录概览">
         <SummaryStat label="已发布" value={publishedRecords} tone="success" />
         <SummaryStat label="草稿" value={draftRecords} tone={draftRecords > 0 ? 'warning' : 'neutral'} />
+        <SummaryStat label="媒体异常" value={mediaExceptionRecords} tone={mediaExceptionRecords > 0 ? 'warning' : 'neutral'} />
+        <SummaryStat label="风险标记" value={riskFlagRecords} tone={riskFlagRecords > 0 ? 'danger' : 'neutral'} />
       </ListSummary>
       {state.error ? <Panel><EmptyState message={`加载失败：${state.error}`} /></Panel> : null}
       {actionError ? <Panel><EmptyState message={`操作失败：${actionError}`} /></Panel> : null}
-      <TableShell columns={['记录', '孩子', '类型', '可见范围', '状态', '创建时间', '操作']} rows={rows} emptyMessage="暂无匹配成长记录。可按标题、孩子或发布状态重新查询。" loading={state.loading} />
+      <TableShell columns={['记录', '孩子', '类型', '媒体', '可见范围', '状态', '创建时间', '操作']} rows={rows} emptyMessage="暂无匹配成长记录。可切换筛选或重新搜索。" loading={state.loading} />
       {state.result ? <PaginationPanel page={state.result.page} pageSize={state.result.page_size} total={state.result.total} hasMore={state.result.has_more} loading={state.loading} onPrevPage={state.onPrevPage} onNextPage={state.onNextPage} /> : null}
       <DetailDrawer open={detail.state.open} title={detail.state.title} subtitle={detail.state.subtitle} loading={detail.state.loading} error={detail.state.error} onClose={detail.closeDetail}>
         {detail.state.data ? <RecordDetailContent data={detail.state.data} /> : null}
@@ -1575,9 +1852,12 @@ export const MediaPage = () => {
   const mediaAutoLoadedRef = useRef(false);
   const [updatingMediaNo, setUpdatingMediaNo] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
+  const mediaLoadRequestRef = useRef(0);
 
   const load = useCallback(async (nextPage = page, nextPageSize = pageSize, event?: FormEvent, override?: Partial<AdminMediaListParams>) => {
     event?.preventDefault();
+    const requestId = ++mediaLoadRequestRef.current;
     setLoading(true);
     setError(null);
     try {
@@ -1591,16 +1871,18 @@ export const MediaPage = () => {
         uploader_user_no: optionalFilter(override?.uploader_user_no ?? uploaderUserNo),
         start_time: override?.start_time ?? toIsoDateTime(startTime),
         end_time: override?.end_time ?? toIsoDateTime(endTime),
-        page: nextPage,
-        page_size: nextPageSize,
-      });
+         page: nextPage,
+         page_size: nextPageSize,
+       });
+      if (requestId !== mediaLoadRequestRef.current) return;
       setResult(next);
       setPage(next.page);
       setPageSize(next.page_size);
     } catch (err) {
+      if (requestId !== mediaLoadRequestRef.current) return;
       setError(getErrorMessage(err));
     } finally {
-      setLoading(false);
+      if (requestId === mediaLoadRequestRef.current) setLoading(false);
     }
   }, [childNo, endTime, familyNo, keyword, linked, mediaType, page, pageSize, startTime, status, uploaderUserNo]);
 
@@ -1672,21 +1954,19 @@ export const MediaPage = () => {
     <Badge key={`${item.media_no}-type`} tone="info">{mediaTypeLabel(item.media_type)}</Badge>,
     <ActionGroup key={`${item.media_no}-actions`}>
       <ActionButton icon={<Eye size={15} />} onClick={() => void detail.openDetail('媒体详情', item.media_no, () => adminApi.getMediaDetail(item.media_no))}>详情</ActionButton>
-      <ActionButton icon={<CheckCircle2 size={15} />} onClick={() => void updateStatus(item, 'ready')} disabled={updatingMediaNo === item.media_no} tone="success">通过</ActionButton>
-      <ActionButton icon={<AlertTriangle size={15} />} onClick={() => void updateStatus(item, 'failed')} disabled={updatingMediaNo === item.media_no} tone="warning">异常</ActionButton>
-      <ActionButton icon={<ArchiveX size={15} />} onClick={() => void updateStatus(item, 'removed')} disabled={updatingMediaNo === item.media_no} tone="danger">下架</ActionButton>
+       <ActionMenu>
+         <ActionButton icon={<CheckCircle2 size={15} />} onClick={() => updateStatus(item, 'ready')} disabled={updatingMediaNo === item.media_no} tone="success">通过</ActionButton>
+         <ActionButton icon={<AlertTriangle size={15} />} onClick={() => updateStatus(item, 'failed')} disabled={updatingMediaNo === item.media_no} tone="warning">标记异常</ActionButton>
+         <ActionButton icon={<ArchiveX size={15} />} onClick={() => updateStatus(item, 'removed')} disabled={updatingMediaNo === item.media_no} tone="danger">下架</ActionButton>
+      </ActionMenu>
     </ActionGroup>,
   ]);
 
   return (
-    <PageShell title="媒体列表" description="用于查看媒体上传记录、归属关系和类型。">
+    <PageShell title="媒体库">
       <Panel>
         <form className="admin-audit-filter-form" onSubmit={(event) => void load(1, pageSize, event)} style={{ display: 'grid', gap: '12px' }}>
-          <div>
-            <strong style={{ display: 'block', color: '#16211f', marginBottom: '4px' }}>筛选条件</strong>
-            <p style={mutedTextStyle}>按媒体内容、状态、归属和上传时间定位素材。</p>
-          </div>
-          <div className="admin-audit-filter-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
+          <div className="admin-audit-filter-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(240px, 1fr) repeat(2, minmax(160px, 0.45fr))', gap: '10px' }}>
             <input style={inputStyle} value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="编号 / 文件 / 孩子 / 记录" />
             <AdminSelect value={mediaType} onChange={(event) => setMediaType(event.target.value)}>
               <option value="">全部类型</option>
@@ -1696,39 +1976,48 @@ export const MediaPage = () => {
             </AdminSelect>
             <AdminSelect value={status} onChange={(event) => setStatus(event.target.value)}>
               <option value="">全部状态</option>
-              <option value="uploading">上传中</option>
+              <option value="uploading">处理中</option>
               <option value="ready">可用</option>
               <option value="failed">异常</option>
               <option value="removed">已下架</option>
             </AdminSelect>
-            <AdminSelect value={linked} onChange={(event) => setLinked(event.target.value)}>
-              <option value="">全部关联</option>
-              <option value="linked">已关联记录</option>
-              <option value="unlinked">未关联记录</option>
-            </AdminSelect>
-            <input style={inputStyle} value={childNo} onChange={(event) => setChildNo(event.target.value)} placeholder="孩子编号" />
-            <input style={inputStyle} value={familyNo} onChange={(event) => setFamilyNo(event.target.value)} placeholder="家庭编号" />
-            <input style={inputStyle} value={uploaderUserNo} onChange={(event) => setUploaderUserNo(event.target.value)} placeholder="上传者编号" />
-            <AdminDateInput type="datetime-local" value={startTime} onChange={(event) => setStartTime(event.target.value)} aria-label="开始时间" />
-            <AdminDateInput type="datetime-local" value={endTime} onChange={(event) => setEndTime(event.target.value)} aria-label="结束时间" />
           </div>
+          {advancedFiltersOpen ? (
+            <div className="admin-audit-filter-grid admin-advanced-filter-grid">
+              <AdminSelect value={linked} onChange={(event) => setLinked(event.target.value)}>
+                <option value="">全部关联</option>
+                <option value="linked">已关联记录</option>
+                <option value="unlinked">未关联记录</option>
+              </AdminSelect>
+              <input style={inputStyle} value={childNo} onChange={(event) => setChildNo(event.target.value)} placeholder="孩子编号" />
+              <input style={inputStyle} value={familyNo} onChange={(event) => setFamilyNo(event.target.value)} placeholder="家庭编号" />
+              <input style={inputStyle} value={uploaderUserNo} onChange={(event) => setUploaderUserNo(event.target.value)} placeholder="上传者编号" />
+              <AdminDateInput type="datetime-local" value={startTime} onChange={(event) => setStartTime(event.target.value)} aria-label="开始时间" placeholder="开始时间" />
+              <AdminDateInput type="datetime-local" value={endTime} onChange={(event) => setEndTime(event.target.value)} aria-label="结束时间" placeholder="结束时间" />
+            </div>
+          ) : null}
           <div className="admin-audit-filter-actions" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            <button type="submit" style={primaryButtonStyle} disabled={loading}>
+            <AdminButton type="submit" tone="primary" disabled={loading}>
               {loading ? '查询中…' : '查询'}
-            </button>
-            <button type="button" style={secondaryButtonStyle} disabled={loading} onClick={() => void clearFilters()}>
+            </AdminButton>
+            <AdminButton type="button" tone="ghost" disabled={loading} onClick={() => void clearFilters()}>
               清空
-            </button>
+            </AdminButton>
+            <AdminButton type="button" tone="ghost" disabled={loading} onClick={() => setAdvancedFiltersOpen((current) => !current)}>
+              <SlidersHorizontal size={15} />
+              {advancedFiltersOpen ? '收起筛选' : '高级筛选'}
+            </AdminButton>
           </div>
         </form>
       </Panel>
-      <ListSummary total={result?.total} label="媒体库概览" description="默认展示媒体清单，优先识别异常、上传中和未关联素材。">
+      <Panel className="admin-media-compact-summary">
+        <SummaryStat label="总数" value={result?.total ?? 0} />
         <SummaryStat label="可用" value={readyMedia} tone="success" />
         <SummaryStat label="待处理" value={needsReviewMedia} tone={needsReviewMedia > 0 ? 'warning' : 'neutral'} />
-      </ListSummary>
+      </Panel>
       {error ? <Panel><EmptyState message={`加载失败：${error}`} /></Panel> : null}
       {actionError ? <Panel><EmptyState message={`操作失败：${actionError}`} /></Panel> : null}
-      <TableShell columns={['媒体', '处理建议', '孩子', '上传者', '类型', '操作']} rows={rows} emptyMessage="暂无匹配媒体。可清空筛选，或优先查看上传中、异常、未关联媒体。" loading={loading} />
+      <TableShell columns={['媒体', '状态', '孩子', '上传者', '类型', '操作']} rows={rows} emptyMessage="暂无媒体" loading={loading} />
       {result ? <PaginationPanel page={result.page} pageSize={result.page_size} total={result.total} hasMore={result.has_more} loading={loading} onPrevPage={() => load(page - 1, pageSize)} onNextPage={() => load(page + 1, pageSize)} /> : null}
       <DetailDrawer open={detail.state.open} title={detail.state.title} subtitle={detail.state.subtitle} loading={detail.state.loading} error={detail.state.error} onClose={detail.closeDetail}>
         {detail.state.data ? <MediaDetailContent data={detail.state.data} /> : null}
@@ -1826,6 +2115,146 @@ export const AIJobsPage = () => {
         {detail.state.data ? <AiJobDetailContent data={detail.state.data} /> : null}
       </DetailDrawer>
       {reasonDialog}
+    </PageShell>
+  );
+};
+
+export const NotificationsPage = () => {
+  const detail = useDetailState<AdminNotificationItem>();
+  const [keyword, setKeyword] = useState('');
+  const [readState, setReadState] = useState('');
+  const [notificationType, setNotificationType] = useState('');
+  const [deliveryStatus, setDeliveryStatus] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<{ list: AdminNotificationItem[]; page: number; page_size: number; total: number; has_more: boolean } | null>(null);
+  const autoLoadedRef = useRef(false);
+  const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
+
+  const load = useCallback(async (nextPage = page, nextPageSize = pageSize, event?: FormEvent, override?: NotificationFilterOverride) => {
+    event?.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      const activeKeyword = override?.keyword ?? keyword;
+      const activeReadState = override?.readState ?? readState;
+      const activeNotificationType = override?.notificationType ?? notificationType;
+      const activeDeliveryStatus = override?.deliveryStatus ?? deliveryStatus;
+      const activeStartTime = override?.startTime ?? startTime;
+      const activeEndTime = override?.endTime ?? endTime;
+      const next = await adminApi.listNotifications({
+        keyword: activeKeyword || undefined,
+        read_state: activeReadState || undefined,
+        notification_type: activeNotificationType || undefined,
+        delivery_status: activeDeliveryStatus || undefined,
+        start_time: toIsoDateTime(activeStartTime),
+        end_time: toIsoDateTime(activeEndTime),
+        page: nextPage,
+        page_size: nextPageSize,
+      });
+      setResult(next);
+      setPage(next.page);
+      setPageSize(next.page_size);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setLoading(false);
+    }
+  }, [deliveryStatus, endTime, keyword, notificationType, page, pageSize, readState, startTime]);
+
+  const clearFilters = async () => {
+    setKeyword('');
+    setReadState('');
+    setNotificationType('');
+    setDeliveryStatus('');
+    setStartTime('');
+    setEndTime('');
+    await load(1, pageSize, undefined, { keyword: '', readState: '', notificationType: '', deliveryStatus: '', startTime: '', endTime: '' });
+  };
+
+  useEffect(() => {
+    if (autoLoadedRef.current) return;
+    autoLoadedRef.current = true;
+    const timer = window.setTimeout(() => {
+      void load(1, pageSize);
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [load, pageSize]);
+
+  const currentNotifications = result?.list ?? [];
+  const unreadCount = currentNotifications.filter((item) => !item.read_at).length;
+  const failedDeliveryCount = currentNotifications.filter((item) => (item.delivery_status_counts.failed ?? 0) > 0).length;
+  const queuedDeliveryCount = currentNotifications.filter((item) => (item.delivery_status_counts.queued ?? 0) > 0).length;
+  const rows = formatListRows(currentNotifications, (item) => [
+    <EntityTitle key={`${item.notification_no}-content`} title={item.title} meta={`${notificationTypeLabel(item.notification_type)} · ${item.notification_no}`} />,
+    <EntityTitle key={`${item.notification_no}-user`} title={item.user_name} meta={item.user_mobile ?? item.user_no} />,
+    <EntityTitle key={`${item.notification_no}-family`} title={item.family_name ?? '未命名家庭'} meta={item.family_no} />,
+    <Badge key={`${item.notification_no}-read`} tone={item.read_at ? 'success' : 'warning'}>{notificationReadStateLabel(item.read_at ? 'read' : 'unread')}</Badge>,
+    <NotificationDeliveryBadges key={`${item.notification_no}-delivery`} item={item} />,
+    <CompactText key={`${item.notification_no}-target`} value={item.target_no ? `${item.target_type ?? 'target'}:${item.target_no}` : null} maxWidth={160} />,
+    formatDateTime(item.created_at),
+    <ActionButton key={`${item.notification_no}-detail`} icon={<Eye size={15} />} onClick={() => void detail.openDetail('通知详情', item.notification_no, async () => item)}>详情</ActionButton>,
+  ]);
+
+  return (
+    <PageShell title="通知管理" description="查看站内消息和手机通知投递状态，定位家庭成员收不到通知、推送失败和未读积压问题。">
+      <Panel>
+        <form className="admin-audit-filter-form" onSubmit={(event) => void load(1, pageSize, event)} style={{ display: 'grid', gap: '12px' }}>
+          <div className="admin-audit-filter-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(260px, 1fr) minmax(180px, 0.45fr)', gap: '10px' }}>
+            <input style={inputStyle} value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="用户 / 家庭 / 通知 / 目标" />
+            <AdminSelect value={readState} onChange={(event) => setReadState(event.target.value)}>
+              <option value="">全部已读状态</option>
+              <option value="unread">未读</option>
+              <option value="read">已读</option>
+            </AdminSelect>
+          </div>
+          {advancedFiltersOpen ? (
+            <div className="admin-audit-filter-grid admin-advanced-filter-grid">
+              <AdminSelect value={notificationType} onChange={(event) => setNotificationType(event.target.value)}>
+                <option value="">全部通知类型</option>
+                <option value="family.record_published">家庭发布记录</option>
+                <option value="system.update_available">版本更新</option>
+              </AdminSelect>
+              <AdminSelect value={deliveryStatus} onChange={(event) => setDeliveryStatus(event.target.value)}>
+                <option value="">全部投递状态</option>
+                <option value="queued">待投递</option>
+                <option value="sent">已投递</option>
+                <option value="failed">投递失败</option>
+                <option value="skipped">已跳过</option>
+              </AdminSelect>
+              <AdminDateInput type="datetime-local" value={startTime} onChange={(event) => setStartTime(event.target.value)} aria-label="开始时间" placeholder="开始时间" />
+              <AdminDateInput type="datetime-local" value={endTime} onChange={(event) => setEndTime(event.target.value)} aria-label="结束时间" placeholder="结束时间" />
+            </div>
+          ) : null}
+          <div className="admin-audit-filter-actions" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <AdminButton type="submit" tone="primary" disabled={loading}>
+              {loading ? '查询中…' : '查询'}
+            </AdminButton>
+            <AdminButton type="button" tone="ghost" disabled={loading} onClick={() => void clearFilters()}>
+              清空
+            </AdminButton>
+            <AdminButton type="button" tone="ghost" disabled={loading} onClick={() => setAdvancedFiltersOpen((current) => !current)}>
+              <SlidersHorizontal size={15} />
+              {advancedFiltersOpen ? '收起筛选' : '高级筛选'}
+            </AdminButton>
+          </div>
+        </form>
+      </Panel>
+      <ListSummary total={result?.total} label="通知状态概览" description="默认展示最近通知，优先关注未读积压、待投递和投递异常；投递失败不作为普通用户提示文案直接铺在列表中。">
+        <SummaryStat label="未读" value={unreadCount} tone={unreadCount > 0 ? 'warning' : 'success'} />
+        <SummaryStat label="待投递" value={queuedDeliveryCount} tone={queuedDeliveryCount > 0 ? 'warning' : 'neutral'} />
+        <SummaryStat label="投递失败" value={failedDeliveryCount} tone={failedDeliveryCount > 0 ? 'danger' : 'success'} />
+      </ListSummary>
+      {error ? <Panel><EmptyState message="通知数据暂时不可用，请稍后重试或查看系统运维日志。" /></Panel> : null}
+      <TableShell columns={['通知', '接收人', '家庭', '已读', '投递', '目标', '创建时间', '操作']} rows={rows} emptyMessage="暂无匹配通知。可清空筛选，或等待用户发布记录后生成家庭通知。" loading={loading} />
+      {result ? <PaginationPanel page={result.page} pageSize={result.page_size} total={result.total} hasMore={result.has_more} loading={loading} onPrevPage={async () => { if (!loading && page > 1) await load(page - 1, pageSize); }} onNextPage={async () => { if (!loading && result.has_more) await load(page + 1, pageSize); }} /> : null}
+      <DetailDrawer open={detail.state.open} title={detail.state.title} subtitle={detail.state.subtitle} loading={detail.state.loading} error={detail.state.error} onClose={detail.closeDetail}>
+        {detail.state.data ? <NotificationDetailContent data={detail.state.data} /> : null}
+      </DetailDrawer>
     </PageShell>
   );
 };
@@ -1955,7 +2384,7 @@ export const SupportTicketsPage = () => {
       <Panel>
         <form className="admin-audit-filter-form" onSubmit={(event) => void load(1, pageSize, event)} style={{ display: 'grid', gap: '12px' }}>
           <div>
-            <strong style={{ display: 'block', color: '#16211f', marginBottom: '4px' }}>筛选条件</strong>
+          <strong style={{ display: 'block', color: '#221b12', marginBottom: '4px' }}>筛选条件</strong>
             <p style={mutedTextStyle}>支持按反馈编号、提交人、联系方式、问题内容、类型、优先级和处理状态筛选。</p>
           </div>
           <div className="admin-audit-filter-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
@@ -2101,7 +2530,7 @@ export const ArchiveExportRequestsPage = () => {
     <EntityTitle key={`${item.request_no}-title`} title={item.request_no} meta={archiveExportPurposeLabel(item.purpose)} />,
     <EntityTitle key={`${item.request_no}-child`} title={item.child_name} meta={item.child_no} />,
     <EntityTitle key={`${item.request_no}-user`} title={item.user_name} meta={item.user_mobile ?? item.user_no} />,
-    <span key={`${item.request_no}-snapshot`} style={{ display: 'grid', gap: '4px', color: '#4b5a56', fontSize: '12px', fontWeight: 700 }}>
+        <span key={`${item.request_no}-snapshot`} style={{ display: 'grid', gap: '4px', color: '#5d4d35', fontSize: '12px', fontWeight: 700 }}>
       <span>{archiveExportTypeLabel(item.export_type)}</span>
       <span>{item.record_count} 条记录 · {item.media_count} 个媒体 · {item.milestone_count} 个里程碑</span>
     </span>,
@@ -2132,7 +2561,7 @@ export const ArchiveExportRequestsPage = () => {
       <Panel>
         <form className="admin-audit-filter-form" onSubmit={(event) => void load(1, pageSize, event)} style={{ display: 'grid', gap: '12px' }}>
           <div>
-            <strong style={{ display: 'block', color: '#16211f', marginBottom: '4px' }}>筛选条件</strong>
+          <strong style={{ display: 'block', color: '#221b12', marginBottom: '4px' }}>筛选条件</strong>
             <p style={mutedTextStyle}>支持按申请编号、孩子、家庭、申请人、联系方式、申请类型和处理状态筛选。</p>
           </div>
           <div className="admin-audit-filter-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
@@ -2255,7 +2684,7 @@ export const AuditLogsPage = () => {
       <Panel>
         <form className="admin-audit-filter-form" onSubmit={(event) => void load(1, pageSize, event)} style={{ display: 'grid', gap: '12px' }}>
           <div>
-            <strong style={{ display: 'block', color: '#16211f', marginBottom: '4px' }}>筛选条件</strong>
+            <strong style={{ display: 'block', color: '#221b12', marginBottom: '4px' }}>筛选条件</strong>
             <p style={mutedTextStyle}>支持按关键字、动作、目标类型和发生时间筛选。</p>
           </div>
           <div className="admin-audit-filter-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
@@ -2276,8 +2705,8 @@ export const AuditLogsPage = () => {
                 </option>
               ))}
             </AdminSelect>
-            <AdminDateInput type="datetime-local" value={startTime} onChange={(event) => setStartTime(event.target.value)} aria-label="开始时间" />
-            <AdminDateInput type="datetime-local" value={endTime} onChange={(event) => setEndTime(event.target.value)} aria-label="结束时间" />
+            <AdminDateInput type="datetime-local" value={startTime} onChange={(event) => setStartTime(event.target.value)} aria-label="开始时间" placeholder="开始时间" />
+            <AdminDateInput type="datetime-local" value={endTime} onChange={(event) => setEndTime(event.target.value)} aria-label="结束时间" placeholder="结束时间" />
           </div>
           <div className="admin-audit-filter-actions" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <button type="submit" style={primaryButtonStyle} disabled={loading}>

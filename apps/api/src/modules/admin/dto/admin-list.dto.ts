@@ -1,4 +1,4 @@
-import { IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class AdminListDto {
   @IsOptional()
@@ -15,4 +15,14 @@ export class AdminListDto {
   @IsOptional()
   @IsString()
   keyword?: string;
+}
+
+export const adminRecordFilters = ['all', 'image', 'video', 'audio', 'media_exception', 'pending', 'risk'] as const;
+
+export type AdminRecordFilter = (typeof adminRecordFilters)[number];
+
+export class AdminRecordListDto extends AdminListDto {
+  @IsOptional()
+  @IsIn(adminRecordFilters)
+  record_filter?: AdminRecordFilter;
 }

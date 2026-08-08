@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Param, Patch, Post, Put, Query, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, Patch, Post, Put, Query, Req, Res, UseGuards } from '@nestjs/common';
 import { Request, Response } from 'express';
 
 import { REFRESH_TOKEN_COOKIE_NAME } from '../../shared/constants';
@@ -77,6 +77,12 @@ export class UsersController {
   @HttpCode(200)
   registerDeviceToken(@CurrentUser() user: AuthenticatedUser, @Body() dto: RegisterDeviceTokenDto) {
     return this.usersService.registerDeviceToken(user.id, dto);
+  }
+
+  @Delete('me/device-tokens')
+  @HttpCode(200)
+  unregisterDeviceToken(@CurrentUser() user: AuthenticatedUser, @Body() dto: RegisterDeviceTokenDto) {
+    return this.usersService.unregisterDeviceToken(user.id, dto);
   }
 
   @Get('me/app-update')

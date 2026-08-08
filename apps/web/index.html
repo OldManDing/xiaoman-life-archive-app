@@ -5,10 +5,42 @@
     <link rel="icon" type="image/png" href="/brand/nianlun-logo-64.png" />
     <link rel="apple-touch-icon" href="/brand/nianlun-logo-192.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <style>
+      html, body { margin: 0; min-height: 100%; background: #f8f8f4; }
+      .nianlun-preboot {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: grid;
+        place-items: center;
+        background: #f8f8f4;
+      }
+      .nianlun-preboot img {
+        width: 96px;
+        height: 96px;
+        border-radius: 22%;
+        box-shadow: 0 24px 58px rgba(27, 39, 32, 0.18);
+      }
+    </style>
     <title>年轮</title>
   </head>
   <body>
+    <main id="nianlun-preboot" class="nianlun-preboot" aria-label="正在启动年轮">
+      <img src="/brand/nianlun-mark-192.png" alt="" width="96" height="96" />
+    </main>
     <div id="root"></div>
+    <script>
+      const nianlunRoot = document.getElementById('root');
+      const nianlunPreboot = document.getElementById('nianlun-preboot');
+      const nianlunObserver = new MutationObserver(() => {
+        if (!nianlunRoot.firstElementChild) return;
+        requestAnimationFrame(() => {
+          nianlunPreboot.remove();
+          nianlunObserver.disconnect();
+        });
+      });
+      nianlunObserver.observe(nianlunRoot, { childList: true });
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -1,14 +1,15 @@
 import { Link } from 'react-router-dom';
-import { Children, isValidElement, useEffect, useId, useMemo, useRef, useState, type ChangeEvent, type CSSProperties, type ReactElement, type ReactNode, type SelectHTMLAttributes } from 'react';
-import { Check, ChevronDown, ChevronLeft } from 'lucide-react';
+import { createPortal } from 'react-dom';
+import { Children, forwardRef, isValidElement, useEffect, useId, useMemo, useRef, useState, type ChangeEvent, type CSSProperties, type ForwardedRef, type InputHTMLAttributes, type ReactElement, type ReactNode, type SelectHTMLAttributes } from 'react';
+import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
 
 const pageShellStyle: CSSProperties = {
   display: 'grid',
   alignContent: 'start',
-  gap: '22px',
+  gap: '18px',
   minHeight: 'var(--nl-page-min-height, 100dvh)',
   gridTemplateColumns: 'minmax(0, 1fr)',
-  padding: '0 22px calc(40px + env(safe-area-inset-bottom))',
+  padding: '0 var(--nl-content-inline) calc(40px + env(safe-area-inset-bottom))',
   background: 'var(--nl-page-bg)',
   color: 'var(--nl-ink)',
   overflowX: 'hidden',
@@ -18,7 +19,7 @@ const pageShellStyle: CSSProperties = {
 const cardStyle: CSSProperties = {
   background: 'var(--nl-card-bg)',
   borderRadius: '8px',
-  padding: '18px',
+  padding: '16px',
   border: '1px solid var(--nl-border-soft)',
   boxShadow: 'var(--nl-shadow-sm)',
   WebkitBackdropFilter: 'blur(16px) saturate(1.02)',
@@ -29,9 +30,9 @@ const headingStyle: CSSProperties = {
   margin: 0,
   color: 'var(--nl-ink)',
   fontFamily: 'var(--nl-font-display)',
-  fontSize: '31px',
-  fontWeight: 800,
-  lineHeight: 1.08,
+  fontSize: 'var(--nl-title-page-size)',
+  fontWeight: 780,
+  lineHeight: 1.12,
 };
 
 const backControlStyle: CSSProperties = {
@@ -128,11 +129,11 @@ export const AppTopBar = ({
         position: 'sticky',
         top: 0,
         zIndex: 3,
-        padding: 'calc(18px + env(safe-area-inset-top)) 22px 10px',
+        padding: 'calc(16px + env(safe-area-inset-top)) var(--nl-content-inline) 8px',
         background: background === 'var(--nl-glass-strong)' ? 'var(--nl-topbar-bg)' : background,
         borderBottom: '1px solid transparent',
-        WebkitBackdropFilter: 'blur(16px) saturate(1.01)',
-        backdropFilter: 'blur(16px) saturate(1.01)',
+        WebkitBackdropFilter: 'none',
+        backdropFilter: 'none',
         boxShadow: 'none',
         ...style,
       }}
@@ -140,7 +141,7 @@ export const AppTopBar = ({
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'minmax(56px, auto) minmax(0, 1fr) minmax(56px, auto)',
+          gridTemplateColumns: 'minmax(48px, auto) minmax(0, 1fr) minmax(48px, auto)',
           alignItems: 'center',
           gap: '8px',
         }}
@@ -158,20 +159,25 @@ export const AppTopBar = ({
             <span aria-hidden="true" />
           )}
         </div>
-        <h1
-          style={{
-            ...headingStyle,
-            minWidth: 0,
-            textAlign: 'center',
-            fontSize: '17px',
-            fontWeight: 760,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {title}
-        </h1>
+        {title ? (
+          <h1
+            style={{
+              ...headingStyle,
+              minWidth: 0,
+              textAlign: 'center',
+              fontFamily: 'var(--nl-font-sans)',
+              fontSize: '16px',
+              fontWeight: 680,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {title}
+          </h1>
+        ) : (
+          <span aria-hidden="true" />
+        )}
         <div style={{ display: 'flex', justifyContent: 'flex-end', minWidth: 0 }}>{action ?? <span aria-hidden="true" />}</div>
       </div>
     </header>
@@ -195,13 +201,20 @@ export const PageShell = ({
   backLabel?: string;
   children: ReactNode;
 }) => (
-  <section style={pageShellStyle}>
+  <section className="app-page-shell" style={pageShellStyle}>
     {!hideHeader ? (
       backTo || onBack ? (
-        <AppTopBar title={title} description={description} backTo={backTo} onBack={onBack} backLabel={backLabel} style={{ margin: '0 -22px' }} />
+        <>
+          <AppTopBar title="" backTo={backTo} onBack={onBack} backLabel={backLabel} style={{ margin: '0 -22px' }} />
+          <header className="page-shell-masthead" style={{ display: 'grid', gap: '9px', padding: '4px 0 8px' }}>
+            <span aria-hidden="true" style={{ width: '28px', height: '2px', background: 'var(--nl-primary-2)' }} />
+            <h1 style={{ ...headingStyle, fontSize: '29px', lineHeight: 1.08 }}>{title}</h1>
+            {description ? <p style={{ margin: 0, maxWidth: '34em', color: 'var(--nl-muted)', lineHeight: 1.65, fontSize: '13px', fontWeight: 500 }}>{description}</p> : null}
+          </header>
+        </>
       ) : (
-        <header style={{ padding: 'calc(34px + env(safe-area-inset-top)) 0 4px', display: 'grid', gap: '8px' }}>
-          <h1 style={{ ...headingStyle, fontSize: '32px' }}>{title}</h1>
+        <header style={{ padding: 'calc(30px + env(safe-area-inset-top)) 0 2px', display: 'grid', gap: '6px' }}>
+          <h1 style={headingStyle}>{title}</h1>
           {description ? <p style={{ margin: '4px 0 0', color: 'var(--nl-muted)', lineHeight: 1.6, fontSize: '13px', fontWeight: 500 }}>{description}</p> : null}
         </header>
       )
@@ -211,7 +224,7 @@ export const PageShell = ({
 );
 
 export const Panel = ({ children, style }: { children: ReactNode; style?: CSSProperties }) => (
-  <div style={{ ...cardStyle, ...style }}>{children}</div>
+  <div className="app-panel" style={{ ...cardStyle, ...style }}>{children}</div>
 );
 
 export const Field = ({ label, children }: { label: string; children: ReactNode }) => (
@@ -244,11 +257,15 @@ export const dateControlStyle: CSSProperties = {
   gap: '10px',
   padding: '0 14px',
   color: 'var(--nl-ink)',
-  fontWeight: 520,
+  fontWeight: 540,
   cursor: 'pointer',
   overflow: 'hidden',
   WebkitAppearance: 'none',
   appearance: 'none',
+  isolation: 'isolate',
+  background: 'var(--nl-control-bg-active)',
+  borderColor: 'var(--nl-border-muted)',
+  boxShadow: 'inset 0 1px 0 var(--nl-inset-highlight)',
 };
 
 export const hiddenNativeDateInputStyle: CSSProperties = {
@@ -263,11 +280,337 @@ export const hiddenNativeDateInputStyle: CSSProperties = {
   padding: 0,
 };
 
+const assignDateInputRef = (ref: ForwardedRef<HTMLInputElement>, value: HTMLInputElement | null) => {
+  if (typeof ref === 'function') {
+    ref(value);
+    return;
+  }
+  if (ref) ref.current = value;
+};
+
+type DateDraft = {
+  year: number;
+  month: number;
+  day: number;
+  hour: number;
+  minute: number;
+};
+
+const appDateWeekdays = ['日', '一', '二', '三', '四', '五', '六'];
+
+const padDatePart = (value: number) => String(value).padStart(2, '0');
+
+const clampDateNumber = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+
+const getDaysInMonth = (year: number, month: number) => new Date(year, month, 0).getDate();
+
+const normalizeDateDraft = (draft: DateDraft): DateDraft => {
+  const month = clampDateNumber(draft.month, 1, 12);
+  const day = clampDateNumber(draft.day, 1, getDaysInMonth(draft.year, month));
+  return {
+    year: draft.year,
+    month,
+    day,
+    hour: clampDateNumber(draft.hour, 0, 23),
+    minute: clampDateNumber(draft.minute, 0, 59),
+  };
+};
+
+const parseDateInputValue = (rawValue: InputHTMLAttributes<HTMLInputElement>['value'], type: 'date' | 'datetime-local'): DateDraft => {
+  const now = new Date();
+  const fallback: DateDraft = {
+    year: now.getFullYear(),
+    month: now.getMonth() + 1,
+    day: now.getDate(),
+    hour: now.getHours(),
+    minute: now.getMinutes(),
+  };
+  const value = typeof rawValue === 'string' ? rawValue : '';
+  if (!value) return fallback;
+
+  const [datePart, timePart = ''] = value.split('T');
+  const dateMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(datePart);
+  if (!dateMatch) return fallback;
+
+  const timeMatch = /^(\d{2}):(\d{2})/.exec(timePart);
+  return normalizeDateDraft({
+    year: Number(dateMatch[1]),
+    month: Number(dateMatch[2]),
+    day: Number(dateMatch[3]),
+    hour: type === 'datetime-local' && timeMatch ? Number(timeMatch[1]) : fallback.hour,
+    minute: type === 'datetime-local' && timeMatch ? Number(timeMatch[2]) : fallback.minute,
+  });
+};
+
+const formatDateDraftValue = (draft: DateDraft, type: 'date' | 'datetime-local') => {
+  const normalized = normalizeDateDraft(draft);
+  const date = [normalized.year, padDatePart(normalized.month), padDatePart(normalized.day)].join('-');
+  if (type === 'date') return date;
+  return `${date}T${padDatePart(normalized.hour)}:${padDatePart(normalized.minute)}`;
+};
+
+const shiftDateDraftMonth = (draft: DateDraft, delta: number): DateDraft => {
+  const next = new Date(draft.year, draft.month - 1 + delta, 1);
+  return normalizeDateDraft({
+    ...draft,
+    year: next.getFullYear(),
+    month: next.getMonth() + 1,
+  });
+};
+
+const getDateGridDays = (year: number, month: number) => {
+  const leading = new Date(year, month - 1, 1).getDay();
+  const total = getDaysInMonth(year, month);
+  return [
+    ...Array.from({ length: leading }, () => null),
+    ...Array.from({ length: total }, (_, index) => index + 1),
+  ];
+};
+
+type AppDateInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> & {
+  type?: 'date' | 'datetime-local';
+  displayValue?: string;
+  placeholder?: string;
+  variant?: 'default' | 'line';
+  controlStyle?: CSSProperties;
+  textStyle?: CSSProperties;
+};
+
+export const AppDateInput = forwardRef<HTMLInputElement, AppDateInputProps>(({
+  type = 'date',
+  displayValue,
+  placeholder,
+  variant = 'default',
+  controlStyle,
+  textStyle,
+  disabled,
+  className,
+  value,
+  onChange,
+  onKeyDown,
+  onPointerDown,
+  ...props
+}, forwardedRef) => {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [isPickerOpen, setPickerOpen] = useState(false);
+  const [draft, setDraft] = useState<DateDraft>(() => parseDateInputValue(value ?? props.defaultValue, type));
+  const isDateTime = type === 'datetime-local';
+  const hasValue = typeof value === 'string' ? value.length > 0 : Boolean(value);
+  const lineVariantStyle: CSSProperties = variant === 'line'
+    ? {
+        minHeight: '44px',
+        width: 'auto',
+        minWidth: 0,
+        padding: '0 0 0 2px',
+        border: 'none',
+        borderRadius: 0,
+        background: 'transparent',
+        boxShadow: 'none',
+        justifyContent: 'flex-end',
+      }
+    : {};
+  const Icon = isDateTime ? Clock : CalendarDays;
+
+  useEffect(() => {
+    if (!isPickerOpen) return;
+    setDraft(parseDateInputValue(value ?? props.defaultValue, type));
+  }, [isPickerOpen, props.defaultValue, type, value]);
+
+  useEffect(() => {
+    if (!isPickerOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setPickerOpen(false);
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [isPickerOpen]);
+
+  const openPicker = () => {
+    if (disabled) return;
+    setPickerOpen(true);
+  };
+
+  const emitDateValue = (nextValue: string) => {
+    const event = {
+      target: { value: nextValue, name: props.name },
+      currentTarget: { value: nextValue, name: props.name },
+    } as ChangeEvent<HTMLInputElement>;
+    onChange?.(event);
+  };
+
+  const commitPickerValue = () => {
+    emitDateValue(formatDateDraftValue(draft, type));
+    setPickerOpen(false);
+  };
+
+  const updateMonth = (delta: number) => setDraft((current) => shiftDateDraftMonth(current, delta));
+
+  const updateTime = (key: 'hour' | 'minute', rawValue: string) => {
+    const max = key === 'hour' ? 23 : 59;
+    const next = Number(rawValue.replace(/\D/g, ''));
+    setDraft((current) => ({
+      ...current,
+      [key]: Number.isFinite(next) ? clampDateNumber(next, 0, max) : 0,
+    }));
+  };
+
+  const calendarDays = getDateGridDays(draft.year, draft.month);
+  const today = parseDateInputValue(formatDateDraftValue(parseDateInputValue('', type), 'date'), 'date');
+
+  return (
+    <>
+      <span
+        className={['app-date-control', 'app-date-control-' + variant].filter(Boolean).join(' ')}
+        onClick={openPicker}
+        style={{
+          ...dateControlStyle,
+          ...lineVariantStyle,
+          minHeight: variant === 'line' ? lineVariantStyle.minHeight : dateControlStyle.minHeight,
+          color: hasValue ? 'var(--nl-ink)' : 'var(--nl-muted-placeholder)',
+          opacity: disabled ? 0.58 : 1,
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          ...controlStyle,
+        }}
+      >
+        <input
+          {...props}
+          ref={(node) => {
+            inputRef.current = node;
+            assignDateInputRef(forwardedRef, node);
+          }}
+          className={['app-date-time-input', className].filter(Boolean).join(' ')}
+          type="text"
+          inputMode="none"
+          autoComplete="off"
+          data-date-input-type={type}
+          value={value}
+          disabled={disabled}
+          onChange={onChange}
+          onKeyDown={(event) => {
+            onKeyDown?.(event);
+            if (event.defaultPrevented) return;
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              openPicker();
+            }
+          }}
+          onPointerDown={(event) => {
+            onPointerDown?.(event);
+            if (event.defaultPrevented) return;
+            event.preventDefault();
+            openPicker();
+          }}
+          style={hiddenNativeDateInputStyle}
+        />
+        <Icon size={isDateTime ? 15 : 17} strokeWidth={2.05} color="var(--nl-muted-strong)" style={{ pointerEvents: 'none', opacity: variant === 'line' ? 0.7 : 0.82, flexShrink: 0 }} />
+        <span
+          style={{
+            pointerEvents: 'none',
+            flex: variant === 'line' ? '0 1 auto' : 1,
+            minWidth: 0,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            fontSize: variant === 'line' ? '14px' : '14px',
+            fontWeight: variant === 'line' ? 600 : 560,
+            ...textStyle,
+          }}
+        >
+          {displayValue || placeholder || (isDateTime ? '选择时间' : '年/月/日')}
+        </span>
+      </span>
+      {isPickerOpen && typeof document !== 'undefined' ? createPortal(
+        <span className="app-date-sheet-backdrop" onMouseDown={(event) => {
+          if (event.target === event.currentTarget) setPickerOpen(false);
+        }}>
+          <span className="app-date-sheet" role="dialog" aria-modal="true" aria-label={typeof props['aria-label'] === 'string' ? props['aria-label'] : '选择日期'}>
+            <span className="app-date-sheet-header">
+              <span>
+                <span className="app-date-sheet-kicker">{isDateTime ? '发生时间' : '日期'}</span>
+                <strong>{draft.year}年{padDatePart(draft.month)}月</strong>
+              </span>
+              <span className="app-date-sheet-actions">
+                <button type="button" onClick={() => setPickerOpen(false)}>取消</button>
+                <button type="button" className="app-date-sheet-confirm" onClick={commitPickerValue}>确定</button>
+              </span>
+            </span>
+            <span className="app-date-sheet-nav" aria-label="切换月份">
+              <button type="button" aria-label={`上一年：${draft.year - 1}`} onClick={() => updateMonth(-12)}>{draft.year - 1}</button>
+              <button type="button" aria-label="上一月" onClick={() => updateMonth(-1)}>
+                <ChevronLeft size={16} strokeWidth={2.4} />
+              </button>
+              <span>{draft.year}.{padDatePart(draft.month)}</span>
+              <button type="button" aria-label="下一月" onClick={() => updateMonth(1)}>
+                <ChevronRight size={16} strokeWidth={2.4} />
+              </button>
+              <button type="button" aria-label={`下一年：${draft.year + 1}`} onClick={() => updateMonth(12)}>{draft.year + 1}</button>
+            </span>
+            <span className="app-date-weekdays">
+              {appDateWeekdays.map((weekday) => <span key={weekday}>{weekday}</span>)}
+            </span>
+            <span className="app-date-grid">
+              {calendarDays.map((day, index) => {
+                const selected = day === draft.day;
+                const isToday = day === today.day && draft.month === today.month && draft.year === today.year;
+                return day ? (
+                  <button
+                    key={day}
+                    type="button"
+                    className={[
+                      'app-date-day',
+                      selected ? 'app-date-day-selected' : '',
+                      isToday ? 'app-date-day-today' : '',
+                    ].filter(Boolean).join(' ')}
+                    onClick={() => setDraft((current) => ({ ...current, day }))}
+                  >
+                    {day}
+                  </button>
+                ) : <span key={`blank-${index}`} className="app-date-day-empty" />;
+              })}
+            </span>
+            {isDateTime ? (
+              <span className="app-date-time-panel">
+                <span>时间</span>
+                <label>
+                  <input
+                    inputMode="numeric"
+                    value={padDatePart(draft.hour)}
+                    onChange={(event) => updateTime('hour', event.target.value)}
+                    aria-label="小时"
+                  />
+                  <small>时</small>
+                </label>
+                <label>
+                  <input
+                    inputMode="numeric"
+                    value={padDatePart(draft.minute)}
+                    onChange={(event) => updateTime('minute', event.target.value)}
+                    aria-label="分钟"
+                  />
+                  <small>分</small>
+                </label>
+              </span>
+            ) : null}
+          </span>
+        </span>,
+        document.body,
+      ) : null}
+    </>
+  );
+});
+
 export const selectControlStyle: CSSProperties = {
   width: '100%',
   minHeight: '44px',
   borderRadius: '8px',
-  border: '1px solid var(--nl-border-soft)',
+  borderWidth: '1px',
+  borderStyle: 'solid',
+  borderColor: 'var(--nl-border-soft)',
   padding: '10px 13px',
   boxSizing: 'border-box',
   color: 'var(--nl-ink)',
@@ -390,7 +733,7 @@ export const AppSelect = ({
           gap: '8px',
           textAlign: 'left',
           ...selectStyle,
-          ...(open ? { border: '1px solid var(--nl-primary-border)', background: 'var(--nl-control-bg-active)', boxShadow: '0 0 0 3px rgba(var(--nl-primary-rgb),0.055)' } : {}),
+          ...(open ? { background: 'var(--nl-control-bg-active)', boxShadow: '0 0 0 3px rgba(var(--nl-primary-rgb),0.055)' } : {}),
         }}
       >
         <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{selectedOption?.label ?? ''}</span>
@@ -503,7 +846,7 @@ export const AppSegmentedControl = ({
             minWidth: 0,
             minHeight: '44px',
             border: 'none',
-            borderRadius: '6px',
+             borderRadius: '11px',
             background: selected ? 'var(--nl-primary-soft)' : 'transparent',
             color: selected ? 'var(--nl-primary-2)' : 'var(--nl-muted)',
             fontSize: options.length > 4 ? '12px' : '13px',
@@ -542,7 +885,7 @@ export const primaryButtonStyle: CSSProperties = {
   gap: '8px',
   lineHeight: 1.2,
   textDecoration: 'none',
-  boxShadow: '0 12px 24px rgba(var(--nl-primary-rgb),0.1), inset 0 1px 0 var(--nl-inset-highlight-faint)',
+  boxShadow: '0 10px 24px rgba(var(--nl-shadow-rgb),0.1), inset 0 1px 0 var(--nl-inset-highlight-faint)',
   transition: 'transform 0.14s ease, box-shadow 0.16s ease, background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, opacity 0.16s ease',
 };
 

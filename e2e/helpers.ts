@@ -11,7 +11,7 @@ export async function loginWeb(page: Page) {
   await page.getByRole('checkbox', { name: '我已阅读并同意《用户协议》和《隐私政策》' }).check();
   await page.getByRole('button', { name: '进入年轮' }).click();
   await expect(page).toHaveURL(/\/home$/);
-  await expect(page.getByText('小满的成长记录')).toBeVisible();
+  await expect(page.getByText('成长封面')).toBeVisible();
 }
 
 export async function loginAdmin(page: Page) {
@@ -21,6 +21,15 @@ export async function loginAdmin(page: Page) {
   await page.getByRole('button', { name: '进入管理后台' }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
   await expect(page.getByRole('heading', { name: '后台总览' })).toBeVisible();
+}
+
+export async function openAdminMore(page: Page) {
+  const more = page.locator('.admin-nav-more');
+  const trigger = more.getByRole('button', { name: '更多管理' });
+  if ((await trigger.getAttribute('aria-expanded')) !== 'true') {
+    await trigger.click();
+  }
+  await expect(trigger).toHaveAttribute('aria-expanded', 'true');
 }
 
 export async function expectNoUnfinishedCopy(page: Page) {

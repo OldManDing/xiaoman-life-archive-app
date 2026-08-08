@@ -9,10 +9,11 @@ import { AliyunSmsProvider } from './services/sms/providers/aliyun-sms.provider'
 import { MockSmsProvider } from './services/sms/providers/mock-sms.provider';
 import { SmsService } from './services/sms/sms.service';
 import { StorageService } from './services/storage.service';
+import { HuaweiPushDeliveryService } from './services/huawei-push-delivery.service';
 
 @Global()
 @Module({
-  providers: [AccessControlService, AuditLogService, NotificationService, RuntimeConfigService, StorageService, SmsCodeService, SmsService, MockSmsProvider, AliyunSmsProvider],
-  exports: [AccessControlService, AuditLogService, NotificationService, RuntimeConfigService, StorageService, SmsCodeService, SmsService],
+  providers: [AccessControlService, AuditLogService, HuaweiPushDeliveryService, NotificationService, RuntimeConfigService, StorageService, SmsCodeService, SmsService, MockSmsProvider, AliyunSmsProvider],
+  exports: [AccessControlService, AuditLogService, HuaweiPushDeliveryService, NotificationService, RuntimeConfigService, StorageService, SmsCodeService, SmsService],
 })
 export class SharedModule {}

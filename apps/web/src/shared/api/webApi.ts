@@ -13,6 +13,7 @@ import type {
   FeedbackTicketsListResponse,
   FamilyMemberOperationsResponse,
   DeletionCheckResponse,
+  DeviceTokenMutationResponse,
   MembershipBookRequestResponse,
   MembershipBookRequestsListResponse,
   ArchiveExportRequestResponse,
@@ -80,6 +81,13 @@ export interface ChangePasswordPayload {
   current_password: string;
   new_password: string;
   new_password_confirm: string;
+}
+
+export interface DeviceTokenPayload {
+  platform: 'android' | 'ios';
+  provider: 'hms' | 'fcm' | 'apns' | 'local';
+  push_token: string;
+  device_label?: string;
 }
 
 export interface UpdatePreferencesPayload {
@@ -258,6 +266,16 @@ export const webApi = {
 
   async markAllNotificationsRead() {
     const response = await http.patch<ApiEnvelope<NotificationMutationResponse>>('/users/me/notifications/read-all');
+    return response.data.data;
+  },
+
+  async registerDeviceToken(payload: DeviceTokenPayload) {
+    const response = await http.post<ApiEnvelope<DeviceTokenMutationResponse>>('/users/me/device-tokens', payload);
+    return response.data.data;
+  },
+
+  async unregisterDeviceToken(payload: DeviceTokenPayload) {
+    const response = await http.delete<ApiEnvelope<DeviceTokenMutationResponse>>('/users/me/device-tokens', { data: payload });
     return response.data.data;
   },
 

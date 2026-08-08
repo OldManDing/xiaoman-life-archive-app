@@ -68,6 +68,15 @@ export interface NotificationMutationResponse {
   updated_count?: number;
 }
 
+export interface DeviceTokenMutationResponse {
+  success: boolean;
+  provider: 'hms' | 'fcm' | 'apns' | 'local';
+  platform: 'android' | 'ios';
+  remote_push_enabled: boolean;
+  registered_at?: string;
+  disabled_count?: number;
+}
+
 export interface AppUpdateCheckResponse {
   platform: 'android';
   current_version: string;
@@ -232,6 +241,8 @@ export interface RecordSummary {
   tags: string[];
   creator_user_no?: string;
   creator_name: string;
+  creator_avatar_url?: string | null;
+  creator_avatar_media_no?: string | null;
   is_milestone: boolean;
   record_type: string;
   status: 'draft' | 'published';

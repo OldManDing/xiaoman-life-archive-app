@@ -3,6 +3,7 @@ import { ActorType, FamilyMemberRole, Prisma, RecordTagSource, RecordType, Visib
 
 import { PrismaService } from '../../prisma/prisma.service';
 import { MEDIA_STATUS_READY, RECORD_STATUS_DRAFT, RECORD_STATUS_PUBLISHED } from '../../shared/constants';
+import { parseMediaReference } from '../../shared/media-reference';
 import { AccessControlService } from '../../shared/services/access-control.service';
 import { AuditLogService } from '../../shared/services/audit-log.service';
 import { NotificationService } from '../../shared/services/notification.service';
@@ -10,6 +11,7 @@ import { StorageService } from '../../shared/services/storage.service';
 import { ageDisplay, generateBizNo, normalizePage, normalizePageSize, statusToRecordLabel, toDateOnly } from '../../shared/utils';
 import { CreateRecordDto } from './dto/create-record.dto';
 import { ListRecordsDto } from './dto/list-records.dto';
+import { ensureRecordMediaCountLimits } from '../media/media-policy';
 import { UpdateRecordDto } from './dto/update-record.dto';
 
 const uniqueTagNames = (tags: Array<{ tagName: string }>) => Array.from(new Set(tags.map((item) => item.tagName).filter(Boolean)));
@@ -105,6 +107,7 @@ export class RecordsService {
       if (media.length !== mediaNos.length) {
         throw new BadRequestException('存在不可用媒体');
       }
+      ensureRecordMediaCountLimits(media);
 
       const created = await tx.record.create({
         data: {
@@ -265,6 +268,7 @@ export class RecordsService {
         if (media.length !== nextMediaNos.length) {
           throw new BadRequestException('存在不可用媒体');
         }
+        ensureRecordMediaCountLimits(media);
 
         await tx.recordMedia.updateMany({
           where: { recordId: record.id },
@@ -279,6 +283,8 @@ export class RecordsService {
             }),
           ),
         );
+      } else {
+        ensureRecordMediaCountLimits(record.media);
       }
 
       await tx.record.update({
@@ -381,6 +387,36 @@ export class RecordsService {
     }
   }
 
+  private async resolveUserAvatarUrl(userId: bigint, avatarUrl: string | null) {
+    const mediaNo = parseMediaReference(avatarUrl);
+    if (!mediaNo) return avatarUrl;
+
+    const media = await this.prisma.recordMedia.findFirst({
+      where: {
+        mediaNo,
+        uploaderUserId: userId,
+        status: MEDIA_STATUS_READY,
+        deletedAt: null,
+      },
+      select: { objectKey: true, thumbnailObjectKey: true },
+    });
+    if (!media) return null;
+
+    const objectKey = media.thumbnailObjectKey ?? media.objectKey;
+    try {
+      return (await this.storageService.createAccessUrl(objectKey)).access_url;
+    } catch {
+      if (objectKey !== media.objectKey) {
+        try {
+          return (await this.storageService.createAccessUrl(media.objectKey)).access_url;
+        } catch {
+          return null;
+        }
+      }
+      return null;
+    }
+  }
+
   private async toRecordSummary(record: {
     recordNo: string;
     title: string | null;
@@ -390,13 +426,16 @@ export class RecordsService {
     recordType: string;
     isMilestone: boolean;
     aiSummary?: string | null;
-    creator: { userNo: string; nickname: string };
+    creator: { id: bigint; userNo: string; nickname: string; avatarUrl: string | null };
     tags: Array<{ tagName: string }>;
     media: Array<{ objectKey: string; mediaNo: string; mediaType: string }>;
     status: number;
   }) {
     const firstMedia = record.media[0];
-    const cover = firstMedia ? await this.storageService.createAccessUrl(firstMedia.objectKey) : null;
+    const [cover, creatorAvatarUrl] = await Promise.all([
+      firstMedia ? this.storageService.createAccessUrl(firstMedia.objectKey) : Promise.resolve(null),
+      this.resolveUserAvatarUrl(record.creator.id, record.creator.avatarUrl),
+    ]);
 
     return {
       record_no: record.recordNo,
@@ -411,6 +450,8 @@ export class RecordsService {
       tags: uniqueTagNames(record.tags),
       creator_user_no: record.creator.userNo,
       creator_name: record.creator.nickname,
+      creator_avatar_url: creatorAvatarUrl,
+      creator_avatar_media_no: parseMediaReference(record.creator.avatarUrl),
       is_milestone: record.isMilestone,
       record_type: record.recordType,
       status: statusToRecordLabel(record.status),

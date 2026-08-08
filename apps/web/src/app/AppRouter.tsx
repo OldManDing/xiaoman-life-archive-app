@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { App as CapacitorApp } from '@capacitor/app';
 import { Capacitor } from '@capacitor/core';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
+import { initializeHmsPush } from '../shared/hmsPush';
 import { registerNativeNotificationTapHandler, scheduleNativeNotificationsForNewItems } from '../shared/nativeNotifications';
 import { markWelcomeIntroSeen } from '../shared/welcome';
 import { PublicLayout } from '../layouts/PublicLayout';
@@ -13,7 +14,7 @@ import { BrandBootMotion } from '../components/BrandBootMotion';
 import {
   LoginPage, SplashPage, WelcomePage, HomePage, TimelinePage, CreateRecordPage,
   SearchPage, ViewRecordPage, EditRecordPage, FamilyPage, FamilyChildPage,
-  FamilyMembersPage, FamilyMemberDetailPage, FamilyInvitePage, ProfilePage, MessagesPage, AccountPage,
+  FamilyMembersPage, FamilyMemberDetailPage, FamilyInvitePage, ProfilePage, MessagesPage, NotificationSettingsPage, AccountPage,
   SettingsPage, LegalPage, ReportsPage, ExportBackupPage, MembershipPage,
   SecurityPage, HelpFeedbackPage, AboutPage, ContactPage, AccountDeletionPage, ErrorPage, OnboardingChildPage
 } from '../pages/index';
@@ -22,6 +23,28 @@ const authRoutes = new Set(['/auth/login', '/splash', '/welcome', '/onboarding/c
 const tabRoutes = new Set(['/home', '/timeline', '/family', '/profile']);
 const bootRecoveryDelayMs = 8000;
 const bootMinimumVisibleMs = import.meta.env.MODE === 'test' || import.meta.env.VITE_E2E === 'true' ? 0 : 3000;
+
+const RouteSurfaceReady = ({ onReady }: { onReady: () => void }) => {
+  useEffect(() => {
+    let cancelled = false;
+    let firstFrame = 0;
+    let secondFrame = 0;
+
+    firstFrame = window.requestAnimationFrame(() => {
+      secondFrame = window.requestAnimationFrame(() => {
+        if (!cancelled) onReady();
+      });
+    });
+
+    return () => {
+      cancelled = true;
+      window.cancelAnimationFrame(firstFrame);
+      window.cancelAnimationFrame(secondFrame);
+    };
+  }, [onReady]);
+
+  return null;
+};
 
 const NativeBackButtonHandler = () => {
   const location = useLocation();
@@ -84,6 +107,7 @@ const NativeNotificationBridge = () => {
 
     let cancelled = false;
     let appStateRemove: (() => void) | undefined;
+    let hmsPushRemove: (() => void) | undefined;
     const syncNotifications = async () => {
       try {
         const notifications = await webApi.listNotifications({ page: 1, page_size: 5 });
@@ -93,7 +117,14 @@ const NativeNotificationBridge = () => {
       }
     };
 
-    void syncNotifications();
+    void initializeHmsPush(navigate).then((remove) => {
+      if (cancelled) {
+        remove();
+        return;
+      }
+      hmsPushRemove = remove;
+      void syncNotifications();
+    });
     const timer = window.setInterval(() => void syncNotifications(), 60_000);
     void CapacitorApp.addListener('appStateChange', ({ isActive }) => {
       if (isActive) void syncNotifications();
@@ -109,8 +140,9 @@ const NativeNotificationBridge = () => {
       cancelled = true;
       window.clearInterval(timer);
       appStateRemove?.();
+      hmsPushRemove?.();
     };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, navigate]);
 
   return null;
 };
@@ -119,6 +151,8 @@ export const AppRouter = () => {
   const { isBootstrapping, isAuthenticated, needsOnboarding, clearSession } = useAuth();
   const [showBootRecovery, setShowBootRecovery] = useState(false);
   const [bootMinimumElapsed, setBootMinimumElapsed] = useState(() => bootMinimumVisibleMs <= 0);
+  const [routeSurfaceReady, setRouteSurfaceReady] = useState(false);
+  const markRouteSurfaceReady = useCallback(() => setRouteSurfaceReady(true), []);
 
   useEffect(() => {
     if (!isBootstrapping) {
@@ -140,7 +174,9 @@ export const AppRouter = () => {
     return () => window.clearTimeout(timer);
   }, []);
 
-  if (isBootstrapping || !bootMinimumElapsed) {
+  const shouldMountRoutes = !isBootstrapping && bootMinimumElapsed;
+
+  if (!shouldMountRoutes) {
     return (
       <BrandBootMotion
         showRecovery={showBootRecovery}
@@ -154,10 +190,12 @@ export const AppRouter = () => {
   }
 
   return (
-    <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
-      <NativeBackButtonHandler />
-      <NativeNotificationBridge />
-      <Routes>
+    <>
+      <BrowserRouter future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
+        <RouteSurfaceReady onReady={markRouteSurfaceReady} />
+        <NativeBackButtonHandler />
+        <NativeNotificationBridge />
+        <Routes>
         <Route element={<PublicLayout />}>
           <Route path="/welcome" element={isAuthenticated ? <Navigate to={needsOnboarding ? '/onboarding/child' : '/home'} replace /> : <WelcomePage />} />
           <Route path="/splash" element={<SplashPage />} />
@@ -188,6 +226,7 @@ export const AppRouter = () => {
             <Route path="family/invite" element={<FamilyInvitePage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="profile/messages" element={<MessagesPage />} />
+            <Route path="profile/notifications" element={<NotificationSettingsPage />} />
             <Route path="profile/account" element={<AccountPage />} />
             <Route path="profile/reports" element={<Navigate to="/profile" replace />} />
             <Route path="profile/export" element={<Navigate to="/profile" replace />} />
@@ -203,8 +242,14 @@ export const AppRouter = () => {
         </Route>
         
         <Route path="/error" element={<ErrorPage />} />
-        <Route path="*" element={<Navigate to="/splash" replace />} />
-      </Routes>
-    </BrowserRouter>
+        <Route path="*" element={<Navigate to="/error" replace />} />
+        </Routes>
+      </BrowserRouter>
+      {!routeSurfaceReady ? (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'var(--nl-page-bg)' }}>
+          <BrandBootMotion />
+        </div>
+      ) : null}
+    </>
   );
 };

@@ -9,6 +9,7 @@ import { StorageService } from '../../shared/services/storage.service';
 import { extFromMime, generateBizNo } from '../../shared/utils';
 import { ConfirmMediaDto } from './dto/confirm-media.dto';
 import { CreateUploadTokenDto } from './dto/create-upload-token.dto';
+import { ensureMediaDurationLimit } from './media-policy';
 
 const normalizeMimeType = (mimeType: string) => mimeType.toLowerCase().split(';', 1)[0].trim();
 const GENERIC_UPLOAD_MIME_TYPES = new Set(['application/octet-stream', 'binary/octet-stream']);
@@ -169,11 +170,11 @@ export class MediaService {
     }
 
     if (media.mediaType === MediaType.image && (!dto.width || !dto.height)) {
-      throw new BadRequestException('图片需要提供宽高信息');
+      throw new BadRequestException('图片尺寸读取失败，请重新选择一张图片');
     }
 
-    if (media.mediaType === MediaType.video && typeof dto.duration_seconds !== 'number') {
-      throw new BadRequestException('视频需要提供时长信息');
+    if (media.mediaType === MediaType.video || media.mediaType === MediaType.audio) {
+      ensureMediaDurationLimit(media.mediaType, dto.duration_seconds);
     }
 
     const updated = await this.prisma.recordMedia.update({

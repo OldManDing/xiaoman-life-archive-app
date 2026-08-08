@@ -1,7 +1,7 @@
 import type { FormEvent, ReactNode } from 'react';
 
-import { EmptyState, Panel } from '../shared/ui';
-import { inputStyle, mutedTextStyle, primaryButtonStyle, secondaryButtonStyle, tableStyle, thTdStyle } from '../shared/uiStyles';
+import { AdminButton, EmptyState } from '../shared/ui';
+import { tableStyle, thTdStyle } from '../shared/uiStyles';
 
 export const SearchPanel = ({
   keyword,
@@ -9,7 +9,6 @@ export const SearchPanel = ({
   loading,
   onSearch,
   onClearSearch,
-  description = '输入用户、孩子、记录、媒体或任务相关关键字后查询。',
   placeholder = '输入关键字筛选',
 }: {
   keyword: string;
@@ -20,23 +19,19 @@ export const SearchPanel = ({
   description?: string;
   placeholder?: string;
 }) => (
-  <Panel>
-    <form className="admin-search-form" onSubmit={onSearch} style={{ display: 'grid', gap: '12px' }}>
-      <div>
-        <strong style={{ display: 'block', color: '#16211f', marginBottom: '4px' }}>筛选条件</strong>
-        <p style={mutedTextStyle}>{description}</p>
-      </div>
-      <div className="admin-search-controls" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
-        <input style={{ ...inputStyle, maxWidth: '360px' }} value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder={placeholder} />
-        <button type="submit" style={primaryButtonStyle} disabled={loading}>
+  <div className="admin-search-panel">
+    <form className="admin-search-form" onSubmit={onSearch}>
+      <div className="admin-search-controls">
+        <input className="admin-filter-control admin-search-keyword" value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder={placeholder} />
+        <AdminButton className="admin-filter-button" tone="primary" type="submit" disabled={loading}>
           {loading ? '查询中…' : '查询'}
-        </button>
-        <button type="button" style={secondaryButtonStyle} onClick={() => void onClearSearch()} disabled={loading}>
+        </AdminButton>
+        <AdminButton className="admin-filter-button" tone="ghost" type="button" onClick={() => void onClearSearch()} disabled={loading}>
           清空
-        </button>
+        </AdminButton>
       </div>
     </form>
-  </Panel>
+  </div>
 );
 
 export const TableShell = ({
@@ -50,7 +45,7 @@ export const TableShell = ({
   emptyMessage: string;
   loading?: boolean;
 }) => (
-    <Panel>
+    <div className="admin-table-panel">
       {!rows.length ? (
         <EmptyState title={loading ? '正在加载数据' : '暂无可处理数据'} message={loading ? '正在获取最新列表，加载完成后会自动显示。' : emptyMessage}>
           <span>{loading ? '请稍候，不需要重复点击查询。' : '可清空筛选后重新查看。'}</span>
@@ -61,7 +56,7 @@ export const TableShell = ({
             <thead>
               <tr>
                 {columns.map((column) => (
-                  <th key={column} data-column={column} style={{ ...thTdStyle, color: '#66736f', fontSize: '13px', background: '#f6f8f7' }}>
+                  <th key={column} data-column={column} style={{ ...thTdStyle, color: '#7d7162', fontSize: '12px', background: '#f7efe1' }}>
                     {column}
                   </th>
                 ))}
@@ -81,7 +76,7 @@ export const TableShell = ({
           </table>
         </div>
       )}
-    </Panel>
+    </div>
 );
 
 export const PaginationPanel = ({
@@ -101,19 +96,19 @@ export const PaginationPanel = ({
   onPrevPage: () => Promise<void>;
   onNextPage: () => Promise<void>;
 }) => (
-  <Panel>
-    <div className="admin-pagination" style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-      <div style={{ color: '#66736f', fontSize: '14px', fontWeight: 600 }}>
+  <div className="admin-pagination-panel">
+      <div className="admin-pagination" style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ color: '#7d7162', fontSize: '14px', fontWeight: 600 }}>
         当前第 {page} 页 · 每页 {pageSize} 条 · 共 {total} 条
       </div>
       <div className="admin-pagination-actions" style={{ display: 'flex', gap: '8px' }}>
-        <button type="button" style={primaryButtonStyle} onClick={() => void onPrevPage()} disabled={loading || page <= 1}>
+        <AdminButton type="button" tone="secondary" onClick={() => void onPrevPage()} disabled={loading || page <= 1}>
           上一页
-        </button>
-        <button type="button" style={primaryButtonStyle} onClick={() => void onNextPage()} disabled={loading || !hasMore}>
+        </AdminButton>
+        <AdminButton type="button" tone="primary" onClick={() => void onNextPage()} disabled={loading || !hasMore}>
           下一页
-        </button>
+        </AdminButton>
       </div>
     </div>
-  </Panel>
+  </div>
 );

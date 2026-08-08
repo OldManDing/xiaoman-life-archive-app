@@ -1,6 +1,20 @@
 import { NotificationService } from '../../src/shared/services/notification.service';
 
 describe('NotificationService', () => {
+  const originalPushEnabled = process.env.HUAWEI_PUSH_ENABLED;
+  const huaweiPushDeliveryService = {
+    processPendingDeliveries: jest.fn().mockResolvedValue({ processed_count: 0 }),
+  };
+
+  beforeAll(() => {
+    process.env.HUAWEI_PUSH_ENABLED = 'true';
+  });
+
+  afterAll(() => {
+    if (originalPushEnabled === undefined) delete process.env.HUAWEI_PUSH_ENABLED;
+    else process.env.HUAWEI_PUSH_ENABLED = originalPushEnabled;
+  });
+
   it('creates unread record-published notifications for active family members except the publisher', async () => {
     const prisma = {
       familyMember: {
@@ -21,7 +35,7 @@ describe('NotificationService', () => {
       },
       $transaction: jest.fn().mockImplementation(async (callback: (tx: unknown) => Promise<unknown>) => callback(prisma)),
     };
-    const service = new NotificationService(prisma as never);
+    const service = new NotificationService(prisma as never, huaweiPushDeliveryService as never);
 
     const result = await service.createRecordPublishedNotifications({
       record_no: 'r_001',
@@ -62,6 +76,15 @@ describe('NotificationService', () => {
       ]),
     });
     expect(prisma.userNotification.createMany.mock.calls[0][0].data).toHaveLength(1);
+    expect(prisma.userDeviceToken.findMany).toHaveBeenCalledWith({
+      where: {
+        userId: { in: [BigInt(2)] },
+        provider: 'hms',
+        status: 1,
+        deletedAt: null,
+      },
+      select: { userId: true, provider: true },
+    });
     expect(prisma.notificationDelivery.createMany).toHaveBeenCalledWith({
       data: [
         expect.objectContaining({
@@ -75,6 +98,7 @@ describe('NotificationService', () => {
         }),
       ],
     });
+    expect(huaweiPushDeliveryService.processPendingDeliveries).toHaveBeenCalled();
   });
 
   it('does not create a notification when the publisher is the only active member', async () => {
@@ -87,7 +111,7 @@ describe('NotificationService', () => {
         createMany: jest.fn(),
       },
     };
-    const service = new NotificationService(prisma as never);
+    const service = new NotificationService(prisma as never, huaweiPushDeliveryService as never);
 
     const result = await service.createRecordPublishedNotifications({
       record_no: 'r_001',

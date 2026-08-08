@@ -1,6 +1,6 @@
 ﻿import { expect, test, type Page } from '@playwright/test';
 
-import { adminBaseURL, expectNoEnglishSeedCopy, loginWeb, webBaseURL } from './helpers';
+import { adminBaseURL, expectNoEnglishSeedCopy, loginWeb, openAdminMore, webBaseURL } from './helpers';
 
 const confirmAdminAction = async (page: Page, reason: string) => {
   const dialog = page.getByRole('dialog', { name: /冻结用户|解冻用户|下架记录|恢复记录|通过媒体审核|标记媒体异常|下架媒体|重试 AI 任务|取消 AI 任务/ });
@@ -20,7 +20,15 @@ const loginAdminDirectly = async (page: Page) => {
 };
 
 const openAdminModule = async (page: Page, path: string) => {
-  await page.locator(`a[href="${path}"]`).first().click();
+  if (path === '/media' || path === '/content-risks') {
+    await openAdminMore(page);
+    await page.locator('aside a[href="/ops-readiness"]').click();
+    await expect(page).toHaveURL(/\/ops-readiness$/);
+    await page.getByRole('link', { name: path === '/media' ? '技术媒体库' : '风险队列', exact: true }).click();
+  } else {
+    if (['/users', '/ai-jobs', '/audit-logs'].includes(path)) await openAdminMore(page);
+    await page.locator(`a[href="${path}"]`).first().click();
+  }
   await expect(page).toHaveURL(new RegExp(`${path}$`));
   await expect(page.getByRole('button', { name: '查询' })).toBeVisible();
 };
@@ -46,20 +54,12 @@ test.describe('Front and admin button/API connectivity', () => {
     await expect(page.getByText('设置已保存')).toBeVisible();
 
     await page.goto(`${webBaseURL}/profile/export`);
-    await page.getByRole('button', { name: /图片和视频/ }).click();
-    await expect(page.getByRole('button', { name: /图片和视频/ })).toHaveAttribute('aria-pressed', 'true');
-    const summaryDownloadPromise = page.waitForEvent('download');
-    await page.getByRole('button', { name: '下载摘要' }).click();
-    const summaryDownload = await summaryDownloadPromise;
-    expect(summaryDownload.suggestedFilename()).toContain('档案摘要');
-    await expect(page.getByText(/档案摘要已生成：\d+ 条记录、\d+ 个媒体，并已写入审计日志。/)).toBeVisible();
-    await page.getByRole('button', { name: '打包申请' }).click();
-    await expect(page.getByText(/档案打包申请已提交/)).toBeVisible();
+    await expect(page).toHaveURL(/\/profile$/);
+    await expect(page.getByText('导出与备份')).toHaveCount(0);
 
     await page.goto(`${webBaseURL}/profile/membership`);
-    await page.getByRole('button', { name: '刷新状态' }).click();
-    await expect(page.getByText('服务状态已刷新')).toBeVisible();
-    await expect(page.getByText('服务状态仅反映当前账号配置，具体能力以页面实际可用为准。')).toBeVisible();
+    await expect(page).toHaveURL(/\/profile$/);
+    await expect(page.getByText('服务状态')).toHaveCount(0);
 
     await page.goto(`${webBaseURL}/profile/security`);
     await page.getByRole('button', { name: '注销账号' }).click();
@@ -87,8 +87,9 @@ test.describe('Front and admin button/API connectivity', () => {
     await expect(page.getByRole('button', { name: '复制到剪贴板' })).toBeVisible();
 
     await page.goto(`${webBaseURL}/record/r_demo_001`);
-    await expect(page.getByRole('heading', { name: '记录详情' })).toBeVisible();
-    const aiSectionVisible = await page.getByText('智能整理').isVisible().catch(() => false);
+    await expect(page.getByTestId('record-primary-media-preview')).toBeVisible();
+    await expect(page.getByText('第一次自己吃饭', { exact: true })).toBeVisible();
+    const aiSectionVisible = await page.getByText('整理建议').isVisible().catch(() => false);
     if (aiSectionVisible) {
       await page.getByRole('button', { name: '标题' }).click();
       await expect(page.getByText(/标题(正在处理中|已生成并同步到记录详情)|调用频率(受限|超限)/)).toBeVisible();
@@ -137,14 +138,16 @@ test.describe('Front and admin button/API connectivity', () => {
 
     await openAdminModule(page, '/media');
     const mediaRow = page.getByRole('row', { name: /第一次自己吃饭/ });
-    await page.getByPlaceholder('输入关键字筛选').fill('第一次自己吃饭');
+    await page.getByPlaceholder('编号 / 文件 / 孩子 / 记录').fill('第一次自己吃饭');
     await page.getByRole('button', { name: '查询' }).click();
     await mediaRow.getByRole('button', { name: '详情' }).click();
     await expect(page.getByRole('dialog', { name: '媒体详情' })).toBeVisible();
     await page.getByRole('button', { name: '关闭' }).click();
-    await mediaRow.getByRole('button', { name: '异常' }).click();
+    await mediaRow.getByRole('button', { name: '更多操作' }).click();
+    await mediaRow.getByRole('button', { name: '标记异常' }).click();
     await confirmAdminAction(page, '自动化验证媒体异常按钮');
     await expect(mediaRow).toContainText('异常');
+    await mediaRow.getByRole('button', { name: '更多操作' }).click();
     await mediaRow.getByRole('button', { name: '通过' }).click();
     await confirmAdminAction(page, '自动化验证媒体通过按钮');
     await expect(mediaRow).toContainText('可用');

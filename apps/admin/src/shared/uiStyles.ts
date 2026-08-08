@@ -1,50 +1,54 @@
 import type { CSSProperties } from 'react';
 
 export const cardStyle: CSSProperties = {
-  background: '#fbfcfb',
-  border: '1px solid #d7e0db',
-  borderRadius: '8px',
+  background: '#ffffff',
+  border: '1px solid rgba(35, 31, 27, 0.1)',
+  borderRadius: '12px',
   padding: '16px',
-  boxShadow: '0 8px 22px rgba(15, 23, 42, 0.04)',
+  boxShadow: '0 16px 38px rgba(30, 24, 18, 0.045)',
 };
 
 export const headingStyle: CSSProperties = {
   margin: 0,
-  fontSize: '24px',
-  fontWeight: 800,
-  color: '#16211f',
+  fontSize: '28px',
+  fontWeight: 900,
+  color: '#221b12',
   letterSpacing: 0,
 };
 
 export const inputStyle: CSSProperties = {
   width: '100%',
   boxSizing: 'border-box',
-  minHeight: '40px',
-  borderRadius: '8px',
-  border: '1px solid #cbd5d1',
-  padding: '9px 11px',
+  minHeight: '42px',
+  borderRadius: '10px',
+  border: '1px solid rgba(35, 31, 27, 0.12)',
+  padding: '10px 12px',
   fontSize: '13px',
   background: '#ffffff',
-  color: '#1f2933',
+  color: '#221b12',
   outline: 'none',
+  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.72)',
+  transition: 'border-color 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease',
 };
 
 export const primaryButtonStyle: CSSProperties = {
-  border: 'none',
-  borderRadius: '8px',
-  padding: '9px 13px',
-  background: '#123c37',
-  color: '#ffffff',
+  border: '1px solid rgba(75, 59, 35, 0.82)',
+  borderRadius: '10px',
+  padding: '9px 14px',
+  background: '#4a3a22',
+  color: '#fffaf1',
   fontWeight: 800,
   cursor: 'pointer',
-  minHeight: '40px',
+  minHeight: '42px',
+  boxShadow: '0 10px 22px rgba(70, 48, 24, 0.08)',
 };
 
 export const secondaryButtonStyle: CSSProperties = {
   ...primaryButtonStyle,
-  border: '1px solid #cbd5d1',
+  border: '1px solid rgba(139, 116, 79, 0.22)',
   background: '#ffffff',
-  color: '#123c37',
+  color: '#5d4d35',
+  boxShadow: 'none',
 };
 
 export const tableStyle: CSSProperties = {
@@ -55,11 +59,11 @@ export const tableStyle: CSSProperties = {
 
 export const thTdStyle: CSSProperties = {
   textAlign: 'left',
-  padding: '10px 10px',
-  borderBottom: '1px solid #e1e8e4',
+  padding: '11px 12px',
+  borderBottom: '1px solid rgba(139, 116, 79, 0.12)',
   fontSize: '13px',
   verticalAlign: 'top',
-  color: '#263532',
+  color: '#2f281d',
   minWidth: 0,
   whiteSpace: 'normal',
   overflowWrap: 'anywhere',
@@ -67,7 +71,7 @@ export const thTdStyle: CSSProperties = {
 
 export const mutedTextStyle: CSSProperties = {
   margin: 0,
-  color: '#66736f',
+  color: '#7d7162',
   fontSize: '13px',
   lineHeight: 1.6,
 };
@@ -78,9 +82,9 @@ export const badgeStyle: CSSProperties = {
   minHeight: '24px',
   borderRadius: '999px',
   padding: '3px 9px',
-  border: '1px solid #cbd5d1',
-  background: '#f6f8f7',
-  color: '#263532',
+  border: '1px solid rgba(139, 116, 79, 0.18)',
+  background: '#f7efe1',
+  color: '#4d412f',
   fontSize: '12px',
   fontWeight: 700,
   whiteSpace: 'nowrap',

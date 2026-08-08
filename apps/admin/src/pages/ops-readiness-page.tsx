@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import { AlertTriangle, CheckCircle2, DatabaseBackup, RefreshCw, ShieldAlert } from 'lucide-react';
 
 import { adminApi, type AdminOpsReadinessResponse } from '../shared/request';
-import { Badge, EmptyState, PageShell, Panel } from '../shared/ui';
-import { cardStyle, mutedTextStyle, secondaryButtonStyle, tableStyle, thTdStyle } from '../shared/uiStyles';
+import { AdminButton, Badge, EmptyState, PageShell, Panel } from '../shared/ui';
+import { cardStyle, mutedTextStyle, tableStyle, thTdStyle } from '../shared/uiStyles';
 
 const formatDateTime = (value: string | null | undefined) => (value ? new Date(value).toLocaleString('zh-CN', { hour12: false }) : '-');
 
@@ -45,8 +45,8 @@ const statusIcon = (status: 'ready' | 'warning' | 'blocked') => {
 
 const StatCard = ({ label, value, helper }: { label: string; value: number | string; helper: string }) => (
   <article style={{ ...cardStyle, display: 'grid', gap: '8px' }}>
-    <span style={{ color: '#66736f', fontSize: '13px', fontWeight: 700 }}>{label}</span>
-    <strong style={{ color: '#16211f', fontSize: '28px', lineHeight: 1 }}>{value}</strong>
+  <span style={{ color: '#7d7162', fontSize: '13px', fontWeight: 700 }}>{label}</span>
+  <strong style={{ color: '#221b12', fontSize: '28px', lineHeight: 1 }}>{value}</strong>
     <p style={mutedTextStyle}>{helper}</p>
   </article>
 );
@@ -122,7 +122,7 @@ export const OpsReadinessPage = () => {
           <Panel>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '12px' }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: '18px', color: '#16211f' }}>运行配置</h2>
+        <h2 style={{ margin: 0, fontSize: '18px', color: '#221b12' }}>运行配置</h2>
                 <p style={mutedTextStyle}>环境：{readiness.environment.app_env}，端口：{readiness.environment.app_port}，检查时间：{formatDateTime(readiness.generated_at)}</p>
               </div>
               <Badge tone={readiness.backup_recovery.status === 'ready' ? 'success' : statusTone(readiness.backup_recovery.status)}>
@@ -147,7 +147,7 @@ export const OpsReadinessPage = () => {
           <Panel>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '12px' }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: '18px', color: '#16211f' }}>上线验收门禁</h2>
+        <h2 style={{ margin: 0, fontSize: '18px', color: '#221b12' }}>上线验收门禁</h2>
                 <p style={mutedTextStyle}>真实 AI 和地点 POI 必须以登录后的 live readiness 结果为准，不能只看 provider 名称。</p>
               </div>
               <Badge tone={statusTone(readiness.release_gates.status)}>线上复验{statusLabel(readiness.release_gates.status)}</Badge>
@@ -165,10 +165,10 @@ export const OpsReadinessPage = () => {
                 <tbody>{readiness.release_gates.checks.map((item) => <StatusRow key={item.key} item={item} />)}</tbody>
               </table>
             </div>
-            <div style={{ borderTop: '1px solid #e5ece8', marginTop: '14px', paddingTop: '14px', display: 'grid', gap: '10px' }}>
+          <div style={{ borderTop: '1px solid #ded4c6', marginTop: '14px', paddingTop: '14px', display: 'grid', gap: '10px' }}>
               <div style={{ display: 'flex', gap: '10px', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
                 <div>
-                  <h3 style={{ margin: 0, fontSize: '15px', color: '#16211f' }}>复验报告</h3>
+                <h3 style={{ margin: 0, fontSize: '15px', color: '#221b12' }}>复验报告</h3>
                   <p style={mutedTextStyle}>
                     {readiness.release_gates.report.path}，检查时间：{formatDateTime(readiness.release_gates.report.checked_at)}
                     {readiness.release_gates.report.age_hours === null ? '' : `，距现在 ${readiness.release_gates.report.age_hours} 小时`}
@@ -216,7 +216,19 @@ export const OpsReadinessPage = () => {
           </Panel>
 
           <Panel>
-            <h2 style={{ margin: '0 0 12px', fontSize: '18px', color: '#16211f' }}>备份恢复与告警值班</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div>
+        <h2 style={{ margin: 0, fontSize: '18px', color: '#221b12' }}>技术入口</h2>
+              </div>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <Link to="/media" className="admin-button admin-button-secondary admin-technical-entry">技术媒体库</Link>
+                <Link to="/content-risks" className="admin-button admin-button-secondary admin-technical-entry">风险队列</Link>
+              </div>
+            </div>
+          </Panel>
+
+          <Panel>
+        <h2 style={{ margin: '0 0 12px', fontSize: '18px', color: '#221b12' }}>备份恢复与告警值班</h2>
             <div style={{ overflowX: 'auto' }}>
               <table style={tableStyle}>
                 <thead>
@@ -233,25 +245,20 @@ export const OpsReadinessPage = () => {
           </Panel>
 
           <Panel>
-            <h2 style={{ margin: '0 0 12px', fontSize: '18px', color: '#16211f' }}>运营动作</h2>
+        <h2 style={{ margin: '0 0 12px', fontSize: '18px', color: '#221b12' }}>运营动作</h2>
             <div style={{ display: 'grid', gap: '10px' }}>
               {readiness.action_items.map((item) => (
                 <Link
                   key={`${item.priority}-${item.label}`}
                   to={item.to}
-                  style={{
-                    ...secondaryButtonStyle,
-                    justifyContent: 'space-between',
-                    textDecoration: 'none',
-                    minHeight: '52px',
-                    gap: '12px',
-                  }}
+                  className="admin-ops-action-link"
+                  style={{ textDecoration: 'none' }}
                 >
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '9px' }}>
                     <DatabaseBackup size={17} />
                     <span>{item.label}</span>
                   </span>
-                  <span style={{ color: '#66736f', fontSize: '12px', fontWeight: 700 }}>{item.helper}</span>
+                  <span style={{ color: '#7d7162', fontSize: '12px', fontWeight: 700 }}>{item.helper}</span>
                 </Link>
               ))}
             </div>
@@ -261,9 +268,9 @@ export const OpsReadinessPage = () => {
 
       {!loading && !readiness && !error ? (
         <EmptyState title="暂无运维数据" message="系统暂未返回运维检查结果。">
-          <button
+          <AdminButton
             type="button"
-            style={secondaryButtonStyle}
+            tone="secondary"
             onClick={() => {
               setLoading(true);
               setError(null);
@@ -276,7 +283,7 @@ export const OpsReadinessPage = () => {
           >
             <RefreshCw size={16} />
             重新读取
-          </button>
+          </AdminButton>
         </EmptyState>
       ) : null}
     </PageShell>

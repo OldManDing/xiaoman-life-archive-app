@@ -15,6 +15,7 @@ import {
   getMobileLatestBuildNumber,
   getMobileLatestVersion,
   getMobileReleaseNotes,
+  isHuaweiPushEnabled,
 } from '../../shared/env-config';
 import { parseMediaReference } from '../../shared/media-reference';
 import { AccessControlService } from '../../shared/services/access-control.service';
@@ -270,7 +271,32 @@ export class UsersService {
       success: true,
       provider: row.provider,
       platform: row.platform,
+      remote_push_enabled: row.provider === 'hms' && isHuaweiPushEnabled(),
       registered_at: row.updatedAt.toISOString(),
+    };
+  }
+
+  async unregisterDeviceToken(userId: bigint, dto: RegisterDeviceTokenDto) {
+    await this.findUserOrThrow(userId);
+    const result = await this.prisma.userDeviceToken.updateMany({
+      where: {
+        userId,
+        provider: dto.provider,
+        tokenHash: hashToken(dto.push_token),
+        deletedAt: null,
+      },
+      data: {
+        status: 0,
+        deletedAt: new Date(),
+      },
+    });
+
+    return {
+      success: true,
+      provider: dto.provider,
+      platform: dto.platform,
+      remote_push_enabled: false,
+      disabled_count: result.count,
     };
   }
 

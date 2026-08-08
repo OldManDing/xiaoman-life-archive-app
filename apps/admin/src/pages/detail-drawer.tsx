@@ -1,4 +1,6 @@
-import { useState, type CSSProperties, type ReactNode } from 'react';
+﻿import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+
+import { Maximize2 } from 'lucide-react';
 
 import { Panel } from '../shared/ui';
 
@@ -15,7 +17,7 @@ const drawerStyle: CSSProperties = {
   width: 'min(780px, 100vw)',
   height: '100%',
   overflow: 'auto',
-  background: '#f5f8f7',
+  background: '#faf7f1',
   padding: '18px',
   display: 'grid',
   alignContent: 'start',
@@ -35,7 +37,7 @@ const labelValueGridStyle: CSSProperties = {
 };
 
 const itemStyle: CSSProperties = {
-  border: '1px solid #d6dedb',
+  border: '1px solid #ded4c6',
   borderRadius: '8px',
   background: '#ffffff',
   padding: '12px',
@@ -44,14 +46,14 @@ const itemStyle: CSSProperties = {
 };
 
 const labelStyle: CSSProperties = {
-  color: '#66736f',
+  color: '#756b5c',
   fontSize: '12px',
   fontWeight: 700,
   letterSpacing: 0,
 };
 
 const valueStyle: CSSProperties = {
-  color: '#16211f',
+  color: '#221b12',
   fontSize: '14px',
   lineHeight: 1.65,
   wordBreak: 'break-word',
@@ -60,7 +62,7 @@ const valueStyle: CSSProperties = {
 const sectionHeadingStyle: CSSProperties = {
   fontSize: '15px',
   fontWeight: 800,
-  color: '#16211f',
+  color: '#221b12',
   margin: 0,
 };
 
@@ -120,6 +122,15 @@ export const DetailDrawer = ({
   onClose: () => void;
   children: ReactNode;
 }) => {
+  useEffect(() => {
+    if (!open) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, [onClose, open]);
+
   if (!open) return null;
 
   return (
@@ -135,16 +146,18 @@ export const DetailDrawer = ({
         <Panel>
           <div className="admin-drawer-header" style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'flex-start' }}>
             <div style={{ display: 'grid', gap: '4px' }}>
-              <h2 style={{ margin: 0, fontSize: '18px', color: '#123c37' }}>{title}</h2>
-              {subtitle ? <p style={{ margin: 0, color: '#66736f', fontSize: '13px', lineHeight: 1.6 }}>{subtitle}</p> : null}
+              <h2 style={{ margin: 0, fontSize: '18px', color: '#4a3a22' }}>{title}</h2>
+              {subtitle ? <p style={{ margin: 0, color: '#756b5c', fontSize: '13px', lineHeight: 1.6 }}>{subtitle}</p> : null}
             </div>
             <button
               type="button"
+              className="admin-drawer-close"
+              aria-label="关闭详情"
               onClick={onClose}
               style={{
-                border: '1px solid #cbd5d1',
+                border: '1px solid #ded4c6',
                 background: '#fff',
-                color: '#123c37',
+                color: '#4a3a22',
                 borderRadius: '8px',
                 padding: '8px 12px',
                 fontWeight: 700,
@@ -157,7 +170,7 @@ export const DetailDrawer = ({
           </div>
         </Panel>
 
-        {loading ? <Panel><p style={{ margin: 0, color: '#66736f' }}>加载中…</p></Panel> : null}
+        {loading ? <Panel><p style={{ margin: 0, color: '#756b5c' }}>加载中…</p></Panel> : null}
         {error ? <Panel><p style={{ margin: 0, color: '#b91c1c', fontWeight: 700 }}>{error}</p></Panel> : null}
         {!loading && !error ? children : null}
       </div>
@@ -224,23 +237,36 @@ const previewKind = (mediaType?: string | null, mimeType?: string | null) => {
 
 export const MediaPreview = ({
   src,
+  fullSrc,
   alt,
   mediaType,
   mimeType,
 }: {
   src: string | null;
+  fullSrc?: string | null;
   alt: string;
   mediaType?: string | null;
   mimeType?: string | null;
 }) => {
   const kind = previewKind(mediaType, mimeType);
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState(false);
   const failed = Boolean(src && failedSrc === src);
+  const expandSrc = fullSrc ?? src;
+
+  useEffect(() => {
+    if (!expanded) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setExpanded(false);
+    };
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, [expanded]);
 
   if (!src) {
     return (
       <div className="admin-media-preview-empty">
-        暂无预览地址
+        <span>暂无预览地址</span>
       </div>
     );
   }
@@ -256,28 +282,54 @@ export const MediaPreview = ({
 
   if (kind === 'image') {
     return (
-      <img
-        className="admin-media-preview-image"
-        src={src}
-        alt={alt}
-        loading="lazy"
-        decoding="async"
-        onError={() => setFailedSrc(src)}
-      />
+      <>
+        <button type="button" className="admin-media-preview-expandable" onClick={() => setExpanded(true)} aria-label="放大查看图片">
+          <img
+            className="admin-media-preview-image"
+            src={src}
+            alt={alt}
+            loading="lazy"
+            decoding="async"
+            onError={() => setFailedSrc(src)}
+          />
+        </button>
+        {expanded && expandSrc ? (
+          <div className="admin-media-lightbox" role="dialog" aria-modal="true" aria-label="图片预览" onClick={() => setExpanded(false)}>
+            <img src={expandSrc} alt={alt} onClick={(event) => event.stopPropagation()} />
+          </div>
+        ) : null}
+      </>
     );
   }
 
   if (kind === 'video') {
     return (
-      <video className="admin-media-preview-video" src={src} controls preload="none" onError={() => setFailedSrc(src)}>
-        当前浏览器不支持视频预览。
-      </video>
+      <>
+        <div className="admin-media-preview-video-shell">
+          <video className="admin-media-preview-video" src={src} controls preload="none" onError={() => setFailedSrc(src)}>
+            当前浏览器不支持视频预览。
+          </video>
+          <button type="button" className="admin-media-preview-expand-video" onClick={() => setExpanded(true)} aria-label="放大查看视频" title="放大查看视频">
+            <Maximize2 size={15} strokeWidth={2.2} />
+          </button>
+        </div>
+        {expanded && expandSrc ? (
+          <div className="admin-media-lightbox" role="dialog" aria-modal="true" aria-label="视频预览" onClick={() => setExpanded(false)}>
+            <video src={expandSrc} controls autoPlay onClick={(event) => event.stopPropagation()}>
+              当前浏览器不支持视频预览。
+            </video>
+          </div>
+        ) : null}
+      </>
     );
   }
 
   if (kind === 'audio') {
     return (
       <div className="admin-media-preview-audio">
+        <div className="admin-media-preview-audio-head">
+          <span>录音文件</span>
+        </div>
         <audio src={src} controls preload="none" onError={() => setFailedSrc(src)}>
           当前浏览器不支持音频预览。
         </audio>

@@ -74,7 +74,7 @@ test.describe('App critical journeys', () => {
 
     await expect(page).toHaveURL(/\/home$/);
     await expect(page.getByText('小满', { exact: true }).first()).toBeVisible();
-    await expect(page.getByText('小满的成长记录')).toBeVisible();
+    await expect(page.getByText('成长封面')).toBeVisible();
     await expect(page.getByText('今日值得记录')).toHaveCount(0);
     await expect(page.getByText('成长时间线')).toHaveCount(0);
     await expect(page.getByText('一年前的今天')).toHaveCount(0);
@@ -158,11 +158,12 @@ test.describe('App critical journeys', () => {
 
     await expect(page).toHaveURL(/\/record\/create$/);
     await expect(page.getByRole('heading', { name: '记录时光' })).toBeVisible();
-    await expect(page.getByText('素材', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: '拍照记录' })).toBeVisible();
     await expect(page.getByText('媒体采集')).toHaveCount(0);
     await expect(page.getByText('内容输入')).toHaveCount(0);
     await expect(page.getByText('设置')).toBeVisible();
     await expect(page.getByRole('button', { name: '拍照记录' })).toBeVisible();
+    await page.getByRole('button', { name: '更多媒体' }).click();
     await expect(page.getByRole('button', { name: '拍摄视频' })).toBeVisible();
     await expect(page.getByRole('button', { name: '从相册添加' })).toBeVisible();
     await expect(page.getByRole('button', { name: '录制语音' })).toBeVisible();
@@ -203,9 +204,8 @@ test.describe('App critical journeys', () => {
     await page.goto(`${webBaseURL}/record/create?type=audio&focus=media`);
     await expect(page.getByLabel('媒体预览')).toHaveCount(0);
     await expect(page.getByTestId('record-media-preview-empty')).toHaveCount(0);
-    await expect(page.locator('input[aria-label="录制语音"]')).toHaveAttribute('capture', '');
     const audioChooserPromise = page.waitForEvent('filechooser');
-    await page.getByRole('button', { name: '录制语音' }).click();
+    await page.getByRole('button', { name: '上传语音' }).click();
     const audioChooser = await audioChooserPromise;
     await audioChooser.setFiles({ name: 'voice.wav', mimeType: 'audio/wav', buffer: Buffer.from([82, 73, 70, 70]) });
     await expect(page.getByLabel('语音预览')).toBeVisible();
@@ -291,16 +291,17 @@ test.describe('App critical journeys', () => {
     await expect(page.getByRole('button', { name: '相册' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'AI故事' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: '月报' })).toHaveCount(0);
-    await expect(page.getByText('小满的成长记录')).toBeVisible();
+    await expect(page.getByText('成长封面')).toBeVisible();
     await expect(page.getByRole('region', { name: '最近照片' })).toBeVisible();
 
     await page.goto(`${webBaseURL}/record/create`);
     await expect(page.getByRole('button', { name: '拍照记录' })).toBeVisible();
+    await page.getByRole('button', { name: '更多媒体' }).click();
     await expect(page.getByRole('button', { name: '拍摄视频' })).toBeVisible();
     await expect(page.getByRole('button', { name: '从相册添加' })).toBeVisible();
 
     await page.goto(`${webBaseURL}/record/create?type=audio&focus=media`);
-    await expect(page.getByText('素材')).toBeVisible();
+    await expect(page.getByRole('button', { name: '录制语音' })).toBeVisible();
     await expect(page.getByRole('button', { name: '录制语音' })).toBeVisible();
     await expect(page.getByRole('button', { name: '上传语音' })).toBeVisible();
     expect(consoleErrors.join('\n')).not.toContain('style property during rerender');
@@ -330,9 +331,11 @@ test.describe('App critical journeys', () => {
     await expect(page.getByText('发布前请填写正文')).toBeVisible();
 
     await page.getByPlaceholder('正文').fill('这是一条纯文字记录，用来验证发布必填和隐藏上传区。');
-    await page.locator('input[type="datetime-local"]').fill('');
-    await page.getByRole('button', { name: '发布', exact: true }).click();
-    await expect(page.getByText('发布前请选择发生时间')).toBeVisible();
+    const timeControl = page.locator('.app-date-control').filter({ has: page.locator('[data-date-input-type="datetime-local"]') });
+    await timeControl.click();
+    const timeDialog = page.getByRole('dialog', { name: '发生时间 *' });
+    await expect(timeDialog).toBeVisible();
+    await timeDialog.getByRole('button', { name: '确定' }).click();
   });
 
   test('phone location fills the location field with a visible response', async ({ page, context }) => {
@@ -365,11 +368,10 @@ test.describe('App critical journeys', () => {
 
     await page.getByPlaceholder('标题').fill(recordTitle);
     await page.getByPlaceholder('正文').fill('小满午后在公园里发现了一片会发光的叶子，想把这一刻留给以后的自己。');
-    await page.locator('input[type="datetime-local"]').fill('2026-05-12T08:30');
+    await expect(page.getByLabel('发生时间 *')).toHaveValue(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/);
     await page.getByRole('button', { name: '发布', exact: true }).click();
 
     await expect(page).toHaveURL(/\/record\/r_/);
-    await expect(page.getByRole('heading', { name: '记录详情' })).toBeVisible();
     await expect(page.getByTestId('record-primary-media-preview')).toBeVisible();
     await expect(page.getByText(recordTitle)).toBeVisible();
 
@@ -386,7 +388,8 @@ test.describe('App critical journeys', () => {
     await expectNoUnfinishedCopy(page);
 
     await reloadedTimelineCard.click();
-    await expect(page.getByRole('heading', { name: '记录详情' })).toBeVisible();
+    await expect(page.getByTestId('record-primary-media-preview')).toBeVisible();
+    await expect(page.getByText(recordTitle, { exact: true })).toBeVisible();
     await page.getByRole('button', { name: '删除记录' }).click();
     const deleteDialog = page.getByRole('dialog', { name: '删除记录确认' });
     await expect(deleteDialog).toBeVisible();
@@ -399,8 +402,9 @@ test.describe('App critical journeys', () => {
     await loginWeb(page);
     await page.goto(`${webBaseURL}/record/r_demo_001`);
 
-    await expect(page.getByRole('heading', { name: '记录详情' })).toBeVisible();
-    const aiSectionVisible = await page.getByText('智能整理').isVisible().catch(() => false);
+    await expect(page.getByTestId('record-primary-media-preview')).toBeVisible();
+    await expect(page.getByText('第一次自己吃饭', { exact: true })).toBeVisible();
+    const aiSectionVisible = await page.getByText('整理建议').isVisible().catch(() => false);
     if (aiSectionVisible) {
       await expect(page.getByText('整理状态：已完成')).toBeVisible();
       await page.getByRole('button', { name: '摘要' }).click();
@@ -418,7 +422,7 @@ test.describe('App critical journeys', () => {
   test('secondary App controls provide visible responses', async ({ page }) => {
     await loginWeb(page);
 
-    await expect(page.getByText('小满的成长记录')).toBeVisible();
+    await expect(page.getByText('成长封面')).toBeVisible();
     await expect(page.getByRole('region', { name: '最近照片' })).toBeVisible();
 
     await page.goto(`${webBaseURL}/search`);
@@ -444,8 +448,8 @@ test.describe('App critical journeys', () => {
     await expect(page.getByLabel('搜索地点')).toBeVisible();
     await page.getByLabel('搜索地点').fill('公园');
     await expect(page.getByRole('button', { name: '公园' })).toBeVisible();
-    await page.getByRole('button', { name: '可见范围 家庭成员可见' }).click();
-    await expect(page.getByText('当前记录默认仅对家庭成员可见')).toBeVisible();
+    await expect(page.getByRole('button', { name: /可见范围/ })).toHaveCount(0);
+    await expect(page.getByText('当前记录默认仅对家庭成员可见')).toHaveCount(0);
 
     await page.getByRole('button', { name: '切换里程碑记录' }).click();
     await expect(page.getByRole('button', { name: '切换里程碑记录' })).toHaveAttribute('aria-pressed', 'true');
@@ -453,7 +457,7 @@ test.describe('App critical journeys', () => {
     await expect(page.getByRole('button', { name: '切换里程碑记录' })).toHaveAttribute('aria-pressed', 'false');
 
     await page.goto(`${webBaseURL}/profile`);
-    await page.getByRole('button', { name: '+ 添加宝宝' }).click();
+    await page.getByRole('button', { name: '添加孩子档案' }).click();
     await expect(page).toHaveURL(/\/onboarding\/child\?mode=add$/);
     await expect(page.getByRole('heading', { name: '添加宝宝档案' })).toBeVisible();
 
@@ -471,9 +475,9 @@ test.describe('App critical journeys', () => {
     await expect(page.getByText('小满').first()).toBeVisible();
     await expect(page.getByText('ID: 00000001')).toHaveCount(0);
 
-    await expect(page.getByText('月报与纪念册')).toBeVisible();
-    await expect(page.getByText('导出与备份')).toBeVisible();
-    await expect(page.getByText('服务状态')).toBeVisible();
+    await expect(page.getByText('月报与纪念册')).toHaveCount(0);
+    await expect(page.getByText('导出与备份')).toHaveCount(0);
+    await expect(page.getByText('服务状态')).toHaveCount(0);
     await expect(page.getByText('家庭管理')).toBeVisible();
     await expect(page.getByText('帮助与反馈')).toBeVisible();
     await expect(page.getByText('隐私设置')).toBeVisible();
@@ -484,35 +488,17 @@ test.describe('App critical journeys', () => {
     await page.getByRole('button', { name: /关于我们/ }).click();
     await expect(page).toHaveURL(/\/profile\/about$/);
     await expect(page.getByRole('heading', { name: 'nianlun' })).toBeVisible();
-    await expect(page.getByText(/版本 2\.0\.1（构建 .+）/)).toBeVisible();
+    await expect(page.getByText(/版本 \d+\.\d+\.\d+（构建 .+）/)).toBeVisible();
     await expect(page.getByRole('button', { name: /服务说明/ })).toHaveCount(0);
     await expect(page.getByText(/孩子的人生档案馆|官网信息将随服务发布节奏同步更新/)).toHaveCount(0);
 
-    await page.goto(`${webBaseURL}/profile`);
-    await page.getByRole('button', { name: /月报与纪念册/ }).click();
-    await expect(page).toHaveURL(/\/profile\/reports$/);
-    await expect(page.getByRole('heading', { name: '月报与纪念册' })).toBeVisible();
-    await expect(page.getByText('月度故事摘要')).toBeVisible();
-    await expectNoEnglishSeedCopy(page);
-
     await page.goto(`${webBaseURL}/profile/export`);
-    await expect(page.getByRole('heading', { name: '导出与备份' })).toBeVisible();
-    await expect(page.getByRole('button', { name: '下载摘要' })).toBeVisible();
-    await expect(page.getByText('导出内容')).toBeVisible();
-    await expect(page.getByText('交付记录')).toBeVisible();
-    await expect(page.getByText('家庭管理员可提交导出申请。')).toBeVisible();
-    await expect(page.getByRole('button', { name: '打包申请' })).toBeEnabled();
-    await expect(page.getByRole('button', { name: '成年移交' })).toBeEnabled();
-    await page.getByRole('button', { name: '打包申请' }).click();
-    await expect(page.getByText(/档案打包申请已提交/)).toBeVisible();
-    await expect(page.getByText(/当前快照：\d+ 条记录、\d+ 个媒体、\d+ 个里程碑。/)).toBeVisible();
-    await expect(page.getByText('最近申请')).toBeVisible();
-    await expect(page.getByText('档案打包 · 全部数据').first()).toBeVisible();
-    await expect(page.getByText('待处理').first()).toBeVisible();
+    await expect(page).toHaveURL(/\/profile$/);
+    await expect(page.getByRole('heading', { name: '导出与备份' })).toHaveCount(0);
 
     await page.goto(`${webBaseURL}/profile/membership`);
-    await expect(page.getByRole('heading', { name: '服务状态' })).toBeVisible();
-    await expect(page.getByText('服务状态仅反映当前账号配置，具体能力以页面实际可用为准。')).toBeVisible();
+    await expect(page).toHaveURL(/\/profile$/);
+    await expect(page.getByRole('heading', { name: '服务状态' })).toHaveCount(0);
 
     await page.goto(`${webBaseURL}/profile/security`);
     await expect(page.getByRole('heading', { name: '账号与安全' })).toBeVisible();
@@ -534,9 +520,8 @@ test.describe('App critical journeys', () => {
     await expect(page).toHaveURL(/\/home$/);
 
     await page.goto(`${webBaseURL}/profile/export`);
-    await expect(page.getByText('仅家庭管理员可导出。')).toBeVisible();
-    await expect(page.getByRole('button', { name: '打包申请' })).toBeDisabled();
-    await expect(page.getByRole('button', { name: '成年移交' })).toBeDisabled();
-    await expect(page.getByRole('button', { name: '下载摘要' })).toBeDisabled();
+    await expect(page).toHaveURL(/\/profile$/);
+    await expect(page.getByText('仅家庭管理员可导出。')).toHaveCount(0);
+    await expect(page.getByRole('button', { name: '打包申请' })).toHaveCount(0);
   });
 });

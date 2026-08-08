@@ -6,8 +6,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Edit3,
+  Film,
   FileText,
   MapPin,
+  Play,
   PlayCircle,
   Search,
   SlidersHorizontal,
@@ -18,13 +20,13 @@ import {
 import { useAuth } from '../shared/AuthContext';
 import { formatAgeAtEvent } from '../shared/age';
 import { webApi } from '../shared/api/webApi';
-import type { RecordSummary } from '../shared/api/types';
+import type { RecordSummary, RecordsListResponse } from '../shared/api/types';
 import { useAsyncData } from '../shared/hooks';
 import { recordTypeLabel } from '../shared/labels';
 import { loadLocalSettings } from '../shared/localSettings';
 import { useCachedMediaUrl } from '../shared/useCachedMediaUrl';
 import { compactPrimaryButtonStyle } from '../shared/ui';
-import { EmptyState } from './shared';
+import { EmptyState, normalizeDisplayName } from './shared';
 import {
   RefAvatar,
   RefChip,
@@ -44,7 +46,7 @@ const iconButtonStyle: CSSProperties = {
   height: 46,
   borderRadius: '8px',
   border: '1px solid var(--nl-border-strong)',
-  background: 'linear-gradient(180deg, rgba(var(--nl-surface-strong-rgb),0.76), rgba(var(--nl-surface-rgb),0.42))',
+  background: 'var(--nl-control-bg)',
   color: 'var(--nl-ink)',
   display: 'grid',
   placeItems: 'center',
@@ -56,6 +58,11 @@ const formatDay = (value: string) => new Date(value).getDate();
 const formatMonth = (value: string) => new Date(value).toLocaleDateString('zh-CN', { month: 'short' });
 const formatShortDate = (value: string) => new Date(value).toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
 const formatAnniversaryDate = (value: string) => new Date(value).toLocaleDateString('zh-CN', { year: 'numeric', month: 'numeric', day: 'numeric' });
+const formatArchiveMonthTitle = (value: string) => {
+  const date = new Date(value);
+  return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}`;
+};
+const formatWeekdayShort = (value: string) => new Date(value).toLocaleDateString('zh-CN', { weekday: 'short' }).replace('星期', '周');
 const formatMonthTitle = (value: string) => {
   const date = new Date(value);
   return `${date.getFullYear()}年 ${date.getMonth() + 1}月`;
@@ -105,7 +112,7 @@ const HomeImage = ({
   style,
 }: {
   src: string | null | undefined;
-  fallbackSrc: string;
+  fallbackSrc: string | null;
   alt: string;
   loading?: 'eager' | 'lazy';
   style?: CSSProperties;
@@ -118,6 +125,8 @@ const HomeImage = ({
   }, [resolvedSrc]);
 
   const displaySrc = failedSrc === resolvedSrc ? fallbackSrc : resolvedSrc;
+
+  if (!displaySrc) return null;
 
   return (
     <img
@@ -142,7 +151,7 @@ const RecordTextThumbnail = ({ label = '文字', compact = false }: { label?: st
       display: 'grid',
       placeItems: 'center',
       gap: compact ? 3 : 5,
-      background: 'linear-gradient(180deg, rgba(var(--nl-surface-strong-rgb),0.46), rgba(var(--nl-surface-rgb),0.18))',
+      background: 'rgba(var(--nl-surface-strong-rgb),0.34)',
       color: 'var(--nl-muted-strong)',
     }}
   >
@@ -160,7 +169,7 @@ const RecordSummaryCard = ({ record, onClick }: { record: RecordSummary; onClick
     <span style={{ minWidth: 0, display: 'grid', gap: 6, flex: 1 }}>
       <strong style={{ color: 'var(--nl-ink)', fontSize: 14, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{record.title ?? '未命名记录'}</strong>
       <span style={{ ...refMutedTextStyle, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{record.summary ?? '这条记录还没有摘要。'}</span>
-      <span style={{ color: 'var(--nl-muted)', fontSize: 11, fontWeight: 500 }}>{record.tags?.length ? `${record.tags.length} 个标签` : record.creator_name}</span>
+      <span style={{ color: 'var(--nl-muted)', fontSize: 11, fontWeight: 500 }}>{record.tags?.length ? `${record.tags.length} 个标签` : normalizeDisplayName(record.creator_name, '家人')}</span>
     </span>
   </button>
 );
@@ -192,7 +201,7 @@ const HomeTimelineCard = ({ record, onClick, index }: { record: RecordSummary; o
         <span style={{ minWidth: 0, display: 'grid', gap: 5 }}>
           <span style={{ color: 'var(--nl-muted)', fontSize: 11, lineHeight: 1.1, fontWeight: 520 }}>{formatMonth(record.event_time)} {formatDay(record.event_time)} · {getRecordLabel(record)}</span>
           <strong style={{ color: 'var(--nl-ink)', fontSize: 15, lineHeight: 1.28, fontWeight: 720, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{record.title ?? '未命名记录'}</strong>
-          <span style={{ color: 'var(--nl-muted-strong)', fontSize: 12, lineHeight: 1.48, fontWeight: 460, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{record.summary ?? `${record.creator_name} 留下的一条成长记录。`}</span>
+          <span style={{ color: 'var(--nl-muted-strong)', fontSize: 12, lineHeight: 1.48, fontWeight: 460, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{record.summary ?? `${normalizeDisplayName(record.creator_name, '家人')} 留下的一条成长记录。`}</span>
         </span>
       </span>
     </button>
@@ -220,10 +229,9 @@ const TimelineRecordRow = ({
   const hasCover = hasVisualCover(record);
   const fallbackImage = index % 3 === 1 ? referenceAssets.parkPhoto : index % 3 === 2 ? referenceAssets.roomPhoto : referenceAssets.childPhoto;
   return (
-    <button type="button" onClick={onClick} className="nl-pressable" style={{ width: '100%', border: 'none', borderBottom: '1px solid var(--nl-border-soft)', borderRadius: 0, background: 'transparent', padding: '16px 0', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 86px', gap: 16, alignItems: 'center', textAlign: 'left', cursor: 'pointer', boxShadow: 'none' }}>
-      <span style={{ minWidth: 0, display: 'grid', gap: 5 }}>
-        <span style={{ color: 'var(--nl-muted)', fontSize: 11, lineHeight: 1.15, fontWeight: 520 }}>{formatMonth(record.event_time)} {formatDay(record.event_time)} · {ageLabel || formatShortDate(record.event_time)} · {getRecordLabel(record)}</span>
-        <strong style={{ color: 'var(--nl-ink)', fontSize: 16, lineHeight: 1.25, fontWeight: 760, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{record.title ?? '未命名记录'}</strong>
+    <button type="button" onClick={onClick} className="nl-pressable" style={{ width: '100%', minHeight: 112, border: 'none', borderBottom: '1px solid rgba(var(--nl-shadow-rgb),0.07)', borderRadius: 0, background: 'transparent', padding: '18px 0', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 82px', gap: 14, alignItems: 'center', textAlign: 'left', cursor: 'pointer', boxShadow: 'none' }}>
+      <span style={{ minWidth: 0, display: 'grid', gap: 8 }}>
+        <strong style={{ color: 'var(--nl-ink)', fontSize: 17, lineHeight: 1.22, fontWeight: 780, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{record.title ?? '未命名记录'}</strong>
         {mediaKind === 'audio' ? (
           <span style={{ width: '100%', maxWidth: 144, minHeight: 34, borderRadius: 8, background: 'transparent', border: '1px solid rgba(var(--nl-primary-rgb),0.2)', color: 'var(--nl-primary-2)', padding: '0 10px', display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 11, fontWeight: 520 }}>
             <PlayCircle size={14} fill="currentColor" />
@@ -233,36 +241,176 @@ const TimelineRecordRow = ({
             00:06
           </span>
         ) : (
-          <span style={{ color: 'var(--nl-muted-strong)', fontSize: 13, lineHeight: 1.5, fontWeight: 460, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{record.summary ?? '这条记录还没有正文。'}</span>
+          <span style={{ color: 'var(--nl-muted-strong)', fontSize: 13, lineHeight: 1.52, fontWeight: 460, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{record.summary ?? '这条记录还没有正文。'}</span>
         )}
+        <span style={{ color: 'var(--nl-muted)', fontSize: 11, lineHeight: 1.15, fontWeight: 560 }}>{ageLabel || formatShortDate(record.event_time)} · {getRecordLabel(record)}</span>
       </span>
-      <span style={{ position: 'relative', width: 86, height: 66, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--nl-border-muted)', background: 'var(--nl-surface-soft)', boxShadow: '0 12px 26px rgba(var(--nl-shadow-rgb),0.18)' }}>
+      <span style={{ position: 'relative', width: 82, height: 82, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--nl-border-image)', background: 'var(--nl-surface-soft)', boxShadow: '0 14px 32px rgba(var(--nl-shadow-rgb),0.12)' }}>
         {hasCover ? (
           <HomeImage src={coverUrl} fallbackSrc={fallbackImage} alt={record.title ?? '成长照片'} />
         ) : (
           <RecordTextThumbnail label={getRecordLabel(record)} />
         )}
-        {isMilestone ? <span style={{ position: 'absolute', right: 5, top: 5, width: 20, height: 20, borderRadius: '6px', background: 'var(--nl-media-scrim)', color: 'var(--nl-primary-2)', display: 'grid', placeItems: 'center' }}><Star size={11} fill="currentColor" /></span> : null}
+        {isMilestone ? <span style={{ position: 'absolute', right: 6, top: 6, width: 22, height: 22, borderRadius: '8px', background: 'var(--nl-media-scrim)', color: 'var(--nl-on-dark)', display: 'grid', placeItems: 'center', WebkitBackdropFilter: 'blur(10px)', backdropFilter: 'blur(10px)' }}><Star size={12} fill="currentColor" /></span> : null}
       </span>
     </button>
   );
 };
 
 type HomePhotoTile = {
-  src: string;
+  src: string | null;
   title: string;
   recordNo?: string;
   meta?: string;
+  target?: string;
+  placeholder?: boolean;
+  mediaKind?: string | null;
+  videoPreviewSrc?: string | null;
+  textOnly?: boolean;
+  excerpt?: string | null;
 };
 
 const homePhotoFallbacks = [referenceAssets.childPhoto, referenceAssets.roomPhoto, referenceAssets.parkPhoto];
 const HOME_PHOTO_AUTOPLAY_MS = 2000;
+const HOME_PHOTO_TURN_MS = 420;
+const emptyHomeRecordsResponse: RecordsListResponse = { list: [], page: 1, page_size: 12, total: 0, has_more: false };
+const homeVideoThumbnailCache = new Map<string, string | null>();
+const homeVideoPreviewCache = new Map<string, string | null>();
+const homeVideoThumbnailPromises = new Map<string, Promise<string | null>>();
+
+const getHomeVideoThumbnail = (mediaNo: string) => {
+  if (homeVideoThumbnailCache.has(mediaNo)) return Promise.resolve(homeVideoThumbnailCache.get(mediaNo) ?? null);
+  const request = homeVideoThumbnailPromises.get(mediaNo) ?? webApi.mediaAccessUrl(mediaNo)
+    .then((response) => {
+      homeVideoPreviewCache.set(mediaNo, response.access_url || null);
+      return response.thumbnail_url || null;
+    })
+    .catch(() => null)
+    .finally(() => homeVideoThumbnailPromises.delete(mediaNo));
+  homeVideoThumbnailPromises.set(mediaNo, request);
+  return request.then((thumbnailUrl) => {
+    homeVideoThumbnailCache.set(mediaNo, thumbnailUrl);
+    return thumbnailUrl;
+  });
+};
+
+const useHomeRecordCover = (record: RecordSummary | null, mediaKind: string | null) => {
+  const isVideo = mediaKind === 'video';
+  const mediaNo = isVideo ? record?.cover_media_no ?? null : null;
+  const [videoThumbnail, setVideoThumbnail] = useState<string | null>(() => mediaNo ? homeVideoThumbnailCache.get(mediaNo) ?? null : null);
+  const [videoPreview, setVideoPreview] = useState<string | null>(() => mediaNo ? homeVideoPreviewCache.get(mediaNo) ?? null : null);
+  const imageUrl = useCachedMediaUrl(
+    isVideo ? null : record?.cover_media_no,
+    isVideo ? null : record?.cover_url,
+    isVideo ? 'image' : mediaKind ?? 'image',
+    { cacheRemote: !isVideo && mediaKind !== 'audio' },
+  );
+
+  useEffect(() => {
+    let active = true;
+    setVideoThumbnail(mediaNo ? homeVideoThumbnailCache.get(mediaNo) ?? null : null);
+    setVideoPreview(mediaNo ? homeVideoPreviewCache.get(mediaNo) ?? null : null);
+    if (mediaNo) void getHomeVideoThumbnail(mediaNo).then((thumbnailUrl) => {
+      if (active) {
+        setVideoThumbnail(thumbnailUrl);
+        setVideoPreview(homeVideoPreviewCache.get(mediaNo) ?? null);
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [mediaNo]);
+
+  return {
+    src: isVideo ? videoThumbnail : imageUrl,
+    videoPreviewSrc: isVideo ? videoPreview : null,
+  };
+};
+
+const HomeVideoFrame = ({ src, active, compact, title }: { src: string; active: boolean; compact: boolean; title: string }) => {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    if (active && !compact && !navigator.userAgent.includes('jsdom')) videoRef.current?.load();
+  }, [active, compact, src]);
+
+  const seekToFirstFrame = (video: HTMLVideoElement) => {
+    if (video.duration > 0.05 && video.currentTime === 0) video.currentTime = Math.min(0.1, video.duration / 10);
+  };
+
+  return (
+    <video
+      ref={videoRef}
+      src={src}
+      muted
+      playsInline
+      preload={active && !compact ? 'auto' : 'metadata'}
+      onLoadedMetadata={(event) => seekToFirstFrame(event.currentTarget)}
+      onLoadedData={(event) => seekToFirstFrame(event.currentTarget)}
+      aria-label={active ? title : undefined}
+      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+    />
+  );
+};
+
+const HomeTileVisual = ({ tile, active, compact = false, fallbackSrc }: { tile: HomePhotoTile; active: boolean; compact?: boolean; fallbackSrc: string }) => {
+  if (tile.textOnly) {
+    return (
+      <span
+        style={{
+          width: '100%',
+          height: '100%',
+          display: 'grid',
+          alignContent: compact ? 'center' : 'start',
+          justifyItems: compact ? 'center' : 'start',
+          gap: compact ? 4 : 18,
+          padding: compact ? 8 : '54px 34px 150px',
+          boxSizing: 'border-box',
+          background: 'var(--nl-primary-2)',
+          color: 'var(--nl-on-dark)',
+          overflow: 'hidden',
+        }}
+      >
+        <FileText size={compact ? 20 : 28} strokeWidth={1.5} />
+        {!compact ? (
+          <p style={{ margin: 0, maxWidth: '18em', color: 'var(--nl-on-dark-muted)', fontFamily: 'var(--nl-font-display)', fontSize: 18, lineHeight: 1.75, fontWeight: 520, display: '-webkit-box', WebkitLineClamp: 6, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+            {tile.excerpt || tile.title}
+          </p>
+        ) : null}
+      </span>
+    );
+  }
+
+  if (tile.mediaKind === 'video') {
+    return (
+      <span style={{ position: 'relative', width: '100%', height: '100%', display: 'grid', placeItems: 'center', background: 'var(--nl-surface-strong)' }}>
+        {tile.src ? (
+          <HomeImage src={tile.src} fallbackSrc={null} alt={active ? tile.title : ''} loading={active ? 'eager' : 'lazy'} />
+        ) : tile.videoPreviewSrc ? (
+          <HomeVideoFrame src={tile.videoPreviewSrc} active={active} compact={compact} title={tile.title} />
+        ) : (
+          <span style={{ display: 'grid', justifyItems: 'center', gap: compact ? 5 : 10, color: 'var(--nl-muted-strong)' }}>
+            <Film size={compact ? 22 : 38} strokeWidth={1.5} />
+            {!compact ? <span style={{ fontSize: 10, lineHeight: 1, fontWeight: 740, letterSpacing: '0.08em' }}>VIDEO ARCHIVE</span> : null}
+          </span>
+        )}
+        <span aria-hidden="true" style={{ position: 'absolute', width: compact ? 28 : 46, height: compact ? 28 : 46, borderRadius: '50%', display: 'grid', placeItems: 'center', color: 'var(--nl-on-dark)', background: 'var(--nl-media-scrim)', boxShadow: '0 10px 24px rgba(var(--nl-shadow-rgb),0.18)' }}>
+          <Play size={compact ? 15 : 24} fill="currentColor" strokeWidth={1.4} style={{ marginLeft: compact ? 1 : 2 }} />
+        </span>
+      </span>
+    );
+  }
+
+  return <HomeImage src={tile.src} fallbackSrc={fallbackSrc} alt={active ? tile.title : ''} loading={active ? 'eager' : 'lazy'} />;
+};
 
 const HomePhotoDrawer = ({ tiles, onOpen }: { tiles: HomePhotoTile[]; onOpen: (tile: HomePhotoTile) => void }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
   const ignoreClickRef = useRef(false);
-  const tileKey = tiles.map((tile) => `${tile.recordNo ?? ''}:${tile.src}`).join('|');
+  // Media cache URLs can change from remote to blob URLs after mount. Keep the
+  // carousel identity tied to records so cache hydration cannot reset autoplay.
+  const tileKey = tiles.map((tile) => tile.recordNo ?? tile.target ?? tile.title).join('|');
   const canScrollDrawer = tiles.length > 3;
   const drawerTileWidth = 88;
   const drawerTileHeight = 58;
@@ -338,8 +486,8 @@ const HomePhotoDrawer = ({ tiles, onOpen }: { tiles: HomePhotoTile[]; onOpen: (t
     setActiveIndex(index);
   };
 
-  const getLoopOffset = (index: number) => {
-    const rawOffset = index - activeTileIndex;
+  const getLoopOffset = (index: number, centerIndex = activeTileIndex) => {
+    const rawOffset = index - centerIndex;
     if (!canScrollDrawer) return rawOffset;
     if (rawOffset > tiles.length / 2) return rawOffset - tiles.length;
     if (rawOffset < -tiles.length / 2) return rawOffset + tiles.length;
@@ -496,34 +644,68 @@ const HomePhotoDrawer = ({ tiles, onOpen }: { tiles: HomePhotoTile[]; onOpen: (t
 
 const HomePhotoCarousel = ({ tiles, onOpen }: { tiles: HomePhotoTile[]; onOpen: (tile: HomePhotoTile) => void }) => {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [turning, setTurning] = useState<{ from: number; to: number; direction: 1 | -1 } | null>(null);
+  const activeIndexRef = useRef(0);
+  const turningRef = useRef<{ from: number; to: number; direction: 1 | -1 } | null>(null);
+  const queuedTurnRef = useRef<{ to: number; direction: 1 | -1 } | null>(null);
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null);
   const ignoreClickRef = useRef(false);
   const interactionPauseUntilRef = useRef(0);
-  const tileKey = tiles.map((tile) => `${tile.recordNo ?? ''}:${tile.src}`).join('|');
+  const flipTimeoutRef = useRef<number | null>(null);
+  const flipFrameRef = useRef<number | null>(null);
+  // Media cache URLs can change from remote to blob URLs after mount. Keep the
+  // carousel identity tied to records so cache hydration cannot reset autoplay.
+  const tileKey = tiles.map((tile) => tile.recordNo ?? tile.target ?? tile.title).join('|');
   const canLoop = tiles.length > 1;
-  const thumbWidth = 78;
-  const thumbHeight = 56;
-  const thumbStride = Math.round(thumbWidth * 0.55);
+  const usesSparseRail = tiles.length > 1 && tiles.length <= 3;
+  const thumbWidth = usesSparseRail ? 112 : 104;
+  const thumbHeight = usesSparseRail ? 76 : 72;
+  const thumbStride = Math.round(thumbWidth * 0.3);
   const visibleThumbCount = Math.min(tiles.length, 5);
-  const thumbRailWidth = visibleThumbCount > 0 ? Math.min(thumbWidth + thumbStride * (visibleThumbCount - 1), 258) : 0;
+  const thumbRailWidth = visibleThumbCount > 0 ? Math.min(thumbWidth + thumbStride * (visibleThumbCount - 1), usesSparseRail ? 210 : 326) : 0;
 
   const normalizeIndex = (index: number) => {
     if (!tiles.length) return 0;
     return ((index % tiles.length) + tiles.length) % tiles.length;
   };
   const activeTileIndex = normalizeIndex(activeIndex);
+  const drawerActiveIndex = turning ? turning.to : activeTileIndex;
   const activeTile = tiles[activeTileIndex] ?? tiles[0];
+  const displayTile = tiles[drawerActiveIndex] ?? activeTile;
+  const layoutMode = activeTile?.placeholder ? 'empty' : tiles.length === 1 ? 'single' : usesSparseRail ? 'sparse' : 'drawer';
 
   useEffect(() => {
     setActiveIndex(0);
+    activeIndexRef.current = 0;
+    turningRef.current = null;
+    queuedTurnRef.current = null;
+    setTurning(null);
+    if (flipTimeoutRef.current !== null) {
+      window.clearTimeout(flipTimeoutRef.current);
+      flipTimeoutRef.current = null;
+    }
+    if (flipFrameRef.current !== null) {
+      window.cancelAnimationFrame(flipFrameRef.current);
+      flipFrameRef.current = null;
+    }
   }, [tileKey]);
+
+  useEffect(() => {
+    activeIndexRef.current = activeIndex;
+  }, [activeIndex]);
+
+  useEffect(() => () => {
+    if (flipTimeoutRef.current !== null) window.clearTimeout(flipTimeoutRef.current);
+    if (flipFrameRef.current !== null) window.cancelAnimationFrame(flipFrameRef.current);
+  }, []);
 
   useEffect(() => {
     if (tiles.length <= 1) return undefined;
 
     const timer = window.setInterval(() => {
       if (Date.now() < interactionPauseUntilRef.current) return;
-      setActiveIndex((index) => index + 1);
+      if (turningRef.current || queuedTurnRef.current) return;
+      requestTurn(activeIndexRef.current + 1, 1);
     }, HOME_PHOTO_AUTOPLAY_MS);
 
     return () => window.clearInterval(timer);
@@ -531,24 +713,62 @@ const HomePhotoCarousel = ({ tiles, onOpen }: { tiles: HomePhotoTile[]; onOpen: 
 
   if (!activeTile) return null;
 
-  const getLoopOffset = (index: number) => {
-    const rawOffset = index - activeTileIndex;
+  const getLoopOffset = (index: number, centerIndex = activeTileIndex) => {
+    const rawOffset = index - centerIndex;
     if (!canLoop) return rawOffset;
     if (rawOffset > tiles.length / 2) return rawOffset - tiles.length;
     if (rawOffset < -tiles.length / 2) return rawOffset + tiles.length;
     return rawOffset;
   };
 
+  function startTurn(nextIndex: number, direction: 1 | -1) {
+    if (!canLoop) return;
+    const currentIndex = activeIndexRef.current;
+    const normalizedFrom = normalizeIndex(currentIndex);
+    const normalizedTo = normalizeIndex(nextIndex);
+    if (normalizedFrom === normalizedTo) return;
+    const nextTurn = { from: normalizedFrom, to: normalizedTo, direction };
+    turningRef.current = nextTurn;
+    setTurning(nextTurn);
+    flipTimeoutRef.current = window.setTimeout(() => {
+      activeIndexRef.current = normalizedTo;
+      setActiveIndex(normalizedTo);
+      turningRef.current = null;
+      setTurning(null);
+      flipTimeoutRef.current = null;
+
+      const queuedTurn = queuedTurnRef.current;
+      queuedTurnRef.current = null;
+      if (!queuedTurn || queuedTurn.to === normalizedTo) return;
+      flipFrameRef.current = window.requestAnimationFrame(() => {
+        flipFrameRef.current = null;
+        startTurn(queuedTurn.to, queuedTurn.direction);
+      });
+    }, HOME_PHOTO_TURN_MS);
+  }
+
+  function requestTurn(nextIndex: number, direction: 1 | -1) {
+    if (!canLoop) return;
+    const normalizedTo = normalizeIndex(nextIndex);
+    interactionPauseUntilRef.current = Date.now() + 1500;
+    if (turningRef.current) {
+      queuedTurnRef.current = { to: normalizedTo, direction };
+      return;
+    }
+    startTurn(normalizedTo, direction);
+  }
+
   const moveBy = (delta: number) => {
     if (!canLoop) return;
-    interactionPauseUntilRef.current = Date.now() + 1300;
-    setActiveIndex((index) => index + delta);
+    const projectedIndex = queuedTurnRef.current?.to ?? turningRef.current?.to ?? activeIndexRef.current;
+    requestTurn(projectedIndex + delta, delta > 0 ? 1 : -1);
   };
 
   const selectTile = (index: number) => {
     if (ignoreClickRef.current) return;
-    interactionPauseUntilRef.current = Date.now() + 1300;
-    setActiveIndex((current) => current + getLoopOffset(index));
+    const offset = getLoopOffset(index, drawerActiveIndex);
+    if (offset === 0) return;
+    requestTurn(index, offset > 0 ? 1 : -1);
   };
 
   const onCarouselPointerDown = (event: ReactPointerEvent<HTMLElement>) => {
@@ -583,6 +803,7 @@ const HomePhotoCarousel = ({ tiles, onOpen }: { tiles: HomePhotoTile[]; onOpen: 
       const deltaX = event.clientX - start.x;
       const deltaY = Math.abs(event.clientY - start.y);
       if (Math.abs(deltaX) > 30 && Math.abs(deltaX) > deltaY) {
+        ignoreClickRef.current = true;
         interactionPauseUntilRef.current = Date.now() + 1300;
         moveBy(deltaX < 0 ? 1 : -1);
       }
@@ -590,16 +811,16 @@ const HomePhotoCarousel = ({ tiles, onOpen }: { tiles: HomePhotoTile[]; onOpen: 
 
     if (!ignoreClickRef.current) return;
     interactionPauseUntilRef.current = Date.now() + 1300;
-    window.setTimeout(() => {
-      ignoreClickRef.current = false;
-    }, 120);
   };
 
   return (
     <section
       aria-label="最近照片"
       data-photo-carousel="true"
-      style={{ display: 'grid', gap: 12, width: '100%', overflow: 'hidden', contain: 'layout paint' }}
+      data-photo-active-index={drawerActiveIndex}
+      data-photo-turning={turning ? 'true' : 'false'}
+      data-photo-layout={layoutMode}
+      style={{ display: 'grid', gap: 0, width: '100%', justifyItems: 'center', overflow: 'visible', contain: 'layout paint' }}
     >
       <button
         className="nl-media-interaction"
@@ -610,76 +831,86 @@ const HomePhotoCarousel = ({ tiles, onOpen }: { tiles: HomePhotoTile[]; onOpen: 
         onPointerUp={clearCarouselPointer}
         onPointerCancel={clearCarouselPointer}
         onClick={() => {
-          if (!ignoreClickRef.current) onOpen(activeTile);
+          if (ignoreClickRef.current) {
+            ignoreClickRef.current = false;
+            return;
+          }
+          onOpen(displayTile);
         }}
         style={{
           position: 'relative',
           width: '100%',
-          aspectRatio: '4 / 3',
-          minHeight: 278,
-          maxHeight: 352,
-          borderRadius: 8,
-          border: '1px solid var(--nl-border-soft)',
-          background: 'rgba(var(--nl-surface-strong-rgb),0.64)',
+          justifySelf: 'center',
+          aspectRatio: activeTile.placeholder ? '16 / 10' : '4 / 5.45',
+          minHeight: activeTile.placeholder ? 232 : 440,
+          maxHeight: activeTile.placeholder ? 268 : 'min(572px, calc(100svh - 238px))',
+          borderRadius: 0,
+          border: 'none',
+          background: 'var(--nl-bg-warm)',
           overflow: 'hidden',
-          padding: 10,
+          padding: 0,
           cursor: 'pointer',
-          boxShadow: '0 30px 76px rgba(var(--nl-shadow-rgb),0.16), inset 0 1px 0 rgba(255,255,255,0.62)',
+          boxShadow: '0 24px 52px rgba(var(--nl-shadow-rgb),0.12)',
           textAlign: 'left',
           touchAction: 'pan-y',
           contain: 'layout paint',
+          perspective: 1450,
           WebkitTapHighlightColor: 'transparent',
         }}
       >
         {tiles.map((tile, index) => {
           const active = index === activeTileIndex;
-          const loopOffset = getLoopOffset(index);
-          const visible = Math.abs(loopOffset) <= 1;
+          const turningFrom = turning?.from === index;
+          const turningTo = turning?.to === index;
+          const slideClass = turningTo
+            ? turning.direction === 1 ? 'home-photo-incoming-forward' : 'home-photo-incoming-backward'
+            : turningFrom
+              ? turning.direction === 1 ? 'home-photo-outgoing-forward' : 'home-photo-outgoing-backward'
+              : undefined;
+          const visible = active || turningFrom || turningTo;
           return (
             <span
               key={`${tile.recordNo ?? tile.title}-${index}`}
+              className={slideClass}
               data-photo-slide={index}
-              aria-hidden={!active}
+              aria-hidden={!visible}
               style={{
                 position: 'absolute',
-                inset: '10px 10px 58px',
+                inset: 0,
                 display: 'block',
-                borderRadius: 8,
+                borderRadius: 0,
                 overflow: 'hidden',
-                opacity: visible ? (active ? 1 : 0) : 0,
-                transform: `translate3d(${loopOffset * 22}px, 0, 0) scale(${active ? 1 : 1.01})`,
-                transition: 'opacity 0.42s ease, transform 0.48s cubic-bezier(0.22, 1, 0.36, 1)',
-                zIndex: active ? 2 : 1,
-                willChange: 'opacity, transform',
-                background: 'var(--nl-surface-soft)',
+                opacity: visible ? 1 : 0,
+                transform: 'translate3d(0, 0, 0)',
+                transition: slideClass ? undefined : 'opacity 0.28s ease',
+                zIndex: turningTo ? 4 : turningFrom ? 3 : active ? 2 : 1,
+                willChange: slideClass ? 'transform, opacity' : active ? 'opacity' : undefined,
+                backfaceVisibility: 'hidden',
+                background: tile.placeholder ? 'transparent' : 'var(--nl-surface-soft)',
+                boxShadow: 'none',
               }}
             >
-              <HomeImage
-                src={tile.src}
-                fallbackSrc={homePhotoFallbacks[index % homePhotoFallbacks.length]}
-                alt={active ? tile.title : ''}
-                loading={active ? 'eager' : 'lazy'}
-              />
+              {tile.placeholder ? (
+                <span style={{ width: '100%', height: '100%', display: 'grid', placeItems: 'center' }}>
+                  <span style={{ display: 'grid', justifyItems: 'center', gap: 12, transform: 'translateY(-2px)' }}>
+                    <span style={{ width: 86, height: 86, display: 'block', borderRadius: '50%', overflow: 'hidden', border: '3px solid var(--nl-border-image)', boxShadow: '0 14px 30px rgba(var(--nl-shadow-rgb),0.12)' }}>
+                      <HomeImage src={tile.src} fallbackSrc={referenceAssets.childAvatar} alt={active ? tile.title : ''} loading="eager" />
+                    </span>
+                    <span style={{ display: 'grid', gap: 5, justifyItems: 'center', textAlign: 'center' }}>
+                      <strong style={{ color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: 21, lineHeight: 1.08, fontWeight: 800 }}>{tile.title}</strong>
+                    </span>
+                  </span>
+                </span>
+              ) : <HomeTileVisual tile={tile} active={active || turningTo} fallbackSrc={homePhotoFallbacks[index % homePhotoFallbacks.length]} />}
             </span>
           );
         })}
-        <span
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            inset: '10px 10px 58px',
-            borderRadius: 8,
-            zIndex: 3,
-            background: 'linear-gradient(180deg, rgba(12,12,10,0) 62%, rgba(12,12,10,0.24) 100%)',
-            pointerEvents: 'none',
-          }}
-        />
-        <span
+        {!activeTile.placeholder ? <span
           style={{
             position: 'absolute',
             left: 18,
             right: 18,
-            bottom: 17,
+            bottom: 112,
             zIndex: 4,
             display: 'grid',
             gridTemplateColumns: 'minmax(0, 1fr) minmax(34px, auto)',
@@ -689,30 +920,34 @@ const HomePhotoCarousel = ({ tiles, onOpen }: { tiles: HomePhotoTile[]; onOpen: 
           }}
         >
           <span style={{ minWidth: 0, display: 'grid', gap: 4 }}>
-            <span style={{ color: 'var(--nl-muted)', fontSize: 10, lineHeight: 1, fontWeight: 620 }}>
-              {activeTile.meta ?? `${activeTileIndex + 1} / ${tiles.length}`}
+            <span style={{ color: 'var(--nl-on-dark-muted)', fontSize: 10, lineHeight: 1, fontWeight: 760, letterSpacing: '0.08em', textShadow: 'var(--nl-text-shadow-hero)' }}>
+              {displayTile.meta ?? `${drawerActiveIndex + 1} / ${tiles.length}`}
             </span>
-            <strong style={{ color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: 19, lineHeight: 1.12, fontWeight: 780, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {activeTile.title}
+            <strong style={{ color: 'var(--nl-on-dark)', fontFamily: 'var(--nl-font-display)', fontSize: 28, lineHeight: 1.12, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textShadow: 'var(--nl-text-shadow-hero)' }}>
+              {displayTile.title}
             </strong>
           </span>
-          <span style={{ color: 'var(--nl-muted)', fontSize: 10, lineHeight: 1, fontWeight: 620 }}>
-            {String(activeTileIndex + 1).padStart(2, '0')} / {String(tiles.length).padStart(2, '0')}
-          </span>
-        </span>
+          {tiles.length > 1 ? (
+            <span style={{ color: 'var(--nl-on-dark-muted)', fontSize: 11, lineHeight: 1, fontWeight: 760, textShadow: 'var(--nl-text-shadow-hero)' }}>
+              {String(drawerActiveIndex + 1).padStart(2, '0')} / {String(tiles.length).padStart(2, '0')}
+            </span>
+          ) : null}
+        </span> : null}
       </button>
 
-      <div
+      {tiles.length > 1 ? <div
         data-photo-drawer="true"
         style={{
+          position: 'relative',
+          zIndex: 6,
           display: 'grid',
           placeItems: 'center',
           overflowX: 'hidden',
           overflowY: 'hidden',
           width: '100%',
-          minHeight: thumbHeight + 18,
-          padding: '0 0 8px',
-          margin: 0,
+          minHeight: thumbHeight + 28,
+          padding: '10px 0 12px',
+          margin: tiles.length > 1 ? '-92px 0 0' : 0,
           scrollbarWidth: 'none',
         }}
       >
@@ -722,18 +957,20 @@ const HomePhotoCarousel = ({ tiles, onOpen }: { tiles: HomePhotoTile[]; onOpen: 
             position: 'relative',
             width: thumbRailWidth,
             maxWidth: '100%',
-            height: thumbHeight + 16,
+            height: thumbHeight + 24,
             margin: '0 auto',
             overflow: 'visible',
             contain: 'layout paint',
           }}
         >
           {tiles.map((tile, index) => {
-            const active = index === activeTileIndex;
-            const loopOffset = getLoopOffset(index);
+            const active = index === drawerActiveIndex;
+            const loopOffset = getLoopOffset(index, drawerActiveIndex);
             const absOffset = Math.abs(loopOffset);
-            const visible = tiles.length <= 3 || absOffset <= 3;
-            const thumbScale = active ? 1.05 : absOffset === 1 ? 0.96 : absOffset === 2 ? 0.88 : 0.8;
+            const visualOffset = usesSparseRail ? index - (tiles.length - 1) / 2 : loopOffset;
+            const visible = usesSparseRail || absOffset <= 3;
+            const thumbScale = active ? 1.04 : usesSparseRail ? 0.97 : absOffset === 1 ? 0.96 : absOffset === 2 ? 0.88 : 0.8;
+            const turningFrom = turning?.from === index;
             return (
               <button
                 className="nl-media-interaction"
@@ -744,34 +981,44 @@ const HomePhotoCarousel = ({ tiles, onOpen }: { tiles: HomePhotoTile[]; onOpen: 
                 aria-pressed={active}
                 onClick={() => selectTile(index)}
                 style={{
-                  ['--nl-media-active-transform' as string]: `translate3d(${loopOffset * thumbStride}px, 0, 0) scale(${thumbScale})`,
+                  ['--nl-media-active-transform' as string]: `translate3d(${visualOffset * thumbStride}px, 0, 0) scale(${thumbScale})`,
                   position: 'absolute',
                   left: `calc(50% - ${thumbWidth / 2}px)`,
-                  top: active ? 0 : absOffset === 1 ? 6 : 10,
+                  top: active ? 0 : usesSparseRail ? 5 : absOffset === 1 ? 7 : 12,
                   width: thumbWidth,
                   height: thumbHeight,
-                  borderRadius: 8,
-                  border: active ? '1px solid rgba(var(--nl-primary-rgb),0.3)' : '1px solid var(--nl-border-soft)',
+                   borderRadius: 8,
+                   border: active ? '2px solid var(--nl-border-image)' : '2px solid rgba(255,255,252,0.76)',
                   background: 'var(--nl-surface-soft)',
                   overflow: 'hidden',
                   padding: 0,
                   cursor: 'pointer',
-                  boxShadow: active ? '0 24px 48px rgba(var(--nl-shadow-rgb),0.34), 0 0 0 1px rgba(var(--nl-primary-rgb),0.1)' : '0 12px 24px rgba(var(--nl-shadow-rgb),0.2)',
-                  zIndex: active ? tiles.length + 2 : tiles.length + 1 - absOffset,
-                  opacity: visible ? (active ? 1 : absOffset === 1 ? 0.86 : absOffset === 2 ? 0.64 : 0.42) : 0,
+                   boxShadow: active ? '0 24px 48px rgba(var(--nl-shadow-rgb),0.34)' : '0 12px 24px rgba(var(--nl-shadow-rgb),0.2)',
+                  zIndex: active ? tiles.length + 3 : turningFrom ? tiles.length + 2 : usesSparseRail ? index + 1 : tiles.length + 1 - absOffset,
+                  opacity: visible ? (active ? 1 : usesSparseRail ? 0.82 : absOffset === 1 ? 0.86 : absOffset === 2 ? 0.64 : 0.42) : 0,
                   pointerEvents: visible ? 'auto' : 'none',
-                  transform: `translate3d(${loopOffset * thumbStride}px, 0, 0) scale(${thumbScale})`,
+                  transform: `translate3d(${visualOffset * thumbStride}px, 0, 0) scale(${thumbScale})`,
                   transformOrigin: 'center',
-                  transition: 'opacity 0.3s ease, transform 0.38s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.18s ease, top 0.28s ease',
+                  transition: 'opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1), transform 0.42s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.18s ease, top 0.42s cubic-bezier(0.22, 1, 0.36, 1)',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
-                <HomeImage src={tile.src} fallbackSrc={homePhotoFallbacks[index % homePhotoFallbacks.length]} alt="" />
+                <span
+                  aria-hidden="true"
+                  style={{
+                    position: 'relative',
+                    display: 'block',
+                    width: '100%',
+                    height: '100%',
+                  }}
+                >
+                  <HomeTileVisual tile={tile} active={active} compact fallbackSrc={homePhotoFallbacks[index % homePhotoFallbacks.length]} />
+                </span>
               </button>
             );
           })}
         </div>
-      </div>
+      </div> : null}
     </section>
   );
 };
@@ -780,11 +1027,10 @@ export const HomePage = () => {
   const navigate = useNavigate();
   const { user, activeChild, children, setActiveChild, refreshChildren } = useAuth();
   const anniversaryWindow = useMemo(() => getOneYearAgoWindow(), []);
-  const { data: recordData, loading, error } = useAsyncData<RecordSummary[]>(
+  const { data: recordData, loading, error } = useAsyncData<RecordsListResponse>(
     async () => {
-      if (!activeChild) return [];
-      const result = await webApi.listRecords({ child_no: activeChild.child_no, page: 1, page_size: 5, status: 'published' });
-      return result.list;
+      if (!activeChild) return emptyHomeRecordsResponse;
+      return webApi.listRecords({ child_no: activeChild.child_no, page: 1, page_size: 12, status: 'published' });
     },
     [activeChild?.child_no],
   );
@@ -812,9 +1058,10 @@ export const HomePage = () => {
     if (!activeChild && children.length > 0) setActiveChild(children[0]);
   }, [activeChild, children, setActiveChild]);
 
-  const records = recordData ?? [];
+  const records = recordData?.list ?? [];
+  const totalRecordCount = recordData?.total ?? records.length;
   const anniversaryRecord = anniversaryData?.[0] ?? null;
-  const childName = activeChild?.name?.trim() || '孩子';
+  const childName = normalizeDisplayName(activeChild?.name, '孩子');
   const timelinePreviewRecords = records.slice(0, 3);
   const timelineMonthTitle = timelinePreviewRecords[0] ? formatMonthTitle(timelinePreviewRecords[0].event_time) : formatMonthTitle(new Date().toISOString());
   const switchChild = () => {
@@ -843,127 +1090,78 @@ export const HomePage = () => {
   const fourthHeroMediaKind = fourthHeroRecord ? getMediaKind(fourthHeroRecord) : null;
   const fifthHeroMediaKind = fifthHeroRecord ? getMediaKind(fifthHeroRecord) : null;
   const sixthHeroMediaKind = sixthHeroRecord ? getMediaKind(sixthHeroRecord) : null;
-  const anniversaryMediaKind = anniversaryRecord ? getMediaKind(anniversaryRecord) : null;
-  const primaryHeroPhoto = useCachedMediaUrl(primaryHeroRecord?.cover_media_no, primaryHeroRecord?.cover_url, primaryHeroMediaKind ?? 'image', {
-    cacheRemote: primaryHeroMediaKind !== 'audio',
-  });
-  const leftHeroPhoto = useCachedMediaUrl(leftHeroRecord?.cover_media_no, leftHeroRecord?.cover_url, leftHeroMediaKind ?? 'image', {
-    cacheRemote: leftHeroMediaKind !== 'audio',
-  });
-  const rightHeroPhoto = useCachedMediaUrl(rightHeroRecord?.cover_media_no, rightHeroRecord?.cover_url, rightHeroMediaKind ?? 'image', {
-    cacheRemote: rightHeroMediaKind !== 'audio',
-  });
-  const fourthHeroPhoto = useCachedMediaUrl(fourthHeroRecord?.cover_media_no, fourthHeroRecord?.cover_url, fourthHeroMediaKind ?? 'image', {
-    cacheRemote: fourthHeroMediaKind !== 'audio',
-  });
-  const fifthHeroPhoto = useCachedMediaUrl(fifthHeroRecord?.cover_media_no, fifthHeroRecord?.cover_url, fifthHeroMediaKind ?? 'image', {
-    cacheRemote: fifthHeroMediaKind !== 'audio',
-  });
-  const sixthHeroPhoto = useCachedMediaUrl(sixthHeroRecord?.cover_media_no, sixthHeroRecord?.cover_url, sixthHeroMediaKind ?? 'image', {
-    cacheRemote: sixthHeroMediaKind !== 'audio',
-  });
-  const anniversaryCoverUrl = useCachedMediaUrl(anniversaryRecord?.cover_media_no, anniversaryRecord?.cover_url, anniversaryMediaKind ?? 'image', {
-    cacheRemote: anniversaryMediaKind !== 'audio',
-  });
-  const recordCountText = loading ? '正在同步' : error ? '暂未同步' : `${records.length} 条记录`;
-  const heroPhotoUrls = [primaryHeroPhoto, leftHeroPhoto, rightHeroPhoto, fourthHeroPhoto, fifthHeroPhoto, sixthHeroPhoto];
+  const primaryHeroPhoto = useHomeRecordCover(primaryHeroRecord, primaryHeroMediaKind);
+  const leftHeroPhoto = useHomeRecordCover(leftHeroRecord, leftHeroMediaKind);
+  const rightHeroPhoto = useHomeRecordCover(rightHeroRecord, rightHeroMediaKind);
+  const fourthHeroPhoto = useHomeRecordCover(fourthHeroRecord, fourthHeroMediaKind);
+  const fifthHeroPhoto = useHomeRecordCover(fifthHeroRecord, fifthHeroMediaKind);
+  const sixthHeroPhoto = useHomeRecordCover(sixthHeroRecord, sixthHeroMediaKind);
+  const recordCountText = loading ? '正在同步' : error ? '暂未同步' : `${totalRecordCount} 条记录`;
+  const heroMedia = [primaryHeroPhoto, leftHeroPhoto, rightHeroPhoto, fourthHeroPhoto, fifthHeroPhoto, sixthHeroPhoto];
   const realPhotoTiles = heroVisualRecords.map((record, index) => ({
-    src: heroPhotoUrls[index] ?? homePhotoFallbacks[index % homePhotoFallbacks.length],
+    src: heroMedia[index].src,
     title: record.title ?? `成长照片 ${index + 1}`,
     recordNo: record.record_no,
     meta: `${formatMonth(record.event_time)} ${formatDay(record.event_time)} · ${formatAgeAtEvent(activeChild?.birthday, record.event_time) || '成长片段'}`,
+    mediaKind: getMediaKind(record),
+    videoPreviewSrc: heroMedia[index].videoPreviewSrc
+      ?? (getMediaKind(record) === 'video' && /^(data:video\/|blob:)/i.test(record.cover_url ?? '') ? record.cover_url : null),
   }));
-  const placeholderPhotoTiles = [
-    { src: referenceAssets.childPhoto, title: '最近照片', meta: 'PRIVATE ARCHIVE' },
-    { src: referenceAssets.roomPhoto, title: '生活瞬间', meta: 'FAMILY MOMENTS' },
-    { src: anniversaryCoverUrl ?? referenceAssets.parkPhoto, title: anniversaryRecord?.title ?? '成长片段', recordNo: anniversaryRecord?.record_no, meta: anniversaryRecord ? `${formatMonth(anniversaryRecord.event_time)} ${formatDay(anniversaryRecord.event_time)}` : 'MEMORY FILE' },
-  ];
-  const recentPhotoTiles = realPhotoTiles.length >= 3
-    ? realPhotoTiles
-    : [...realPhotoTiles, ...placeholderPhotoTiles].filter((tile, index, list) => !tile.recordNo || list.findIndex((item) => item.recordNo === tile.recordNo) === index).slice(0, 3);
+  const textRecordTiles: HomePhotoTile[] = records
+    .filter((record) => !hasVisualCover(record))
+    .slice(0, Math.max(0, 6 - realPhotoTiles.length))
+    .map((record) => ({
+      src: null,
+      title: record.title ?? '文字记录',
+      recordNo: record.record_no,
+      meta: `${formatMonth(record.event_time)} ${formatDay(record.event_time)} · ${formatAgeAtEvent(activeChild?.birthday, record.event_time) || '成长片段'}`,
+      mediaKind: getMediaKind(record),
+      textOnly: true,
+      excerpt: record.summary,
+    }));
+  const archiveTiles = realPhotoTiles.length ? [...realPhotoTiles, ...textRecordTiles] : [];
+  const recentPhotoTiles: HomePhotoTile[] = archiveTiles.length
+    ? archiveTiles
+    : [{ src: homeChildAvatar, title: '记录第一刻', meta: '私家成长档案', target: childRequiredTarget('/record/create'), placeholder: true }];
 
   return (
     <div style={refPageStyle}>
-      <section style={{ padding: 'calc(24px + env(safe-area-inset-top)) 22px 0', display: 'grid', gap: 18 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 48px', gap: 10, alignItems: 'start' }}>
+      <section className="home-cover-page" style={{ padding: 'calc(20px + env(safe-area-inset-top)) 0 0', display: 'grid', gap: 0 }}>
+        <div className="home-identity-bar" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: 14, alignItems: 'center', padding: '0 16px 18px' }}>
           <button type="button" onClick={switchChild} style={{ minWidth: 0, border: 'none', background: 'transparent', padding: 0, display: 'grid', gap: 5, textAlign: 'left', cursor: 'pointer' }}>
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
-              <h1 style={{ margin: 0, color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: 23, lineHeight: 1.12, fontWeight: 800, letterSpacing: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{childName}</h1>
+              <h1 style={{ margin: 0, color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-sans)', fontSize: 26, lineHeight: 1.1, fontWeight: 700, letterSpacing: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{childName}</h1>
               <ChevronDown size={17} color="var(--nl-muted)" />
             </span>
-            <strong style={{ color: 'var(--nl-muted)', fontSize: 12, lineHeight: 1.16, fontWeight: 520 }}>{activeChild?.current_age_display ?? user?.nickname ?? '家庭档案'}</strong>
+            <strong style={{ color: 'var(--nl-muted)', fontSize: 11.5, lineHeight: 1.2, fontWeight: 540 }}>{activeChild?.current_age_display ?? user?.nickname ?? '家庭档案'} · 私家成长档案</strong>
           </button>
-          <button type="button" aria-label="切换孩子" onClick={switchChild} style={{ border: 'none', background: 'transparent', padding: 0, justifySelf: 'end', cursor: 'pointer' }}>
-            <RefAvatar src={homeChildAvatar} mediaNo={activeChild?.avatar_media_no} label={childName} size={44} fallbackSrc={referenceAssets.childAvatar} />
-          </button>
-        </div>
-
-        <section aria-label="成长记录" style={{ padding: '14px 0 10px', display: 'grid', gap: 12 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: 12, alignItems: 'start' }}>
-            <div style={{ minWidth: 0, display: 'grid', gap: 5 }}>
-              <strong style={{ color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: 32, lineHeight: 1.08, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{childName}的成长记录</strong>
-            </div>
-        <button type="button" onClick={() => navigate(childRequiredTarget('/record/create'))} style={{ ...compactPrimaryButtonStyle, minWidth: 56 }}>
-              <Edit3 size={13} /> 记录
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <button type="button" onClick={() => navigate(childRequiredTarget('/record/create'))} aria-label="记录" style={{ width: 42, height: 42, border: '1px solid var(--nl-primary-line)', borderRadius: 8, background: 'transparent', color: 'var(--nl-primary-2)', display: 'grid', placeItems: 'center', cursor: 'pointer' }}>
+              <Edit3 size={17} />
+            </button>
+            <button type="button" aria-label="切换孩子" onClick={switchChild} style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer' }}>
+              <RefAvatar src={homeChildAvatar} mediaNo={activeChild?.avatar_media_no} label={childName} size={52} fallbackSrc={referenceAssets.childAvatar} />
             </button>
           </div>
-          <span style={{ color: 'var(--nl-muted-strong)', fontSize: 12, lineHeight: 1.45, fontWeight: 500 }}>
-            {recordCountText} · {activeChild?.current_age_display ?? '年龄待完善'} · 最新 {timelinePreviewRecords[0] ? formatMonth(timelinePreviewRecords[0].event_time) : '暂无'}
+        </div>
+
+        <section aria-label="成长记录" className="home-cover-meta" style={{ display: 'flex', alignItems: 'end', justifyContent: 'space-between', gap: 14, padding: '0 16px 14px' }}>
+          <div style={{ display: 'grid', gap: 4 }}>
+            <span style={{ color: 'var(--nl-accent)', fontSize: 10, lineHeight: 1, fontWeight: 780, letterSpacing: '0.13em' }}>PRIVATE ARCHIVE</span>
+            <strong style={{ color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: 22, lineHeight: 1.05, fontWeight: 780 }}>成长封面</strong>
+          </div>
+          <span style={{ color: 'var(--nl-muted-strong)', fontSize: 11.5, lineHeight: 1.35, fontWeight: 620, textAlign: 'right' }}>
+            {recordCountText}<br />{activeChild?.current_age_display ?? '年龄待完善'} · {timelinePreviewRecords[0] ? `最新 ${formatMonth(timelinePreviewRecords[0].event_time)}` : '等待第一条记录'}
           </span>
         </section>
 
         <HomePhotoCarousel
           tiles={recentPhotoTiles}
-          onOpen={(tile) => navigate(tile.recordNo ? `/record/${tile.recordNo}` : '/timeline')}
+          onOpen={(tile) => navigate(tile.recordNo ? `/record/${tile.recordNo}` : tile.target ?? '/timeline')}
         />
 
       </section>
 
-      <main style={{ ...refContentStyle, paddingTop: 22, paddingBottom: 50, gap: 22 }}>
-        <section>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 8 }}>
-            <div>
-              <h2 style={{ margin: 0, color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: 24, fontWeight: 800 }}>{timelineMonthTitle}</h2>
-            </div>
-            <button type="button" onClick={() => navigate('/timeline')} style={{ minHeight: 34, border: '1px solid transparent', borderRadius: 8, background: 'transparent', color: 'var(--nl-muted)', fontSize: 12, fontWeight: 560, display: 'inline-flex', alignItems: 'center', gap: 3, cursor: 'pointer', padding: '0 2px' }}>
-              全部 <ChevronRight size={14} />
-            </button>
-          </div>
-          {loading ? <EmptyState message="正在加载最近记录…" /> : null}
-          {error ? <EmptyState message={`加载失败：${error}`} /> : null}
-          {!loading && !error && timelinePreviewRecords.length ? (
-            <div style={{ display: 'grid', gap: 0 }}>
-              {timelinePreviewRecords.slice(0, 2).map((record, index) => <HomeTimelineCard key={record.record_no} record={record} index={index} onClick={() => navigate(`/record/${record.record_no}`)} />)}
-            </div>
-          ) : null}
-          {!loading && !error && !timelinePreviewRecords.length ? (
-            <div style={{ ...refCardStyle, borderRadius: 8, padding: 18 }}>
-              <EmptyState message="还没有成长记录。" />
-              <button type="button" onClick={() => navigate(activeChild ? '/record/create?focus=media' : '/onboarding/child?mode=add')} style={{ ...refPrimaryButtonStyle, marginTop: 12, width: '100%', minHeight: 42 }}>
-                <Camera size={15} /> 记录此刻
-              </button>
-            </div>
-          ) : null}
-        </section>
-
-        {anniversaryRecord ? (
-          <section>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
-              <h2 style={{ margin: 0, color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: 22, fontWeight: 800 }}>一年前的今天</h2>
-              <span style={{ color: 'var(--nl-muted)', fontSize: 11, fontWeight: 500 }}>{formatAnniversaryDate(anniversaryRecord.event_time)}</span>
-            </div>
-            <button type="button" onClick={() => navigate(`/record/${anniversaryRecord.record_no}`)} style={{ width: '100%', border: 'none', borderTop: '1px solid var(--nl-border-soft)', borderRadius: 0, background: 'transparent', padding: '16px 0', display: 'grid', gridTemplateColumns: '86px minmax(0, 1fr)', gap: 14, alignItems: 'center', textAlign: 'left', cursor: 'pointer', boxShadow: 'none' }}>
-              <span style={{ width: 86, height: 66, borderRadius: 8, overflow: 'hidden', border: '1px solid var(--nl-border-muted)', background: 'var(--nl-surface-soft)', boxShadow: '0 12px 26px rgba(var(--nl-shadow-rgb),0.18)' }}>
-                <HomeImage src={anniversaryCoverUrl} fallbackSrc={referenceAssets.parkPhoto} alt={anniversaryRecord.title ?? '一年前的成长记录'} />
-              </span>
-              <span style={{ minWidth: 0, display: 'grid', gap: 5 }}>
-                <strong style={{ color: 'var(--nl-ink)', fontSize: 15, lineHeight: 1.35, fontWeight: 720, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{anniversaryRecord.title ?? '一年前的成长记录'}</strong>
-                {anniversaryRecord.summary ? <span style={{ color: 'var(--nl-muted-strong)', fontSize: 13, lineHeight: 1.5, fontWeight: 460, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{anniversaryRecord.summary}</span> : null}
-              </span>
-            </button>
-          </section>
-        ) : null}
-      </main>
     </div>
   );
 };
@@ -1213,14 +1411,43 @@ export const TimelinePage = () => {
     }
   }, [selectedYear, yearOptions]);
   const timelineRecords = visibleRecords.filter((record) => getRecordYear(record.event_time) === selectedYear);
+  const timelineMonthGroups = useMemo(() => {
+    const groups: Array<{
+      key: string;
+      label: string;
+      days: Array<{ key: string; day: string; weekday: string; records: RecordSummary[] }>;
+    }> = [];
+    timelineRecords.forEach((record) => {
+      const monthKey = formatArchiveMonthTitle(record.event_time);
+      let monthGroup = groups.find((item) => item.key === monthKey);
+      if (!monthGroup) {
+        monthGroup = { key: monthKey, label: monthKey, days: [] };
+        groups.push(monthGroup);
+      }
+      const date = new Date(record.event_time);
+      const dayKey = Number.isNaN(date.getTime())
+        ? record.event_time.slice(0, 10)
+        : `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+      let dayGroup = monthGroup.days.find((item) => item.key === dayKey);
+      if (!dayGroup) {
+        const nextDayGroup = { key: dayKey, day: String(formatDay(record.event_time)), weekday: formatWeekdayShort(record.event_time), records: [] as RecordSummary[] };
+        monthGroup.days.push(nextDayGroup);
+        dayGroup = nextDayGroup;
+      }
+      dayGroup.records.push(record);
+    });
+    return groups;
+  }, [timelineRecords]);
   const showFilterEmptyState = Boolean(activeChild && !loading && !error && hasActiveFilter && visibleRecords.length === 0);
   const showNoRecordsState = Boolean(activeChild && !loading && !error && !hasActiveFilter && records.length === 0);
   return (
     <div style={refPageStyle}>
-      <header style={{ position: 'sticky', top: 0, zIndex: 4, background: 'var(--nl-topbar-bg)', WebkitBackdropFilter: 'blur(18px) saturate(1.02)', backdropFilter: 'blur(18px) saturate(1.02)', padding: 'calc(24px + env(safe-area-inset-top)) 22px 12px', borderBottom: filterOpen ? '1px solid var(--nl-border-soft)' : '1px solid transparent', transition: 'border-color 0.18s ease', boxShadow: 'none' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 }}>
-          <div style={{ display: 'grid', gap: 5, minWidth: 0, flex: 1 }}>
-            <h1 style={{ margin: 0, color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: 30, fontWeight: 800, lineHeight: 1.08, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>成长时间轴</h1>
+      <header style={{ position: 'sticky', top: 0, zIndex: 4, background: 'var(--nl-topbar-bg)', WebkitBackdropFilter: 'blur(18px) saturate(1.02)', backdropFilter: 'blur(18px) saturate(1.02)', padding: 'calc(20px + env(safe-area-inset-top)) var(--nl-content-inline) 10px', borderBottom: filterOpen ? '1px solid var(--nl-border-soft)' : '1px solid transparent', transition: 'border-color 0.18s ease', boxShadow: 'none' }}>
+        <div style={{ display: 'flex', alignItems: 'end', gap: 14, marginBottom: 12 }}>
+          <div style={{ display: 'grid', gap: 3, minWidth: 0, flex: 1 }}>
+            <span style={{ color: 'var(--nl-accent)', fontSize: 10, lineHeight: 1, fontWeight: 760, letterSpacing: '0.12em' }}>TIMELINE</span>
+            <h1 style={{ margin: 0, color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: 38, fontWeight: 780, lineHeight: 0.96, fontVariantNumeric: 'tabular-nums' }}>{selectedYear}</h1>
+            <span style={{ color: 'var(--nl-muted)', fontSize: 11, fontWeight: 560 }}>{normalizeDisplayName(activeChild?.name, '孩子')}的成长时间线</span>
           </div>
           <button type="button" aria-label="筛选记录" aria-pressed={filterOpen} onClick={() => setFilterOpen((current) => !current)} style={{ width: 42, height: 42, border: 'none', borderRadius: 0, flexShrink: 0, background: 'transparent', color: filterOpen || hasActiveFilter ? 'var(--nl-primary-2)' : 'var(--nl-muted-strong)', display: 'grid', placeItems: 'center', cursor: 'pointer', boxShadow: 'none' }}>
             <SlidersHorizontal size={20} />
@@ -1231,8 +1458,8 @@ export const TimelinePage = () => {
             const active = selectedYear === year;
             const count = yearRecordCount.get(year) ?? 0;
             return (
-              <button key={year} type="button" aria-pressed={active} onClick={() => setSelectedYear(year)} style={{ minWidth: 62, minHeight: 40, border: 'none', borderBottom: active ? '1px solid rgba(var(--nl-primary-rgb),0.28)' : '1px solid transparent', borderRadius: 0, background: 'transparent', color: active ? 'var(--nl-primary-2)' : count > 0 ? 'var(--nl-muted-strong)' : 'var(--nl-muted)', padding: '6px 3px', display: 'grid', gap: 2, placeItems: 'center', fontSize: 12, fontWeight: active ? 680 : 520, boxShadow: 'none', cursor: 'pointer', flexShrink: 0, opacity: count > 0 || active ? 1 : 0.56 }}>
-                <span>{year}年</span>
+              <button key={year} type="button" aria-label={`${year}年`} aria-pressed={active} onClick={() => setSelectedYear(year)} style={{ minWidth: 62, minHeight: 36, border: 'none', borderBottom: active ? '2px solid var(--nl-accent)' : '2px solid transparent', borderRadius: 0, background: 'transparent', color: active ? 'var(--nl-primary-2)' : count > 0 ? 'var(--nl-muted-strong)' : 'var(--nl-muted)', padding: '4px 3px 6px', display: 'grid', gap: 2, placeItems: 'center', fontSize: 11, fontWeight: active ? 700 : 500, boxShadow: 'none', cursor: 'pointer', flexShrink: 0, opacity: count > 0 || active ? 1 : 0.56 }}>
+                <span>{year}</span>
                 <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 500 }}>{count > 0 ? `${count}条` : '暂无'}</span>
               </button>
             );
@@ -1265,17 +1492,17 @@ export const TimelinePage = () => {
         ) : null}
       </header>
 
-      <main style={{ ...refContentStyle, display: 'flex', flexDirection: 'column', minHeight: 'calc(var(--nl-page-min-height, 100dvh) - 132px)', boxSizing: 'border-box', padding: '14px 22px 50px', gap: 14 }}>
+      <main style={{ ...refContentStyle, display: 'flex', flexDirection: 'column', minHeight: 'calc(var(--nl-page-min-height, 100dvh) - 132px)', boxSizing: 'border-box', padding: '14px var(--nl-content-inline) 50px', gap: 14 }}>
         {filterOpen ? (
           <div
             style={{
               borderRadius: 8,
               border: '1px solid var(--nl-border-soft)',
-              background: 'rgba(var(--nl-surface-rgb),0.08)',
+              background: 'rgba(var(--nl-surface-rgb),0.52)',
               padding: 14,
               display: 'grid',
               gap: 14,
-              boxShadow: 'inset 0 1px 0 var(--nl-inset-highlight)',
+              boxShadow: 'var(--nl-shadow-sm)',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
@@ -1352,15 +1579,34 @@ export const TimelinePage = () => {
         {loading ? <EmptyState message="正在加载记录列表…" /> : null}
         {error ? <EmptyState message={`加载失败：${error}`} /> : null}
         {!loading && !error && activeChild && timelineRecords.length ? (
-          <div style={{ display: 'grid', gap: 0, padding: '4px 0 18px' }}>
-            {timelineRecords.map((record, index) => (
-              <TimelineRecordRow
-                key={record.record_no}
-                record={record}
-                index={index}
-                ageLabel={formatAgeAtEvent(activeChild.birthday, record.event_time)}
-                onClick={() => navigate(`/record/${record.record_no}`)}
-              />
+          <div style={{ display: 'grid', gap: 24, padding: '4px 0 18px' }}>
+            {timelineMonthGroups.map((group) => (
+              <section key={group.key} style={{ display: 'grid', gap: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, padding: '0 0 14px' }}>
+                  <strong style={{ color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: 25, lineHeight: 1, fontWeight: 760 }}>{group.label}</strong>
+                  <span style={{ color: 'var(--nl-muted)', fontSize: 12, fontWeight: 700 }}>{group.days.reduce((count, day) => count + day.records.length, 0)} 条记录</span>
+                </div>
+                {group.days.map((day) => (
+                  <section key={day.key} style={{ display: 'grid', gridTemplateColumns: '52px minmax(0, 1fr)', gap: 0, alignItems: 'stretch' }}>
+                    <span style={{ paddingTop: 18, display: 'grid', alignContent: 'start', justifyItems: 'start', gap: 5, color: 'var(--nl-primary-2)' }}>
+                      <strong style={{ fontFamily: 'var(--nl-font-sans)', fontSize: 24, lineHeight: 1, fontWeight: 720, fontVariantNumeric: 'tabular-nums' }}>{day.day}</strong>
+                      <span style={{ color: 'var(--nl-muted)', fontSize: 10, lineHeight: 1, fontWeight: 640 }}>{day.weekday}</span>
+                    </span>
+                    <div style={{ minWidth: 0, borderLeft: '1px solid rgba(var(--nl-accent-rgb),0.28)', paddingLeft: 18, position: 'relative' }}>
+                      <span aria-hidden="true" style={{ position: 'absolute', left: -4, top: 25, width: 7, height: 7, borderRadius: '50%', background: 'var(--nl-page-bg)', border: '2px solid var(--nl-accent)' }} />
+                      {day.records.map((record, index) => (
+                        <TimelineRecordRow
+                          key={record.record_no}
+                          record={record}
+                          index={index}
+                          ageLabel={formatAgeAtEvent(activeChild.birthday, record.event_time)}
+                          onClick={() => navigate(`/record/${record.record_no}`)}
+                        />
+                      ))}
+                    </div>
+                  </section>
+                ))}
+              </section>
             ))}
           </div>
         ) : null}

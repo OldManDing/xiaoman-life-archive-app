@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Bell, BookHeart, Camera, CheckCircle2, ChevronRight, DownloadCloud, FileBox, FileText, HelpCircle, Home, Info, KeyRound, Lock, LogOut, Mail, RefreshCw, Shield, ShieldCheck, Smartphone, Users } from 'lucide-react';
+import { Bell, BookHeart, Camera, CheckCircle2, ChevronRight, DownloadCloud, FileBox, FileText, HelpCircle, Home, Info, KeyRound, Lock, LogOut, Mail, RefreshCw, Shield, ShieldCheck, Smartphone, UserPlus, UserRound, Users } from 'lucide-react';
 
 import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
@@ -10,10 +10,13 @@ import { membershipTypeLabel } from '../shared/labels';
 import { createPersistableAvatarPreview, saveLocalMediaPreview, saveRuntimeMediaPreview, toStoredMediaReference } from '../shared/localMediaPreview';
 import { loadLocalSettings, localSettingsToPreferences, preferencesToLocalSettings, saveLocalSettings, type LocalSettings } from '../shared/localSettings';
 import { isSupportedImageFile, resolveFileMimeType, withResolvedFileMimeType } from '../shared/mediaFiles';
+import { normalizeUploadErrorMessage, readUploadMetadata } from '../shared/mediaMetadata';
+import { getHmsPushConnectionStatus, setHmsRemotePushEnabled, type HmsPushConnectionStatus } from '../shared/hmsPush';
 import { saveTextFileToDownloads } from '../shared/nativeExport';
+import { getNativeNotificationPermissionStatus, requestNativeNotificationPermission, type NativeNotificationPermissionStatus } from '../shared/nativeNotifications';
 import { useCachedMediaUrl } from '../shared/useCachedMediaUrl';
 import { AppSelect, Field, PageShell, Panel, compactSecondaryButtonStyle, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle, textareaStyle } from '../shared/ui';
-import { EmptyState, buttonRowStyle, rowStyle } from './shared';
+import { EmptyState, buttonRowStyle, normalizeDisplayName, rowStyle } from './shared';
 import { RefAvatar, RefListRow, RefSectionTitle, isReferencePlaceholderAvatar, refPageStyle, referenceAssets } from './reference-ui';
 
 
@@ -27,8 +30,80 @@ const normalizeNotificationCopy = (value: string) =>
     .replace(/\s{2,}/g, ' ')
     .trim();
 
+const notificationPermissionLabel = (status: NativeNotificationPermissionStatus | 'checking') => {
+  if (status === 'checking') return '正在检查';
+  if (status === 'granted') return '系统通知已开启';
+  if (status === 'denied') return '系统通知未开启';
+  if (status === 'prompt' || status === 'prompt-with-rationale') return '尚未开启';
+  if (status === 'web') return '网页预览';
+  return '以系统设置为准';
+};
+
+const NotificationSwitchRow = ({
+  title,
+  description,
+  checked,
+  disabled,
+  onChange,
+}: {
+  title: string;
+  description?: string;
+  checked: boolean;
+  disabled?: boolean;
+  onChange: () => void;
+}) => (
+  <button
+    type="button"
+    role="switch"
+    aria-checked={checked}
+    aria-label={title}
+    disabled={disabled}
+    onClick={onChange}
+    style={{
+      width: '100%',
+      minHeight: 64,
+      border: 'none',
+      borderBottom: '1px solid rgba(var(--nl-shadow-rgb),0.07)',
+      background: 'transparent',
+      padding: '14px 0',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: 14,
+      textAlign: 'left',
+      opacity: disabled ? 0.42 : 1,
+      cursor: disabled ? 'not-allowed' : 'pointer',
+      WebkitTapHighlightColor: 'transparent',
+    }}
+  >
+    <span style={{ minWidth: 0, display: 'grid', gap: 4 }}>
+      <strong style={{ color: 'var(--nl-ink)', fontSize: 15, lineHeight: 1.2, fontWeight: 680, letterSpacing: 0 }}>{title}</strong>
+      {description ? <span style={{ color: 'var(--nl-muted)', fontSize: 12, lineHeight: 1.45, fontWeight: 460 }}>{description}</span> : null}
+    </span>
+    <span
+      aria-hidden="true"
+      style={{
+        width: 42,
+        height: 24,
+        borderRadius: 999,
+        padding: 2,
+        background: checked ? 'var(--nl-primary)' : 'rgba(var(--nl-surface-strong-rgb),0.22)',
+        border: checked ? '1px solid rgba(var(--nl-primary-rgb),0.18)' : '1px solid rgba(var(--nl-shadow-rgb),0.08)',
+        display: 'flex',
+        justifyContent: checked ? 'flex-end' : 'flex-start',
+        boxShadow: checked ? '0 7px 18px rgba(var(--nl-shadow-rgb),0.1)' : 'inset 0 1px 0 rgba(255,255,255,0.72)',
+        flexShrink: 0,
+        transition: 'background 0.18s ease, box-shadow 0.18s ease',
+      }}
+    >
+      <span style={{ width: 18, height: 18, borderRadius: 999, background: 'var(--nl-surface-soft)', boxShadow: '0 3px 9px rgba(var(--nl-shadow-rgb),0.16)' }} />
+    </span>
+  </button>
+);
+
 const uploadAvatarImage = async (childNo: string, file: File, previewUrl?: string | null) => {
   const uploadFile = withResolvedFileMimeType(file);
+  const metadata = await readUploadMetadata('image', previewUrl);
   const uploadToken = await webApi.createUploadToken({
     child_no: childNo,
     file_name: uploadFile.name,
@@ -49,7 +124,7 @@ const uploadAvatarImage = async (childNo: string, file: File, previewUrl?: strin
       throw new Error(`头像上传失败：HTTP ${uploadResponse.status}`);
     }
   }
-  await webApi.confirmUpload({ media_no: uploadToken.media_no });
+  await webApi.confirmUpload({ media_no: uploadToken.media_no, ...metadata });
   try {
     const preview = await createPersistableAvatarPreview(uploadFile);
     if (preview) {
@@ -62,7 +137,7 @@ const uploadAvatarImage = async (childNo: string, file: File, previewUrl?: strin
   return toStoredMediaReference(uploadToken.media_no);
 };
 
-const ProfileAvatar = ({ src, mediaNo, label, fallbackSrc = referenceAssets.momAvatar }: { src?: string | null; mediaNo?: string | null; label: string; fallbackSrc?: string }) => {
+const ProfileAvatar = ({ src, mediaNo, label, fallbackSrc = null }: { src?: string | null; mediaNo?: string | null; label: string; fallbackSrc?: string | null }) => {
   const resolvedSrc = useStoredMediaUrl(src && !isReferencePlaceholderAvatar(src) ? src : null, mediaNo);
   const displaySrc = resolvedSrc && !isReferencePlaceholderAvatar(resolvedSrc) ? resolvedSrc : fallbackSrc;
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
@@ -72,26 +147,27 @@ const ProfileAvatar = ({ src, mediaNo, label, fallbackSrc = referenceAssets.momA
   }, [displaySrc]);
 
   if (displaySrc && failedSrc !== displaySrc) {
-    return <img src={displaySrc} alt={label} decoding="async" onError={() => setFailedSrc(displaySrc)} style={{ width: '68px', height: '68px', borderRadius: '999px', objectFit: 'cover', border: '1px solid var(--nl-border-image)', background: 'var(--nl-surface-soft)', boxShadow: '0 12px 26px rgba(var(--nl-shadow-rgb),0.2)', flexShrink: 0 }} />;
+    return <img src={displaySrc} alt={label} decoding="async" onError={() => setFailedSrc(displaySrc)} style={{ width: '72px', height: '72px', borderRadius: '999px', objectFit: 'cover', border: '2px solid var(--nl-border-image)', outline: '1px solid rgba(var(--nl-accent-rgb),0.1)', background: 'var(--nl-surface-soft)', boxShadow: '0 12px 26px rgba(var(--nl-shadow-rgb),0.15)', flexShrink: 0 }} />;
   }
 
   return (
     <div
       style={{
-        width: '68px',
-        height: '68px',
+        width: '72px',
+        height: '72px',
         borderRadius: '999px',
-        background: 'linear-gradient(180deg, rgba(var(--nl-surface-strong-rgb),0.72), rgba(var(--nl-surface-rgb),0.42))',
-        border: '1px solid var(--nl-border-image)',
+        background: 'rgba(var(--nl-surface-strong-rgb),0.46)',
+        border: '2px solid var(--nl-border-image)',
+        outline: '1px solid rgba(var(--nl-accent-rgb),0.1)',
         display: 'grid',
         placeItems: 'center',
         fontWeight: 700,
         color: 'var(--nl-ink)',
-        boxShadow: '0 12px 26px rgba(var(--nl-shadow-rgb),0.2)',
+        boxShadow: '0 12px 26px rgba(var(--nl-shadow-rgb),0.15)',
         flexShrink: 0,
       }}
     >
-      {label.slice(0, 1) || '我'}
+      <UserRound size={28} strokeWidth={1.7} aria-hidden="true" />
     </div>
   );
 };
@@ -179,10 +255,10 @@ const ProfileQuickAction = ({
   onClick: () => void;
 }) => {
   const toneStyles = {
-    neutral: { background: 'linear-gradient(180deg, rgba(var(--nl-surface-strong-rgb),0.38), rgba(var(--nl-surface-rgb),0.14))', color: 'var(--nl-muted-strong)', iconBg: 'rgba(var(--nl-primary-rgb),0.1)', border: 'var(--nl-border-muted)' },
-    warm: { background: 'linear-gradient(180deg, rgba(var(--nl-primary-rgb),0.1), rgba(var(--nl-surface-rgb),0.28))', color: 'var(--nl-primary-2)', iconBg: 'rgba(var(--nl-primary-rgb),0.12)', border: 'rgba(var(--nl-primary-rgb),0.2)' },
-    green: { background: 'linear-gradient(180deg, rgba(var(--nl-success-rgb),0.14), rgba(var(--nl-surface-rgb),0.28))', color: 'var(--nl-success)', iconBg: 'rgba(var(--nl-success-rgb),0.17)', border: 'rgba(var(--nl-success-rgb),0.24)' },
-    blue: { background: 'linear-gradient(180deg, rgba(var(--nl-primary-rgb),0.08), rgba(var(--nl-surface-rgb),0.18))', color: 'var(--nl-primary-2)', iconBg: 'rgba(var(--nl-primary-rgb),0.1)', border: 'rgba(var(--nl-primary-rgb),0.18)' },
+    neutral: { background: 'rgba(var(--nl-surface-strong-rgb),0.3)', color: 'var(--nl-muted-strong)', iconBg: 'rgba(var(--nl-primary-rgb),0.1)', border: 'var(--nl-border-muted)' },
+    warm: { background: 'rgba(var(--nl-primary-rgb),0.08)', color: 'var(--nl-primary-2)', iconBg: 'rgba(var(--nl-primary-rgb),0.12)', border: 'rgba(var(--nl-primary-rgb),0.2)' },
+    green: { background: 'rgba(var(--nl-success-rgb),0.1)', color: 'var(--nl-success)', iconBg: 'rgba(var(--nl-success-rgb),0.17)', border: 'rgba(var(--nl-success-rgb),0.24)' },
+    blue: { background: 'rgba(var(--nl-primary-rgb),0.07)', color: 'var(--nl-primary-2)', iconBg: 'rgba(var(--nl-primary-rgb),0.1)', border: 'rgba(var(--nl-primary-rgb),0.18)' },
   }[tone];
 
   return (
@@ -247,7 +323,7 @@ const toggleTrackStyle = (enabled: boolean) =>
     height: '28px',
     borderRadius: '999px',
     border: enabled ? '1px solid rgba(var(--nl-primary-rgb),0.24)' : '1px solid var(--nl-border-muted)',
-    background: enabled ? 'linear-gradient(135deg, rgba(var(--nl-primary-rgb),0.18), rgba(var(--nl-primary-rgb),0.1))' : 'rgba(var(--nl-surface-rgb),0.32)',
+    background: enabled ? 'var(--nl-primary)' : 'rgba(var(--nl-surface-strong-rgb),0.22)',
     padding: '3px',
     display: 'flex',
     alignItems: 'center',
@@ -259,8 +335,8 @@ const toggleKnobStyle = (enabled: boolean) => ({
   width: '20px',
   height: '20px',
   borderRadius: '999px',
-    background: enabled ? 'var(--nl-primary-gradient)' : 'rgba(var(--nl-surface-strong-rgb),0.72)',
-  boxShadow: enabled ? '0 5px 12px rgba(var(--nl-primary-rgb),0.1)' : 'inset 0 1px 0 var(--nl-inset-highlight)',
+  background: enabled ? 'var(--nl-surface-soft)' : 'rgba(var(--nl-surface-strong-rgb),0.72)',
+  boxShadow: enabled ? '0 4px 10px rgba(var(--nl-shadow-rgb),0.16)' : 'inset 0 1px 0 var(--nl-inset-highlight)',
 }) as const;
 
 const toMonthKey = (value: string | Date) => {
@@ -316,6 +392,7 @@ const membershipBookStatusColor = (value: MembershipBookRequestItem['status']) =
 };
 
 const formatProfileDateTime = (value: string | null) => (value ? new Date(value).toLocaleString('zh-CN', { hour12: false }) : '—');
+const isTechnicalProfileName = (value: string) => /^(?:codex(?:ui)?\d[a-z0-9]*|native_[a-z0-9_]+|1\d{10})$/i.test(value.trim());
 
 export const ProfilePage = () => {
   const { user, logout, activeChild } = useAuth();
@@ -328,88 +405,89 @@ export const ProfilePage = () => {
     },
     [activeChild?.child_no],
   );
-  const { data: notificationCount, loading: notificationCountLoading } = useAsyncData<NotificationUnreadCountResponse>(
+  const { data: notificationCount } = useAsyncData<NotificationUnreadCountResponse>(
     async () => webApi.notificationUnreadCount(),
     [],
   );
   const latestDraft = draftRecords?.[0] ?? null;
   const unreadCount = notificationCount?.unread_count ?? 0;
-  const notificationCountText = notificationCountLoading ? '同步中' : unreadCount > 0 ? `${unreadCount} 条未读` : '暂无未读';
+  const rawProfileName = normalizeDisplayName(user?.nickname, '未登录用户');
+  const technicalProfileName = isTechnicalProfileName(rawProfileName);
+  const profileName = technicalProfileName ? '我的年轮' : rawProfileName;
+  const profileSubline = technicalProfileName
+    ? `${rawProfileName} · ${membershipTypeLabel(user?.membership_type)}`
+    : membershipTypeLabel(user?.membership_type);
+  const quickActions = [
+    {
+      title: '草稿',
+      value: latestDraft ? `${draftRecords?.length ?? 1} 条` : '暂无',
+      icon: FileBox,
+      onClick: () => navigate(latestDraft ? `/record/${latestDraft.record_no}/edit` : '/record/create'),
+    },
+    {
+      title: '消息',
+      value: unreadCount > 0 ? `${unreadCount} 条未读` : '暂无未读',
+      icon: Bell,
+      onClick: () => navigate('/profile/messages'),
+    },
+  ];
   return (
     <div style={refPageStyle}>
-      <section style={{ background: 'transparent', padding: 'calc(32px + env(safe-area-inset-top)) 22px 22px', borderBottom: '1px solid var(--nl-border-soft)', borderRadius: 0, boxShadow: 'none', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'relative', display: 'flex', gap: 16, alignItems: 'center' }}>
-          <RefAvatar src={user?.avatar_url && !isReferencePlaceholderAvatar(user.avatar_url) ? user.avatar_url : referenceAssets.momAvatar} mediaNo={user?.avatar_media_no} label={user?.nickname ?? '我的头像'} size={62} />
+      <section style={{ background: 'transparent', padding: 'calc(26px + env(safe-area-inset-top)) var(--nl-content-inline) 24px', borderBottom: '1px solid var(--nl-border-soft)', borderRadius: 0, boxShadow: 'none', position: 'relative', overflow: 'hidden', display: 'grid', gap: 22 }}>
+        <div style={{ display: 'grid', gap: 8 }}>
+          <span aria-hidden="true" style={{ width: 28, height: 2, background: 'var(--nl-primary-2)' }} />
+          <h1 style={{ margin: 0, color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: 32, lineHeight: 1.06, fontWeight: 780 }}>我的档案</h1>
+        </div>
+        <div style={{ position: 'relative', display: 'flex', gap: 18, alignItems: 'center' }}>
+          <ProfileAvatar src={user?.avatar_url} mediaNo={user?.avatar_media_no} label={user?.nickname ?? '我的头像'} />
           <div style={{ minWidth: 0, flex: 1, display: 'grid', gap: 6 }}>
             <div style={{ display: 'grid', gap: 6, alignItems: 'start' }}>
-              <strong style={{ color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: 28, lineHeight: 1.08, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.nickname ?? '未登录用户'}</strong>
-              <span style={{ justifySelf: 'start', color: 'var(--nl-muted)', background: 'transparent', border: 'none', borderRadius: 0, padding: 0, fontSize: 11, fontWeight: 520 }}>{membershipTypeLabel(user?.membership_type)}</span>
+              <strong title={profileName} style={{ color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: 25, lineHeight: 1.1, fontWeight: 760, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{profileName}</strong>
+              <span style={{ justifySelf: 'start', maxWidth: '100%', color: 'var(--nl-muted)', background: 'transparent', border: 'none', borderRadius: 0, padding: 0, fontSize: 11, fontWeight: 520, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{profileSubline}</span>
             </div>
           </div>
           <button type="button" onClick={() => navigate('/profile/account')} style={{ minHeight: 36, border: 'none', borderRadius: 0, background: 'transparent', color: 'var(--nl-primary-2)', padding: '0 2px', fontSize: 13, fontWeight: 660, cursor: 'pointer', boxShadow: 'none' }}>编辑</button>
         </div>
       </section>
 
-      <main style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 18, padding: '18px 22px 48px' }}>
+      <main style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: '28px', padding: '24px var(--nl-content-inline) 48px' }}>
         <section>
-          <div style={{ borderTop: '1px solid var(--nl-border-soft)', background: 'transparent', overflow: 'hidden' }}>
-            <RefListRow
-              icon={<FileBox size={22} />}
-              title="草稿箱"
-              value={latestDraft ? `${draftRecords?.length ?? 1} 条草稿` : '暂无草稿'}
-              onClick={() => navigate(latestDraft ? `/record/${latestDraft.record_no}/edit` : '/record/create')}
-              isLast
-            />
+          <RefSectionTitle>最近使用</RefSectionTitle>
+          <div style={{ borderTop: '1px solid var(--nl-border-muted)' }}>
+            {quickActions.map(({ title, value, icon: Icon, onClick }, index) => (
+              <RefListRow key={title} icon={<Icon size={20} strokeWidth={1.9} />} title={title} value={value} onClick={onClick} isLast={index === quickActions.length - 1} />
+            ))}
           </div>
         </section>
 
         <section>
-          <div style={{ borderTop: '1px solid var(--nl-border-muted)', background: 'transparent', overflow: 'hidden' }}>
-            <RefListRow
-              icon={<Bell size={22} />}
-              title="消息"
-              value={<span style={{ color: unreadCount > 0 ? 'var(--nl-primary-2)' : 'var(--nl-muted)', fontWeight: unreadCount > 0 ? 700 : 520 }}>{notificationCountText}</span>}
-              onClick={() => navigate('/profile/messages')}
-              isLast
-            />
-          </div>
-        </section>
-
-        <section>
-          <RefSectionTitle>我的孩子</RefSectionTitle>
+          <RefSectionTitle>家庭档案</RefSectionTitle>
           <div style={{ borderTop: '1px solid var(--nl-border-muted)', padding: 0, overflow: 'hidden' }}>
-            <button type="button" onClick={() => navigate('/family/child')} style={{ width: '100%', minHeight: 68, border: 'none', borderBottom: '1px solid var(--nl-border-muted)', background: 'transparent', padding: '12px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, textAlign: 'left', cursor: 'pointer' }}>
+            <button type="button" aria-label="家庭管理，进入家庭档案" onClick={() => navigate('/family/members')} style={{ width: '100%', minHeight: 88, border: 'none', borderBottom: '1px solid var(--nl-border-muted)', background: 'transparent', padding: '14px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, textAlign: 'left', cursor: 'pointer' }}>
               <span style={{ display: 'flex', gap: 14, alignItems: 'center', minWidth: 0 }}>
                 <RefAvatar
                   src={activeChild?.avatar_url && !isReferencePlaceholderAvatar(activeChild.avatar_url) ? activeChild.avatar_url : referenceAssets.childAvatar}
                   mediaNo={activeChild?.avatar_media_no}
                   label={activeChild?.name ?? '孩子'}
-                  size={46}
+                  size={52}
                   fallbackSrc={referenceAssets.childAvatar}
                 />
                 <span style={{ minWidth: 0 }}>
-                  <strong style={{ display: 'block', color: 'var(--nl-ink)', fontSize: 16, fontWeight: 720 }}>{activeChild?.name ?? '孩子资料'}</strong>
-                  <span style={{ display: 'block', marginTop: 3, color: 'var(--nl-muted)', fontSize: 12, fontWeight: 500 }}>{activeChild?.current_age_display ?? '未选择孩子'}</span>
+                  <strong style={{ display: 'block', color: 'var(--nl-ink)', fontSize: 16, fontWeight: 700 }}>家庭管理</strong>
+                  <span style={{ display: 'block', marginTop: 4, color: 'var(--nl-muted)', fontSize: 12, fontWeight: 500 }}>{activeChild?.family_no ? `${activeChild.name} · 家人和动态` : '建立孩子档案后开始记录'}</span>
                 </span>
               </span>
               <ChevronRight size={18} color="var(--nl-muted)" />
             </button>
-            <button type="button" onClick={() => navigate('/onboarding/child?mode=add')} style={{ ...compactSecondaryButtonStyle, width: '100%' }}>+ 添加宝宝</button>
           </div>
         </section>
 
         <section>
-          <RefSectionTitle>管理</RefSectionTitle>
+          <RefSectionTitle>账户设置</RefSectionTitle>
           <div style={{ borderTop: '1px solid var(--nl-border-muted)', background: 'transparent', overflow: 'hidden' }}>
-            <RefListRow icon={<ShieldCheck size={22} />} title="隐私设置" onClick={() => navigate('/profile/settings')} isLast />
-          </div>
-        </section>
-
-        <section style={{ paddingTop: 14 }}>
-          <RefSectionTitle>设置</RefSectionTitle>
-          <div style={{ borderTop: '1px solid var(--nl-border-muted)', background: 'transparent', overflow: 'hidden' }}>
+            <RefListRow icon={<Bell size={22} />} title="通知管理" onClick={() => navigate('/profile/notifications')} />
+            <RefListRow icon={<ShieldCheck size={22} />} title="隐私设置" onClick={() => navigate('/profile/settings')} />
             <RefListRow icon={<Lock size={22} />} title="账号与安全" onClick={() => navigate('/profile/security')} />
-            <RefListRow icon={<Users size={22} />} title="家庭管理" onClick={() => navigate('/family/members')} />
             <RefListRow icon={<HelpCircle size={22} />} title="帮助与反馈" onClick={() => navigate('/profile/help')} />
             <RefListRow icon={<Info size={22} />} title="关于我们" onClick={() => navigate('/profile/about')} isLast />
           </div>
@@ -566,6 +644,148 @@ export const MessagesPage = () => {
   );
 };
 
+export const NotificationSettingsPage = () => {
+  const [settings, setSettings] = useState<LocalSettings>(() => loadLocalSettings());
+  const [permissionStatus, setPermissionStatus] = useState<NativeNotificationPermissionStatus | 'checking'>('checking');
+  const [message, setMessage] = useState<string | null>(null);
+  const [pushConnectionStatus, setPushConnectionStatus] = useState<HmsPushConnectionStatus>(() => getHmsPushConnectionStatus());
+  const { data: notificationCount } = useAsyncData<NotificationUnreadCountResponse>(
+    async () => webApi.notificationUnreadCount(),
+    [],
+  );
+
+  const refreshPermissionStatus = async () => {
+    setPermissionStatus('checking');
+    const status = await getNativeNotificationPermissionStatus();
+    setPermissionStatus(status);
+  };
+
+  useEffect(() => {
+    void refreshPermissionStatus();
+    const updateConnectionStatus = () => setPushConnectionStatus(getHmsPushConnectionStatus());
+    window.addEventListener('nianlun:hms-push-status', updateConnectionStatus);
+    return () => window.removeEventListener('nianlun:hms-push-status', updateConnectionStatus);
+  }, []);
+
+  const saveNotificationSettings = (next: LocalSettings) => {
+    setSettings(next);
+    saveLocalSettings(next);
+    setMessage('通知偏好已保存在本机。');
+  };
+
+  const updateSetting = (key: keyof Pick<LocalSettings, 'notificationPushEnabled' | 'notificationFamilyEnabled' | 'notificationUpdateEnabled'>) => {
+    const next = { ...settings, [key]: !settings[key] };
+    saveNotificationSettings(next);
+    if (key === 'notificationPushEnabled' || key === 'notificationFamilyEnabled') {
+      void setHmsRemotePushEnabled(next.notificationPushEnabled && next.notificationFamilyEnabled).then(setPushConnectionStatus);
+    }
+  };
+
+  const requestPermission = async () => {
+    setMessage(null);
+    const status = await requestNativeNotificationPermission();
+    setPermissionStatus(status);
+    if (status === 'granted') {
+      const connectionStatus = await setHmsRemotePushEnabled(settings.notificationPushEnabled && settings.notificationFamilyEnabled);
+      setPushConnectionStatus(connectionStatus);
+      setMessage(connectionStatus === 'registered' ? '手机通知已开启。' : '系统通知已开启，消息仍可在 App 内查看。');
+      return;
+    }
+    setMessage('系统通知未开启，请在手机系统设置中允许通知。');
+  };
+
+  const unreadText = `${notificationCount?.unread_count ?? 0} 条未读`;
+  const permissionText = notificationPermissionLabel(permissionStatus);
+  const remotePushText =
+    pushConnectionStatus === 'registered'
+      ? '手机通知已开启'
+      : pushConnectionStatus === 'connecting'
+        ? '正在开启手机通知'
+        : permissionStatus === 'granted'
+          ? '应用内消息正常'
+          : '手机通知待开启';
+  const shouldShowPermissionButton = permissionStatus !== 'checking' && permissionStatus !== 'granted' && permissionStatus !== 'web';
+
+  return (
+    <PageShell title="通知管理" backTo="/profile">
+      <div style={{ display: 'grid', gap: 22 }}>
+        <section
+          style={{
+            display: 'grid',
+            gap: 12,
+            padding: '2px 0 16px',
+            borderBottom: '1px solid rgba(var(--nl-shadow-rgb),0.08)',
+          }}
+        >
+          <div style={{ display: 'grid', gap: 9 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+              <strong style={{ color: 'var(--nl-ink)', fontSize: 14, fontWeight: 680 }}>手机通知状态</strong>
+              <button
+                type="button"
+                onClick={shouldShowPermissionButton ? requestPermission : refreshPermissionStatus}
+                style={{
+                  minWidth: 82,
+                  minHeight: 38,
+                  borderRadius: 8,
+                  border: '1px solid rgba(var(--nl-shadow-rgb),0.1)',
+                  background: 'var(--nl-control-bg)',
+                  color: 'var(--nl-primary-2)',
+                  padding: '0 13px',
+                  fontSize: 11,
+                  fontWeight: 720,
+                  whiteSpace: 'nowrap',
+                  boxShadow: 'none',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                }}
+              >
+                {shouldShowPermissionButton ? '开启通知' : '检查状态'}
+              </button>
+            </div>
+            <div style={{ display: 'grid', gap: 6 }}>
+              <strong style={{ color: 'var(--nl-primary-2)', fontSize: 18, lineHeight: 1.18, fontWeight: 700 }}>{remotePushText}</strong>
+              <span style={{ color: 'var(--nl-muted)', fontSize: 12, lineHeight: 1.5, maxWidth: 332 }}>
+                <span>{permissionText}</span>
+                <span aria-hidden="true"> · </span>
+                <span>{unreadText}</span>
+              </span>
+            </div>
+          </div>
+        </section>
+
+        <section style={{ display: 'grid', gap: 8 }}>
+          <RefSectionTitle>通知偏好</RefSectionTitle>
+          <div style={{ background: 'transparent', overflow: 'hidden' }}>
+            <NotificationSwitchRow
+              title="手机通知"
+              checked={settings.notificationPushEnabled}
+              onChange={() => updateSetting('notificationPushEnabled')}
+            />
+            <NotificationSwitchRow
+              title="家庭动态通知"
+              checked={settings.notificationFamilyEnabled}
+              disabled={!settings.notificationPushEnabled}
+              onChange={() => updateSetting('notificationFamilyEnabled')}
+            />
+            <NotificationSwitchRow
+              title="版本更新提醒"
+              checked={settings.notificationUpdateEnabled}
+              disabled={!settings.notificationPushEnabled}
+              onChange={() => updateSetting('notificationUpdateEnabled')}
+            />
+          </div>
+        </section>
+
+        {message ? (
+          <p style={{ ...helperTextStyle, color: isPositiveStatusMessage(message) ? 'var(--nl-success)' : 'var(--nl-danger)' }}>
+            {message}
+          </p>
+        ) : null}
+      </div>
+    </PageShell>
+  );
+};
+
 export const AccountPage = () => {
   const { user, activeChild, setUserProfile } = useAuth();
   const settings = loadLocalSettings();
@@ -646,7 +866,7 @@ export const AccountPage = () => {
       setMessage('头像已更新');
     } catch (err) {
       setAvatarPreviewUrl(null);
-      setMessage(err instanceof Error ? err.message : '头像上传失败');
+      setMessage(normalizeUploadErrorMessage(err instanceof Error ? err.message : '头像上传失败', 'image'));
     } finally {
       setAvatarUploading(false);
     }
@@ -1348,7 +1568,7 @@ export const MembershipPage = () => {
 
   return (
     <PageShell title="服务状态" backTo="/profile">
-      <section style={{ borderRadius: '8px', border: '1px solid var(--nl-border-strong)', background: 'linear-gradient(180deg, rgba(var(--nl-surface-strong-rgb),0.7), rgba(var(--nl-surface-rgb),0.4))', padding: '16px', minHeight: '124px', color: 'var(--nl-ink)', display: 'grid', gap: '13px', boxShadow: 'var(--nl-shadow-sm)', overflow: 'hidden', position: 'relative' }}>
+      <section style={{ borderRadius: '8px', border: '1px solid var(--nl-border-strong)', background: 'rgba(var(--nl-surface-strong-rgb),0.46)', padding: '16px', minHeight: '124px', color: 'var(--nl-ink)', display: 'grid', gap: '13px', boxShadow: 'var(--nl-shadow-sm)', overflow: 'hidden', position: 'relative' }}>
         <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center' }}>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center', minWidth: 0 }}>
             <ProfileAvatar src={user?.avatar_url} mediaNo={user?.avatar_media_no} label={user?.nickname ?? '账号'} />
@@ -1962,7 +2182,7 @@ const AboutMenuLink = ({
   </button>
 );
 
-const appVersion = import.meta.env.VITE_APP_VERSION ?? '2.0.3';
+const appVersion = import.meta.env.VITE_APP_VERSION ?? '2.0.4';
 const appBuildNumber = import.meta.env.VITE_APP_BUILD_NUMBER ?? 'dev';
 const appBuildNumberValue = Number.isFinite(Number(appBuildNumber)) ? Number(appBuildNumber) : 0;
 const appBuildTime = import.meta.env.VITE_APP_BUILD_TIME ?? null;
@@ -2002,7 +2222,7 @@ export const AboutPage = () => {
           alt="年轮"
           width={96}
           height={96}
-          style={{ borderRadius: '8px', boxShadow: '0 16px 36px rgba(var(--nl-shadow-rgb),0.24)', marginBottom: '16px' }}
+          style={{ boxSizing: 'border-box', objectFit: 'contain', borderRadius: '22%', boxShadow: '0 18px 42px rgba(var(--nl-shadow-rgb),0.18)', marginBottom: '16px' }}
         />
         <h2 style={{ margin: 0, color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '26px', lineHeight: 1.08, fontWeight: 800 }}>nianlun</h2>
         <p style={{ margin: '6px 0 0', color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 600 }}>版本 {appVersion}（构建 {appBuildNumber} · {appBuildTimeText}）</p>
@@ -2011,28 +2231,26 @@ export const AboutPage = () => {
       <Panel style={{ padding: 0, overflow: 'hidden', borderRadius: 0, background: 'transparent', border: 'none', borderTop: '1px solid var(--nl-border-muted)', boxShadow: 'none' }}>
         <AboutMenuLink icon={RefreshCw} label="检查更新" value={updateStatusText} isLast={!updateResult && !updateError} onClick={() => void checkUpdate()} />
         {updateError ? <p style={{ ...helperTextStyle, color: 'var(--nl-danger)', margin: 0, padding: '0 16px 14px' }}>{updateError}</p> : null}
-        {updateResult ? (
+        {updateResult?.update_available ? (
           <div style={{ borderTop: '1px solid var(--nl-border-muted)', padding: '14px 0 16px', display: 'grid', gap: '9px', background: 'transparent' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center' }}>
               <strong style={{ color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 700 }}>
-                {updateResult.update_available ? '发现新版本' : '当前已是最新'}
+                发现新版本
               </strong>
-              <span style={{ color: updateResult.update_available ? (updateResult.force_update ? 'var(--nl-danger)' : 'var(--nl-primary-2)') : 'var(--nl-success)', fontSize: '12px', fontWeight: 720 }}>
-                {updateResult.update_available ? (updateResult.force_update ? '需要更新' : '可更新') : '已完成'}
+              <span style={{ color: updateResult.force_update ? 'var(--nl-danger)' : 'var(--nl-primary-2)', fontSize: '12px', fontWeight: 720 }}>
+                {updateResult.force_update ? '需要更新' : '可更新'}
               </span>
             </div>
             <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.65 }}>
-              {updateResult.update_available
-                ? `最新版本 ${updateResult.latest_version}（构建 ${updateResult.latest_build_number}）`
-                : `当前版本 ${updateResult.current_version}（构建 ${updateResult.current_build_number}）`}
+              最新版本 {updateResult.latest_version}（构建 {updateResult.latest_build_number}）
             </p>
             {updateResult.release_notes ? <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.65, whiteSpace: 'pre-wrap' }}>{updateResult.release_notes}</p> : null}
-            {updateResult.update_available && updateResult.apk_url ? (
+            {updateResult.apk_url ? (
               <a href={updateResult.apk_url} target="_blank" rel="noreferrer" style={{ ...primaryButtonStyle, minHeight: '42px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' }}>
                 下载 APK
               </a>
             ) : null}
-            {updateResult.update_available && !updateResult.apk_url ? <p style={{ ...helperTextStyle, margin: 0 }}>新版本已准备，应用市场审核后开放更新。</p> : null}
+            {!updateResult.apk_url ? <p style={{ ...helperTextStyle, margin: 0 }}>新版本已准备，应用市场审核后开放更新。</p> : null}
           </div>
         ) : null}
       </Panel>

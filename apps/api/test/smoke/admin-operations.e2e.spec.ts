@@ -11,12 +11,14 @@ import { AiJobsQueue } from '../../src/modules/ai-jobs/ai-jobs.queue';
 import { PrismaService } from '../../src/prisma/prisma.service';
 import { ApiExceptionFilter } from '../../src/shared/api-exception.filter';
 import { ApiResponseInterceptor } from '../../src/shared/api-response.interceptor';
+import { StorageService } from '../../src/shared/services/storage.service';
 import { hashToken } from '../../src/shared/utils';
 
 describe('Admin operations contract', () => {
   let app: INestApplication;
   let jwtService: JwtService;
   const enqueue = jest.fn();
+  const storageHeadObject = jest.fn();
   const now = new Date('2026-05-10T08:00:00.000Z');
 
   const adminSuper = {
@@ -371,6 +373,7 @@ describe('Admin operations contract', () => {
       findFirst: jest.fn().mockResolvedValue(mediaWithRelations),
       update: jest.fn().mockImplementation(async ({ data }: any) => {
         media.status = data.status;
+        mediaWithRelations.status = data.status;
         return { ...media };
       }),
     },
@@ -482,6 +485,15 @@ describe('Admin operations contract', () => {
       .useValue(prismaMock)
       .overrideProvider(AiJobsQueue)
       .useValue({ enqueue })
+      .overrideProvider(StorageService)
+      .useValue({
+        headObject: storageHeadObject,
+        createAccessUrl: jest.fn().mockResolvedValue({
+          access_url: 'data:image/svg+xml,mock',
+          expires_in: 600,
+          expire_at: new Date(Date.now() + 600_000).toISOString(),
+        }),
+      })
       .compile();
 
     app = moduleRef.createNestApplication();
@@ -498,6 +510,8 @@ describe('Admin operations contract', () => {
 
   beforeEach(() => {
     enqueue.mockClear();
+    storageHeadObject.mockReset();
+    storageHeadObject.mockResolvedValue({ exists: false });
     prismaMock.auditLog.create.mockClear();
     record.contentText = '今天自己骑了一小段。';
     record.status = 2;
@@ -1212,6 +1226,32 @@ describe('Admin operations contract', () => {
         }),
       }),
     );
+
+    await request(app.getHttpServer())
+      .patch(`/api/v1/admin/media/${media.mediaNo}/status`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ status: 'ready', reason: 'mock fixture restored' })
+      .expect(200)
+      .expect((response) => {
+        expect(response.body.data).toMatchObject({ media_no: media.mediaNo, status: 'ready', changed: true });
+      });
+  });
+
+  it('requires storage verification when restoring real media', async () => {
+    const token = await adminToken();
+    const realMedia = { ...media, storageProvider: 'minio', status: 3 };
+    prismaMock.recordMedia.findFirst.mockResolvedValueOnce(realMedia);
+
+    await request(app.getHttpServer())
+      .patch(`/api/v1/admin/media/${realMedia.mediaNo}/status`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ status: 'ready', reason: 'restore real media' })
+      .expect(400)
+      .expect((response) => {
+        expect(response.body.message).toContain('媒体文件不存在');
+      });
+
+    expect(storageHeadObject).toHaveBeenCalledWith(realMedia.objectKey);
   });
 
   it('resets a user password and revokes active sessions', async () => {

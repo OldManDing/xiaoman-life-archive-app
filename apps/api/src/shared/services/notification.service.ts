@@ -2,7 +2,9 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 
 import { PrismaService } from '../../prisma/prisma.service';
 import { FAMILY_MEMBER_ACTIVE_STATUS } from '../constants';
+import { isHuaweiPushEnabled } from '../env-config';
 import { generateBizNo, normalizePage, normalizePageSize } from '../utils';
+import { HuaweiPushDeliveryService } from './huawei-push-delivery.service';
 
 const RECORD_PUBLISHED_NOTIFICATION_TYPE = 'family.record_published';
 
@@ -35,7 +37,10 @@ type NotificationWithRelations = {
 
 @Injectable()
 export class NotificationService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly huaweiPushDeliveryService: HuaweiPushDeliveryService,
+  ) {}
 
   async createRecordPublishedNotifications(input: RecordPublishedNotificationInput) {
     const members = await this.prisma.familyMember.findMany({
@@ -99,14 +104,17 @@ export class NotificationService {
         },
         select: { id: true, userId: true },
       });
-      const deviceTokens = await tx.userDeviceToken.findMany({
-        where: {
-          userId: { in: rows.map((row) => row.userId) },
-          status: 1,
-          deletedAt: null,
-        },
-        select: { userId: true, provider: true },
-      });
+      const deviceTokens = isHuaweiPushEnabled()
+        ? await tx.userDeviceToken.findMany({
+            where: {
+              userId: { in: rows.map((row) => row.userId) },
+              provider: 'hms',
+              status: 1,
+              deletedAt: null,
+            },
+            select: { userId: true, provider: true },
+          })
+        : [];
       const providersByUserId = new Map<string, Set<string>>();
       for (const token of deviceTokens) {
         const key = token.userId.toString();
@@ -130,6 +138,9 @@ export class NotificationService {
         await tx.notificationDelivery.createMany({ data: deliveryRows });
       }
     });
+    if (isHuaweiPushEnabled()) {
+      void this.huaweiPushDeliveryService.processPendingDeliveries();
+    }
     return { created_count: rows.length };
   }
 

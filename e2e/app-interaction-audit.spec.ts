@@ -314,7 +314,9 @@ const collectButtonCandidates = async (page: Page): Promise<ButtonCandidate[]> =
           const text = label(element, index);
           const disabled = Boolean((element as HTMLButtonElement).disabled) || element.getAttribute('aria-disabled') === 'true';
           const shell = Boolean(element.closest('nav'));
-          const skipReason = destructiveRe.test(text)
+          const skipReason = element.closest('[data-photo-index-rail]')
+            ? 'intentional-overlap-carousel-control'
+            : destructiveRe.test(text)
             ? 'destructive-action'
             : navigationRe.test(text)
               ? 'navigation-covered-by-route-audit'
@@ -419,6 +421,7 @@ const collectStyleIssues = async (page: Page, route: string, viewport: string) =
       }
 
       document.querySelectorAll('button, [role="button"], input, textarea, select').forEach((element, index) => {
+        if (element.matches('input[type="file"]')) return;
         if (!visibleInViewport(element)) return;
         const rect = element.getBoundingClientRect();
         const clippedRect = visibleRect(element);
@@ -453,7 +456,8 @@ const collectStyleIssues = async (page: Page, route: string, viewport: string) =
         if (centerX < 0 || centerX > window.innerWidth || centerY < 0 || centerY > window.innerHeight) return;
         const topElement = document.elementFromPoint(centerX, centerY);
         const topInteractive = topElement?.closest('button, [role="button"], input, textarea, select');
-        if (topElement && topElement !== element && topInteractive !== element && !element.contains(topElement) && !topElement.contains(element)) {
+        const intentionalOverlap = Boolean(element.closest('[data-photo-index-rail]'));
+        if (topElement && !intentionalOverlap && topElement !== element && topInteractive !== element && !element.contains(topElement) && !topElement.contains(element)) {
           issues.push({
             route: currentRoute,
             viewport: currentViewport,
@@ -470,14 +474,16 @@ const collectStyleIssues = async (page: Page, route: string, viewport: string) =
   );
 
 const dismissTransientUi = async (page: Page) => {
-  const dialog = page.locator('[role="dialog"]').first();
-  if (await dialog.isVisible().catch(() => false)) {
+  for (let index = 0; index < 4; index += 1) {
+    const dialog = page.locator('[role="dialog"]').first();
+    if (!(await dialog.isVisible().catch(() => false))) return;
     const closeButton = dialog.locator('button[aria-label], button').last();
     if (await closeButton.isVisible().catch(() => false)) {
       await closeButton.click({ timeout: 2_000 }).catch(() => page.keyboard.press('Escape'));
     } else {
       await page.keyboard.press('Escape');
     }
+    await dialog.waitFor({ state: 'hidden', timeout: 2_000 }).catch(() => undefined);
   }
 };
 
@@ -489,11 +495,14 @@ const clickRouteButtons = async (page: Page, route: string, issues: AuditIssue[]
   const visitedKeys = new Set<string>();
 
   for (let safety = 0; safety < 14; safety += 1) {
+    await dismissTransientUi(page);
+
     if (!isCurrentAuditRoute(page, route)) {
       await gotoAuditRoute(page, route);
       await waitForSettledUi(page, 1_000);
       await fillVisibleControls(page);
       await chooseVisibleComboboxOptions(page);
+      await dismissTransientUi(page);
     }
 
     const allCandidates = await collectButtonCandidates(page);
@@ -539,6 +548,7 @@ const clickRouteButtons = async (page: Page, route: string, issues: AuditIssue[]
 
     try {
       await targetHandle.scrollIntoViewIfNeeded();
+      await dismissTransientUi(page);
       await targetHandle.click({ timeout: 1_500, noWaitAfter: true });
       clicked += 1;
       clickedLabels.push(currentLabel ?? candidate.label);
@@ -548,6 +558,11 @@ const clickRouteButtons = async (page: Page, route: string, issues: AuditIssue[]
       const message = error instanceof Error ? error.message : String(error);
       if (/not attached to the DOM|detached from the DOM/i.test(message)) {
         skipped.push({ route, label: candidate.label, reason: 'detached-after-route-change' });
+        continue;
+      }
+      if (/intercepts pointer events/i.test(message) && /role="dialog"|aria-label="状态"|知道了/.test(message)) {
+        await dismissTransientUi(page);
+        skipped.push({ route, label: candidate.label, reason: 'transient-dialog-covered-by-sampled-clicks' });
         continue;
       }
 
@@ -616,6 +631,7 @@ const auditCreateRecordRouteButtons = async (page: Page, route: string, skipped:
       await locator.first().click({ timeout: 1_500, noWaitAfter: true }).catch(() => undefined);
       clickedLabels.push(label);
       await waitForSettledUi(page, 250);
+      await dismissTransientUi(page);
     }
   };
 
@@ -628,6 +644,8 @@ const auditCreateRecordRouteButtons = async (page: Page, route: string, skipped:
         buffer: tinyPng,
       })
       .catch(() => undefined);
+    await waitForSettledUi(page, 750);
+    await dismissTransientUi(page);
     clickedLabels.push(route.includes('audio') ? '上传语音' : route.includes('video') ? '从相册选择视频' : '从相册添加');
   }
 

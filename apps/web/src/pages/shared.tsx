@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { Archive } from 'lucide-react';
 
 import { helperTextStyle } from '../shared/ui';
 
@@ -25,13 +26,51 @@ export const formatDateTimeLocal = (value: string) => {
   return new Date(date.getTime() - timezoneOffset).toISOString().slice(0, 16);
 };
 
-export const EmptyState = ({ message }: { message: string }) => <p style={helperTextStyle}>{message}</p>;
+const invalidQuestionMarkTextPattern = /^[?\uFF1F\uFFFD\s]+$/u;
+
+export const normalizeDisplayName = (value: string | null | undefined, fallback: string) => {
+  const trimmed = value?.trim() ?? '';
+  if (!trimmed || invalidQuestionMarkTextPattern.test(trimmed)) return fallback;
+  return trimmed;
+};
+
+export const EmptyState = ({ message }: { message: string }) => (
+  <div
+    role="status"
+    style={{
+      minHeight: '92px',
+      padding: '18px 8px',
+      display: 'grid',
+      placeItems: 'center',
+      alignContent: 'center',
+      gap: '9px',
+      textAlign: 'center',
+    }}
+  >
+    <span
+      aria-hidden="true"
+      style={{
+        width: '36px',
+        height: '36px',
+        borderRadius: '8px',
+        border: '1px solid var(--nl-border-muted)',
+        color: 'var(--nl-muted)',
+        background: 'var(--nl-control-bg)',
+        display: 'grid',
+        placeItems: 'center',
+      }}
+    >
+      <Archive size={17} strokeWidth={1.8} />
+    </span>
+    <p style={{ ...helperTextStyle, margin: 0, maxWidth: '260px' }}>{message}</p>
+  </div>
+);
 
 export const sectionTitleStyle = {
   margin: 0,
-  fontSize: '18px',
-  fontWeight: 720,
-  fontFamily: 'var(--nl-font-display)',
+  fontSize: '17px',
+  fontWeight: 700,
+  fontFamily: 'var(--nl-font-sans)',
   color: 'var(--nl-ink)',
 } as const;
 

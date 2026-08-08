@@ -61,12 +61,15 @@ vi.mock('../shared/deviceLocation', () => ({
 }));
 
 vi.mock('../shared/nativeNotifications', () => ({
+  getNativeNotificationPermissionStatus: vi.fn(),
+  requestNativeNotificationPermission: vi.fn(),
   registerNativeNotificationTapHandler: vi.fn(() => () => undefined),
   scheduleNativeNotificationsForNewItems: vi.fn(),
 }));
 
 import { webApi } from '../shared/api/webApi';
 import { getCurrentDeviceLocation } from '../shared/deviceLocation';
+import { getNativeNotificationPermissionStatus, requestNativeNotificationPermission } from '../shared/nativeNotifications';
 
 const refreshMock = vi.mocked(webApi.refresh);
 const listChildrenMock = vi.mocked(webApi.listChildren);
@@ -111,7 +114,65 @@ const deleteFamilyMemberMock = vi.mocked(webApi.deleteFamilyMember);
 const updateFamilyMemberRoleMock = vi.mocked(webApi.updateFamilyMemberRole);
 const createFamilyInviteMock = vi.mocked(webApi.createFamilyInvite);
 const getCurrentDeviceLocationMock = vi.mocked(getCurrentDeviceLocation);
+const getNativeNotificationPermissionStatusMock = vi.mocked(getNativeNotificationPermissionStatus);
+const requestNativeNotificationPermissionMock = vi.mocked(requestNativeNotificationPermission);
 const optionalInvitePlaceholder = '邀请码';
+
+const installMediaMetadataMocks = ({
+  imageWidth = 1200,
+  imageHeight = 900,
+  videoWidth = 1280,
+  videoHeight = 720,
+  duration = 8,
+}: {
+  imageWidth?: number;
+  imageHeight?: number;
+  videoWidth?: number;
+  videoHeight?: number;
+  duration?: number;
+} = {}) => {
+  const originalImage = window.Image;
+  const originalCreateElement = document.createElement.bind(document);
+
+  class MockImage {
+    onload: (() => void) | null = null;
+    onerror: (() => void) | null = null;
+    naturalWidth = imageWidth;
+    naturalHeight = imageHeight;
+    width = imageWidth;
+    height = imageHeight;
+
+    set src(_value: string) {
+      window.setTimeout(() => this.onload?.(), 0);
+    }
+  }
+
+  Object.defineProperty(window, 'Image', { configurable: true, value: MockImage as unknown as typeof Image });
+  const createElementSpy = vi.spyOn(document, 'createElement').mockImplementation(((tagName: string, options?: ElementCreationOptions) => {
+    const element = originalCreateElement(tagName, options);
+    if (tagName.toLowerCase() === 'video') {
+      Object.defineProperty(element, 'videoWidth', { configurable: true, value: videoWidth });
+      Object.defineProperty(element, 'videoHeight', { configurable: true, value: videoHeight });
+      Object.defineProperty(element, 'duration', { configurable: true, value: duration });
+      Object.defineProperty(element, 'load', { configurable: true, value: vi.fn(() => {
+        window.setTimeout(() => element.dispatchEvent(new Event('loadedmetadata')), 0);
+      }) });
+    }
+    if (tagName.toLowerCase() === 'audio') {
+      Object.defineProperty(element, 'duration', { configurable: true, value: duration });
+      Object.defineProperty(element, 'load', { configurable: true, value: vi.fn(() => {
+        window.setTimeout(() => element.dispatchEvent(new Event('loadedmetadata')), 0);
+      }) });
+      vi.spyOn(element as HTMLAudioElement, 'canPlayType').mockReturnValue('probably');
+    }
+    return element;
+  }) as typeof document.createElement);
+
+  return () => {
+    Object.defineProperty(window, 'Image', { configurable: true, value: originalImage });
+    createElementSpy.mockRestore();
+  };
+};
 
 const demoChild = {
   child_no: 'c_001',
@@ -225,6 +286,11 @@ describe('App Shell', () => {
     clearMediaAccessUrlCache();
     clearWelcomeIntroSeen();
     getCurrentDeviceLocationMock.mockReset();
+    getNativeNotificationPermissionStatusMock.mockReset();
+    getNativeNotificationPermissionStatusMock.mockResolvedValue('granted');
+    requestNativeNotificationPermissionMock.mockReset();
+    requestNativeNotificationPermissionMock.mockResolvedValue('granted');
+    window.localStorage.removeItem('xiaoman-web-local-settings');
     window.history.pushState({}, '', '/auth/login');
   });
 
@@ -240,7 +306,7 @@ describe('App Shell', () => {
     refreshMock.mockReturnValue(new Promise(() => undefined));
     render(<App />);
     expect(screen.getByLabelText('正在进入年轮')).toBeDefined();
-    expect(screen.getByText('正在进入家庭时间线')).toBeDefined();
+    expect(screen.getByText('家庭影像档案')).toBeDefined();
   });
 
   it('offers a login exit when bootstrap takes too long', async () => {
@@ -452,7 +518,7 @@ describe('App Shell', () => {
     await waitFor(() => {
       expect(refreshMock).toHaveBeenCalled();
     });
-    expect(await screen.findByText('小满的成长记录')).toBeDefined();
+    expect(await screen.findByText('成长封面')).toBeDefined();
   });
 
   it('registers with password without invite code after agreement is accepted', async () => {
@@ -659,7 +725,7 @@ describe('App Shell', () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.getByText('小满的成长记录')).toBeDefined();
+      expect(screen.getByText('成长封面')).toBeDefined();
     });
   });
 
@@ -697,7 +763,7 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    expect(await screen.findByText('最近真实记录')).toBeDefined();
+    expect(await screen.findByText('成长封面')).toBeDefined();
     expect(screen.queryByText('一年前的今天')).toBeNull();
     expect(screen.queryByText('第一次在草地上奔跑')).toBeNull();
   });
@@ -736,12 +802,15 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    expect(await screen.findByText('只写了一段文字')).toBeDefined();
+    expect(await screen.findByText('成长封面')).toBeDefined();
     expect(screen.queryByAltText('只写了一段文字')).toBeNull();
     expect(screen.queryByAltText('成长记录')).toBeNull();
+    const emptyCarousel = screen.getByLabelText('最近照片');
+    expect(emptyCarousel.getAttribute('data-photo-layout')).toBe('empty');
+    expect(emptyCarousel.querySelector('[data-photo-drawer="true"]')).toBeNull();
   });
 
-  it('shows the one-year-ago card only from the anniversary records API result', async () => {
+  it('does not render a standalone one-year-ago module on the home cover page', async () => {
     window.history.pushState({}, '', '/home');
     mockAuthenticatedSession();
     const anniversaryRecord = {
@@ -768,11 +837,12 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    expect(await screen.findByText('一年前的今天')).toBeDefined();
-    expect(screen.getByText('一年前真实记录')).toBeDefined();
+    expect(await screen.findByText('成长封面')).toBeDefined();
+    expect(screen.queryByText('一年前的今天')).toBeNull();
+    expect(screen.queryByText('一年前真实记录')).toBeNull();
   });
 
-  it('fills home photo tiles with real anniversary media before placeholders', async () => {
+  it('shows only real recent and anniversary media without placeholder slides', async () => {
     window.history.pushState({}, '', '/home');
     mockAuthenticatedSession();
     const recentRecord = {
@@ -821,15 +891,201 @@ describe('App Shell', () => {
       expect(srcs).toContain('https://cdn.example.test/anniversary.jpg');
     });
     const drawer = recentPhotoSection.querySelector('[data-photo-drawer="true"]') as HTMLElement;
+    expect(recentPhotoSection.getAttribute('data-photo-layout')).toBe('sparse');
     expect(drawer.style.overflowX).toBe('hidden');
     expect(drawer.style.display).toBe('grid');
     const rail = recentPhotoSection.querySelector('[data-photo-index-rail="true"]') as HTMLElement;
     expect(rail).toBeDefined();
-    expect(rail.style.width).toBe('164px');
-    expect((recentPhotoSection.querySelector('[data-photo-index="0"]') as HTMLElement).style.transform).toContain('translate3d(0px');
-    expect((recentPhotoSection.querySelector('[data-photo-index="1"]') as HTMLElement).style.transform).toContain('translate3d(43px');
-    expect((recentPhotoSection.querySelector('[data-photo-index="2"]') as HTMLElement).style.transform).toContain('translate3d(-43px');
-    expect(recentPhotoSection.querySelectorAll('[data-photo-index]').length).toBe(3);
+    expect(rail.style.width).toBe('146px');
+    expect((recentPhotoSection.querySelector('[data-photo-index="0"]') as HTMLElement).style.transform).toContain('translate3d(-17px');
+    expect((recentPhotoSection.querySelector('[data-photo-index="1"]') as HTMLElement).style.transform).toContain('translate3d(17px');
+    expect(recentPhotoSection.querySelectorAll('[data-photo-index]').length).toBe(2);
+  });
+
+  it('uses the cover alone when the home has one visual record', async () => {
+    window.history.pushState({}, '', '/home');
+    mockAuthenticatedSession();
+    const singleRecord = {
+      record_no: 'r_single_photo',
+      cover_media_no: null,
+      cover_media_type: 'image' as const,
+      cover_url: 'https://cdn.example.test/single.jpg',
+      title: '唯一照片',
+      summary: '一张真实照片。',
+      event_time: '2026-05-28T10:00:00.000Z',
+      location_text: null,
+      tags: [],
+      creator_name: '测试用户',
+      is_milestone: false,
+      record_type: 'mixed',
+      status: 'published' as const,
+    };
+    listRecordsMock.mockImplementation(async (query) => {
+      if (query.start_time || query.end_time) {
+        return { list: [], page: 1, page_size: 1, total: 0, has_more: false };
+      }
+      return { list: [singleRecord], page: 1, page_size: 12, total: 1, has_more: false };
+    });
+
+    render(<App />);
+
+    const carousel = await screen.findByLabelText('最近照片');
+    expect(carousel.getAttribute('data-photo-layout')).toBe('single');
+    expect(carousel.querySelector('[data-photo-drawer="true"]')).toBeNull();
+    expect(screen.queryByText('01 / 01')).toBeNull();
+  });
+
+  it('uses the generated thumbnail instead of a video payload on the home cover', async () => {
+    window.history.pushState({}, '', '/home');
+    mockAuthenticatedSession();
+    const videoRecord = {
+      record_no: 'r_home_video',
+      cover_media_no: 'm_home_video',
+      cover_media_type: 'video' as const,
+      cover_url: 'data:video/mp4;base64,AAAA',
+      title: '视频记录',
+      summary: '一段真实视频。',
+      event_time: '2026-05-28T10:00:00.000Z',
+      location_text: null,
+      tags: [],
+      creator_name: '测试用户',
+      is_milestone: false,
+      record_type: 'video',
+      status: 'published' as const,
+    };
+    listRecordsMock.mockImplementation(async (query) => {
+      if (query.start_time || query.end_time) {
+        return { list: [], page: 1, page_size: 1, total: 0, has_more: false };
+      }
+      return { list: [videoRecord], page: 1, page_size: 12, total: 1, has_more: false };
+    });
+    mediaAccessUrlMock.mockResolvedValue({
+      media_no: 'm_home_video',
+      access_url: 'https://cdn.example.test/video.mp4',
+      thumbnail_url: 'https://cdn.example.test/video-thumbnail.jpg',
+      expires_in: 3600,
+    });
+
+    render(<App />);
+
+    const carousel = await screen.findByLabelText('最近照片');
+    await waitFor(() => {
+      expect((carousel.querySelector('img[alt="视频记录"]') as HTMLImageElement)?.getAttribute('src')).toBe('https://cdn.example.test/video-thumbnail.jpg');
+    });
+    expect(Array.from(carousel.querySelectorAll('img')).some((image) => image.getAttribute('src')?.startsWith('data:video/'))).toBe(false);
+    expect(carousel.querySelector('video')).toBeNull();
+  });
+
+  it('renders the signed video frame when a video has no generated thumbnail', async () => {
+    window.history.pushState({}, '', '/home');
+    mockAuthenticatedSession();
+    const videoRecord = {
+      record_no: 'r_home_video_legacy',
+      cover_media_no: 'm_home_video_legacy',
+      cover_media_type: 'video' as const,
+      cover_url: 'data:video/mp4;base64,BBBB',
+      title: '旧视频记录',
+      summary: '一段本地视频。',
+      event_time: '2026-05-28T10:00:00.000Z',
+      location_text: null,
+      tags: [],
+      creator_name: '测试用户',
+      is_milestone: false,
+      record_type: 'video',
+      status: 'published' as const,
+    };
+    listRecordsMock.mockImplementation(async (query) => query.start_time || query.end_time
+      ? { list: [], page: 1, page_size: 1, total: 0, has_more: false }
+      : { list: [videoRecord], page: 1, page_size: 12, total: 1, has_more: false });
+    mediaAccessUrlMock.mockResolvedValue({
+      media_no: 'm_home_video_legacy',
+      access_url: 'https://cdn.example.test/legacy-video.mp4',
+      thumbnail_url: null,
+      expires_in: 3600,
+    });
+
+    render(<App />);
+
+    const carousel = await screen.findByLabelText('最近照片');
+    await waitFor(() => {
+      expect((carousel.querySelector('video') as HTMLVideoElement)?.getAttribute('src')).toBe('https://cdn.example.test/legacy-video.mp4');
+    });
+    expect(carousel.querySelector('img[alt="旧视频记录"]')).toBeNull();
+    expect(Array.from(carousel.querySelectorAll('img')).some((image) => image.getAttribute('src')?.startsWith('data:video/'))).toBe(false);
+  });
+
+  it('shows the backend total for the home record count', async () => {
+    window.history.pushState({}, '', '/home');
+    mockAuthenticatedSession();
+
+    const visibleRecords = ['最近一条', '第二条'].map((title, index) => ({
+      record_no: `r_visible_${index + 1}`,
+      cover_media_no: null,
+      cover_media_type: 'image' as const,
+      cover_url: `https://cdn.example.test/visible-${index + 1}.jpg`,
+      title,
+      summary: `${title}真实照片。`,
+      event_time: `2026-05-${28 - index}T10:00:00.000Z`,
+      location_text: null,
+      tags: [],
+      creator_name: '测试用户',
+      is_milestone: false,
+      record_type: 'mixed',
+      status: 'published' as const,
+    }));
+
+    listRecordsMock.mockImplementation(async (query) => {
+      if (query.start_time || query.end_time) {
+        return { list: [], page: 1, page_size: 1, total: 0, has_more: false };
+      }
+      return { list: visibleRecords, page: 1, page_size: 12, total: 18, has_more: true };
+    });
+
+    render(<App />);
+
+    expect(await screen.findByText('成长封面')).toBeDefined();
+    expect(screen.getByText(/18 条记录/)).toBeDefined();
+    expect(screen.queryByText(/2 条记录/)).toBeNull();
+  });
+
+  it('autoplays the home photo carousel', async () => {
+    window.history.pushState({}, '', '/home');
+    mockAuthenticatedSession();
+
+    const photoRecords = ['第一张', '第二张', '第三张'].map((title, index) => ({
+      record_no: `r_autoplay_photo_${index + 1}`,
+      cover_media_no: null,
+      cover_media_type: 'image' as const,
+      cover_url: `https://cdn.example.test/autoplay-${index + 1}.jpg`,
+      title,
+      summary: `${title}真实照片。`,
+      event_time: `2026-05-${28 - index}T10:00:00.000Z`,
+      location_text: null,
+      tags: [],
+      creator_name: '测试用户',
+      is_milestone: false,
+      record_type: 'mixed',
+      status: 'published' as const,
+    }));
+
+    listRecordsMock.mockImplementation(async (query) => {
+      if (query.start_time || query.end_time) {
+        return { list: [], page: 1, page_size: 1, total: 0, has_more: false };
+      }
+      return { list: photoRecords, page: 1, page_size: 12, total: photoRecords.length, has_more: false };
+    });
+
+    render(<App />);
+
+    const recentPhotoSection = await screen.findByLabelText('最近照片');
+    expect(recentPhotoSection.getAttribute('data-photo-active-index')).toBe('0');
+
+    await waitFor(
+      () => {
+        expect(recentPhotoSection.getAttribute('data-photo-active-index')).toBe('1');
+      },
+      { timeout: 3200 },
+    );
   });
 
   it('uses a manual looping carousel for home photos', async () => {
@@ -864,16 +1120,17 @@ describe('App Shell', () => {
     const drawer = recentPhotoSection.querySelector('[data-photo-drawer="true"]') as HTMLElement;
 
     await waitFor(() => expect(recentPhotoSection.querySelectorAll('[data-photo-index]').length).toBe(4));
+    expect(recentPhotoSection.getAttribute('data-photo-layout')).toBe('drawer');
     expect(stage.style.touchAction).toBe('pan-y');
     expect(drawer.style.overflowX).toBe('hidden');
-    expect((recentPhotoSection.querySelector('[data-photo-index="1"]') as HTMLElement).style.transform).toContain('translate3d(43px');
-    expect((recentPhotoSection.querySelector('[data-photo-index="2"]') as HTMLElement).style.transform).toContain('translate3d(86px');
+    expect((recentPhotoSection.querySelector('[data-photo-index="1"]') as HTMLElement).style.transform).toContain('translate3d(31px');
+    expect((recentPhotoSection.querySelector('[data-photo-index="2"]') as HTMLElement).style.transform).toContain('translate3d(62px');
 
     fireEvent.click(screen.getByRole('button', { name: '选择照片：第四张' }));
 
     await waitFor(() => {
       const mainImage = recentPhotoSection.querySelector('[data-photo-stage="true"] img[alt="第四张"]');
-      expect(mainImage).toBeDefined();
+      expect(mainImage).not.toBeNull();
     });
 
     const mainImage = recentPhotoSection.querySelector('[data-photo-stage="true"] img[alt="第四张"]') as HTMLImageElement;
@@ -891,6 +1148,24 @@ describe('App Shell', () => {
       const firstImage = recentPhotoSection.querySelector('[data-photo-stage="true"] img[alt="第一张"]');
       expect(firstImage).not.toBeNull();
     });
+
+    await new Promise((resolve) => window.setTimeout(resolve, 300));
+    fireEvent.click(stage);
+    expect(window.location.pathname).toBe('/home');
+
+    fireEvent.pointerDown(stage, { clientX: 330, clientY: 160, pointerId: 2 });
+    fireEvent.pointerUp(stage, { clientX: 170, clientY: 160, pointerId: 2 });
+
+    for (const pointerId of [3, 4]) {
+      fireEvent.pointerDown(stage, { clientX: 330, clientY: 160, pointerId });
+      fireEvent.pointerMove(stage, { clientX: 220, clientY: 160, pointerId });
+      fireEvent.pointerUp(stage, { clientX: 170, clientY: 160, pointerId });
+    }
+
+    await waitFor(() => {
+      expect(recentPhotoSection.getAttribute('data-photo-active-index')).toBe('3');
+      expect(recentPhotoSection.getAttribute('data-photo-turning')).toBe('false');
+    }, { timeout: 1800 });
   });
 
   it('shows a clear empty state when timeline filters have no matching records', async () => {
@@ -1091,6 +1366,7 @@ describe('App Shell', () => {
     const originalCreateObjectURL = URL.createObjectURL;
     const originalRevokeObjectURL = URL.revokeObjectURL;
     const originalFetch = globalThis.fetch;
+    const restoreMediaMetadataMocks = installMediaMetadataMocks({ imageWidth: 1024, imageHeight: 768 });
     Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: vi.fn(() => 'blob:text-edit-photo') });
     Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: vi.fn() });
     Object.defineProperty(globalThis, 'fetch', { configurable: true, value: vi.fn().mockResolvedValue({ ok: true }) });
@@ -1164,7 +1440,11 @@ describe('App Shell', () => {
       fireEvent.change(fileInput, {
         target: { files: [new File(['photo'], 'text-edit-photo.png', { type: 'image/png' })] },
       });
-      await waitFor(() => expect(confirmUploadMock).toHaveBeenCalled());
+      await waitFor(() => expect(confirmUploadMock).toHaveBeenCalledWith({
+        media_no: 'm_text_edit_photo',
+        width: 1024,
+        height: 768,
+      }));
       fireEvent.click(screen.getByRole('button', { name: '保存' }));
 
       await waitFor(() => {
@@ -1190,7 +1470,169 @@ describe('App Shell', () => {
       } else {
         Reflect.deleteProperty(globalThis, 'fetch');
       }
+      restoreMediaMetadataMocks();
     }
+  });
+
+  it('repeatedly opens the selected photo from a multi-photo record editor in a body-level preview', async () => {
+    window.history.pushState({}, '', '/record/r_multi_photo_edit/edit');
+    mockAuthenticatedSession();
+    const photoUrls = [
+      'data:image/png;base64,Zmlyc3Q=',
+      'data:image/png;base64,c2Vjb25k',
+      'data:image/png;base64,dGhpcmQ=',
+      'data:image/png;base64,Zm91cnRo',
+    ];
+    detailRecordMock.mockResolvedValue({
+      record_no: 'r_multi_photo_edit',
+      child_no: 'c_001',
+      creator_user_no: 'u_001',
+      creator_name: '测试用户',
+      record_type: 'mixed',
+      title: '多图编辑预览',
+      content_text: '进入编辑后可以逐张查看。',
+      media_list: photoUrls.map((accessUrl, index) => (
+        {
+          media_no: `m_multi_photo_${index + 1}`,
+          media_type: 'image',
+          access_url: accessUrl,
+          original_name: `photo-${index + 1}.png`,
+          mime_type: 'image/png',
+          size_bytes: index + 5,
+          width: 100,
+          height: 100,
+          duration_seconds: null,
+        }
+      )),
+      tags: [],
+      event_time: '2026-07-27T08:00:00.000Z',
+      location_text: null,
+      visibility_scope: 'family',
+      is_milestone: false,
+      ai_generated_title: null,
+      ai_summary: null,
+      ai_status: null,
+      status: 'published',
+      created_at: '2026-07-27T08:00:00.000Z',
+      updated_at: '2026-07-27T08:00:00.000Z',
+    });
+
+    render(<App />);
+
+    const photoPreviews = await screen.findAllByRole('button', { name: '照片预览' });
+    expect(photoPreviews).toHaveLength(4);
+
+    for (const index of [0, 2, 3, 1, 3, 0]) {
+      fireEvent.click(photoPreviews[index]);
+
+      const fullscreenDialog = await screen.findByRole('dialog', { name: '全屏照片预览' });
+      expect(fullscreenDialog.parentElement).toBe(document.body);
+      expect(fullscreenDialog.querySelector('img')?.getAttribute('src')).toBe(photoUrls[index]);
+
+      if (index === 0) {
+        const firstImage = fullscreenDialog.querySelector('img')!;
+        fireEvent.pointerDown(firstImage, { pointerId: 101, pointerType: 'touch', clientX: 320, clientY: 180 });
+        fireEvent.pointerMove(firstImage, { pointerId: 101, pointerType: 'touch', clientX: 190, clientY: 184 });
+        fireEvent.pointerUp(firstImage, { pointerId: 101, pointerType: 'touch', clientX: 90, clientY: 184 });
+
+        await waitFor(() => {
+          expect(fullscreenDialog.getAttribute('data-media-index')).toBe('1');
+          expect(fullscreenDialog.querySelector('img')?.getAttribute('src')).toBe(photoUrls[1]);
+        });
+
+        const secondImage = fullscreenDialog.querySelector('img')!;
+        fireEvent.pointerDown(secondImage, { pointerId: 102, pointerType: 'touch', clientX: 80, clientY: 180 });
+        fireEvent.pointerMove(secondImage, { pointerId: 102, pointerType: 'touch', clientX: 210, clientY: 182 });
+        fireEvent.pointerUp(secondImage, { pointerId: 102, pointerType: 'touch', clientX: 320, clientY: 182 });
+
+        await waitFor(() => {
+          expect(fullscreenDialog.getAttribute('data-media-index')).toBe('0');
+          expect(fullscreenDialog.querySelector('img')?.getAttribute('src')).toBe(photoUrls[0]);
+        });
+      }
+
+      fireEvent.click(fullscreenDialog);
+      await waitFor(() => {
+        expect(screen.queryByRole('dialog', { name: '全屏照片预览' })).toBeNull();
+      });
+    }
+  });
+
+  it('swipes through mixed image and video media in record detail and loops at the edges', async () => {
+    window.history.pushState({}, '', '/record/r_mixed_media_gallery');
+    mockAuthenticatedSession();
+    const imageOne = 'data:image/png;base64,aW1hZ2Utb25l';
+    const videoOne = 'data:video/mp4;base64,dmlkZW8tb25l';
+    const imageTwo = 'data:image/png;base64,aW1hZ2UtdHdv';
+    detailRecordMock.mockResolvedValue({
+      record_no: 'r_mixed_media_gallery',
+      child_no: 'c_001',
+      creator_user_no: 'u_001',
+      creator_name: '测试用户',
+      record_type: 'mixed',
+      title: '混合媒体滑页',
+      content_text: '图片和视频可以连续查看。',
+      media_list: [
+        { media_no: 'm_gallery_image_1', media_type: 'image', access_url: imageOne, original_name: 'image-1.png', mime_type: 'image/png', size_bytes: 10, width: 100, height: 100, duration_seconds: null },
+        { media_no: 'm_gallery_video_1', media_type: 'video', access_url: videoOne, original_name: 'video-1.mp4', mime_type: 'video/mp4', size_bytes: 20, width: 100, height: 100, duration_seconds: 8 },
+        { media_no: 'm_gallery_image_2', media_type: 'image', access_url: imageTwo, original_name: 'image-2.png', mime_type: 'image/png', size_bytes: 10, width: 100, height: 100, duration_seconds: null },
+      ],
+      tags: [],
+      event_time: '2026-07-31T08:00:00.000Z',
+      location_text: null,
+      visibility_scope: 'family',
+      is_milestone: false,
+      ai_generated_title: null,
+      ai_summary: null,
+      ai_status: null,
+      status: 'published',
+      created_at: '2026-07-31T08:00:00.000Z',
+      updated_at: '2026-07-31T08:00:00.000Z',
+    });
+
+    render(<App />);
+
+    const primaryPreview = await screen.findByTestId('record-primary-media-preview');
+    fireEvent.click(primaryPreview);
+    const fullscreenDialog = await screen.findByRole('dialog', { name: '全屏照片预览' });
+    expect(fullscreenDialog.getAttribute('data-media-total')).toBe('3');
+
+    const firstImage = fullscreenDialog.querySelector('img')!;
+    fireEvent.pointerDown(firstImage, { pointerId: 201, pointerType: 'touch', clientX: 320, clientY: 160 });
+    fireEvent.pointerUp(firstImage, { pointerId: 201, pointerType: 'touch', clientX: 70, clientY: 162 });
+
+    const fullscreenVideo = await waitFor(() => {
+      const video = fullscreenDialog.querySelector('video');
+      expect(fullscreenDialog.getAttribute('data-media-index')).toBe('1');
+      expect(video?.getAttribute('src')).toBe(videoOne);
+      return video as HTMLVideoElement;
+    });
+
+    fireEvent.pointerDown(fullscreenVideo, { pointerId: 202, pointerType: 'touch', clientX: 320, clientY: 80 });
+    fireEvent.pointerMove(fullscreenVideo, { pointerId: 202, pointerType: 'touch', clientX: 180, clientY: 82 });
+    fireEvent.pointerUp(fullscreenVideo, { pointerId: 202, pointerType: 'touch', clientX: 70, clientY: 82 });
+
+    await waitFor(() => {
+      expect(fullscreenDialog.getAttribute('data-media-index')).toBe('2');
+      expect(fullscreenDialog.querySelector('img')?.getAttribute('src')).toBe(imageTwo);
+    });
+
+    const lastImage = fullscreenDialog.querySelector('img')!;
+    fireEvent.pointerDown(lastImage, { pointerId: 203, pointerType: 'touch', clientX: 320, clientY: 160 });
+    fireEvent.pointerUp(lastImage, { pointerId: 203, pointerType: 'touch', clientX: 70, clientY: 162 });
+
+    await waitFor(() => {
+      expect(fullscreenDialog.getAttribute('data-media-index')).toBe('0');
+      expect(fullscreenDialog.querySelector('img')?.getAttribute('src')).toBe(imageOne);
+    });
+
+    fireEvent.pointerDown(fullscreenDialog, { pointerId: 204, pointerType: 'touch', clientX: 320, clientY: 400 });
+    fireEvent.pointerUp(fullscreenDialog, { pointerId: 204, pointerType: 'touch', clientX: 70, clientY: 400 });
+
+    await waitFor(() => {
+      expect(fullscreenDialog.getAttribute('data-media-index')).toBe('1');
+      expect(fullscreenDialog.querySelector('video')?.getAttribute('src')).toBe(videoOne);
+    });
   });
 
   it('saves a record draft without requiring publish fields', async () => {
@@ -1375,6 +1817,8 @@ describe('App Shell', () => {
     render(<App />);
 
     expect(await screen.findByRole('button', { name: '拍照记录' })).toBeDefined();
+    expect(screen.queryByRole('button', { name: '拍摄视频' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: '更多媒体' }));
     expect(screen.getByRole('button', { name: '拍摄视频' })).toBeDefined();
     expect(screen.queryByLabelText('媒体预览')).toBeNull();
     expect(screen.queryByTestId('record-media-preview-empty')).toBeNull();
@@ -1419,6 +1863,9 @@ describe('App Shell', () => {
       window.history.pushState({}, '', route);
       const view = render(<App />);
       expect(await screen.findByRole('button', { name: /拍摄视频|录制语音/ })).toBeDefined();
+      if (route.includes('type=audio')) {
+        expect(screen.getByText('支持 m4a、mp3、wav、aac、webm、ogg；AMR/部分 3GP 无法在应用内播放；语音最长支持10分钟。')).toBeDefined();
+      }
       expect(screen.queryByLabelText('媒体预览')).toBeNull();
       expect(screen.queryByTestId('record-media-preview-empty')).toBeNull();
       view.unmount();
@@ -1431,6 +1878,7 @@ describe('App Shell', () => {
     createUploadTokenMock.mockReturnValue(new Promise(() => undefined));
     const originalCreateObjectURL = URL.createObjectURL;
     const originalRevokeObjectURL = URL.revokeObjectURL;
+    const restoreMediaMetadataMocks = installMediaMetadataMocks({ videoWidth: 1280, videoHeight: 720, duration: 9 });
     Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: vi.fn(() => 'blob:record-video-preview') });
     Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: vi.fn() });
 
@@ -1461,7 +1909,225 @@ describe('App Shell', () => {
       } else {
         Reflect.deleteProperty(URL, 'revokeObjectURL');
       }
+      restoreMediaMetadataMocks();
     }
+  });
+
+  it('blocks a video that exceeds the five minute limit before upload', async () => {
+    window.history.pushState({}, '', '/record/create?type=video&focus=media');
+    mockAuthenticatedSession();
+    const restoreMediaMetadataMocks = installMediaMetadataMocks({ videoWidth: 1280, videoHeight: 720, duration: 301 });
+    const originalCreateObjectURL = URL.createObjectURL;
+    Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: vi.fn(() => 'blob:too-long-video') });
+
+    try {
+      render(<App />);
+      const videoInput = await waitFor(() => {
+        const input = document.querySelector('input[aria-label="拍摄视频"]');
+        expect(input).not.toBeNull();
+        return input as HTMLInputElement;
+      });
+
+      fireEvent.change(videoInput, {
+        target: { files: [new File(['video'], 'too-long.mp4', { type: 'video/mp4' })] },
+      });
+
+      expect(await screen.findByText('视频最长支持5分钟，请重新选择较短的文件。')).toBeDefined();
+      expect(createUploadTokenMock).not.toHaveBeenCalled();
+    } finally {
+      if (originalCreateObjectURL) {
+        Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: originalCreateObjectURL });
+      } else {
+        Reflect.deleteProperty(URL, 'createObjectURL');
+      }
+      restoreMediaMetadataMocks();
+    }
+  });
+
+  it('uploads playable audio with duration metadata', async () => {
+    window.history.pushState({}, '', '/record/create?type=audio&focus=media');
+    mockAuthenticatedSession();
+    const originalCreateObjectURL = URL.createObjectURL;
+    const originalRevokeObjectURL = URL.revokeObjectURL;
+    const restoreMediaMetadataMocks = installMediaMetadataMocks({ duration: 11 });
+    Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: vi.fn(() => 'blob:record-audio-preview') });
+    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: vi.fn() });
+    createUploadTokenMock.mockResolvedValue({
+      media_no: 'm_audio_upload',
+      object_key: 'mock/audio.m4a',
+      upload_url: 'https://upload.example/audio.m4a',
+      method: 'PUT',
+      headers: {},
+      mock_upload: true,
+      expires_in: 600,
+    });
+    confirmUploadMock.mockResolvedValue({
+      media_no: 'm_audio_upload',
+      status: 'ready',
+      width: null,
+      height: null,
+      duration_seconds: 11,
+      created_at: '2026-05-28T10:00:00.000Z',
+      updated_at: '2026-05-28T10:00:00.000Z',
+    });
+
+    try {
+      render(<App />);
+      const audioInput = await waitFor(() => {
+        const input = document.querySelector('input[aria-label="上传语音"]');
+        expect(input).not.toBeNull();
+        return input as HTMLInputElement;
+      });
+
+      fireEvent.change(audioInput, {
+        target: { files: [new File(['audio'], 'story.m4a', { type: 'audio/mp4' })] },
+      });
+
+      await waitFor(() => expect(confirmUploadMock).toHaveBeenCalledWith({
+        media_no: 'm_audio_upload',
+        duration_seconds: 11,
+      }));
+      expect(screen.getByLabelText('语音预览').querySelector('audio')?.getAttribute('src')).toMatch(/^(data:audio\/mp4;base64,|blob:record-audio-preview$)/);
+    } finally {
+      if (originalCreateObjectURL) {
+        Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: originalCreateObjectURL });
+      } else {
+        Reflect.deleteProperty(URL, 'createObjectURL');
+      }
+      if (originalRevokeObjectURL) {
+        Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: originalRevokeObjectURL });
+      } else {
+        Reflect.deleteProperty(URL, 'revokeObjectURL');
+      }
+      restoreMediaMetadataMocks();
+    }
+  });
+
+  it('records audio in the app and uploads the generated voice file', async () => {
+    window.history.pushState({}, '', '/record/create?type=audio&focus=media');
+    mockAuthenticatedSession();
+    const originalCreateObjectURL = URL.createObjectURL;
+    const originalRevokeObjectURL = URL.revokeObjectURL;
+    const originalMediaRecorder = globalThis.MediaRecorder;
+    const originalMediaDevices = navigator.mediaDevices;
+    const restoreMediaMetadataMocks = installMediaMetadataMocks({ duration: 6 });
+    Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: vi.fn(() => 'blob:recorded-audio-preview') });
+    Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: vi.fn() });
+    const stopTrack = vi.fn();
+    const stream = { getTracks: () => [{ stop: stopTrack }] } as unknown as MediaStream;
+    Object.defineProperty(navigator, 'mediaDevices', {
+      configurable: true,
+      value: {
+        getUserMedia: vi.fn().mockResolvedValue(stream),
+      },
+    });
+
+    class MockMediaRecorder extends EventTarget {
+      static isTypeSupported = vi.fn((mimeType: string) => mimeType === 'audio/webm;codecs=opus');
+      mimeType = 'audio/webm;codecs=opus';
+      state: RecordingState = 'inactive';
+      ondataavailable: ((event: BlobEvent) => void) | null = null;
+      onstop: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+
+      constructor(public stream: MediaStream, public options?: MediaRecorderOptions) {
+        super();
+      }
+
+      start() {
+        this.state = 'recording';
+      }
+
+      requestData() {
+        this.ondataavailable?.({ data: new Blob(['voice'], { type: this.mimeType }) } as BlobEvent);
+      }
+
+      stop() {
+        this.state = 'inactive';
+        this.onstop?.();
+      }
+    }
+
+    Object.defineProperty(globalThis, 'MediaRecorder', { configurable: true, value: MockMediaRecorder });
+    createUploadTokenMock.mockResolvedValue({
+      media_no: 'm_recorded_audio_upload',
+      object_key: 'mock/recorded.webm',
+      upload_url: 'https://upload.example/recorded.webm',
+      method: 'PUT',
+      headers: {},
+      mock_upload: true,
+      expires_in: 600,
+    });
+    confirmUploadMock.mockResolvedValue({
+      media_no: 'm_recorded_audio_upload',
+      status: 'ready',
+      width: null,
+      height: null,
+      duration_seconds: 6,
+      created_at: '2026-05-28T10:00:00.000Z',
+      updated_at: '2026-05-28T10:00:00.000Z',
+    });
+
+    try {
+      render(<App />);
+      fireEvent.click(await screen.findByRole('button', { name: '录制语音' }));
+      const stopButton = await screen.findByRole('button', { name: '停止录音' });
+      fireEvent.click(stopButton);
+
+      await waitFor(() => expect(confirmUploadMock).toHaveBeenCalledWith({
+        media_no: 'm_recorded_audio_upload',
+        duration_seconds: 6,
+      }));
+      expect(createUploadTokenMock).toHaveBeenCalledWith(expect.objectContaining({
+        file_name: expect.stringMatching(/^voice-\d+\.webm$/),
+        mime_type: 'audio/webm',
+        media_type: 'audio',
+      }));
+      expect(stopTrack).toHaveBeenCalled();
+      expect(screen.getByLabelText('语音预览').querySelector('audio')?.getAttribute('src')).toMatch(/^(data:audio\/webm;base64,|blob:recorded-audio-preview$)/);
+    } finally {
+      if (originalCreateObjectURL) {
+        Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: originalCreateObjectURL });
+      } else {
+        Reflect.deleteProperty(URL, 'createObjectURL');
+      }
+      if (originalRevokeObjectURL) {
+        Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: originalRevokeObjectURL });
+      } else {
+        Reflect.deleteProperty(URL, 'revokeObjectURL');
+      }
+      if (originalMediaRecorder) {
+        Object.defineProperty(globalThis, 'MediaRecorder', { configurable: true, value: originalMediaRecorder });
+      } else {
+        Reflect.deleteProperty(globalThis, 'MediaRecorder');
+      }
+      if (originalMediaDevices) {
+        Object.defineProperty(navigator, 'mediaDevices', { configurable: true, value: originalMediaDevices });
+      } else {
+        Reflect.deleteProperty(navigator, 'mediaDevices');
+      }
+      restoreMediaMetadataMocks();
+    }
+  });
+
+  it('blocks unsupported voice files before upload', async () => {
+    window.history.pushState({}, '', '/record/create?type=audio&focus=media');
+    mockAuthenticatedSession();
+
+    render(<App />);
+    const audioInput = await waitFor(() => {
+      const input = document.querySelector('input[aria-label="上传语音"]');
+      expect(input).not.toBeNull();
+      return input as HTMLInputElement;
+    });
+
+    fireEvent.change(audioInput, {
+      target: { files: [new File(['amr'], 'voice.amr', { type: 'audio/amr' })] },
+    });
+
+    expect(await screen.findByText('当前录音格式在手机内置播放器中无法播放，请选择 m4a、mp3、wav 或 aac 格式的语音文件。')).toBeDefined();
+    expect(createUploadTokenMock).not.toHaveBeenCalled();
+    expect(confirmUploadMock).not.toHaveBeenCalled();
   });
 
   it('shows an account avatar preview before the upload finishes', async () => {
@@ -1470,6 +2136,7 @@ describe('App Shell', () => {
     createUploadTokenMock.mockReturnValue(new Promise(() => undefined));
     const originalCreateObjectURL = URL.createObjectURL;
     const originalRevokeObjectURL = URL.revokeObjectURL;
+    const restoreMediaMetadataMocks = installMediaMetadataMocks({ imageWidth: 640, imageHeight: 640 });
     Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: vi.fn(() => 'blob:avatar-preview') });
     Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: vi.fn() });
 
@@ -1501,6 +2168,7 @@ describe('App Shell', () => {
       } else {
         Reflect.deleteProperty(URL, 'revokeObjectURL');
       }
+      restoreMediaMetadataMocks();
     }
   });
 
@@ -1533,6 +2201,7 @@ describe('App Shell', () => {
     });
     const originalCreateObjectURL = URL.createObjectURL;
     const originalRevokeObjectURL = URL.revokeObjectURL;
+    const restoreMediaMetadataMocks = installMediaMetadataMocks({ imageWidth: 720, imageHeight: 720 });
     Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: vi.fn(() => 'blob:avatar-success-preview') });
     Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: vi.fn() });
 
@@ -1549,6 +2218,11 @@ describe('App Shell', () => {
       });
 
       await waitFor(() => {
+        expect(confirmUploadMock).toHaveBeenCalledWith({
+          media_no: 'm_account_avatar_success',
+          width: 720,
+          height: 720,
+        });
         expect(updateMeMock).toHaveBeenCalledWith({ avatar_url: 'media:m_account_avatar_success' });
       });
       await waitFor(() => {
@@ -1566,6 +2240,7 @@ describe('App Shell', () => {
       } else {
         Reflect.deleteProperty(URL, 'revokeObjectURL');
       }
+      restoreMediaMetadataMocks();
     }
   });
 
@@ -1629,6 +2304,7 @@ describe('App Shell', () => {
     const originalCreateObjectURL = URL.createObjectURL;
     const originalRevokeObjectURL = URL.revokeObjectURL;
     const originalFetch = globalThis.fetch;
+    const restoreMediaMetadataMocks = installMediaMetadataMocks({ imageWidth: 1600, imageHeight: 1200 });
     Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: vi.fn(() => 'blob:record-photo-preview') });
     Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: vi.fn() });
     Object.defineProperty(globalThis, 'fetch', { configurable: true, value: vi.fn().mockResolvedValue({ ok: true }) });
@@ -1698,7 +2374,11 @@ describe('App Shell', () => {
       fireEvent.change(fileInput, {
         target: { files: [new File(['photo'], 'photo.png', { type: 'image/png' })] },
       });
-      await waitFor(() => expect(confirmUploadMock).toHaveBeenCalled());
+      await waitFor(() => expect(confirmUploadMock).toHaveBeenCalledWith({
+        media_no: 'm_preview_after_publish',
+        width: 1600,
+        height: 1200,
+      }));
 
       fireEvent.change(screen.getByPlaceholderText('标题'), { target: { value: '发布后预览' } });
       fireEvent.change(screen.getByPlaceholderText('正文'), { target: { value: '发布后马上应该看到刚上传的照片。' } });
@@ -1711,9 +2391,30 @@ describe('App Shell', () => {
       const fullscreenDialog = await screen.findByRole('dialog');
       expect(fullscreenDialog.querySelector('img')?.getAttribute('src')).toMatch(/^(data:image\/png;base64,|blob:record-photo-preview$)/);
       expect(screen.queryByRole('button', { name: '关闭全屏预览' })).toBeNull();
-      fireEvent.click(fullscreenDialog.querySelector('img')!);
+      const fullscreenImage = fullscreenDialog.querySelector('img')!;
+      fireEvent.pointerDown(fullscreenImage, { pointerId: 1, pointerType: 'touch', clientX: 20, clientY: 20 });
+      fireEvent.pointerUp(fullscreenImage, { pointerId: 1, pointerType: 'touch', clientX: 20, clientY: 20 });
+      fireEvent.pointerDown(fullscreenImage, { pointerId: 2, pointerType: 'touch', clientX: 20, clientY: 20 });
+      fireEvent.pointerUp(fullscreenImage, { pointerId: 2, pointerType: 'touch', clientX: 20, clientY: 20 });
+      expect(fullscreenImage.getAttribute('data-zoomed')).toBe('true');
       expect(screen.getByRole('dialog')).toBeDefined();
-      fireEvent.click(fullscreenDialog);
+      fireEvent.pointerDown(fullscreenImage, { pointerId: 20, pointerType: 'touch', clientX: 20, clientY: 20 });
+      fireEvent.pointerMove(fullscreenImage, { pointerId: 20, pointerType: 'touch', clientX: 88, clientY: 42 });
+      fireEvent.pointerUp(fullscreenImage, { pointerId: 20, pointerType: 'touch', clientX: 88, clientY: 42 });
+      expect(Number(fullscreenImage.getAttribute('data-pan-x'))).not.toBe(0);
+      expect(Number(fullscreenImage.getAttribute('data-pan-y'))).not.toBe(0);
+      fireEvent.pointerDown(fullscreenImage, { pointerId: 3, pointerType: 'touch', clientX: 20, clientY: 20 });
+      fireEvent.pointerUp(fullscreenImage, { pointerId: 3, pointerType: 'touch', clientX: 20, clientY: 20 });
+      fireEvent.pointerDown(fullscreenImage, { pointerId: 4, pointerType: 'touch', clientX: 20, clientY: 20 });
+      fireEvent.pointerUp(fullscreenImage, { pointerId: 4, pointerType: 'touch', clientX: 20, clientY: 20 });
+      expect(fullscreenImage.getAttribute('data-zoomed')).toBe('false');
+      fireEvent.pointerDown(fullscreenImage, { pointerId: 5, pointerType: 'touch', clientX: 20, clientY: 20 });
+      fireEvent.pointerMove(fullscreenImage, { pointerId: 5, pointerType: 'touch', clientX: 48, clientY: 20 });
+      fireEvent.pointerUp(fullscreenImage, { pointerId: 5, pointerType: 'touch', clientX: 48, clientY: 20 });
+      await new Promise((resolve) => window.setTimeout(resolve, 300));
+      expect(screen.getByRole('dialog')).toBeDefined();
+      fireEvent.pointerDown(fullscreenImage, { pointerId: 6, pointerType: 'touch', clientX: 20, clientY: 20 });
+      fireEvent.pointerUp(fullscreenImage, { pointerId: 6, pointerType: 'touch', clientX: 20, clientY: 20 });
       await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     } finally {
       if (originalCreateObjectURL) {
@@ -1731,6 +2432,7 @@ describe('App Shell', () => {
       } else {
         Reflect.deleteProperty(globalThis, 'fetch');
       }
+      restoreMediaMetadataMocks();
     }
   });
 
@@ -1740,6 +2442,7 @@ describe('App Shell', () => {
     const originalCreateObjectURL = URL.createObjectURL;
     const originalRevokeObjectURL = URL.revokeObjectURL;
     const originalFetch = globalThis.fetch;
+    const restoreMediaMetadataMocks = installMediaMetadataMocks({ videoWidth: 1920, videoHeight: 1080, duration: 14 });
     Object.defineProperty(URL, 'createObjectURL', { configurable: true, value: vi.fn(() => 'blob:record-video-preview') });
     Object.defineProperty(URL, 'revokeObjectURL', { configurable: true, value: vi.fn() });
     Object.defineProperty(globalThis, 'fetch', { configurable: true, value: vi.fn().mockResolvedValue({ ok: true }) });
@@ -1809,7 +2512,12 @@ describe('App Shell', () => {
       fireEvent.change(videoInput, {
         target: { files: [new File([new Uint8Array(4_300_001)], 'clip.mp4', { type: 'video/mp4' })] },
       });
-      await waitFor(() => expect(confirmUploadMock).toHaveBeenCalled());
+      await waitFor(() => expect(confirmUploadMock).toHaveBeenCalledWith({
+        media_no: 'm_video_after_publish',
+        width: 1920,
+        height: 1080,
+        duration_seconds: 14,
+      }));
 
       fireEvent.change(screen.getByPlaceholderText('标题'), { target: { value: '发布后视频预览' } });
       fireEvent.change(screen.getByPlaceholderText('正文'), { target: { value: '发布后马上应该看到刚上传的视频。' } });
@@ -1818,7 +2526,7 @@ describe('App Shell', () => {
 
       const primaryPreview = await screen.findByTestId('record-primary-media-preview');
       expect(primaryPreview.querySelector('video')?.getAttribute('src')).toBe('blob:record-video-preview');
-      expect(primaryPreview.querySelector('video')?.getAttribute('preload')).toBe('none');
+      expect(primaryPreview.querySelector('video')?.getAttribute('preload')).toBe('metadata');
       expect(primaryPreview.querySelector('button')).toBeNull();
       fireEvent.click(screen.getByRole('button', { name: '视频预览' }));
       const fullscreenDialog = await screen.findByRole('dialog');
@@ -1845,6 +2553,7 @@ describe('App Shell', () => {
       } else {
         Reflect.deleteProperty(globalThis, 'fetch');
       }
+      restoreMediaMetadataMocks();
     }
   });
 
@@ -2040,7 +2749,7 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    expect(await screen.findByText('孩子的成长记录')).toBeDefined();
+    expect(await screen.findByText('成长封面')).toBeDefined();
     expect(screen.queryByText(/今天想和我聊聊/)).toBeNull();
   });
 
@@ -2106,7 +2815,7 @@ describe('App Shell', () => {
     fireEvent.click(screen.getByRole('button', { name: /关于我们/ }));
 
     expect(await screen.findByRole('heading', { name: 'nianlun' })).toBeDefined();
-    expect(screen.getByText(/版本 2\.0\.3（构建/)).toBeDefined();
+    expect(screen.getByText(/版本 2\.0\.4（构建/)).toBeDefined();
     expect(screen.queryByRole('button', { name: /应用反馈/ })).toBeNull();
     expect(screen.queryByRole('heading', { name: '孩子的人生档案馆' })).toBeNull();
     expect(screen.queryByText(/familyarchive\.com/)).toBeNull();
@@ -2273,6 +2982,67 @@ describe('App Shell', () => {
     expect(await screen.findByText('家庭里的文字记录')).toBeDefined();
     expect(screen.queryByAltText('家庭里的文字记录')).toBeNull();
     expect(screen.queryByAltText('家庭动态图片')).toBeNull();
+  });
+
+  it('loads the creator avatar in family activity from media references', async () => {
+    window.history.pushState({}, '', '/family');
+    mockAuthenticatedSession();
+    listFamilyMembersMock.mockResolvedValue({
+      family_no: 'f_001',
+      list: [
+        {
+          user_no: 'u_001',
+          nickname: '测试用户',
+          avatar_url: null,
+          avatar_media_no: null,
+          mobile_masked: '138****0000',
+          role: 'owner',
+          status: 1,
+          joined_at: '2026-04-21T00:00:00.000Z',
+          invited_by_user_no: null,
+        },
+      ],
+    });
+    listRecordsMock.mockResolvedValue({
+      list: [
+        {
+          record_no: 'r_avatar_family',
+          cover_media_no: null,
+          cover_media_type: null,
+          cover_url: null,
+          title: '带头像的记录',
+          summary: '家庭动态应该显示发布者头像。',
+          event_time: '2026-06-21T10:00:00.000Z',
+          location_text: null,
+          tags: [],
+          creator_user_no: 'u_001',
+          creator_name: '测试用户',
+          creator_avatar_url: null,
+          creator_avatar_media_no: 'm_creator_avatar',
+          is_milestone: false,
+          record_type: 'text',
+          status: 'published',
+        },
+      ],
+      page: 1,
+      page_size: 3,
+      total: 1,
+      has_more: false,
+    });
+    mediaAccessUrlMock.mockResolvedValue({
+      media_no: 'm_creator_avatar',
+      access_url: 'https://cdn.example.test/avatar.jpg',
+      thumbnail_url: 'https://cdn.example.test/avatar-thumb.jpg',
+      expires_in: 3600,
+    });
+
+    render(<App />);
+
+    const activity = await screen.findByRole('button', { name: /查看家庭动态：带头像的记录/ });
+    const avatar = activity.querySelector('img[alt="我"]') as HTMLImageElement | null;
+    expect(avatar).not.toBeNull();
+    await waitFor(() => expect(avatar?.getAttribute('src')).toBe('https://cdn.example.test/avatar-thumb.jpg'));
+    expect(mediaAccessUrlMock).toHaveBeenCalledWith('m_creator_avatar');
   });
 
   it('explains invite role permissions before creating a family invite', async () => {
@@ -2680,8 +3450,8 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    expect(await screen.findByText('小满的成长记录')).toBeDefined();
-    expect(screen.getByRole('button', { name: /记录此刻/ })).toBeDefined();
+    expect(await screen.findByText('成长封面')).toBeDefined();
+    expect(screen.getByRole('button', { name: '记录' })).toBeDefined();
     expect(screen.queryByRole('button', { name: /月报/ })).toBeNull();
     expect(screen.queryByRole('button', { name: /未来信箱/ })).toBeNull();
   });
@@ -2798,6 +3568,28 @@ describe('App Shell', () => {
     await waitFor(() => expect(listNotificationsMock).toHaveBeenCalled());
     expect(await screen.findByText('暂无消息')).toBeDefined();
     expect(screen.queryByText(/同步失败/)).toBeNull();
+  });
+
+  it('opens app notification management and saves local notification preferences', async () => {
+    window.history.pushState({}, '', '/profile/notifications');
+    mockAuthenticatedSession();
+    notificationUnreadCountMock.mockResolvedValue({ unread_count: 2 });
+    getNativeNotificationPermissionStatusMock.mockResolvedValue('denied');
+    requestNativeNotificationPermissionMock.mockResolvedValue('granted');
+
+    render(<App />);
+
+    expect(await screen.findByRole('heading', { name: '通知管理' })).toBeDefined();
+    expect(await screen.findByText('系统通知未开启')).toBeDefined();
+    expect(screen.getByText(/2 条未读/)).toBeDefined();
+
+    fireEvent.click(screen.getByRole('button', { name: '开启通知' }));
+    await waitFor(() => expect(requestNativeNotificationPermissionMock).toHaveBeenCalledTimes(1));
+    expect(await screen.findByText('系统通知已开启，消息仍可在 App 内查看。')).toBeDefined();
+
+    fireEvent.click(screen.getByRole('switch', { name: '家庭动态通知' }));
+    const stored = JSON.parse(window.localStorage.getItem('xiaoman-web-local-settings') ?? '{}');
+    expect(stored.notificationFamilyEnabled).toBe(false);
   });
 
   it('checks app updates from the about page and shows the APK download link', async () => {

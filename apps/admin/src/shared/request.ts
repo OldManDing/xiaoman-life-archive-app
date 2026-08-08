@@ -284,8 +284,15 @@ export interface AdminRecordItem {
   record_type: string;
   visibility_scope: string;
   status: string;
+  media_count?: number;
+  media_types?: string[];
+  pending_media_count?: number;
+  has_media_exception?: boolean;
+  has_risk_flag?: boolean;
   created_at: string;
 }
+
+export type AdminRecordFilter = 'all' | 'image' | 'video' | 'audio' | 'media_exception' | 'pending' | 'risk';
 
 export interface AdminMediaItem {
   media_no: string;
@@ -325,6 +332,46 @@ export interface AdminAiJobItem {
   error_message: string | null;
   retry_count: number;
   created_at: string;
+}
+
+export interface AdminNotificationItem {
+  notification_no: string;
+  notification_type: string;
+  title: string;
+  body: string;
+  user_no: string;
+  user_name: string;
+  user_mobile: string | null;
+  family_no: string;
+  family_name: string | null;
+  actor_user_no: string | null;
+  actor_name: string | null;
+  target_type: string | null;
+  target_no: string | null;
+  read_at: string | null;
+  created_at: string;
+  delivery_total: number;
+  delivery_status_counts: Record<string, number>;
+  latest_delivery: {
+    channel: string;
+    provider: string | null;
+    status: string;
+    attempts: number;
+    last_error: string | null;
+    delivered_at: string | null;
+    created_at: string;
+  } | null;
+  deliveries: Array<{
+    channel: string;
+    provider: string | null;
+    status: string;
+    attempts: number;
+    next_retry_at: string | null;
+    last_error: string | null;
+    delivered_at: string | null;
+    created_at: string;
+    updated_at: string;
+  }>;
 }
 
 export interface AdminAuditLogItem {
@@ -696,7 +743,7 @@ export const adminApi = {
     return unwrap(response);
   },
 
-  async listRecords(params: { keyword?: string; page?: number; page_size?: number }) {
+  async listRecords(params: { keyword?: string; page?: number; page_size?: number; record_filter?: AdminRecordFilter }) {
     const response = await request.get<ApiEnvelope<AdminListResponse<AdminRecordItem>>>('/admin/records', { params });
     return unwrap(response);
   },
@@ -733,6 +780,11 @@ export const adminApi = {
 
   async listContentRisks(params: { keyword?: string; page?: number; page_size?: number; category?: string; severity?: string; status?: string }) {
     const response = await request.get<ApiEnvelope<AdminListResponse<AdminContentRiskItem>>>('/admin/content-risks', { params });
+    return unwrap(response);
+  },
+
+  async listNotifications(params: { keyword?: string; page?: number; page_size?: number; read_state?: string; notification_type?: string; delivery_status?: string; start_time?: string; end_time?: string }) {
+    const response = await request.get<ApiEnvelope<AdminListResponse<AdminNotificationItem>>>('/admin/notifications', { params });
     return unwrap(response);
   },
 

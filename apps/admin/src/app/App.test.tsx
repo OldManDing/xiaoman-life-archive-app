@@ -37,6 +37,7 @@ vi.mock('../shared/request', () => ({
     retryAiJob: vi.fn(),
     cancelAiJob: vi.fn(),
     listContentRisks: vi.fn(),
+    listNotifications: vi.fn(),
     listSupportTickets: vi.fn(),
     updateSupportTicketStatus: vi.fn(),
     listArchiveExportRequests: vi.fn(),
@@ -64,6 +65,7 @@ const createInviteMock = vi.mocked(adminApi.createInvite);
 const resetUserPasswordMock = vi.mocked(adminApi.resetUserPassword);
 const updateUserMembershipMock = vi.mocked(adminApi.updateUserMembership);
 const listContentRisksMock = vi.mocked(adminApi.listContentRisks);
+const listNotificationsMock = vi.mocked(adminApi.listNotifications);
 const listSupportTicketsMock = vi.mocked(adminApi.listSupportTickets);
 const listArchiveExportRequestsMock = vi.mocked(adminApi.listArchiveExportRequests);
 
@@ -73,6 +75,17 @@ const renderWithRouter = (path: string) =>
       <App />
     </MemoryRouter>,
   );
+
+const findAdminLink = async (href: string) => {
+  const find = async () => (await screen.findAllByRole('link')).find((link) => link.getAttribute('href') === href);
+  let link = await find();
+  if (!link) {
+    const moreButton = await screen.findByRole('button', { name: '更多管理' });
+    if (moreButton.getAttribute('aria-expanded') !== 'true') fireEvent.click(moreButton);
+    link = await find();
+  }
+  return link;
+};
 
 describe('App', () => {
   beforeEach(() => {
@@ -94,6 +107,7 @@ describe('App', () => {
     resetUserPasswordMock.mockReset();
     updateUserMembershipMock.mockReset();
     listContentRisksMock.mockReset();
+    listNotificationsMock.mockReset();
     listSupportTicketsMock.mockReset();
     listArchiveExportRequestsMock.mockReset();
     dashboardMock.mockResolvedValue({
@@ -367,7 +381,7 @@ describe('App', () => {
       expect(loginMock).toHaveBeenCalledWith({ username: 'admin', password: 'ChangeMe123!' });
     });
 
-    const usersLink = (await screen.findAllByRole('link')).find((link) => link.getAttribute('href') === '/users');
+    const usersLink = await findAdminLink('/users');
     expect(usersLink).toBeTruthy();
     fireEvent.click(usersLink!);
     fireEvent.click(await screen.findByRole('button', { name: /查询/ }));
@@ -475,7 +489,7 @@ describe('App', () => {
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
     fireEvent.click(screen.getByRole('button', { name: '进入管理后台' }));
 
-    const familiesLink = (await screen.findAllByRole('link')).find((link) => link.getAttribute('href') === '/families');
+    const familiesLink = await findAdminLink('/families');
     expect(familiesLink).toBeTruthy();
     fireEvent.click(familiesLink!);
 
@@ -582,13 +596,13 @@ describe('App', () => {
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
     fireEvent.click(screen.getByRole('button', { name: '进入管理后台' }));
 
-    const recordsLink = (await screen.findAllByRole('link')).find((link) => link.getAttribute('href') === '/records');
+    const recordsLink = await findAdminLink('/records');
     expect(recordsLink).toBeTruthy();
     fireEvent.click(recordsLink!);
 
-    expect(await screen.findByRole('heading', { name: '记录列表' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: '成长记录' })).toBeInTheDocument();
     await waitFor(() => {
-      expect(listRecordsMock).toHaveBeenCalledWith({ keyword: undefined, page: 1, page_size: 20 });
+      expect(listRecordsMock).toHaveBeenCalledWith({ keyword: undefined, page: 1, page_size: 20, record_filter: 'all' });
     });
     fireEvent.click(screen.getByRole('button', { name: '详情' }));
 
@@ -596,11 +610,6 @@ describe('App', () => {
       expect(getRecordDetailMock).toHaveBeenCalledWith('r_001');
     });
     expect(await screen.findByText('内容预览')).toBeInTheDocument();
-    expect(screen.queryByRole('img', { name: 'photo.jpg' })).not.toBeInTheDocument();
-    expect(screen.getByText('点击后加载预览，避免一次性拉取大量媒体。')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: '加载预览' }));
-
     expect(screen.getByRole('img', { name: 'photo.jpg' })).toHaveAttribute('src', 'https://cdn.example.com/photo.jpg');
   });
 
@@ -646,7 +655,7 @@ describe('App', () => {
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
     fireEvent.click(screen.getByRole('button', { name: '进入管理后台' }));
 
-    const usersLink = (await screen.findAllByRole('link')).find((link) => link.getAttribute('href') === '/users');
+    const usersLink = await findAdminLink('/users');
     expect(usersLink).toBeTruthy();
     fireEvent.click(usersLink!);
 
@@ -707,13 +716,13 @@ describe('App', () => {
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
     fireEvent.click(screen.getByRole('button', { name: '进入管理后台' }));
 
-    const usersLink = (await screen.findAllByRole('link')).find((link) => link.getAttribute('href') === '/users');
+    const usersLink = await findAdminLink('/users');
     expect(usersLink).toBeTruthy();
     fireEvent.click(usersLink!);
 
     fireEvent.click(await screen.findByRole('button', { name: '调整权益' }));
     fireEvent.change(screen.getByLabelText('权益类型'), { target: { value: 'ai_plus' } });
-    fireEvent.change(screen.getByLabelText('到期日期'), { target: { value: '2099-12-31' } });
+    fireEvent.change(await screen.findByLabelText('到期日期'), { target: { value: '2099-12-31' } });
     fireEvent.change(screen.getByLabelText('操作原因'), { target: { value: '年付套餐开通' } });
     fireEvent.click(screen.getByRole('button', { name: '确认调整' }));
 
@@ -759,7 +768,7 @@ describe('App', () => {
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
     fireEvent.click(screen.getByRole('button', { name: '进入管理后台' }));
 
-    const invitesLink = (await screen.findAllByRole('link')).find((link) => link.getAttribute('href') === '/invites');
+    const invitesLink = await findAdminLink('/invites');
     expect(invitesLink).toBeTruthy();
     fireEvent.click(invitesLink!);
 
@@ -823,7 +832,7 @@ describe('App', () => {
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
     fireEvent.click(screen.getByRole('button', { name: '进入管理后台' }));
 
-    const archiveLink = (await screen.findAllByRole('link')).find((link) => link.getAttribute('href') === '/archive-export-requests');
+    const archiveLink = await findAdminLink('/archive-export-requests');
     expect(archiveLink).toBeTruthy();
     fireEvent.click(archiveLink!);
 
@@ -883,7 +892,7 @@ describe('App', () => {
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
     fireEvent.click(screen.getByRole('button', { name: '进入管理后台' }));
 
-    const supportLink = (await screen.findAllByRole('link')).find((link) => link.getAttribute('href') === '/support-tickets');
+    const supportLink = await findAdminLink('/support-tickets');
     expect(supportLink).toBeTruthy();
     fireEvent.click(supportLink!);
 
@@ -902,7 +911,7 @@ describe('App', () => {
     expect(screen.getAllByText('儿童安全').length).toBeGreaterThan(0);
   });
 
-  it('opens the content risk queue from the admin navigation', async () => {
+  it('filters risk-marked records from the growth records page', async () => {
     loginMock.mockResolvedValue({
       access_token: 'admin-token',
       expires_in: 7200,
@@ -943,23 +952,109 @@ describe('App', () => {
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
     fireEvent.click(screen.getByRole('button', { name: '进入管理后台' }));
 
-    const riskLink = (await screen.findAllByRole('link')).find((link) => link.getAttribute('href') === '/content-risks');
-    expect(riskLink).toBeTruthy();
-    fireEvent.click(riskLink!);
+    const recordsLink = await findAdminLink('/records');
+    expect(recordsLink).toBeTruthy();
+    fireEvent.click(recordsLink!);
 
-    expect(await screen.findByRole('heading', { name: '内容风险' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: '成长记录' })).toBeInTheDocument();
+    const riskFilter = await screen.findByRole('button', { name: '风险标记' });
+    expect(riskFilter).toBeTruthy();
+    fireEvent.click(riskFilter);
+
+    expect(await screen.findByRole('heading', { name: '成长记录' })).toBeInTheDocument();
     await waitFor(() => {
-      expect(listContentRisksMock).toHaveBeenCalledWith({
+      expect(listRecordsMock).toHaveBeenLastCalledWith({ keyword: undefined, page: 1, page_size: 20, record_filter: 'risk' });
+    });
+    expect(window.location.pathname + window.location.search).toBe('/records?record_filter=risk');
+  });
+
+  it('opens notification management from the admin navigation', async () => {
+    loginMock.mockResolvedValue({
+      access_token: 'admin-token',
+      expires_in: 7200,
+      admin: {
+        username: 'admin',
+        display_name: '系统管理员',
+        role: 'super_admin',
+      },
+    });
+    listNotificationsMock.mockResolvedValue({
+      list: [
+        {
+          notification_no: 'msg_001',
+          notification_type: 'family.record_published',
+          title: '小满发布了新记录',
+          body: '测试家长发布了「第一次骑车」。',
+          user_no: 'u_002',
+          user_name: '家庭成员',
+          user_mobile: '13900000000',
+          family_no: 'f_001',
+          family_name: '小满家庭',
+          actor_user_no: 'u_001',
+          actor_name: '测试家长',
+          target_type: 'record',
+          target_no: 'r_001',
+          read_at: null,
+          created_at: '2026-05-27T00:00:00.000Z',
+          delivery_total: 1,
+          delivery_status_counts: { queued: 1 },
+          latest_delivery: {
+            channel: 'push',
+            provider: 'local',
+            status: 'queued',
+            attempts: 0,
+            last_error: null,
+            delivered_at: null,
+            created_at: '2026-05-27T00:00:00.000Z',
+          },
+          deliveries: [
+            {
+              channel: 'push',
+              provider: 'local',
+              status: 'queued',
+              attempts: 0,
+              next_retry_at: null,
+              last_error: null,
+              delivered_at: null,
+              created_at: '2026-05-27T00:00:00.000Z',
+              updated_at: '2026-05-27T00:00:00.000Z',
+            },
+          ],
+        },
+      ],
+      page: 1,
+      page_size: 20,
+      total: 1,
+      has_more: false,
+    });
+
+    renderWithRouter('/login');
+
+    fireEvent.change(screen.getByPlaceholderText('请输入用户名'), { target: { value: 'admin' } });
+    fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
+    fireEvent.click(screen.getByRole('button', { name: '进入管理后台' }));
+
+    const notificationLink = await findAdminLink('/notifications');
+    expect(notificationLink).toBeTruthy();
+    fireEvent.click(notificationLink!);
+
+    expect(await screen.findByRole('heading', { name: '通知管理' })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(listNotificationsMock).toHaveBeenCalledWith({
         keyword: undefined,
-        category: undefined,
-        severity: undefined,
-        status: undefined,
+        read_state: undefined,
+        notification_type: undefined,
+        delivery_status: undefined,
+        start_time: undefined,
+        end_time: undefined,
         page: 1,
-        page_size: 10,
+        page_size: 20,
       });
     });
-    expect(await screen.findByText('第一次骑车')).toBeInTheDocument();
-    expect(screen.getAllByText('P0 阻塞').length).toBeGreaterThan(0);
+    expect(await screen.findByText('小满发布了新记录')).toBeInTheDocument();
+    expect(screen.getByText('家庭成员')).toBeInTheDocument();
+    expect(screen.getAllByText('未读').length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/待投递/).length).toBeGreaterThan(0);
   });
 
   it('opens the system operations readiness page from the admin navigation', async () => {
@@ -979,7 +1074,7 @@ describe('App', () => {
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
     fireEvent.click(screen.getByRole('button', { name: '进入管理后台' }));
 
-    const opsLink = (await screen.findAllByRole('link')).find((link) => link.getAttribute('href') === '/ops-readiness');
+    const opsLink = await findAdminLink('/ops-readiness');
     expect(opsLink).toBeTruthy();
     fireEvent.click(opsLink!);
 
@@ -1030,7 +1125,7 @@ describe('App', () => {
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
     fireEvent.click(screen.getByRole('button', { name: '进入管理后台' }));
 
-    const configLink = (await screen.findAllByRole('link')).find((link) => link.getAttribute('href') === '/system-config');
+    const configLink = await findAdminLink('/system-config');
     expect(configLink).toBeTruthy();
     fireEvent.click(configLink!);
 
@@ -1151,7 +1246,7 @@ describe('App', () => {
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
     fireEvent.click(screen.getByRole('button', { name: '进入管理后台' }));
 
-    const aiSettingsLink = (await screen.findAllByRole('link')).find((link) => link.getAttribute('href') === '/ai-settings');
+    const aiSettingsLink = await findAdminLink('/ai-settings');
     expect(aiSettingsLink).toBeTruthy();
     fireEvent.click(aiSettingsLink!);
 

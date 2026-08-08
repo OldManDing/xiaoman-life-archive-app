@@ -13,9 +13,10 @@ import { AdminRoles } from './decorators/admin-roles.decorator';
 import { AdminAuditLogListDto } from './dto/admin-audit-log-list.dto';
 import { AdminChangePasswordDto } from './dto/admin-change-password.dto';
 import { AdminCreateInviteDto } from './dto/admin-create-invite.dto';
-import { AdminListDto } from './dto/admin-list.dto';
+import { AdminListDto, AdminRecordListDto } from './dto/admin-list.dto';
 import { AdminLoginDto } from './dto/admin-login.dto';
 import { AdminMediaListDto } from './dto/admin-media-list.dto';
+import { AdminNotificationListDto } from './dto/admin-notification-list.dto';
 import { AdminResetUserPasswordDto } from './dto/admin-reset-user-password.dto';
 import { AdminUpdateMediaStatusDto } from './dto/admin-update-media-status.dto';
 import { AdminUpdateArchiveExportRequestStatusDto } from './dto/admin-update-archive-export-request-status.dto';
@@ -214,7 +215,7 @@ export class AdminController {
   @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
   @AdminRoles(AdminRole.super_admin, AdminRole.operator, AdminRole.viewer)
   @Get('records')
-  records(@CurrentUser() admin: AuthenticatedAdmin, @Query() dto: AdminListDto, @Req() request: Request) {
+  records(@CurrentUser() admin: AuthenticatedAdmin, @Query() dto: AdminRecordListDto, @Req() request: Request) {
     return this.adminService.listRecords(admin, dto, request);
   }
 
@@ -306,6 +307,13 @@ export class AdminController {
   @Get('content-risks')
   contentRisks(@CurrentUser() admin: AuthenticatedAdmin, @Query() dto: AdminContentRiskListDto, @Req() request: Request) {
     return this.adminService.listContentRisks(admin, dto, request);
+  }
+
+  @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
+  @AdminRoles(AdminRole.super_admin, AdminRole.operator, AdminRole.viewer)
+  @Get('notifications')
+  notifications(@CurrentUser() admin: AuthenticatedAdmin, @Query() dto: AdminNotificationListDto, @Req() request: Request) {
+    return this.adminService.listNotifications(admin, dto, request);
   }
 
   @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)

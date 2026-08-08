@@ -5,7 +5,7 @@ import { useEffect, useState, type CSSProperties } from 'react';
 import { webApi } from '../shared/api/webApi';
 import type { AppUpdateCheckResponse } from '../shared/api/types';
 
-const appVersion = import.meta.env.VITE_APP_VERSION ?? '2.0.3';
+const appVersion = import.meta.env.VITE_APP_VERSION ?? '2.0.4';
 const appBuildNumberRaw = import.meta.env.VITE_APP_BUILD_NUMBER ?? 'dev';
 const appBuildNumber = Number.isFinite(Number(appBuildNumberRaw)) ? Number(appBuildNumberRaw) : 0;
 
@@ -130,8 +130,8 @@ const AppUpdateNotice = ({ bottomOffset }: { bottomOffset: string }) => {
 
 export const AppLayout = () => {
   const location = useLocation();
-  const bottomNavHeight = 'calc(78px + env(safe-area-inset-bottom))';
-  const bottomNavClearance = 'calc(78px + env(safe-area-inset-bottom))';
+  const bottomNavHeight = 'calc(74px + env(safe-area-inset-bottom))';
+  const bottomNavClearance = 'calc(74px + env(safe-area-inset-bottom))';
   const tabScrollPadding = '32px';
   const navItems = [
     { to: '/home', label: '首页', icon: Home, featured: false },
@@ -142,7 +142,7 @@ export const AppLayout = () => {
   ];
   const tabPaths = new Set(['/home', '/timeline', '/family', '/profile']);
   const showBottomNav = tabPaths.has(location.pathname);
-  const updateNoticeBottom = showBottomNav ? 'calc(90px + env(safe-area-inset-bottom))' : '16px';
+  const updateNoticeBottom = showBottomNav ? 'calc(86px + env(safe-area-inset-bottom))' : '16px';
 
   return (
     <div
@@ -160,6 +160,7 @@ export const AppLayout = () => {
       }}
     >
       <main
+        className="app-main-scroll"
         style={{
           flex: 1,
           overflow: showBottomNav ? 'auto' : 'visible',
@@ -179,6 +180,7 @@ export const AppLayout = () => {
         <Outlet />
       </main>
       {showBottomNav ? <nav
+        className="app-bottom-nav"
         aria-label="主导航"
         style={{
           position: 'fixed',
@@ -188,12 +190,12 @@ export const AppLayout = () => {
           width: '100%',
           maxWidth: '430px',
           minHeight: bottomNavHeight,
-          borderTop: '1px solid var(--nl-border-muted)',
+          borderTop: '1px solid var(--nl-border-soft)',
           borderRight: 'none',
           borderBottom: 'none',
           borderLeft: 'none',
           borderRadius: 0,
-          background: 'var(--nl-nav-bg)',
+        background: 'rgba(var(--nl-surface-rgb), 0.94)',
           WebkitBackdropFilter: 'blur(18px) saturate(1.02)',
           backdropFilter: 'blur(18px) saturate(1.02)',
           display: 'flex',
@@ -201,8 +203,8 @@ export const AppLayout = () => {
           alignItems: 'center',
           zIndex: 10,
           marginTop: 'auto',
-          padding: '4px 14px calc(12px + env(safe-area-inset-bottom))',
-          boxShadow: '0 -10px 28px rgba(var(--nl-shadow-rgb),0.08), inset 0 1px 0 var(--nl-inset-highlight)',
+          padding: '5px 14px calc(10px + env(safe-area-inset-bottom))',
+          boxShadow: '0 -12px 30px rgba(var(--nl-shadow-rgb),0.08)',
           boxSizing: 'border-box',
         }}
       >
@@ -219,13 +221,13 @@ export const AppLayout = () => {
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: '2px',
+                gap: '3px',
                 textDecoration: 'none',
-                color: isActive || item.featured ? 'var(--nl-ink)' : 'var(--nl-muted)',
-                fontSize: '10.5px',
-                fontWeight: isActive ? 680 : 520,
+                color: isActive || item.featured ? 'var(--nl-primary-2)' : 'var(--nl-muted)',
+                fontSize: '10px',
+                fontWeight: isActive ? 650 : 500,
                 position: 'relative',
-                minHeight: '40px',
+                minHeight: '44px',
                 justifyContent: 'center',
               })}
             >
@@ -234,20 +236,20 @@ export const AppLayout = () => {
                   <span
                     className="app-bottom-nav-icon"
                     style={{
-                    width: item.featured ? '34px' : '27px',
-                    height: item.featured ? '34px' : '27px',
+                    width: '28px',
+                    height: '28px',
                     marginTop: 0,
-                    borderRadius: item.featured ? '9px' : '8px',
+                    borderRadius: 0,
                     display: 'grid',
                     placeItems: 'center',
-                    background: item.featured ? 'var(--nl-primary-soft)' : 'transparent',
-                    color: item.featured ? 'var(--nl-primary-2)' : isActive ? 'var(--nl-ink)' : 'var(--nl-muted)',
+                    background: 'transparent',
+                    color: item.featured || isActive ? 'var(--nl-primary-2)' : 'var(--nl-muted)',
                     boxShadow: 'none',
                     border: 'none',
                       transition: 'transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.18s ease, color 0.18s ease',
                     }}
                   >
-                    <Icon size={item.featured ? 22 : 19} strokeWidth={isActive || item.featured ? 2.2 : 1.9} />
+                    <Icon size={isActive || item.featured ? 20 : 19} strokeWidth={isActive || item.featured ? 2.15 : 1.8} />
                   </span>
                   <span className="app-bottom-nav-label" style={{ lineHeight: 1, marginTop: 0 }}>{item.label}</span>
                 </>

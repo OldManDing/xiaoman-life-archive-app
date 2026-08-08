@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
-import { adminBaseURL, apiBaseURL, expectNoEnglishSeedCopy, loginAdmin } from './helpers';
+import { adminBaseURL, apiBaseURL, expectNoEnglishSeedCopy, loginAdmin, openAdminMore } from './helpers';
 
 const confirmAdminAction = async (page: Page, reason: string) => {
   const dialog = page.getByRole('dialog', { name: /冻结用户|解冻用户|下架记录|恢复记录|通过媒体审核|标记媒体异常|下架媒体|受理客服反馈|解决客服反馈|关闭客服反馈|受理档案交付申请|完成档案交付申请|驳回档案交付申请/ });
@@ -28,18 +28,11 @@ test.describe('Admin critical journeys', () => {
 
     await expect(page.getByText('系统管理员')).toBeVisible();
     await expect(page.getByText('超级管理员', { exact: true })).toBeVisible();
-    await expect(page.getByText('今日优先级')).toBeVisible();
-    await expect(page.getByRole('heading', { name: '值班工作台' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: '今日处置顺序' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: '下一步去哪' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: '值班判断' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: '链路状态' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: '统计图' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: '最近审计日志' })).toBeVisible();
-    await expect(page.getByText('待处理 AI')).toBeVisible();
-    await expect(page.getByText('今天先处理阻塞项。')).toBeVisible();
-    await expect(page.getByText('优先排查上传失败、断链和下架素材。')).toBeVisible();
-    await expect(page.getByText('AI、内容、媒体和审计集中到同一屏')).toBeVisible();
+    await expect(page.getByText(/今日先清理异常项|当前没有待处理异常/)).toBeVisible();
+    await expect(page.getByRole('heading', { name: '待处理', exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: '数据规模' })).toBeVisible();
+    await expect(page.getByText('AI 链路正常')).toBeVisible();
+    await expect(page.getByText('媒体异常')).toBeVisible();
     await expectNoEnglishSeedCopy(page);
   });
 
@@ -67,12 +60,16 @@ test.describe('Admin critical journeys', () => {
         beforeSidebarTop,
         sidebarTop: sidebar.getBoundingClientRect().top,
         mainScrollTop: main.scrollTop,
+        mainOverflowY: getComputedStyle(main).overflowY,
+        mainCanScroll: main.scrollHeight > main.clientHeight,
         windowScrollY: window.scrollY,
         pageExtraScroll: document.documentElement.scrollHeight - window.innerHeight,
       };
     });
 
-    expect(scrollState.mainScrollTop).toBeGreaterThan(0);
+    expect(scrollState.mainOverflowY).toBe('auto');
+    expect(scrollState.mainCanScroll).toBe(false);
+    expect(scrollState.mainScrollTop).toBe(0);
     expect(Math.abs(scrollState.sidebarTop - scrollState.beforeSidebarTop)).toBeLessThanOrEqual(1);
     expect(scrollState.windowScrollY).toBe(0);
     expect(scrollState.pageExtraScroll).toBeLessThanOrEqual(2);
@@ -80,6 +77,7 @@ test.describe('Admin critical journeys', () => {
 
   test('queries accounts and opens login detail drawer', async ({ page }) => {
     await loginAdmin(page);
+    await openAdminMore(page);
     await page.getByRole('link', { name: '账号管理', exact: true }).click();
     await page.getByRole('button', { name: '查询' }).click();
 
@@ -100,6 +98,7 @@ test.describe('Admin critical journeys', () => {
 
   test('generates a registration invite code from admin', async ({ page }) => {
     await loginAdmin(page);
+    await openAdminMore(page);
     await page.getByRole('link', { name: '邀请码', exact: true }).click();
 
     await expect(page.getByRole('heading', { name: '邀请码管理' })).toBeVisible();
@@ -112,6 +111,7 @@ test.describe('Admin critical journeys', () => {
 
   test('filters audit logs and opens audit detail drawer', async ({ page }) => {
     await loginAdmin(page);
+    await openAdminMore(page);
     await page.getByRole('link', { name: '审计日志', exact: true }).click();
     await page.getByRole('combobox').first().selectOption('admin_login');
     await page.getByRole('button', { name: '查询' }).click();
@@ -146,6 +146,7 @@ test.describe('Admin critical journeys', () => {
     const ticketNo = feedbackJson.data.ticket_no as string;
 
     await loginAdmin(page);
+    await openAdminMore(page);
     await page.getByRole('link', { name: '客服反馈', exact: true }).click();
 
     await expect(page.getByRole('heading', { name: '客服反馈' })).toBeVisible();
@@ -179,6 +180,7 @@ test.describe('Admin critical journeys', () => {
     const requestNo = exportJson.data.request_no as string;
 
     await loginAdmin(page);
+    await openAdminMore(page);
     await page.getByRole('link', { name: '档案交付', exact: true }).click();
 
     await expect(page.getByRole('heading', { name: '档案交付申请' })).toBeVisible();
@@ -193,6 +195,7 @@ test.describe('Admin critical journeys', () => {
 
   test('shows system operations readiness for config statistics and backup recovery', async ({ page }) => {
     await loginAdmin(page);
+    await openAdminMore(page);
     await page.getByRole('link', { name: '系统运维', exact: true }).click();
 
     await expect(page.getByRole('heading', { name: '系统运维' })).toBeVisible();
@@ -204,26 +207,35 @@ test.describe('Admin critical journeys', () => {
     await expect(page.getByText('成长资产')).toBeVisible();
     await expect(page.getByRole('row', { name: /对象存储/ })).toBeVisible();
     await expect(page.getByRole('row', { name: /备份保留周期/ })).toBeVisible();
+    await expect(page.getByRole('link', { name: '技术媒体库', exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: '风险队列', exact: true })).toBeVisible();
+    await expect(page.locator('aside a[href="/media"]')).toHaveCount(0);
+    await expect(page.locator('aside a[href="/content-risks"]')).toHaveCount(0);
     await expectNoEnglishSeedCopy(page);
   });
 
   test('media library exposes localized review actions', async ({ page }) => {
     await loginAdmin(page);
-    await page.getByRole('link', { name: '媒体库', exact: true }).click();
-    await page.getByPlaceholder('输入关键字筛选').fill('第一次自己吃饭');
+    await openAdminMore(page);
+    await page.getByRole('link', { name: '系统运维', exact: true }).click();
+    await page.getByRole('link', { name: '技术媒体库', exact: true }).click();
+    await page.getByPlaceholder('编号 / 文件 / 孩子 / 记录').fill('第一次自己吃饭');
     await page.getByRole('button', { name: '查询' }).click();
 
     const mediaRow = page.getByRole('row', { name: /第一次自己吃饭/ });
     await expect(mediaRow).toContainText('图片');
     await expect(mediaRow).toContainText('可用');
+    await expect(mediaRow.getByRole('button', { name: '详情' })).toBeVisible();
+    await mediaRow.getByRole('button', { name: '更多操作' }).click();
     await expect(mediaRow.getByRole('button', { name: '通过' })).toBeVisible();
-    await expect(mediaRow.getByRole('button', { name: '异常' })).toBeVisible();
+    await expect(mediaRow.getByRole('button', { name: '标记异常' })).toBeVisible();
     await expect(mediaRow.getByRole('button', { name: '下架' })).toBeVisible();
     await expectNoEnglishSeedCopy(page);
   });
 
   test('admin inline action buttons update and restore seeded data', async ({ page }) => {
     await loginAdmin(page);
+    await openAdminMore(page);
 
     await page.getByRole('link', { name: '账号管理', exact: true }).click();
     await page.getByRole('button', { name: '查询' }).click();
@@ -249,19 +261,23 @@ test.describe('Admin critical journeys', () => {
     await confirmAdminAction(page, '自动化验证记录恢复按钮');
     await expect(page.getByRole('row', { name: /第一次自己吃饭/ })).toContainText('已发布');
 
-    await page.getByRole('link', { name: '媒体库', exact: true }).click();
-    await page.getByPlaceholder('输入关键字筛选').fill('第一次自己吃饭');
+    await page.getByRole('link', { name: '系统运维', exact: true }).click();
+    await page.getByRole('link', { name: '技术媒体库', exact: true }).click();
+    await page.getByPlaceholder('编号 / 文件 / 孩子 / 记录').fill('第一次自己吃饭');
     await page.getByRole('button', { name: '查询' }).click();
     let mediaRow = page.getByRole('row', { name: /第一次自己吃饭/ });
     await expect(mediaRow).toContainText('可用');
-    await mediaRow.getByRole('button', { name: '异常' }).click();
+    await mediaRow.getByRole('button', { name: '更多操作' }).click();
+    await mediaRow.getByRole('button', { name: '标记异常' }).click();
     await confirmAdminAction(page, '自动化验证媒体异常按钮');
     mediaRow = page.getByRole('row', { name: /第一次自己吃饭/ });
     await expect(mediaRow).toContainText('异常');
+    await mediaRow.getByRole('button', { name: '更多操作' }).click();
     await mediaRow.getByRole('button', { name: '下架' }).click();
     await confirmAdminAction(page, '自动化验证媒体下架按钮');
     mediaRow = page.getByRole('row', { name: /第一次自己吃饭/ });
     await expect(mediaRow).toContainText('已下架');
+    await mediaRow.getByRole('button', { name: '更多操作' }).click();
     await mediaRow.getByRole('button', { name: '通过' }).click();
     await confirmAdminAction(page, '自动化验证媒体恢复可用按钮');
     await expect(page.getByRole('row', { name: /第一次自己吃饭/ })).toContainText('可用');

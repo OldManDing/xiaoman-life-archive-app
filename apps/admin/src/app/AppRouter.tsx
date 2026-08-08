@@ -16,6 +16,7 @@ import {
   InvitesPage,
   LoginPage,
   MediaPage,
+  NotificationsPage,
   OpsReadinessPage,
   RecordsPage,
   SupportTicketsPage,
@@ -45,6 +46,7 @@ export const AppRouter = () => {
           <Route path="/ai-jobs" element={<AIJobsPage />} />
           <Route path="/ai-settings" element={<AiSettingsPage />} />
           <Route path="/content-risks" element={<ContentRisksPage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/support-tickets" element={<SupportTicketsPage />} />
           <Route path="/archive-export-requests" element={<ArchiveExportRequestsPage />} />
           <Route path="/ops-readiness" element={<OpsReadinessPage />} />

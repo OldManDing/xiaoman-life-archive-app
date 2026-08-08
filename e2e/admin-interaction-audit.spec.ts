@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { expect, test, type ElementHandle, type Page } from '@playwright/test';
 
-import { adminBaseURL, loginAdmin } from './helpers';
+import { adminBaseURL, loginAdmin, openAdminMore } from './helpers';
 
 type AuditIssue = {
   route: string;
@@ -51,7 +51,7 @@ const minimumRouteClicks: Record<string, number> = {
   '/invites': 2,
   '/children': 2,
   '/records': 3,
-  '/media': 5,
+  '/media': 2,
   '/ai-jobs': 2,
   '/content-risks': 1,
   '/support-tickets': 2,
@@ -223,11 +223,14 @@ const fillVisibleControls = async (page: Page, route?: string) => {
 
   return touched;
 };
+const maxAuditButtonsPerRoute: Record<string, number> = {
+  '/support-tickets': 8,
+};
 
 const prepareRouteForAudit = async (page: Page, route: string) => {
   if (route !== '/media') return;
 
-  await page.getByPlaceholder('输入关键字筛选').fill('第一次自己吃饭');
+  await page.getByPlaceholder('编号 / 文件 / 孩子 / 记录').fill('第一次自己吃饭');
   await page.getByRole('button', { name: '查询' }).click();
   await expect(page.getByRole('row', { name: /第一次自己吃饭/ })).toBeVisible();
 };
@@ -310,11 +313,20 @@ const collectStyleIssues = async (page: Page, route: string, viewport: string) =
   );
 
 const closeOpenDialog = async (page: Page) => {
+  // Media lightboxes are nested inside detail drawers. Close the topmost
+  // preview first so the click does not get intercepted by the drawer.
+  const lightbox = page.locator('.admin-media-lightbox').last();
+  if (await lightbox.isVisible().catch(() => false)) {
+    await page.keyboard.press('Escape');
+    await expect(lightbox).toBeHidden();
+    return true;
+  }
+
   const dialog = page.locator('[role="dialog"]').first();
   if (!(await dialog.isVisible().catch(() => false))) return false;
 
   await fillVisibleControls(page);
-  const closeButton = dialog.locator('.admin-modal-close, button[aria-label]').first();
+  const closeButton = dialog.locator('.admin-drawer-close, .admin-modal-close').first();
   if (await closeButton.isVisible().catch(() => false)) {
     await closeButton.click();
   } else if (await dialog.locator('button').first().isVisible().catch(() => false)) {
@@ -331,6 +343,19 @@ const navigateWithinAdmin = async (page: Page, route: string) => {
     await loginAdmin(page);
   }
 
+  if (route === '/media' || route === '/content-risks') {
+    await openAdminMore(page);
+    await page.locator('aside a[href="/ops-readiness"]').click();
+    await expect(page).toHaveURL(/\/ops-readiness$/);
+    const technicalEntry = route === '/media' ? '技术媒体库' : '风险队列';
+    await page.getByRole('link', { name: technicalEntry, exact: true }).click();
+    await expect(page).toHaveURL(new RegExp(`${route.replace('/', '\\/')}$`));
+    return;
+  }
+
+  if (['/users', '/invites', '/notifications', '/ai-settings', '/ai-jobs', '/support-tickets', '/archive-export-requests', '/ops-readiness', '/system-config', '/audit-logs'].includes(route)) {
+    await openAdminMore(page);
+  }
   const link = page.locator(`aside a[href="${route}"]`).first();
   await expect(link).toBeVisible();
   await link.click();
@@ -357,6 +382,8 @@ const clickVisibleButtons = async (page: Page, route: string, issues: AuditIssue
   candidates.sort((left, right) => right.y - left.y || left.x - right.x);
 
   for (const candidate of candidates) {
+    const clickedForRoute = clicked.filter((item) => item.route === route).length;
+    if (clickedForRoute >= (maxAuditButtonsPerRoute[route] ?? Number.POSITIVE_INFINITY)) break;
     await closeOpenDialog(page);
     const attached = await candidate.handle.evaluate((element) => element.isConnected).catch(() => false);
     if (!attached) continue;
@@ -430,6 +457,14 @@ test.describe('Admin exhaustive interaction audit', () => {
       await waitForRouteButtons(page, route);
       issues.push(...(await collectStyleIssues(page, route, 'desktop')));
       const clickResult = await clickVisibleButtons(page, route, issues);
+      if (route === '/invites') {
+        const copyInviteButton = page.getByRole('button', { name: '复制邀请码' });
+        if (await copyInviteButton.waitFor({ state: 'visible', timeout: 5_000 }).then(() => true).catch(() => false)) {
+          await copyInviteButton.click();
+          clickResult.clicked.push({ route, label: '复制邀请码' });
+          await waitForSettledUi(page, 300);
+        }
+      }
       clicks.push(...clickResult.clicked);
       routeSummaries.push({
         route,

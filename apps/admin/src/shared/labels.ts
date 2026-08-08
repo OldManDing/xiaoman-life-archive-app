@@ -104,7 +104,7 @@ export const mediaTypeLabel = (value: string | null | undefined) =>
 
 export const mediaStatusLabel = (value: string | null | undefined) =>
   fallbackLabel(value, {
-    uploading: '上传中',
+    uploading: '处理中',
     ready: '可用',
     failed: '异常',
     removed: '已下架',
@@ -133,6 +133,27 @@ export const aiProviderLabel = (value: string | null | undefined) =>
     mock: '本地模拟服务',
     openai: 'OpenAI 服务',
     'openai-compatible': '兼容 OpenAI 的 AI 服务',
+  });
+
+export const notificationTypeLabel = (value: string | null | undefined) =>
+  fallbackLabel(value, {
+    'family.record_published': '家庭发布记录',
+    'system.update_available': '版本更新',
+  });
+
+export const notificationReadStateLabel = (value: string | null | undefined) =>
+  fallbackLabel(value, {
+    read: '已读',
+    unread: '未读',
+  });
+
+export const notificationDeliveryStatusLabel = (value: string | null | undefined) =>
+  fallbackLabel(value, {
+    queued: '待投递',
+    processing: '投递中',
+    sent: '已投递',
+    failed: '投递失败',
+    skipped: '已跳过',
   });
 
 export const archiveExportPurposeLabel = (value: string | null | undefined) =>
@@ -200,6 +221,7 @@ export const auditActionLabel = (value: string | null | undefined) =>
     admin_list_media: '查询媒体',
     admin_list_ai_jobs: '查询 AI 任务',
     admin_list_content_risks: '查询内容风险',
+    admin_list_notifications: '查询通知',
     admin_list_support_tickets: '查询客服反馈',
     admin_list_archive_export_requests: '查询档案交付申请',
     admin_list_system_configs: '查询系统配置',
@@ -238,6 +260,7 @@ export const auditTargetTypeLabel = (value: string | null | undefined) =>
     media: '媒体',
     ai_job: 'AI 任务',
     content_risk: '内容风险',
+    notification: '通知',
     system: '系统运维',
     system_config: '系统配置',
     support_ticket: '客服反馈',

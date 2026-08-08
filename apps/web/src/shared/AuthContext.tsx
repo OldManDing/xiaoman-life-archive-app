@@ -3,6 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { clearAccessToken, getAccessToken, hasStoredSessionHint, setAccessToken as persistAccessToken } from './auth/tokenMemory';
 import type { ChildRecord, UserProfile } from './api/types';
 import { webApi, type LoginPayload, type RegisterPayload } from './api/webApi';
+import { unregisterHmsDeviceToken } from './hmsPush';
 
 interface AuthContextValue {
   accessToken: string | null;
@@ -165,6 +166,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const logout = useCallback(async () => {
     try {
+      await unregisterHmsDeviceToken();
       await webApi.logout();
     } catch {
       // Local sign-out must still complete if the server session is already invalidated.

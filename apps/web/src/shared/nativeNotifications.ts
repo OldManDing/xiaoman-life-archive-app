@@ -2,11 +2,15 @@ import { Capacitor } from '@capacitor/core';
 import { LocalNotifications } from '@capacitor/local-notifications';
 
 import type { UserNotificationItem } from './api/types';
+import { getHmsPushConnectionStatus } from './hmsPush';
+import { loadLocalSettings } from './localSettings';
 
 const seenNotificationKey = 'nianlun.seenNativeNotificationNos';
 const maxSeenNotificationCount = 80;
 
 const isNativeNotificationAvailable = () => Capacitor.isNativePlatform();
+
+export type NativeNotificationPermissionStatus = 'web' | 'granted' | 'denied' | 'prompt' | 'prompt-with-rationale' | 'unknown';
 
 const readSeenNotificationNos = () => {
   if (typeof window === 'undefined') return new Set<string>();
@@ -36,21 +40,49 @@ export const markNativeNotificationSeen = (notificationNos: string[]) => {
   saveSeenNotificationNos(seen);
 };
 
-const ensureNativeNotificationPermission = async () => {
-  if (!isNativeNotificationAvailable()) return false;
-  const current = await LocalNotifications.checkPermissions();
-  if (current.display === 'granted') return true;
-  const requested = await LocalNotifications.requestPermissions();
-  return requested.display === 'granted';
+const normalizePermissionStatus = (value?: string): NativeNotificationPermissionStatus => {
+  if (value === 'granted' || value === 'denied' || value === 'prompt' || value === 'prompt-with-rationale') {
+    return value;
+  }
+  return 'unknown';
+};
+
+export const getNativeNotificationPermissionStatus = async (): Promise<NativeNotificationPermissionStatus> => {
+  if (!isNativeNotificationAvailable()) return 'web';
+  try {
+    const current = await LocalNotifications.checkPermissions();
+    return normalizePermissionStatus(current.display);
+  } catch {
+    return 'unknown';
+  }
+};
+
+export const requestNativeNotificationPermission = async (): Promise<NativeNotificationPermissionStatus> => {
+  if (!isNativeNotificationAvailable()) return 'web';
+  try {
+    const requested = await LocalNotifications.requestPermissions();
+    return normalizePermissionStatus(requested.display);
+  } catch {
+    return 'unknown';
+  }
+};
+
+const canScheduleNotificationItem = (item: UserNotificationItem) => {
+  const settings = loadLocalSettings();
+  if (!settings.notificationPushEnabled) return false;
+  if (item.notification_type === 'family.record_published') return settings.notificationFamilyEnabled;
+  if (item.notification_type === 'system.update_available') return settings.notificationUpdateEnabled;
+  return true;
 };
 
 export const scheduleNativeNotificationsForNewItems = async (items: UserNotificationItem[]) => {
   if (!items.length || !isNativeNotificationAvailable()) return;
-  const granted = await ensureNativeNotificationPermission();
-  if (!granted) return;
+  if (getHmsPushConnectionStatus() === 'registered') return;
+  const permissionStatus = await getNativeNotificationPermissionStatus();
+  if (permissionStatus !== 'granted') return;
 
   const seen = readSeenNotificationNos();
-  const freshItems = items.filter((item) => !item.read_at && !seen.has(item.notification_no)).slice(0, 3);
+  const freshItems = items.filter((item) => !item.read_at && !seen.has(item.notification_no) && canScheduleNotificationItem(item)).slice(0, 3);
   if (!freshItems.length) return;
 
   const now = Date.now();

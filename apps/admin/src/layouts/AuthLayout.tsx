@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom';
+﻿import { Outlet } from 'react-router-dom';
 
 export const AuthLayout = () => {
   return (
@@ -8,7 +8,7 @@ export const AuthLayout = () => {
         minHeight: '100vh',
         display: 'grid',
         placeItems: 'center',
-        background: '#eef2f1',
+        background: '#ffffff',
         padding: '24px',
         position: 'relative',
         overflow: 'hidden',
@@ -22,7 +22,7 @@ export const AuthLayout = () => {
           width: '360px',
           height: '360px',
           borderRadius: '999px',
-          border: '1px solid rgba(18, 60, 55, 0.12)',
+          border: '1px solid rgba(74, 57, 40, 0.12)',
           boxShadow: 'inset 0 0 0 28px rgba(255,255,255,0.18)',
         }}
       />

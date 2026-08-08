@@ -1,8 +1,9 @@
 ﻿import { useEffect, useMemo, useRef, useState, type ChangeEvent, type CSSProperties, type FormEvent } from 'react';
-import { AlertCircle, BookOpen, CheckCircle2, Clock, Eye, FileAudio, Image, ImagePlus, MapPin, Mic, PlayCircle, Ruler, Sparkles, Star, Tag, Video, X } from 'lucide-react';
+import { AlertCircle, BookOpen, CheckCircle2, Clock, Eye, FileAudio, Image, ImagePlus, MapPin, Mic, MoreHorizontal, PlayCircle, RotateCcw, Ruler, Sparkles, Square, Star, Tag, Video, X } from 'lucide-react';
 import { Camera, CameraResultType, CameraSource, type GalleryPhoto, type Photo } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
-import type { ReactNode } from 'react';
+import type { PointerEvent as ReactPointerEvent, ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { useAuth } from '../shared/AuthContext';
@@ -13,10 +14,12 @@ import { aiJobStatusLabel, recordStatusLabel, recordTypeLabel, visibilityScopeLa
 import { createPersistableMediaPreview, removeRuntimeMediaPreview, resolveMediaPreviewUrl, resolveStoredMediaUrl, saveLocalMediaPreview, saveRuntimeMediaPreview } from '../shared/localMediaPreview';
 import { useCachedMediaUrl } from '../shared/useCachedMediaUrl';
 import { getCurrentDeviceLocation } from '../shared/deviceLocation';
-import { AppSelect, AppTopBar, PageShell, Panel, compactSecondaryButtonStyle, dateControlStyle, helperTextStyle, hiddenNativeDateInputStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle } from '../shared/ui';
-import { EmptyState, buttonRowStyle, formSubmitSpacingStyle, formatDateTimeLocal, rowStyle } from './shared';
+import { AppDateInput, AppSelect, AppTopBar, PageShell, Panel, compactSecondaryButtonStyle, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle } from '../shared/ui';
+import { EmptyState, buttonRowStyle, formSubmitSpacingStyle, formatDateTimeLocal, normalizeDisplayName, rowStyle } from './shared';
 import { referenceAssets } from './reference-ui';
 import { deriveMediaType, normalizeMimeType, resolveFileMimeType, withResolvedFileMimeType } from '../shared/mediaFiles';
+import { ensurePlayableAudioFile, normalizeUploadErrorMessage, readUploadMetadata, UNSUPPORTED_AUDIO_PLAYBACK_MESSAGE } from '../shared/mediaMetadata';
+import { getMediaCountLimit, getMediaCountLimitMessage, getMediaDurationLimit, getMediaDurationLimitMessage, getMediaLimitHint, RECORD_MEDIA_LIMITS } from '../shared/mediaLimits';
 
 type MediaPreview = {
   media_no: string;
@@ -59,6 +62,13 @@ const tagOptions = ['生日纪念', '户外日常', '语言发育', '大动作�
 
 const locationOptions = ['家里', '小区', '公园', '学校', '医院', '游乐场', '爷爷奶奶家', '外婆家'];
 const PERSISTABLE_NON_IMAGE_PREVIEW_BYTES = 4_200_000;
+const AUDIO_UPLOAD_ACCEPT = 'audio/mpeg,audio/mp4,audio/m4a,audio/x-m4a,audio/aac,audio/wav,audio/x-wav,audio/webm,audio/ogg';
+const AUDIO_FORMAT_HINT = `支持 m4a、mp3、wav、aac、webm、ogg；AMR/部分 3GP 无法在应用内播放；${getMediaDurationLimitMessage('audio')}。`;
+const AUDIO_RECORDING_MIME_TYPES = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/aac'];
+const normalizeAudioDurationFallback = (value: number | null | undefined) => {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return null;
+  return Math.max(1, Math.round(value));
+};
 
 const hasAiPlusAccess = (user: { membership_type?: string; membership_expire_at?: string | null } | null | undefined) => {
   if (user?.membership_type !== 'ai_plus') return false;
@@ -92,6 +102,34 @@ const revokeObjectUrl = (url?: string | null) => {
   }
 };
 
+const resolveAudioRecordingMimeType = () => {
+  if (typeof MediaRecorder === 'undefined') return '';
+  const canCheckSupport = typeof MediaRecorder.isTypeSupported === 'function';
+  if (!canCheckSupport) return '';
+  return AUDIO_RECORDING_MIME_TYPES.find((mimeType) => MediaRecorder.isTypeSupported(mimeType)) ?? '';
+};
+
+const audioRecordingExtension = (mimeType: string) => {
+  const normalized = normalizeMimeType(mimeType);
+  if (normalized === 'audio/mp4' || normalized === 'audio/x-m4a') return 'm4a';
+  if (normalized === 'audio/aac') return 'aac';
+  if (normalized === 'audio/wav' || normalized === 'audio/x-wav') return 'wav';
+  if (normalized === 'audio/mpeg') return 'mp3';
+  if (normalized === 'audio/ogg') return 'ogg';
+  return 'webm';
+};
+
+const stopMediaStream = (stream?: MediaStream | null) => {
+  stream?.getTracks().forEach((track) => track.stop());
+};
+
+const formatRecordingTime = (seconds: number) => {
+  const safeSeconds = Math.max(0, Math.floor(seconds));
+  const minutes = Math.floor(safeSeconds / 60);
+  const remainingSeconds = safeSeconds % 60;
+  return `${minutes}:${String(remainingSeconds).padStart(2, '0')}`;
+};
+
 const normalizePromptMessage = (message: string) =>
   /google\s*play|play services|gms|service_version|service missing|service disabled/i.test(message)
     ? '当前手机定位服务不可用，可手动填写地点或选择常用地点。'
@@ -108,7 +146,7 @@ const normalizeMetricInput = (value: string) => value.replace(/[^\d.]/g, '').rep
 const metadataSelectStyle = {
   minHeight: '44px',
   borderRadius: '8px',
-  background: 'linear-gradient(180deg, rgba(var(--nl-surface-strong-rgb),0.78), rgba(var(--nl-surface-rgb),0.48))',
+  background: 'rgba(var(--nl-surface-strong-rgb),0.48)',
   border: '1px solid var(--nl-border-strong)',
   boxShadow: 'inset 0 1px 0 var(--nl-inset-highlight)',
 } as const;
@@ -129,7 +167,7 @@ const selectedChipButtonStyle = {
   minHeight: '44px',
   border: '1px solid var(--nl-border-strong)',
   borderRadius: '8px',
-  background: 'linear-gradient(180deg, rgba(var(--nl-surface-strong-rgb),0.72), rgba(var(--nl-surface-rgb),0.38))',
+  background: 'rgba(var(--nl-surface-strong-rgb),0.42)',
   color: 'var(--nl-muted-strong)',
   padding: '7px 11px',
   fontSize: '12px',
@@ -142,7 +180,7 @@ const selectedChipButtonStyle = {
 } as const;
 
 const mediaActionButtonStyle: CSSProperties = {
-  minHeight: '58px',
+  minHeight: '76px',
   width: '100%',
   minWidth: 0,
   boxSizing: 'border-box',
@@ -150,7 +188,7 @@ const mediaActionButtonStyle: CSSProperties = {
   border: '1px solid transparent',
   background: 'transparent',
   color: 'var(--nl-muted-strong)',
-  padding: '7px 2px',
+  padding: '10px 4px',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
@@ -163,8 +201,8 @@ const mediaActionButtonStyle: CSSProperties = {
 };
 
 const mediaActionIconStyle: CSSProperties = {
-  width: '34px',
-  height: '30px',
+  width: '42px',
+  height: '38px',
   borderRadius: '8px',
   background: 'transparent',
   color: 'var(--nl-primary-2)',
@@ -190,6 +228,7 @@ const MediaActionButton = ({
   displayLabel,
   onClick,
   disabled,
+  ariaExpanded,
   style,
 }: {
   icon: ReactNode;
@@ -197,11 +236,13 @@ const MediaActionButton = ({
   displayLabel?: string;
   onClick: () => void;
   disabled?: boolean;
+  ariaExpanded?: boolean;
   style?: CSSProperties;
 }) => (
   <button
     type="button"
     aria-label={label}
+    aria-expanded={ariaExpanded}
     onClick={onClick}
     disabled={disabled}
     style={{
@@ -440,23 +481,31 @@ const mediaPreviewCardBaseStyle: CSSProperties = {
   overflow: 'hidden',
   border: '1px solid var(--nl-border-soft)',
   background: 'rgba(var(--nl-surface-rgb),0.08)',
-  boxShadow: '0 22px 58px rgba(var(--nl-shadow-rgb),0.22)',
+  boxShadow: '0 14px 34px rgba(var(--nl-shadow-rgb),0.12)',
 };
 
 const MediaPreviewTile = ({
   media,
   compact,
+  featured,
   onRemove,
+  onRetry,
   onOpen,
 }: {
   media: RenderableMediaPreview;
   compact?: boolean;
+  featured?: boolean;
   onRemove?: (mediaNo: string) => void;
+  onRetry?: (mediaNo: string) => void;
   onOpen?: (media: FullscreenMediaPreview) => void;
 }) => {
   const mediaUrl = useCachedMediaUrl(media.media_no, media.preview_url ?? media.access_url ?? null, media.media_type, {
     cacheRemote: media.media_type === 'image' || !compact,
   }) ?? media.preview_url ?? media.access_url ?? '';
+  const [mediaLoadFailed, setMediaLoadFailed] = useState(false);
+  useEffect(() => {
+    setMediaLoadFailed(false);
+  }, [mediaUrl]);
   const label = mediaPreviewLabel(media.media_type);
   const canOpenFullscreen = Boolean(onOpen && mediaUrl && media.media_type !== 'audio');
   const statusLabel = media.upload_status === 'uploading' ? '上传中' : media.upload_status === 'failed' ? '上传失败' : null;
@@ -484,29 +533,31 @@ const MediaPreviewTile = ({
       }
       style={{
         ...mediaPreviewCardBaseStyle,
-        minHeight: compact ? '136px' : media.media_type === 'audio' ? '156px' : '176px',
-        height: compact ? '136px' : media.media_type === 'audio' ? '156px' : '176px',
+        minHeight: featured && media.media_type !== 'audio' ? '220px' : compact ? '136px' : media.media_type === 'audio' ? '156px' : '176px',
+        height: featured && media.media_type !== 'audio' ? '220px' : compact ? '136px' : media.media_type === 'audio' ? '156px' : '176px',
         borderRadius: '8px',
         cursor: canOpenFullscreen ? 'pointer' : 'default',
         WebkitTapHighlightColor: 'transparent',
       }}
     >
-      {media.media_type === 'image' && mediaUrl ? (
+      {media.media_type === 'image' && mediaUrl && !mediaLoadFailed ? (
         <img
           src={mediaUrl}
           alt={media.original_name ?? '已上传照片'}
-          loading={compact ? 'lazy' : 'eager'}
+          loading={compact && !featured ? 'lazy' : 'eager'}
           decoding="async"
+          onError={() => setMediaLoadFailed(true)}
           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', pointerEvents: canOpenFullscreen ? 'none' : 'auto', WebkitTapHighlightColor: 'transparent' }}
         />
       ) : null}
-      {media.media_type === 'video' && mediaUrl ? (
+      {media.media_type === 'video' && mediaUrl && !mediaLoadFailed ? (
         <>
           <video
             src={mediaUrl}
             muted
             playsInline
             preload="none"
+            onError={() => setMediaLoadFailed(true)}
             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', background: 'var(--nl-surface-soft)', pointerEvents: canOpenFullscreen ? 'none' : 'auto', WebkitTapHighlightColor: 'transparent' }}
           />
           <span aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', color: 'var(--nl-ink)', pointerEvents: 'none' }}>
@@ -524,9 +575,10 @@ const MediaPreviewTile = ({
           {media.duration_seconds ? <span style={{ fontSize: '12px', color: 'var(--nl-muted)' }}>{media.duration_seconds} 秒</span> : null}
         </div>
       ) : null}
-      {!mediaUrl || !['image', 'video', 'audio'].includes(media.media_type) ? (
-        <div style={{ minHeight: compact ? '136px' : '156px', display: 'grid', placeItems: 'center', color: 'var(--nl-muted)', padding: '14px', boxSizing: 'border-box' }}>
+      {!mediaUrl || mediaLoadFailed || !['image', 'video', 'audio'].includes(media.media_type) ? (
+        <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', alignContent: 'center', gap: '8px', color: 'var(--nl-muted)', padding: '14px', boxSizing: 'border-box', background: 'var(--nl-surface-soft)' }}>
           <Image size={28} strokeWidth={1.8} />
+          <span style={{ fontSize: '12px', fontWeight: 650 }}>{mediaLoadFailed ? '媒体暂时无法加载' : '暂无预览'}</span>
         </div>
       ) : null}
       {statusLabel ? (
@@ -535,9 +587,39 @@ const MediaPreviewTile = ({
         </span>
       ) : null}
       {media.upload_status === 'failed' && media.error_message ? (
-        <span style={{ position: 'absolute', left: '10px', right: '10px', top: '10px', borderRadius: '12px', background: 'var(--nl-danger-soft)', color: 'var(--nl-danger)', border: '1px solid var(--nl-danger-line)', padding: '7px 9px', fontSize: '11px', lineHeight: 1.45, fontWeight: 750 }}>
-          {media.error_message} 请移除后重新选择素材。
+        <span style={{ position: 'absolute', left: '10px', right: '10px', top: '10px', borderRadius: '8px', background: 'var(--nl-danger-soft)', color: 'var(--nl-danger)', border: '1px solid var(--nl-danger-line)', padding: '7px 9px', fontSize: '11px', lineHeight: 1.45, fontWeight: 750 }}>
+          {media.error_message}
         </span>
+      ) : null}
+      {media.upload_status === 'failed' && onRetry ? (
+        <button
+          type="button"
+          aria-label="重试上传"
+          onClick={(event) => {
+            event.stopPropagation();
+            onRetry(media.media_no);
+          }}
+          style={{
+            position: 'absolute',
+            left: '10px',
+            bottom: '10px',
+            minHeight: '38px',
+            borderRadius: '8px',
+            border: '1px solid var(--nl-danger-line)',
+            background: 'var(--nl-dialog-bg)',
+            color: 'var(--nl-danger)',
+            padding: '8px 11px',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '6px',
+            fontSize: '12px',
+            fontWeight: 700,
+            cursor: 'pointer',
+          }}
+        >
+          <RotateCcw size={14} strokeWidth={2.2} />
+          重试
+        </button>
       ) : null}
       {onRemove ? (
           <button
@@ -574,18 +656,305 @@ const MediaPreviewTile = ({
 
 const MediaFullscreenDialog = ({
   media,
+  mediaList,
   onClose,
 }: {
   media: FullscreenMediaPreview | null;
+  mediaList?: RenderableMediaPreview[];
   onClose: () => void;
 }) => {
-  const mediaUrl = useCachedMediaUrl(media?.media_no, media?.preview_url ?? media?.access_url ?? null, media?.media_type, {
+  const galleryMedia = useMemo(() => {
+    const visualMedia = (mediaList ?? []).filter((item) => (
+      (item.media_type === 'image' || item.media_type === 'video')
+      && Boolean(item.preview_url || item.access_url)
+    ));
+    const mergedMedia = media && (media.media_type === 'image' || media.media_type === 'video')
+      ? visualMedia.some((item) => item.media_no === media.media_no)
+        ? visualMedia.map((item) => item.media_no === media.media_no ? { ...item, ...media } : item)
+        : [...visualMedia, media]
+      : visualMedia;
+    return Array.from(new Map(mergedMedia.map((item) => [item.media_no, item])).values());
+  }, [media, mediaList]);
+  const seedMediaNo = media?.media_no ?? null;
+  const [galleryState, setGalleryState] = useState<{ seedMediaNo: string | null; activeMediaNo: string | null }>({
+    seedMediaNo: null,
+    activeMediaNo: null,
+  });
+  const [pageDirection, setPageDirection] = useState<1 | -1 | 0>(0);
+  const effectiveMediaNo = galleryState.seedMediaNo === seedMediaNo ? galleryState.activeMediaNo : seedMediaNo;
+  const activeMedia = galleryMedia.find((item) => item.media_no === effectiveMediaNo) ?? media;
+  const activeMediaIndex = activeMedia ? galleryMedia.findIndex((item) => item.media_no === activeMedia.media_no) : -1;
+  const canSwipeMedia = galleryMedia.length > 1 && activeMediaIndex >= 0;
+  const mediaUrl = useCachedMediaUrl(activeMedia?.media_no, activeMedia?.preview_url ?? activeMedia?.access_url ?? null, activeMedia?.media_type, {
     cacheRemote: true,
-  }) ?? media?.preview_url ?? media?.access_url ?? '';
-  const label = media ? mediaPreviewLabel(media.media_type) : '媒体预览';
+  }) ?? activeMedia?.preview_url ?? activeMedia?.access_url ?? '';
+  const label = activeMedia ? mediaPreviewLabel(activeMedia.media_type) : '媒体预览';
+  const [imageZoomed, setImageZoomed] = useState(false);
+  const [imageZoomOrigin, setImageZoomOrigin] = useState('50% 50%');
+  const [imagePan, setImagePan] = useState({ x: 0, y: 0 });
+  const [imageDragging, setImageDragging] = useState(false);
+  const [imageLoadFailed, setImageLoadFailed] = useState(false);
+  const imageClickTimerRef = useRef<number | null>(null);
+  const imagePointerRef = useRef<{
+    pointerId: number;
+    x: number;
+    y: number;
+    moved: boolean;
+    startPanX: number;
+    startPanY: number;
+  } | null>(null);
+  const videoPointerRef = useRef<{
+    pointerId: number;
+    x: number;
+    y: number;
+    ignoreControls: boolean;
+  } | null>(null);
+  const backdropPointerRef = useRef<{ pointerId: number; x: number; y: number } | null>(null);
+  const suppressVideoClickRef = useRef(false);
+  const suppressBackdropClickRef = useRef(false);
+  const lastImageTapRef = useRef<{ at: number; x: number; y: number } | null>(null);
+
+  const imageDoubleTapWindowMs = 280;
+
+  const clearImageClickTimer = () => {
+    if (imageClickTimerRef.current === null) return;
+    window.clearTimeout(imageClickTimerRef.current);
+    imageClickTimerRef.current = null;
+  };
+
+  const closeAfterSingleImageTap = () => {
+    clearImageClickTimer();
+    imageClickTimerRef.current = window.setTimeout(() => {
+      imageClickTimerRef.current = null;
+      lastImageTapRef.current = null;
+      onClose();
+    }, imageDoubleTapWindowMs + 20);
+  };
+
+  const moveMedia = (delta: 1 | -1) => {
+    if (!canSwipeMedia) return false;
+    const nextIndex = (activeMediaIndex + delta + galleryMedia.length) % galleryMedia.length;
+    const nextMedia = galleryMedia[nextIndex];
+    if (!nextMedia) return false;
+    clearImageClickTimer();
+    lastImageTapRef.current = null;
+    imagePointerRef.current = null;
+    videoPointerRef.current = null;
+    setPageDirection(delta);
+    setGalleryState({ seedMediaNo, activeMediaNo: nextMedia.media_no });
+    return true;
+  };
+
+  const toggleImageZoom = (element: HTMLImageElement, clientX: number, clientY: number) => {
+    if (!imageZoomed) {
+      const bounds = element.getBoundingClientRect();
+      const x = bounds.width ? ((clientX - bounds.left) / bounds.width) * 100 : 50;
+      const y = bounds.height ? ((clientY - bounds.top) / bounds.height) * 100 : 50;
+      setImageZoomOrigin(`${Math.min(100, Math.max(0, x))}% ${Math.min(100, Math.max(0, y))}%`);
+    } else {
+      setImageZoomOrigin('50% 50%');
+    }
+    setImagePan({ x: 0, y: 0 });
+    setImageZoomed((current) => !current);
+  };
+
+  const clampImagePan = (element: HTMLImageElement, x: number, y: number) => {
+    const baseWidth = element.offsetWidth || element.naturalWidth || Math.max(1, window.innerWidth - 32);
+    const baseHeight = element.offsetHeight || element.naturalHeight || Math.max(1, window.innerHeight - 144);
+    const maxX = baseWidth * 0.5;
+    const maxY = baseHeight * 0.5;
+    return {
+      x: Math.min(maxX, Math.max(-maxX, x)),
+      y: Math.min(maxY, Math.max(-maxY, y)),
+    };
+  };
+
+  const onImagePointerDown = (event: ReactPointerEvent<HTMLImageElement>) => {
+    event.stopPropagation();
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    imagePointerRef.current = {
+      pointerId: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      moved: false,
+      startPanX: imagePan.x,
+      startPanY: imagePan.y,
+    };
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // Pointer capture is optional in older Android WebViews.
+    }
+  };
+
+  const onImagePointerMove = (event: ReactPointerEvent<HTMLImageElement>) => {
+    const pointer = imagePointerRef.current;
+    if (!pointer || pointer.pointerId !== event.pointerId) return;
+    const deltaX = event.clientX - pointer.x;
+    const deltaY = event.clientY - pointer.y;
+    if (Math.hypot(deltaX, deltaY) > 10) {
+      pointer.moved = true;
+      clearImageClickTimer();
+      lastImageTapRef.current = null;
+    }
+    if (imageZoomed && pointer.moved) {
+      event.preventDefault();
+      setImageDragging(true);
+      setImagePan(clampImagePan(event.currentTarget, pointer.startPanX + deltaX, pointer.startPanY + deltaY));
+    }
+  };
+
+  const clearImagePointer = (event: ReactPointerEvent<HTMLImageElement>) => {
+    const pointer = imagePointerRef.current;
+    if (!pointer || pointer.pointerId !== event.pointerId) return null;
+    imagePointerRef.current = null;
+    setImageDragging(false);
+    try {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    } catch {
+      // The browser may release capture before pointerup/pointercancel.
+    }
+    return pointer;
+  };
+
+  const onImagePointerUp = (event: ReactPointerEvent<HTMLImageElement>) => {
+    event.stopPropagation();
+    const pointer = clearImagePointer(event);
+    if (!pointer) return;
+    const deltaX = event.clientX - pointer.x;
+    const deltaY = event.clientY - pointer.y;
+    const isHorizontalSwipe = !imageZoomed
+      && Math.abs(deltaX) >= 48
+      && Math.abs(deltaX) > Math.abs(deltaY) * 1.15;
+    if (isHorizontalSwipe) {
+      moveMedia(deltaX < 0 ? 1 : -1);
+      return;
+    }
+    if (pointer.moved) {
+      return;
+    }
+
+    const now = Date.now();
+    const lastTap = lastImageTapRef.current;
+    const isDoubleTap = Boolean(
+      lastTap
+      && now - lastTap.at <= imageDoubleTapWindowMs
+      && Math.hypot(event.clientX - lastTap.x, event.clientY - lastTap.y) <= 28,
+    );
+
+    if (isDoubleTap) {
+      clearImageClickTimer();
+      lastImageTapRef.current = null;
+      toggleImageZoom(event.currentTarget, event.clientX, event.clientY);
+      return;
+    }
+
+    lastImageTapRef.current = { at: now, x: event.clientX, y: event.clientY };
+    closeAfterSingleImageTap();
+  };
+
+  const onVideoPointerDown = (event: ReactPointerEvent<HTMLVideoElement>) => {
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const controlsHeight = bounds.height > 0 ? Math.min(72, bounds.height * 0.28) : 0;
+    const ignoreControls = controlsHeight > 0 && event.clientY >= bounds.bottom - controlsHeight;
+    videoPointerRef.current = {
+      pointerId: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      ignoreControls,
+    };
+    if (ignoreControls) return;
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // Pointer capture is optional in older Android WebViews.
+    }
+  };
+
+  const onVideoPointerMove = (event: ReactPointerEvent<HTMLVideoElement>) => {
+    const pointer = videoPointerRef.current;
+    if (!pointer || pointer.pointerId !== event.pointerId || pointer.ignoreControls) return;
+    const deltaX = event.clientX - pointer.x;
+    const deltaY = event.clientY - pointer.y;
+    if (Math.abs(deltaX) > 12 && Math.abs(deltaX) > Math.abs(deltaY)) {
+      event.preventDefault();
+      suppressVideoClickRef.current = true;
+    }
+  };
+
+  const clearVideoPointer = (event: ReactPointerEvent<HTMLVideoElement>) => {
+    const pointer = videoPointerRef.current;
+    if (!pointer || pointer.pointerId !== event.pointerId) return null;
+    videoPointerRef.current = null;
+    if (!pointer.ignoreControls) {
+      try {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      } catch {
+        // The browser may release capture before pointerup/pointercancel.
+      }
+    }
+    return pointer;
+  };
+
+  const onVideoPointerUp = (event: ReactPointerEvent<HTMLVideoElement>) => {
+    event.stopPropagation();
+    const pointer = clearVideoPointer(event);
+    if (!pointer || pointer.ignoreControls) return;
+    const deltaX = event.clientX - pointer.x;
+    const deltaY = event.clientY - pointer.y;
+    if (Math.abs(deltaX) >= 48 && Math.abs(deltaX) > Math.abs(deltaY) * 1.15) {
+      event.preventDefault();
+      moveMedia(deltaX < 0 ? 1 : -1);
+    }
+  };
+
+  const onBackdropPointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const target = event.target as HTMLElement | null;
+    if (target?.closest('img,video')) return;
+    if (event.pointerType === 'mouse' && event.button !== 0) return;
+    suppressBackdropClickRef.current = false;
+    backdropPointerRef.current = { pointerId: event.pointerId, x: event.clientX, y: event.clientY };
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // Pointer capture is optional in older Android WebViews.
+    }
+  };
+
+  const onBackdropPointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const pointer = backdropPointerRef.current;
+    if (!pointer || pointer.pointerId !== event.pointerId) return;
+    backdropPointerRef.current = null;
+    try {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    } catch {
+      // The browser may release capture before pointerup/pointercancel.
+    }
+    const deltaX = event.clientX - pointer.x;
+    const deltaY = event.clientY - pointer.y;
+    if (Math.abs(deltaX) < 48 || Math.abs(deltaX) <= Math.abs(deltaY) * 1.15) return;
+    event.preventDefault();
+    suppressBackdropClickRef.current = true;
+    moveMedia(deltaX < 0 ? 1 : -1);
+  };
 
   useEffect(() => {
-    if (!media) return undefined;
+    setImageLoadFailed(false);
+    setImageZoomed(false);
+    setImageZoomOrigin('50% 50%');
+    setImagePan({ x: 0, y: 0 });
+    setImageDragging(false);
+    imagePointerRef.current = null;
+    videoPointerRef.current = null;
+    lastImageTapRef.current = null;
+    clearImageClickTimer();
+  }, [activeMedia?.media_no]);
+
+  const isOpen = Boolean(media);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
     const scrollY = window.scrollY;
     const previousBodyOverflow = document.body.style.overflow;
     const previousBodyPosition = document.body.style.position;
@@ -599,13 +968,8 @@ const MediaFullscreenDialog = ({
     document.body.style.top = `-${scrollY}px`;
     document.body.style.width = '100%';
 
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKeyDown);
-
     return () => {
-      window.removeEventListener('keydown', onKeyDown);
+      clearImageClickTimer();
       document.documentElement.style.overflow = previousHtmlOverflow;
       document.body.style.overflow = previousBodyOverflow;
       document.body.style.position = previousBodyPosition;
@@ -615,17 +979,45 @@ const MediaFullscreenDialog = ({
         window.scrollTo(0, scrollY);
       }
     };
-  }, [media, onClose]);
+  }, [isOpen]);
 
-  if (!media || !mediaUrl) return null;
+  useEffect(() => {
+    if (!isOpen) {
+      setGalleryState({ seedMediaNo: null, activeMediaNo: null });
+      setPageDirection(0);
+      return undefined;
+    }
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+      if (event.key === 'ArrowLeft') moveMedia(-1);
+      if (event.key === 'ArrowRight') moveMedia(1);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [activeMediaIndex, galleryMedia.length, isOpen, onClose]);
 
-  return (
+  if (!activeMedia || !mediaUrl) return null;
+
+  return createPortal(
     <div
       className="nl-media-interaction"
       role="dialog"
       aria-modal="true"
       aria-label={`全屏${label}`}
-      onClick={onClose}
+      data-media-index={activeMediaIndex >= 0 ? String(activeMediaIndex) : '0'}
+      data-media-total={String(Math.max(galleryMedia.length, 1))}
+      onClick={(event) => {
+        if (suppressBackdropClickRef.current) {
+          suppressBackdropClickRef.current = false;
+          return;
+        }
+        onClose();
+      }}
+      onPointerDown={onBackdropPointerDown}
+      onPointerUp={onBackdropPointerUp}
+      onPointerCancel={() => {
+        backdropPointerRef.current = null;
+      }}
       style={{
         position: 'fixed',
         inset: 0,
@@ -633,13 +1025,16 @@ const MediaFullscreenDialog = ({
         background: 'var(--nl-media-overlay-bg)',
         display: 'grid',
         placeItems: 'center',
-        padding: 'calc(24px + env(safe-area-inset-top)) 12px calc(24px + env(safe-area-inset-bottom))',
+        padding: 'calc(72px + env(safe-area-inset-top)) 16px calc(72px + env(safe-area-inset-bottom))',
         overscrollBehavior: 'contain',
-        touchAction: 'none',
+        touchAction: 'manipulation',
+        overflow: 'hidden',
         WebkitTapHighlightColor: 'transparent',
       }}
     >
       <div
+        key={activeMedia.media_no}
+        className={pageDirection === 1 ? 'record-media-page-forward' : pageDirection === -1 ? 'record-media-page-backward' : undefined}
         onClick={(event) => event.stopPropagation()}
         style={{
           display: 'inline-grid',
@@ -650,55 +1045,121 @@ const MediaFullscreenDialog = ({
           background: 'transparent',
           overflow: 'visible',
           overscrollBehavior: 'contain',
-          touchAction: media.media_type === 'video' ? 'auto' : 'none',
+          touchAction: activeMedia.media_type === 'video' ? 'pan-y' : 'manipulation',
+          ...(imageLoadFailed ? {
+            width: 'min(82vw, 360px)',
+            minHeight: '220px',
+            padding: '24px',
+            border: '1px solid rgba(255,255,255,0.14)',
+            background: 'rgba(255,255,255,0.06)',
+            borderRadius: '12px',
+            color: 'rgba(255,255,255,0.78)',
+            gap: '10px',
+          } : {}),
+          willChange: pageDirection ? 'transform, opacity' : undefined,
           WebkitTapHighlightColor: 'transparent',
         }}
       >
-        {media.media_type === 'image' ? (
-          <img
-            src={mediaUrl}
-            alt={media.original_name ?? label}
+        {activeMedia.media_type === 'image' ? (
+          <>
+            <img
+            src={imageLoadFailed ? 'data:image/svg+xml;charset=UTF-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22320%22 height=%22220%22 viewBox=%220 0 320 220%22%3E%3Crect width=%22320%22 height=%22220%22 rx=%2218%22 fill=%22%232b2924%22/%3E%3Cpath d=%22M78 148l48-52 38 38 26-26 52 60H78z%22 fill=%22%239b8b72%22/%3E%3Ccircle cx=%22120%22 cy=%2278%22 r=%2224%22 fill=%22%23c6b89f%22/%3E%3C/svg%3E' : mediaUrl}
+            alt={activeMedia.original_name ?? label}
             decoding="async"
+            draggable={false}
+            data-zoomed={imageZoomed ? 'true' : 'false'}
+            data-pan-x={String(Math.round(imagePan.x))}
+            data-pan-y={String(Math.round(imagePan.y))}
+            onClick={(event) => event.stopPropagation()}
+            onError={() => setImageLoadFailed(true)}
+            onPointerDown={onImagePointerDown}
+            onPointerMove={onImagePointerMove}
+            onPointerUp={onImagePointerUp}
+            onPointerCancel={(event) => {
+              event.stopPropagation();
+              clearImagePointer(event);
+            }}
             style={{
               width: 'auto',
               height: 'auto',
-              maxWidth: 'calc(100vw - 24px)',
-              maxHeight: 'calc(100dvh - 48px - env(safe-area-inset-top) - env(safe-area-inset-bottom))',
+              maxWidth: 'calc(100vw - 32px)',
+              maxHeight: 'calc(100dvh - 144px - env(safe-area-inset-top) - env(safe-area-inset-bottom))',
               objectFit: 'contain',
               display: 'block',
               borderRadius: 0,
+              transform: `translate3d(${imagePan.x}px, ${imagePan.y}px, 0) scale(${imageZoomed ? 2 : 1})`,
+              transformOrigin: imageZoomOrigin,
+              transition: imageDragging ? 'none' : 'transform 220ms cubic-bezier(0.22, 1, 0.36, 1)',
+              cursor: imageZoomed ? (imageDragging ? 'grabbing' : 'grab') : 'zoom-in',
+              touchAction: imageZoomed ? 'none' : 'pan-y',
               WebkitTapHighlightColor: 'transparent',
             }}
-          />
+            />
+            {imageLoadFailed ? <span style={{ color: 'rgba(255,255,255,0.78)', fontSize: '13px', lineHeight: 1.5 }}>媒体暂时无法加载</span> : null}
+          </>
         ) : null}
-        {media.media_type === 'video' ? (
+        {activeMedia.media_type === 'video' ? (
           <video
             src={mediaUrl}
             controls
             autoPlay
             playsInline
             preload="auto"
+            onClick={(event) => {
+              event.stopPropagation();
+              if (!suppressVideoClickRef.current) return;
+              event.preventDefault();
+              suppressVideoClickRef.current = false;
+            }}
+            onPointerDown={onVideoPointerDown}
+            onPointerMove={onVideoPointerMove}
+            onPointerUp={onVideoPointerUp}
+            onPointerCancel={(event) => {
+              event.stopPropagation();
+              clearVideoPointer(event);
+              suppressVideoClickRef.current = false;
+            }}
             style={{
               width: 'auto',
               height: 'auto',
-              maxWidth: 'calc(100vw - 24px)',
-              maxHeight: 'calc(100dvh - 48px - env(safe-area-inset-top) - env(safe-area-inset-bottom))',
+              maxWidth: 'calc(100vw - 32px)',
+              maxHeight: 'calc(100dvh - 144px - env(safe-area-inset-top) - env(safe-area-inset-bottom))',
               objectFit: 'contain',
               display: 'block',
               background: 'transparent',
               borderRadius: 0,
+              touchAction: 'pan-y',
             }}
           />
         ) : null}
-        {media.media_type === 'audio' ? (
-          <div style={{ width: 'min(100%, 420px)', display: 'grid', gap: '16px', color: 'var(--nl-on-primary)', textAlign: 'center' }}>
+        {activeMedia.media_type === 'audio' ? (
+          <div onClick={(event) => event.stopPropagation()} style={{ width: 'min(100%, 420px)', display: 'grid', gap: '16px', color: 'var(--nl-on-primary)', textAlign: 'center' }}>
             <FileAudio size={44} strokeWidth={1.8} style={{ justifySelf: 'center' }} />
-            <strong style={{ fontSize: '16px', fontWeight: 720 }}>{media.original_name ?? label}</strong>
+            <strong style={{ fontSize: '16px', fontWeight: 720 }}>{activeMedia.original_name ?? label}</strong>
             <audio src={mediaUrl} controls autoPlay style={{ width: '100%' }} />
           </div>
         ) : null}
       </div>
-    </div>
+      {canSwipeMedia ? (
+        <span
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            left: '50%',
+            bottom: 'calc(26px + env(safe-area-inset-bottom))',
+            transform: 'translateX(-50%)',
+            color: 'var(--nl-on-dark-muted)',
+            fontSize: 11,
+            lineHeight: 1,
+            fontWeight: 700,
+            pointerEvents: 'none',
+          }}
+        >
+          {String(activeMediaIndex + 1).padStart(2, '0')} / {String(galleryMedia.length).padStart(2, '0')}
+        </span>
+      ) : null}
+    </div>,
+    document.body,
   );
 };
 
@@ -874,6 +1335,8 @@ const RecordForm = ({
   const [submitting, setSubmitting] = useState(false);
   const [pendingAction, setPendingAction] = useState<'publish' | 'draft' | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [audioRecording, setAudioRecording] = useState(false);
+  const [audioRecordingSeconds, setAudioRecordingSeconds] = useState(0);
   const [selectorMessage, setSelectorMessage] = useState<string | null>(null);
   const [tagSelectValue, setTagSelectValue] = useState('');
   const [poiSuggestions, setPoiSuggestions] = useState<LocationSuggestion[]>([]);
@@ -888,9 +1351,11 @@ const RecordForm = ({
   const [metricNote, setMetricNote] = useState('');
   const [mediaNos, setMediaNos] = useState<string[]>(normalizedInitialValue.media_nos);
   const [mediaPreviews, setMediaPreviews] = useState<MediaPreview[]>(normalizedInitialValue.media_items);
+  const [moreMediaOpen, setMoreMediaOpen] = useState(normalizedInitialValue.record_type === 'audio' || normalizedInitialValue.record_type === 'video');
   const [fullscreenMedia, setFullscreenMedia] = useState<FullscreenMediaPreview | null>(null);
   const [discardConfirmOpen, setDiscardConfirmOpen] = useState(false);
   const mediaPreviewsRef = useRef<MediaPreview[]>(normalizedInitialValue.media_items);
+  const failedUploadFilesRef = useRef(new Map<string, { file: File; options: { durationFallbackSeconds?: number | null } }>());
   const titleInputRef = useRef<HTMLInputElement | null>(null);
   const contentInputRef = useRef<HTMLTextAreaElement | null>(null);
   const timeInputRef = useRef<HTMLInputElement | null>(null);
@@ -899,11 +1364,18 @@ const RecordForm = ({
   const galleryInputRef = useRef<HTMLInputElement | null>(null);
   const audioCaptureInputRef = useRef<HTMLInputElement | null>(null);
   const audioLibraryInputRef = useRef<HTMLInputElement | null>(null);
+  const audioRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioRecordingStreamRef = useRef<MediaStream | null>(null);
+  const audioRecordingChunksRef = useRef<Blob[]>([]);
+  const audioRecordingStartedAtRef = useRef<number | null>(null);
+  const audioRecordingDiscardRef = useRef(false);
+  const audioRecordingLimitTriggeredRef = useRef(false);
   const selectedChildNoRef = useRef('');
   const allowNavigationWithoutPromptRef = useRef(false);
 
   const currentChild = children.find((child) => child.child_no === form.child_no) ?? activeChild ?? children[0] ?? null;
-  const currentChildName = currentChild?.name?.trim() || '请选择孩子';
+  const currentChildName = normalizeDisplayName(currentChild?.name, currentChild ? '宝宝' : '请选择孩子');
+  const currentChildInitial = normalizeDisplayName(currentChild?.name, '宝').slice(0, 1);
   const currentChildAvatar = referenceAssets.childAvatar;
   const selectedTags = splitTags(form.tags);
   const isHeightRecord = mode === 'create' && initialMetricMode === 'height';
@@ -974,6 +1446,8 @@ const RecordForm = ({
     setForm(nextInitialValue);
     setMediaNos(nextInitialValue.media_nos);
     setMediaPreviews(nextInitialValue.media_items);
+    setMoreMediaOpen(nextInitialValue.record_type === 'audio' || nextInitialValue.record_type === 'video');
+    failedUploadFilesRef.current.clear();
     if (initialMetricMode !== 'height') {
       setHeightValue('');
       setWeightValue('');
@@ -1058,6 +1532,38 @@ const RecordForm = ({
   }, [hasUnsavedChanges]);
 
   useEffect(() => {
+    if (!audioRecording) return undefined;
+    const timer = window.setInterval(() => {
+      const startedAt = audioRecordingStartedAtRef.current;
+      const elapsedSeconds = startedAt ? Math.floor((Date.now() - startedAt) / 1000) : 0;
+      setAudioRecordingSeconds(elapsedSeconds);
+      if (elapsedSeconds >= RECORD_MEDIA_LIMITS.audioMaxDurationSeconds && !audioRecordingLimitTriggeredRef.current) {
+        audioRecordingLimitTriggeredRef.current = true;
+        setSelectorMessage(`已达到${getMediaDurationLimitMessage('audio')}，录音将自动停止并上传。`);
+        const recorder = audioRecorderRef.current;
+        if (recorder && recorder.state !== 'inactive') {
+          audioRecordingDiscardRef.current = false;
+          recorder.requestData?.();
+          recorder.stop();
+        }
+      }
+    }, 250);
+
+    return () => window.clearInterval(timer);
+  }, [audioRecording]);
+
+  useEffect(() => {
+    return () => {
+      const recorder = audioRecorderRef.current;
+      if (recorder && recorder.state !== 'inactive') {
+        audioRecordingDiscardRef.current = true;
+        recorder.stop();
+      }
+      stopMediaStream(audioRecordingStreamRef.current);
+    };
+  }, []);
+
+  useEffect(() => {
     return () => {
       mediaPreviewsRef.current.forEach((item) => {
         if (item.is_local) {
@@ -1081,15 +1587,26 @@ const RecordForm = ({
     const currentIndex = children.findIndex((child) => child.child_no === form.child_no);
     const nextChild = children[(currentIndex + 1 + children.length) % children.length];
     setForm((current) => ({ ...current, child_no: nextChild.child_no }));
-    setSelectorMessage(`已切换为 ${nextChild.name}`);
+    setSelectorMessage(`已切换为 ${normalizeDisplayName(nextChild.name, '宝宝')}`);
   };
 
   const triggerMediaInput = (input: HTMLInputElement | null) => {
-    if (uploading || !input) return;
+    if (uploading || audioRecording || !input) return;
     setError(null);
     setSelectorMessage(null);
     input.value = '';
     input.click();
+  };
+
+  const currentMediaCount = (mediaType: MediaType) =>
+    mediaPreviewsRef.current.filter((item) => item.media_type === mediaType && item.upload_status !== 'failed').length;
+
+  const ensureMediaCountAvailable = (mediaType: MediaType) => {
+    if (currentMediaCount(mediaType) >= getMediaCountLimit(mediaType)) {
+      setError(getMediaCountLimitMessage(mediaType));
+      return false;
+    }
+    return true;
   };
 
   const persistConfirmedMediaPreview = async (mediaNo: string, file: File, mediaType: MediaType, objectUrl: string) => {
@@ -1117,7 +1634,7 @@ const RecordForm = ({
     }
   };
 
-  const uploadMediaFile = async (file: File) => {
+  const uploadMediaFile = async (file: File, options: { durationFallbackSeconds?: number | null } = {}) => {
     const childNo = form.child_no || currentChild?.child_no || (await waitForSelectedChildNo());
     if (!childNo) {
       setError('发布前请选择孩子档案');
@@ -1131,24 +1648,45 @@ const RecordForm = ({
     }
 
     const uploadFile = withResolvedFileMimeType(file);
+    if (!ensureMediaCountAvailable(mediaType)) return;
+    if (mediaType === 'audio') {
+      try {
+        ensurePlayableAudioFile(uploadFile);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : UNSUPPORTED_AUDIO_PLAYBACK_MESSAGE);
+        return;
+      }
+    }
     setUploading(true);
     setError(null);
     const pendingMediaNo = createPendingMediaNo();
     const previewUrl = typeof URL.createObjectURL === 'function' ? URL.createObjectURL(uploadFile) : '';
     if (previewUrl) saveRuntimeMediaPreview(pendingMediaNo, previewUrl);
+    const pendingPreview: MediaPreview = {
+      media_no: pendingMediaNo,
+      preview_url: previewUrl,
+      media_type: mediaType,
+      original_name: uploadFile.name,
+      is_local: Boolean(previewUrl),
+      upload_status: 'uploading',
+    };
+    mediaPreviewsRef.current = [...mediaPreviewsRef.current, pendingPreview];
     setMediaPreviews((current) => [
       ...current,
-      {
-        media_no: pendingMediaNo,
-        preview_url: previewUrl,
-        media_type: mediaType,
-        original_name: uploadFile.name,
-        is_local: Boolean(previewUrl),
-        upload_status: 'uploading',
-      },
+      pendingPreview,
     ]);
 
     try {
+      const durationFallbackSeconds = mediaType === 'audio' ? normalizeAudioDurationFallback(options.durationFallbackSeconds) : null;
+      const metadata = await readUploadMetadata(mediaType, previewUrl, { durationFallbackSeconds });
+      const durationLimit = getMediaDurationLimit(mediaType);
+      const durationSeconds = metadata.duration_seconds ?? durationFallbackSeconds;
+      if (durationLimit && (typeof durationSeconds !== 'number' || !Number.isFinite(durationSeconds))) {
+        throw new Error(`${mediaType === 'video' ? '视频' : '语音'}时长读取失败，请重新选择可播放的文件。`);
+      }
+      if (durationLimit && typeof durationSeconds === 'number' && durationSeconds > durationLimit) {
+        throw new Error(`${getMediaDurationLimitMessage(mediaType)}，请重新选择较短的文件。`);
+      }
       const uploadToken = await webApi.createUploadToken({
         child_no: childNo,
         file_name: uploadFile.name,
@@ -1170,7 +1708,7 @@ const RecordForm = ({
         }
       }
 
-      await webApi.confirmUpload({ media_no: uploadToken.media_no });
+      await webApi.confirmUpload({ media_no: uploadToken.media_no, ...metadata });
       setForm((current) => {
         if (current.record_type === 'text' || current.record_type === 'milestone') return { ...current, record_type: 'mixed' };
         if (mediaType === 'audio') return { ...current, record_type: 'audio' };
@@ -1181,37 +1719,26 @@ const RecordForm = ({
         return current;
       });
       setMediaNos((current) => [...current, uploadToken.media_no]);
-      setMediaPreviews((current) =>
-        current.map((item) =>
-          item.media_no === pendingMediaNo
-            ? {
-                media_no: uploadToken.media_no,
-                preview_url: previewUrl,
-                media_type: mediaType,
-                original_name: uploadFile.name,
-                is_local: false,
-                upload_status: 'ready',
-              }
-            : item,
-        ),
-      );
+      const readyPreview = {
+        media_no: uploadToken.media_no,
+        preview_url: previewUrl,
+        media_type: mediaType,
+        original_name: uploadFile.name,
+        is_local: false,
+        upload_status: 'ready' as const,
+        duration_seconds: metadata.duration_seconds ?? durationFallbackSeconds ?? null,
+      };
+      mediaPreviewsRef.current = mediaPreviewsRef.current.map((item) => item.media_no === pendingMediaNo ? readyPreview : item);
+      setMediaPreviews((current) => current.map((item) => item.media_no === pendingMediaNo ? readyPreview : item));
       removeRuntimeMediaPreview(pendingMediaNo);
+      failedUploadFilesRef.current.delete(pendingMediaNo);
       if (previewUrl) void persistConfirmedMediaPreview(uploadToken.media_no, uploadFile, mediaType, previewUrl);
     } catch (err) {
       removeRuntimeMediaPreview(pendingMediaNo);
-      const message = err instanceof Error ? err.message : '上传失败';
-      setMediaPreviews((current) =>
-        current.map((item) =>
-          item.media_no === pendingMediaNo
-            ? {
-                ...item,
-                upload_status: 'failed',
-                error_message: message,
-              }
-            : item,
-        ),
-      );
-      setError(message);
+      const message = normalizeUploadErrorMessage(err instanceof Error ? err.message : '上传失败', mediaType);
+      failedUploadFilesRef.current.set(pendingMediaNo, { file: uploadFile, options });
+      mediaPreviewsRef.current = mediaPreviewsRef.current.map((item) => item.media_no === pendingMediaNo ? { ...item, upload_status: 'failed', error_message: message } : item);
+      setMediaPreviews((current) => current.map((item) => item.media_no === pendingMediaNo ? { ...item, upload_status: 'failed', error_message: message } : item));
     } finally {
       setUploading(false);
     }
@@ -1226,6 +1753,112 @@ const RecordForm = ({
     event.target.value = '';
   };
 
+  const startAudioRecording = async () => {
+    if (uploading || audioRecording) return;
+    if (!ensureMediaCountAvailable('audio')) return;
+
+    setError(null);
+    setSelectorMessage(null);
+
+    if (typeof MediaRecorder === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+      triggerMediaInput(audioCaptureInputRef.current);
+      setSelectorMessage('当前设备不支持应用内录音，已打开系统录音文件选择。');
+      return;
+    }
+
+    let stream: MediaStream | null = null;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mimeType = resolveAudioRecordingMimeType();
+      const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
+
+      audioRecordingChunksRef.current = [];
+      audioRecordingStreamRef.current = stream;
+      audioRecorderRef.current = recorder;
+      audioRecordingStartedAtRef.current = Date.now();
+      audioRecordingDiscardRef.current = false;
+      audioRecordingLimitTriggeredRef.current = false;
+      setAudioRecordingSeconds(0);
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioRecordingChunksRef.current.push(event.data);
+        }
+      };
+      recorder.onerror = () => {
+        setAudioRecording(false);
+        setAudioRecordingSeconds(0);
+        audioRecordingStartedAtRef.current = null;
+        stopMediaStream(audioRecordingStreamRef.current);
+        audioRecordingStreamRef.current = null;
+        audioRecorderRef.current = null;
+        audioRecordingChunksRef.current = [];
+        audioRecordingDiscardRef.current = false;
+        setError('录音中断，请检查麦克风权限后重试，或改用上传语音文件。');
+      };
+      recorder.onstop = () => {
+        const shouldDiscard = audioRecordingDiscardRef.current;
+        const chunks = [...audioRecordingChunksRef.current];
+        const recordedMimeType = normalizeMimeType(recorder.mimeType || mimeType || chunks[0]?.type) || 'audio/webm';
+        const recordingStartedAt = audioRecordingStartedAtRef.current;
+        const measuredDurationSeconds = normalizeAudioDurationFallback(recordingStartedAt ? (Date.now() - recordingStartedAt) / 1000 : audioRecordingSeconds);
+        const recordedDurationSeconds = audioRecordingLimitTriggeredRef.current
+          ? RECORD_MEDIA_LIMITS.audioMaxDurationSeconds
+          : measuredDurationSeconds;
+        audioRecordingChunksRef.current = [];
+        audioRecordingDiscardRef.current = false;
+        audioRecordingLimitTriggeredRef.current = false;
+        setAudioRecording(false);
+        setAudioRecordingSeconds(0);
+        audioRecordingStartedAtRef.current = null;
+        stopMediaStream(audioRecordingStreamRef.current);
+        audioRecordingStreamRef.current = null;
+        audioRecorderRef.current = null;
+
+        if (shouldDiscard) {
+          return;
+        }
+
+        if (!chunks.length) {
+          setError('没有录到声音，请重新录制。');
+          return;
+        }
+
+        const audioFile = new File([new Blob(chunks, { type: recordedMimeType })], `voice-${Date.now()}.${audioRecordingExtension(recordedMimeType)}`, {
+          type: recordedMimeType,
+        });
+        void uploadMediaFile(audioFile, { durationFallbackSeconds: recordedDurationSeconds });
+      };
+
+      recorder.start(1000);
+      setAudioRecording(true);
+    } catch (err) {
+      stopMediaStream(stream);
+      audioRecordingStreamRef.current = null;
+      audioRecorderRef.current = null;
+      audioRecordingChunksRef.current = [];
+      audioRecordingDiscardRef.current = false;
+      setAudioRecording(false);
+      setAudioRecordingSeconds(0);
+      audioRecordingStartedAtRef.current = null;
+      const message =
+        err instanceof DOMException && (err.name === 'NotAllowedError' || err.name === 'SecurityError')
+          ? '无法使用麦克风，请在系统权限中允许录音，或改用上传语音文件。'
+          : '录音启动失败，请检查麦克风权限后重试，或改用上传语音文件。';
+      setError(message);
+    }
+  };
+
+  const stopAudioRecording = () => {
+    const recorder = audioRecorderRef.current;
+    if (!recorder || recorder.state === 'inactive') return;
+    audioRecordingDiscardRef.current = false;
+    if (typeof recorder.requestData === 'function') {
+      recorder.requestData();
+    }
+    recorder.stop();
+  };
+
   const uploadNativeImage = async (asset: NativeImageAsset, prefix: 'camera' | 'gallery') => {
     const file = await nativeImageToFile(asset, prefix);
     await uploadMediaFile(file);
@@ -1238,6 +1871,7 @@ const RecordForm = ({
     }
 
     if (uploading) return;
+    if (!ensureMediaCountAvailable('image')) return;
 
     setError(null);
     try {
@@ -1270,12 +1904,13 @@ const RecordForm = ({
     }
 
     if (uploading) return;
+    if (!ensureMediaCountAvailable('image')) return;
 
     setError(null);
     try {
       const result = await Camera.pickImages({
         quality: 86,
-        limit: 20,
+        limit: Math.max(1, getMediaCountLimit('image') - currentMediaCount('image')),
         correctOrientation: true,
         presentationStyle: 'fullscreen',
       });
@@ -1295,6 +1930,8 @@ const RecordForm = ({
 
   const removeMedia = (mediaNo: string) => {
     removeRuntimeMediaPreview(mediaNo);
+    failedUploadFilesRef.current.delete(mediaNo);
+    mediaPreviewsRef.current = mediaPreviewsRef.current.filter((item) => item.media_no !== mediaNo);
     setMediaNos((current) => current.filter((item) => item !== mediaNo));
     setMediaPreviews((current) => {
       const removed = current.find((item) => item.media_no === mediaNo);
@@ -1303,6 +1940,18 @@ const RecordForm = ({
       }
       return current.filter((item) => item.media_no !== mediaNo);
     });
+  };
+
+  const retryFailedMedia = (mediaNo: string) => {
+    if (uploading || audioRecording) return;
+    const retryEntry = failedUploadFilesRef.current.get(mediaNo);
+    if (!retryEntry) {
+      setError('原文件已不可用，请重新选择素材。');
+      return;
+    }
+    const { file, options } = retryEntry;
+    removeMedia(mediaNo);
+    void uploadMediaFile(file, options);
   };
 
   const resolveSubmitRecordType = () => {
@@ -1335,6 +1984,10 @@ const RecordForm = ({
   const submitRecord = async (nextStatus = form.status) => {
     if (uploading) {
       setError('媒体还在上传，请完成后再发布。');
+      return;
+    }
+    if (audioRecording) {
+      setError('录音还在进行，请先停止录音。');
       return;
     }
 
@@ -1478,7 +2131,6 @@ const RecordForm = ({
       return locationText === manualLocationText || location.name.trim() === manualLocationText;
     });
   const showMediaSection = !isHeightRecord && (form.record_type !== 'text' || mode === 'edit' || mediaNos.length > 0);
-  const showPhotoVideoAction = showMediaSection && form.record_type !== 'audio';
   const showAudioAction = showMediaSection && form.record_type !== 'video';
   const photoVideoAccept =
     form.record_type === 'video'
@@ -1529,11 +2181,11 @@ const RecordForm = ({
       }}
     >
         <AppTopBar
-          title={isHeightRecord ? '记录身高' : mode === 'create' ? '记录时光' : '编辑记录'}
+          title=""
           backLabel={mode === 'create' ? '取消' : '返回'}
           backVariant={mode === 'create' ? 'text' : 'icon'}
           onBack={leaveRecordForm}
-          style={{ position: 'relative', top: 'auto', margin: '0 -18px 12px', padding: 'calc(30px + env(safe-area-inset-top)) 18px 12px' }}
+          style={{ position: 'relative', top: 'auto', margin: '0 -18px 8px', padding: 'calc(26px + env(safe-area-inset-top)) 18px 10px' }}
           action={
             <button
               type="submit"
@@ -1547,16 +2199,28 @@ const RecordForm = ({
                 padding: '0 2px',
                 fontSize: '15px',
                 fontWeight: 560,
-                cursor: submitting || uploading ? 'not-allowed' : 'pointer',
-                opacity: submitting || uploading ? 0.72 : 1,
+                cursor: submitting || uploading || audioRecording ? 'not-allowed' : 'pointer',
+                opacity: submitting || uploading || audioRecording ? 0.72 : 1,
               }}
-              disabled={submitting || uploading}
+              disabled={submitting || uploading || audioRecording}
             >
               {pendingAction === 'publish' ? `${primarySubmitLabel}中…` : primarySubmitLabel}
             </button>
           }
         />
-        <form id="record-form" onSubmit={handleSubmit} style={{ ...rowStyle, gap: '14px', width: '100%', maxWidth: '100%', overflowX: 'hidden' }}>
+        <header className="record-workspace-masthead" style={{ display: 'grid', gap: '8px', padding: '6px 2px 16px' }}>
+          <span aria-hidden="true" style={{ width: '30px', height: '2px', background: 'var(--nl-primary-2)' }} />
+          <h1
+            aria-label={isHeightRecord ? '记录身高' : mode === 'create' ? '记录时光' : '编辑记录'}
+            style={{ margin: 0, color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '34px', lineHeight: 1.05, fontWeight: 780 }}
+          >
+            {isHeightRecord ? '身高记录' : mode === 'create' ? '新记录' : '编辑记录'}
+          </h1>
+          <span style={{ color: 'var(--nl-muted)', fontSize: '12px', lineHeight: 1.4, fontWeight: 560 }}>
+            {currentChildName} · {form.event_time ? formatDateTimeDisplay(form.event_time) : '选择时间'}
+          </span>
+        </header>
+        <form id="record-form" onSubmit={handleSubmit} style={{ ...rowStyle, gap: '18px', width: '100%', maxWidth: '100%', overflowX: 'hidden' }}>
           <section
             style={{
               order: 0,
@@ -1588,8 +2252,8 @@ const RecordForm = ({
             >
               <div
                 style={{
-                  width: '38px',
-                  height: '38px',
+                  width: '44px',
+                  height: '44px',
                   borderRadius: '999px',
                   background: currentChildAvatar ? 'var(--nl-surface-soft)' : 'rgba(var(--nl-primary-rgb),0.1)',
                   border: '1px solid var(--nl-border-muted)',
@@ -1601,50 +2265,25 @@ const RecordForm = ({
                   overflow: 'hidden',
                 }}
               >
-                {currentChildAvatar ? <img src={currentChildAvatar} alt={currentChildName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (currentChild?.name?.slice(0, 1) ?? '宝')}
+                {currentChildAvatar ? <img src={currentChildAvatar} alt={currentChildName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : currentChildInitial}
               </div>
               <span style={{ display: 'grid', gap: '2px', minWidth: 0 }}>
-                <strong style={{ fontSize: '15px', color: 'var(--nl-ink)', fontWeight: 680, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{currentChildName}</strong>
+                <strong style={{ fontSize: '16px', color: 'var(--nl-ink)', fontWeight: 680, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{currentChildName}</strong>
               </span>
             </button>
-            <label
-              style={{
-                ...dateControlStyle,
-                minHeight: '38px',
-                gap: '7px',
-                padding: '0 0 5px',
-                border: 'none',
-                borderBottom: '1px solid var(--nl-border-muted)',
-                borderRadius: 0,
-                background: 'transparent',
-                boxShadow: 'none',
+            <AppDateInput
+              ref={timeInputRef}
+              type="datetime-local"
+              aria-label="发生时间 *"
+              value={form.event_time}
+              displayValue={form.event_time ? formatDateTimeDisplay(form.event_time) : undefined}
+              placeholder="选择时间"
+              variant="line"
+              onChange={(event) => {
+                setError(null);
+                setForm((current) => ({ ...current, event_time: event.target.value }));
               }}
-              onClick={() => {
-                const picker = timeInputRef.current as (HTMLInputElement & { showPicker?: () => void }) | null;
-                try {
-                  picker?.showPicker?.();
-                } catch {
-                  picker?.focus();
-                }
-              }}
-            >
-              <input
-                ref={timeInputRef}
-                className="app-date-time-input"
-                aria-label="发生时间 *"
-                style={hiddenNativeDateInputStyle}
-                type="datetime-local"
-                value={form.event_time}
-                onChange={(event) => {
-                  setError(null);
-                  setForm((current) => ({ ...current, event_time: event.target.value }));
-                }}
-              />
-              <Clock size={14} strokeWidth={2.2} color="var(--nl-muted)" />
-              <span style={{ flex: 1, minWidth: 0, color: form.event_time ? 'var(--nl-ink)' : 'var(--nl-muted)', fontSize: '12px', fontWeight: 520, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', pointerEvents: 'none' }}>
-                {form.event_time ? formatDateTimeDisplay(form.event_time) : '选择时间'}
-              </span>
-            </label>
+            />
           </section>
 
           {isHeightRecord ? (
@@ -1718,81 +2357,106 @@ const RecordForm = ({
               style={{
                 order: 1,
                 display: 'grid',
-                gap: '10px',
+                gap: '14px',
+                minHeight: mediaPreviews.length ? undefined : '226px',
+                margin: '2px -18px 0',
                 borderRadius: 0,
                 border: 'none',
-                borderBottom: '1px solid var(--nl-border-muted)',
-                background: 'transparent',
-                padding: '3px 0 16px',
+                borderTop: '1px solid var(--nl-border-soft)',
+                borderBottom: '1px solid var(--nl-border-soft)',
+                background: 'var(--nl-surface-soft)',
+                padding: '22px 18px 20px',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '12px' }}>
-                <strong style={{ color: 'var(--nl-ink)', fontSize: '15px', fontWeight: 660 }}>媒体</strong>
+                <strong style={{ color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '25px', lineHeight: 1.08, fontWeight: 780 }}>影像与声音</strong>
                 {uploading ? <span style={{ minWidth: 0, color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>正在上传…</span> : null}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: showPhotoVideoAction && showAudioAction ? 'repeat(auto-fit, minmax(58px, 1fr))' : 'repeat(2, minmax(0, 1fr))', gap: '4px', borderRadius: 0, borderTop: '1px solid var(--nl-border-soft)', borderBottom: '1px solid var(--nl-border-soft)', background: 'transparent', padding: '6px 0' }}>
-                {showPhotoVideoAction ? (
-                  form.record_type === 'video' ? (
-                    <>
-                      <MediaActionButton icon={<Video size={17} strokeWidth={2.2} />} label="拍摄视频" displayLabel="视频" onClick={() => triggerMediaInput(videoCaptureInputRef.current)} disabled={uploading} />
-                      <MediaActionButton icon={<ImagePlus size={17} strokeWidth={2.2} />} label="从相册选择" displayLabel="相册" onClick={() => triggerMediaInput(galleryInputRef.current)} disabled={uploading} />
-                    </>
-                  ) : (
-                    <>
-                      <MediaActionButton icon={<ImagePlus size={17} strokeWidth={2.2} />} label="拍照记录" displayLabel="拍照" onClick={() => void openNativePhotoCapture()} disabled={uploading} />
-                      <MediaActionButton icon={<Image size={17} strokeWidth={2.2} />} label="从相册添加" displayLabel="相册" onClick={() => void openNativeGalleryImages()} disabled={uploading} />
-                      <MediaActionButton icon={<Video size={17} strokeWidth={2.2} />} label="拍摄视频" displayLabel="视频" onClick={() => triggerMediaInput(videoCaptureInputRef.current)} disabled={uploading} />
-                    </>
-                  )
-                ) : null}
-                {showAudioAction ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
+                {form.record_type === 'video' ? (
                   <>
-                    <MediaActionButton icon={<Mic size={17} strokeWidth={2.2} />} label="录制语音" displayLabel="录音" onClick={() => triggerMediaInput(audioCaptureInputRef.current)} disabled={uploading} />
-                    <MediaActionButton icon={<FileAudio size={17} strokeWidth={2.2} />} label="上传语音" displayLabel="上传" onClick={() => triggerMediaInput(audioLibraryInputRef.current)} disabled={uploading} />
+                    <MediaActionButton icon={<Video size={17} strokeWidth={2.2} />} label="拍摄视频" displayLabel="视频" onClick={() => { if (ensureMediaCountAvailable('video')) triggerMediaInput(videoCaptureInputRef.current); }} disabled={uploading || audioRecording} />
+                    <MediaActionButton icon={<ImagePlus size={17} strokeWidth={2.2} />} label="从相册选择" displayLabel="相册" onClick={() => triggerMediaInput(galleryInputRef.current)} disabled={uploading || audioRecording} />
                   </>
-                ) : null}
+                ) : form.record_type === 'audio' ? (
+                  <>
+                    <MediaActionButton
+                      icon={audioRecording ? <Square size={16} strokeWidth={2.4} fill="currentColor" /> : <Mic size={17} strokeWidth={2.2} />}
+                      label={audioRecording ? '停止录音' : '录制语音'}
+                      displayLabel={audioRecording ? `停止 ${formatRecordingTime(audioRecordingSeconds)}` : '录制语音'}
+                      onClick={() => (audioRecording ? stopAudioRecording() : void startAudioRecording())}
+                      disabled={uploading}
+                      style={audioRecording ? { color: 'var(--nl-danger)', background: 'var(--nl-danger-soft)', border: '1px solid var(--nl-danger-line)' } : undefined}
+                    />
+                    <MediaActionButton icon={<FileAudio size={17} strokeWidth={2.2} />} label="上传语音" displayLabel="上传语音" onClick={() => triggerMediaInput(audioLibraryInputRef.current)} disabled={uploading || audioRecording} />
+                  </>
+                ) : (
+                  <>
+                    <MediaActionButton icon={<ImagePlus size={17} strokeWidth={2.2} />} label="拍照记录" displayLabel="拍照" onClick={() => void openNativePhotoCapture()} disabled={uploading || audioRecording} />
+                    <MediaActionButton icon={<Image size={17} strokeWidth={2.2} />} label="从相册添加" displayLabel="相册" onClick={() => void openNativeGalleryImages()} disabled={uploading || audioRecording} />
+                    <MediaActionButton icon={<MoreHorizontal size={18} strokeWidth={2.2} />} label="更多媒体" displayLabel={moreMediaOpen ? '收起' : '更多'} ariaExpanded={moreMediaOpen} onClick={() => setMoreMediaOpen((current) => !current)} disabled={uploading || audioRecording} />
+                  </>
+                )}
               </div>
+              <p style={{ margin: '0', color: 'var(--nl-muted)', fontSize: '10.5px', lineHeight: 1.45, fontWeight: 500, textAlign: 'center' }}>{getMediaLimitHint()}</p>
+              {form.record_type !== 'audio' && form.record_type !== 'video' && moreMediaOpen ? (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px', borderTop: '1px solid var(--nl-border-soft)', paddingTop: '12px' }}>
+                  <MediaActionButton icon={<Video size={17} strokeWidth={2.2} />} label="拍摄视频" displayLabel="视频" onClick={() => { if (ensureMediaCountAvailable('video')) triggerMediaInput(videoCaptureInputRef.current); }} disabled={uploading || audioRecording} />
+                  <MediaActionButton
+                    icon={audioRecording ? <Square size={16} strokeWidth={2.4} fill="currentColor" /> : <Mic size={17} strokeWidth={2.2} />}
+                    label={audioRecording ? '停止录音' : '录制语音'}
+                    displayLabel={audioRecording ? `停止 ${formatRecordingTime(audioRecordingSeconds)}` : '录音'}
+                    onClick={() => (audioRecording ? stopAudioRecording() : void startAudioRecording())}
+                    disabled={uploading}
+                    style={audioRecording ? { color: 'var(--nl-danger)', background: 'var(--nl-danger-soft)', border: '1px solid var(--nl-danger-line)' } : undefined}
+                  />
+                  <MediaActionButton icon={<FileAudio size={17} strokeWidth={2.2} />} label="上传语音" displayLabel="上传" onClick={() => triggerMediaInput(audioLibraryInputRef.current)} disabled={uploading || audioRecording} />
+                </div>
+              ) : null}
+              {showAudioAction && (form.record_type === 'audio' || moreMediaOpen) ? (
+                <p style={{ margin: '0', color: 'var(--nl-muted)', fontSize: '11.5px', lineHeight: 1.55, fontWeight: 500 }}>
+                  {audioRecording ? '正在录音，点停止后自动上传。' : AUDIO_FORMAT_HINT}
+                </p>
+              ) : null}
 
               {mediaPreviews.length ? (
                 <section
                   aria-label="媒体预览"
                   style={{
-                    borderRadius: '8px',
-                    border: '1px solid var(--nl-border-soft)',
-                    background: 'rgba(var(--nl-surface-rgb),0.08)',
-                    padding: '7px',
+                    borderRadius: 0,
+                    border: 'none',
+                    background: 'transparent',
+                    padding: 0,
                     display: 'grid',
                     gap: '10px',
                     maxWidth: '100%',
-                    boxShadow: '0 18px 46px rgba(var(--nl-shadow-rgb),0.14)',
+                    boxShadow: 'none',
                   }}
                 >
                   {mediaPreviews.length === 1 ? (
-                    <div style={{ display: 'flex', justifyContent: 'center' }}>
-                      <div style={{ width: 'min(164px, 100%)' }}>
-                        <MediaPreviewTile key={mediaPreviews[0].media_no} media={mediaPreviews[0]} compact onRemove={removeMedia} onOpen={setFullscreenMedia} />
-                      </div>
+                    <div style={{ width: '100%' }}>
+                      <MediaPreviewTile key={mediaPreviews[0].media_no} media={mediaPreviews[0]} featured onRemove={removeMedia} onRetry={retryFailedMedia} onOpen={setFullscreenMedia} />
                     </div>
                   ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px', maxWidth: '100%' }}>
                       {mediaPreviews.map((media) => (
-                        <MediaPreviewTile key={media.media_no} media={media} compact onRemove={removeMedia} onOpen={setFullscreenMedia} />
+                        <MediaPreviewTile key={media.media_no} media={media} compact onRemove={removeMedia} onRetry={retryFailedMedia} onOpen={setFullscreenMedia} />
                       ))}
                     </div>
                   )}
                 </section>
               ) : null}
 
-              <input ref={photoCaptureInputRef} aria-label="拍照记录" type="file" accept="image/*,image/jpeg,image/png,image/webp,image/heic,image/heif" capture="environment" onChange={(event) => void onFileChange(event)} disabled={uploading} style={{ display: 'none' }} />
-              <input ref={videoCaptureInputRef} aria-label="拍摄视频" type="file" accept="video/*,video/mp4,video/webm,video/quicktime,video/3gpp" capture="environment" onChange={(event) => void onFileChange(event)} disabled={uploading} style={{ display: 'none' }} />
-              <input ref={galleryInputRef} aria-label={form.record_type === 'video' ? '从相册选择视频' : '从相册添加'} type="file" accept={photoVideoAccept} multiple onChange={(event) => void onFileChange(event)} disabled={uploading} style={{ display: 'none' }} />
-              <input ref={audioCaptureInputRef} aria-label="录制语音" type="file" accept="audio/*,audio/mpeg,audio/mp4,audio/m4a,audio/x-m4a,audio/aac,audio/wav,audio/x-wav,audio/webm,audio/ogg,audio/3gpp,audio/amr" capture onChange={(event) => void onFileChange(event)} disabled={uploading} style={{ display: 'none' }} />
-              <input ref={audioLibraryInputRef} aria-label="上传语音" type="file" accept="audio/*,audio/mpeg,audio/mp4,audio/m4a,audio/x-m4a,audio/aac,audio/wav,audio/x-wav,audio/webm,audio/ogg,audio/3gpp,audio/amr" onChange={(event) => void onFileChange(event)} disabled={uploading} style={{ display: 'none' }} />
+              <input ref={photoCaptureInputRef} aria-label="拍照记录" type="file" accept="image/*,image/jpeg,image/png,image/webp,image/heic,image/heif" capture="environment" onChange={(event) => void onFileChange(event)} disabled={uploading || audioRecording} style={{ display: 'none' }} />
+              <input ref={videoCaptureInputRef} aria-label="拍摄视频" type="file" accept="video/*,video/mp4,video/webm,video/quicktime,video/3gpp" capture="environment" onChange={(event) => void onFileChange(event)} disabled={uploading || audioRecording} style={{ display: 'none' }} />
+              <input ref={galleryInputRef} aria-label={form.record_type === 'video' ? '从相册选择视频' : '从相册添加'} type="file" accept={photoVideoAccept} multiple onChange={(event) => void onFileChange(event)} disabled={uploading || audioRecording} style={{ display: 'none' }} />
+              <input ref={audioCaptureInputRef} aria-label="录制语音文件" type="file" accept={AUDIO_UPLOAD_ACCEPT} capture onChange={(event) => void onFileChange(event)} disabled={uploading || audioRecording} style={{ display: 'none' }} />
+              <input ref={audioLibraryInputRef} aria-label="上传语音" type="file" accept={AUDIO_UPLOAD_ACCEPT} onChange={(event) => void onFileChange(event)} disabled={uploading || audioRecording} style={{ display: 'none' }} />
             </section>
           ) : null}
 
           {!isHeightRecord ? (
-          <div className="record-editor-card" style={{ order: 2, display: 'grid', gap: '12px', borderRadius: 0, border: 'none', background: 'transparent', padding: '0 0 4px', boxShadow: 'none' }}>
+          <div className="record-editor-card" style={{ order: 2, display: 'grid', gap: '12px', borderRadius: 0, border: 'none', background: 'transparent', padding: '8px 0 10px', boxShadow: 'none' }}>
             <div className="record-editor-title-row" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', alignItems: 'center', gap: '10px', borderBottom: '1px solid var(--nl-border-soft)', padding: '0 0 14px' }}>
               <input
                 ref={titleInputRef}
@@ -1803,7 +2467,8 @@ const RecordForm = ({
                   minHeight: '42px',
                   border: 'none',
                   padding: '4px 0 2px',
-                  fontSize: '20px',
+                  fontFamily: 'var(--nl-font-display)',
+                  fontSize: '25px',
                   fontWeight: 760,
                   lineHeight: 1.22,
                   color: 'var(--nl-ink)',
@@ -1846,7 +2511,7 @@ const RecordForm = ({
                 className="record-body-input"
                 style={{
                   width: '100%',
-                  minHeight: '188px',
+                  minHeight: '172px',
                   border: 'none',
                   outline: 'none',
                   resize: 'none',
@@ -1906,7 +2571,7 @@ const RecordForm = ({
           </div>
           ) : null}
 
-          <div style={{ order: 3, display: 'grid', gap: '8px', borderRadius: 0, border: 'none', borderBottom: '1px solid var(--nl-border-muted)', background: 'transparent', padding: '2px 0 13px' }}>
+          <div style={{ order: 3, display: 'grid', gap: '6px', borderRadius: 0, border: 'none', borderBottom: '1px solid var(--nl-border-muted)', background: 'transparent', padding: '0 0 11px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
               <span style={{ color: 'var(--nl-ink)', fontSize: '15px', fontWeight: 620 }}>设置</span>
             </div>
@@ -2129,7 +2794,7 @@ const RecordForm = ({
               type="button"
               style={{ ...secondaryButtonStyle, order: 6, width: '100%', minHeight: '48px', justifyContent: 'center' }}
               onClick={() => void submitRecord('draft')}
-              disabled={submitting || uploading}
+              disabled={submitting || uploading || audioRecording}
             >
               {pendingAction === 'draft' ? '保存草稿中…' : '保存草稿'}
             </button>
@@ -2155,7 +2820,7 @@ const RecordForm = ({
             onConfirm={leaveAfterDiscard}
           />
         ) : null}
-        <MediaFullscreenDialog media={fullscreenMedia} onClose={() => setFullscreenMedia(null)} />
+        <MediaFullscreenDialog media={fullscreenMedia} mediaList={mediaPreviews} onClose={() => setFullscreenMedia(null)} />
     </div>
   );
 };
@@ -2202,12 +2867,13 @@ export const ViewRecordPage = () => {
   const navigate = useNavigate();
   const params = useParams<{ record_no: string }>();
   const { user } = useAuth();
+  const [primaryMediaRetryKey, setPrimaryMediaRetryKey] = useState(0);
   const { data, loading, error, setData } = useAsyncData<RecordDetail | null>(
     async () => {
       if (!params.record_no) return null;
       return webApi.detailRecord(params.record_no);
     },
-    [params.record_no],
+    [params.record_no, primaryMediaRetryKey],
   );
   const [aiJob, setAiJob] = useState<AiJobDetail | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
@@ -2217,6 +2883,7 @@ export const ViewRecordPage = () => {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [fullscreenMedia, setFullscreenMedia] = useState<FullscreenMediaPreview | null>(null);
+  const [primaryMediaLoadFailed, setPrimaryMediaLoadFailed] = useState(false);
 
   useEffect(() => {
     if (!aiJob || !['pending', 'processing'].includes(aiJob.status)) return;
@@ -2290,8 +2957,16 @@ export const ViewRecordPage = () => {
   const primaryMedia = data?.media_list[0] ?? null;
   const primaryMediaUrl = useCachedMediaUrl(primaryMedia?.media_no, primaryMedia?.access_url ?? null, primaryMedia?.media_type, {
     cacheRemote: Boolean(primaryMedia),
-  });
-  const primaryMediaOpenable = Boolean(primaryMedia && primaryMediaUrl && primaryMedia.media_type !== 'audio');
+  }) ?? primaryMedia?.access_url ?? null;
+  useEffect(() => {
+    setPrimaryMediaLoadFailed(false);
+  }, [primaryMedia?.media_no, primaryMediaUrl]);
+  const primaryMediaOpenable = Boolean(primaryMedia && (primaryMediaUrl || primaryMedia.access_url) && primaryMedia.media_type !== 'audio');
+  const primaryMediaPreviewUrl = primaryMediaUrl ?? primaryMedia?.access_url ?? null;
+  const retryPrimaryMedia = () => {
+    setPrimaryMediaLoadFailed(false);
+    setPrimaryMediaRetryKey((current) => current + 1);
+  };
   const canUseAi = hasAiPlusAccess(user);
   const aiJobSuggestedTitle =
     aiJob?.status === 'success' && aiJob.job_type === 'record_title' && typeof aiJob.output_json?.suggested_title === 'string'
@@ -2301,28 +2976,49 @@ export const ViewRecordPage = () => {
   const displayTitle = data ? (data.title?.trim() || generatedTitle || '未命名记录') : '未命名记录';
   const aiJobProcessing = aiJob?.status === 'pending' || aiJob?.status === 'processing';
   const secondaryMediaList = data?.media_list.slice(primaryMedia ? 1 : 0) ?? [];
+  const detailDateText = data ? new Date(data.event_time).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' }) : '';
+  const detailCreatorName = data
+    ? data.creator_user_no === user?.user_no
+      ? '我'
+      : /^(?:codex(?:ui)?\d[a-z0-9]*|native_[a-z0-9_]+|1\d{10})$/i.test(data.creator_name.trim())
+        ? '家人'
+        : normalizeDisplayName(data.creator_name, '家人')
+    : '';
+  const detailMetaText = [detailDateText, detailCreatorName].filter(Boolean).join(' · ');
+  const detailMetadataItems = data ? [
+    { label: '类型', value: recordTypeLabel(data.record_type, data.is_milestone) },
+    { label: '时间', value: new Date(data.event_time).toLocaleString('zh-CN', { hour12: false }) },
+    { label: '可见范围', value: data.status === 'draft' ? '仅自己可见（草稿）' : visibilityScopeLabel(data.visibility_scope) },
+    { label: '地点', value: normalizeLocationText(data.location_text) || '未填写' },
+    { label: '状态', value: recordStatusLabel(data.status) },
+  ] : [];
 
   return (
     <PageShell
       title="记录详情"
-      backTo="/timeline"
-      onBack={() => {
+      hideHeader
+    >
+      <AppTopBar
+        title=""
+        backTo="/timeline"
+        onBack={() => {
         if (window.history.length > 1) {
           navigate(-1);
           return;
         }
         navigate('/timeline');
       }}
-    >
+        style={{ margin: '0 calc(var(--nl-content-inline) * -1)' }}
+      />
       {loading ? <Panel><EmptyState message="正在加载记录详情…" /></Panel> : null}
       {error ? <Panel><EmptyState message={`加载失败：${error}`} /></Panel> : null}
       {data ? (
-        <article style={{ display: 'grid', gap: '18px', paddingBottom: '10px' }}>
+        <article style={{ display: 'grid', gap: '22px', paddingBottom: '10px' }}>
           <section style={{ borderRadius: 0, border: 'none', background: 'transparent', overflow: 'visible', boxShadow: 'none', padding: 0 }}>
-            {primaryMedia && primaryMediaUrl ? (
+            {primaryMedia ? (
               primaryMedia.media_type === 'audio' ? (
                 <div data-testid="record-primary-media-preview" style={{ padding: 0, borderRadius: 8, background: 'transparent', border: 'none' }}>
-                  <MediaPreviewTile media={{ ...primaryMedia, preview_url: primaryMediaUrl }} onOpen={setFullscreenMedia} />
+                  <MediaPreviewTile media={{ ...primaryMedia, preview_url: primaryMediaUrl ?? primaryMedia.access_url }} onOpen={setFullscreenMedia} />
                 </div>
               ) : (
                 <div
@@ -2331,72 +3027,74 @@ export const ViewRecordPage = () => {
                   aria-label={mediaPreviewLabel(primaryMedia.media_type)}
                   role={primaryMediaOpenable ? 'button' : undefined}
                   tabIndex={primaryMediaOpenable ? 0 : undefined}
-                  onClick={primaryMediaOpenable ? () => setFullscreenMedia({ ...primaryMedia, preview_url: primaryMediaUrl }) : undefined}
+                   onClick={primaryMediaOpenable ? () => setFullscreenMedia({ ...primaryMedia, preview_url: primaryMediaPreviewUrl }) : undefined}
                   onKeyDown={
                     primaryMediaOpenable
                       ? (event) => {
                           if (event.key === 'Enter' || event.key === ' ') {
                             event.preventDefault();
-                            setFullscreenMedia({ ...primaryMedia, preview_url: primaryMediaUrl });
+                           setFullscreenMedia({ ...primaryMedia, preview_url: primaryMediaPreviewUrl });
                           }
                         }
                       : undefined
                   }
-                  style={{ position: 'relative', background: 'var(--nl-surface-soft)', cursor: primaryMediaOpenable ? 'pointer' : 'default', borderRadius: 8, overflow: 'hidden', border: '1px solid var(--nl-border-soft)', boxShadow: '0 28px 72px rgba(var(--nl-shadow-rgb),0.36)', WebkitTapHighlightColor: 'transparent' }}
+                  style={{ position: 'relative', margin: '0 calc(var(--nl-content-inline) * -1)', background: 'var(--nl-bg-warm)', cursor: primaryMediaOpenable ? 'pointer' : 'default', borderRadius: 0, overflow: 'hidden', border: 'none', boxShadow: '0 26px 64px rgba(var(--nl-shadow-rgb),0.16)', WebkitTapHighlightColor: 'transparent' }}
                 >
-                  {primaryMedia.media_type === 'video' ? (
-                    <video src={primaryMediaUrl} controls playsInline preload="none" style={{ width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', display: 'block', background: 'var(--nl-surface-soft)', pointerEvents: primaryMediaOpenable ? 'none' : 'auto', WebkitTapHighlightColor: 'transparent' }} />
+                  {!primaryMediaUrl ? (
+                    <div style={{ width: '100%', aspectRatio: '4 / 4.55', display: 'grid', placeItems: 'center', alignContent: 'center', gap: '10px', padding: '24px', color: 'var(--nl-muted)', background: 'var(--nl-surface-soft)', textAlign: 'center', boxSizing: 'border-box' }}>
+                      <Image size={34} strokeWidth={1.7} />
+                      <strong style={{ color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 700 }}>媒体正在准备</strong>
+                      <span style={{ maxWidth: '240px', fontSize: '12px', lineHeight: 1.55 }}>原始媒体仍可在下方关联媒体中查看状态。</span>
+                      <button type="button" onClick={(event) => { event.stopPropagation(); retryPrimaryMedia(); }} style={{ minHeight: '38px', border: '1px solid var(--nl-border-muted)', borderRadius: '8px', background: 'var(--nl-dialog-bg)', color: 'var(--nl-primary-2)', padding: '0 13px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}>重新加载</button>
+                    </div>
+                  ) : !primaryMediaLoadFailed && primaryMedia.media_type === 'video' ? (
+                    <>
+                      <video key={`primary-video-${primaryMedia.media_no}-${primaryMediaRetryKey}-${primaryMediaUrl}`} src={primaryMediaUrl} muted playsInline preload="metadata" onError={() => setPrimaryMediaLoadFailed(true)} style={{ width: '100%', aspectRatio: '4 / 4.55', objectFit: 'cover', display: 'block', background: 'var(--nl-bg-warm)', pointerEvents: 'none', WebkitTapHighlightColor: 'transparent' }} />
+                      <span aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', pointerEvents: 'none' }}>
+                        <span style={{ width: 58, height: 58, borderRadius: '50%', display: 'grid', placeItems: 'center', color: 'var(--nl-on-dark)', background: 'rgba(37,31,24,0.46)', WebkitBackdropFilter: 'blur(14px)', backdropFilter: 'blur(14px)', boxShadow: '0 18px 42px rgba(var(--nl-shadow-rgb),0.26)' }}>
+                          <PlayCircle size={32} strokeWidth={1.65} fill="rgba(255,250,241,0.18)" />
+                        </span>
+                      </span>
+                    </>
+                  ) : !primaryMediaLoadFailed ? (
+                    <img key={`primary-image-${primaryMedia.media_no}-${primaryMediaRetryKey}-${primaryMediaUrl}`} src={primaryMediaUrl} alt={displayTitle || primaryMedia.original_name || '记录封面'} loading="eager" decoding="async" onError={() => setPrimaryMediaLoadFailed(true)} style={{ width: '100%', aspectRatio: '4 / 4.55', objectFit: 'cover', display: 'block', pointerEvents: primaryMediaOpenable ? 'none' : 'auto', WebkitTapHighlightColor: 'transparent' }} />
                   ) : (
-                    <img src={primaryMediaUrl} alt={displayTitle || primaryMedia.original_name || '记录封面'} loading="eager" decoding="async" style={{ width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', display: 'block', pointerEvents: primaryMediaOpenable ? 'none' : 'auto', WebkitTapHighlightColor: 'transparent' }} />
+                    <div style={{ width: '100%', aspectRatio: '4 / 4.55', display: 'grid', placeItems: 'center', alignContent: 'center', gap: '10px', padding: '24px', color: 'var(--nl-muted)', background: 'var(--nl-surface-soft)', textAlign: 'center', boxSizing: 'border-box' }}>
+                      <Image size={34} strokeWidth={1.7} />
+                      <strong style={{ color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 700 }}>媒体暂时无法加载</strong>
+                      <span style={{ maxWidth: '240px', fontSize: '12px', lineHeight: 1.55 }}>记录正文和媒体状态仍然保留。</span>
+                      <button type="button" onClick={(event) => { event.stopPropagation(); retryPrimaryMedia(); }} style={{ minHeight: '38px', border: '1px solid var(--nl-border-muted)', borderRadius: '8px', background: 'var(--nl-dialog-bg)', color: 'var(--nl-primary-2)', padding: '0 13px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}>重试</button>
+                    </div>
                   )}
+                  <span aria-hidden="true" style={{ position: 'absolute', inset: '45% 0 0', background: 'linear-gradient(180deg, rgba(20,16,12,0), rgba(20,16,12,0.5))', pointerEvents: 'none' }} />
+                  {data.media_list.length > 1 ? (
+                    <span style={{ position: 'absolute', right: 18, bottom: 18, color: 'var(--nl-on-dark)', fontSize: 12, fontWeight: 820, textShadow: 'var(--nl-text-shadow-hero)' }}>
+                      01 / {String(data.media_list.length).padStart(2, '0')}
+                    </span>
+                  ) : null}
                 </div>
               )
             ) : null}
-            <div style={{ padding: primaryMedia && primaryMediaUrl ? '18px 2px 0' : '0', display: 'grid', gap: '15px' }}>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: 0, background: 'transparent', color: data.is_milestone ? 'var(--nl-primary-2)' : 'var(--nl-muted)', border: 'none', borderBottom: data.is_milestone ? '1px solid rgba(var(--nl-primary-rgb),0.28)' : '1px solid var(--nl-border-soft)', padding: '0 0 5px', fontSize: '11px', fontWeight: 520 }}>
-                  {data.is_milestone ? <Star size={13} fill="currentColor" /> : null}
-                  {recordTypeLabel(data.record_type, data.is_milestone)}
-                </span>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: 0, background: 'transparent', color: 'var(--nl-muted)', border: 'none', borderBottom: '1px solid var(--nl-border-soft)', padding: '0 0 5px', fontSize: '11px', fontWeight: 520 }}>
-                  {recordStatusLabel(data.status)}
-                </span>
+            <div style={{ padding: primaryMedia && primaryMediaUrl ? '24px 2px 0' : '8px 0 0', display: 'grid', gap: '20px' }}>
+              <div style={{ display: 'grid', gap: '9px' }}>
+                <span style={{ color: 'var(--nl-muted)', fontSize: 12, lineHeight: 1.25, fontWeight: 720 }}>{detailMetaText}</span>
+                <h1 style={{ margin: 0, color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '31px', lineHeight: 1.08, fontWeight: 780 }}>{displayTitle}</h1>
               </div>
-              <div style={{ display: 'grid', gap: '10px' }}>
-                <h2 style={{ margin: 0, color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '30px', lineHeight: 1.12, fontWeight: 800 }}>{displayTitle}</h2>
-                <p style={{ margin: 0, color: 'var(--nl-muted-strong)', fontSize: '15px', lineHeight: 1.86, fontWeight: 460, whiteSpace: 'pre-wrap' }}>{data.content_text ?? '暂无正文'}</p>
-              </div>
-              <div style={{ display: 'grid', gap: '8px' }}>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: 0, background: 'transparent', border: 'none', padding: '2px 0', color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 500 }}>
-                    <Clock size={13} />
-                    {new Date(data.event_time).toLocaleString('zh-CN', { hour12: false })}
-                  </span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: 0, background: 'transparent', border: 'none', padding: '2px 0', color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 500 }}>
-                    <Eye size={13} />
-                    {visibilityScopeLabel(data.visibility_scope)}
-                  </span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', borderRadius: 0, background: 'transparent', border: 'none', padding: '2px 0', color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 500 }}>
-                    <MapPin size={13} />
-                    {normalizeLocationText(data.location_text) || '未填写地点'}
-                  </span>
-                </div>
-                {data.tags.length ? (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px' }}>
-                    {data.tags.map((tag, index) => (
-                      <span key={`${data.record_no}-${tag}-${index}`} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', borderRadius: 0, background: 'transparent', border: 'none', borderBottom: '1px solid var(--nl-border-soft)', padding: '0 0 4px', color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 500 }}>
-                        <Tag size={10} />
-                        {tag}
-                      </span>
-                    ))}
+              <p style={{ margin: 0, color: 'var(--nl-muted-strong)', fontSize: '15px', lineHeight: 1.9, fontWeight: 450, whiteSpace: 'pre-wrap' }}>{data.content_text ?? '暂无正文'}</p>
+              <div style={{ display: 'grid', borderTop: '1px solid var(--nl-border-soft)' }}>
+                {detailMetadataItems.map((item) => (
+                  <div key={item.label} style={{ minHeight: 42, display: 'grid', gridTemplateColumns: '72px minmax(0, 1fr)', gap: 12, alignItems: 'center', borderBottom: '1px solid var(--nl-border-soft)', padding: '8px 0' }}>
+                    <span style={{ color: 'var(--nl-muted)', fontSize: 11, lineHeight: 1.3, fontWeight: 620 }}>{item.label}</span>
+                    <span style={{ color: 'var(--nl-muted-strong)', fontSize: 12, lineHeight: 1.45, fontWeight: 560, textAlign: 'right', overflowWrap: 'anywhere' }}>{item.value}</span>
                   </div>
-                ) : null}
+                ))}
               </div>
+              {data.tags.length ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 12px' }}>{data.tags.map((tag, index) => <span key={`${data.record_no}-${tag}-${index}`} style={{ color: 'var(--nl-primary-2)', fontSize: 11, fontWeight: 620 }}>#{tag}</span>)}</div> : null}
             </div>
           </section>
 
               {canUseAi ? (
-              <section style={{ borderRadius: 0, background: 'transparent', border: 'none', borderTop: '1px solid var(--nl-border-muted)', padding: '15px 0 0', display: 'grid', gap: '11px', boxShadow: 'none' }}>
+              <section style={{ borderRadius: 0, background: 'transparent', border: 'none', borderTop: '1px solid rgba(var(--nl-shadow-rgb),0.08)', padding: '18px 0 0', display: 'grid', gap: '11px', boxShadow: 'none' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '28px minmax(0, 1fr)', alignItems: 'start', gap: '10px' }}>
                   <span style={{ width: '28px', height: '28px', borderRadius: 0, background: 'transparent', color: 'var(--nl-primary-2)', display: 'grid', placeItems: 'center' }}>
                     <Sparkles size={15} strokeWidth={2.2} />
@@ -2432,10 +3130,13 @@ export const ViewRecordPage = () => {
               </section>
               ) : null}
 
-          {secondaryMediaList.length ? (
+          {secondaryMediaList.length > 0 ? (
             <Panel style={{ padding: '15px 0 0', borderRadius: 0, border: 'none', borderTop: '1px solid var(--nl-border-muted)', background: 'transparent', boxShadow: 'none' }}>
               <div style={{ display: 'grid', gap: '10px' }}>
-                <strong style={{ color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 660 }}>更多媒体</strong>
+                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '12px' }}>
+                  <strong style={{ color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 700 }}>关联媒体</strong>
+                  <span style={{ color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 600 }}>{data.media_list.length} 项</span>
+                </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
                   {secondaryMediaList.map((media) => (
                     <MediaPreviewTile key={media.media_no} media={media} compact onOpen={setFullscreenMedia} />
@@ -2445,11 +3146,11 @@ export const ViewRecordPage = () => {
             </Panel>
           ) : null}
 
-          <div style={{ ...buttonRowStyle, gridTemplateColumns: 'minmax(0, 1fr)', gap: '9px' }}>
+          <div style={{ ...buttonRowStyle, gridTemplateColumns: 'minmax(0, 1fr)', gap: '8px', paddingTop: '4px' }}>
             <button type="button" style={{ ...primaryButtonStyle, width: '100%', minWidth: 0, minHeight: '48px', justifyContent: 'center' }} onClick={() => navigate(`/record/${data.record_no}/edit`)}>
               编辑记录
             </button>
-            <button type="button" style={{ ...secondaryButtonStyle, width: '100%', minWidth: 0, minHeight: '42px', justifyContent: 'center', color: 'var(--nl-danger)', borderColor: 'var(--nl-danger-border)', fontSize: '14px', cursor: deleting ? 'not-allowed' : 'pointer', opacity: deleting ? 0.64 : 1 }} onClick={() => {
+            <button type="button" style={{ width: 'fit-content', minHeight: '42px', justifySelf: 'center', border: 'none', background: 'transparent', color: 'var(--nl-danger)', padding: '8px 14px', fontSize: '12px', fontWeight: 560, cursor: deleting ? 'not-allowed' : 'pointer', opacity: deleting ? 0.64 : 0.78 }} onClick={() => {
               setDeleteError(null);
               setDeleteConfirmOpen(true);
             }} disabled={deleting}>
@@ -2469,7 +3170,7 @@ export const ViewRecordPage = () => {
           onConfirm={() => void onDelete()}
         />
       ) : null}
-      <MediaFullscreenDialog media={fullscreenMedia} onClose={() => setFullscreenMedia(null)} />
+      <MediaFullscreenDialog media={fullscreenMedia} mediaList={data?.media_list} onClose={() => setFullscreenMedia(null)} />
     </PageShell>
   );
 };

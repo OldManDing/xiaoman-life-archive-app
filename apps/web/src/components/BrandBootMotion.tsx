@@ -15,7 +15,7 @@ const shellStyle: CSSProperties = {
   display: 'grid',
   alignContent: 'center',
   justifyItems: 'center',
-  gap: '24px',
+  gap: '20px',
   overflow: 'hidden',
 };
 
@@ -23,14 +23,14 @@ const motionBlockStyle: CSSProperties = {
   width: 'min(100%, 360px)',
   display: 'grid',
   justifyItems: 'center',
-  gap: '18px',
+  gap: '20px',
   textAlign: 'center',
 };
 
 const logoStageStyle: CSSProperties = {
   position: 'relative',
-  width: '174px',
-  height: '174px',
+  width: '164px',
+  height: '164px',
   display: 'grid',
   placeItems: 'center',
 };
@@ -38,10 +38,11 @@ const logoStageStyle: CSSProperties = {
 const logoStyle: CSSProperties = {
   position: 'relative',
   zIndex: 3,
-  width: '82px',
-  height: '82px',
-  borderRadius: '8px',
-  boxShadow: '0 18px 48px rgba(var(--nl-shadow-rgb),0.28)',
+  width: '96px',
+  height: '96px',
+  borderRadius: '22%',
+  objectFit: 'contain',
+  boxShadow: '0 24px 58px rgba(var(--nl-shadow-rgb),0.22)',
 };
 
 const timelineTrackStyle: CSSProperties = {
@@ -106,30 +107,35 @@ export const BrandBootMotion = ({ showRecovery = false, onRetry, onExit }: Brand
           position: absolute;
           inset: 0;
           border-radius: 999px;
-          background:
-            conic-gradient(from 24deg,
-              transparent 0deg,
-              rgba(var(--nl-primary-rgb),0.46) 42deg,
-              transparent 104deg,
-              rgba(var(--nl-accent-rgb),0.54) 176deg,
-              transparent 236deg,
-              var(--nl-boot-ring-light) 292deg,
-              transparent 360deg);
-          -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), var(--nl-mask-fill) calc(100% - 1px));
-          mask: radial-gradient(farthest-side, transparent calc(100% - 2px), var(--nl-mask-fill) calc(100% - 1px));
+          border: 1px solid rgba(var(--nl-primary-rgb),0.18);
           animation: nlBootRingTurn 5.6s linear infinite;
+        }
+
+        .nl-boot-ring:first-of-type::after {
+          content: "";
+          position: absolute;
+          top: 7px;
+          left: 50%;
+          width: 6px;
+          height: 6px;
+          margin-left: -3px;
+          border-radius: 999px;
+          background: var(--nl-accent);
+          box-shadow: 0 0 0 4px rgba(var(--nl-accent-rgb),0.09);
         }
 
         .nl-boot-ring:nth-of-type(2) {
           inset: 22px;
-          opacity: 0.72;
+          opacity: 0.74;
+          border-color: rgba(var(--nl-accent-rgb),0.2);
           animation-duration: 4.2s;
           animation-direction: reverse;
         }
 
         .nl-boot-ring:nth-of-type(3) {
           inset: 44px;
-          opacity: 0.58;
+          opacity: 0.68;
+          border-color: rgba(var(--nl-primary-rgb),0.26);
           animation: nlBootRingBreathe 2.4s ease-in-out infinite;
         }
 
@@ -138,9 +144,9 @@ export const BrandBootMotion = ({ showRecovery = false, onRetry, onExit }: Brand
         }
 
         .nl-boot-line {
-          height: 2px;
+          height: 1px;
           border-radius: 999px;
-          background: rgba(var(--nl-primary-rgb),0.44);
+          background: rgba(var(--nl-accent-rgb),0.56);
           transform-origin: left center;
           animation: nlBootLineReveal 1.9s ease-in-out infinite;
         }
@@ -164,12 +170,12 @@ export const BrandBootMotion = ({ showRecovery = false, onRetry, onExit }: Brand
         <span className="nl-boot-ring" />
         <span className="nl-boot-ring" />
         <span className="nl-boot-ring" />
-        <img className="nl-boot-logo" src="/brand/nianlun-logo-192.png" alt="" width={82} height={82} style={logoStyle} />
+        <img className="nl-boot-logo" src="/brand/nianlun-logo-192.png" alt="" width={96} height={96} style={logoStyle} />
       </div>
 
       <div style={{ display: 'grid', gap: '7px', justifyItems: 'center', minWidth: 0 }}>
-        <strong style={{ color: 'var(--nl-ink)', fontSize: '24px', lineHeight: 1.1, fontWeight: 760 }}>年轮</strong>
-        <span style={{ color: 'var(--nl-muted)', fontSize: '13px', fontWeight: 620 }}>正在进入家庭时间线</span>
+        <strong style={{ color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '26px', lineHeight: 1.1, fontWeight: 780 }}>年轮</strong>
+        <span style={{ color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 520 }}>家庭影像档案</span>
       </div>
 
       <div aria-hidden="true" style={timelineTrackStyle}>
@@ -194,7 +200,7 @@ export const BrandBootMotion = ({ showRecovery = false, onRetry, onExit }: Brand
           <button
             type="button"
             onClick={onExit}
-            style={{ ...recoveryButtonStyle, background: 'var(--nl-primary-gradient)', color: 'var(--nl-on-primary)', fontWeight: 760, borderColor: 'var(--nl-primary-border)', boxShadow: '0 10px 20px rgba(var(--nl-primary-rgb),0.09), inset 0 1px 0 var(--nl-inset-highlight-faint)' }}
+            style={{ ...recoveryButtonStyle, background: 'var(--nl-primary)', color: 'var(--nl-on-primary)', fontWeight: 760, borderColor: 'var(--nl-primary-border)', boxShadow: '0 10px 20px rgba(var(--nl-primary-rgb),0.09), inset 0 1px 0 var(--nl-inset-highlight-faint)' }}
           >
             回到登录
           </button>
