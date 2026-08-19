@@ -363,6 +363,102 @@ export function getMapProviderName(env: EnvSource = process.env): MapProviderNam
   return provider;
 }
 
+export function getJwtAccessExpiresIn(env: EnvSource = process.env): string {
+  return readEnvValue(env, 'JWT_ACCESS_EXPIRES_IN') ?? '2h';
+}
+
+export function getJwtRefreshExpiresIn(env: EnvSource = process.env): string {
+  return readEnvValue(env, 'JWT_REFRESH_EXPIRES_IN') ?? '30d';
+}
+
+export function getMapApiKey(env: EnvSource = process.env): string | null {
+  return readEnvValue(env, 'MAP_API_KEY') ?? null;
+}
+
+export function getMapAmapEndpoint(env: EnvSource = process.env): string {
+  return readEnvValue(env, 'MAP_AMAP_ENDPOINT') ?? 'https://restapi.amap.com/v3/place/text';
+}
+
+export function getMapAmapRegeocodeEndpoint(env: EnvSource = process.env): string {
+  return readEnvValue(env, 'MAP_AMAP_REGEOCODE_ENDPOINT') ?? 'https://restapi.amap.com/v3/geocode/regeo';
+}
+
+export function getMapRequestTimeoutMs(env: EnvSource = process.env): number {
+  const value = readEnvValue(env, 'MAP_REQUEST_TIMEOUT_MS');
+  return value ? Number(value) : 5000;
+}
+
+export function getMediaUploadSessionTtlSeconds(env: EnvSource = process.env): number {
+  const value = readEnvValue(env, 'MEDIA_UPLOAD_SESSION_TTL_SECONDS');
+  return value ? Number(value) : 3600;
+}
+
+export function getStorageBucket(env: EnvSource = process.env): string {
+  return readEnvValue(env, 'STORAGE_BUCKET') ?? 'xiaoman-archive-local';
+}
+
+export function getUploadImageMaxBytes(env: EnvSource = process.env): number {
+  const value = readEnvValue(env, 'UPLOAD_IMAGE_MAX_BYTES');
+  return value ? Number(value) : 10 * 1024 * 1024;
+}
+
+export function getUploadVideoMaxBytes(env: EnvSource = process.env): number {
+  const value = readEnvValue(env, 'UPLOAD_VIDEO_MAX_BYTES');
+  return value ? Number(value) : 200 * 1024 * 1024;
+}
+
+export function getUploadAudioMaxBytes(env: EnvSource = process.env): number {
+  const value = readEnvValue(env, 'UPLOAD_AUDIO_MAX_BYTES');
+  return value ? Number(value) : 50 * 1024 * 1024;
+}
+
+export function getStorageEndpoint(env: EnvSource = process.env): string | undefined {
+  return readEnvValue(env, 'STORAGE_ENDPOINT') ?? undefined;
+}
+
+export function getStorageSignedUrlExpiresIn(env: EnvSource = process.env): number {
+  const value = readEnvValue(env, 'STORAGE_SIGNED_URL_EXPIRES_IN');
+  return value ? Number(value) : 600;
+}
+
+export function getStorageRegion(env: EnvSource = process.env): string {
+  return readEnvValue(env, 'STORAGE_REGION') ?? 'auto';
+}
+
+export function getStorageForcePathStyle(env: EnvSource = process.env): boolean {
+  const value = readEnvValue(env, 'STORAGE_FORCE_PATH_STYLE');
+  return String(value ?? 'true').toLowerCase() === 'true';
+}
+
+export function getStorageAccessKey(env: EnvSource = process.env): string | undefined {
+  return readEnvValue(env, 'STORAGE_ACCESS_KEY') ?? undefined;
+}
+
+export function getStorageSecretKey(env: EnvSource = process.env): string | undefined {
+  return readEnvValue(env, 'STORAGE_SECRET_KEY') ?? undefined;
+}
+
+export function getLiveReadinessReportPath(env: EnvSource = process.env): string | null {
+  const value = readEnvValue(env, 'LIVE_READINESS_REPORT_PATH');
+  return value ? value : null;
+}
+
+export function getSmsAccessKey(env: EnvSource = process.env): string {
+  return requireEnvValue(env, 'SMS_ACCESS_KEY');
+}
+
+export function getSmsSecretKey(env: EnvSource = process.env): string {
+  return requireEnvValue(env, 'SMS_SECRET_KEY');
+}
+
+export function getSmsEndpoint(env: EnvSource = process.env): string {
+  return readEnvValue(env, 'SMS_ENDPOINT') ?? 'https://dysmsapi.aliyuncs.com';
+}
+
+export function getSmsSignName(env: EnvSource = process.env): string {
+  return requireEnvValue(env, 'SMS_SIGN_NAME');
+}
+
 function requireEnvValues(env: EnvSource, names: string[]) {
   for (const name of names) {
     requireEnvValue(env, name);
@@ -487,8 +583,14 @@ export function validateRuntimeConfig(config: Record<string, unknown>): Record<s
     const systemConfigSecret = getSystemConfigEncryptionSecret(config);
     validateStrictSystemConfigSecret(systemConfigSecret, accessSecret, refreshSecret);
 
-    if (isAdminBootstrapAllowed(config) && getAdminInitialPassword(config) === DEFAULT_ADMIN_PASSWORD) {
-      throw new Error('ADMIN_INITIAL_PASSWORD cannot use the default value when admin bootstrap is enabled outside local/test environments');
+    if (isAdminBootstrapAllowed(config)) {
+      const initialPassword = getAdminInitialPassword(config);
+      if (initialPassword === DEFAULT_ADMIN_PASSWORD) {
+        throw new Error('ADMIN_INITIAL_PASSWORD cannot use the default value when admin bootstrap is enabled outside local/test environments');
+      }
+      if (initialPassword.length < 12) {
+        throw new Error('ADMIN_INITIAL_PASSWORD must be at least 12 characters in production environments');
+      }
     }
 
     validateStrictOperationsConfig(config);

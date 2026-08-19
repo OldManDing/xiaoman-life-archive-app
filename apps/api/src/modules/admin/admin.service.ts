@@ -186,6 +186,114 @@ type AdminAiSettingsTestResult = {
   message: string;
 };
 
+type DashboardTrendMetric = 'users' | 'records' | 'media' | 'risks' | 'ai_jobs';
+type DashboardTrendRow = {
+  bucket: unknown;
+  metric: unknown;
+  trend_count: unknown;
+};
+type DashboardTrendPoint = {
+  date?: string;
+  month?: string;
+  users: number;
+  records: number;
+  media: number;
+  risks: number;
+  ai_jobs: number;
+};
+
+const DASHBOARD_DAILY_BUCKETS = 14;
+const DASHBOARD_MONTHLY_BUCKETS = 12;
+const DASHBOARD_DAY_MS = 24 * 60 * 60 * 1000;
+const DASHBOARD_TREND_METRICS: DashboardTrendMetric[] = ['users', 'records', 'media', 'risks', 'ai_jobs'];
+
+const startOfUtcDay = (date: Date) => new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+const startOfUtcMonth = (date: Date) => new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), 1));
+const addUtcMonths = (date: Date, amount: number) => new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth() + amount, 1));
+
+const buildDashboardBuckets = (start: Date, count: number, monthly: boolean) =>
+  Array.from({ length: count }, (_, index) => {
+    const bucket = monthly ? addUtcMonths(start, index) : new Date(start.getTime() + index * DASHBOARD_DAY_MS);
+    return monthly
+      ? `${bucket.getUTCFullYear()}-${String(bucket.getUTCMonth() + 1).padStart(2, '0')}`
+      : `${bucket.getUTCFullYear()}-${String(bucket.getUTCMonth() + 1).padStart(2, '0')}-${String(bucket.getUTCDate()).padStart(2, '0')}`;
+  });
+
+// Whitelist allowed date formats to prevent SQL injection
+const ALLOWED_BUCKET_FORMATS = {
+  daily: '%Y-%m-%d',
+  monthly: '%Y-%m',
+} as const;
+
+type BucketFormatMode = keyof typeof ALLOWED_BUCKET_FORMATS;
+
+const buildDashboardTrendQuery = (start: Date, end: Date, mode: BucketFormatMode) => {
+  const bucketFormat = ALLOWED_BUCKET_FORMATS[mode];
+  const contentRiskCondition = Prisma.join(
+    CONTENT_RISK_KEYWORDS.flatMap(({ keyword }) => [
+      Prisma.sql`r.title LIKE ${`%${keyword}%`}`,
+      Prisma.sql`r.content_text LIKE ${`%${keyword}%`}`,
+    ]),
+    ' OR ',
+  );
+  const branches = [
+    Prisma.sql`
+      SELECT DATE_FORMAT(u.created_at, ${bucketFormat}) AS bucket, 'users' AS metric, COUNT(*) AS trend_count
+      FROM users u
+      WHERE u.deleted_at IS NULL AND u.created_at >= ${start} AND u.created_at < ${end}
+      GROUP BY DATE_FORMAT(u.created_at, ${bucketFormat})
+    `,
+    Prisma.sql`
+      SELECT DATE_FORMAT(r.published_at, ${bucketFormat}) AS bucket, 'records' AS metric, COUNT(*) AS trend_count
+      FROM records r
+      WHERE r.deleted_at IS NULL AND r.status = ${RECORD_STATUS_PUBLISHED}
+        AND r.published_at IS NOT NULL AND r.published_at >= ${start} AND r.published_at < ${end}
+      GROUP BY DATE_FORMAT(r.published_at, ${bucketFormat})
+    `,
+    Prisma.sql`
+      SELECT DATE_FORMAT(m.created_at, ${bucketFormat}) AS bucket, 'media' AS metric, COUNT(*) AS trend_count
+      FROM record_media m
+      WHERE m.deleted_at IS NULL AND m.created_at >= ${start} AND m.created_at < ${end}
+      GROUP BY DATE_FORMAT(m.created_at, ${bucketFormat})
+    `,
+    Prisma.sql`
+      SELECT DATE_FORMAT(r.created_at, ${bucketFormat}) AS bucket, 'risks' AS metric, COUNT(*) AS trend_count
+      FROM records r
+      WHERE r.deleted_at IS NULL AND (${contentRiskCondition}) AND r.created_at >= ${start} AND r.created_at < ${end}
+      GROUP BY DATE_FORMAT(r.created_at, ${bucketFormat})
+      UNION ALL
+      SELECT DATE_FORMAT(m.created_at, ${bucketFormat}) AS bucket, 'risks' AS metric, COUNT(*) AS trend_count
+      FROM record_media m
+      WHERE m.deleted_at IS NULL AND (m.status IN (${MEDIA_STATUS_UPLOADING}, ${MEDIA_STATUS_FAILED}) OR m.record_id IS NULL)
+        AND m.created_at >= ${start} AND m.created_at < ${end}
+      GROUP BY DATE_FORMAT(m.created_at, ${bucketFormat})
+      UNION ALL
+      SELECT DATE_FORMAT(t.created_at, ${bucketFormat}) AS bucket, 'risks' AS metric, COUNT(*) AS trend_count
+      FROM support_tickets t
+      WHERE t.priority = 'child_safety' AND t.created_at >= ${start} AND t.created_at < ${end}
+      GROUP BY DATE_FORMAT(t.created_at, ${bucketFormat})
+      UNION ALL
+      SELECT DATE_FORMAT(j.created_at, ${bucketFormat}) AS bucket, 'risks' AS metric, COUNT(*) AS trend_count
+      FROM ai_jobs j
+      WHERE j.status = 'failed' AND j.created_at >= ${start} AND j.created_at < ${end}
+      GROUP BY DATE_FORMAT(j.created_at, ${bucketFormat})
+    `,
+    Prisma.sql`
+      SELECT DATE_FORMAT(j.created_at, ${bucketFormat}) AS bucket, 'ai_jobs' AS metric, COUNT(*) AS trend_count
+      FROM ai_jobs j
+      WHERE j.created_at >= ${start} AND j.created_at < ${end}
+      GROUP BY DATE_FORMAT(j.created_at, ${bucketFormat})
+    `,
+  ];
+
+  return Prisma.sql`
+    SELECT bucket, metric, SUM(trend_count) AS trend_count
+    FROM (${Prisma.join(branches, ' UNION ALL ')}) AS dashboard_trends
+    GROUP BY bucket, metric
+    ORDER BY bucket ASC, metric ASC
+  `;
+};
+
 const CONTENT_RISK_KEYWORDS: Array<{ keyword: string; severity: ContentRiskSeverity; reason: string }> = [
   { keyword: '虐待', severity: 'p0', reason: '疑似儿童安全或伤害内容' },
   { keyword: '自残', severity: 'p0', reason: '疑似自伤或危机内容' },
@@ -1774,22 +1882,55 @@ export class AdminService {
     };
   }
 
+  private async loadDashboardTrend(start: Date, end: Date, count: number, monthly: boolean): Promise<DashboardTrendPoint[]> {
+    const rows = await this.prisma.$queryRaw<DashboardTrendRow[]>(buildDashboardTrendQuery(start, end, monthly ? 'monthly' : 'daily'));
+    const counts = new Map<string, number>();
+
+    for (const row of rows) {
+      if (typeof row.bucket !== 'string' || typeof row.metric !== 'string') continue;
+      if (!DASHBOARD_TREND_METRICS.includes(row.metric as DashboardTrendMetric)) continue;
+      const countValue = Number(row.trend_count);
+      if (!Number.isFinite(countValue)) continue;
+      counts.set(`${row.bucket}:${row.metric}`, countValue);
+    }
+
+    const buckets = buildDashboardBuckets(start, count, monthly);
+    return buckets.map((bucket) => ({
+      ...(monthly ? { month: bucket } : { date: bucket }),
+      users: counts.get(`${bucket}:users`) ?? 0,
+      records: counts.get(`${bucket}:records`) ?? 0,
+      media: counts.get(`${bucket}:media`) ?? 0,
+      risks: counts.get(`${bucket}:risks`) ?? 0,
+      ai_jobs: counts.get(`${bucket}:ai_jobs`) ?? 0,
+    }));
+  }
+
   async dashboard(admin: AuthenticatedAdmin, request: Request) {
-    const [userCount, childCount, recordCount, mediaCount, aiJobGroups, recentAuditLogs] = await this.prisma.$transaction([
-      this.prisma.user.count({ where: { deletedAt: null } }),
-      this.prisma.child.count({ where: { deletedAt: null } }),
-      this.prisma.record.count({ where: { deletedAt: null } }),
-      this.prisma.recordMedia.count({ where: { deletedAt: null } }),
-      this.prisma.aiJob.groupBy({
-        by: ['status'],
-        orderBy: { status: 'asc' },
-        _count: true,
-      }),
-      this.prisma.auditLog.findMany({
-        orderBy: { createdAt: 'desc' },
-        take: 5,
-      }),
+    const now = new Date();
+    const dailyEnd = new Date(startOfUtcDay(now).getTime() + DASHBOARD_DAY_MS);
+    const dailyStart = new Date(dailyEnd.getTime() - DASHBOARD_DAILY_BUCKETS * DASHBOARD_DAY_MS);
+    const monthlyEnd = addUtcMonths(startOfUtcMonth(now), 1);
+    const monthlyStart = addUtcMonths(monthlyEnd, -DASHBOARD_MONTHLY_BUCKETS);
+    const [summary, dailyTrend, monthlyTrend] = await Promise.all([
+      this.prisma.$transaction([
+        this.prisma.user.count({ where: { deletedAt: null } }),
+        this.prisma.child.count({ where: { deletedAt: null } }),
+        this.prisma.record.count({ where: { deletedAt: null } }),
+        this.prisma.recordMedia.count({ where: { deletedAt: null } }),
+        this.prisma.aiJob.groupBy({
+          by: ['status'],
+          orderBy: { status: 'asc' },
+          _count: true,
+        }),
+        this.prisma.auditLog.findMany({
+          orderBy: { createdAt: 'desc' },
+          take: 5,
+        }),
+      ]),
+      this.loadDashboardTrend(dailyStart, dailyEnd, DASHBOARD_DAILY_BUCKETS, false),
+      this.loadDashboardTrend(monthlyStart, monthlyEnd, DASHBOARD_MONTHLY_BUCKETS, true),
     ]);
+    const [userCount, childCount, recordCount, mediaCount, aiJobGroups, recentAuditLogs] = summary;
 
     await this.logListAudit(admin, 'admin_view_dashboard', request);
 
@@ -1805,6 +1946,10 @@ export class AdminService {
         count: aiJobGroups.find((item) => item.status === status)?._count ?? 0,
       })),
       recent_audit_logs: recentAuditLogs.map((item) => this.toAuditLogItem(item)),
+      trend: {
+        daily: dailyTrend,
+        monthly: monthlyTrend,
+      },
     };
   }
 
@@ -1884,7 +2029,7 @@ export class AdminService {
       throw new BadRequestException('生产环境不能使用 mock AI 服务');
     }
     const beforeRows = await this.prisma.systemConfig.findMany({
-      where: { configKey: { in: AI_SETTING_KEYS as unknown as string[] } },
+      where: { configKey: { in: [...AI_SETTING_KEYS] } },
     });
     const beforeMap = new Map(beforeRows.map((item) => [item.configKey, item.value]));
     const existingApiKey = beforeMap.get('ai_api_key') ?? readEnvString('AI_API_KEY');
