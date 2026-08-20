@@ -3,7 +3,7 @@ import type { CSSProperties } from 'react';
 export const cardStyle: CSSProperties = {
   background: '#ffffff',
   border: '1px solid rgba(35, 31, 27, 0.1)',
-  borderRadius: '12px',
+  borderRadius: '8px',
   padding: '16px',
   boxShadow: '0 16px 38px rgba(30, 24, 18, 0.045)',
 };
@@ -11,8 +11,8 @@ export const cardStyle: CSSProperties = {
 export const headingStyle: CSSProperties = {
   margin: 0,
   fontSize: '28px',
-  fontWeight: 900,
-  color: '#221b12',
+  fontWeight: 700,
+  color: '#1f1d1a',
   letterSpacing: 0,
 };
 
@@ -20,7 +20,7 @@ export const inputStyle: CSSProperties = {
   width: '100%',
   boxSizing: 'border-box',
   minHeight: '42px',
-  borderRadius: '10px',
+  borderRadius: '8px',
   border: '1px solid rgba(35, 31, 27, 0.12)',
   padding: '10px 12px',
   fontSize: '13px',
@@ -33,7 +33,7 @@ export const inputStyle: CSSProperties = {
 
 export const primaryButtonStyle: CSSProperties = {
   border: '1px solid rgba(75, 59, 35, 0.82)',
-  borderRadius: '10px',
+  borderRadius: '8px',
   padding: '9px 14px',
   background: '#4a3a22',
   color: '#fffaf1',
@@ -53,17 +53,19 @@ export const secondaryButtonStyle: CSSProperties = {
 
 export const tableStyle: CSSProperties = {
   width: '100%',
-  borderCollapse: 'collapse',
+  borderCollapse: 'separate',
+  borderSpacing: 0,
+  borderRadius: '10px',
   background: '#ffffff',
 };
 
 export const thTdStyle: CSSProperties = {
   textAlign: 'left',
   padding: '11px 12px',
-  borderBottom: '1px solid rgba(139, 116, 79, 0.12)',
+  borderBottom: '1px solid #eceae6',
   fontSize: '13px',
   verticalAlign: 'top',
-  color: '#2f281d',
+  color: '#2d2a26',
   minWidth: 0,
   whiteSpace: 'normal',
   overflowWrap: 'anywhere',
