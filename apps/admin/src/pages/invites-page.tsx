@@ -6,7 +6,8 @@ import { inviteStatusLabel } from '../shared/labels';
 import { formatDateTime, getErrorMessage } from '../shared/format';
 import { Badge, EmptyState, PageShell, Panel } from '../shared/ui';
 import { inputStyle, mutedTextStyle, primaryButtonStyle, secondaryButtonStyle } from '../shared/uiStyles';
-import { ActionButton, useOperationReasonDialog } from './shared';
+import { ActionButton } from './shared';
+import { useOperationReasonDialog } from '../shared/useOperationReasonDialog';
 import { formatListRows, useAdminListPage } from './list-page-state';
 import { PaginationPanel, SearchPanel, TableShell } from './shared';
 

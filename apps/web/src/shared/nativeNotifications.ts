@@ -3,7 +3,7 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 
 import type { UserNotificationItem } from './api/types';
 import { getHmsPushConnectionStatus } from './hmsPush';
-import { loadLocalSettings } from './localSettings';
+import { getLocalSettingsScope, loadLocalSettings } from './localSettings';
 
 const seenNotificationKey = 'nianlun.seenNativeNotificationNos';
 const maxSeenNotificationCount = 80;
@@ -15,7 +15,8 @@ export type NativeNotificationPermissionStatus = 'web' | 'granted' | 'denied' | 
 const readSeenNotificationNos = () => {
   if (typeof window === 'undefined') return new Set<string>();
   try {
-    const raw = window.localStorage.getItem(seenNotificationKey);
+    const scope = getLocalSettingsScope();
+    const raw = window.localStorage.getItem(scope ? `${seenNotificationKey}:${scope}` : seenNotificationKey);
     const values = raw ? JSON.parse(raw) : [];
     return new Set(Array.isArray(values) ? values.filter((item): item is string => typeof item === 'string') : []);
   } catch {
@@ -26,7 +27,8 @@ const readSeenNotificationNos = () => {
 const saveSeenNotificationNos = (values: Set<string>) => {
   if (typeof window === 'undefined') return;
   try {
-    window.localStorage.setItem(seenNotificationKey, JSON.stringify(Array.from(values).slice(-maxSeenNotificationCount)));
+    const scope = getLocalSettingsScope();
+    window.localStorage.setItem(scope ? `${seenNotificationKey}:${scope}` : seenNotificationKey, JSON.stringify(Array.from(values).slice(-maxSeenNotificationCount)));
   } catch {
     // Notification dedupe is best effort only.
   }
@@ -102,6 +104,18 @@ export const scheduleNativeNotificationsForNewItems = async (items: UserNotifica
 
   freshItems.forEach((item) => seen.add(item.notification_no));
   saveSeenNotificationNos(seen);
+};
+
+export const cancelScheduledNativeNotifications = async () => {
+  if (!isNativeNotificationAvailable()) return;
+  try {
+    const pending = await LocalNotifications.getPending();
+    if (pending.notifications.length) {
+      await LocalNotifications.cancel({ notifications: pending.notifications.map(({ id }) => ({ id })) });
+    }
+  } catch {
+    // Notification cleanup is best effort during logout and preference changes.
+  }
 };
 
 export const registerNativeNotificationTapHandler = (navigate: (path: string) => void) => {

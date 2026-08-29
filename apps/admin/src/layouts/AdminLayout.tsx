@@ -86,14 +86,6 @@ const ChangePasswordModal = ({ open, onClose }: { open: boolean; onClose: () => 
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (open) {
-      setForm({ current: '', next: '', confirm: '' });
-      setError(null);
-      setMessage(null);
-    }
-  }, [open]);
-
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (form.next.length < 8 || form.next.length > 12) {
@@ -164,10 +156,7 @@ export const AdminLayout = () => {
   const primarySections = navSections.filter((section) => !section.secondary);
   const secondarySections = navSections.filter((section) => section.secondary);
   const isSecondaryRoute = secondarySections.some((section) => section.items.some((item) => location.pathname === item.to)) || location.pathname === '/audit-logs';
-  // 二级路由下桌面端默认展开"更多管理"，移动端保持收起。
-  useEffect(() => {
-    if (isSecondaryRoute && !isMobileViewport) setMoreOpen(true);
-  }, [isSecondaryRoute, isMobileViewport]);
+  const showMore = moreOpen || (isSecondaryRoute && !isMobileViewport);
 
   useEffect(() => {
     if (!moreOpen) return;
@@ -182,7 +171,7 @@ export const AdminLayout = () => {
 
   return (
       <div className="admin-layout">
-      <aside className={`admin-sidebar${moreOpen ? ' admin-sidebar-more-open' : ''}`}>
+      <aside className={`admin-sidebar${showMore ? ' admin-sidebar-more-open' : ''}`}>
         <div className="admin-sidebar-brand">
           <img src="/brand/nianlun-logo-64.png" alt="年轮" className="admin-brand-logo" width={44} height={44} />
           <div className="admin-sidebar-brand-text">
@@ -220,14 +209,14 @@ export const AdminLayout = () => {
               type="button"
               className={`admin-nav-more-trigger${isSecondaryRoute ? ' admin-nav-more-trigger-active' : ''}`}
               aria-label="更多管理"
-              aria-expanded={moreOpen}
+              aria-expanded={showMore}
               onClick={() => setMoreOpen((current) => !current)}
             >
               <Menu className="admin-nav-more-icon" size={17} strokeWidth={2.2} />
               <span className="admin-nav-more-label-desktop">更多管理</span>
               <span className="admin-nav-more-label-mobile">更多</span>
             </button>
-            {moreOpen ? <>
+            {showMore ? <>
               <button type="button" className="admin-nav-more-backdrop" aria-label="关闭面板" onClick={closeMore} />
               <div className="admin-nav-more-content">
                 <div className="admin-nav-more-heading">
@@ -287,7 +276,7 @@ export const AdminLayout = () => {
       <main className="admin-main">
         <Outlet />
       </main>
-      <ChangePasswordModal open={passwordModalOpen} onClose={() => setPasswordModalOpen(false)} />
+      <ChangePasswordModal key={passwordModalOpen ? 'open' : 'closed'} open={passwordModalOpen} onClose={() => setPasswordModalOpen(false)} />
     </div>
   );
 };

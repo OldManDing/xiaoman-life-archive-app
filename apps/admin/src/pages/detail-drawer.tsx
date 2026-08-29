@@ -3,7 +3,7 @@
 import { Maximize2, RotateCcw, X } from 'lucide-react';
 
 import { Panel } from '../shared/ui';
-import { useDialogA11y } from '../shared/modal';
+import { useDialogA11y } from '../shared/useDialogA11y';
 
 const overlayStyle: CSSProperties = {
   position: 'fixed',

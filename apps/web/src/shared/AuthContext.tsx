@@ -4,6 +4,8 @@ import { clearAccessToken, getAccessToken, hasStoredSessionHint, setAccessToken 
 import type { ChildRecord, UserProfile } from './api/types';
 import { webApi, type LoginPayload, type RegisterPayload } from './api/webApi';
 import { unregisterHmsDeviceToken } from './hmsPush';
+import { cancelScheduledNativeNotifications } from './nativeNotifications';
+import { setLocalSettingsScope } from './localSettings';
 
 interface AuthContextValue {
   accessToken: string | null;
@@ -74,6 +76,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const hydrateAfterAuth = useCallback(
     async (payload: { access_token: string; user: UserProfile; need_create_child: boolean }) => {
       setAccessToken(payload.access_token);
+      setLocalSettingsScope(payload.user.user_no);
       setUser(payload.user);
       setNeedsOnboarding(payload.need_create_child);
 
@@ -98,6 +101,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           const profile = await webApi.me();
           if (!isCurrentBootstrapRun()) return;
           setAccessToken(persistedToken);
+          setLocalSettingsScope(profile.user_no);
           setUser(profile);
           const nextChildren = await refreshChildren();
           if (!isCurrentBootstrapRun()) return;
@@ -123,6 +127,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch {
       if (!isCurrentBootstrapRun()) return;
       clearAccessToken();
+      setLocalSettingsScope(null);
       setAccessTokenState(null);
       setUser(null);
       setNeedsOnboarding(false);
@@ -156,6 +161,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const clearSession = useCallback(() => {
     bootstrapRunRef.current += 1;
     clearAccessToken();
+    setLocalSettingsScope(null);
     setAccessTokenState(null);
     setUser(null);
     setNeedsOnboarding(false);
@@ -171,6 +177,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } catch {
       // Local sign-out must still complete if the server session is already invalidated.
     } finally {
+      await cancelScheduledNativeNotifications();
       clearSession();
     }
   }, [clearSession]);

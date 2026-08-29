@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 
 import { AdminButton, EmptyState } from '../shared/ui';
-import { AdminModal } from '../shared/modal';
-import { primaryButtonStyle, secondaryButtonStyle, tableStyle, tableHeaderStyle, thTdStyle } from '../shared/uiStyles';
+import { tableStyle, tableHeaderStyle, thTdStyle } from '../shared/uiStyles';
 
 export const SearchPanel = ({
   keyword,
@@ -112,10 +111,6 @@ export const PaginationPanel = ({
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
   const [jumpValue, setJumpValue] = useState('');
 
-  useEffect(() => {
-    setJumpValue('');
-  }, [page]);
-
   const submitJump = async () => {
     const target = Number(jumpValue);
     if (!onJumpToPage || !Number.isInteger(target) || target < 1 || target > totalPages || target === page) return;
@@ -149,6 +144,7 @@ export const PaginationPanel = ({
           <span className="admin-pagination-jump">
             跳至
             <input
+              key={page}
               value={jumpValue}
               disabled={loading}
               inputMode="numeric"
@@ -186,28 +182,25 @@ export const PaginationPanel = ({
  */
 export const ActionFeedback = ({ message, error }: { message?: string | null; error?: string | null }) => {
   const [dismissed, setDismissed] = useState<string | null>(null);
-  const current = error ? { tone: 'error' as const, text: error } : message ? { tone: 'success' as const, text: message } : null;
-  const currentKey = current ? `${current.tone}:${current.text}` : '';
+  const currentTone = error ? 'error' as const : message ? 'success' as const : null;
+  const currentText = error || message || null;
+  const currentKey = currentTone && currentText ? `${currentTone}:${currentText}` : '';
 
   useEffect(() => {
-    setDismissed(null);
-  }, [currentKey]);
-
-  useEffect(() => {
-    if (!current || current.tone !== 'success') return;
+    if (currentTone !== 'success' || !currentKey) return;
     const timer = window.setTimeout(() => setDismissed(currentKey), 6000);
     return () => window.clearTimeout(timer);
-  }, [current, currentKey]);
+  }, [currentKey, currentTone]);
 
-  if (!current || dismissed === currentKey) return null;
+  if (!currentTone || !currentText || dismissed === currentKey) return null;
 
   return (
     <div
-      className={`admin-action-toast admin-action-toast-${current.tone}`}
-      role={current.tone === 'error' ? 'alert' : 'status'}
-      aria-live={current.tone === 'error' ? 'assertive' : 'polite'}
+      className={`admin-action-toast admin-action-toast-${currentTone}`}
+      role={currentTone === 'error' ? 'alert' : 'status'}
+      aria-live={currentTone === 'error' ? 'assertive' : 'polite'}
     >
-      <span>{current.text}</span>
+      <span>{currentText}</span>
       <button type="button" aria-label="关闭提示" onClick={() => setDismissed(currentKey)}>
         ×
       </button>
@@ -239,62 +232,3 @@ export const ActionButton = ({
     {children}
   </button>
 );
-
-/**
- * 敏感操作统一走"填写原因"确认弹窗；原因会随请求写入审计日志。
- */
-export const useOperationReasonDialog = () => {
-  const resolverRef = useRef<((value: string | null) => void) | null>(null);
-  const [dialog, setDialog] = useState<{ actionName: string; reason: string; error: string | null } | null>(null);
-
-  const requestOperationReason = (actionName: string) =>
-    new Promise<string | null>((resolve) => {
-      resolverRef.current?.(null);
-      resolverRef.current = resolve;
-      setDialog({ actionName, reason: '', error: null });
-    });
-
-  const closeDialog = (value: string | null) => {
-    resolverRef.current?.(value);
-    resolverRef.current = null;
-    setDialog(null);
-  };
-
-  useEffect(() => () => resolverRef.current?.(null), []);
-
-  const reasonDialog = dialog ? (
-    <AdminModal open={Boolean(dialog)} title={dialog.actionName} eyebrow="后台操作确认" onClose={() => closeDialog(null)}>
-      <label className="admin-modal-field">
-        操作原因
-        <textarea
-          value={dialog.reason}
-          onChange={(event) => setDialog((current) => (current ? { ...current, reason: event.target.value, error: null } : current))}
-          placeholder="写清楚为什么要执行这次操作，方便审计复盘"
-          autoFocus
-        />
-      </label>
-      {dialog.error ? <p className="admin-modal-error">{dialog.error}</p> : null}
-      <div className="admin-modal-actions">
-        <button type="button" style={secondaryButtonStyle} onClick={() => closeDialog(null)}>
-          取消
-        </button>
-        <button
-          type="button"
-          style={primaryButtonStyle}
-          onClick={() => {
-            const normalized = dialog.reason.trim();
-            if (!normalized) {
-              setDialog((current) => (current ? { ...current, error: '请填写操作原因' } : current));
-              return;
-            }
-            closeDialog(normalized);
-          }}
-        >
-          确认执行
-        </button>
-      </div>
-    </AdminModal>
-  ) : null;
-
-  return { requestOperationReason, reasonDialog };
-};

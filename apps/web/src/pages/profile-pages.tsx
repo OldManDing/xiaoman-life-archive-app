@@ -1,4 +1,5 @@
 ﻿import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Bell, BookHeart, Camera, CheckCircle2, ChevronRight, DownloadCloud, FileBox, FileText, HelpCircle, Home, Info, KeyRound, Lock, LogOut, Mail, RefreshCw, Shield, ShieldCheck, Smartphone, UserPlus, UserRound, Users } from 'lucide-react';
 
@@ -497,6 +498,7 @@ export const ProfilePage = () => {
             type="button"
             style={{ width: '100%', marginTop: 14, minHeight: 46, border: '1px solid var(--nl-danger-soft)', borderRadius: 8, background: 'transparent', color: 'var(--nl-danger)', fontSize: 14, fontWeight: 620, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', boxShadow: 'none' }}
             onClick={async () => {
+              if (typeof window !== 'undefined' && !window.confirm('确定退出当前账号吗？')) return;
               await logout();
               navigate('/auth/login', { replace: true });
             }}
@@ -663,6 +665,7 @@ export const NotificationSettingsPage = () => {
   const [message, setMessage] = useState<string | null>(null);
   const [permissionBusy, setPermissionBusy] = useState(false);
   const [pushConnectionStatus, setPushConnectionStatus] = useState<HmsPushConnectionStatus>(() => getHmsPushConnectionStatus());
+  const settingRequestRef = useRef(0);
   const { data: notificationCount } = useAsyncData<NotificationUnreadCountResponse>(
     async () => webApi.notificationUnreadCount(),
     [],
@@ -696,11 +699,20 @@ export const NotificationSettingsPage = () => {
     setMessage('通知偏好已保存在本机。');
   };
 
-  const updateSetting = (key: keyof Pick<LocalSettings, 'notificationPushEnabled' | 'notificationFamilyEnabled' | 'notificationUpdateEnabled'>) => {
+  const updateSetting = async (key: keyof Pick<LocalSettings, 'notificationPushEnabled' | 'notificationFamilyEnabled' | 'notificationUpdateEnabled'>) => {
+    const requestId = ++settingRequestRef.current;
+    const previous = settings;
     const next = { ...settings, [key]: !settings[key] };
     saveNotificationSettings(next);
     if (key === 'notificationPushEnabled' || key === 'notificationFamilyEnabled') {
-      void setHmsRemotePushEnabled(next.notificationPushEnabled && next.notificationFamilyEnabled).then(setPushConnectionStatus);
+      const status = await setHmsRemotePushEnabled(next.notificationPushEnabled && next.notificationFamilyEnabled);
+      if (requestId !== settingRequestRef.current) return;
+      setPushConnectionStatus(status);
+      if (status === 'failed') {
+        setSettings(previous);
+        saveLocalSettings(previous);
+        setMessage('手机通知设置同步失败，已恢复上一次状态。');
+      }
     }
   };
 
@@ -802,19 +814,19 @@ export const NotificationSettingsPage = () => {
             <NotificationSwitchRow
               title="手机通知"
               checked={settings.notificationPushEnabled}
-              onChange={() => updateSetting('notificationPushEnabled')}
+              onChange={() => void updateSetting('notificationPushEnabled')}
             />
             <NotificationSwitchRow
               title="家庭动态通知"
               checked={settings.notificationFamilyEnabled}
               disabled={!settings.notificationPushEnabled}
-              onChange={() => updateSetting('notificationFamilyEnabled')}
+              onChange={() => void updateSetting('notificationFamilyEnabled')}
             />
             <NotificationSwitchRow
               title="版本更新提醒"
               checked={settings.notificationUpdateEnabled}
               disabled={!settings.notificationPushEnabled}
-              onChange={() => updateSetting('notificationUpdateEnabled')}
+              onChange={() => void updateSetting('notificationUpdateEnabled')}
             />
           </div>
         </section>
@@ -830,7 +842,7 @@ export const NotificationSettingsPage = () => {
 };
 
 export const AccountPage = () => {
-  const { user, activeChild, setUserProfile } = useAuth();
+  const { user, activeChild, children, setUserProfile } = useAuth();
   const settings = loadLocalSettings();
   const [nickname, setNickname] = useState(user?.nickname ?? '');
   const [mobile, setMobile] = useState('');
@@ -887,10 +899,6 @@ export const AccountPage = () => {
     const file = event.target.files?.[0];
     event.target.value = '';
     if (!file) return;
-    if (!activeChild?.child_no) {
-      setMessage('请先选择孩子档案后再上传头像');
-      return;
-    }
     if (!isSupportedImageFile(file)) {
       setMessage('头像仅支持 JPG、PNG、WebP、HEIC 图片');
       return;
@@ -902,7 +910,11 @@ export const AccountPage = () => {
     setAvatarUploading(true);
     setMessage('头像保存中…');
     try {
-      const avatarUrl = await uploadAvatarImage(activeChild.child_no, uploadFile, previewUrl);
+      const uploadChildNo = activeChild?.child_no ?? children[0]?.child_no;
+      if (!uploadChildNo) {
+        throw new Error('当前账号还没有可关联的家庭档案，暂时无法上传头像');
+      }
+      const avatarUrl = await uploadAvatarImage(uploadChildNo, uploadFile, previewUrl);
       const nextProfile = await webApi.updateMe({ avatar_url: avatarUrl });
       setUserProfile({ ...nextProfile, avatar_url: avatarUrl });
       setAvatarPreviewUrl(null);
@@ -1028,7 +1040,7 @@ export const SettingsPage = () => {
         </div>
         {[
           { key: 'hideMobileMask' as const, title: '手机号搜索', icon: Users, inverted: true },
-          { key: 'autoRefreshHome' as const, title: '历史时间轴', icon: RefreshCw },
+          { key: 'showHistoryToNewMembers' as const, title: '向新成员展示历史时间轴', icon: RefreshCw },
         ].map((item) => {
           const Icon = item.icon;
           const enabled = item.inverted ? !settings[item.key] : settings[item.key];

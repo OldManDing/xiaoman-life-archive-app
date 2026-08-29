@@ -1415,6 +1415,14 @@ const normalizeRecordFormInitialValue = (value: RecordFormInitialValue): RecordF
   };
 };
 
+const recordEventTimeToIso = (value: string) => {
+  const normalized = value.trim();
+  if (!normalized) return undefined;
+  const localDateTime = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(normalized) ? `${normalized}:00+08:00` : normalized;
+  const parsed = new Date(localDateTime);
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
+};
+
 const buildRecordDraftSignature = (
   value: RecordFormInitialValue,
   mediaNos: string[],
@@ -2179,7 +2187,7 @@ const RecordForm = ({
         tags: heightRecordPayload?.tags ?? splitTags(form.tags),
         location_text: locationText || undefined,
         visibility_scope: form.visibility_scope,
-        event_time: form.event_time ? new Date(form.event_time).toISOString() : undefined,
+        event_time: recordEventTimeToIso(form.event_time),
         is_milestone: !isHeightRecord && form.record_type === 'milestone',
         status: nextStatus,
       });

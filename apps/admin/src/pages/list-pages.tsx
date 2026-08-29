@@ -60,7 +60,8 @@ import { AdminModal } from '../shared/modal';
 import { useAdminAuth } from '../shared/useAdminAuth';
 import { DetailDrawer, DetailGrid, DetailList, DetailSection, JsonBlock, MediaPreview } from './detail-drawer';
 import { formatListRows, useAdminListPage } from './list-page-state';
-import { ActionButton, ActionFeedback, PaginationPanel, SearchPanel, TableShell, useOperationReasonDialog } from './shared';
+import { ActionButton, ActionFeedback, PaginationPanel, SearchPanel, TableShell } from './shared';
+import { useOperationReasonDialog } from '../shared/useOperationReasonDialog';
 
 const badgeToneForStatus = (value: string) => {
   if (['active', 'normal', 'published', 'success', 'ready', 'completed', 'resolved'].includes(value)) return 'success' as const;

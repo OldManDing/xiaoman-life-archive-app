@@ -45,7 +45,9 @@ const datePart = (value: string | Date, type: 'year' | 'month' | 'day') => {
   if (!date) return null;
   return new Intl.DateTimeFormat('en-US', { timeZone: appTimeZone, [type]: 'numeric' }).formatToParts(date).find((part) => part.type === type)?.value ?? null;
 };
-const formatDay = (value: string) => parseSafeDate(value)?.toLocaleString('zh-CN', { timeZone: appTimeZone, day: 'numeric' }) ?? '—';
+const formatDay = (value: string) => parseSafeDate(value)
+  ? new Intl.DateTimeFormat('en-US', { timeZone: appTimeZone, day: 'numeric' }).format(parseSafeDate(value) as Date)
+  : '—';
 const formatMonth = (value: string) => parseSafeDate(value)?.toLocaleDateString('zh-CN', { timeZone: appTimeZone, month: 'short' }) ?? '待定';
 const formatArchiveMonthTitle = (value: string) => {
   const date = parseSafeDate(value);
@@ -612,11 +614,14 @@ export const HomePage = () => {
 };
 
 const searchHistoryKey = 'nianlun.search.history.v1';
-const readSearchHistory = () => {
+const searchHistoryStorageKey = (scope?: string | null) => scope ? `${searchHistoryKey}:${scope}` : searchHistoryKey;
+const readSearchHistory = (scope?: string | null) => {
   if (typeof window === 'undefined') return [];
 
   try {
-    const raw = window.localStorage.getItem(searchHistoryKey);
+    const scopedKey = searchHistoryStorageKey(scope);
+    const raw = window.localStorage.getItem(scopedKey) ?? (scope ? window.localStorage.getItem(searchHistoryKey) : null);
+    if (scope && raw && !window.localStorage.getItem(scopedKey)) window.localStorage.setItem(scopedKey, raw);
     const parsed = raw ? JSON.parse(raw) : [];
     return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string' && item.trim().length > 0).slice(0, 8) : [];
   } catch {
@@ -624,10 +629,10 @@ const readSearchHistory = () => {
   }
 };
 
-const writeSearchHistory = (history: string[]) => {
+const writeSearchHistory = (history: string[], scope?: string | null) => {
   if (typeof window === 'undefined') return;
   try {
-    window.localStorage.setItem(searchHistoryKey, JSON.stringify(history.slice(0, 8)));
+    window.localStorage.setItem(searchHistoryStorageKey(scope), JSON.stringify(history.slice(0, 8)));
   } catch {
     // Some embedded WebViews can block localStorage writes; search should still work.
   }
@@ -637,11 +642,13 @@ const uniqueSearchValues = (values: Array<string | null | undefined>) =>
   Array.from(new Set(values.map((value) => value?.trim()).filter((value): value is string => Boolean(value))));
 
 export const SearchPage = () => {
-  const { activeChild } = useAuth();
+  const { activeChild, user } = useAuth();
   const navigate = useNavigate();
   const [keyword, setKeyword] = useState('');
   const [searchKeyword, setSearchKeyword] = useState('');
-  const [history, setHistory] = useState<string[]>(() => readSearchHistory());
+  const searchScope = user?.user_no ?? null;
+  const [history, setHistory] = useState<string[]>(() => readSearchHistory(searchScope));
+  useEffect(() => setHistory(readSearchHistory(searchScope)), [searchScope]);
   const normalizedKeyword = keyword.trim();
   useEffect(() => {
     const timer = window.setTimeout(() => setSearchKeyword(normalizedKeyword), normalizedKeyword ? 260 : 0);
@@ -671,13 +678,13 @@ export const SearchPage = () => {
     setSearchKeyword(next);
     setHistory((current) => {
       const updated = [next, ...current.filter((item) => item !== next)].slice(0, 8);
-      writeSearchHistory(updated);
+      writeSearchHistory(updated, searchScope);
       return updated;
     });
   };
   const clearSearchHistory = () => {
     setHistory([]);
-    writeSearchHistory([]);
+    writeSearchHistory([], searchScope);
   };
 
   return (
@@ -831,7 +838,7 @@ const TimelineDayThumb = ({ record, ageLabel, onClick }: { record: RecordSummary
 
   if (!hasCover && !isVideo && mediaKind !== 'audio') {
     return (
-      <button ref={thumbRef} type="button" className="tl-textcard" onClick={onClick}>
+      <button ref={thumbRef} type="button" className="tl-textcard" aria-label={`查看记录：${record.title ?? '未命名记录'}`} onClick={onClick}>
         <strong>{record.title ?? '未命名记录'}</strong>
         {record.summary ? <span className="tl-textcard-excerpt">{record.summary}</span> : null}
         <span className="tl-textcard-meta">{formatStreamTime(record.event_time)} · {ageLabel}</span>
@@ -840,7 +847,7 @@ const TimelineDayThumb = ({ record, ageLabel, onClick }: { record: RecordSummary
   }
 
   return (
-    <button ref={thumbRef} type="button" className="tl-thumb" onClick={onClick}>
+    <button ref={thumbRef} type="button" className="tl-thumb" aria-label={`查看记录：${record.title ?? '成长媒体'}`} onClick={onClick}>
       {hasCover || isVideo ? (
         <HomeTileVisual
           tile={{ src: cover.src, title: record.title ?? '成长照片', mediaKind, videoPreviewSrc: cover.videoPreviewSrc }}
