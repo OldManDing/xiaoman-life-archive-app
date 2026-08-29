@@ -1,13 +1,13 @@
 ﻿import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 
-import { Maximize2 } from 'lucide-react';
+import { Maximize2, RotateCcw, X } from 'lucide-react';
 
 import { Panel } from '../shared/ui';
+import { useDialogA11y } from '../shared/modal';
 
 const overlayStyle: CSSProperties = {
   position: 'fixed',
   inset: 0,
-  zIndex: 40,
   background: 'rgba(11, 18, 17, 0.42)',
   display: 'flex',
   justifyContent: 'flex-end',
@@ -15,55 +15,12 @@ const overlayStyle: CSSProperties = {
 
 const drawerStyle: CSSProperties = {
   width: 'min(780px, 100vw)',
-  height: '100%',
-  overflow: 'auto',
-  background: '#faf7f1',
-  padding: '18px',
-  display: 'grid',
-  alignContent: 'start',
-  gridAutoRows: 'max-content',
-  gap: '14px',
-};
-
-const sectionStyle: CSSProperties = {
-  display: 'grid',
-  gap: '10px',
 };
 
 const labelValueGridStyle: CSSProperties = {
   display: 'grid',
   gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
   gap: '10px',
-};
-
-const itemStyle: CSSProperties = {
-  border: '1px solid #ded4c6',
-  borderRadius: '8px',
-  background: '#ffffff',
-  padding: '12px',
-  display: 'grid',
-  gap: '4px',
-};
-
-const labelStyle: CSSProperties = {
-  color: '#756b5c',
-  fontSize: '12px',
-  fontWeight: 700,
-  letterSpacing: 0,
-};
-
-const valueStyle: CSSProperties = {
-  color: '#221b12',
-  fontSize: '14px',
-  lineHeight: 1.65,
-  wordBreak: 'break-word',
-};
-
-const sectionHeadingStyle: CSSProperties = {
-  fontSize: '15px',
-  fontWeight: 800,
-  color: '#221b12',
-  margin: 0,
 };
 
 const jsonKeyLabels: Record<string, string> = {
@@ -112,6 +69,7 @@ export const DetailDrawer = ({
   loading,
   error,
   onClose,
+  onRetry,
   children,
 }: {
   open: boolean;
@@ -120,22 +78,17 @@ export const DetailDrawer = ({
   loading?: boolean;
   error?: string | null;
   onClose: () => void;
+  onRetry?: () => void;
   children: ReactNode;
 }) => {
-  useEffect(() => {
-    if (!open) return;
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', closeOnEscape);
-    return () => document.removeEventListener('keydown', closeOnEscape);
-  }, [onClose, open]);
+  const containerRef = useDialogA11y(open, onClose);
 
   if (!open) return null;
 
   return (
     <div className="admin-drawer-overlay" style={overlayStyle} onClick={onClose} role="presentation">
       <div
+        ref={containerRef}
         className="admin-detail-drawer"
         style={drawerStyle}
         role="dialog"
@@ -143,35 +96,50 @@ export const DetailDrawer = ({
         aria-label={title}
         onClick={(event) => event.stopPropagation()}
       >
-        <Panel>
+        <Panel className="admin-detail-header-panel">
           <div className="admin-drawer-header" style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'flex-start' }}>
-            <div style={{ display: 'grid', gap: '4px' }}>
-              <h2 style={{ margin: 0, fontSize: '18px', color: '#4a3a22' }}>{title}</h2>
+            <div className="admin-drawer-head-copy">
+              <h2 className="admin-detail-title">{title}</h2>
               {subtitle ? <p style={{ margin: 0, color: '#756b5c', fontSize: '13px', lineHeight: 1.6 }}>{subtitle}</p> : null}
             </div>
             <button
               type="button"
               className="admin-drawer-close"
               aria-label="关闭详情"
+              title="关闭详情"
               onClick={onClose}
               style={{
                 border: '1px solid #ded4c6',
                 background: '#fff',
                 color: '#4a3a22',
                 borderRadius: '8px',
-                padding: '8px 12px',
+                padding: 0,
                 fontWeight: 700,
                 cursor: 'pointer',
                 minHeight: '44px',
+                minWidth: '44px',
+                width: '44px',
+                display: 'grid',
+                placeItems: 'center',
               }}
             >
-              关闭
+              <X size={18} strokeWidth={2} aria-hidden="true" />
             </button>
           </div>
         </Panel>
 
         {loading ? <Panel><p style={{ margin: 0, color: '#756b5c' }}>加载中…</p></Panel> : null}
-        {error ? <Panel><p style={{ margin: 0, color: '#b91c1c', fontWeight: 700 }}>{error}</p></Panel> : null}
+        {error ? (
+          <Panel>
+            <p style={{ margin: '0 0 10px', color: '#b91c1c', fontWeight: 700 }}>{error}</p>
+            {onRetry ? (
+              <button type="button" className="admin-action-button admin-action-button-secondary" onClick={onRetry}>
+                <RotateCcw size={15} />
+                重试
+              </button>
+            ) : null}
+          </Panel>
+        ) : null}
         {!loading && !error ? children : null}
       </div>
     </div>
@@ -179,9 +147,9 @@ export const DetailDrawer = ({
 };
 
 export const DetailSection = ({ title, children }: { title: string; children: ReactNode }) => (
-  <Panel>
-    <section style={sectionStyle}>
-      <h3 style={sectionHeadingStyle}>{title}</h3>
+  <Panel className="admin-detail-section">
+    <section className="admin-detail-section-body">
+      <h3 className="admin-detail-heading">{title}</h3>
       {children}
     </section>
   </Panel>
@@ -190,20 +158,20 @@ export const DetailSection = ({ title, children }: { title: string; children: Re
 export const DetailGrid = ({ items }: { items: Array<{ label: string; value: ReactNode }> }) => (
   <dl className="admin-detail-grid" style={labelValueGridStyle}>
     {items.map((item) => (
-      <div key={item.label} style={itemStyle}>
-        <dt style={labelStyle}>{item.label}</dt>
-        <dd style={{ ...valueStyle, margin: 0 }}>{item.value ?? '—'}</dd>
+      <div key={item.label} className="admin-detail-list-item">
+        <dt className="admin-detail-term">{item.label}</dt>
+        <dd className="admin-detail-value">{item.value ?? '—'}</dd>
       </div>
     ))}
   </dl>
 );
 
 export const DetailList = ({ items }: { items: Array<{ label: string; value: ReactNode }> }) => (
-  <div style={{ display: 'grid', gap: '8px' }}>
+  <div className="admin-detail-list" style={{ display: 'grid', gap: '0' }}>
     {items.map((item) => (
-      <div key={item.label} style={itemStyle}>
-        <div style={labelStyle}>{item.label}</div>
-        <div style={{ ...valueStyle, whiteSpace: 'pre-wrap' }}>{item.value ?? '—'}</div>
+      <div key={item.label} className="admin-detail-list-item">
+        <div className="admin-detail-term">{item.label}</div>
+        <div className="admin-detail-value admin-detail-value-pre">{item.value ?? '—'}</div>
       </div>
     ))}
   </div>
@@ -283,7 +251,7 @@ export const MediaPreview = ({
   if (kind === 'image') {
     return (
       <>
-        <button type="button" className="admin-media-preview-expandable" onClick={() => setExpanded(true)} aria-label="放大查看图片">
+        <button type="button" className="admin-media-preview-expandable" onClick={() => setExpanded(true)} aria-label="放大查看图片" title="放大查看图片">
           <img
             className="admin-media-preview-image"
             src={src}

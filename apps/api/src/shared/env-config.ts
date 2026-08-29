@@ -13,7 +13,6 @@ const NATIVE_APP_CORS_ORIGINS = ['https://localhost', 'capacitor://localhost', '
 const DEFAULT_AUTH_RATE_LIMIT_WINDOW_MS = 60_000;
 const DEFAULT_AUTH_RATE_LIMIT_MAX_ATTEMPTS = 10;
 const RELAXED_AUTH_RATE_LIMIT_MAX_ATTEMPTS = 1_000;
-const DEFAULT_BACKUP_RETENTION_DAYS = 30;
 
 export type AiProviderName = 'mock' | 'openai' | 'openai-compatible';
 export type MapProviderName = 'mock' | 'amap' | 'disabled';
@@ -144,6 +143,10 @@ function readBoolean(env: EnvSource, name: string, fallback: boolean): boolean {
   throw new Error(`Invalid ${name} value: ${configured}`);
 }
 
+export function getAuditLogRetentionDays(env: EnvSource = process.env): number {
+  return readPositiveInteger(env, 'AUDIT_LOG_RETENTION_DAYS', 90);
+}
+
 export function getAuthRateLimitWindowMs(env: EnvSource = process.env): number {
   return readPositiveInteger(env, 'AUTH_RATE_LIMIT_WINDOW_MS', DEFAULT_AUTH_RATE_LIMIT_WINDOW_MS);
 }
@@ -156,34 +159,6 @@ export function getAuthRateLimitMaxAttempts(env: EnvSource = process.env): numbe
   }
 
   return attempts;
-}
-
-export function getBackupRetentionDays(env: EnvSource = process.env): number {
-  return readPositiveInteger(env, 'BACKUP_RETENTION_DAYS', DEFAULT_BACKUP_RETENTION_DAYS);
-}
-
-export function getBackupRunbookUrl(env: EnvSource = process.env): string | null {
-  return readEnvValue(env, 'BACKUP_RUNBOOK_URL') ?? null;
-}
-
-export function getBackupRestoreDrillAt(env: EnvSource = process.env): string | null {
-  const configured = readEnvValue(env, 'BACKUP_RESTORE_DRILL_AT');
-  if (!configured) return null;
-
-  const timestamp = Date.parse(configured);
-  if (Number.isNaN(timestamp)) {
-    throw new Error(`Invalid BACKUP_RESTORE_DRILL_AT value: ${configured}`);
-  }
-
-  return new Date(timestamp).toISOString();
-}
-
-export function getAlertContactName(env: EnvSource = process.env): string | null {
-  return readEnvValue(env, 'ALERT_CONTACT_NAME') ?? null;
-}
-
-export function getAlertContactChannel(env: EnvSource = process.env): string | null {
-  return readEnvValue(env, 'ALERT_CONTACT_CHANNEL') ?? null;
 }
 
 export function getMobileLatestVersion(env: EnvSource = process.env): string {
@@ -209,11 +184,35 @@ export function getMobileApkUrl(env: EnvSource = process.env): string | null {
     throw new Error(`Invalid MOBILE_APK_URL value: ${configured}`);
   }
 
-  if (!['http:', 'https:'].includes(parsed.protocol)) {
-    throw new Error('MOBILE_APK_URL must use http or https');
+  if (parsed.protocol !== 'https:') {
+    throw new Error('MOBILE_APK_URL must use https');
   }
 
   return parsed.toString();
+}
+
+export function getMobileApkSha256(env: EnvSource = process.env): string | null {
+  const configured = readEnvValue(env, 'MOBILE_APK_SHA256');
+  if (!configured) return null;
+
+  const normalized = configured.toLowerCase();
+  if (!/^[a-f0-9]{64}$/.test(normalized)) {
+    throw new Error('MOBILE_APK_SHA256 must be a 64-character hexadecimal SHA-256 digest');
+  }
+
+  return normalized;
+}
+
+export function getMobileApkSizeBytes(env: EnvSource = process.env): number | null {
+  const configured = readEnvValue(env, 'MOBILE_APK_SIZE_BYTES');
+  if (!configured) return null;
+
+  const value = Number(configured);
+  if (!Number.isSafeInteger(value) || value <= 0) {
+    throw new Error(`Invalid MOBILE_APK_SIZE_BYTES value: ${configured}`);
+  }
+
+  return value;
 }
 
 export function getMobileForceUpdate(env: EnvSource = process.env): boolean {
@@ -495,15 +494,6 @@ function validateStrictProviderConfig(env: EnvSource) {
   }
 }
 
-function validateStrictOperationsConfig(env: EnvSource) {
-  getBackupRetentionDays(env);
-  requireEnvValue(env, 'BACKUP_RUNBOOK_URL');
-  requireEnvValue(env, 'BACKUP_RESTORE_DRILL_AT');
-  getBackupRestoreDrillAt(env);
-  requireEnvValue(env, 'ALERT_CONTACT_NAME');
-  requireEnvValue(env, 'ALERT_CONTACT_CHANNEL');
-}
-
 function validateStrictJwtSecrets(accessSecret: string, refreshSecret: string) {
   if (accessSecret === refreshSecret) {
     throw new Error('JWT_ACCESS_SECRET and JWT_REFRESH_SECRET must be different outside local/test environments');
@@ -549,6 +539,10 @@ export function validateRuntimeConfig(config: Record<string, unknown>): Record<s
   getAppPort(config);
   getAuthRateLimitWindowMs(config);
   getAuthRateLimitMaxAttempts(config);
+  getMobileLatestBuildNumber(config);
+  getMobileApkUrl(config);
+  getMobileApkSha256(config);
+  getMobileApkSizeBytes(config);
   resolveCorsOrigins(config);
   if (isSmsEnabled(config)) {
     getSmsProviderName(config);
@@ -593,7 +587,6 @@ export function validateRuntimeConfig(config: Record<string, unknown>): Record<s
       }
     }
 
-    validateStrictOperationsConfig(config);
   }
 
   return config;

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, act } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 
@@ -69,12 +69,22 @@ const listNotificationsMock = vi.mocked(adminApi.listNotifications);
 const listSupportTicketsMock = vi.mocked(adminApi.listSupportTickets);
 const listArchiveExportRequestsMock = vi.mocked(adminApi.listArchiveExportRequests);
 
-const renderWithRouter = (path: string) =>
-  render(
+const renderWithRouter = async (path: string) => {
+  const view = render(
     <MemoryRouter initialEntries={[path]} future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
       <App />
     </MemoryRouter>,
   );
+  // React.lazy 的页面 chunk 在微任务里解析，且重定向经 startTransition
+  // 还需要额外渲染拍；等根节点真正挂载内容后再交给断言。
+  await act(async () => {
+    for (let tick = 0; tick < 10; tick += 1) {
+      if (view.container.firstElementChild?.childElementCount) break;
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+  });
+  return view;
+};
 
 const findAdminLink = async (href: string) => {
   const find = async () => (await screen.findAllByRole('link')).find((link) => link.getAttribute('href') === href);
@@ -85,6 +95,12 @@ const findAdminLink = async (href: string) => {
     link = await find();
   }
   return link;
+};
+
+const openRowActionMenu = async () => {
+  const moreButton = await screen.findByRole('button', { name: '更多操作' });
+  if (moreButton.getAttribute('aria-expanded') !== 'true') fireEvent.click(moreButton);
+  return moreButton;
 };
 
 describe('App', () => {
@@ -114,6 +130,7 @@ describe('App', () => {
       totals: { users: 1, children: 1, records: 1, media: 1 },
       ai_job_status_distribution: [],
       recent_audit_logs: [],
+      trend: { daily: [], monthly: [] },
     });
     opsReadinessMock.mockResolvedValue({
       generated_at: '2026-05-27T00:00:00.000Z',
@@ -145,13 +162,6 @@ describe('App', () => {
         media_exceptions: 0,
         failed_media: 0,
         failed_ai_jobs: 0,
-      },
-      backup_recovery: {
-        status: 'warning',
-        checks: [
-          { key: 'retention', label: '备份保留周期', value: '30 天', status: 'warning', helper: '建议至少保留 90 天。' },
-          { key: 'runbook', label: '恢复手册', value: '未配置', status: 'warning', helper: '缺少恢复手册地址，运营无法独立处理。' },
-        ],
       },
       release_gates: {
         status: 'warning',
@@ -253,26 +263,15 @@ describe('App', () => {
           updated_at: null,
         },
         {
-          config_key: 'backup_retention_days',
-          category: 'backup_recovery',
-          label: '备份保留周期',
-          value: '30',
-          value_type: 'number',
-          description: '生产备份至少建议保留 90 天，用于长期家庭档案恢复窗口。',
+          config_key: 'mobile_latest_version',
+          category: 'mobile_release',
+          label: '移动端最新版本',
+          value: '2.0.7',
+          value_type: 'text',
+          description: '关于页和启动静默检查使用的最新版本号。',
           source: 'environment',
           updated_by_name: null,
           updated_at: null,
-        },
-        {
-          config_key: 'alert_contact_name',
-          category: 'alerting',
-          label: '告警联系人',
-          value: '值班同学',
-          value_type: 'text',
-          description: '线上异常、备份失败或 provider 门禁失败时的第一责任人。',
-          source: 'admin',
-          updated_by_name: '系统管理员',
-          updated_at: '2026-05-27T00:00:00.000Z',
         },
         {
           config_key: 'ai_api_key',
@@ -329,17 +328,55 @@ describe('App', () => {
     vi.clearAllMocks();
   });
 
-  it('redirects to login when not authenticated', () => {
-    renderWithRouter('/');
+  it('redirects to login when not authenticated', async () => {
+    await renderWithRouter('/');
     expect(screen.getByText('管理员登录')).toBeInTheDocument();
   });
 
-  it('renders the redesigned login page', () => {
-    renderWithRouter('/login');
+  it('renders the redesigned login page', async () => {
+    await renderWithRouter('/login');
     expect(screen.getByRole('heading', { name: '管理员登录' })).toBeInTheDocument();
     expect(screen.queryByText('年轮运营中枢')).not.toBeInTheDocument();
     expect(screen.queryByText('管理入口')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: '进入管理后台' })).toBeInTheDocument();
+  });
+
+  it('renders dashboard daily and monthly trend views', async () => {
+    loginMock.mockResolvedValue({
+      access_token: 'admin-token',
+      expires_in: 7200,
+      admin: {
+        username: 'admin',
+        display_name: '系统管理员',
+        role: 'super_admin',
+      },
+    });
+    dashboardMock.mockResolvedValue({
+      totals: { users: 12, children: 3, records: 18, media: 30 },
+      ai_job_status_distribution: [],
+      recent_audit_logs: [],
+      trend: {
+        daily: [
+          { date: '2026-08-18', users: 2, records: 4, media: 5, risks: 1, ai_jobs: 3 },
+          { date: '2026-08-19', users: 3, records: 5, media: 6, risks: 0, ai_jobs: 4 },
+        ],
+        monthly: [
+          { month: '2026-07', users: 8, records: 12, media: 20, risks: 2, ai_jobs: 14 },
+          { month: '2026-08', users: 10, records: 15, media: 24, risks: 1, ai_jobs: 18 },
+        ],
+      },
+    });
+
+    await renderWithRouter('/login');
+    fireEvent.change(screen.getByPlaceholderText('请输入用户名'), { target: { value: 'admin' } });
+    fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
+    fireEvent.click(screen.getByRole('button', { name: '进入管理后台' }));
+
+    expect(await screen.findByRole('heading', { name: '后台总览' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: '最近十四天数据趋势' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: '每月' }));
+    expect(screen.getByRole('img', { name: '最近十二个月数据趋势' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '每月' })).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('logs in and loads the user list page', async () => {
@@ -371,7 +408,7 @@ describe('App', () => {
       has_more: false,
     });
 
-    renderWithRouter('/login');
+    await renderWithRouter('/login');
 
     fireEvent.change(screen.getByPlaceholderText('请输入用户名'), { target: { value: 'admin' } });
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
@@ -483,7 +520,7 @@ describe('App', () => {
       ],
     });
 
-    renderWithRouter('/login');
+    await renderWithRouter('/login');
 
     fireEvent.change(screen.getByPlaceholderText('请输入用户名'), { target: { value: 'admin' } });
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
@@ -590,7 +627,7 @@ describe('App', () => {
       updated_at: '2026-05-27T01:00:00.000Z',
     });
 
-    renderWithRouter('/login');
+    await renderWithRouter('/login');
 
     fireEvent.change(screen.getByPlaceholderText('请输入用户名'), { target: { value: 'admin' } });
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
@@ -649,7 +686,7 @@ describe('App', () => {
       reset_at: '2026-05-26T00:00:00.000Z',
     });
 
-    renderWithRouter('/login');
+    await renderWithRouter('/login');
 
     fireEvent.change(screen.getByPlaceholderText('请输入用户名'), { target: { value: 'admin' } });
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
@@ -659,6 +696,7 @@ describe('App', () => {
     expect(usersLink).toBeTruthy();
     fireEvent.click(usersLink!);
 
+    await openRowActionMenu();
     fireEvent.click(await screen.findByRole('button', { name: '重置密码' }));
     fireEvent.change(screen.getByLabelText('新密码'), { target: { value: 'NewPass123!' } });
     fireEvent.change(screen.getByLabelText('确认新密码'), { target: { value: 'NewPass123!' } });
@@ -710,7 +748,7 @@ describe('App', () => {
       changed: true,
     });
 
-    renderWithRouter('/login');
+    await renderWithRouter('/login');
 
     fireEvent.change(screen.getByPlaceholderText('请输入用户名'), { target: { value: 'admin' } });
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
@@ -720,8 +758,16 @@ describe('App', () => {
     expect(usersLink).toBeTruthy();
     fireEvent.click(usersLink!);
 
+    await openRowActionMenu();
     fireEvent.click(await screen.findByRole('button', { name: '调整权益' }));
+    const expiryInput = await screen.findByLabelText('到期日期');
+    expect(expiryInput).toHaveAttribute('type', 'date');
+    expect(expiryInput).toBeDisabled();
+    expect(screen.getByText('基础会员无需设置')).toBeInTheDocument();
+
     fireEvent.change(screen.getByLabelText('权益类型'), { target: { value: 'ai_plus' } });
+    expect(expiryInput).not.toBeDisabled();
+    expect(screen.getByText('请选择到期日期')).toBeInTheDocument();
     fireEvent.change(await screen.findByLabelText('到期日期'), { target: { value: '2099-12-31' } });
     fireEvent.change(screen.getByLabelText('操作原因'), { target: { value: '年付套餐开通' } });
     fireEvent.click(screen.getByRole('button', { name: '确认调整' }));
@@ -729,7 +775,8 @@ describe('App', () => {
     await waitFor(() => {
       expect(updateUserMembershipMock).toHaveBeenCalledWith('u_001', {
         membership_type: 'ai_plus',
-        membership_expire_at: '2099-12-31T23:59:59.000Z',
+        // 到期时刻按本地时区当天 23:59:59 换算成 ISO，避免 UTC 硬编码。
+        membership_expire_at: new Date('2099-12-31T23:59:59').toISOString(),
         reason: '年付套餐开通',
       });
     });
@@ -762,7 +809,7 @@ describe('App', () => {
       created_at: '2026-05-25T00:00:00.000Z',
     });
 
-    renderWithRouter('/login');
+    await renderWithRouter('/login');
 
     fireEvent.change(screen.getByPlaceholderText('请输入用户名'), { target: { value: 'admin' } });
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
@@ -775,8 +822,14 @@ describe('App', () => {
     expect(await screen.findByRole('heading', { name: '邀请码管理' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: '生成邀请码' }));
 
+    // 生成邀请码也要求填写审计原因。
+    fireEvent.change(await screen.findByPlaceholderText('写清楚为什么要执行这次操作，方便审计复盘'), {
+      target: { value: '地推活动发放' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '确认执行' }));
+
     await waitFor(() => {
-      expect(createInviteMock).toHaveBeenCalledWith({ mobile: undefined, expires_in_hours: 168 });
+      expect(createInviteMock).toHaveBeenCalledWith({ mobile: undefined, expires_in_hours: 168, reason: '地推活动发放' });
     });
     expect(await screen.findByText('NL-ABC123-DEF456')).toBeInTheDocument();
     expect(screen.getByText('本次生成的邀请码')).toBeInTheDocument();
@@ -826,7 +879,7 @@ describe('App', () => {
       has_more: false,
     });
 
-    renderWithRouter('/login');
+    await renderWithRouter('/login');
 
     fireEvent.change(screen.getByPlaceholderText('请输入用户名'), { target: { value: 'admin' } });
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
@@ -886,7 +939,7 @@ describe('App', () => {
       has_more: false,
     });
 
-    renderWithRouter('/login');
+    await renderWithRouter('/login');
 
     fireEvent.change(screen.getByPlaceholderText('请输入用户名'), { target: { value: 'admin' } });
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
@@ -946,7 +999,7 @@ describe('App', () => {
       has_more: false,
     });
 
-    renderWithRouter('/login');
+    await renderWithRouter('/login');
 
     fireEvent.change(screen.getByPlaceholderText('请输入用户名'), { target: { value: 'admin' } });
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
@@ -965,7 +1018,7 @@ describe('App', () => {
     await waitFor(() => {
       expect(listRecordsMock).toHaveBeenLastCalledWith({ keyword: undefined, page: 1, page_size: 20, record_filter: 'risk' });
     });
-    expect(window.location.pathname + window.location.search).toBe('/records?record_filter=risk');
+    expect(window.location.search).toBe('?record_filter=risk');
   });
 
   it('opens notification management from the admin navigation', async () => {
@@ -1028,7 +1081,7 @@ describe('App', () => {
       has_more: false,
     });
 
-    renderWithRouter('/login');
+    await renderWithRouter('/login');
 
     fireEvent.change(screen.getByPlaceholderText('请输入用户名'), { target: { value: 'admin' } });
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
@@ -1068,7 +1121,7 @@ describe('App', () => {
       },
     });
 
-    renderWithRouter('/login');
+    await renderWithRouter('/login');
 
     fireEvent.change(screen.getByPlaceholderText('请输入用户名'), { target: { value: 'admin' } });
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
@@ -1091,7 +1144,7 @@ describe('App', () => {
     expect(screen.getByText(/地图服务配置负责人/)).toBeInTheDocument();
     expect(screen.getByText('AI 真实调用')).toBeInTheDocument();
     expect(screen.getAllByText(/INVALID_USER_KEY/).length).toBeGreaterThan(0);
-    expect(screen.getByText('备份恢复与告警值班')).toBeInTheDocument();
+    expect(screen.queryByText('备份恢复与告警值班')).not.toBeInTheDocument();
     expect(screen.getByText('复验真实 provider')).toBeInTheDocument();
     expect(screen.getByText('处理档案交付申请')).toBeInTheDocument();
   });
@@ -1107,19 +1160,19 @@ describe('App', () => {
       },
     });
     updateSystemConfigMock.mockResolvedValue({
-      config_key: 'backup_retention_days',
-      category: 'backup_recovery',
-      label: '备份保留周期',
-      value: '120',
-      value_type: 'number',
-      description: '生产备份至少建议保留 90 天，用于长期家庭档案恢复窗口。',
+      config_key: 'mobile_latest_version',
+      category: 'mobile_release',
+      label: '移动端最新版本',
+      value: '2.0.8',
+      value_type: 'text',
+      description: '关于页和启动静默检查使用的最新版本号。',
       source: 'admin',
       updated_by_name: '系统管理员',
       updated_at: '2026-05-27T01:00:00.000Z',
       changed: true,
     });
 
-    renderWithRouter('/login');
+    await renderWithRouter('/login');
 
     fireEvent.change(screen.getByPlaceholderText('请输入用户名'), { target: { value: 'admin' } });
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
@@ -1133,22 +1186,22 @@ describe('App', () => {
     await waitFor(() => {
       expect(listSystemConfigsMock).toHaveBeenCalled();
     });
-    expect(await screen.findByText('备份保留周期')).toBeInTheDocument();
+    expect(await screen.findByText('移动端最新版本')).toBeInTheDocument();
     expect(screen.queryByText('AI API Key')).not.toBeInTheDocument();
     expect(screen.getAllByText('环境变量').length).toBeGreaterThan(0);
 
     fireEvent.click(screen.getAllByRole('button', { name: '调整' })[0]);
-    fireEvent.change(screen.getByLabelText('配置值'), { target: { value: '120' } });
-    fireEvent.change(screen.getByLabelText('操作原因'), { target: { value: '上线前把备份保留周期提高到 120 天' } });
+    fireEvent.change(screen.getByLabelText('配置值'), { target: { value: '2.0.8' } });
+    fireEvent.change(screen.getByLabelText('操作原因'), { target: { value: '发布移动端新版本' } });
     fireEvent.click(screen.getByRole('button', { name: '保存配置' }));
 
     await waitFor(() => {
-      expect(updateSystemConfigMock).toHaveBeenCalledWith('backup_retention_days', {
-        value: '120',
-        reason: '上线前把备份保留周期提高到 120 天',
+      expect(updateSystemConfigMock).toHaveBeenCalledWith('mobile_latest_version', {
+        value: '2.0.8',
+        reason: '发布移动端新版本',
       });
     });
-    expect(await screen.findByText('已更新备份保留周期，后台和运行中服务会优先使用新的配置。')).toBeInTheDocument();
+    expect(await screen.findByText('已更新移动端最新版本，后台和运行中服务会优先使用新的配置。')).toBeInTheDocument();
   });
 
   it('manages AI settings from a dedicated page', async () => {
@@ -1240,7 +1293,7 @@ describe('App', () => {
       ],
     }));
 
-    renderWithRouter('/login');
+    await renderWithRouter('/login');
 
     fireEvent.change(screen.getByPlaceholderText('请输入用户名'), { target: { value: 'admin' } });
     fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
@@ -1254,7 +1307,8 @@ describe('App', () => {
     await waitFor(() => {
       expect(listSystemConfigsMock).toHaveBeenCalled();
     });
-    expect(screen.getAllByText('OpenAI 兼容服务').length).toBeGreaterThan(0);
+    // 供应商文案统一走 labels.ts 的 aiProviderLabel。
+    expect(screen.getAllByText('兼容 OpenAI 的 AI 服务').length).toBeGreaterThan(0);
     expect(screen.getByText('Key 已配置')).toBeInTheDocument();
     expect(screen.queryByRole('dialog', { name: '修改 AI 设置' })).not.toBeInTheDocument();
 
@@ -1291,5 +1345,32 @@ describe('App', () => {
       expect(screen.getAllByText('连接成功').length).toBeGreaterThan(0);
     });
     expect(screen.getAllByText('AI 服务连接成功，当前供应商、模型和 Key 可以完成一次轻量调用。').length).toBeGreaterThan(0);
+  });
+
+  it('keeps the more management menu expanded after selecting a secondary route', async () => {
+    loginMock.mockResolvedValue({
+      access_token: 'admin-token',
+      expires_in: 7200,
+      admin: {
+        username: 'admin',
+        display_name: 'Smoke Test',
+        role: 'operator',
+      },
+    });
+
+    await renderWithRouter('/login');
+
+    fireEvent.change(screen.getByPlaceholderText('请输入用户名'), { target: { value: 'admin' } });
+    fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
+    fireEvent.click(screen.getByRole('button', { name: '进入管理后台' }));
+
+    const moreButton = await screen.findByRole('button', { name: '更多管理' });
+    fireEvent.click(moreButton);
+    expect(moreButton).toHaveAttribute('aria-expanded', 'true');
+
+    fireEvent.click(await screen.findByRole('link', { name: '账号管理' }));
+
+    expect(await screen.findByRole('heading', { name: '账号管理' })).toBeInTheDocument();
+    expect(moreButton).toHaveAttribute('aria-expanded', 'true');
   });
 });

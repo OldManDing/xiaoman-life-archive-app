@@ -2,18 +2,15 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Save, Settings2, ShieldCheck } from 'lucide-react';
 
 import { adminApi, type AdminSystemConfigItem } from '../shared/request';
+import { formatDateTime } from '../shared/format';
 import { AdminButton, AdminDateInput, AdminSelect, Badge, EmptyState, PageShell, Panel } from '../shared/ui';
 import { inputStyle, mutedTextStyle } from '../shared/uiStyles';
 import { useAdminAuth } from '../shared/useAdminAuth';
 import { TableShell } from './shared';
 
-const formatDateTime = (value: string | null | undefined) => (value ? new Date(value).toLocaleString('zh-CN', { hour12: false }) : '—');
-
 const categoryLabel = (value: AdminSystemConfigItem['category']) =>
   ({
     ai_provider: 'AI 服务',
-    backup_recovery: '备份恢复',
-    alerting: '告警值班',
     mobile_release: '版本更新',
   })[value];
 
@@ -38,6 +35,26 @@ const toEditableValue = (item: AdminSystemConfigItem) => {
 const displayValue = (item: AdminSystemConfigItem) => {
   const value = item.display_value ?? item.value;
   return value ? value : '未配置';
+};
+
+// 按配置类型做前端校验，避免明显的格式错误多打一次接口才发现。
+const validateConfigValue = (item: AdminSystemConfigItem, value: string): string | null => {
+  const trimmed = value.trim();
+  if (item.value_type === 'secret' || item.value_type === 'datetime') {
+    if (!trimmed) return item.value_type === 'secret' ? '密钥不能为空' : '时间不能为空';
+  }
+  if (!trimmed) return null;
+  if (item.value_type === 'number' && !/^\d+$/.test(trimmed)) return '配置值必须是整数';
+  if (item.value_type === 'url') {
+    try {
+      const parsed = new URL(trimmed);
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return '配置值必须是 http 或 https 链接';
+    } catch {
+      return '配置值必须是合法的 URL';
+    }
+  }
+  if (item.value_type === 'datetime' && Number.isNaN(new Date(trimmed).getTime())) return '配置值必须是合法时间';
+  return null;
 };
 
 export const SystemConfigPage = () => {
@@ -86,11 +103,17 @@ export const SystemConfigPage = () => {
     event.preventDefault();
     if (!editing) return;
 
+    const validationError = validateConfigValue(editing, value);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setSaving(true);
     setError(null);
     setMessage(null);
     try {
-      const updated = await adminApi.updateSystemConfig(editing.config_key, { value, reason });
+      const updated = await adminApi.updateSystemConfig(editing.config_key, { value: value.trim(), reason: reason.trim() });
       setConfigs((current) => current.map((item) => (item.config_key === updated.config_key ? updated : item)));
       setEditing(updated);
       setValue(toEditableValue(updated));
@@ -107,27 +130,30 @@ export const SystemConfigPage = () => {
   const configuredCount = visibleConfigs.filter((item) => displayValue(item) !== '未配置').length;
   const adminManagedCount = visibleConfigs.filter((item) => item.source === 'admin').length;
 
-  const rows = visibleConfigs.map((item) => [
-    <span key={`${item.config_key}-label`} className="admin-system-config-name">
-      <strong>{item.label}</strong>
-      <span>{item.description}</span>
-    </span>,
-    <span key={`${item.config_key}-status`} className="admin-system-config-status-cell">
-      <Badge tone="info">{categoryLabel(item.category)}</Badge>
-      <strong>{displayValue(item)}</strong>
-      <small>
-        <span>{item.source === 'admin' ? '后台配置' : '环境变量'}</span>
-        <span> · {valueTypeLabel(item.value_type)}</span>
-      </small>
-    </span>,
-    item.updated_by_name ? `${item.updated_by_name} / ${formatDateTime(item.updated_at)}` : '—',
-    <AdminButton key={`${item.config_key}-action`} type="button" tone="secondary" disabled={!canEdit} onClick={() => startEdit(item)}>
-      调整
-    </AdminButton>,
-  ]);
+  const rows = visibleConfigs.map((item) => ({
+    key: item.config_key,
+    cells: [
+      <span key={`${item.config_key}-label`} className="admin-system-config-name">
+        <strong>{item.label}</strong>
+        <span>{item.description}</span>
+      </span>,
+      <span key={`${item.config_key}-status`} className="admin-system-config-status-cell">
+        <Badge tone="info">{categoryLabel(item.category)}</Badge>
+        <strong>{displayValue(item)}</strong>
+        <small>
+          <span>{item.source === 'admin' ? '后台配置' : '环境变量'}</span>
+          <span> · {valueTypeLabel(item.value_type)}</span>
+        </small>
+      </span>,
+      item.updated_by_name ? `${item.updated_by_name} / ${formatDateTime(item.updated_at)}` : '—',
+      <AdminButton key={`${item.config_key}-action`} type="button" tone="secondary" disabled={!canEdit} onClick={() => startEdit(item)}>
+        调整
+      </AdminButton>,
+    ],
+  }));
 
   return (
-    <PageShell title="系统配置" description="维护备份恢复和告警值班等通用运维配置。AI 供应商、模型和 Key 请在「AI 设置」中集中管理。">
+    <PageShell title="系统配置" description="维护移动端版本更新参数。AI 供应商、模型和 Key 请在「AI 设置」中集中管理。">
       {error ? <Panel><EmptyState title="操作失败" message={error} /></Panel> : null}
       {message ? <Panel><p style={{ ...mutedTextStyle, margin: 0 }}>{message}</p></Panel> : null}
 
@@ -138,7 +164,7 @@ export const SystemConfigPage = () => {
             配置工作台
           </span>
           <h2>只保留运维必须修改的配置。</h2>
-          <p>备份、告警和值班参数集中在这里；AI 供应商相关内容继续放在 AI 设置，避免系统配置页变成杂项堆叠。</p>
+          <p>这里只保留已经接入运行链路的通用配置；AI 供应商相关内容继续放在 AI 设置。</p>
         </div>
         <div className="admin-system-config-status">
           <div>
@@ -159,7 +185,13 @@ export const SystemConfigPage = () => {
 
       <section className="admin-system-config-grid">
         <div className="admin-system-config-list">
-          <TableShell columns={['配置项', '当前状态', '最后调整', '操作']} rows={rows} emptyMessage="暂无系统配置项。" loading={loading} />
+          <TableShell
+            className="admin-system-config-table"
+            columns={['配置项', '当前状态', '最后调整', '操作']}
+            rows={rows}
+            emptyMessage="暂无系统配置项。"
+            loading={loading}
+          />
         </div>
 
         <Panel className="admin-system-config-editor">

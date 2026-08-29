@@ -15,6 +15,8 @@ import { StorageService } from '../../shared/services/storage.service';
 import { decryptSystemConfigSecret, encryptSystemConfigSecret } from '../../shared/system-config-secret';
 import {
   getMobileApkUrl,
+  getMobileApkSha256,
+  getMobileApkSizeBytes,
   getMobileForceUpdate,
   getMobileLatestBuildNumber,
   getMobileLatestVersion,
@@ -24,14 +26,9 @@ import {
   getAdminJwtAccessExpiresIn,
   getAdminJwtAccessSecret,
   getAiProviderName,
-  getAlertContactChannel,
-  getAlertContactName,
   getAppEnv,
   getAppPort,
   getAuthRateLimitMaxAttempts,
-  getBackupRestoreDrillAt,
-  getBackupRetentionDays,
-  getBackupRunbookUrl,
   getMapProviderName,
   getSmsProviderName,
   getStorageProviderName,
@@ -67,6 +64,7 @@ import { AdminAuditLogListDto } from './dto/admin-audit-log-list.dto';
 import { AdminLoginDto } from './dto/admin-login.dto';
 import { AdminMediaListDto } from './dto/admin-media-list.dto';
 import { AdminNotificationListDto } from './dto/admin-notification-list.dto';
+import { AdminRevokeInviteDto } from './dto/admin-revoke-invite.dto';
 import { AdminResetUserPasswordDto } from './dto/admin-reset-user-password.dto';
 import { AdminSupportTicketListDto } from './dto/admin-support-ticket-list.dto';
 import { AdminUpdateArchiveExportRequestStatusDto } from './dto/admin-update-archive-export-request-status.dto';
@@ -144,7 +142,7 @@ type NotificationWithRelations = Prisma.UserNotificationGetPayload<{
     deliveries: true;
   };
 }>;
-type SystemConfigCategory = 'backup_recovery' | 'alerting' | 'ai_provider' | 'mobile_release';
+type SystemConfigCategory = 'ai_provider' | 'mobile_release';
 type SystemConfigValueType = 'number' | 'url' | 'datetime' | 'text' | 'secret' | 'select';
 type SystemConfigDefinition = {
   key: string;
@@ -156,6 +154,7 @@ type SystemConfigDefinition = {
   options?: Array<{ value: string; label: string }>;
   min?: number;
   max?: number;
+  optional?: boolean;
 };
 type SystemConfigWithUpdater = Prisma.SystemConfigGetPayload<{
   include: {
@@ -238,51 +237,63 @@ const buildDashboardTrendQuery = (start: Date, end: Date, mode: BucketFormatMode
   );
   const branches = [
     Prisma.sql`
-      SELECT DATE_FORMAT(u.created_at, ${bucketFormat}) AS bucket, 'users' AS metric, COUNT(*) AS trend_count
-      FROM users u
-      WHERE u.deleted_at IS NULL AND u.created_at >= ${start} AND u.created_at < ${end}
-      GROUP BY DATE_FORMAT(u.created_at, ${bucketFormat})
+      SELECT bucket, 'users' AS metric, COUNT(*) AS trend_count
+      FROM (
+        SELECT DATE_FORMAT(u.created_at, ${bucketFormat}) AS bucket
+        FROM users u
+        WHERE u.deleted_at IS NULL AND u.created_at >= ${start} AND u.created_at < ${end}
+      ) AS sub
+      GROUP BY bucket
     `,
     Prisma.sql`
-      SELECT DATE_FORMAT(r.published_at, ${bucketFormat}) AS bucket, 'records' AS metric, COUNT(*) AS trend_count
-      FROM records r
-      WHERE r.deleted_at IS NULL AND r.status = ${RECORD_STATUS_PUBLISHED}
-        AND r.published_at IS NOT NULL AND r.published_at >= ${start} AND r.published_at < ${end}
-      GROUP BY DATE_FORMAT(r.published_at, ${bucketFormat})
+      SELECT bucket, 'records' AS metric, COUNT(*) AS trend_count
+      FROM (
+        SELECT DATE_FORMAT(r.published_at, ${bucketFormat}) AS bucket
+        FROM records r
+        WHERE r.deleted_at IS NULL AND r.status = ${RECORD_STATUS_PUBLISHED}
+          AND r.published_at IS NOT NULL AND r.published_at >= ${start} AND r.published_at < ${end}
+      ) AS sub
+      GROUP BY bucket
     `,
     Prisma.sql`
-      SELECT DATE_FORMAT(m.created_at, ${bucketFormat}) AS bucket, 'media' AS metric, COUNT(*) AS trend_count
-      FROM record_media m
-      WHERE m.deleted_at IS NULL AND m.created_at >= ${start} AND m.created_at < ${end}
-      GROUP BY DATE_FORMAT(m.created_at, ${bucketFormat})
+      SELECT bucket, 'media' AS metric, COUNT(*) AS trend_count
+      FROM (
+        SELECT DATE_FORMAT(m.created_at, ${bucketFormat}) AS bucket
+        FROM record_media m
+        WHERE m.deleted_at IS NULL AND m.created_at >= ${start} AND m.created_at < ${end}
+      ) AS sub
+      GROUP BY bucket
     `,
     Prisma.sql`
-      SELECT DATE_FORMAT(r.created_at, ${bucketFormat}) AS bucket, 'risks' AS metric, COUNT(*) AS trend_count
-      FROM records r
-      WHERE r.deleted_at IS NULL AND (${contentRiskCondition}) AND r.created_at >= ${start} AND r.created_at < ${end}
-      GROUP BY DATE_FORMAT(r.created_at, ${bucketFormat})
-      UNION ALL
-      SELECT DATE_FORMAT(m.created_at, ${bucketFormat}) AS bucket, 'risks' AS metric, COUNT(*) AS trend_count
-      FROM record_media m
-      WHERE m.deleted_at IS NULL AND (m.status IN (${MEDIA_STATUS_UPLOADING}, ${MEDIA_STATUS_FAILED}) OR m.record_id IS NULL)
-        AND m.created_at >= ${start} AND m.created_at < ${end}
-      GROUP BY DATE_FORMAT(m.created_at, ${bucketFormat})
-      UNION ALL
-      SELECT DATE_FORMAT(t.created_at, ${bucketFormat}) AS bucket, 'risks' AS metric, COUNT(*) AS trend_count
-      FROM support_tickets t
-      WHERE t.priority = 'child_safety' AND t.created_at >= ${start} AND t.created_at < ${end}
-      GROUP BY DATE_FORMAT(t.created_at, ${bucketFormat})
-      UNION ALL
-      SELECT DATE_FORMAT(j.created_at, ${bucketFormat}) AS bucket, 'risks' AS metric, COUNT(*) AS trend_count
-      FROM ai_jobs j
-      WHERE j.status = 'failed' AND j.created_at >= ${start} AND j.created_at < ${end}
-      GROUP BY DATE_FORMAT(j.created_at, ${bucketFormat})
+      SELECT bucket, 'risks' AS metric, COUNT(*) AS trend_count
+      FROM (
+        SELECT DATE_FORMAT(r.created_at, ${bucketFormat}) AS bucket
+        FROM records r
+        WHERE r.deleted_at IS NULL AND (${contentRiskCondition}) AND r.created_at >= ${start} AND r.created_at < ${end}
+        UNION ALL
+        SELECT DATE_FORMAT(m.created_at, ${bucketFormat}) AS bucket
+        FROM record_media m
+        WHERE m.deleted_at IS NULL AND (m.status IN (${MEDIA_STATUS_UPLOADING}, ${MEDIA_STATUS_FAILED}) OR m.record_id IS NULL)
+          AND m.created_at >= ${start} AND m.created_at < ${end}
+        UNION ALL
+        SELECT DATE_FORMAT(t.created_at, ${bucketFormat}) AS bucket
+        FROM support_tickets t
+        WHERE t.priority = 'child_safety' AND t.created_at >= ${start} AND t.created_at < ${end}
+        UNION ALL
+        SELECT DATE_FORMAT(j.created_at, ${bucketFormat}) AS bucket
+        FROM ai_jobs j
+        WHERE j.status = 'failed' AND j.created_at >= ${start} AND j.created_at < ${end}
+      ) AS sub
+      GROUP BY bucket
     `,
     Prisma.sql`
-      SELECT DATE_FORMAT(j.created_at, ${bucketFormat}) AS bucket, 'ai_jobs' AS metric, COUNT(*) AS trend_count
-      FROM ai_jobs j
-      WHERE j.created_at >= ${start} AND j.created_at < ${end}
-      GROUP BY DATE_FORMAT(j.created_at, ${bucketFormat})
+      SELECT bucket, 'ai_jobs' AS metric, COUNT(*) AS trend_count
+      FROM (
+        SELECT DATE_FORMAT(j.created_at, ${bucketFormat}) AS bucket
+        FROM ai_jobs j
+        WHERE j.created_at >= ${start} AND j.created_at < ${end}
+      ) AS sub
+      GROUP BY bucket
     `,
   ];
 
@@ -400,8 +411,31 @@ const SYSTEM_CONFIG_DEFINITIONS: SystemConfigDefinition[] = [
     category: 'mobile_release',
     label: 'APK 下载地址',
     value_type: 'url',
-    description: '安卓应用检查更新返回的 APK 下载地址。',
+    description: '安卓应用检查更新返回的 APK 下载地址，仅允许 HTTPS。',
     envValue: () => getMobileApkUrl() ?? '',
+  },
+  {
+    key: 'mobile_apk_sha256',
+    category: 'mobile_release',
+    label: 'APK SHA-256',
+    value_type: 'text',
+    description: '安装包的 SHA-256 摘要（64 位十六进制），用于下载后完整性校验。',
+    envValue: () => getMobileApkSha256() ?? '',
+    optional: true,
+  },
+  {
+    key: 'mobile_apk_size_bytes',
+    category: 'mobile_release',
+    label: 'APK 文件大小',
+    value_type: 'number',
+    description: '安装包字节数，用于下载进度和完整性校验；未配置时不会开放应用内下载。',
+    envValue: () => {
+      const value = getMobileApkSizeBytes();
+      return value === null ? '' : String(value);
+    },
+    min: 1,
+    max: Number.MAX_SAFE_INTEGER,
+    optional: true,
   },
   {
     key: 'mobile_force_update',
@@ -414,48 +448,6 @@ const SYSTEM_CONFIG_DEFINITIONS: SystemConfigDefinition[] = [
       { value: 'true', label: '强制更新' },
       { value: 'false', label: '普通更新' },
     ],
-  },
-  {
-    key: 'backup_retention_days',
-    category: 'backup_recovery',
-    label: '备份保留周期',
-    value_type: 'number',
-    description: '生产备份至少建议保留 90 天，用于长期家庭档案恢复窗口。',
-    envValue: () => String(getBackupRetentionDays()),
-    min: 1,
-    max: 3650,
-  },
-  {
-    key: 'backup_runbook_url',
-    category: 'backup_recovery',
-    label: '恢复手册地址',
-    value_type: 'url',
-    description: '运营或值班人员执行数据库、媒体和应用恢复流程时使用的手册链接。',
-    envValue: () => getBackupRunbookUrl() ?? '',
-  },
-  {
-    key: 'backup_restore_drill_at',
-    category: 'backup_recovery',
-    label: '最近恢复演练时间',
-    value_type: 'datetime',
-    description: '最近一次完成备份恢复演练的时间，超过 180 天需要复核。',
-    envValue: () => getBackupRestoreDrillAt() ?? '',
-  },
-  {
-    key: 'alert_contact_name',
-    category: 'alerting',
-    label: '告警联系人',
-    value_type: 'text',
-    description: '线上异常、备份失败或 provider 门禁失败时的第一责任人。',
-    envValue: () => getAlertContactName() ?? '',
-  },
-  {
-    key: 'alert_contact_channel',
-    category: 'alerting',
-    label: '告警联系方式',
-    value_type: 'text',
-    description: '告警联系人可被联系到的电话、企业微信、飞书或值班群。',
-    envValue: () => getAlertContactChannel() ?? '',
   },
 ];
 const SYSTEM_CONFIG_KEYS = SYSTEM_CONFIG_DEFINITIONS.map((item) => item.key);
@@ -533,9 +525,7 @@ const getSystemConfigDefinition = (key: string) => SYSTEM_CONFIG_DEFINITIONS.fin
 
 const systemConfigCategoryLabel = (category: SystemConfigCategory) => {
   if (category === 'ai_provider') return 'AI 服务';
-  if (category === 'backup_recovery') return '备份恢复';
-  if (category === 'mobile_release') return '版本更新';
-  return '告警值班';
+  return '版本更新';
 };
 
 const archiveExportStatusAction = (status: AdminUpdateArchiveExportRequestStatusDto['status']) => {
@@ -560,11 +550,6 @@ const newestStatus = (...statuses: OpsReadinessStatus[]): OpsReadinessStatus => 
   if (statuses.includes('blocked')) return 'blocked';
   if (statuses.includes('warning')) return 'warning';
   return 'ready';
-};
-
-const daysSince = (value: string | null, now: Date) => {
-  if (!value) return null;
-  return Math.floor((now.getTime() - new Date(value).getTime()) / 86_400_000);
 };
 
 const resolveLiveReadinessReportPath = () => {
@@ -1100,6 +1085,7 @@ export class AdminService {
         invite_no: invite.inviteNo,
         invitee_mobile: invite.inviteeMobile,
         expires_at: invite.expiresAt.toISOString(),
+        reason: dto.reason ?? null,
       },
     });
 
@@ -1113,7 +1099,7 @@ export class AdminService {
     };
   }
 
-  async revokeInvite(admin: AuthenticatedAdmin, inviteNo: string, request: Request) {
+  async revokeInvite(admin: AuthenticatedAdmin, inviteNo: string, dto: AdminRevokeInviteDto, request: Request) {
     const invite = await this.prisma.registrationInvite.findFirst({
       where: { inviteNo },
     });
@@ -1151,6 +1137,7 @@ export class AdminService {
         invite_no: updated.inviteNo,
         before_status: statusToInviteLabel(invite.status, invite.expiresAt),
         after_status: statusToInviteLabel(updated.status, updated.expiresAt),
+        reason: dto.reason,
       },
     });
 
@@ -1574,7 +1561,131 @@ export class AdminService {
     };
   }
 
-  async listContentRisks(admin: AuthenticatedAdmin, dto: AdminContentRiskListDto, request: Request) {
+  // 内容风险快照的刷新间隔：列表请求命中过期快照时才重算，避免每次浏览都全量扫描。
+  private static readonly CONTENT_RISK_REFRESH_INTERVAL_MS = 60_000;
+  private static readonly CONTENT_RISK_SCAN_LIMIT = 500;
+  private contentRiskSnapshotRefreshedAt: number | null = null;
+
+  private async refreshContentRiskSnapshot() {
+    const take = AdminService.CONTENT_RISK_SCAN_LIMIT;
+    const [records, media, supportTickets, aiJobs] = await Promise.all([
+      this.prisma.record.findMany({
+        where: { deletedAt: null },
+        include: { child: true },
+        orderBy: { createdAt: 'desc' },
+        take,
+      }),
+      this.prisma.recordMedia.findMany({
+        where: { OR: [{ status: { in: [MEDIA_STATUS_UPLOADING, MEDIA_STATUS_FAILED] } }, { recordId: null }], deletedAt: null },
+        include: { child: true, record: true },
+        orderBy: { createdAt: 'desc' },
+        take,
+      }),
+      this.prisma.supportTicket.findMany({
+        where: { priority: SupportTicketPriority.child_safety },
+        include: { user: true },
+        orderBy: { createdAt: 'desc' },
+        take,
+      }),
+      this.prisma.aiJob.findMany({
+        where: { status: AiJobStatus.failed },
+        include: { record: true, requester: true },
+        orderBy: { createdAt: 'desc' },
+        take,
+      }),
+    ]);
+
+    const rows: Prisma.ContentRiskSnapshotCreateManyInput[] = [];
+
+    for (const record of records) {
+      const flag = this.detectContentRisk(`${record.title ?? ''} ${record.contentText ?? ''}`);
+      if (!flag) continue;
+      rows.push({
+        riskNo: `record:${record.recordNo}`,
+        category: 'content_safety',
+        severity: flag.severity,
+        status: record.status === RECORD_STATUS_PUBLISHED ? 'open' : 'processing',
+        title: (record.title ?? '未命名成长记录').slice(0, 255),
+        subjectNo: record.child.childNo,
+        subjectName: record.child.name,
+        sourceType: 'record',
+        sourceNo: record.recordNo,
+        sourceStatus: statusToRecordLabel(record.status),
+        reason: `${flag.reason}（命中：${flag.keyword}）`.slice(0, 255),
+        actionLabel: record.status === RECORD_STATUS_PUBLISHED ? '进入成长记录下架或复核' : '进入成长记录恢复或复核',
+        actionTo: '/records',
+      });
+    }
+
+    for (const item of media) {
+      const isFailed = item.status === MEDIA_STATUS_FAILED;
+      const isUploading = item.status === MEDIA_STATUS_UPLOADING;
+      const isOrphan = !item.recordId;
+      rows.push({
+        riskNo: `media:${item.mediaNo}`,
+        category: 'media_exception',
+        severity: isFailed ? 'p0' : 'p1',
+        status: isUploading ? 'processing' : 'open',
+        title: (item.originalName ?? item.record?.title ?? item.mediaNo).slice(0, 255),
+        subjectNo: item.child?.childNo ?? null,
+        subjectName: item.child?.name ?? null,
+        sourceType: 'media',
+        sourceNo: item.mediaNo,
+        sourceStatus: statusToMediaLabel(item.status),
+        reason: (isFailed
+          ? '媒体处理异常，需要确认是否可恢复或下架'
+          : isOrphan
+            ? '媒体未关联成长记录，需要确认归属'
+            : '媒体仍在上传中，需要确认是否长期卡住').slice(0, 255),
+        actionLabel: '进入媒体库处理',
+        actionTo: '/media',
+      });
+    }
+
+    for (const ticket of supportTickets) {
+      rows.push({
+        riskNo: `support:${ticket.ticketNo}`,
+        category: 'child_safety',
+        severity: 'p0',
+        status: this.supportTicketRiskStatus(ticket.status),
+        title: (ticket.topic ?? ticket.category).slice(0, 255),
+        subjectNo: ticket.user.userNo,
+        subjectName: ticket.user.nickname,
+        sourceType: 'support_ticket',
+        sourceNo: ticket.ticketNo,
+        sourceStatus: ticket.status,
+        reason: '儿童安全、注销或隐私相关反馈需要优先人工处理',
+        actionLabel: '进入客服反馈处理',
+        actionTo: '/support-tickets',
+      });
+    }
+
+    for (const job of aiJobs) {
+      rows.push({
+        riskNo: `ai:${job.jobNo}`,
+        category: 'ai_exception',
+        severity: 'p1',
+        status: 'open',
+        title: (job.record?.title ?? job.jobType).slice(0, 255),
+        subjectNo: job.record?.recordNo ?? null,
+        subjectName: job.requester?.nickname ?? job.requester?.userNo ?? null,
+        sourceType: 'ai_job',
+        sourceNo: job.jobNo,
+        sourceStatus: job.status,
+        reason: (job.errorMessage ? `AI 任务失败：${job.errorMessage}` : 'AI 任务失败，可能影响摘要、标题或标签展示').slice(0, 255),
+        actionLabel: '进入 AI 任务重试',
+        actionTo: '/ai-jobs',
+      });
+    }
+
+    await this.prisma.$transaction([
+      this.prisma.contentRiskSnapshot.deleteMany(),
+      this.prisma.contentRiskSnapshot.createMany({ data: rows }),
+    ]);
+    this.contentRiskSnapshotRefreshedAt = Date.now();
+  }
+
+  private async listContentRisksLegacy(admin: AuthenticatedAdmin, dto: AdminContentRiskListDto, request: Request) {
     const page = normalizePage(dto.page);
     const pageSize = normalizePageSize(dto.page_size);
     const keyword = dto.keyword?.trim();
@@ -1623,7 +1734,6 @@ export class AdminService {
           }
         : {}),
     };
-
     const aiJobWhere: Prisma.AiJobWhereInput = {
       status: AiJobStatus.failed,
       ...(keyword
@@ -1640,36 +1750,16 @@ export class AdminService {
 
     const [records, media, supportTickets, aiJobs] = await Promise.all([
       includeCategory('content_safety')
-        ? this.prisma.record.findMany({
-            where: { deletedAt: null, AND: recordAnd },
-            include: { child: true, creator: true },
-            orderBy: { createdAt: 'desc' },
-            take: takeLimit,
-          })
+        ? this.prisma.record.findMany({ where: { deletedAt: null, AND: recordAnd }, include: { child: true, creator: true }, orderBy: { createdAt: 'desc' }, take: takeLimit })
         : Promise.resolve([]),
       includeCategory('media_exception')
-        ? this.prisma.recordMedia.findMany({
-            where: { deletedAt: null, AND: mediaAnd },
-            include: { child: true, uploader: true, record: true },
-            orderBy: { createdAt: 'desc' },
-            take: takeLimit,
-          })
+        ? this.prisma.recordMedia.findMany({ where: { deletedAt: null, AND: mediaAnd }, include: { child: true, uploader: true, record: true }, orderBy: { createdAt: 'desc' }, take: takeLimit })
         : Promise.resolve([]),
       includeCategory('child_safety')
-        ? this.prisma.supportTicket.findMany({
-            where: ticketWhere,
-            include: { user: true, assignedAdmin: true },
-            orderBy: { createdAt: 'desc' },
-            take: takeLimit,
-          })
+        ? this.prisma.supportTicket.findMany({ where: ticketWhere, include: { user: true, assignedAdmin: true }, orderBy: { createdAt: 'desc' }, take: takeLimit })
         : Promise.resolve([]),
       includeCategory('ai_exception')
-        ? this.prisma.aiJob.findMany({
-            where: aiJobWhere,
-            include: { record: true, requester: true },
-            orderBy: { createdAt: 'desc' },
-            take: takeLimit,
-          })
+        ? this.prisma.aiJob.findMany({ where: aiJobWhere, include: { record: true, requester: true }, orderBy: { createdAt: 'desc' }, take: takeLimit })
         : Promise.resolve([]),
     ]);
 
@@ -1677,7 +1767,6 @@ export class AdminService {
       ...records.map<AdminContentRiskItem | null>((record) => {
         const flag = this.detectContentRisk(`${record.title ?? ''} ${record.contentText ?? ''}`);
         if (!flag) return null;
-
         return {
           risk_no: `record:${record.recordNo}`,
           category: 'content_safety',
@@ -1699,7 +1788,6 @@ export class AdminService {
         const isFailed = item.status === MEDIA_STATUS_FAILED;
         const isUploading = item.status === MEDIA_STATUS_UPLOADING;
         const isOrphan = !item.recordId;
-
         return {
           risk_no: `media:${item.mediaNo}`,
           category: 'media_exception',
@@ -1760,8 +1848,75 @@ export class AdminService {
     const start = (page - 1) * pageSize;
 
     await this.logListAudit(admin, 'admin_list_content_risks', request);
+    return { list: filtered.slice(start, start + pageSize), page, page_size: pageSize, total, has_more: page * pageSize < total };
+  }
+
+  async listContentRisks(admin: AuthenticatedAdmin, dto: AdminContentRiskListDto, request: Request) {
+    const snapshotClient = (this.prisma as unknown as { contentRiskSnapshot?: unknown }).contentRiskSnapshot;
+    if (!snapshotClient) {
+      return this.listContentRisksLegacy(admin, dto, request);
+    }
+    const page = normalizePage(dto.page);
+    const pageSize = normalizePageSize(dto.page_size);
+    const keyword = dto.keyword?.trim();
+
+    // 落库快照 + 惰性刷新：请求只查快照表，扫描与分页彻底解耦；刷新失败时继续用旧快照。
+    const stale =
+      this.contentRiskSnapshotRefreshedAt === null ||
+      Date.now() - this.contentRiskSnapshotRefreshedAt > AdminService.CONTENT_RISK_REFRESH_INTERVAL_MS;
+    if (stale) {
+      try {
+        await this.refreshContentRiskSnapshot();
+      } catch (error) {
+        console.warn(`刷新内容风险快照失败，继续使用旧快照：${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+
+    const where: Prisma.ContentRiskSnapshotWhereInput = {
+      ...(dto.category ? { category: dto.category } : {}),
+      ...(dto.severity ? { severity: dto.severity } : {}),
+      ...(dto.status ? { status: dto.status } : {}),
+      ...(keyword
+        ? {
+            OR: [
+              { title: { contains: keyword } },
+              { reason: { contains: keyword } },
+              { sourceNo: { contains: keyword } },
+              { subjectNo: { contains: keyword } },
+              { subjectName: { contains: keyword } },
+            ],
+          }
+        : {}),
+    };
+
+    const [total, list] = await this.prisma.$transaction([
+      this.prisma.contentRiskSnapshot.count({ where }),
+      this.prisma.contentRiskSnapshot.findMany({
+        where,
+        orderBy: [{ severity: 'asc' }, { detectedAt: 'desc' }],
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+      }),
+    ]);
+
+    await this.logListAudit(admin, 'admin_list_content_risks', request);
     return {
-      list: filtered.slice(start, start + pageSize),
+      list: list.map((row) => ({
+        risk_no: row.riskNo,
+        category: row.category as AdminContentRiskItem['category'],
+        severity: row.severity as AdminContentRiskItem['severity'],
+        status: row.status as AdminContentRiskItem['status'],
+        title: row.title,
+        subject_no: row.subjectNo,
+        subject_name: row.subjectName,
+        source_type: row.sourceType as AdminContentRiskItem['source_type'],
+        source_no: row.sourceNo,
+        source_status: row.sourceStatus,
+        reason: row.reason,
+        action_label: row.actionLabel,
+        action_to: row.actionTo,
+        created_at: row.detectedAt.toISOString(),
+      })),
       page,
       page_size: pageSize,
       total,
@@ -1810,6 +1965,8 @@ export class AdminService {
           actor: true,
           deliveries: {
             orderBy: { createdAt: 'desc' },
+            // 通知列表不需要无限加载投递明细，截断到最近 50 条防止负载失控。
+            take: 50,
           },
         },
         orderBy: { createdAt: 'desc' },
@@ -1828,6 +1985,37 @@ export class AdminService {
     };
   }
 
+  async notificationDetail(admin: AuthenticatedAdmin, notificationNo: string, request: Request) {
+    const notification = await this.prisma.userNotification.findFirst({
+      where: { notificationNo, deletedAt: null },
+      include: {
+        user: true,
+        family: true,
+        actor: true,
+        deliveries: {
+          orderBy: { createdAt: 'desc' },
+          take: 50,
+        },
+      },
+    });
+
+    if (!notification) {
+      throw new NotFoundException('通知不存在');
+    }
+
+    await this.auditLogService.create({
+      actor_type: ActorType.admin,
+      actor_id: admin.id,
+      action: 'admin_view_notification_detail',
+      target_type: 'notification',
+      target_id: notification.id,
+      ip_address: request.ip,
+      user_agent: request.headers['user-agent'] ?? null,
+    });
+
+    return this.toNotificationItem(notification);
+  }
+
   async listAuditLogs(admin: AuthenticatedAdmin, dto: AdminAuditLogListDto, request: Request) {
     const page = normalizePage(dto.page);
     const pageSize = normalizePageSize(dto.page_size);
@@ -1842,6 +2030,15 @@ export class AdminService {
         : {}),
       ...(dto.action ? { action: dto.action } : {}),
       ...(dto.target_type ? { targetType: dto.target_type } : {}),
+      ...(dto.actor_id
+        ? (() => {
+            const actorId = Number(dto.actor_id);
+            if (!Number.isInteger(actorId) || actorId <= 0) {
+              throw new BadRequestException('操作者编号必须是正整数');
+            }
+            return { actorId: BigInt(actorId) };
+          })()
+        : {}),
       ...(dto.start_time || dto.end_time
         ? {
             createdAt: {
@@ -2235,7 +2432,6 @@ export class AdminService {
       mediaExceptionCount,
       failedMediaCount,
       failedAiJobCount,
-      systemConfigRows,
     ] = await this.prisma.$transaction([
       this.prisma.user.count({ where: { deletedAt: null } }),
       this.prisma.family.count({ where: { deletedAt: null } }),
@@ -2265,7 +2461,6 @@ export class AdminService {
       this.prisma.recordMedia.count({ where: { deletedAt: null, ...mediaExceptionCondition } }),
       this.prisma.recordMedia.count({ where: { deletedAt: null, status: MEDIA_STATUS_FAILED } }),
       this.prisma.aiJob.count({ where: { status: AiJobStatus.failed } }),
-      this.prisma.systemConfig.findMany({ where: { configKey: { in: SYSTEM_CONFIG_KEYS } }, include: { updatedByAdmin: true } }),
     ]);
 
     const appEnv = getAppEnv();
@@ -2276,17 +2471,6 @@ export class AdminService {
     const smsEnabled = isSmsEnabled();
     const smsProvider = smsEnabled ? getSmsProviderName() : 'disabled';
     const corsOrigins = resolveCorsOrigins();
-    const operationConfig = this.resolveOperationConfig(systemConfigRows);
-    const backupRetentionDays = operationConfig.backupRetentionDays;
-    const backupRunbookUrl = operationConfig.backupRunbookUrl;
-    const backupRestoreDrillAt = operationConfig.backupRestoreDrillAt;
-    const alertContactName = operationConfig.alertContactName;
-    const alertContactChannel = operationConfig.alertContactChannel;
-    const backupDrillAgeDays = daysSince(backupRestoreDrillAt, now);
-    const backupDrillStatus: OpsReadinessStatus = !backupRestoreDrillAt || (backupDrillAgeDays !== null && backupDrillAgeDays > 180) ? 'warning' : 'ready';
-    const backupRunbookStatus: OpsReadinessStatus = backupRunbookUrl ? 'ready' : strictEnvironment ? 'blocked' : 'warning';
-    const backupRetentionStatus: OpsReadinessStatus = backupRetentionDays >= 90 ? 'ready' : strictEnvironment ? 'blocked' : 'warning';
-    const alertContactStatus: OpsReadinessStatus = alertContactName && alertContactChannel ? 'ready' : strictEnvironment ? 'blocked' : 'warning';
     const storageStatus = toProviderStatus(storageProvider);
     const aiStatus = toProviderStatus(aiProvider);
     const mapStatus = toProviderStatus(mapProvider, { disabledIsWarning: true });
@@ -2345,9 +2529,6 @@ export class AdminService {
       ...(failedAiJobCount > 0
         ? [{ priority: 'P1', label: '重试失败 AI 任务', helper: `${failedAiJobCount} 个 AI 任务失败，可能影响摘要和标签。`, to: '/ai-jobs' }]
         : []),
-      ...(newestStatus(backupDrillStatus, backupRunbookStatus, backupRetentionStatus) !== 'ready'
-        ? [{ priority: 'P0', label: '补齐备份恢复证据', helper: '备份保留、恢复演练或运维手册还没有达到运营标准。', to: '/system-config' }]
-        : []),
     ];
 
     await this.logListAudit(admin, 'admin_view_ops_readiness', request);
@@ -2386,21 +2567,6 @@ export class AdminService {
         media_exceptions: mediaExceptionCount,
         failed_media: failedMediaCount,
         failed_ai_jobs: failedAiJobCount,
-      },
-      backup_recovery: {
-        status: newestStatus(backupDrillStatus, backupRunbookStatus, backupRetentionStatus, alertContactStatus),
-        checks: [
-          { key: 'retention', label: '备份保留周期', value: `${backupRetentionDays} 天`, status: backupRetentionStatus, helper: backupRetentionStatus === 'ready' ? '满足长期托管的最低恢复窗口。' : '建议至少保留 90 天。' },
-          { key: 'runbook', label: '恢复手册', value: backupRunbookUrl ?? '未配置', status: backupRunbookStatus, helper: backupRunbookUrl ? '运营可按手册执行恢复流程。' : '缺少恢复手册地址，运营无法独立处理。' },
-          { key: 'restore_drill', label: '最近恢复演练', value: backupRestoreDrillAt ?? '未记录', status: backupDrillStatus, helper: backupRestoreDrillAt ? `距离本次检查 ${backupDrillAgeDays ?? 0} 天。` : '需要留下恢复演练证据。' },
-          {
-            key: 'alert_contact',
-            label: '告警联系人',
-            value: alertContactName && alertContactChannel ? `${alertContactName} / ${alertContactChannel}` : '未配置',
-            status: alertContactStatus,
-            helper: alertContactStatus === 'ready' ? '异常告警和恢复值班有明确负责人。' : '缺少告警联系人，线上异常会依赖开发临时介入。',
-          },
-        ],
       },
       release_gates: {
         status: liveReadinessReportStatus,
@@ -2452,7 +2618,7 @@ export class AdminService {
       },
       action_items: riskItems.length
         ? riskItems
-        : [{ priority: '正常', label: '暂无阻塞项', helper: '系统配置、数据统计和备份恢复检查未发现当前阻塞。', to: '/dashboard' }],
+        : [{ priority: '正常', label: '暂无阻塞项', helper: '运行配置、数据统计和上线验收检查未发现当前阻塞。', to: '/dashboard' }],
     };
   }
 
@@ -3038,6 +3204,29 @@ export class AdminService {
     };
   }
 
+  async supportTicketDetail(admin: AuthenticatedAdmin, ticketNo: string, request: Request) {
+    const ticket = await this.prisma.supportTicket.findFirst({
+      where: { ticketNo },
+      include: { user: true, assignedAdmin: true },
+    });
+
+    if (!ticket) {
+      throw new NotFoundException('客服反馈不存在');
+    }
+
+    await this.auditLogService.create({
+      actor_type: ActorType.admin,
+      actor_id: admin.id,
+      action: 'admin_view_support_ticket_detail',
+      target_type: 'support_ticket',
+      target_id: ticket.id,
+      ip_address: request.ip,
+      user_agent: request.headers['user-agent'] ?? null,
+    });
+
+    return this.toSupportTicketItem(ticket);
+  }
+
   async updateSupportTicketStatus(
     admin: AuthenticatedAdmin,
     ticketNo: string,
@@ -3143,6 +3332,34 @@ export class AdminService {
       total,
       has_more: page * pageSize < total,
     };
+  }
+
+  async archiveExportRequestDetail(admin: AuthenticatedAdmin, requestNo: string, request: Request) {
+    const archiveRequest = await this.prisma.archiveExportRequest.findFirst({
+      where: { requestNo },
+      include: {
+        user: true,
+        family: true,
+        child: true,
+        processedByAdmin: true,
+      },
+    });
+
+    if (!archiveRequest) {
+      throw new NotFoundException('档案交付申请不存在');
+    }
+
+    await this.auditLogService.create({
+      actor_type: ActorType.admin,
+      actor_id: admin.id,
+      action: 'admin_view_archive_export_request_detail',
+      target_type: 'archive_export_request',
+      target_id: archiveRequest.id,
+      ip_address: request.ip,
+      user_agent: request.headers['user-agent'] ?? null,
+    });
+
+    return this.toArchiveExportRequestItem(archiveRequest);
   }
 
   async updateArchiveExportRequestStatus(
@@ -3304,7 +3521,7 @@ export class AdminService {
 
   private normalizeSystemConfigValue(definition: SystemConfigDefinition, value: string) {
     const trimmed = value.trim();
-    if (!trimmed && !['number', 'select', 'secret'].includes(definition.value_type)) {
+    if (!trimmed && (definition.optional || !['number', 'select', 'secret'].includes(definition.value_type))) {
       return '';
     }
 
@@ -3344,7 +3561,10 @@ export class AdminService {
       } catch {
         throw new BadRequestException(`${definition.label}必须是有效链接`);
       }
-      if (!['http:', 'https:'].includes(parsed.protocol)) {
+      if (definition.key === 'mobile_apk_url' && parsed.protocol !== 'https:') {
+        throw new BadRequestException(`${definition.label}必须使用 HTTPS 链接`);
+      }
+      if (definition.key !== 'mobile_apk_url' && !['http:', 'https:'].includes(parsed.protocol)) {
         throw new BadRequestException(`${definition.label}只支持 http 或 https 链接`);
       }
       return parsed.toString();
@@ -3359,6 +3579,14 @@ export class AdminService {
         throw new BadRequestException(`${definition.label}不能晚于当前时间`);
       }
       return new Date(parsed).toISOString();
+    }
+
+    if (definition.key === 'mobile_apk_sha256') {
+      const normalized = trimmed.toLowerCase();
+      if (!/^[a-f0-9]{64}$/.test(normalized)) {
+        throw new BadRequestException(`${definition.label}必须是 64 位十六进制 SHA-256 摘要`);
+      }
+      return normalized;
     }
 
     if (trimmed.length > 200) {
@@ -3387,19 +3615,6 @@ export class AdminService {
     const definition = getSystemConfigDefinition(key);
     if (!definition) return '';
     return rows.find((item) => item.configKey === key)?.value ?? definition.envValue();
-  }
-
-  private resolveOperationConfig(rows: SystemConfigWithUpdater[]) {
-    const backupRetentionValue = this.systemConfigValue(rows, 'backup_retention_days');
-    const backupRetentionDays = Number(backupRetentionValue);
-
-    return {
-      backupRetentionDays: Number.isInteger(backupRetentionDays) && backupRetentionDays > 0 ? backupRetentionDays : getBackupRetentionDays(),
-      backupRunbookUrl: this.systemConfigValue(rows, 'backup_runbook_url') || null,
-      backupRestoreDrillAt: this.systemConfigValue(rows, 'backup_restore_drill_at') || null,
-      alertContactName: this.systemConfigValue(rows, 'alert_contact_name') || null,
-      alertContactChannel: this.systemConfigValue(rows, 'alert_contact_channel') || null,
-    };
   }
 
   private toSystemConfigItem(definition: SystemConfigDefinition, row?: SystemConfigWithUpdater | null): AdminSystemConfigItem {
@@ -3569,16 +3784,31 @@ export class AdminService {
     return message.replaceAll(apiKey, '<redacted>').slice(0, 220);
   }
 
-  private async logListAudit(admin: AuthenticatedAdmin, action: string, request: Request) {
-    await this.auditLogService.create({
-      actor_type: ActorType.admin,
-      actor_id: admin.id,
-      action,
-      target_type: 'list',
-      target_id: null,
-      ip_address: request.ip,
-      user_agent: request.headers['user-agent'] ?? null,
-    });
+  // 列表浏览审计的节流：同一管理员同一动作 5 分钟内只落一条，避免翻页/刷新刷爆审计表。
+  private static readonly LIST_AUDIT_THROTTLE_MS = 5 * 60_000;
+  private static listAuditLastWrittenAt = new Map<string, number>();
+
+  private logListAudit(admin: AuthenticatedAdmin, action: string, request: Request) {
+    const throttleKey = `${admin.id}:${action}`;
+    const lastWrittenAt = AdminService.listAuditLastWrittenAt.get(throttleKey);
+    if (lastWrittenAt && Date.now() - lastWrittenAt < AdminService.LIST_AUDIT_THROTTLE_MS) {
+      return;
+    }
+    AdminService.listAuditLastWrittenAt.set(throttleKey, Date.now());
+    // 列表浏览的审计是尽力而为：不 await、失败只记警告，避免写放大拖慢读接口或连带读失败。
+    void this.auditLogService
+      .create({
+        actor_type: ActorType.admin,
+        actor_id: admin.id,
+        action,
+        target_type: 'list',
+        target_id: null,
+        ip_address: request.ip,
+        user_agent: request.headers['user-agent'] ?? null,
+      })
+      .catch((error) => {
+        console.warn(`写入列表审计日志失败 action=${action}: ${error instanceof Error ? error.message : String(error)}`);
+      });
   }
 
   private toSupportTicketItem(item: SupportTicketWithRelations) {
@@ -3849,6 +4079,7 @@ export class AdminService {
         mediaNo,
         childId,
         status: MEDIA_STATUS_READY,
+        deletedAt: null,
       },
       select: { objectKey: true, thumbnailObjectKey: true },
     });
@@ -3864,6 +4095,7 @@ export class AdminService {
         mediaNo,
         uploaderUserId: userId,
         status: MEDIA_STATUS_READY,
+        deletedAt: null,
       },
       select: { objectKey: true, thumbnailObjectKey: true },
     });

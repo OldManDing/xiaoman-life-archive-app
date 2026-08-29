@@ -22,3 +22,35 @@ artifacts/visual-review/final-*.png
 artifacts/debug/
 artifacts/deploy/
 artifacts/trace-debug/
+
+# 本地调试产物（不入库）
+.playwright-cli/
+.tmp/
+apps/api/check-admin.js
+apps/api/create-admin.js
+apps/api/update-admin.js
+apps/api/test-admin*.js
+apps/api/test-dashboard*.js
+apps/api/test-tables.js
+DASHBOARD_FIX.md
+backup-recovered-*.sql
+query-admin.sql
+check-admin.js
+create-admin.js
+update-admin.js
+test-admin*.js
+test-dashboard*.js
+test-tables.js
+test-fixed-query.js
+output/
+scripts/android-webview-cdp.cjs
+
+# 运维备份与构建产物（体积巨大，绝不入库）
+artifacts/full-server-backups/
+artifacts/avd-snapshots-backup-*/
+artifacts/cloud-backups/
+artifacts/deploy/
+artifacts/releases/
+artifacts/apk/
+artifacts/*.sql
+artifacts/

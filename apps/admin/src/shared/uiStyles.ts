@@ -10,7 +10,6 @@ export const cardStyle: CSSProperties = {
 
 export const headingStyle: CSSProperties = {
   margin: 0,
-  fontSize: '28px',
   fontWeight: 700,
   color: '#1f1d1a',
   letterSpacing: 0,
@@ -67,8 +66,12 @@ export const thTdStyle: CSSProperties = {
   verticalAlign: 'top',
   color: '#2d2a26',
   minWidth: 0,
-  whiteSpace: 'normal',
-  overflowWrap: 'anywhere',
+};
+
+export const tableHeaderStyle: CSSProperties = {
+  color: '#68635c',
+  fontSize: '12px',
+  background: '#f7f7f5',
 };
 
 export const mutedTextStyle: CSSProperties = {

@@ -73,6 +73,10 @@ export class ApiExceptionFilter implements ExceptionFilter {
       return;
     }
 
+    // 未识别异常必须留下堆栈，否则线上 1099 无从排查。
+    console.error(
+      `[api-exception] unhandled ${exception instanceof Error ? exception.stack : String(exception)}`,
+    );
     response.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
       code: 1099,
       message: '系统异常',

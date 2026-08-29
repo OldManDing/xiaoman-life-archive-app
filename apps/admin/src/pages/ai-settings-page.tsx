@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent, type Re
 import { Bot, CheckCircle2, FlaskConical, KeyRound, Save, ShieldCheck, XCircle } from 'lucide-react';
 
 import { adminApi, type AdminAiSettingsTestResponse, type AdminSystemConfigItem } from '../shared/request';
+import { aiProviderLabel } from '../shared/labels';
+import { formatDateTime } from '../shared/format';
+import { AdminModal } from '../shared/modal';
 import { AdminSelect, Badge, EmptyState, PageShell, Panel } from '../shared/ui';
 import { inputStyle, mutedTextStyle, primaryButtonStyle, secondaryButtonStyle } from '../shared/uiStyles';
 import { useAdminAuth } from '../shared/useAdminAuth';
@@ -27,12 +30,6 @@ type AiSettingsForm = {
   reason: string;
 };
 
-const providerLabel: Record<string, string> = {
-  'openai-compatible': 'OpenAI 兼容服务',
-  openai: 'OpenAI 服务',
-  mock: '本地模拟服务',
-};
-
 const getConfig = (configs: AdminSystemConfigItem[], key: AiConfigKey) => configs.find((item) => item.config_key === key);
 
 const editableValue = (item: AdminSystemConfigItem | undefined) => {
@@ -51,8 +48,6 @@ const buildForm = (configs: AdminSystemConfigItem[]): AiSettingsForm => ({
 });
 
 const sourceLabel = (source: AdminSystemConfigItem['source'] | undefined) => (source === 'admin' ? '后台配置' : '环境变量');
-
-const formatDateTime = (value: string | null | undefined) => (value ? new Date(value).toLocaleString('zh-CN', { hour12: false }) : '-');
 
 const isPositiveIntegerInRange = (value: string, min: number, max: number) => {
   const parsed = Number(value);
@@ -120,6 +115,7 @@ export const AiSettingsPage = () => {
   const [formError, setFormError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [testResult, setTestResult] = useState<AdminAiSettingsTestResponse | null>(null);
+  const [testDialog, setTestDialog] = useState<{ result: AdminAiSettingsTestResponse | null; error: string | null } | null>(null);
 
   const aiConfigs = useMemo(
     () => AI_CONFIG_KEYS.map((key) => getConfig(configs, key)).filter((item): item is AdminSystemConfigItem => Boolean(item)),
@@ -137,13 +133,16 @@ export const AiSettingsPage = () => {
   const updates = useMemo(() => {
     const next: Array<{ key: AiConfigKey; value: string }> = [];
     if (form.provider !== currentForm.provider) next.push({ key: 'ai_provider', value: form.provider });
-    if (form.baseUrl.trim() !== currentForm.baseUrl) next.push({ key: 'ai_base_url', value: form.baseUrl.trim() });
-    if (form.model.trim() !== currentForm.model) next.push({ key: 'ai_model', value: form.model.trim() });
+    // 切到 mock 时不动真实供应商字段，避免把线上 base_url / model / Key 覆盖为空值。
+    if (form.provider !== 'mock') {
+      if (form.baseUrl.trim() !== currentForm.baseUrl) next.push({ key: 'ai_base_url', value: form.baseUrl.trim() });
+      if (form.model.trim() !== currentForm.model) next.push({ key: 'ai_model', value: form.model.trim() });
+      if (form.apiKey.trim()) next.push({ key: 'ai_api_key', value: form.apiKey.trim() });
+    }
     if (form.timeoutMs.trim() !== currentForm.timeoutMs) next.push({ key: 'ai_timeout_ms', value: form.timeoutMs.trim() });
     if (form.dailyLimitPerUser.trim() !== currentForm.dailyLimitPerUser) {
       next.push({ key: 'ai_daily_limit_per_user', value: form.dailyLimitPerUser.trim() });
     }
-    if (form.apiKey.trim()) next.push({ key: 'ai_api_key', value: form.apiKey.trim() });
     return next;
   }, [currentForm, form]);
   const hasChanges = updates.length > 0;
@@ -154,6 +153,7 @@ export const AiSettingsPage = () => {
     setError(null);
     setFormError(null);
     setTestResult(null);
+    setTestDialog(null);
   };
 
   const openEditor = () => {
@@ -162,11 +162,14 @@ export const AiSettingsPage = () => {
     setError(null);
     setMessage(null);
     setTestResult(null);
+    setTestDialog(null);
     setIsEditing(true);
   };
 
   const closeEditor = () => {
     if (saving) return;
+    // 有未保存修改时先确认，避免误触 × 丢掉已经填写的内容。
+    if (hasChanges && !window.confirm('当前有未保存的修改，确认放弃并关闭？')) return;
     setForm(buildForm(configs));
     setFormError(null);
     setIsEditing(false);
@@ -242,7 +245,7 @@ export const AiSettingsPage = () => {
       setIsEditing(false);
       setMessage('AI 服务设置已保存。新的配置会被后台和运行中服务优先使用，请继续执行连接测试。');
     } catch (err) {
-      setFormError(err instanceof Error ? err.message : 'AI 设置保存失败，请刷新后确认是否有部分配置已保存');
+      setFormError(err instanceof Error ? err.message : 'AI 设置保存失败，请稍后重试');
     } finally {
       setSaving(false);
     }
@@ -250,19 +253,21 @@ export const AiSettingsPage = () => {
 
   const testConnection = async () => {
     if (hasChanges) {
-      setError('当前有未保存修改，请先保存后再测试连接');
+      setError(null);
+      setTestDialog({ result: null, error: '当前有未保存修改，请先保存后再测试连接' });
       return;
     }
 
     setTesting(true);
     setError(null);
     setMessage(null);
+    setTestDialog(null);
     try {
       const result = await adminApi.testAiSettings();
       setTestResult(result);
-      setMessage(result.status === 'success' ? 'AI 服务连接测试通过' : `AI 服务连接测试未通过：${result.message}`);
+      setTestDialog({ result, error: null });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'AI 服务连接测试失败');
+      setTestDialog({ result: null, error: err instanceof Error ? err.message : 'AI 服务连接测试失败' });
     } finally {
       setTesting(false);
     }
@@ -278,20 +283,7 @@ export const AiSettingsPage = () => {
 
       {message ? (
         <Panel>
-          {testResult ? (
-            <div className={`admin-ai-settings-inline-result admin-ai-settings-inline-result-${testResult.status}`}>
-              {testResult.status === 'success' ? <CheckCircle2 size={20} /> : <XCircle size={20} />}
-              <div>
-                <strong>{testResult.status === 'success' ? '连接成功' : '连接失败'}</strong>
-                <p>{testResult.message}</p>
-                <span>
-                  {testResult.provider} / {testResult.model ?? '-'} / {testResult.latency_ms}ms
-                </span>
-              </div>
-            </div>
-          ) : (
-            <p style={{ ...mutedTextStyle, margin: 0 }}>{message}</p>
-          )}
+          <p style={{ ...mutedTextStyle, margin: 0 }}>{message}</p>
         </Panel>
       ) : null}
 
@@ -303,7 +295,7 @@ export const AiSettingsPage = () => {
                 <Bot size={15} />
                 当前 AI 通道
               </span>
-              <h2>{providerLabel[form.provider] ?? form.provider}</h2>
+              <h2>{aiProviderLabel(form.provider)}</h2>
               <p>这里管理的是实际运行时读取的 AI 配置。后台保存后，服务会优先使用数据库配置，未覆盖的字段继续使用环境变量。</p>
             </div>
             <div className="admin-ai-settings-status">
@@ -316,13 +308,13 @@ export const AiSettingsPage = () => {
         <div className="admin-ai-settings-signals">
           <ConfigSignal
             label="供应商"
-            value={providerLabel[editableValue(providerConfig)] ?? (editableValue(providerConfig) || '-')}
+            value={aiProviderLabel(editableValue(providerConfig)) || '—'}
             helper={`来源：${sourceLabel(providerConfig?.source)}`}
             tone={providerConfig?.source === 'admin' ? 'success' : 'neutral'}
           />
           <ConfigSignal
             label="模型"
-            value={editableValue(modelConfig) || '-'}
+            value={editableValue(modelConfig) || '—'}
             helper={`来源：${sourceLabel(modelConfig?.source)}`}
             tone={modelConfig?.source === 'admin' ? 'success' : 'neutral'}
           />
@@ -348,13 +340,13 @@ export const AiSettingsPage = () => {
               <h2>运行配置</h2>
               <p>这里只展示当前已保存配置。修改供应商、模型或 Key 时会进入弹框，并要求填写必填项和操作原因。</p>
             </div>
-            <Badge tone="success">配置已同步</Badge>
+            <Badge tone="info">后台配置优先生效</Badge>
           </div>
 
           <div className="admin-ai-settings-readonly-grid">
             <ConfigSignal
               label="接口地址"
-              value={editableValue(baseUrlConfig) || '-'}
+              value={editableValue(baseUrlConfig) || '—'}
               helper={`来源：${sourceLabel(baseUrlConfig?.source)}`}
               tone={baseUrlConfig?.source === 'admin' ? 'success' : 'neutral'}
             />
@@ -403,7 +395,7 @@ export const AiSettingsPage = () => {
                   <strong>{testResult.status === 'success' ? '连接成功' : '连接失败'}</strong>
                   <p>{testResult.message}</p>
                   <span>
-                    {testResult.provider} / {testResult.model ?? '-'} / {testResult.latency_ms}ms
+                    {testResult.provider} / {testResult.model ?? '—'} / {testResult.latency_ms}ms
                   </span>
                 </div>
               </div>
@@ -438,19 +430,9 @@ export const AiSettingsPage = () => {
       </section>
 
       {isEditing ? (
-        <div className="admin-modal-overlay" role="presentation">
-          <section className="admin-modal admin-ai-settings-modal" role="dialog" aria-modal="true" aria-labelledby="admin-ai-settings-dialog-title">
+        <AdminModal open={isEditing} title="修改 AI 设置" eyebrow="AI 服务管理" onClose={closeEditor} className="admin-ai-settings-modal">
             <form className="admin-ai-settings-form" onSubmit={onSubmit}>
-              <div className="admin-modal-header">
-                <div>
-                  <span>AI 服务管理</span>
-                  <h2 id="admin-ai-settings-dialog-title">修改 AI 设置</h2>
-                  <p className="admin-ai-settings-dialog-copy">带“必填”的字段保存前必须完整填写；API Key 留空会保留当前密钥。</p>
-                </div>
-                <button type="button" className="admin-modal-close" onClick={closeEditor} aria-label="关闭 AI 设置弹窗">
-                  ×
-                </button>
-              </div>
+              <p className="admin-ai-settings-dialog-copy">带“必填”的字段保存前必须完整填写；API Key 留空会保留当前密钥。</p>
 
               <div className="admin-ai-settings-required-note">
                 <span>*</span>
@@ -558,8 +540,32 @@ export const AiSettingsPage = () => {
                 </button>
               </div>
             </form>
-          </section>
-        </div>
+        </AdminModal>
+      ) : null}
+
+      {testDialog ? (
+        <AdminModal open={Boolean(testDialog)} title={testDialog.error ? '测试未完成' : testDialog.result?.status === 'success' ? '连接成功' : '连接失败'} eyebrow="连接测试" onClose={() => setTestDialog(null)} className="admin-ai-test-dialog">
+
+            {testDialog.error ? (
+              <div className="admin-ai-test-dialog-error">
+                <XCircle size={22} />
+                <p>{testDialog.error}</p>
+              </div>
+            ) : testDialog.result ? (
+              <div className={`admin-ai-test-dialog-result admin-ai-test-dialog-result-${testDialog.result.status}`}>
+                {testDialog.result.status === 'success' ? <CheckCircle2 size={22} /> : <XCircle size={22} />}
+                <div>
+                  <strong>{testDialog.result.status === 'success' ? 'AI 服务可以正常调用' : 'AI 服务暂时不可用'}</strong>
+                  <p>{testDialog.result.message}</p>
+                  <span>{testDialog.result.provider} / {testDialog.result.model ?? '—'} / {testDialog.result.latency_ms}ms</span>
+                </div>
+              </div>
+            ) : null}
+
+            <div className="admin-modal-actions">
+              <button type="button" style={primaryButtonStyle} onClick={() => setTestDialog(null)}>知道了</button>
+            </div>
+        </AdminModal>
       ) : null}
     </PageShell>
   );

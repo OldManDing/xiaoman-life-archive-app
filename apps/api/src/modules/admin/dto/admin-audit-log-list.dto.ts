@@ -22,6 +22,11 @@ export class AdminAuditLogListDto {
 
   @IsOptional()
   @IsString()
+  // 精确过滤某个后台账号的操作记录（AuditLog.actorId 的字符串形式）。
+  actor_id?: string;
+
+  @IsOptional()
+  @IsString()
   target_type?: string;
 
   @IsOptional()

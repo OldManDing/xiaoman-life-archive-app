@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AlertTriangle, CheckCircle2, DatabaseBackup, RefreshCw, ShieldAlert } from 'lucide-react';
+import { RefreshCw, Settings2 } from 'lucide-react';
 
 import { adminApi, type AdminOpsReadinessResponse } from '../shared/request';
+import { formatDateTime } from '../shared/format';
 import { AdminButton, Badge, EmptyState, PageShell, Panel } from '../shared/ui';
-import { cardStyle, mutedTextStyle, tableStyle, thTdStyle } from '../shared/uiStyles';
-
-const formatDateTime = (value: string | null | undefined) => (value ? new Date(value).toLocaleString('zh-CN', { hour12: false }) : '-');
+import {mutedTextStyle} from '../shared/uiStyles';
 
 const statusLabel = (status: 'ready' | 'warning' | 'blocked') => {
   if (status === 'ready') return '就绪';
@@ -37,17 +36,11 @@ const reportStatusTone = (status: AdminOpsReadinessResponse['release_gates']['re
 
 const compactText = (value: string) => (value.length > 150 ? `${value.slice(0, 150)}...` : value);
 
-const statusIcon = (status: 'ready' | 'warning' | 'blocked') => {
-  if (status === 'ready') return <CheckCircle2 size={17} />;
-  if (status === 'warning') return <AlertTriangle size={17} />;
-  return <ShieldAlert size={17} />;
-};
-
 const StatCard = ({ label, value, helper }: { label: string; value: number | string; helper: string }) => (
-  <article style={{ ...cardStyle, display: 'grid', gap: '8px' }}>
-  <span style={{ color: '#7d7162', fontSize: '13px', fontWeight: 700 }}>{label}</span>
-  <strong style={{ color: '#221b12', fontSize: '28px', lineHeight: 1 }}>{value}</strong>
-    <p style={mutedTextStyle}>{helper}</p>
+  <article className="admin-ops-stat-card">
+  <span className="admin-ops-stat-label">{label}</span>
+  <strong className="admin-ops-stat-num">{value}</strong>
+    <p className="admin-text-muted">{helper}</p>
   </article>
 );
 
@@ -56,23 +49,17 @@ const StatusRow = ({
 }: {
   item:
     | AdminOpsReadinessResponse['providers'][number]
-    | AdminOpsReadinessResponse['backup_recovery']['checks'][number]
     | AdminOpsReadinessResponse['release_gates']['checks'][number];
 }) => (
-  <tr>
-    <td style={thTdStyle}>
+  <tr className="admin-ops-status-row">
+    <td className="admin-ops-label-cell">
       <strong>{item.label}</strong>
     </td>
-    <td style={thTdStyle}>{item.value}</td>
-    <td style={thTdStyle}>
-      <Badge tone={statusTone(item.status)}>
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-          {statusIcon(item.status)}
-          {statusLabel(item.status)}
-        </span>
-      </Badge>
+    <td>{item.value}</td>
+    <td>
+      <Badge tone={statusTone(item.status)}>{statusLabel(item.status)}</Badge>
     </td>
-    <td style={thTdStyle}>{item.helper}</td>
+    <td>{item.helper}</td>
   </tr>
 );
 
@@ -106,13 +93,13 @@ export const OpsReadinessPage = () => {
   const stats = readiness?.data_statistics;
 
   return (
-    <PageShell title="系统运维" description="集中查看运行配置、数据体量、待处理风险、备份恢复和告警值班证据，支撑日常运维判断。">
+    <PageShell title="系统运维" description="集中查看运行配置、数据体量、待处理风险和上线验收门禁，支撑日常运维判断。">
       {error ? <EmptyState title="加载失败" message={error} /> : null}
       {loading ? <EmptyState title="正在加载" message="正在读取系统配置和运营统计。" /> : null}
 
       {readiness && stats ? (
         <>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+          <div className="admin-ops-stat-grid admin-ops-stat-grid-auto">
             <StatCard label="家庭与档案" value={`${stats.families} / ${stats.children}`} helper="家庭数 / 孩子档案数，用于判断长期托管规模。" />
             <StatCard label="成长资产" value={`${stats.records} / ${stats.media}`} helper="记录数 / 媒体数，用于判断存储和审核压力。" />
             <StatCard label="运营待办" value={stats.pending_archive_export_requests + stats.open_support_tickets} helper="档案交付和客服反馈中仍需人工处理的数量。" />
@@ -120,23 +107,21 @@ export const OpsReadinessPage = () => {
           </div>
 
           <Panel>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '12px' }}>
+            <div className="admin-ops-panel-head">
               <div>
-        <h2 style={{ margin: 0, fontSize: '18px', color: '#221b12' }}>运行配置</h2>
+        <h2 className="admin-ops-section-title">运行配置</h2>
                 <p style={mutedTextStyle}>环境：{readiness.environment.app_env}，端口：{readiness.environment.app_port}，检查时间：{formatDateTime(readiness.generated_at)}</p>
               </div>
-              <Badge tone={readiness.backup_recovery.status === 'ready' ? 'success' : statusTone(readiness.backup_recovery.status)}>
-                备份恢复{statusLabel(readiness.backup_recovery.status)}
-              </Badge>
+              <Badge tone="info">运行状态</Badge>
             </div>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={tableStyle}>
+            <div className="admin-ops-table-scroll admin-ops-table-scroll-auto">
+              <table className="admin-ops-readiness-table admin-ops-provider-table admin-data-table">
                 <thead>
                   <tr>
-                    <th style={thTdStyle}>配置项</th>
-                    <th style={thTdStyle}>当前值</th>
-                    <th style={thTdStyle}>状态</th>
-                    <th style={thTdStyle}>运营判断</th>
+                    <th>配置项</th>
+                    <th>当前值</th>
+                    <th>状态</th>
+                    <th>运营判断</th>
                   </tr>
                 </thead>
                 <tbody>{readiness.providers.map((item) => <StatusRow key={item.key} item={item} />)}</tbody>
@@ -145,30 +130,30 @@ export const OpsReadinessPage = () => {
           </Panel>
 
           <Panel>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', alignItems: 'center', marginBottom: '12px' }}>
+            <div className="admin-ops-panel-head">
               <div>
-        <h2 style={{ margin: 0, fontSize: '18px', color: '#221b12' }}>上线验收门禁</h2>
+        <h2 className="admin-ops-section-title">上线验收门禁</h2>
                 <p style={mutedTextStyle}>真实 AI 和地点 POI 必须以登录后的 live readiness 结果为准，不能只看 provider 名称。</p>
               </div>
               <Badge tone={statusTone(readiness.release_gates.status)}>线上复验{statusLabel(readiness.release_gates.status)}</Badge>
             </div>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={tableStyle}>
+            <div className="admin-ops-table-scroll admin-ops-table-scroll-auto">
+              <table className="admin-ops-readiness-table admin-ops-release-table admin-data-table">
                 <thead>
                   <tr>
-                    <th style={thTdStyle}>门禁项</th>
-                    <th style={thTdStyle}>证据</th>
-                    <th style={thTdStyle}>状态</th>
-                    <th style={thTdStyle}>运营判断</th>
+                    <th>门禁项</th>
+                    <th>证据</th>
+                    <th>状态</th>
+                    <th>运营判断</th>
                   </tr>
                 </thead>
                 <tbody>{readiness.release_gates.checks.map((item) => <StatusRow key={item.key} item={item} />)}</tbody>
               </table>
             </div>
-          <div style={{ borderTop: '1px solid #ded4c6', marginTop: '14px', paddingTop: '14px', display: 'grid', gap: '10px' }}>
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap' }}>
+          <div className="admin-ops-report-block">
+              <div className="admin-ops-report-head">
                 <div>
-                <h3 style={{ margin: 0, fontSize: '15px', color: '#221b12' }}>复验报告</h3>
+                <h3 className="admin-ops-report-title">复验报告</h3>
                   <p style={mutedTextStyle}>
                     {readiness.release_gates.report.path}，检查时间：{formatDateTime(readiness.release_gates.report.checked_at)}
                     {readiness.release_gates.report.age_hours === null ? '' : `，距现在 ${readiness.release_gates.report.age_hours} 小时`}
@@ -178,10 +163,10 @@ export const OpsReadinessPage = () => {
               </div>
 
               {readiness.release_gates.report.failures.length ? (
-                <div style={{ display: 'grid', gap: '6px' }}>
+                <div className="admin-ops-report-list">
                   {readiness.release_gates.report.blocked_requirements.length ? (
-                    <p style={{ ...mutedTextStyle, margin: 0 }}>
-                      <strong style={{ color: readiness.release_gates.report.blocked_requirement_details.some((item) => item.severity === 'P0') ? '#9f1239' : '#9a3412' }}>
+                    <p className="admin-text-muted">
+                      <strong className={readiness.release_gates.report.blocked_requirement_details.some((item) => item.severity === 'P0') ? 'admin-ops-sev-p0' : 'admin-ops-sev-p1'}>
                         {readiness.release_gates.report.blocked_requirement_details.some((item) => item.severity === 'P0') ? '阻塞验收项' : '延期验收项'}
                       </strong>
                       ：{readiness.release_gates.report.blocked_requirements.join('、')}
@@ -189,7 +174,7 @@ export const OpsReadinessPage = () => {
                   ) : null}
                   {readiness.release_gates.report.blocked_requirement_details.map((item) => (
                     <p key={item.requirement} style={{ ...mutedTextStyle, margin: 0 }}>
-                      <strong style={{ color: item.severity === 'P0' ? '#9f1239' : '#9a3412' }}>
+                      <strong className={item.severity === 'P0' ? 'admin-ops-sev-p0' : 'admin-ops-sev-p1'}>
                         {item.severity} / {item.requirement}
                       </strong>
                       ：{item.owner} 负责；证据为 {item.evidence}；下一步：{compactText(item.next_action)}
@@ -197,14 +182,14 @@ export const OpsReadinessPage = () => {
                   ))}
                   {readiness.release_gates.report.failures.map((failure) => (
                     <p key={`${failure.name}-${failure.error}`} style={{ ...mutedTextStyle, margin: 0 }}>
-                      <strong style={{ color: '#9f1239' }}>{failure.name}</strong>：{compactText(failure.error)}
+                      <strong className="admin-ops-sev-p0">{failure.name}</strong>：{compactText(failure.error)}
                     </p>
                   ))}
                 </div>
               ) : null}
 
               {readiness.release_gates.report.next_actions.length ? (
-                <div style={{ display: 'grid', gap: '6px' }}>
+                <div className="admin-ops-report-list">
                   {readiness.release_gates.report.next_actions.map((action) => (
                     <p key={action} style={{ ...mutedTextStyle, margin: 0 }}>
                       {action}
@@ -216,11 +201,11 @@ export const OpsReadinessPage = () => {
           </Panel>
 
           <Panel>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <div className="admin-ops-panel-head">
               <div>
-        <h2 style={{ margin: 0, fontSize: '18px', color: '#221b12' }}>技术入口</h2>
+        <h2 className="admin-ops-section-title">技术入口</h2>
               </div>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <div className="admin-ops-entry-actions">
                 <Link to="/media" className="admin-button admin-button-secondary admin-technical-entry">技术媒体库</Link>
                 <Link to="/content-risks" className="admin-button admin-button-secondary admin-technical-entry">风险队列</Link>
               </div>
@@ -228,37 +213,19 @@ export const OpsReadinessPage = () => {
           </Panel>
 
           <Panel>
-        <h2 style={{ margin: '0 0 12px', fontSize: '18px', color: '#221b12' }}>备份恢复与告警值班</h2>
-            <div style={{ overflowX: 'auto' }}>
-              <table style={tableStyle}>
-                <thead>
-                  <tr>
-                    <th style={thTdStyle}>检查项</th>
-                    <th style={thTdStyle}>证据</th>
-                    <th style={thTdStyle}>状态</th>
-                    <th style={thTdStyle}>处理口径</th>
-                  </tr>
-                </thead>
-                <tbody>{readiness.backup_recovery.checks.map((item) => <StatusRow key={item.key} item={item} />)}</tbody>
-              </table>
-            </div>
-          </Panel>
-
-          <Panel>
-        <h2 style={{ margin: '0 0 12px', fontSize: '18px', color: '#221b12' }}>运营动作</h2>
-            <div style={{ display: 'grid', gap: '10px' }}>
+        <h2 className="admin-ops-section-title admin-ops-section-title-tight">运营动作</h2>
+            <div className="admin-ops-action-list">
               {readiness.action_items.map((item) => (
                 <Link
                   key={`${item.priority}-${item.label}`}
                   to={item.to}
                   className="admin-ops-action-link"
-                  style={{ textDecoration: 'none' }}
                 >
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '9px' }}>
-                    <DatabaseBackup size={17} />
+                  <span className="admin-ops-action-label">
+                    <Settings2 size={17} />
                     <span>{item.label}</span>
                   </span>
-                  <span style={{ color: '#7d7162', fontSize: '12px', fontWeight: 700 }}>{item.helper}</span>
+                  <span className="admin-ops-action-helper">{item.helper}</span>
                 </Link>
               ))}
             </div>

@@ -12,21 +12,27 @@ export const useAdminListPage = <T,>(
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AdminListResponse<T> | null>(null);
   const autoLoadedRef = useRef(false);
+  const requestVersionRef = useRef(0);
 
   const load = useCallback(async (nextPage = page, nextPageSize = pageSize, event?: FormEvent, keywordOverride?: string) => {
     event?.preventDefault();
+    const requestVersion = ++requestVersionRef.current;
     setLoading(true);
     setError(null);
     try {
-      const activeKeyword = keywordOverride ?? keyword;
+      const activeKeyword = (keywordOverride ?? keyword).trim();
       const next = await loader({ keyword: activeKeyword || undefined, page: nextPage, page_size: nextPageSize });
+      if (requestVersionRef.current !== requestVersion) return;
       setResult(next);
       setPage(next.page);
       setPageSize(next.page_size);
     } catch (err) {
+      if (requestVersionRef.current !== requestVersion) return;
       setError(err instanceof Error ? err.message : '加载失败');
     } finally {
-      setLoading(false);
+      if (requestVersionRef.current === requestVersion) {
+        setLoading(false);
+      }
     }
   }, [keyword, loader, page, pageSize]);
 
@@ -37,6 +43,14 @@ export const useAdminListPage = <T,>(
   const onClearSearch = async () => {
     setKeyword('');
     await load(1, pageSize, undefined, '');
+  };
+
+  const onPageSizeChange = async (nextPageSize: number) => {
+    await load(1, nextPageSize);
+  };
+
+  const onJumpToPage = async (nextPage: number) => {
+    await load(nextPage, pageSize);
   };
 
   useEffect(() => {
@@ -76,7 +90,10 @@ export const useAdminListPage = <T,>(
     onClearSearch,
     onPrevPage,
     onNextPage,
+    onPageSizeChange,
+    onJumpToPage,
   };
 };
 
-export const formatListRows = <T,>(items: T[], mapper: (item: T) => Array<ReactNode>) => items.map(mapper);
+export const formatListRows = <T,>(items: T[], mapper: (item: T) => Array<ReactNode>, getKey: (item: T) => string) =>
+  items.map((item) => ({ key: getKey(item), cells: mapper(item) }));

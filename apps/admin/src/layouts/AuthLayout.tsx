@@ -8,24 +8,11 @@ export const AuthLayout = () => {
         minHeight: '100vh',
         display: 'grid',
         placeItems: 'center',
-        background: '#ffffff',
         padding: '24px',
         position: 'relative',
         overflow: 'hidden',
       }}
     >
-      <div
-        aria-hidden="true"
-        style={{
-          position: 'absolute',
-          inset: 'auto -120px -160px auto',
-          width: '360px',
-          height: '360px',
-          borderRadius: '999px',
-          border: '1px solid rgba(74, 57, 40, 0.12)',
-          boxShadow: 'inset 0 0 0 28px rgba(255,255,255,0.18)',
-        }}
-      />
       <div
         className="admin-auth-container"
         style={{

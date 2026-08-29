@@ -1,6 +1,6 @@
 import axios, { AxiosError } from 'axios';
 
-import { getAccessToken } from './authMemory';
+import { clearAccessTokenMemory, getAccessToken } from './authMemory';
 
 export interface AdminListResponse<T> {
   list: T[];
@@ -18,10 +18,27 @@ interface ApiEnvelope<T> {
 
 type ErrorEnvelope = { message?: unknown };
 
+const STATUS_MESSAGES: Record<number, string> = {
+  400: '请求参数有误，请检查后重试',
+  401: '登录状态已失效，请重新登录',
+  403: '没有权限执行该操作，请联系超级管理员',
+  404: '数据不存在或已被删除',
+  429: '操作过于频繁，请稍后再试',
+};
+
 const toUserFacingError = (error: AxiosError) => {
+  const status = error.response?.status;
   const responseMessage = (error.response?.data as ErrorEnvelope | undefined)?.message;
   if (typeof responseMessage === 'string' && responseMessage.trim()) {
     return new Error(responseMessage);
+  }
+
+  if (status && STATUS_MESSAGES[status]) {
+    return new Error(STATUS_MESSAGES[status]);
+  }
+
+  if (status && status >= 500) {
+    return new Error('服务暂时不可用，请稍后重试');
   }
 
   if (error.message === 'Network Error') {
@@ -70,6 +87,24 @@ export interface AdminDashboardResponse {
   };
   ai_job_status_distribution: Array<{ status: string; count: number }>;
   recent_audit_logs: AdminAuditLogItem[];
+  trend: {
+    daily: Array<{
+      date: string;
+      users: number;
+      records: number;
+      media: number;
+      risks: number;
+      ai_jobs: number;
+    }>;
+    monthly: Array<{
+      month: string;
+      users: number;
+      records: number;
+      media: number;
+      risks: number;
+      ai_jobs: number;
+    }>;
+  };
 }
 
 export interface AdminOpsReadinessResponse {
@@ -104,16 +139,6 @@ export interface AdminOpsReadinessResponse {
     media_exceptions: number;
     failed_media: number;
     failed_ai_jobs: number;
-  };
-  backup_recovery: {
-    status: 'ready' | 'warning' | 'blocked';
-    checks: Array<{
-      key: string;
-      label: string;
-      value: string;
-      status: 'ready' | 'warning' | 'blocked';
-      helper: string;
-    }>;
   };
   release_gates: {
     status: 'ready' | 'warning' | 'blocked';
@@ -160,7 +185,7 @@ export interface AdminOpsReadinessResponse {
 
 export interface AdminSystemConfigItem {
   config_key: string;
-  category: 'backup_recovery' | 'alerting' | 'ai_provider' | 'mobile_release';
+  category: 'ai_provider' | 'mobile_release';
   label: string;
   value: string;
   display_value?: string;
@@ -622,6 +647,7 @@ export interface AdminLoginResponse {
 const request = axios.create({
   baseURL: '/api/v1',
   withCredentials: true,
+  timeout: 30000,
 });
 
 request.interceptors.request.use((config) => {
@@ -634,14 +660,39 @@ request.interceptors.request.use((config) => {
 
 request.interceptors.response.use(
   (response) => response,
-  (error: AxiosError) => Promise.reject(toUserFacingError(error)),
+  (error: AxiosError) => {
+    // 登录接口本身的 401 交给登录页展示，其余 401 说明会话已过期。
+    const isLoginRequest = error.config?.url?.includes('/admin/auth/login');
+    if (error.response?.status === 401 && !isLoginRequest && typeof window !== 'undefined') {
+      clearAccessTokenMemory();
+      if (!window.location.pathname.startsWith('/login')) {
+        window.location.assign('/login');
+      }
+    }
+    return Promise.reject(toUserFacingError(error));
+  },
 );
 
-const unwrap = <T,>(response: { data: ApiEnvelope<T> }) => response.data.data;
+const unwrap = <T,>(response: { data: ApiEnvelope<T> }) => {
+  if (response.data.code !== 0) {
+    throw new Error(response.data.message || '请求失败，请稍后重试');
+  }
+  return response.data.data;
+};
 
 export const adminApi = {
   async login(payload: { username: string; password: string }) {
     const response = await request.post<ApiEnvelope<AdminLoginResponse>>('/admin/auth/login', payload);
+    return unwrap(response);
+  },
+
+  async logout() {
+    const response = await request.post<ApiEnvelope<{ changed: boolean }>>('/admin/auth/logout');
+    return unwrap(response);
+  },
+
+  async changePassword(payload: { current_password: string; new_password: string; new_password_confirm: string }) {
+    const response = await request.post<ApiEnvelope<{ changed: boolean }>>('/admin/auth/password', payload);
     return unwrap(response);
   },
 
@@ -703,13 +754,13 @@ export const adminApi = {
     return unwrap(response);
   },
 
-  async createInvite(payload: { mobile?: string; expires_in_hours?: number }) {
+  async createInvite(payload: { mobile?: string; expires_in_hours?: number; reason?: string }) {
     const response = await request.post<ApiEnvelope<AdminInviteCreateResponse>>('/admin/invites', payload);
     return unwrap(response);
   },
 
-  async revokeInvite(inviteNo: string) {
-    const response = await request.post<ApiEnvelope<AdminInviteRevokeResponse>>(`/admin/invites/${inviteNo}/revoke`);
+  async revokeInvite(inviteNo: string, payload: { reason: string }) {
+    const response = await request.post<ApiEnvelope<AdminInviteRevokeResponse>>(`/admin/invites/${inviteNo}/revoke`, payload);
     return unwrap(response);
   },
 
@@ -788,6 +839,11 @@ export const adminApi = {
     return unwrap(response);
   },
 
+  async getNotificationDetail(notificationNo: string) {
+    const response = await request.get<ApiEnvelope<AdminNotificationItem>>(`/admin/notifications/${notificationNo}`);
+    return unwrap(response);
+  },
+
   async getAiJobDetail(jobNo: string) {
     const response = await request.get<ApiEnvelope<AdminAiJobDetail>>(`/admin/ai-jobs/${jobNo}`);
     return unwrap(response);
@@ -808,6 +864,11 @@ export const adminApi = {
     return unwrap(response);
   },
 
+  async getSupportTicketDetail(ticketNo: string) {
+    const response = await request.get<ApiEnvelope<AdminSupportTicketItem>>(`/admin/support-tickets/${ticketNo}`);
+    return unwrap(response);
+  },
+
   async updateSupportTicketStatus(ticketNo: string, payload: { status: 'processing' | 'resolved' | 'closed'; note: string }) {
     const response = await request.patch<ApiEnvelope<AdminSupportTicketItem & { changed: boolean }>>(`/admin/support-tickets/${ticketNo}/status`, payload);
     return unwrap(response);
@@ -815,6 +876,11 @@ export const adminApi = {
 
   async listArchiveExportRequests(params: { keyword?: string; page?: number; page_size?: number; status?: string; purpose?: string }) {
     const response = await request.get<ApiEnvelope<AdminListResponse<AdminArchiveExportRequestItem>>>('/admin/archive-export-requests', { params });
+    return unwrap(response);
+  },
+
+  async getArchiveExportRequestDetail(requestNo: string) {
+    const response = await request.get<ApiEnvelope<AdminArchiveExportRequestItem>>(`/admin/archive-export-requests/${requestNo}`);
     return unwrap(response);
   },
 
@@ -829,7 +895,7 @@ export const adminApi = {
     return unwrap(response);
   },
 
-  async listAuditLogs(params: { keyword?: string; page?: number; page_size?: number; action?: string; target_type?: string; start_time?: string; end_time?: string }) {
+  async listAuditLogs(params: { keyword?: string; page?: number; page_size?: number; action?: string; target_type?: string; actor_id?: string; start_time?: string; end_time?: string }) {
     const response = await request.get<ApiEnvelope<AdminListResponse<AdminAuditLogItem>>>('/admin/audit-logs', { params });
     return unwrap(response);
   },

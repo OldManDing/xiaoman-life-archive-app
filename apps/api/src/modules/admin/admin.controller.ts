@@ -17,6 +17,7 @@ import { AdminListDto, AdminRecordListDto } from './dto/admin-list.dto';
 import { AdminLoginDto } from './dto/admin-login.dto';
 import { AdminMediaListDto } from './dto/admin-media-list.dto';
 import { AdminNotificationListDto } from './dto/admin-notification-list.dto';
+import { AdminRevokeInviteDto } from './dto/admin-revoke-invite.dto';
 import { AdminResetUserPasswordDto } from './dto/admin-reset-user-password.dto';
 import { AdminUpdateMediaStatusDto } from './dto/admin-update-media-status.dto';
 import { AdminUpdateArchiveExportRequestStatusDto } from './dto/admin-update-archive-export-request-status.dto';
@@ -59,6 +60,8 @@ export class AdminController {
 
   @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
   @AdminRoles(AdminRole.super_admin, AdminRole.operator, AdminRole.viewer)
+  @Throttle({ default: { limit: 3, ttl: 3600000 } }) // 3 attempts per hour
+  @UseGuards(ThrottlerGuard)
   @HttpCode(HttpStatus.OK)
   @Post('auth/password')
   changePassword(@CurrentUser() admin: AuthenticatedAdmin, @Body() dto: AdminChangePasswordDto, @Req() request: Request) {
@@ -151,8 +154,13 @@ export class AdminController {
   @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
   @AdminRoles(AdminRole.super_admin, AdminRole.operator)
   @Post('invites/:invite_no/revoke')
-  revokeInvite(@CurrentUser() admin: AuthenticatedAdmin, @Param('invite_no') inviteNo: string, @Req() request: Request) {
-    return this.adminService.revokeInvite(admin, inviteNo, request);
+  revokeInvite(
+    @CurrentUser() admin: AuthenticatedAdmin,
+    @Param('invite_no') inviteNo: string,
+    @Body() dto: AdminRevokeInviteDto,
+    @Req() request: Request,
+  ) {
+    return this.adminService.revokeInvite(admin, inviteNo, dto, request);
   }
 
   @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
@@ -188,6 +196,8 @@ export class AdminController {
 
   @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
   @AdminRoles(AdminRole.super_admin)
+  @Throttle({ default: { limit: 5, ttl: 3600000 } }) // 5 attempts per hour
+  @UseGuards(ThrottlerGuard)
   @Patch('users/:user_no/password')
   resetUserPassword(
     @CurrentUser() admin: AuthenticatedAdmin,
@@ -318,9 +328,23 @@ export class AdminController {
 
   @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
   @AdminRoles(AdminRole.super_admin, AdminRole.operator, AdminRole.viewer)
+  @Get('notifications/:notification_no')
+  notificationDetail(@CurrentUser() admin: AuthenticatedAdmin, @Param('notification_no') notificationNo: string, @Req() request: Request) {
+    return this.adminService.notificationDetail(admin, notificationNo, request);
+  }
+
+  @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
+  @AdminRoles(AdminRole.super_admin, AdminRole.operator, AdminRole.viewer)
   @Get('support-tickets')
   supportTickets(@CurrentUser() admin: AuthenticatedAdmin, @Query() dto: AdminSupportTicketListDto, @Req() request: Request) {
     return this.adminService.listSupportTickets(admin, dto, request);
+  }
+
+  @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
+  @AdminRoles(AdminRole.super_admin, AdminRole.operator, AdminRole.viewer)
+  @Get('support-tickets/:ticket_no')
+  supportTicketDetail(@CurrentUser() admin: AuthenticatedAdmin, @Param('ticket_no') ticketNo: string, @Req() request: Request) {
+    return this.adminService.supportTicketDetail(admin, ticketNo, request);
   }
 
   @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
@@ -340,6 +364,13 @@ export class AdminController {
   @Get('archive-export-requests')
   archiveExportRequests(@CurrentUser() admin: AuthenticatedAdmin, @Query() dto: AdminArchiveExportRequestListDto, @Req() request: Request) {
     return this.adminService.listArchiveExportRequests(admin, dto, request);
+  }
+
+  @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
+  @AdminRoles(AdminRole.super_admin, AdminRole.operator, AdminRole.viewer)
+  @Get('archive-export-requests/:request_no')
+  archiveExportRequestDetail(@CurrentUser() admin: AuthenticatedAdmin, @Param('request_no') requestNo: string, @Req() request: Request) {
+    return this.adminService.archiveExportRequestDetail(admin, requestNo, request);
   }
 
   @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)

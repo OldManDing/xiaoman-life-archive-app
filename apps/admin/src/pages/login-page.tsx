@@ -19,10 +19,14 @@ export const LoginPage = () => {
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
+    if (!form.username.trim() || !form.password) {
+      setError('请输入用户名和密码');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
-      await login(form);
+      await login({ username: form.username.trim(), password: form.password });
       navigate('/dashboard', { replace: true });
     } catch (err) {
       setError(err instanceof Error ? err.message : '登录失败');
@@ -46,6 +50,7 @@ export const LoginPage = () => {
             onChange={(event) => setForm((current) => ({ ...current, username: event.target.value }))}
             placeholder="请输入用户名"
             autoComplete="username"
+            required
           />
         </label>
         <label className="admin-login-field">
@@ -57,9 +62,10 @@ export const LoginPage = () => {
             onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
             placeholder="请输入密码"
             autoComplete="current-password"
+            required
           />
         </label>
-        {error ? <p className="admin-login-error">{error}</p> : null}
+        {error ? <p className="admin-login-error" role="alert">{error}</p> : null}
         <button type="submit" style={primaryButtonStyle} disabled={loading}>
           {loading ? '登录中...' : '进入管理后台'}
         </button>

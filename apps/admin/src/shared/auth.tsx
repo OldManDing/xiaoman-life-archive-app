@@ -10,13 +10,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = useCallback(async (payload: { username: string; password: string }) => {
     const response = await adminApi.login(payload);
-    setAccessTokenMemory(response.access_token);
+    // 过期时刻写入 authMemory，由 getAccessToken 统一判定本地过期。
+    setAccessTokenMemory(response.access_token, response.expires_in);
     setAdminProfileMemory(response.admin);
     setAccessToken(response.access_token);
     setAdmin(response.admin);
   }, []);
 
   const logout = useCallback(() => {
+    // 先通知服务端撤销会话；本地会话无论如何都要清掉，接口失败不阻塞退出。
+    void adminApi.logout().catch(() => undefined);
     clearAccessTokenMemory();
     setAccessToken(null);
     setAdmin(null);

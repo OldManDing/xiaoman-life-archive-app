@@ -135,11 +135,14 @@ export const aiProviderLabel = (value: string | null | undefined) =>
     'openai-compatible': '兼容 OpenAI 的 AI 服务',
   });
 
-export const notificationTypeLabel = (value: string | null | undefined) =>
-  fallbackLabel(value, {
-    'family.record_published': '家庭发布记录',
-    'system.update_available': '版本更新',
-  });
+export const notificationTypeLabels: Record<string, string> = {
+  'family.record_published': '家庭发布记录',
+  'system.update_available': '版本更新',
+};
+
+export const notificationTypeLabel = (value: string | null | undefined) => fallbackLabel(value, notificationTypeLabels);
+
+export const notificationTypeValues = Object.keys(notificationTypeLabels);
 
 export const notificationReadStateLabel = (value: string | null | undefined) =>
   fallbackLabel(value, {
@@ -199,72 +202,81 @@ export const auditActorTypeLabel = (value: string | null | undefined) =>
     system: '系统',
   });
 
-export const auditActionLabel = (value: string | null | undefined) =>
-  fallbackLabel(value, {
-    admin_login: '后台登录',
-    admin_view_dashboard: '查看总览',
-    admin_view_ops_readiness: '查看系统运维就绪',
-    admin_view_user_detail: '查看用户详情',
-    admin_view_family_detail: '查看家庭详情',
-    admin_view_child_detail: '查看孩子详情',
-    admin_view_record_detail: '查看记录详情',
-    admin_view_media_detail: '查看媒体详情',
-    admin_view_ai_job_detail: '查看 AI 任务详情',
-    admin_list_users: '查询用户',
-    admin_list_families: '查询家庭',
-    admin_list_registration_invites: '查询注册邀请码',
-    admin_create_registration_invite: '生成注册邀请码',
-    admin_revoke_registration_invite: '撤销注册邀请码',
-    admin_reset_user_password: '重置用户密码',
-    admin_list_children: '查询孩子档案',
-    admin_list_records: '查询记录',
-    admin_list_media: '查询媒体',
-    admin_list_ai_jobs: '查询 AI 任务',
-    admin_list_content_risks: '查询内容风险',
-    admin_list_notifications: '查询通知',
-    admin_list_support_tickets: '查询客服反馈',
-    admin_list_archive_export_requests: '查询档案交付申请',
-    admin_list_system_configs: '查询系统配置',
-    admin_list_audit_logs: '查询审计日志',
-    admin_update_system_config: '调整系统配置',
-    admin_update_user_membership: '调整用户套餐权益',
-    admin_disable_user: '冻结用户',
-    admin_activate_user: '解冻用户',
-    admin_unpublish_record: '下架记录',
-    admin_restore_record: '恢复记录',
-    admin_approve_media: '通过媒体审核',
-    admin_reject_media: '标记媒体异常',
-    admin_remove_media: '下架媒体',
-    admin_retry_ai_job: '重试 AI 任务',
-    admin_cancel_ai_job: '取消 AI 任务',
-    admin_support_ticket_start_processing: '受理客服反馈',
-    admin_support_ticket_resolve: '解决客服反馈',
-    admin_support_ticket_close: '关闭客服反馈',
-    admin_archive_export_start_processing: '受理档案交付',
-    admin_archive_export_complete: '完成档案交付',
-    admin_archive_export_reject: '驳回档案交付',
-    'user.feedback_submitted': '用户提交客服反馈',
-    'user.archive_export_requested': '用户申请档案打包',
-    'user.adult_handoff_requested': '用户申请成年移交',
-    'seed.initialized': '初始化演示数据',
-  });
+export const auditActionLabels: Record<string, string> = {
+  admin_login: '后台登录',
+  admin_view_dashboard: '查看总览',
+  admin_view_ops_readiness: '查看系统运维就绪',
+  admin_view_user_detail: '查看用户详情',
+  admin_view_family_detail: '查看家庭详情',
+  admin_view_child_detail: '查看孩子详情',
+  admin_view_record_detail: '查看记录详情',
+  admin_view_media_detail: '查看媒体详情',
+  admin_view_ai_job_detail: '查看 AI 任务详情',
+  admin_view_notification_detail: '查看通知详情',
+  admin_view_support_ticket_detail: '查看客服反馈详情',
+  admin_view_archive_export_request_detail: '查看档案交付详情',
+  admin_list_users: '查询用户',
+  admin_list_families: '查询家庭',
+  admin_list_registration_invites: '查询注册邀请码',
+  admin_create_registration_invite: '生成注册邀请码',
+  admin_revoke_registration_invite: '撤销注册邀请码',
+  admin_reset_user_password: '重置用户密码',
+  admin_list_children: '查询孩子档案',
+  admin_list_records: '查询记录',
+  admin_list_media: '查询媒体',
+  admin_list_ai_jobs: '查询 AI 任务',
+  admin_list_content_risks: '查询内容风险',
+  admin_list_notifications: '查询通知',
+  admin_list_support_tickets: '查询客服反馈',
+  admin_list_archive_export_requests: '查询档案交付申请',
+  admin_list_system_configs: '查询系统配置',
+  admin_list_audit_logs: '查询审计日志',
+  admin_update_system_config: '调整系统配置',
+  admin_update_user_membership: '调整用户套餐权益',
+  admin_disable_user: '冻结用户',
+  admin_activate_user: '解冻用户',
+  admin_unpublish_record: '下架记录',
+  admin_restore_record: '恢复记录',
+  admin_approve_media: '通过媒体审核',
+  admin_reject_media: '标记媒体异常',
+  admin_remove_media: '下架媒体',
+  admin_retry_ai_job: '重试 AI 任务',
+  admin_cancel_ai_job: '取消 AI 任务',
+  admin_support_ticket_start_processing: '受理客服反馈',
+  admin_support_ticket_resolve: '解决客服反馈',
+  admin_support_ticket_close: '关闭客服反馈',
+  admin_archive_export_start_processing: '受理档案交付',
+  admin_archive_export_complete: '完成档案交付',
+  admin_archive_export_reject: '驳回档案交付',
+  'user.feedback_submitted': '用户提交客服反馈',
+  'user.archive_export_requested': '用户申请档案打包',
+  'user.adult_handoff_requested': '用户申请成年移交',
+  'seed.initialized': '初始化演示数据',
+};
 
-export const auditTargetTypeLabel = (value: string | null | undefined) =>
-  fallbackLabel(value, {
-    list: '列表',
-    admin_user: '后台账号',
-    user: '用户',
-    child: '孩子档案',
-    family: '家庭',
-    record: '成长记录',
-    media: '媒体',
-    ai_job: 'AI 任务',
-    content_risk: '内容风险',
-    notification: '通知',
-    system: '系统运维',
-    system_config: '系统配置',
-    support_ticket: '客服反馈',
-    archive_export_request: '档案交付申请',
-    audit_log: '审计日志',
-    registration_invite: '注册邀请码',
-  });
+export const auditActionLabel = (value: string | null | undefined) => fallbackLabel(value, auditActionLabels);
+
+export const auditActionValues = Object.keys(auditActionLabels);
+
+export const auditTargetTypeLabels: Record<string, string> = {
+  list: '列表',
+  admin_user: '后台账号',
+  user: '用户',
+  child: '孩子档案',
+  family: '家庭',
+  record: '成长记录',
+  media: '媒体',
+  ai_job: 'AI 任务',
+  content_risk: '内容风险',
+  notification: '通知',
+  system: '系统运维',
+  system_config: '系统配置',
+  support_ticket: '客服反馈',
+  archive_export_request: '档案交付申请',
+  audit_log: '审计日志',
+  registration_invite: '注册邀请码',
+};
+
+export const auditTargetTypeLabel = (value: string | null | undefined) => fallbackLabel(value, auditTargetTypeLabels);
+
+export const auditTargetTypeValues = Object.keys(auditTargetTypeLabels);

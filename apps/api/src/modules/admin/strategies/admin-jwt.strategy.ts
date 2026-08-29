@@ -42,7 +42,7 @@ export class AdminJwtStrategy extends PassportStrategy(Strategy, 'admin-jwt') {
       throw new UnauthorizedException('后台登录状态已失效');
     }
 
-    if (admin.tokenInvalidBefore && payload.iat && payload.iat * 1000 < admin.tokenInvalidBefore.getTime()) {
+    if (admin.tokenInvalidBefore && payload.iat && payload.iat * 1000 <= admin.tokenInvalidBefore.getTime()) {
       throw new UnauthorizedException('后台登录状态已失效');
     }
 

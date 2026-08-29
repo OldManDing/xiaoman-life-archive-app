@@ -13,7 +13,8 @@ describe('AdminDateInput', () => {
     expect(input).toHaveAttribute('type', 'datetime-local');
     expect(input).toHaveClass('admin-date-input');
     expect(input).toHaveClass('audit-date-filter');
-    expect(input.getAttribute('style')).toContain('color: transparent');
+    // 透明覆盖层样式已收编到 .admin-date-input 类，不再有内联样式
+    expect(input.getAttribute('style')).toBeNull();
     expect(input.parentElement).toHaveClass('admin-date-input-shell');
     expect(input.parentElement?.querySelector('.admin-date-display')).toBeTruthy();
     expect(input.parentElement?.textContent).toContain('开始时间');
@@ -29,6 +30,6 @@ describe('AdminDateInput', () => {
     expect(css).toContain('#806b56');
     expect(css).toContain('#f7efe1');
     expect(css).toContain('.admin-audit-filter-form .admin-date-display');
-    expect(css).toContain('padding-right: 42px !important');
+    expect(css).toContain('padding: 10px 42px 10px 12px');
   });
 });

@@ -240,12 +240,12 @@ describe('Admin operations contract', () => {
 
   const systemConfig = {
     id: BigInt(90),
-    configKey: 'backup_retention_days',
-    category: 'backup_recovery',
-    label: '备份保留周期',
-    value: '120',
-    valueType: 'number',
-    description: '生产备份至少建议保留 90 天，用于长期家庭档案恢复窗口。',
+    configKey: 'mobile_latest_version',
+    category: 'mobile_release',
+    label: '移动端最新版本',
+    value: '2.0.7',
+    valueType: 'text',
+    description: '关于页和启动静默检查使用的最新版本号。',
     updatedByAdminId: adminSuper.id,
     createdAt: now,
     updatedAt: now,
@@ -534,17 +534,6 @@ describe('Admin operations contract', () => {
     supportTicket.handledAt = null;
     supportTicket.handleNote = null;
     supportTicket.assignedAdmin = null;
-    Object.assign(systemConfig, {
-      configKey: 'backup_retention_days',
-      category: 'backup_recovery',
-      label: '备份保留周期',
-      value: '120',
-      valueType: 'number',
-      description: '生产备份至少建议保留 90 天，用于长期家庭档案恢复窗口。',
-      updatedByAdminId: adminSuper.id,
-      updatedAt: now,
-      updatedByAdmin: adminSuper,
-    });
     user.membershipType = 'free';
     user.membershipExpireAt = null;
     userWithRelations.membershipType = 'free';
@@ -560,6 +549,19 @@ describe('Admin operations contract', () => {
 
   it('returns dashboard statistics and recent audit logs', async () => {
     const token = await adminToken();
+    const nowUtc = new Date();
+    const dailyBucket = nowUtc.toISOString().slice(0, 10);
+    const monthlyBucket = dailyBucket.slice(0, 7);
+    prismaMock.$queryRaw
+      .mockResolvedValueOnce([
+        { bucket: dailyBucket, metric: 'users', trend_count: 3 },
+        { bucket: dailyBucket, metric: 'records', trend_count: 2 },
+        { bucket: dailyBucket, metric: 'risks', trend_count: 1 },
+      ])
+      .mockResolvedValueOnce([
+        { bucket: monthlyBucket, metric: 'users', trend_count: 8 },
+        { bucket: monthlyBucket, metric: 'media', trend_count: 5 },
+      ]);
 
     const response = await request(app.getHttpServer())
       .get('/api/v1/admin/dashboard')
@@ -581,9 +583,13 @@ describe('Admin operations contract', () => {
       action: 'admin_retry_ai_job',
       target_type: 'ai_job',
     });
+    expect(response.body.data.trend.daily).toHaveLength(14);
+    expect(response.body.data.trend.monthly).toHaveLength(12);
+    expect(response.body.data.trend.daily.at(-1)).toMatchObject({ date: dailyBucket, users: 3, records: 2, risks: 1, media: 0, ai_jobs: 0 });
+    expect(response.body.data.trend.monthly.at(-1)).toMatchObject({ month: monthlyBucket, users: 8, records: 0, media: 5, risks: 0, ai_jobs: 0 });
   });
 
-  it('returns system operations readiness with configuration and backup checks', async () => {
+  it('returns system operations readiness with provider and release checks', async () => {
     const token = await adminToken();
 
     const response = await request(app.getHttpServer())
@@ -608,12 +614,6 @@ describe('Admin operations contract', () => {
         media_exceptions: 1,
         failed_media: 1,
         failed_ai_jobs: 1,
-      },
-      backup_recovery: {
-        status: expect.stringMatching(/ready|warning|blocked/),
-        checks: expect.arrayContaining([
-          expect.objectContaining({ key: 'alert_contact', label: '告警联系人' }),
-        ]),
       },
       release_gates: {
         status: expect.stringMatching(/ready|warning|blocked/),
@@ -665,16 +665,11 @@ describe('Admin operations contract', () => {
         expect(response.body.data.list).toEqual(
           expect.arrayContaining([
             expect.objectContaining({
-              config_key: 'backup_retention_days',
-              label: '备份保留周期',
-              value: '120',
+              config_key: 'mobile_latest_version',
+              label: '移动端最新版本',
+              value: '2.0.7',
               source: 'admin',
               updated_by_name: adminSuper.displayName,
-            }),
-            expect.objectContaining({
-              config_key: 'alert_contact_name',
-              label: '告警联系人',
-              source: 'environment',
             }),
           ]),
         );
@@ -690,14 +685,14 @@ describe('Admin operations contract', () => {
     );
 
     await request(app.getHttpServer())
-      .patch('/api/v1/admin/system-configs/backup_retention_days')
+      .patch('/api/v1/admin/system-configs/mobile_latest_version')
       .set('Authorization', `Bearer ${token}`)
-      .send({ value: '180', reason: '上线前提高长期档案备份窗口' })
+      .send({ value: '2.0.8', reason: '发布移动端新版本' })
       .expect(200)
       .expect((response) => {
         expect(response.body.data).toMatchObject({
-          config_key: 'backup_retention_days',
-          value: '180',
+          config_key: 'mobile_latest_version',
+          value: '2.0.8',
           source: 'admin',
           changed: true,
         });
@@ -705,9 +700,9 @@ describe('Admin operations contract', () => {
 
     expect(prismaMock.systemConfig.upsert).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: { configKey: 'backup_retention_days' },
+        where: { configKey: 'mobile_latest_version' },
         update: expect.objectContaining({
-          value: '180',
+          value: '2.0.8',
           updatedByAdminId: adminSuper.id,
         }),
       }),
@@ -718,10 +713,10 @@ describe('Admin operations contract', () => {
           action: 'admin_update_system_config',
           targetType: 'system_config',
           metadata: expect.objectContaining({
-            config_key: 'backup_retention_days',
-            before_value: '120',
-            after_value: '180',
-            reason: '上线前提高长期档案备份窗口',
+            config_key: 'mobile_latest_version',
+            before_value: '2.0.7',
+            after_value: '2.0.8',
+            reason: '发布移动端新版本',
           }),
         }),
       }),
@@ -1378,6 +1373,7 @@ describe('Admin operations contract', () => {
     await request(app.getHttpServer())
       .post(`/api/v1/admin/invites/${registrationInvite.inviteNo}/revoke`)
       .set('Authorization', `Bearer ${token}`)
+      .send({ reason: 'invite no longer needed' })
       .expect(201)
       .expect((response) => {
         expect(response.body.data).toMatchObject({

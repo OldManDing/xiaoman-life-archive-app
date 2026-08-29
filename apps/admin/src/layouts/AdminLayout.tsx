@@ -1,11 +1,15 @@
-import type { CSSProperties } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { Archive, BarChart3, BellRing, Bot, Database, FileText, House, KeyRound, LogOut, MessageSquareText, ServerCog, Settings2, ShieldCheck, SlidersHorizontal, UsersRound, X, type LucideIcon } from 'lucide-react';
+import { Archive, BarChart3, BellRing, Bot, Database, FileText, House, KeyRound, LogOut, Menu, MessageSquareText, ServerCog, Settings2, ShieldCheck, SlidersHorizontal, UsersRound, X, type LucideIcon } from 'lucide-react';
 
+import { adminApi } from '../shared/request';
+import { getTokenExpiresAt } from '../shared/authMemory';
+import { formatDateTime } from '../shared/format';
+import { inputStyle, primaryButtonStyle, secondaryButtonStyle } from '../shared/uiStyles';
 import { useAdminAuth } from '../shared/useAdminAuth';
 import { adminRoleLabel } from '../shared/labels';
-import { secondaryButtonStyle } from '../shared/uiStyles';
+import { AdminModal } from '../shared/modal';
+
 
 type NavItem = { to: string; label: string; icon: LucideIcon };
 type NavSection = { label: string; items: NavItem[]; secondary?: boolean };
@@ -58,86 +62,144 @@ const navSections: NavSection[] = [
   },
 ];
 
-const sidebarStyle: CSSProperties = {
-  position: 'sticky',
-  top: 0,
-  alignSelf: 'start',
-  height: '100dvh',
-  maxHeight: '100dvh',
-  minHeight: 0,
-  background: '#2b2419',
-  color: '#fff8ed',
-  padding: '22px 16px',
-  boxSizing: 'border-box',
-  display: 'grid',
-  gridTemplateRows: 'auto auto 1fr auto',
-  gap: '22px',
-  overflow: 'hidden',
+const navLinkClassName = ({ isActive }: { isActive: boolean }) => `admin-nav-link${isActive ? ' is-active' : ''}`;
+
+const MOBILE_QUERY = '(max-width: 760px)';
+
+const useIsMobileViewport = () => {
+  const [isMobile, setIsMobile] = useState(() => (typeof window.matchMedia === 'function' ? window.matchMedia(MOBILE_QUERY).matches : false));
+
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return;
+    const query = window.matchMedia(MOBILE_QUERY);
+    const onChange = (event: MediaQueryListEvent) => setIsMobile(event.matches);
+    query.addEventListener('change', onChange);
+    return () => query.removeEventListener('change', onChange);
+  }, []);
+
+  return isMobile;
 };
 
-const navLinkStyle = ({ isActive }: { isActive: boolean }): CSSProperties => ({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'flex-start',
-  gap: '9px',
-  minHeight: '42px',
-  padding: '10px 12px',
-  borderRadius: '8px',
-  color: isActive ? '#2b2419' : '#e9dcc8',
-  background: isActive ? '#fff4df' : 'rgba(255, 248, 237, 0.03)',
-  border: isActive ? '1px solid rgba(255, 244, 223, 0.92)' : '1px solid rgba(255, 248, 237, 0.09)',
-  textDecoration: 'none',
-  fontSize: '14px',
-  fontWeight: 700,
-});
+const ChangePasswordModal = ({ open, onClose }: { open: boolean; onClose: () => void }) => {
+  const [form, setForm] = useState({ current: '', next: '', confirm: '' });
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (open) {
+      setForm({ current: '', next: '', confirm: '' });
+      setError(null);
+      setMessage(null);
+    }
+  }, [open]);
+
+  const onSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (form.next.length < 8 || form.next.length > 12) {
+      setError('新密码长度必须为 8 到 12 位');
+      return;
+    }
+    if (!/[A-Za-z]/.test(form.next) || !/\d/.test(form.next)) {
+      setError('新密码必须同时包含字母和数字');
+      return;
+    }
+    if (form.next !== form.confirm) {
+      setError('两次输入的新密码不一致');
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+    try {
+      await adminApi.changePassword({ current_password: form.current, new_password: form.next, new_password_confirm: form.confirm });
+      setMessage('登录密码已修改，下次登录请使用新密码。');
+      setForm({ current: '', next: '', confirm: '' });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '修改密码失败，请稍后重试');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <AdminModal open={open} title="修改登录密码" eyebrow="账号安全" onClose={onClose}>
+      <form onSubmit={onSubmit}>
+        <label className="admin-modal-field">
+          当前密码
+          <input type="password" style={inputStyle} value={form.current} onChange={(event) => setForm((current) => ({ ...current, current: event.target.value }))} autoComplete="current-password" autoFocus />
+        </label>
+        <label className="admin-modal-field">
+          新密码
+          <input type="password" style={inputStyle} value={form.next} onChange={(event) => setForm((current) => ({ ...current, next: event.target.value }))} placeholder="8 到 12 位，需包含字母和数字" autoComplete="new-password" />
+        </label>
+        <label className="admin-modal-field">
+          确认新密码
+          <input type="password" style={inputStyle} value={form.confirm} onChange={(event) => setForm((current) => ({ ...current, confirm: event.target.value }))} placeholder="再次输入新密码" autoComplete="new-password" />
+        </label>
+        {error ? <p className="admin-modal-error">{error}</p> : null}
+        {message ? <p style={{ margin: '0 0 10px', color: '#2d6d38', fontSize: '13px', fontWeight: 700 }}>{message}</p> : null}
+        <div className="admin-modal-actions">
+          <button type="button" style={secondaryButtonStyle} onClick={onClose}>
+            关闭
+          </button>
+          <button type="submit" style={primaryButtonStyle} disabled={saving}>
+            {saving ? '提交中…' : '确认修改'}
+          </button>
+        </div>
+      </form>
+    </AdminModal>
+  );
+};
 
 export const AdminLayout = () => {
   const { admin, logout } = useAdminAuth();
   const location = useLocation();
+  const isMobileViewport = useIsMobileViewport();
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const closeMore = () => setMoreOpen(false);
+
   const displayName = admin?.display_name === 'System Admin' ? '系统管理员' : admin?.display_name;
   const primarySections = navSections.filter((section) => !section.secondary);
   const secondarySections = navSections.filter((section) => section.secondary);
   const isSecondaryRoute = secondarySections.some((section) => section.items.some((item) => location.pathname === item.to)) || location.pathname === '/audit-logs';
-  const isMobileViewport = () => typeof window.matchMedia === 'function' && window.matchMedia('(max-width: 760px)').matches;
-  const [moreOpen, setMoreOpen] = useState(isSecondaryRoute && !isMobileViewport());
-  const visibleMoreOpen = moreOpen;
-  const closeMore = () => setMoreOpen(false);
+  // 二级路由下桌面端默认展开"更多管理"，移动端保持收起。
   useEffect(() => {
-    if (!visibleMoreOpen) return;
+    if (isSecondaryRoute && !isMobileViewport) setMoreOpen(true);
+  }, [isSecondaryRoute, isMobileViewport]);
+
+  useEffect(() => {
+    if (!moreOpen) return;
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setMoreOpen(false);
     };
     document.addEventListener('keydown', closeOnEscape);
     return () => document.removeEventListener('keydown', closeOnEscape);
-  }, [visibleMoreOpen]);
-  const handleSecondaryNavClick = () => {
-    closeMore();
-  };
+  }, [moreOpen]);
+
+  const expiresAt = getTokenExpiresAt();
 
   return (
-      <div
-      className="admin-layout"
-      style={{
-        minHeight: '100dvh',
-        height: '100dvh',
-        maxHeight: '100dvh',
-        display: 'grid',
-         gridTemplateColumns: '224px minmax(0, 1fr)',
-        background: '#f7f5f0',
-        overflow: 'hidden',
-      }}
-    >
-      <aside className={`admin-sidebar${visibleMoreOpen ? ' admin-sidebar-more-open' : ''}`} style={sidebarStyle}>
+      <div className="admin-layout">
+      <aside className={`admin-sidebar${moreOpen ? ' admin-sidebar-more-open' : ''}`}>
         <div className="admin-sidebar-brand">
           <img src="/brand/nianlun-logo-64.png" alt="年轮" className="admin-brand-logo" width={44} height={44} />
-          <div>
-            <div style={{ fontSize: '13px', color: '#d8c6aa', fontWeight: 700, marginBottom: '6px' }}>年轮</div>
-            <div style={{ fontSize: '22px', fontWeight: 800, letterSpacing: 0 }}>管理后台</div>
+          <div className="admin-sidebar-brand-text">
+            <div className="admin-sidebar-brand-app">年轮</div>
+            <div className="admin-sidebar-brand-title">管理后台</div>
           </div>
         </div>
-          <div className="admin-sidebar-user" style={{ border: 'none', borderRadius: 0, padding: '10px 4px', background: 'transparent', borderTop: '1px solid rgba(255,248,237,0.12)', borderBottom: '1px solid rgba(255,248,237,0.12)' }}>
-          <div style={{ fontSize: '14px', fontWeight: 700 }}>{displayName ?? '未登录'}</div>
-          <div style={{ marginTop: '4px', fontSize: '12px', color: '#d8c6aa' }}>{adminRoleLabel(admin?.role)}</div>
+          <div className="admin-sidebar-user">
+          <div className="admin-sidebar-user-name">{displayName ?? '未登录'}</div>
+          <div className="admin-sidebar-user-role">{adminRoleLabel(admin?.role)}</div>
+          {expiresAt ? (
+            <div className="admin-sidebar-expiry">登录有效期至 {formatDateTime(new Date(expiresAt).toISOString())}</div>
+          ) : null}
+          <button type="button" className="admin-sidebar-password-btn" onClick={() => setPasswordModalOpen(true)}>
+            <KeyRound size={12} style={{ verticalAlign: '-2px', marginRight: '4px' }} />
+            修改密码
+          </button>
         </div>
         <nav className="admin-nav-sections" aria-label="后台导航">
           {primarySections.map((section) => (
@@ -145,7 +207,7 @@ export const AdminLayout = () => {
               <div className="admin-nav-section-label">{section.label}</div>
               <div className="admin-nav-section-items">
                 {section.items.map((item) => (
-                  <NavLink key={item.to} to={item.to} style={navLinkStyle} aria-label={item.label} onClick={closeMore}>
+                  <NavLink key={item.to} to={item.to} className={navLinkClassName} aria-label={item.label} onClick={closeMore}>
                     <item.icon size={17} strokeWidth={2.2} />
                     <span>{item.label}</span>
                   </NavLink>
@@ -154,22 +216,38 @@ export const AdminLayout = () => {
             </section>
           ))}
           <div className="admin-nav-more">
-            <button type="button" className="admin-nav-more-trigger" aria-expanded={visibleMoreOpen} onClick={() => setMoreOpen((current) => !current)}>
-              更多管理
+            <button
+              type="button"
+              className={`admin-nav-more-trigger${isSecondaryRoute ? ' admin-nav-more-trigger-active' : ''}`}
+              aria-label="更多管理"
+              aria-expanded={moreOpen}
+              onClick={() => setMoreOpen((current) => !current)}
+            >
+              <Menu className="admin-nav-more-icon" size={17} strokeWidth={2.2} />
+              <span className="admin-nav-more-label-desktop">更多管理</span>
+              <span className="admin-nav-more-label-mobile">更多</span>
             </button>
-            {visibleMoreOpen ? <>
+            {moreOpen ? <>
               <button type="button" className="admin-nav-more-backdrop" aria-label="关闭面板" onClick={closeMore} />
               <div className="admin-nav-more-content">
                 <div className="admin-nav-more-heading">
                   <strong>更多管理</strong>
-                  <button type="button" aria-label="关闭面板" onClick={closeMore}><X size={17} /></button>
+                  <button type="button" aria-label="关闭面板" title="关闭面板" onClick={closeMore}><X size={17} /></button>
                 </div>
               {secondarySections.map((section) => (
                 <section key={section.label} className="admin-nav-section admin-nav-section-secondary">
                   <div className="admin-nav-section-label">{section.label}</div>
                   <div className="admin-nav-section-items">
                     {section.items.map((item) => (
-                      <NavLink key={item.to} to={item.to} style={navLinkStyle} aria-label={item.label} onClick={handleSecondaryNavClick}>
+                      <NavLink
+                        key={item.to}
+                        to={item.to}
+                        className={navLinkClassName}
+                        aria-label={item.label}
+                        onClick={() => {
+                          if (isMobileViewport) setMoreOpen(false);
+                        }}
+                      >
                         <item.icon size={17} strokeWidth={2.2} />
                         <span>{item.label}</span>
                       </NavLink>
@@ -181,7 +259,14 @@ export const AdminLayout = () => {
                 <section className="admin-nav-section admin-nav-section-secondary">
                   <div className="admin-nav-section-label">审计</div>
                   <div className="admin-nav-section-items">
-                    <NavLink to="/audit-logs" style={navLinkStyle} aria-label="审计日志" onClick={handleSecondaryNavClick}>
+                    <NavLink
+                      to="/audit-logs"
+                      className={navLinkClassName}
+                      aria-label="审计日志"
+                      onClick={() => {
+                        if (isMobileViewport) setMoreOpen(false);
+                      }}
+                    >
                       <ShieldCheck size={17} strokeWidth={2.2} />
                       <span>审计日志</span>
                     </NavLink>
@@ -193,15 +278,16 @@ export const AdminLayout = () => {
           </div>
         </nav>
         <div className="admin-sidebar-footer">
-          <button type="button" style={{ ...secondaryButtonStyle, width: '100%' }} onClick={logout}>
+          <button type="button" className="admin-sidebar-logout" aria-label="退出登录" title="退出登录" onClick={logout}>
             <LogOut size={16} />
-            退出登录
+            <span>退出登录</span>
           </button>
         </div>
       </aside>
-      <main className="admin-main" style={{ padding: '32px 36px 48px', minWidth: 0, height: '100dvh', maxHeight: '100dvh', overflowY: 'auto', overscrollBehavior: 'contain' }}>
+      <main className="admin-main">
         <Outlet />
       </main>
+      <ChangePasswordModal open={passwordModalOpen} onClose={() => setPasswordModalOpen(false)} />
     </div>
   );
 };

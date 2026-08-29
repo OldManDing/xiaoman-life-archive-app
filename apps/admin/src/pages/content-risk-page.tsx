@@ -3,13 +3,12 @@ import { Link } from 'react-router-dom';
 import { AlertTriangle, ExternalLink, ShieldAlert } from 'lucide-react';
 
 import { adminApi, type AdminContentRiskItem, type AdminListResponse } from '../shared/request';
-import { AdminSelect, Badge, EmptyState, PageShell, Panel } from '../shared/ui';
-import { inputStyle, mutedTextStyle, primaryButtonStyle, secondaryButtonStyle } from '../shared/uiStyles';
+import { formatDateTime } from '../shared/format';
+import { AdminButton, AdminSelect, Badge, EmptyState, PageShell, Panel } from '../shared/ui';
+import { inputStyle, mutedTextStyle, secondaryButtonStyle } from '../shared/uiStyles';
 import { PaginationPanel, TableShell } from './shared';
 
-const pageSize = 10;
-
-const formatDateTime = (value: string | null | undefined) => (value ? new Date(value).toLocaleString('zh-CN', { hour12: false }) : '—');
+const pageSize = 20;
 
 const categoryLabel = (value: AdminContentRiskItem['category']) =>
   ({
@@ -41,9 +40,9 @@ const badgeTone = (value: string) => {
 };
 
 const RiskTitle = ({ item }: { item: AdminContentRiskItem }) => (
-  <span style={{ display: 'grid', gap: '5px', minWidth: 0 }}>
-        <strong style={{ color: '#221b12' }}>{item.title}</strong>
-        <span style={{ color: '#7d7162', fontSize: '12px' }}>{item.reason}</span>
+  <span className="admin-risk-title-stack">
+        <strong className="admin-risk-title-text">{item.title}</strong>
+        <span className="admin-risk-title-reason">{item.reason}</span>
   </span>
 );
 
@@ -58,15 +57,15 @@ export const ContentRisksPage = () => {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(
-    async (nextPage = page) => {
+    async (nextPage = page, override?: { keyword?: string; category?: string; severity?: string; status?: string }) => {
       setLoading(true);
       setError(null);
       try {
         const data = await adminApi.listContentRisks({
-          keyword: keyword.trim() || undefined,
-          category: category || undefined,
-          severity: severity || undefined,
-          status: status || undefined,
+          keyword: (override?.keyword ?? keyword).trim() || undefined,
+          category: (override?.category ?? category) || undefined,
+          severity: (override?.severity ?? severity) || undefined,
+          status: (override?.status ?? status) || undefined,
           page: nextPage,
           page_size: pageSize,
         });
@@ -113,32 +112,25 @@ export const ContentRisksPage = () => {
     setCategory('');
     setSeverity('');
     setStatus('');
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await adminApi.listContentRisks({ page: 1, page_size: pageSize });
-      setResult(data);
-      setPage(1);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : '内容风险队列加载失败');
-    } finally {
-      setLoading(false);
-    }
+    await load(1, { keyword: '', category: '', severity: '', status: '' });
   };
 
   const rows =
-    result?.list.map((item) => [
-      <RiskTitle key={`${item.risk_no}-title`} item={item} />,
-      <Badge key={`${item.risk_no}-category`} tone="info">{categoryLabel(item.category)}</Badge>,
-      <Badge key={`${item.risk_no}-severity`} tone={badgeTone(item.severity)}>{severityLabel(item.severity)}</Badge>,
-      <Badge key={`${item.risk_no}-status`} tone={badgeTone(item.status)}>{statusLabel(item.status)}</Badge>,
-      item.subject_name ? `${item.subject_name}（${item.subject_no}）` : item.subject_no ?? '—',
-      formatDateTime(item.created_at),
-      <Link key={`${item.risk_no}-action`} to={item.action_to} style={{ ...secondaryButtonStyle, textDecoration: 'none', minHeight: '38px', justifyContent: 'center' }}>
-        <ExternalLink size={15} />
-        {item.action_label}
-      </Link>,
-    ]) ?? [];
+    result?.list.map((item) => ({
+      key: item.risk_no,
+      cells: [
+        <RiskTitle key={`${item.risk_no}-title`} item={item} />,
+        <Badge key={`${item.risk_no}-category`} tone="info">{categoryLabel(item.category)}</Badge>,
+        <Badge key={`${item.risk_no}-severity`} tone={badgeTone(item.severity)}>{severityLabel(item.severity)}</Badge>,
+        <Badge key={`${item.risk_no}-status`} tone={badgeTone(item.status)}>{statusLabel(item.status)}</Badge>,
+        item.subject_name ? `${item.subject_name}（${item.subject_no}）` : item.subject_no ?? '—',
+        formatDateTime(item.created_at),
+        <Link key={`${item.risk_no}-action`} className="admin-table-action-link" to={item.action_to} style={{ ...secondaryButtonStyle, textDecoration: 'none', minHeight: '38px', justifyContent: 'center' }}>
+          <ExternalLink size={15} />
+          {item.action_label}
+        </Link>,
+      ],
+    })) ?? [];
 
   const openCount = result?.list.filter((item) => item.status === 'open').length ?? 0;
   const p0Count = result?.list.filter((item) => item.severity === 'p0').length ?? 0;
@@ -146,13 +138,13 @@ export const ContentRisksPage = () => {
   return (
     <PageShell title="内容风险" description="集中复核敏感文本、异常媒体、儿童安全反馈和失败 AI 任务，运营可从这里跳转到对应处理队列。">
       <Panel>
-        <form className="admin-search-form" onSubmit={onSearch} style={{ display: 'grid', gap: '12px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <form className="admin-audit-filter-form" onSubmit={onSearch} style={{ display: 'grid', gap: '12px' }}>
+          <div className="admin-row-between-top">
             <div>
           <strong style={{ display: 'block', color: '#221b12', marginBottom: '4px' }}>筛选条件</strong>
               <p style={mutedTextStyle}>支持按风险内容、编号、孩子、用户或处理来源筛选。</p>
             </div>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#9a3412', fontSize: '13px', fontWeight: 700 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#756b5c', fontSize: '13px', fontWeight: 600 }}>
               <ShieldAlert size={16} />
               本页只做风险归集，实际处置在记录、媒体、客服或 AI 队列完成。
             </span>
@@ -179,26 +171,26 @@ export const ContentRisksPage = () => {
               <option value="resolved">已处理</option>
             </AdminSelect>
           </div>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            <button type="submit" style={primaryButtonStyle} disabled={loading}>
+          <div className="admin-audit-filter-actions" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <AdminButton type="submit" tone="primary" disabled={loading}>
               {loading ? '查询中…' : '查询'}
-            </button>
-            <button type="button" style={secondaryButtonStyle} onClick={() => void onClear()} disabled={loading}>
+            </AdminButton>
+            <AdminButton type="button" tone="ghost" onClick={() => void onClear()} disabled={loading}>
               清空
-            </button>
+            </AdminButton>
           </div>
         </form>
       </Panel>
 
       <Panel>
-        <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#221b12', fontWeight: 800 }}>
+        <div className="admin-row-between-top">
+              <span className="admin-risk-summary-title">
             <AlertTriangle size={17} />
             当前页风险概览
           </span>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            <Badge tone={p0Count > 0 ? 'danger' : 'success'}>P0：{p0Count}</Badge>
-            <Badge tone={openCount > 0 ? 'danger' : 'success'}>待处理：{openCount}</Badge>
+          <div className="admin-chip-row">
+            <Badge tone={p0Count > 0 ? 'danger' : 'success'}>当前页 P0：{p0Count}</Badge>
+            <Badge tone={openCount > 0 ? 'danger' : 'success'}>当前页待处理：{openCount}</Badge>
             <Badge tone="info">总数：{result?.total ?? 0}</Badge>
           </div>
         </div>

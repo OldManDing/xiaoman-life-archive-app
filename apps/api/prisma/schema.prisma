@@ -555,6 +555,7 @@ model UserNotification {
   @@index([familyId, createdAt], map: "idx_family_created_at")
   @@index([notificationType, targetType, targetNo], map: "idx_notification_target")
   @@index([actorUserId], map: "idx_actor_user_id")
+  @@unique([userId, notificationType, targetType, targetNo], map: "uk_user_notification_target")
   @@map("user_notifications")
 }
 
@@ -577,6 +578,7 @@ model NotificationDelivery {
   @@index([notificationId], map: "idx_notification_id")
   @@index([userId, createdAt], map: "idx_user_created_at")
   @@index([status, nextRetryAt], map: "idx_status_next_retry_at")
+  @@unique([notificationId, channel, provider], map: "uk_notification_delivery_channel_provider")
   @@map("notification_deliveries")
 }
 
@@ -706,6 +708,29 @@ model ContentRisk {
   @@index([familyId], map: "idx_family_id")
   @@index([userId], map: "idx_user_id")
   @@map("content_risks")
+}
+
+model ContentRiskSnapshot {
+  id          BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  riskNo      String   @unique @map("risk_no") @db.VarChar(96)
+  category    String   @db.VarChar(32)
+  severity    String   @db.VarChar(8)
+  status      String   @db.VarChar(16)
+  title       String   @db.VarChar(255)
+  subjectNo   String?  @map("subject_no") @db.VarChar(64)
+  subjectName String?  @map("subject_name") @db.VarChar(128)
+  sourceType  String   @map("source_type") @db.VarChar(32)
+  sourceNo    String   @map("source_no") @db.VarChar(96)
+  sourceStatus String  @map("source_status") @db.VarChar(32)
+  reason      String   @db.VarChar(255)
+  actionLabel String   @map("action_label") @db.VarChar(64)
+  actionTo    String   @map("action_to") @db.VarChar(64)
+  detectedAt  DateTime @default(now()) @map("detected_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([severity, status, updatedAt], map: "idx_sev_status_updated")
+  @@index([category], map: "idx_category")
+  @@map("content_risk_snapshots")
 }
 
 model AuditLog {
