@@ -50,6 +50,7 @@ describe('FamiliesService', () => {
         mediaNo: 'm_avatar_001',
         uploaderUserId: BigInt(2),
         status: MEDIA_STATUS_READY,
+        deletedAt: null,
       },
       select: { objectKey: true, thumbnailObjectKey: true },
     });

@@ -54,6 +54,13 @@ describe('Admin RBAC and media contract', () => {
     childId: child.id,
     objectKey: 'families/f_001/children/c_001/2026/04/m_001.jpg',
     status: 2,
+    mimeType: 'image/jpeg',
+    sizeBytes: BigInt(1024),
+    width: null,
+    height: null,
+    durationSeconds: null,
+    createdAt: new Date('2026-04-21T00:00:00.000Z'),
+    updatedAt: new Date('2026-04-21T00:00:00.000Z'),
     deletedAt: null,
   };
 

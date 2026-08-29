@@ -1,9 +1,11 @@
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
-import { Clock, Home, Sparkles, User, Users } from 'lucide-react';
+import { Clock, Edit3, Home, User, Users } from 'lucide-react';
 import { useEffect, useState, type CSSProperties } from 'react';
 
 import { webApi } from '../shared/api/webApi';
 import type { AppUpdateCheckResponse } from '../shared/api/types';
+import { formatUpdateBytes, updateDownloadStateLabel, useAppUpdateDownload } from '../shared/appUpdateUi';
+import { hasVerifiedAppUpdateMetadata } from '../shared/appUpdater';
 
 const appVersion = import.meta.env.VITE_APP_VERSION ?? '2.0.4';
 const appBuildNumberRaw = import.meta.env.VITE_APP_BUILD_NUMBER ?? 'dev';
@@ -26,6 +28,7 @@ const updateActionStyle = {
 const AppUpdateNotice = ({ bottomOffset }: { bottomOffset: string }) => {
   const [update, setUpdate] = useState<AppUpdateCheckResponse | null>(null);
   const [dismissed, setDismissed] = useState(false);
+  const download = useAppUpdateDownload(update);
 
   useEffect(() => {
     let mounted = true;
@@ -45,23 +48,43 @@ const AppUpdateNotice = ({ bottomOffset }: { bottomOffset: string }) => {
     };
   }, []);
 
-  if (!update?.update_available || dismissed || !update.apk_url) return null;
+  if (!update?.update_available || dismissed) return null;
 
-  const downloadAction = (
-    <a
-      href={update.apk_url}
-      target="_blank"
-      rel="noreferrer"
-      style={{
-        ...updateActionStyle,
-        background: 'var(--nl-primary-gradient)',
-        borderColor: 'var(--nl-primary-border)',
-        color: 'var(--nl-on-primary)',
-        boxShadow: '0 10px 20px rgba(var(--nl-primary-rgb),0.09), inset 0 1px 0 var(--nl-inset-highlight-faint)',
-      }}
-    >
-      下载更新
-    </a>
+  const hasDownload = hasVerifiedAppUpdateMetadata(update) && update.download_available !== false && update.can_download_update !== false;
+  const downloadAction = hasDownload ? (
+    <div style={{ display: 'grid', gap: '8px' }}>
+      {download.state === 'downloading' || download.state === 'verifying' ? (
+        <>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 650 }}>
+            <span>{updateDownloadStateLabel(download.state)}</span>
+            <span>{Math.round(download.progress)}%</span>
+          </div>
+          <div aria-label={`更新下载进度 ${Math.round(download.progress)}%`} role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(download.progress)} style={{ height: '6px', borderRadius: '999px', overflow: 'hidden', background: 'var(--nl-border-muted)' }}>
+            <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, download.progress))}%`, background: 'var(--nl-primary-gradient)', transition: 'width 0.2s ease' }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+            <span style={{ color: 'var(--nl-muted)', fontSize: '11px' }}>{formatUpdateBytes(download.downloadedBytes)}{download.totalBytes ? ` / ${formatUpdateBytes(download.totalBytes)}` : ''}</span>
+            <button type="button" onClick={() => void download.cancelDownload()} style={{ ...updateActionStyle, minHeight: '32px', padding: '0 10px', background: 'transparent', color: 'var(--nl-muted-strong)' }}>取消</button>
+          </div>
+        </>
+      ) : download.state === 'ready' || download.state === 'permission' ? (
+        <button type="button" onClick={() => void download.install()} style={{ ...updateActionStyle, background: 'var(--nl-primary-gradient)', borderColor: 'var(--nl-primary-border)', color: 'var(--nl-on-primary)', boxShadow: '0 10px 20px rgba(var(--nl-primary-rgb),0.09), inset 0 1px 0 var(--nl-inset-highlight-faint)' }}>
+          {download.state === 'permission' ? '再次安装' : '安装更新'}
+        </button>
+      ) : download.state === 'installing' ? (
+        <button type="button" disabled style={{ ...updateActionStyle, background: 'var(--nl-primary-gradient)', borderColor: 'var(--nl-primary-border)', color: 'var(--nl-on-primary)', opacity: 0.65 }}>
+          正在打开系统安装器
+        </button>
+      ) : (
+        <button type="button" onClick={() => void download.startDownload()} style={{ ...updateActionStyle, background: 'var(--nl-primary-gradient)', borderColor: 'var(--nl-primary-border)', color: 'var(--nl-on-primary)', boxShadow: '0 10px 20px rgba(var(--nl-primary-rgb),0.09), inset 0 1px 0 var(--nl-inset-highlight-faint)' }}>
+          {download.state === 'error' ? '重试下载' : '下载并安装'}
+        </button>
+      )}
+      {download.error ? <p style={{ margin: 0, color: 'var(--nl-danger)', fontSize: '11px', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{download.error}</p> : null}
+      {download.state === 'installing' ? <span style={{ color: 'var(--nl-muted)', fontSize: '11px' }}>{updateDownloadStateLabel(download.state)}</span> : null}
+    </div>
+  ) : (
+    <p style={{ margin: 0, color: 'var(--nl-danger)', fontSize: '12px', lineHeight: 1.55 }}>更新包暂不可下载，请联系管理员或稍后再试。</p>
   );
 
   if (update.force_update) {
@@ -130,23 +153,23 @@ const AppUpdateNotice = ({ bottomOffset }: { bottomOffset: string }) => {
 
 export const AppLayout = () => {
   const location = useLocation();
-  const bottomNavHeight = 'calc(74px + env(safe-area-inset-bottom))';
-  const bottomNavClearance = 'calc(74px + env(safe-area-inset-bottom))';
+  const bottomNavClearance = 'calc(70px + env(safe-area-inset-bottom))';
   const tabScrollPadding = '32px';
   const navItems = [
-    { to: '/home', label: '首页', icon: Home, featured: false },
-    { to: '/timeline', label: '时间轴', icon: Clock, featured: false },
-    { to: '/record/create', label: '记录', icon: Sparkles, featured: false },
-    { to: '/family', label: '家庭', icon: Users, featured: false },
-    { to: '/profile', label: '我的', icon: User, featured: false },
+    { to: '/home', label: '首页', icon: Home },
+    { to: '/timeline', label: '时间轴', icon: Clock },
+    { to: '/record/create', label: '记录', icon: Edit3 },
+    { to: '/family', label: '家庭', icon: Users },
+    { to: '/profile', label: '我的', icon: User },
   ];
   const tabPaths = new Set(['/home', '/timeline', '/family', '/profile']);
   const showBottomNav = tabPaths.has(location.pathname);
-  const updateNoticeBottom = showBottomNav ? 'calc(86px + env(safe-area-inset-bottom))' : '16px';
+  const isHome = location.pathname === '/home';
+  const updateNoticeBottom = showBottomNav ? 'calc(68px + env(safe-area-inset-bottom))' : '16px';
 
   return (
     <div
-      className="app-layout"
+      className={`app-layout${isHome ? ' is-home' : ''}`}
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -189,22 +212,21 @@ export const AppLayout = () => {
           transform: 'translateX(-50%)',
           width: '100%',
           maxWidth: '430px',
-          minHeight: bottomNavHeight,
+          minHeight: 'calc(70px + env(safe-area-inset-bottom))',
+          height: 'calc(70px + env(safe-area-inset-bottom))',
           borderTop: '1px solid var(--nl-border-soft)',
           borderRight: 'none',
           borderBottom: 'none',
           borderLeft: 'none',
           borderRadius: 0,
-        background: 'rgba(var(--nl-surface-rgb), 0.94)',
-          WebkitBackdropFilter: 'blur(18px) saturate(1.02)',
-          backdropFilter: 'blur(18px) saturate(1.02)',
+          background: 'var(--nl-surface)',
           display: 'flex',
           justifyContent: 'space-around',
           alignItems: 'center',
           zIndex: 10,
           marginTop: 'auto',
-          padding: '5px 14px calc(10px + env(safe-area-inset-bottom))',
-          boxShadow: '0 -12px 30px rgba(var(--nl-shadow-rgb),0.08)',
+          padding: '3px 14px max(9px, env(safe-area-inset-bottom))',
+          boxShadow: 'none',
           boxSizing: 'border-box',
         }}
       >
@@ -214,7 +236,7 @@ export const AppLayout = () => {
             <NavLink
               key={item.to}
               to={item.to}
-              className={({ isActive }) => `app-bottom-nav-link${isActive ? ' is-active' : ''}${item.featured ? ' is-featured' : ''}`}
+              className={({ isActive }) => `app-bottom-nav-link${isActive ? ' is-active' : ''}`}
               style={({ isActive }) => ({
                 width: '20%',
                 minWidth: 0,
@@ -223,11 +245,11 @@ export const AppLayout = () => {
                 alignItems: 'center',
                 gap: '3px',
                 textDecoration: 'none',
-                color: isActive || item.featured ? 'var(--nl-primary-2)' : 'var(--nl-muted)',
+                color: isActive ? 'var(--nl-nav-active)' : 'var(--nl-nav-muted)',
                 fontSize: '10px',
                 fontWeight: isActive ? 650 : 500,
                 position: 'relative',
-                minHeight: '44px',
+                minHeight: '48px',
                 justifyContent: 'center',
               })}
             >
@@ -236,22 +258,23 @@ export const AppLayout = () => {
                   <span
                     className="app-bottom-nav-icon"
                     style={{
-                    width: '28px',
-                    height: '28px',
+                    width: isActive ? '30px' : '28px',
+                    height: isActive ? '28px' : '26px',
                     marginTop: 0,
                     borderRadius: 0,
                     display: 'grid',
                     placeItems: 'center',
                     background: 'transparent',
-                    color: item.featured || isActive ? 'var(--nl-primary-2)' : 'var(--nl-muted)',
+                    color: isActive ? 'var(--nl-nav-active)' : 'var(--nl-nav-muted)',
                     boxShadow: 'none',
                     border: 'none',
-                      transition: 'transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.18s ease, color 0.18s ease',
-                    }}
+                    transform: 'none',
+                    transition: 'transform 0.18s ease, color 0.18s ease',
+                  }}
                   >
-                    <Icon size={isActive || item.featured ? 20 : 19} strokeWidth={isActive || item.featured ? 2.15 : 1.8} />
+                    <Icon size={isActive ? 20 : 19} strokeWidth={isActive ? 2.15 : 1.8} />
                   </span>
-                  <span className="app-bottom-nav-label" style={{ lineHeight: 1, marginTop: 0 }}>{item.label}</span>
+                  <span className="app-bottom-nav-label" style={{ lineHeight: 1, marginTop: 0, fontWeight: isActive ? 650 : undefined }}>{item.label}</span>
                 </>
               )}
             </NavLink>

@@ -85,7 +85,11 @@ export interface AppUpdateCheckResponse {
   latest_build_number: number;
   release_notes: string;
   apk_url: string | null;
+  apk_sha256?: string | null;
+  apk_size_bytes?: number | null;
   update_available: boolean;
+  download_available?: boolean;
+  can_download_update?: boolean;
   force_update: boolean;
   checked_at: string;
 }

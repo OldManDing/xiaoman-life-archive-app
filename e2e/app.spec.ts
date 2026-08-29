@@ -457,9 +457,9 @@ test.describe('App critical journeys', () => {
     await expect(page.getByRole('button', { name: '切换里程碑记录' })).toHaveAttribute('aria-pressed', 'false');
 
     await page.goto(`${webBaseURL}/profile`);
-    await page.getByRole('button', { name: '添加孩子档案' }).click();
-    await expect(page).toHaveURL(/\/onboarding\/child\?mode=add$/);
-    await expect(page.getByRole('heading', { name: '添加宝宝档案' })).toBeVisible();
+    await page.getByRole('button', { name: '家庭管理，进入家庭档案' }).click();
+    await expect(page).toHaveURL(/\/family\/members$/);
+    await expect(page.getByRole('heading', { name: '家庭成员' })).toBeVisible();
 
     await page.goto(`${webBaseURL}/family`);
     await page.getByRole('button', { name: /小满妈妈/ }).click();

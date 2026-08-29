@@ -5,6 +5,17 @@ const { spawnSync } = require('node:child_process');
 const repoRoot = path.resolve(__dirname, '..');
 const sourceDir = path.join(repoRoot, 'apps', 'web', 'dist');
 const targetDir = path.join(repoRoot, 'apps', 'mobile', 'www');
+const androidWebDir = path.join(
+  repoRoot,
+  'apps',
+  'mobile',
+  'android',
+  'app',
+  'src',
+  'main',
+  'assets',
+  'public',
+);
 const androidMainActivityPath = path.join(
   repoRoot,
   'apps',
@@ -37,9 +48,12 @@ const androidBuildGradlePath = path.join(repoRoot, 'apps', 'mobile', 'android', 
 const androidRootBuildGradlePath = path.join(repoRoot, 'apps', 'mobile', 'android', 'build.gradle');
 const androidManifestPath = path.join(repoRoot, 'apps', 'mobile', 'android', 'app', 'src', 'main', 'AndroidManifest.xml');
 const androidNativeSourceDir = path.join(repoRoot, 'apps', 'mobile', 'native', 'android');
+const androidNativeLocationPluginPath = path.join(path.dirname(androidMainActivityPath), 'NativeLocationPlugin.java');
+const androidNativeUpdaterPluginPath = path.join(path.dirname(androidMainActivityPath), 'AppUpdaterPlugin.java');
 const androidHmsPushBridgePath = path.join(path.dirname(androidMainActivityPath), 'HmsPushBridgePlugin.java');
 const androidHmsMessageServicePath = path.join(path.dirname(androidMainActivityPath), 'NianlunHmsMessageService.java');
 const androidNotificationIconPath = path.join(repoRoot, 'apps', 'mobile', 'android', 'app', 'src', 'main', 'res', 'drawable', 'ic_stat_nianlun.xml');
+const androidFilePathsPath = path.join(repoRoot, 'apps', 'mobile', 'android', 'app', 'src', 'main', 'res', 'xml', 'file_paths.xml');
 const androidActivityLayoutPath = path.join(repoRoot, 'apps', 'mobile', 'android', 'app', 'src', 'main', 'res', 'layout', 'activity_main.xml');
 const androidStylesPath = path.join(repoRoot, 'apps', 'mobile', 'android', 'app', 'src', 'main', 'res', 'values', 'styles.xml');
 const iosAppDelegatePath = path.join(repoRoot, 'apps', 'mobile', 'ios', 'App', 'App', 'AppDelegate.swift');
@@ -59,7 +73,7 @@ const appBuildTime = process.env.VITE_APP_BUILD_TIME ?? new Date().toISOString()
 const nativeBuildNumber = Number.parseInt(appBuildNumber, 10);
 const hasNativeBuildNumber = Number.isFinite(nativeBuildNumber) && nativeBuildNumber > 0;
 const npmCommand = process.platform === 'win32' ? 'npm.cmd' : 'npm';
-const appDarkColor = '#F8F4EC';
+const appDarkColor = '#F7F4EE';
 
 const writeIfChanged = (filePath, nextSource, label) => {
   const currentSource = fs.readFileSync(filePath, 'utf8');
@@ -187,14 +201,15 @@ const patchAndroidSystemBars = () => {
       '        Window window = getWindow();\n        window.setBackgroundDrawable(new android.graphics.drawable.ColorDrawable(APP_STATUS_BAR_COLOR));\n',
     );
   }
-  nextSource = nextSource.replace('window.setDecorFitsSystemWindows(true);', 'window.setDecorFitsSystemWindows(false);');
-
-  if (!nextSource.includes('window.setDecorFitsSystemWindows(false);')) {
-    nextSource = nextSource.replace(
-      '        Window window = getWindow();\n',
-      '        Window window = getWindow();\n        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {\n            window.setDecorFitsSystemWindows(false);\n        }\n',
-    );
-  }
+  nextSource = nextSource.replace(
+    /\s*if \(Build\.VERSION\.SDK_INT >= Build\.VERSION_CODES\.R\) \{\s*window\.setDecorFitsSystemWindows\((?:true|false)\);\s*\}/g,
+    '',
+  );
+  nextSource = nextSource.replace(/\s*if \(Build\.VERSION\.SDK_INT >= Build\.VERSION_CODES\.R\) \{\s*\}/g, '');
+  nextSource = nextSource.replace(
+    '        Window window = getWindow();\n',
+    '        Window window = getWindow();\n        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {\n            window.setDecorFitsSystemWindows(true);\n        }\n',
+  );
   if (!nextSource.includes('FLAG_TRANSLUCENT_STATUS')) {
     nextSource = nextSource.replace(
       '        Window window = getWindow();\n',
@@ -244,14 +259,55 @@ const patchAndroidSystemBars = () => {
     );
   }
 
-  if (!nextSource.includes('View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN')) {
-    nextSource = nextSource.replace(
-      '        window.getDecorView().setSystemUiVisibility(flags);\n',
-      '        flags |= View.SYSTEM_UI_FLAG_LAYOUT_STABLE | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;\n        window.getDecorView().setSystemUiVisibility(flags);\n',
-    );
-  }
+  nextSource = nextSource.replace(/        flags \|= View\.SYSTEM_UI_FLAG_LAYOUT_STABLE \| View\.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN \| View\.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION;\n/g, '');
+  nextSource = nextSource.replace(/        flags \|= View\.SYSTEM_UI_FLAG_LAYOUT_STABLE;\n/g, '');
+  nextSource = nextSource.replace(/        flags &= ~\(View\.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN \| View\.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION\);\n/g, '');
+  nextSource = nextSource.replace(
+    '        window.getDecorView().setSystemUiVisibility(flags);\n',
+    '        flags |= View.SYSTEM_UI_FLAG_LAYOUT_STABLE;\n        flags &= ~(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION);\n        window.getDecorView().setSystemUiVisibility(flags);\n',
+  );
 
   writeIfChanged(androidMainActivityPath, nextSource, 'Android system bars patched for light UI');
+};
+
+const patchAndroidNativeLocation = () => {
+  if (!fs.existsSync(androidMainActivityPath)) return;
+
+  const templatePath = path.join(androidNativeSourceDir, 'NativeLocationPlugin.java');
+  if (!fs.existsSync(templatePath)) throw new Error(`Missing Android native template: ${templatePath}`);
+  writeFileIfChanged(
+    androidNativeLocationPluginPath,
+    fs.readFileSync(templatePath, 'utf8'),
+    'Android native location plugin synced',
+  );
+
+  const currentActivitySource = fs.readFileSync(androidMainActivityPath, 'utf8');
+  if (!currentActivitySource.includes('registerPlugin(NativeLocationPlugin.class);')) {
+    const nextActivitySource = currentActivitySource.replace(
+      '        super.onCreate(savedInstanceState);\n',
+      '        registerPlugin(NativeLocationPlugin.class);\n        super.onCreate(savedInstanceState);\n',
+    );
+    if (nextActivitySource === currentActivitySource) {
+      throw new Error(`Unable to register NativeLocationPlugin in ${androidMainActivityPath}`);
+    }
+    writeIfChanged(androidMainActivityPath, nextActivitySource, 'Android native location plugin registered');
+  }
+
+  if (!fs.existsSync(androidManifestPath)) return;
+  const locationPermissions = [
+    'android.permission.ACCESS_COARSE_LOCATION',
+    'android.permission.ACCESS_FINE_LOCATION',
+  ];
+  let nextManifest = fs.readFileSync(androidManifestPath, 'utf8');
+  for (const permission of locationPermissions) {
+    if (!nextManifest.includes(permission)) {
+      nextManifest = nextManifest.replace(
+        '</manifest>',
+        `    <uses-permission android:name="${permission}" />\n</manifest>`,
+      );
+    }
+  }
+  writeIfChanged(androidManifestPath, nextManifest, 'Android location permissions patched');
 };
 
 const patchAndroidNativeExportPlugin = () => {
@@ -375,6 +431,79 @@ public class NativeExportPlugin extends Plugin {
     '        registerPlugin(NativeLocationPlugin.class);\n        registerPlugin(NativeExportPlugin.class);\n',
   );
   writeIfChanged(androidMainActivityPath, nextSource, 'Android native export plugin registered');
+};
+
+const patchAndroidAppUpdaterPlugin = () => {
+  if (!fs.existsSync(androidMainActivityPath)) return;
+
+  const pluginTemplatePath = path.join(androidNativeSourceDir, 'AppUpdaterPlugin.java');
+  if (!fs.existsSync(pluginTemplatePath)) {
+    throw new Error(`Missing Android native template: ${pluginTemplatePath}`);
+  }
+  writeFileIfChanged(
+    androidNativeUpdaterPluginPath,
+    fs.readFileSync(pluginTemplatePath, 'utf8'),
+    'Android app updater plugin synced',
+  );
+
+  let activitySource = fs.readFileSync(androidMainActivityPath, 'utf8');
+  if (!activitySource.includes('registerPlugin(AppUpdaterPlugin.class);')) {
+    const registrationAnchor = activitySource.includes('        registerPlugin(NativeExportPlugin.class);')
+      ? '        registerPlugin(NativeExportPlugin.class);\n'
+      : '        registerPlugin(NativeLocationPlugin.class);\n';
+    const nextActivitySource = activitySource.replace(
+      registrationAnchor,
+      `${registrationAnchor}        registerPlugin(AppUpdaterPlugin.class);\n`,
+    );
+    if (nextActivitySource === activitySource) {
+      throw new Error(`Unable to register AppUpdaterPlugin in ${androidMainActivityPath}`);
+    }
+    activitySource = nextActivitySource;
+  }
+  writeIfChanged(androidMainActivityPath, activitySource, 'Android app updater plugin registered');
+
+  if (fs.existsSync(androidManifestPath)) {
+    let manifest = fs.readFileSync(androidManifestPath, 'utf8');
+    if (!manifest.includes('android.permission.REQUEST_INSTALL_PACKAGES')) {
+      manifest = manifest.replace(
+        '</manifest>',
+        '    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\n</manifest>',
+      );
+    }
+    if (!manifest.includes('androidx.core.content.FileProvider')) {
+      const providerBlock = `
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="\${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+`;
+      manifest = manifest.replace('    </application>', `${providerBlock}    </application>`);
+    }
+    writeIfChanged(androidManifestPath, manifest, 'Android app updater manifest patched');
+  }
+
+  const filePathsTemplatePath = path.join(androidNativeSourceDir, 'file_paths.xml');
+  if (fs.existsSync(androidFilePathsPath)) {
+    let filePaths = fs.readFileSync(androidFilePathsPath, 'utf8');
+    if (!filePaths.includes('name="update_cache"')) {
+      filePaths = filePaths.replace(
+        '</paths>',
+        '    <cache-path name="update_cache" path="updates/" />\n</paths>',
+      );
+      writeIfChanged(androidFilePathsPath, filePaths, 'Android update cache path patched');
+    }
+  } else if (fs.existsSync(filePathsTemplatePath)) {
+    writeFileIfChanged(
+      androidFilePathsPath,
+      fs.readFileSync(filePathsTemplatePath, 'utf8'),
+      'Android FileProvider paths synced',
+    );
+  }
 };
 
 const patchAndroidHuaweiPush = () => {
@@ -643,10 +772,18 @@ if (!fs.existsSync(sourceDir)) {
 fs.rmSync(targetDir, { recursive: true, force: true });
 fs.mkdirSync(targetDir, { recursive: true });
 fs.cpSync(sourceDir, targetDir, { recursive: true });
+if (fs.existsSync(path.dirname(androidWebDir))) {
+  fs.rmSync(path.join(androidWebDir, 'assets'), { recursive: true, force: true });
+  fs.mkdirSync(androidWebDir, { recursive: true });
+  fs.cpSync(targetDir, androidWebDir, { recursive: true });
+  console.log(`Android web assets synced: ${androidWebDir}`);
+}
 patchAndroidNativeVersion();
 patchIosNativeVersion();
+patchAndroidNativeLocation();
 patchAndroidSystemBars();
 patchAndroidNativeExportPlugin();
+patchAndroidAppUpdaterPlugin();
 patchAndroidHuaweiPush();
 patchAndroidWindowBackgrounds();
 patchIosWindowBackgrounds();

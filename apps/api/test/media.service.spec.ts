@@ -10,6 +10,15 @@ describe('MediaService', () => {
       },
       recordMedia: {
         create: jest.fn().mockResolvedValue({ mediaNo: 'm_001' }),
+        updateMany: jest.fn().mockResolvedValue({ count: 1 }),
+        findFirstOrThrow: jest.fn().mockResolvedValue({
+          mediaNo: 'm_001',
+          width: 1200,
+          height: 900,
+          durationSeconds: null,
+          createdAt: new Date('2026-06-01T00:00:00.000Z'),
+          updatedAt: new Date('2026-06-01T00:01:00.000Z'),
+        }),
         update: jest.fn().mockResolvedValue({
           id: 100n,
           mediaNo: 'm_001',
@@ -154,8 +163,8 @@ describe('MediaService', () => {
     });
 
     expect(storageService.headObject).toHaveBeenCalledWith('families/f_001/children/c_001/2026/06/m_001.jpg');
-    expect(prisma.recordMedia.update).toHaveBeenCalledWith(expect.objectContaining({
-      where: { id: 100n },
+    expect(prisma.recordMedia.updateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ id: 100n, status: 1, deletedAt: null }),
       data: expect.objectContaining({
         width: 1200,
         height: 900,

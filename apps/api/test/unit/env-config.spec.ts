@@ -1,15 +1,13 @@
 import {
   getAiProviderName,
-  getAlertContactChannel,
-  getAlertContactName,
   getAuthRateLimitMaxAttempts,
   getAuthRateLimitWindowMs,
   getAppEnv,
   getAppPort,
-  getBackupRestoreDrillAt,
-  getBackupRetentionDays,
-  getBackupRunbookUrl,
   getMapProviderName,
+  getMobileApkSha256,
+  getMobileApkSizeBytes,
+  getMobileApkUrl,
   getSmsProviderName,
   getStorageProviderName,
   isAdminBootstrapAllowed,
@@ -221,11 +219,6 @@ describe('env-config', () => {
         DATABASE_URL: 'mysql://user:pass@db:3306/app',
         REDIS_HOST: 'redis',
         REDIS_PORT: '6379',
-        BACKUP_RETENTION_DAYS: '180',
-        BACKUP_RUNBOOK_URL: 'https://ops.example.com/backup',
-        BACKUP_RESTORE_DRILL_AT: '2026-05-27T00:00:00.000Z',
-        ALERT_CONTACT_NAME: '值班运营',
-        ALERT_CONTACT_CHANNEL: 'ops@example.com',
       }),
     ).toThrow('MAP_PROVIDER=disabled is not allowed outside local/test environments');
   });
@@ -257,11 +250,23 @@ describe('env-config', () => {
     expect(getStorageProviderName({ APP_ENV: 'prod', STORAGE_PROVIDER: 'minio' })).toBe('minio');
     expect(getAiProviderName({ APP_ENV: 'prod', AI_PROVIDER: 'openai-compatible' })).toBe('openai-compatible');
     expect(getMapProviderName({ APP_ENV: 'prod', MAP_PROVIDER: 'amap' })).toBe('amap');
-    expect(getBackupRetentionDays({ BACKUP_RETENTION_DAYS: '60' })).toBe(60);
-    expect(getBackupRunbookUrl({ BACKUP_RUNBOOK_URL: 'https://ops.example.com/backup' })).toBe('https://ops.example.com/backup');
-    expect(getBackupRestoreDrillAt({ BACKUP_RESTORE_DRILL_AT: '2026-05-27T00:00:00.000Z' })).toBe('2026-05-27T00:00:00.000Z');
-    expect(getAlertContactName({ ALERT_CONTACT_NAME: '值班运营' })).toBe('值班运营');
-    expect(getAlertContactChannel({ ALERT_CONTACT_CHANNEL: 'ops@example.com' })).toBe('ops@example.com');
+  });
+
+  it('requires HTTPS APK URLs and validates optional APK integrity metadata', () => {
+    expect(getMobileApkUrl({ MOBILE_APK_URL: 'https://download.example.com/nianlun.apk' })).toBe(
+      'https://download.example.com/nianlun.apk',
+    );
+    expect(() => getMobileApkUrl({ MOBILE_APK_URL: 'http://download.example.com/nianlun.apk' })).toThrow(
+      'MOBILE_APK_URL must use https',
+    );
+    expect(getMobileApkSha256({ MOBILE_APK_SHA256: 'A'.repeat(64) })).toBe('a'.repeat(64));
+    expect(() => getMobileApkSha256({ MOBILE_APK_SHA256: 'not-a-hash' })).toThrow(
+      'MOBILE_APK_SHA256 must be a 64-character hexadecimal SHA-256 digest',
+    );
+    expect(getMobileApkSizeBytes({ MOBILE_APK_SIZE_BYTES: '123456' })).toBe(123456);
+    expect(() => getMobileApkSizeBytes({ MOBILE_APK_SIZE_BYTES: '0' })).toThrow(
+      'Invalid MOBILE_APK_SIZE_BYTES value: 0',
+    );
   });
 
   it('rejects unsafe authentication rate-limit configuration', () => {
@@ -292,75 +297,8 @@ describe('env-config', () => {
         DATABASE_URL: 'mysql://user:pass@db:3306/app',
         REDIS_HOST: 'redis',
         REDIS_PORT: '6379',
-        BACKUP_RETENTION_DAYS: '180',
-        BACKUP_RUNBOOK_URL: 'https://ops.example.com/backup',
-        BACKUP_RESTORE_DRILL_AT: '2026-05-27T00:00:00.000Z',
       }),
     ).toThrow('AUTH_RATE_LIMIT_MAX_ATTEMPTS cannot exceed 30 outside local/test environments');
   });
 
-  it('requires backup recovery evidence in strict environments', () => {
-    expect(() =>
-      validateRuntimeConfig({
-        APP_ENV: 'production',
-        APP_PORT: '3000',
-        JWT_ACCESS_SECRET: 'prod_access_secret_that_is_long_enough_123',
-        JWT_REFRESH_SECRET: 'prod_refresh_secret_that_is_long_enough_456',
-        ADMIN_JWT_ACCESS_SECRET: 'prod_admin_secret_that_is_long_enough_789',
-        SYSTEM_CONFIG_ENCRYPTION_SECRET: 'prod_system_config_secret_long_enough_abc',
-        CORS_ORIGINS: 'https://app.example.com',
-        SMS_ENABLED: 'false',
-        STORAGE_PROVIDER: 'minio',
-        STORAGE_REGION: 'local',
-        STORAGE_BUCKET: 'bucket',
-        STORAGE_ENDPOINT: 'https://storage.example.com',
-        STORAGE_ACCESS_KEY: 'storage_access',
-        STORAGE_SECRET_KEY: 'storage_secret',
-        AI_PROVIDER: 'openai-compatible',
-        AI_API_KEY: 'ai_key',
-        AI_BASE_URL: 'https://ai.example.com/v1',
-        AI_MODEL: 'model',
-        MAP_PROVIDER: 'amap',
-        MAP_API_KEY: 'map_key',
-        DATABASE_URL: 'mysql://user:pass@db:3306/app',
-        REDIS_HOST: 'redis',
-        REDIS_PORT: '6379',
-        BACKUP_RETENTION_DAYS: '180',
-        BACKUP_RESTORE_DRILL_AT: '2026-05-27T00:00:00.000Z',
-      }),
-    ).toThrow('Missing required environment variable: BACKUP_RUNBOOK_URL');
-
-    expect(() => getBackupRetentionDays({ BACKUP_RETENTION_DAYS: '0' })).toThrow('Invalid BACKUP_RETENTION_DAYS value: 0');
-    expect(() => getBackupRestoreDrillAt({ BACKUP_RESTORE_DRILL_AT: 'not-a-date' })).toThrow('Invalid BACKUP_RESTORE_DRILL_AT value: not-a-date');
-    expect(() =>
-      validateRuntimeConfig({
-        APP_ENV: 'production',
-        APP_PORT: '3000',
-        JWT_ACCESS_SECRET: 'prod_access_secret_that_is_long_enough_123',
-        JWT_REFRESH_SECRET: 'prod_refresh_secret_that_is_long_enough_456',
-        ADMIN_JWT_ACCESS_SECRET: 'prod_admin_secret_that_is_long_enough_789',
-        SYSTEM_CONFIG_ENCRYPTION_SECRET: 'prod_system_config_secret_long_enough_abc',
-        CORS_ORIGINS: 'https://app.example.com',
-        SMS_ENABLED: 'false',
-        STORAGE_PROVIDER: 'minio',
-        STORAGE_REGION: 'local',
-        STORAGE_BUCKET: 'bucket',
-        STORAGE_ENDPOINT: 'https://storage.example.com',
-        STORAGE_ACCESS_KEY: 'storage_access',
-        STORAGE_SECRET_KEY: 'storage_secret',
-        AI_PROVIDER: 'openai-compatible',
-        AI_API_KEY: 'ai_key',
-        AI_BASE_URL: 'https://ai.example.com/v1',
-        AI_MODEL: 'model',
-        MAP_PROVIDER: 'amap',
-        MAP_API_KEY: 'map_key',
-        DATABASE_URL: 'mysql://user:pass@db:3306/app',
-        REDIS_HOST: 'redis',
-        REDIS_PORT: '6379',
-        BACKUP_RETENTION_DAYS: '180',
-        BACKUP_RUNBOOK_URL: 'https://ops.example.com/backup',
-        BACKUP_RESTORE_DRILL_AT: '2026-05-27T00:00:00.000Z',
-      }),
-    ).toThrow('Missing required environment variable: ALERT_CONTACT_NAME');
-  });
 });

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { webApi } from './api/webApi';
 import { getStoredMediaReferenceNo, resolveStoredMediaUrl } from './localMediaPreview';
@@ -76,21 +76,23 @@ export const useAsyncData = <T,>(loader: () => Promise<T>, deps: unknown[] = [])
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const requestIdRef = useRef(0);
 
   useEffect(() => {
     let mounted = true;
+    const requestId = ++requestIdRef.current;
     setLoading(true);
     setError(null);
 
     loader()
       .then((result) => {
-        if (mounted) setData(result);
+        if (mounted && requestId === requestIdRef.current) setData(result);
       })
       .catch((err: unknown) => {
-        if (mounted) setError(err instanceof Error ? err.message : '请求失败');
+        if (mounted && requestId === requestIdRef.current) setError(err instanceof Error ? err.message : '请求失败');
       })
       .finally(() => {
-        if (mounted) setLoading(false);
+        if (mounted && requestId === requestIdRef.current) setLoading(false);
       });
 
     return () => {

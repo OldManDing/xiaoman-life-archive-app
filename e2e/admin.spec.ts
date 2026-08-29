@@ -10,6 +10,13 @@ const confirmAdminAction = async (page: Page, reason: string) => {
   await expect(dialog).toBeHidden();
 };
 
+const clickOpenAdminMenuAction = async (page: Page, name: string) => {
+  const menu = page.locator('.admin-action-menu-popover').last();
+  const action = menu.getByRole('button', { name, exact: true });
+  await expect(action).toBeVisible();
+  await action.evaluate((button) => (button as HTMLButtonElement).click());
+};
+
 test.describe('Admin critical journeys', () => {
   test('rejects invalid admin password with Chinese feedback', async ({ page }) => {
     await page.goto(`${adminBaseURL}/login`);
@@ -68,8 +75,8 @@ test.describe('Admin critical journeys', () => {
     });
 
     expect(scrollState.mainOverflowY).toBe('auto');
-    expect(scrollState.mainCanScroll).toBe(false);
-    expect(scrollState.mainScrollTop).toBe(0);
+    expect(scrollState.mainCanScroll).toBe(true);
+    expect(scrollState.mainScrollTop).toBeGreaterThan(0);
     expect(Math.abs(scrollState.sidebarTop - scrollState.beforeSidebarTop)).toBeLessThanOrEqual(1);
     expect(scrollState.windowScrollY).toBe(0);
     expect(scrollState.pageExtraScroll).toBeLessThanOrEqual(2);
@@ -113,7 +120,8 @@ test.describe('Admin critical journeys', () => {
     await loginAdmin(page);
     await openAdminMore(page);
     await page.getByRole('link', { name: '审计日志', exact: true }).click();
-    await page.getByRole('combobox').first().selectOption('admin_login');
+    await page.getByRole('combobox').first().click();
+    await page.getByRole('option', { name: '后台登录', exact: true }).click();
     await page.getByRole('button', { name: '查询' }).click();
 
     const auditRow = page.getByRole('row', { name: /后台登录/ }).first();
@@ -153,6 +161,7 @@ test.describe('Admin critical journeys', () => {
     const ticketRow = page.getByRole('row', { name: new RegExp(ticketNo) });
     await expect(ticketRow).toContainText('儿童安全');
     await expect(ticketRow).toContainText('待处理');
+    await ticketRow.getByRole('button', { name: '更多操作' }).click();
     await ticketRow.getByRole('button', { name: '受理' }).click();
     await confirmAdminAction(page, '自动化验证客服反馈受理');
     await expect(ticketRow).toContainText('处理中');
@@ -187,26 +196,28 @@ test.describe('Admin critical journeys', () => {
     const requestRow = page.getByRole('row', { name: new RegExp(requestNo) });
     await expect(requestRow).toContainText('成年移交');
     await expect(requestRow).toContainText('待处理');
+    await requestRow.getByRole('button', { name: '更多操作' }).click();
     await requestRow.getByRole('button', { name: '受理' }).click();
     await confirmAdminAction(page, '自动化验证档案交付受理');
     await expect(requestRow).toContainText('处理中');
     await expectNoEnglishSeedCopy(page);
   });
 
-  test('shows system operations readiness for config statistics and backup recovery', async ({ page }) => {
+  test('shows system operations readiness without unimplemented backup and alert controls', async ({ page }) => {
     await loginAdmin(page);
     await openAdminMore(page);
     await page.getByRole('link', { name: '系统运维', exact: true }).click();
 
     await expect(page.getByRole('heading', { name: '系统运维' })).toBeVisible();
     await expect(page.getByRole('heading', { name: '运行配置' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: '备份恢复与告警值班' })).toBeVisible();
-    await expect(page.getByText('告警联系人', { exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: '上线验收门禁' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: '备份恢复与告警值班' })).toHaveCount(0);
+    await expect(page.getByText('告警联系人', { exact: true })).toHaveCount(0);
     await expect(page.getByRole('heading', { name: '运营动作' })).toBeVisible();
     await expect(page.getByText('家庭与档案')).toBeVisible();
     await expect(page.getByText('成长资产')).toBeVisible();
     await expect(page.getByRole('row', { name: /对象存储/ })).toBeVisible();
-    await expect(page.getByRole('row', { name: /备份保留周期/ })).toBeVisible();
+    await expect(page.getByRole('row', { name: /备份保留周期/ })).toHaveCount(0);
     await expect(page.getByRole('link', { name: '技术媒体库', exact: true })).toBeVisible();
     await expect(page.getByRole('link', { name: '风险队列', exact: true })).toBeVisible();
     await expect(page.locator('aside a[href="/media"]')).toHaveCount(0);
@@ -227,9 +238,10 @@ test.describe('Admin critical journeys', () => {
     await expect(mediaRow).toContainText('可用');
     await expect(mediaRow.getByRole('button', { name: '详情' })).toBeVisible();
     await mediaRow.getByRole('button', { name: '更多操作' }).click();
-    await expect(mediaRow.getByRole('button', { name: '通过' })).toBeVisible();
-    await expect(mediaRow.getByRole('button', { name: '标记异常' })).toBeVisible();
-    await expect(mediaRow.getByRole('button', { name: '下架' })).toBeVisible();
+    const reviewMenu = page.locator('.admin-action-menu-popover').last();
+    await expect(reviewMenu.getByRole('button', { name: '通过', exact: true })).toBeVisible();
+    await expect(reviewMenu.getByRole('button', { name: '标记异常', exact: true })).toBeVisible();
+    await expect(reviewMenu.getByRole('button', { name: '下架', exact: true })).toBeVisible();
     await expectNoEnglishSeedCopy(page);
   });
 
@@ -241,10 +253,12 @@ test.describe('Admin critical journeys', () => {
     await page.getByRole('button', { name: '查询' }).click();
     let parentRow = page.getByRole('row', { name: /小满妈妈/ });
     await expect(parentRow).toContainText('正常');
+    await parentRow.getByRole('button', { name: '更多操作' }).click();
     await parentRow.getByRole('button', { name: '冻结' }).click();
     await confirmAdminAction(page, '自动化验证冻结按钮');
     parentRow = page.getByRole('row', { name: /小满妈妈/ });
     await expect(parentRow).toContainText('已冻结');
+    await parentRow.getByRole('button', { name: '更多操作' }).click();
     await parentRow.getByRole('button', { name: '解冻' }).click();
     await confirmAdminAction(page, '自动化验证解冻按钮');
     await expect(page.getByRole('row', { name: /小满妈妈/ })).toContainText('正常');
@@ -253,14 +267,17 @@ test.describe('Admin critical journeys', () => {
     await page.getByRole('button', { name: '查询' }).click();
     let recordRow = page.getByRole('row', { name: /第一次自己吃饭/ });
     await expect(recordRow).toContainText('已发布');
+    await recordRow.getByRole('button', { name: '更多操作' }).click();
     await recordRow.getByRole('button', { name: '下架' }).click();
     await confirmAdminAction(page, '自动化验证记录下架按钮');
     recordRow = page.getByRole('row', { name: /第一次自己吃饭/ });
     await expect(recordRow).toContainText('草稿');
+    await recordRow.getByRole('button', { name: '更多操作' }).click();
     await recordRow.getByRole('button', { name: '恢复' }).click();
     await confirmAdminAction(page, '自动化验证记录恢复按钮');
     await expect(page.getByRole('row', { name: /第一次自己吃饭/ })).toContainText('已发布');
 
+    await openAdminMore(page);
     await page.getByRole('link', { name: '系统运维', exact: true }).click();
     await page.getByRole('link', { name: '技术媒体库', exact: true }).click();
     await page.getByPlaceholder('编号 / 文件 / 孩子 / 记录').fill('第一次自己吃饭');
@@ -268,17 +285,17 @@ test.describe('Admin critical journeys', () => {
     let mediaRow = page.getByRole('row', { name: /第一次自己吃饭/ });
     await expect(mediaRow).toContainText('可用');
     await mediaRow.getByRole('button', { name: '更多操作' }).click();
-    await mediaRow.getByRole('button', { name: '标记异常' }).click();
+    await clickOpenAdminMenuAction(page, '标记异常');
     await confirmAdminAction(page, '自动化验证媒体异常按钮');
     mediaRow = page.getByRole('row', { name: /第一次自己吃饭/ });
     await expect(mediaRow).toContainText('异常');
     await mediaRow.getByRole('button', { name: '更多操作' }).click();
-    await mediaRow.getByRole('button', { name: '下架' }).click();
+    await clickOpenAdminMenuAction(page, '下架');
     await confirmAdminAction(page, '自动化验证媒体下架按钮');
     mediaRow = page.getByRole('row', { name: /第一次自己吃饭/ });
     await expect(mediaRow).toContainText('已下架');
     await mediaRow.getByRole('button', { name: '更多操作' }).click();
-    await mediaRow.getByRole('button', { name: '通过' }).click();
+    await clickOpenAdminMenuAction(page, '通过');
     await confirmAdminAction(page, '自动化验证媒体恢复可用按钮');
     await expect(page.getByRole('row', { name: /第一次自己吃饭/ })).toContainText('可用');
   });

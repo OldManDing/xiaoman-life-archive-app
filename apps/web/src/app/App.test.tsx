@@ -518,7 +518,7 @@ describe('App Shell', () => {
     await waitFor(() => {
       expect(refreshMock).toHaveBeenCalled();
     });
-    expect(await screen.findByText('成长封面')).toBeDefined();
+    expect(await screen.findByLabelText('成长时刻流')).toBeDefined();
   });
 
   it('registers with password without invite code after agreement is accepted', async () => {
@@ -725,7 +725,7 @@ describe('App Shell', () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.getByText('成长封面')).toBeDefined();
+      expect(screen.getByLabelText('成长时刻流')).toBeDefined();
     });
   });
 
@@ -763,7 +763,7 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    expect(await screen.findByText('成长封面')).toBeDefined();
+    expect(await screen.findByLabelText('成长时刻流')).toBeDefined();
     expect(screen.queryByText('一年前的今天')).toBeNull();
     expect(screen.queryByText('第一次在草地上奔跑')).toBeNull();
   });
@@ -802,12 +802,10 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    expect(await screen.findByText('成长封面')).toBeDefined();
+    const stream = await screen.findByLabelText('成长时刻流');
+    expect(await screen.findByText('只写了一段文字')).toBeDefined();
+    expect(stream.querySelectorAll('img').length).toBe(0);
     expect(screen.queryByAltText('只写了一段文字')).toBeNull();
-    expect(screen.queryByAltText('成长记录')).toBeNull();
-    const emptyCarousel = screen.getByLabelText('最近照片');
-    expect(emptyCarousel.getAttribute('data-photo-layout')).toBe('empty');
-    expect(emptyCarousel.querySelector('[data-photo-drawer="true"]')).toBeNull();
   });
 
   it('does not render a standalone one-year-ago module on the home cover page', async () => {
@@ -837,18 +835,18 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    expect(await screen.findByText('成长封面')).toBeDefined();
+    expect(await screen.findByLabelText('成长时刻流')).toBeDefined();
     expect(screen.queryByText('一年前的今天')).toBeNull();
     expect(screen.queryByText('一年前真实记录')).toBeNull();
   });
 
-  it('shows only real recent and anniversary media without placeholder slides', async () => {
+  it('renders real record media in the moment stream', async () => {
     window.history.pushState({}, '', '/home');
     mockAuthenticatedSession();
     const recentRecord = {
       record_no: 'r_recent_photo',
       cover_media_no: null,
-      cover_media_type: 'image',
+      cover_media_type: 'image' as const,
       cover_url: 'https://cdn.example.test/recent.jpg',
       title: '最近照片',
       summary: '最近真实照片。',
@@ -860,14 +858,14 @@ describe('App Shell', () => {
       record_type: 'mixed',
       status: 'published' as const,
     };
-    const anniversaryRecord = {
-      record_no: 'r_anniversary_photo',
+    const olderRecord = {
+      record_no: 'r_older_photo',
       cover_media_no: null,
-      cover_media_type: 'image',
-      cover_url: 'https://cdn.example.test/anniversary.jpg',
-      title: '一年前照片',
-      summary: '一年前真实照片。',
-      event_time: '2025-05-30T10:00:00.000Z',
+      cover_media_type: 'image' as const,
+      cover_url: 'https://cdn.example.test/older.jpg',
+      title: '更早照片',
+      summary: '另一张真实照片。',
+      event_time: '2026-05-30T10:00:00.000Z',
       location_text: null,
       tags: [],
       creator_name: '测试用户',
@@ -877,32 +875,25 @@ describe('App Shell', () => {
     };
     listRecordsMock.mockImplementation(async (query) => {
       if (query.start_time || query.end_time) {
-        return { list: [anniversaryRecord], page: 1, page_size: 1, total: 1, has_more: false };
+        return { list: [], page: 1, page_size: 1, total: 0, has_more: false };
       }
-      return { list: [recentRecord], page: 1, page_size: 5, total: 1, has_more: false };
+      return { list: [recentRecord, olderRecord], page: 1, page_size: 5, total: 2, has_more: false };
     });
 
     render(<App />);
 
-    const recentPhotoSection = await screen.findByLabelText('最近照片');
+    const stream = await screen.findByLabelText('成长时刻流');
     await waitFor(() => {
-      const srcs = Array.from(recentPhotoSection.querySelectorAll('img')).map((image) => image.getAttribute('src'));
+      const srcs = Array.from(stream.querySelectorAll('img')).map((image) => image.getAttribute('src'));
       expect(srcs).toContain('https://cdn.example.test/recent.jpg');
-      expect(srcs).toContain('https://cdn.example.test/anniversary.jpg');
+      expect(srcs).toContain('https://cdn.example.test/older.jpg');
     });
-    const drawer = recentPhotoSection.querySelector('[data-photo-drawer="true"]') as HTMLElement;
-    expect(recentPhotoSection.getAttribute('data-photo-layout')).toBe('sparse');
-    expect(drawer.style.overflowX).toBe('hidden');
-    expect(drawer.style.display).toBe('grid');
-    const rail = recentPhotoSection.querySelector('[data-photo-index-rail="true"]') as HTMLElement;
-    expect(rail).toBeDefined();
-    expect(rail.style.width).toBe('146px');
-    expect((recentPhotoSection.querySelector('[data-photo-index="0"]') as HTMLElement).style.transform).toContain('translate3d(-17px');
-    expect((recentPhotoSection.querySelector('[data-photo-index="1"]') as HTMLElement).style.transform).toContain('translate3d(17px');
-    expect(recentPhotoSection.querySelectorAll('[data-photo-index]').length).toBe(2);
+    expect(await screen.findByText('最近照片')).toBeDefined();
+    expect(screen.getByText(/已收录 2 条记录/)).toBeDefined();
+    expect(stream.querySelector('[data-photo-drawer="true"]')).toBeNull();
   });
 
-  it('uses the cover alone when the home has one visual record', async () => {
+  it('groups a single visual record under its own day heading', async () => {
     window.history.pushState({}, '', '/home');
     mockAuthenticatedSession();
     const singleRecord = {
@@ -929,9 +920,8 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    const carousel = await screen.findByLabelText('最近照片');
-    expect(carousel.getAttribute('data-photo-layout')).toBe('single');
-    expect(carousel.querySelector('[data-photo-drawer="true"]')).toBeNull();
+    expect(await screen.findByText('唯一照片')).toBeDefined();
+    expect(screen.getByRole('region', { name: /5月28日 .*的记录/ })).toBeDefined();
     expect(screen.queryByText('01 / 01')).toBeNull();
   });
 
@@ -968,12 +958,12 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    const carousel = await screen.findByLabelText('最近照片');
+    const stream = await screen.findByLabelText('成长时刻流');
     await waitFor(() => {
-      expect((carousel.querySelector('img[alt="视频记录"]') as HTMLImageElement)?.getAttribute('src')).toBe('https://cdn.example.test/video-thumbnail.jpg');
+      expect((stream.querySelector('img[alt="视频记录"]') as HTMLImageElement)?.getAttribute('src')).toBe('https://cdn.example.test/video-thumbnail.jpg');
     });
-    expect(Array.from(carousel.querySelectorAll('img')).some((image) => image.getAttribute('src')?.startsWith('data:video/'))).toBe(false);
-    expect(carousel.querySelector('video')).toBeNull();
+    expect(Array.from(stream.querySelectorAll('img')).some((image) => image.getAttribute('src')?.startsWith('data:video/'))).toBe(false);
+    expect(stream.querySelector('video')).toBeNull();
   });
 
   it('renders the signed video frame when a video has no generated thumbnail', async () => {
@@ -1006,12 +996,12 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    const carousel = await screen.findByLabelText('最近照片');
+    const stream = await screen.findByLabelText('成长时刻流');
     await waitFor(() => {
-      expect((carousel.querySelector('video') as HTMLVideoElement)?.getAttribute('src')).toBe('https://cdn.example.test/legacy-video.mp4');
+      expect((stream.querySelector('video') as HTMLVideoElement)?.getAttribute('src')).toBe('https://cdn.example.test/legacy-video.mp4');
     });
-    expect(carousel.querySelector('img[alt="旧视频记录"]')).toBeNull();
-    expect(Array.from(carousel.querySelectorAll('img')).some((image) => image.getAttribute('src')?.startsWith('data:video/'))).toBe(false);
+    expect(stream.querySelector('img[alt="旧视频记录"]')).toBeNull();
+    expect(Array.from(stream.querySelectorAll('img')).some((image) => image.getAttribute('src')?.startsWith('data:video/'))).toBe(false);
   });
 
   it('shows the backend total for the home record count', async () => {
@@ -1043,129 +1033,53 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    expect(await screen.findByText('成长封面')).toBeDefined();
+    expect(await screen.findByLabelText('成长时刻流')).toBeDefined();
     expect(screen.getByText(/18 条记录/)).toBeDefined();
     expect(screen.queryByText(/2 条记录/)).toBeNull();
   });
 
-  it('autoplays the home photo carousel', async () => {
+  it('opens a record detail from the moment stream', async () => {
     window.history.pushState({}, '', '/home');
     mockAuthenticatedSession();
-
-    const photoRecords = ['第一张', '第二张', '第三张'].map((title, index) => ({
-      record_no: `r_autoplay_photo_${index + 1}`,
+    const streamRecord = {
+      record_no: 'r_stream_open',
       cover_media_no: null,
-      cover_media_type: 'image' as const,
-      cover_url: `https://cdn.example.test/autoplay-${index + 1}.jpg`,
-      title,
-      summary: `${title}真实照片。`,
-      event_time: `2026-05-${28 - index}T10:00:00.000Z`,
+      cover_media_type: null,
+      cover_url: null,
+      title: '第一次自己吃饭',
+      summary: '小满第一次尝试用勺子自己吃饭。',
+      event_time: '2026-05-28T10:00:00.000Z',
       location_text: null,
       tags: [],
       creator_name: '测试用户',
       is_milestone: false,
-      record_type: 'mixed',
+      record_type: 'text',
       status: 'published' as const,
-    }));
-
-    listRecordsMock.mockImplementation(async (query) => {
-      if (query.start_time || query.end_time) {
-        return { list: [], page: 1, page_size: 1, total: 0, has_more: false };
-      }
-      return { list: photoRecords, page: 1, page_size: 12, total: photoRecords.length, has_more: false };
+    };
+    listRecordsMock.mockImplementation(async (query) => query.start_time || query.end_time
+      ? { list: [], page: 1, page_size: 1, total: 0, has_more: false }
+      : { list: [streamRecord], page: 1, page_size: 5, total: 1, has_more: false });
+    detailRecordMock.mockResolvedValue({
+      ...streamRecord,
+      child_no: 'c_001',
+      creator_user_no: 'u_001',
+      content_text: streamRecord.summary,
+      media_list: [],
+      visibility_scope: 'family',
+      ai_generated_title: null,
+      ai_summary: null,
+      ai_status: null,
+      created_at: streamRecord.event_time,
+      updated_at: streamRecord.event_time,
     });
 
     render(<App />);
 
-    const recentPhotoSection = await screen.findByLabelText('最近照片');
-    expect(recentPhotoSection.getAttribute('data-photo-active-index')).toBe('0');
-
-    await waitFor(
-      () => {
-        expect(recentPhotoSection.getAttribute('data-photo-active-index')).toBe('1');
-      },
-      { timeout: 3200 },
-    );
-  });
-
-  it('uses a manual looping carousel for home photos', async () => {
-    window.history.pushState({}, '', '/home');
-    mockAuthenticatedSession();
-    const photoRecords = ['第一张', '第二张', '第三张', '第四张'].map((title, index) => ({
-      record_no: `r_photo_${index + 1}`,
-      cover_media_no: null,
-      cover_media_type: 'image',
-      cover_url: `https://cdn.example.test/photo-${index + 1}.jpg`,
-      title,
-      summary: `${title}真实照片。`,
-      event_time: `2026-05-${28 - index}T10:00:00.000Z`,
-      location_text: null,
-      tags: [],
-      creator_name: '测试用户',
-      is_milestone: false,
-      record_type: 'mixed',
-      status: 'published' as const,
-    }));
-    listRecordsMock.mockImplementation(async (query) => {
-      if (query.start_time || query.end_time) {
-        return { list: [], page: 1, page_size: 1, total: 0, has_more: false };
-      }
-      return { list: photoRecords, page: 1, page_size: 5, total: photoRecords.length, has_more: false };
-    });
-
-    render(<App />);
-
-    const recentPhotoSection = await screen.findByLabelText('最近照片');
-    const stage = recentPhotoSection.querySelector('[data-photo-stage="true"]') as HTMLElement;
-    const drawer = recentPhotoSection.querySelector('[data-photo-drawer="true"]') as HTMLElement;
-
-    await waitFor(() => expect(recentPhotoSection.querySelectorAll('[data-photo-index]').length).toBe(4));
-    expect(recentPhotoSection.getAttribute('data-photo-layout')).toBe('drawer');
-    expect(stage.style.touchAction).toBe('pan-y');
-    expect(drawer.style.overflowX).toBe('hidden');
-    expect((recentPhotoSection.querySelector('[data-photo-index="1"]') as HTMLElement).style.transform).toContain('translate3d(31px');
-    expect((recentPhotoSection.querySelector('[data-photo-index="2"]') as HTMLElement).style.transform).toContain('translate3d(62px');
-
-    fireEvent.click(screen.getByRole('button', { name: '选择照片：第四张' }));
+    fireEvent.click(await screen.findByText('第一次自己吃饭'));
 
     await waitFor(() => {
-      const mainImage = recentPhotoSection.querySelector('[data-photo-stage="true"] img[alt="第四张"]');
-      expect(mainImage).not.toBeNull();
+      expect(window.location.pathname).toBe('/record/r_stream_open');
     });
-
-    const mainImage = recentPhotoSection.querySelector('[data-photo-stage="true"] img[alt="第四张"]') as HTMLImageElement;
-    fireEvent.error(mainImage);
-
-    await waitFor(() => {
-      expect((recentPhotoSection.querySelector('[data-photo-stage="true"] img[alt="第四张"]') as HTMLImageElement).getAttribute('src')).toBe('/reference-ui/timeline-child.png');
-    });
-
-    fireEvent.pointerDown(stage, { clientX: 330, clientY: 160, pointerId: 1 });
-    fireEvent.pointerMove(stage, { clientX: 220, clientY: 160, pointerId: 1 });
-    fireEvent.pointerUp(stage, { clientX: 170, clientY: 160, pointerId: 1 });
-
-    await waitFor(() => {
-      const firstImage = recentPhotoSection.querySelector('[data-photo-stage="true"] img[alt="第一张"]');
-      expect(firstImage).not.toBeNull();
-    });
-
-    await new Promise((resolve) => window.setTimeout(resolve, 300));
-    fireEvent.click(stage);
-    expect(window.location.pathname).toBe('/home');
-
-    fireEvent.pointerDown(stage, { clientX: 330, clientY: 160, pointerId: 2 });
-    fireEvent.pointerUp(stage, { clientX: 170, clientY: 160, pointerId: 2 });
-
-    for (const pointerId of [3, 4]) {
-      fireEvent.pointerDown(stage, { clientX: 330, clientY: 160, pointerId });
-      fireEvent.pointerMove(stage, { clientX: 220, clientY: 160, pointerId });
-      fireEvent.pointerUp(stage, { clientX: 170, clientY: 160, pointerId });
-    }
-
-    await waitFor(() => {
-      expect(recentPhotoSection.getAttribute('data-photo-active-index')).toBe('3');
-      expect(recentPhotoSection.getAttribute('data-photo-turning')).toBe('false');
-    }, { timeout: 1800 });
   });
 
   it('shows a clear empty state when timeline filters have no matching records', async () => {
@@ -1808,6 +1722,20 @@ describe('App Shell', () => {
     const dialog = await screen.findByRole('dialog', { name: '状态' });
     expect(dialog.textContent).toContain('当前手机定位服务不可用，可手动填写地点或选择常用地点。');
     expect(dialog.textContent).not.toMatch(/Google Play/i);
+  });
+
+  it('explains when a phone location fix does not meet the ten-metre requirement', async () => {
+    window.history.pushState({}, '', '/record/create?type=text');
+    mockAuthenticatedSession();
+    getCurrentDeviceLocationMock.mockRejectedValue(new Error('location accuracy insufficient: 24m'));
+
+    render(<App />);
+
+    fireEvent.click(await screen.findByRole('button', { name: '手机定位' }));
+
+    const dialog = await screen.findByRole('dialog', { name: '状态' });
+    expect(dialog.textContent).toContain('当前定位精度约 24 米，未达到 10 米要求，请移至开阔处后重试。');
+    expect(dialog.textContent).not.toMatch(/location accuracy/i);
   });
 
   it('shows media actions before capturing media without an empty preview area', async () => {
@@ -2749,7 +2677,7 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    expect(await screen.findByText('成长封面')).toBeDefined();
+    expect(await screen.findByLabelText('成长时刻流')).toBeDefined();
     expect(screen.queryByText(/今天想和我聊聊/)).toBeNull();
   });
 
@@ -3450,7 +3378,7 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    expect(await screen.findByText('成长封面')).toBeDefined();
+    expect(await screen.findByLabelText('成长时刻流')).toBeDefined();
     expect(screen.getByRole('button', { name: '记录' })).toBeDefined();
     expect(screen.queryByRole('button', { name: /月报/ })).toBeNull();
     expect(screen.queryByRole('button', { name: /未来信箱/ })).toBeNull();
@@ -3592,7 +3520,7 @@ describe('App Shell', () => {
     expect(stored.notificationFamilyEnabled).toBe(false);
   });
 
-  it('checks app updates from the about page and shows the APK download link', async () => {
+  it('checks app updates from the about page and shows the in-app update action', async () => {
     window.history.pushState({}, '', '/profile/about');
     mockAuthenticatedSession();
 
@@ -3608,6 +3536,8 @@ describe('App Shell', () => {
       latest_build_number: 5,
       release_notes: '新增家庭消息与版本更新。',
       apk_url: 'https://download.example.com/nianlun-2.0.3.apk',
+      apk_sha256: '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef',
+      apk_size_bytes: 1024,
       update_available: true,
       force_update: false,
       checked_at: '2026-06-22T08:10:00.000Z',
@@ -3617,7 +3547,6 @@ describe('App Shell', () => {
 
     expect(await screen.findByText('发现新版本')).toBeDefined();
     expect(screen.getByText('最新版本 2.0.3（构建 5）')).toBeDefined();
-    const downloadLink = screen.getByRole('link', { name: '下载 APK' }) as HTMLAnchorElement;
-    expect(downloadLink.href).toBe('https://download.example.com/nianlun-2.0.3.apk');
+    expect(screen.getByRole('button', { name: '下载并安装' })).toBeDefined();
   });
 });

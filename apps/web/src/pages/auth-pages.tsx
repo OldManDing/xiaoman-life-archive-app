@@ -336,15 +336,24 @@ export const WelcomePage = () => {
           ))}
         </div>
 
-        <div aria-hidden="true" style={{ display: 'flex', justifyContent: 'center', gap: 6 }}>
+        <div role="tablist" aria-label="介绍页面" style={{ display: 'flex', justifyContent: 'center', gap: 6 }}>
           {welcomePosters.map((poster, index) => (
-            <span
+            <button
               key={poster.src}
+              type="button"
+              role="tab"
+              aria-label={`查看${poster.label}`}
+              aria-selected={index === 0}
+              tabIndex={index === 0 ? 0 : -1}
+              onClick={() => document.querySelector<HTMLElement>(`[aria-label="${poster.label}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })}
               style={{
                 width: index === 0 ? 18 : 6,
                 height: 6,
                 borderRadius: 99,
                 background: index === 0 ? 'rgba(var(--nl-primary-rgb),0.58)' : 'rgba(var(--nl-muted-rgb),0.28)',
+                border: 'none',
+                padding: 0,
+                cursor: 'pointer',
               }}
             />
           ))}
@@ -411,11 +420,7 @@ export const LoginPage = () => {
   };
 
   const goBackFromLogin = () => {
-    if (window.history.length > 1) {
-      navigate(-1);
-      return;
-    }
-    navigate('/splash', { replace: true });
+    navigate('/welcome', { replace: true });
   };
 
   useEffect(() => {

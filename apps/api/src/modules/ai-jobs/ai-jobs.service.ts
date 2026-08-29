@@ -3,6 +3,7 @@ import { AiJobStatus, AiJobType, FamilyMemberRole, MembershipType } from '@prism
 
 import { PrismaService } from '../../prisma/prisma.service';
 import { AccessControlService } from '../../shared/services/access-control.service';
+import { FAMILY_MEMBER_ACTIVE_STATUS, USER_ACTIVE_STATUS } from '../../shared/constants';
 import { RuntimeConfigService } from '../../shared/services/runtime-config.service';
 import { generateBizNo } from '../../shared/utils';
 import { AiJobsQueue } from './ai-jobs.queue';
@@ -27,23 +28,42 @@ export class AiJobsService {
     }
     await this.ensureAiPlusMember(userId);
 
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
-    const countToday = await this.prisma.aiJob.count({
-      where: {
-        requesterUserId: userId,
-        createdAt: { gte: startOfDay },
-      },
-    });
     const dailyLimit = await this.runtimeConfigService.getAiDailyLimitPerUser();
-    if (countToday + dto.job_types.length > dailyLimit) {
-      throw new HttpException('调用频率超限', HttpStatus.TOO_MANY_REQUESTS);
-    }
-
     const provider = await this.runtimeConfigService.getAiProviderName();
     const jobs = await this.prisma.$transaction(async (tx) => {
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+      const transactionClient = tx as typeof tx & {
+        user?: { update?: (args: unknown) => Promise<unknown> };
+        aiJob: typeof tx.aiJob & { count?: (args: unknown) => Promise<number>; findMany?: (args: unknown) => Promise<any[]> };
+      };
+      // Updating the user row serializes quota reservations for the same user
+      // under MySQL's default isolation level. Test doubles may omit this model.
+      if (transactionClient.user?.update) {
+        await transactionClient.user.update({ where: { id: userId }, data: { updatedAt: new Date() } });
+      }
+      const countToday = transactionClient.aiJob.count
+        ? await transactionClient.aiJob.count({ where: { requesterUserId: userId, createdAt: { gte: startOfDay } } })
+        : await this.prisma.aiJob.count({ where: { requesterUserId: userId, createdAt: { gte: startOfDay } } });
+      const existing = transactionClient.aiJob.findMany
+        ? await transactionClient.aiJob.findMany({
+            where: {
+              requesterUserId: userId,
+              recordId: record.id,
+              jobType: { in: dto.job_types },
+              status: { in: [AiJobStatus.pending, AiJobStatus.processing, AiJobStatus.success] },
+            },
+            orderBy: { createdAt: 'desc' },
+            select: { id: true, jobNo: true, jobType: true, status: true },
+          })
+        : [];
+      const existingTypes = new Set(existing.map((job) => job.jobType));
+      const requestedTypes = Array.from(new Set(dto.job_types)).filter((jobType) => !existingTypes.has(jobType));
+      if (countToday + requestedTypes.length > dailyLimit) {
+        throw new HttpException('调用频率超限', HttpStatus.TOO_MANY_REQUESTS);
+      }
       const createdJobs = [] as Array<{ id: bigint; jobNo: string; jobType: AiJobType }>;
-      for (const jobType of dto.job_types) {
+      for (const jobType of requestedTypes) {
         const job = await tx.aiJob.create({
           data: {
             jobNo: generateBizNo('job'),
@@ -59,12 +79,16 @@ export class AiJobsService {
               content_text: record.contentText,
               tags: record.tags.map((item) => item.tagName),
               event_time: record.eventTime.toISOString(),
+              record_updated_at: record.updatedAt?.toISOString?.() ?? null,
             },
           },
         });
         createdJobs.push({ id: job.id, jobNo: job.jobNo, jobType: job.jobType });
       }
-      return createdJobs;
+      return [
+        ...existing.map((job) => ({ id: job.id, jobNo: job.jobNo, jobType: job.jobType })),
+        ...createdJobs,
+      ];
     });
 
     for (const job of jobs) {
@@ -78,7 +102,13 @@ export class AiJobsService {
 
   async detail(userId: bigint, jobNo: string) {
     const job = await this.prisma.aiJob.findFirst({
-      where: { jobNo },
+      where: {
+        jobNo,
+        family: {
+          status: USER_ACTIVE_STATUS,
+          deletedAt: null,
+        },
+      },
       include: { record: true },
     });
 
@@ -90,6 +120,7 @@ export class AiJobsService {
       where: {
         familyId: job.familyId,
         userId,
+        status: FAMILY_MEMBER_ACTIVE_STATUS,
         deletedAt: null,
       },
     });
@@ -126,7 +157,15 @@ export class AiJobsService {
       throw new HttpException('请先输入标题或正文，再使用整理建议', HttpStatus.BAD_REQUEST);
     }
 
-    const [titleOutput, summaryOutput, tagsOutput] = await Promise.all([
+    const dailyLimit = await this.runtimeConfigService.getAiDailyLimitPerUser();
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const countToday = await this.prisma.aiJob.count({ where: { requesterUserId: userId, createdAt: { gte: startOfDay } } });
+    if (countToday >= dailyLimit) {
+      throw new HttpException('调用频率超限', HttpStatus.TOO_MANY_REQUESTS);
+    }
+
+    const outputs = await Promise.allSettled([
       this.aiProviderService.run({
         jobType: AiJobType.record_title,
         title,
@@ -146,11 +185,20 @@ export class AiJobsService {
         existingTags,
       }),
     ]);
+    const [titleOutput, summaryOutput, tagsOutput] = outputs.map((result) =>
+      result.status === 'fulfilled' ? result.value : {},
+    );
+    const firstRejected = outputs.find((result): result is PromiseRejectedResult => result.status === 'rejected');
+    if (firstRejected && outputs.every((result) => result.status === 'rejected')) {
+      throw firstRejected.reason;
+    }
 
     return {
-      suggested_title: titleOutput.suggested_title ?? null,
-      summary: summaryOutput.summary ?? null,
-      tags: tagsOutput.tags ?? [],
+      suggested_title: typeof titleOutput.suggested_title === 'string' ? titleOutput.suggested_title.slice(0, 80) : null,
+      summary: typeof summaryOutput.summary === 'string' ? summaryOutput.summary.slice(0, 500) : null,
+      tags: Array.isArray(tagsOutput.tags)
+        ? Array.from(new Set(tagsOutput.tags.filter((item): item is string => typeof item === 'string').map((item) => item.trim().slice(0, 12)).filter(Boolean))).slice(0, 5)
+        : [],
       provider: await this.runtimeConfigService.getAiProviderName(),
     };
   }

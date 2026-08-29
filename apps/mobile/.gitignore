@@ -2,3 +2,8 @@ android
 ios
 www
 node_modules
+!native/android/
+native/android/*
+!native/android/NativeLocationPlugin.java
+!native/android/AppUpdaterPlugin.java
+!native/android/file_paths.xml

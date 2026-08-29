@@ -1,6 +1,6 @@
-import { BadGatewayException, Injectable } from '@nestjs/common';
+import { BadGatewayException, BadRequestException, Injectable } from '@nestjs/common';
 
-import { getMapProviderName, isStrictEnvironment } from '../../shared/env-config';
+import { getMapProviderName, isStrictEnvironment, getMapApiKey, getMapAmapEndpoint, getMapRequestTimeoutMs, getMapAmapRegeocodeEndpoint } from '../../shared/env-config';
 import { SearchLocationsDto } from './dto/search-locations.dto';
 
 type LocationSuggestion = {
@@ -81,6 +81,12 @@ const distanceKm = (from: { latitude: number; longitude: number }, to: { latitud
 @Injectable()
 export class LocationsService {
   async search(dto: SearchLocationsDto) {
+    const hasLatitude = dto.latitude !== undefined;
+    const hasLongitude = dto.longitude !== undefined;
+    if (hasLatitude !== hasLongitude) {
+      throw new BadRequestException('定位坐标必须同时提供纬度和经度');
+    }
+
     const provider = getMapProviderName();
     if (provider === 'amap') {
       return {
@@ -105,7 +111,7 @@ export class LocationsService {
   private searchMock(dto: Pick<SearchLocationsDto, 'keyword' | 'latitude' | 'longitude'>): LocationSuggestion[] {
     const normalized = dto.keyword.trim();
     const matched = commonLocations.filter((item) => item.includes(normalized) || normalized.includes(item));
-    const list = matched.length ? matched : commonLocations.slice(0, 5);
+    const list = matched;
     const suggestions = list.map((name, index) => ({
       id: `local-${index}-${name}`,
       name,
@@ -127,14 +133,14 @@ export class LocationsService {
   }
 
   private async searchAmap(dto: SearchLocationsDto): Promise<LocationSuggestion[]> {
-    const key = process.env.MAP_API_KEY?.trim();
+    const key = getMapApiKey();
     if (!key) {
       if (!isStrictEnvironment()) return this.searchMock(dto);
       throw new BadGatewayException('地图服务配置缺失');
     }
 
     const currentLocation = await this.reverseGeocodeAmap(dto, key);
-    const url = new URL(process.env.MAP_AMAP_ENDPOINT ?? 'https://restapi.amap.com/v3/place/text');
+    const url = new URL(getMapAmapEndpoint());
     url.searchParams.set('key', key);
     url.searchParams.set('keywords', dto.keyword);
     url.searchParams.set('offset', '10');
@@ -146,7 +152,7 @@ export class LocationsService {
     }
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), Number(process.env.MAP_REQUEST_TIMEOUT_MS ?? 5000));
+    const timeout = setTimeout(() => controller.abort(), getMapRequestTimeoutMs());
     try {
       const response = await fetch(url, { signal: controller.signal });
       if (!response.ok) {
@@ -219,7 +225,7 @@ export class LocationsService {
   private async reverseGeocodeAmap(dto: SearchLocationsDto, key: string): Promise<LocationSuggestion | null> {
     if (dto.latitude === undefined || dto.longitude === undefined) return null;
 
-    const url = new URL(process.env.MAP_AMAP_REGEOCODE_ENDPOINT ?? 'https://restapi.amap.com/v3/geocode/regeo');
+    const url = new URL(getMapAmapRegeocodeEndpoint());
     url.searchParams.set('key', key);
     url.searchParams.set('location', `${dto.longitude},${dto.latitude}`);
     url.searchParams.set('extensions', 'base');
@@ -227,7 +233,7 @@ export class LocationsService {
     url.searchParams.set('roadlevel', '0');
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), Number(process.env.MAP_REQUEST_TIMEOUT_MS ?? 5000));
+    const timeout = setTimeout(() => controller.abort(), getMapRequestTimeoutMs());
     try {
       const response = await fetch(url, { signal: controller.signal });
       if (!response.ok) return null;

@@ -4,31 +4,11 @@
   "clicks": [
     {
       "route": "/home",
-      "label": "12 6月 · 里程碑档案第一次自己吃饭小满第一次尝试用勺子自己吃饭，虽然洒了一点，但看起来特别自豪。"
+      "label": "今天小满把玩具递给家人时主动说了谢谢，大家都很惊喜。6月 12 · 1岁5个月第一次自己吃饭01 / 02"
     },
     {
       "route": "/home",
-      "label": "13 6月 · 文字档案学会说谢谢今天小满把玩具递给家人时主动说了谢谢，大家都很惊喜。"
-    },
-    {
-      "route": "/home",
-      "label": "选择照片：最近照片"
-    },
-    {
-      "route": "/home",
-      "label": "选择照片：生活瞬间"
-    },
-    {
-      "route": "/home",
-      "label": "选择照片：第一次自己吃饭"
-    },
-    {
-      "route": "/home",
-      "label": "button"
-    },
-    {
-      "route": "/home",
-      "label": "小满1岁5月21天"
+      "label": "小满1岁7月19天 · 私家成长档案"
     },
     {
       "route": "/home",
@@ -40,31 +20,31 @@
     },
     {
       "route": "/search",
-      "label": "小满1岁5月21天"
+      "label": "小满1岁7月19天 · 私家成长档案"
     },
     {
       "route": "/timeline",
-      "label": "12 6月 · 1岁5个月 · 里程碑档案第一次自己吃饭小满第一次尝试用勺子自己吃饭，虽然洒了一点，但看起来特别自豪。"
+      "label": "第一次自己吃饭小满第一次尝试用勺子自己吃饭，虽然洒了一点，但看起来特别自豪。1岁5个月 · 里程碑档案"
     },
     {
       "route": "/timeline",
-      "label": "13 6月 · 1岁5个月 · 文字档案学会说谢谢今天小满把玩具递给家人时主动说了谢谢，大家都很惊喜。"
+      "label": "学会说谢谢今天小满把玩具递给家人时主动说了谢谢，大家都很惊喜。1岁5个月 · 文字档案文字档案"
     },
     {
       "route": "/timeline",
-      "label": "2026年2条"
+      "label": "2026年"
     },
     {
       "route": "/timeline",
-      "label": "2025年暂无"
+      "label": "2025年"
     },
     {
       "route": "/timeline",
-      "label": "2024年暂无"
+      "label": "2024年"
     },
     {
       "route": "/timeline",
-      "label": "2023年暂无"
+      "label": "2023年"
     },
     {
       "route": "/record/create",
@@ -75,16 +55,8 @@
       "label": "切换里程碑记录"
     },
     {
-      "route": "/record/create",
-      "label": "可见范围"
-    },
-    {
       "route": "/record/create?type=text&focus=content",
       "label": "切换里程碑记录"
-    },
-    {
-      "route": "/record/create?type=text&focus=content",
-      "label": "可见范围"
     },
     {
       "route": "/record/create?type=video&focus=media",
@@ -95,10 +67,6 @@
       "label": "切换里程碑记录"
     },
     {
-      "route": "/record/create?type=video&focus=media",
-      "label": "可见范围"
-    },
-    {
       "route": "/record/create?type=audio&focus=media",
       "label": "上传语音"
     },
@@ -107,20 +75,12 @@
       "label": "切换里程碑记录"
     },
     {
-      "route": "/record/create?type=audio&focus=media",
-      "label": "可见范围"
-    },
-    {
       "route": "/record/create?type=milestone&focus=content",
       "label": "从相册添加"
     },
     {
       "route": "/record/create?type=milestone&focus=content",
       "label": "切换里程碑记录"
-    },
-    {
-      "route": "/record/create?type=milestone&focus=content",
-      "label": "可见范围"
     },
     {
       "route": "/record/r_demo_001/edit",
@@ -172,7 +132,7 @@
     },
     {
       "route": "/record/r_demo_001/edit",
-      "label": "可见范围家庭成员可见"
+      "label": "移除媒体"
     },
     {
       "route": "/family",
@@ -180,11 +140,11 @@
     },
     {
       "route": "/family",
-      "label": "小小满外婆只读成员"
+      "label": "小小满外婆只读成员 · 139****0000"
     },
     {
       "route": "/family",
-      "label": "小满妈妈管理员"
+      "label": "小小满妈妈管理员 · 138****0000"
     },
     {
       "route": "/family/child",
@@ -232,7 +192,31 @@
     },
     {
       "route": "/profile",
-      "label": "家庭管理"
+      "label": "账号与安全"
+    },
+    {
+      "route": "/profile",
+      "label": "隐私设置"
+    },
+    {
+      "route": "/profile",
+      "label": "通知管理"
+    },
+    {
+      "route": "/profile",
+      "label": "家庭管理，进入家庭档案"
+    },
+    {
+      "route": "/profile",
+      "label": "消息暂无未读"
+    },
+    {
+      "route": "/profile",
+      "label": "草稿暂无"
+    },
+    {
+      "route": "/profile",
+      "label": "编辑"
     },
     {
       "route": "/onboarding/child?mode=add",
@@ -244,23 +228,111 @@
     },
     {
       "route": "/profile/reports",
-      "label": "2026年纪念册整理"
+      "label": "关于我们"
     },
     {
       "route": "/profile/reports",
-      "label": "导出月报摘要"
+      "label": "帮助与反馈"
+    },
+    {
+      "route": "/profile/reports",
+      "label": "账号与安全"
+    },
+    {
+      "route": "/profile/reports",
+      "label": "隐私设置"
+    },
+    {
+      "route": "/profile/reports",
+      "label": "通知管理"
+    },
+    {
+      "route": "/profile/reports",
+      "label": "家庭管理，进入家庭档案"
+    },
+    {
+      "route": "/profile/reports",
+      "label": "消息暂无未读"
+    },
+    {
+      "route": "/profile/reports",
+      "label": "草稿暂无"
+    },
+    {
+      "route": "/profile/reports",
+      "label": "编辑"
     },
     {
       "route": "/profile/export",
-      "label": "下载摘要"
+      "label": "关于我们"
     },
     {
       "route": "/profile/export",
-      "label": "图片和视频"
+      "label": "帮助与反馈"
+    },
+    {
+      "route": "/profile/export",
+      "label": "账号与安全"
+    },
+    {
+      "route": "/profile/export",
+      "label": "隐私设置"
+    },
+    {
+      "route": "/profile/export",
+      "label": "通知管理"
+    },
+    {
+      "route": "/profile/export",
+      "label": "家庭管理，进入家庭档案"
+    },
+    {
+      "route": "/profile/export",
+      "label": "消息暂无未读"
+    },
+    {
+      "route": "/profile/export",
+      "label": "草稿暂无"
+    },
+    {
+      "route": "/profile/export",
+      "label": "编辑"
     },
     {
       "route": "/profile/membership",
-      "label": "刷新状态"
+      "label": "关于我们"
+    },
+    {
+      "route": "/profile/membership",
+      "label": "帮助与反馈"
+    },
+    {
+      "route": "/profile/membership",
+      "label": "账号与安全"
+    },
+    {
+      "route": "/profile/membership",
+      "label": "隐私设置"
+    },
+    {
+      "route": "/profile/membership",
+      "label": "通知管理"
+    },
+    {
+      "route": "/profile/membership",
+      "label": "家庭管理，进入家庭档案"
+    },
+    {
+      "route": "/profile/membership",
+      "label": "消息暂无未读"
+    },
+    {
+      "route": "/profile/membership",
+      "label": "草稿暂无"
+    },
+    {
+      "route": "/profile/membership",
+      "label": "编辑"
     },
     {
       "route": "/profile/security",
@@ -268,7 +340,15 @@
     },
     {
       "route": "/profile/security",
-      "label": "编辑资料"
+      "label": "修改"
+    },
+    {
+      "route": "/profile/security",
+      "label": "修改密码"
+    },
+    {
+      "route": "/profile/security",
+      "label": "收起"
     },
     {
       "route": "/profile/account-delete",
@@ -288,7 +368,7 @@
     },
     {
       "route": "/profile/about",
-      "label": "联系我们帮助与反馈"
+      "label": "联系我们联系方式"
     },
     {
       "route": "/profile/about",
@@ -297,13 +377,26 @@
     {
       "route": "/profile/about",
       "label": "用户服务协议"
+    },
+    {
+      "route": "/profile/about",
+      "label": "检查更新手动检查"
+    },
+    {
+      "route": "/profile/about",
+      "label": "检查更新已是最新"
     }
   ],
   "skipped": [
     {
       "route": "/home",
-      "label": "全部",
-      "reason": "navigation-covered-by-route-audit"
+      "label": "选择照片：学会说谢谢",
+      "reason": "intentional-overlap-carousel-control"
+    },
+    {
+      "route": "/home",
+      "label": "选择照片：第一次自己吃饭",
+      "reason": "intentional-overlap-carousel-control"
     },
     {
       "route": "/home",
@@ -347,22 +440,7 @@
     },
     {
       "route": "/record/create",
-      "label": "拍摄视频",
-      "reason": "native-file-picker-covered-by-dedicated-e2e"
-    },
-    {
-      "route": "/record/create",
-      "label": "录制语音",
-      "reason": "native-file-picker-covered-by-dedicated-e2e"
-    },
-    {
-      "route": "/record/create",
-      "label": "上传语音",
-      "reason": "native-file-picker-covered-by-dedicated-e2e"
-    },
-    {
-      "route": "/record/create",
-      "label": "可见范围家庭成员可见",
+      "label": "更多媒体",
       "reason": "record-create-flow-covered-by-critical-e2e"
     },
     {
@@ -423,16 +501,6 @@
     {
       "route": "/record/create?type=text&focus=content",
       "label": "切换孩子：小满",
-      "reason": "record-create-flow-covered-by-critical-e2e"
-    },
-    {
-      "route": "/record/create?type=text&focus=content",
-      "label": "可见范围家庭成员可见",
-      "reason": "record-create-flow-covered-by-critical-e2e"
-    },
-    {
-      "route": "/record/create?type=text&focus=content",
-      "label": "家庭成员可见",
       "reason": "record-create-flow-covered-by-critical-e2e"
     },
     {
@@ -507,11 +575,6 @@
     },
     {
       "route": "/record/create?type=video&focus=media",
-      "label": "可见范围家庭成员可见",
-      "reason": "record-create-flow-covered-by-critical-e2e"
-    },
-    {
-      "route": "/record/create?type=video&focus=media",
       "label": "手机定位",
       "reason": "record-create-flow-covered-by-critical-e2e"
     },
@@ -574,16 +637,6 @@
       "route": "/record/create?type=audio&focus=media",
       "label": "录制语音",
       "reason": "native-file-picker-covered-by-dedicated-e2e"
-    },
-    {
-      "route": "/record/create?type=audio&focus=media",
-      "label": "可见范围家庭成员可见",
-      "reason": "record-create-flow-covered-by-critical-e2e"
-    },
-    {
-      "route": "/record/create?type=audio&focus=media",
-      "label": "家庭成员可见",
-      "reason": "record-create-flow-covered-by-critical-e2e"
     },
     {
       "route": "/record/create?type=audio&focus=media",
@@ -652,22 +705,7 @@
     },
     {
       "route": "/record/create?type=milestone&focus=content",
-      "label": "拍摄视频",
-      "reason": "native-file-picker-covered-by-dedicated-e2e"
-    },
-    {
-      "route": "/record/create?type=milestone&focus=content",
-      "label": "录制语音",
-      "reason": "native-file-picker-covered-by-dedicated-e2e"
-    },
-    {
-      "route": "/record/create?type=milestone&focus=content",
-      "label": "上传语音",
-      "reason": "native-file-picker-covered-by-dedicated-e2e"
-    },
-    {
-      "route": "/record/create?type=milestone&focus=content",
-      "label": "可见范围家庭成员可见",
+      "label": "更多媒体",
       "reason": "record-create-flow-covered-by-critical-e2e"
     },
     {
@@ -756,18 +794,13 @@
       "reason": "disabled"
     },
     {
-      "route": "/family/invite",
-      "label": "生成中…",
-      "reason": "disabled"
-    },
-    {
       "route": "/profile",
       "label": "退出登录",
       "reason": "destructive-action"
     },
     {
       "route": "/profile/account",
-      "label": "保存昵称",
+      "label": "保存资料",
       "reason": "destructive-action"
     },
     {
@@ -777,43 +810,18 @@
     },
     {
       "route": "/profile/reports",
-      "label": "提交中…",
-      "reason": "disabled"
-    },
-    {
-      "route": "/profile/reports",
-      "label": "添加记录",
-      "reason": "navigation-covered-by-route-audit"
-    },
-    {
-      "route": "/profile/export",
-      "label": "正在生成…",
-      "reason": "disabled"
-    },
-    {
-      "route": "/profile/export",
-      "label": "打包申请",
+      "label": "退出登录",
       "reason": "destructive-action"
     },
     {
       "route": "/profile/export",
-      "label": "成年移交",
+      "label": "退出登录",
       "reason": "destructive-action"
-    },
-    {
-      "route": "/profile/export",
-      "label": "文字记录",
-      "reason": "navigation-covered-by-route-audit"
-    },
-    {
-      "route": "/profile/export",
-      "label": "全部数据",
-      "reason": "navigation-covered-by-route-audit"
     },
     {
       "route": "/profile/membership",
-      "label": "刷新中",
-      "reason": "disabled"
+      "label": "退出登录",
+      "reason": "destructive-action"
     },
     {
       "route": "/profile/account-delete",
@@ -835,9 +843,9 @@
     {
       "route": "/home",
       "inputsTouched": 0,
-      "buttonCandidates": 10,
-      "buttonsClicked": 8,
-      "buttonsSkipped": 2,
+      "buttonCandidates": 6,
+      "buttonsClicked": 3,
+      "buttonsSkipped": 3,
       "disabledButtons": 0
     },
     {
@@ -859,13 +867,21 @@
     {
       "route": "/record/create",
       "inputsTouched": 4,
-      "buttonCandidates": 19,
-      "buttonsClicked": 3,
-      "buttonsSkipped": 17,
+      "buttonCandidates": 16,
+      "buttonsClicked": 2,
+      "buttonsSkipped": 14,
       "disabledButtons": 0
     },
     {
       "route": "/record/create?type=text&focus=content",
+      "inputsTouched": 4,
+      "buttonCandidates": 13,
+      "buttonsClicked": 1,
+      "buttonsSkipped": 12,
+      "disabledButtons": 0
+    },
+    {
+      "route": "/record/create?type=video&focus=media",
       "inputsTouched": 4,
       "buttonCandidates": 15,
       "buttonsClicked": 2,
@@ -873,27 +889,19 @@
       "disabledButtons": 0
     },
     {
-      "route": "/record/create?type=video&focus=media",
-      "inputsTouched": 4,
-      "buttonCandidates": 16,
-      "buttonsClicked": 3,
-      "buttonsSkipped": 15,
-      "disabledButtons": 0
-    },
-    {
       "route": "/record/create?type=audio&focus=media",
       "inputsTouched": 4,
-      "buttonCandidates": 17,
-      "buttonsClicked": 3,
-      "buttonsSkipped": 15,
+      "buttonCandidates": 15,
+      "buttonsClicked": 2,
+      "buttonsSkipped": 13,
       "disabledButtons": 0
     },
     {
       "route": "/record/create?type=milestone&focus=content",
       "inputsTouched": 4,
-      "buttonCandidates": 19,
-      "buttonsClicked": 3,
-      "buttonsSkipped": 17,
+      "buttonCandidates": 16,
+      "buttonsClicked": 2,
+      "buttonsSkipped": 14,
       "disabledButtons": 0
     },
     {
@@ -907,7 +915,7 @@
     {
       "route": "/record/r_demo_001/edit",
       "inputsTouched": 4,
-      "buttonCandidates": 24,
+      "buttonCandidates": 21,
       "buttonsClicked": 13,
       "buttonsSkipped": 1,
       "disabledButtons": 0
@@ -949,20 +957,20 @@
       "inputsTouched": 1,
       "buttonCandidates": 3,
       "buttonsClicked": 3,
-      "buttonsSkipped": 1,
-      "disabledButtons": 1
+      "buttonsSkipped": 0,
+      "disabledButtons": 0
     },
     {
       "route": "/profile",
       "inputsTouched": 0,
-      "buttonCandidates": 13,
-      "buttonsClicked": 3,
+      "buttonCandidates": 10,
+      "buttonsClicked": 9,
       "buttonsSkipped": 1,
       "disabledButtons": 0
     },
     {
       "route": "/profile/account",
-      "inputsTouched": 1,
+      "inputsTouched": 2,
       "buttonCandidates": 1,
       "buttonsClicked": 0,
       "buttonsSkipped": 1,
@@ -979,32 +987,32 @@
     {
       "route": "/profile/reports",
       "inputsTouched": 0,
-      "buttonCandidates": 3,
-      "buttonsClicked": 2,
-      "buttonsSkipped": 2,
-      "disabledButtons": 1
+      "buttonCandidates": 10,
+      "buttonsClicked": 9,
+      "buttonsSkipped": 1,
+      "disabledButtons": 0
     },
     {
       "route": "/profile/export",
       "inputsTouched": 0,
-      "buttonCandidates": 6,
-      "buttonsClicked": 2,
-      "buttonsSkipped": 5,
-      "disabledButtons": 1
+      "buttonCandidates": 10,
+      "buttonsClicked": 9,
+      "buttonsSkipped": 1,
+      "disabledButtons": 0
     },
     {
       "route": "/profile/membership",
       "inputsTouched": 0,
-      "buttonCandidates": 1,
-      "buttonsClicked": 1,
+      "buttonCandidates": 10,
+      "buttonsClicked": 9,
       "buttonsSkipped": 1,
-      "disabledButtons": 1
+      "disabledButtons": 0
     },
     {
       "route": "/profile/security",
       "inputsTouched": 0,
-      "buttonCandidates": 2,
-      "buttonsClicked": 2,
+      "buttonCandidates": 4,
+      "buttonsClicked": 4,
       "buttonsSkipped": 0,
       "disabledButtons": 0
     },
@@ -1035,8 +1043,8 @@
     {
       "route": "/profile/about",
       "inputsTouched": 0,
-      "buttonCandidates": 3,
-      "buttonsClicked": 3,
+      "buttonCandidates": 4,
+      "buttonsClicked": 5,
       "buttonsSkipped": 0,
       "disabledButtons": 0
     },
@@ -1057,10 +1065,6 @@
   "ignoredFailedRequests": [
     "GET http://127.0.0.1:5176/api/v1/records/r_demo_001 net::ERR_ABORTED",
     "GET http://127.0.0.1:5176/api/v1/records/r_demo_001 net::ERR_ABORTED",
-    "GET http://127.0.0.1:5176/api/v1/records/r_demo_002 net::ERR_ABORTED",
-    "GET http://127.0.0.1:5176/api/v1/records/r_demo_002 net::ERR_ABORTED",
-    "GET http://127.0.0.1:5176/api/v1/records/r_demo_001 net::ERR_ABORTED",
-    "GET http://127.0.0.1:5176/api/v1/records/r_demo_001 net::ERR_ABORTED",
     "GET http://127.0.0.1:5176/api/v1/children/c_demo_xiaoman_001 net::ERR_ABORTED",
     "GET http://127.0.0.1:5176/api/v1/children/c_demo_xiaoman_001 net::ERR_ABORTED",
     "GET http://127.0.0.1:5176/api/v1/children/c_demo_xiaoman_001 net::ERR_ABORTED",
@@ -1069,47 +1073,59 @@
     "GET http://127.0.0.1:5176/api/v1/records/r_demo_001 net::ERR_ABORTED",
     "GET http://127.0.0.1:5176/api/v1/records/r_demo_002 net::ERR_ABORTED",
     "GET http://127.0.0.1:5176/api/v1/records/r_demo_002 net::ERR_ABORTED",
-    "GET http://127.0.0.1:5176/api/v1/records/r_demo_001 net::ERR_ABORTED",
-    "GET http://127.0.0.1:5176/api/v1/records/r_demo_001 net::ERR_ABORTED",
     "GET http://127.0.0.1:5176/api/v1/records/r_demo_002 net::ERR_ABORTED",
     "GET http://127.0.0.1:5176/api/v1/records/r_demo_002 net::ERR_ABORTED",
     "GET http://127.0.0.1:5176/api/v1/families/f_demo_001/members net::ERR_ABORTED",
     "GET http://127.0.0.1:5176/api/v1/families/f_demo_001/member-operations?user_no=u_demo_viewer_001 net::ERR_ABORTED",
     "GET http://127.0.0.1:5176/api/v1/records?child_no=c_demo_xiaoman_001&page=1&page_size=30 net::ERR_ABORTED",
     "GET http://127.0.0.1:5176/api/v1/records?child_no=c_demo_xiaoman_001&page=1&page_size=30 net::ERR_ABORTED",
-    "GET http://127.0.0.1:5176/api/v1/families/f_demo_001/member-operations?user_no=u_demo_viewer_001 net::ERR_ABORTED",
     "GET http://127.0.0.1:5176/api/v1/families/f_demo_001/members net::ERR_ABORTED",
-    "GET http://127.0.0.1:5176/api/v1/families/f_demo_001/members net::ERR_ABORTED",
-    "GET http://127.0.0.1:5176/api/v1/families/f_demo_001/members net::ERR_ABORTED",
-    "GET http://127.0.0.1:5176/api/v1/records?child_no=c_demo_xiaoman_001&page=1&page_size=30 net::ERR_ABORTED",
     "GET http://127.0.0.1:5176/api/v1/families/f_demo_001/member-operations?user_no=u_demo_parent_001 net::ERR_ABORTED",
     "GET http://127.0.0.1:5176/api/v1/records?child_no=c_demo_xiaoman_001&page=1&page_size=30 net::ERR_ABORTED",
-    "GET http://127.0.0.1:5176/api/v1/families/f_demo_001/member-operations?user_no=u_demo_parent_001 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/records?child_no=c_demo_xiaoman_001&page=1&page_size=30 net::ERR_ABORTED",
     "PUT http://127.0.0.1:5176/api/v1/families/f_demo_001/members/u_demo_viewer_001/role net::ERR_ABORTED",
     "GET http://127.0.0.1:5176/api/v1/records/r_demo_001 net::ERR_ABORTED",
     "GET http://127.0.0.1:5176/api/v1/records/r_demo_001 net::ERR_ABORTED",
     "GET http://127.0.0.1:5176/api/v1/records/r_demo_002 net::ERR_ABORTED",
     "GET http://127.0.0.1:5176/api/v1/records/r_demo_002 net::ERR_ABORTED",
     "GET http://127.0.0.1:5176/api/v1/users/me/feedback net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/preferences net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/families/f_demo_001/member-operations net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/families/f_demo_001/members net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/notifications/unread-count net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/notifications?page=1&page_size=20 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/notifications?page=1&page_size=20 net::ERR_ABORTED",
     "GET http://127.0.0.1:5176/api/v1/users/me/feedback net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/preferences net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/notifications/unread-count net::ERR_ABORTED",
     "GET http://127.0.0.1:5176/api/v1/families/f_demo_001/members net::ERR_ABORTED",
     "GET http://127.0.0.1:5176/api/v1/families/f_demo_001/members net::ERR_ABORTED",
     "GET http://127.0.0.1:5176/api/v1/families/f_demo_001/member-operations net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/notifications?page=1&page_size=20 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/notifications?page=1&page_size=20 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/notifications/unread-count net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/feedback net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/preferences net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/notifications/unread-count net::ERR_ABORTED",
     "GET http://127.0.0.1:5176/api/v1/families/f_demo_001/member-operations net::ERR_ABORTED",
-    "GET http://127.0.0.1:5176/api/v1/records?child_no=c_demo_xiaoman_001&page=1&page_size=100 net::ERR_ABORTED",
-    "GET http://127.0.0.1:5176/api/v1/users/me/archive-export-requests?child_no=c_demo_xiaoman_001 net::ERR_ABORTED",
-    "GET http://127.0.0.1:5176/api/v1/users/me/archive-export-requests?child_no=c_demo_xiaoman_001 net::ERR_ABORTED",
-    "GET http://127.0.0.1:5176/api/v1/records?child_no=c_demo_xiaoman_001&page=1&page_size=100 net::ERR_ABORTED",
-    "GET http://127.0.0.1:5176/api/v1/users/me net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/families/f_demo_001/members net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/families/f_demo_001/members net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/families/f_demo_001/member-operations net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/notifications?page=1&page_size=20 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/notifications/unread-count net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/notifications?page=1&page_size=20 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/feedback net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/preferences net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/notifications/unread-count net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/families/f_demo_001/members net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/families/f_demo_001/member-operations net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/notifications?page=1&page_size=20 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/notifications?page=1&page_size=20 net::ERR_ABORTED",
+    "GET http://127.0.0.1:5176/api/v1/users/me/notifications/unread-count net::ERR_ABORTED",
     "GET http://127.0.0.1:5176/api/v1/users/me/deletion-check net::ERR_ABORTED",
-    "GET http://127.0.0.1:5176/api/v1/users/me/deletion-check net::ERR_ABORTED",
     "GET http://127.0.0.1:5176/api/v1/families/f_demo_001/member-operations net::ERR_ABORTED",
     "GET http://127.0.0.1:5176/api/v1/families/f_demo_001/members net::ERR_ABORTED",
-    "GET http://127.0.0.1:5176/api/v1/families/f_demo_001/member-operations net::ERR_ABORTED",
     "GET http://127.0.0.1:5176/api/v1/families/f_demo_001/members net::ERR_ABORTED",
-    "GET http://127.0.0.1:5176/api/v1/users/me/feedback net::ERR_ABORTED",
-    "GET http://127.0.0.1:5176/api/v1/users/me/feedback net::ERR_ABORTED",
-    "PUT http://127.0.0.1:5176/api/v1/users/me/preferences net::ERR_ABORTED",
     "GET http://127.0.0.1:5176/api/v1/users/me/feedback net::ERR_ABORTED"
   ],
   "fileChooserErrors": []

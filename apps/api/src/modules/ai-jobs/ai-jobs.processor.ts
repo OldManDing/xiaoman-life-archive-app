@@ -16,6 +16,15 @@ export class AiJobsProcessor {
   ) {}
 
   async process(jobId: bigint) {
+    const startedAt = new Date();
+    const claimed = await this.prisma.aiJob.updateMany({
+      where: { id: jobId, status: AiJobStatus.pending },
+      data: { status: AiJobStatus.processing, startedAt, errorMessage: null },
+    });
+    if (!claimed.count) {
+      return;
+    }
+
     const aiJob = await this.prisma.aiJob.findUnique({
       where: { id: jobId },
       include: {
@@ -29,19 +38,20 @@ export class AiJobsProcessor {
 
     if (!aiJob || !aiJob.record) {
       this.logger.warn(`AI job ${jobId.toString()} missing record context`);
+      await this.prisma.aiJob.updateMany({
+        where: { id: jobId, status: AiJobStatus.processing },
+        data: { status: AiJobStatus.cancelled, errorMessage: '关联记录不存在', finishedAt: new Date() },
+      });
       return;
     }
 
-    if (aiJob.status !== AiJobStatus.pending) {
-      this.logger.warn(`AI job ${jobId.toString()} skipped because status is ${aiJob.status}`);
+    if (aiJob.record.deletedAt) {
+      await this.prisma.aiJob.updateMany({
+        where: { id: jobId, status: AiJobStatus.processing },
+        data: { status: AiJobStatus.cancelled, errorMessage: '关联记录已删除', finishedAt: new Date() },
+      });
       return;
     }
-
-    const startedAt = new Date();
-    await this.prisma.aiJob.update({
-      where: { id: aiJob.id },
-      data: { status: AiJobStatus.processing, startedAt },
-    });
 
     try {
       const output = await this.aiProviderService.run({
@@ -51,67 +61,67 @@ export class AiJobsProcessor {
         existingTags: aiJob.record.tags.map((item) => item.tagName),
       });
 
-      const latest = await this.prisma.aiJob.findUnique({
-        where: { id: aiJob.id },
-        select: { status: true },
-      });
-      if (latest?.status === AiJobStatus.cancelled) {
-        this.logger.warn(`AI job ${jobId.toString()} output ignored because it was cancelled`);
-        return;
-      }
-
       await this.prisma.$transaction(async (tx) => {
+        const latest = await tx.aiJob.findUnique({ where: { id: aiJob.id }, select: { status: true } });
+        if (latest?.status !== AiJobStatus.processing) return;
+
+        const currentRecord = await tx.record.findUnique({
+          where: { id: aiJob.recordId! },
+          select: { deletedAt: true, updatedAt: true },
+        });
+        const snapshot = this.readInputSnapshot(aiJob.inputSnapshot);
+        const snapshotUpdatedAt = typeof snapshot.record_updated_at === 'string' || typeof snapshot.record_updated_at === 'number'
+          ? new Date(snapshot.record_updated_at)
+          : null;
+        if (!currentRecord || currentRecord.deletedAt || (snapshotUpdatedAt && currentRecord.updatedAt.getTime() !== snapshotUpdatedAt.getTime())) {
+          await tx.aiJob.update({
+            where: { id: aiJob.id },
+            data: { status: AiJobStatus.cancelled, errorMessage: '记录已删除或已修改，AI 结果已忽略', finishedAt: new Date() },
+          });
+          return;
+        }
+
+        const safeOutput = this.sanitizeOutput(output);
         if (aiJob.jobType === AiJobType.record_title) {
           await tx.record.update({
             where: { id: aiJob.recordId! },
-            data: { aiGeneratedTitle: String(output.suggested_title), aiStatus: RecordAiStatus.success },
+            data: { aiGeneratedTitle: safeOutput.suggested_title ?? null },
           });
         }
 
         if (aiJob.jobType === AiJobType.record_summary) {
           await tx.record.update({
             where: { id: aiJob.recordId! },
-            data: { aiSummary: String(output.summary), aiStatus: RecordAiStatus.success },
+            data: { aiSummary: safeOutput.summary ?? null },
           });
         }
 
-        if (aiJob.jobType === AiJobType.record_tags && Array.isArray(output.tags)) {
+        if (aiJob.jobType === AiJobType.record_tags && safeOutput.tags.length) {
           await tx.recordTag.createMany({
-            data: output.tags.map((tag) => ({
+            data: safeOutput.tags.map((tag) => ({
               recordId: aiJob.recordId!,
               tagName: String(tag),
               source: RecordTagSource.ai,
             })),
             skipDuplicates: true,
           });
-          await tx.record.update({
-            where: { id: aiJob.recordId! },
-            data: { aiStatus: RecordAiStatus.success },
-          });
         }
+
+        await this.refreshRecordAiStatus(tx, aiJob.recordId!);
 
         await tx.aiJob.update({
           where: { id: aiJob.id },
           data: {
             status: AiJobStatus.success,
-            outputJson: output,
+            outputJson: safeOutput,
             finishedAt: new Date(),
           },
         });
       });
     } catch (error) {
-      const latest = await this.prisma.aiJob.findUnique({
-        where: { id: aiJob.id },
-        select: { status: true },
-      });
-      if (latest?.status === AiJobStatus.cancelled) {
-        this.logger.warn(`AI job ${jobId.toString()} failure ignored because it was cancelled`);
-        return;
-      }
-
       const retryCount = aiJob.retryCount + 1;
-      await this.prisma.aiJob.update({
-        where: { id: aiJob.id },
+      const failed = await this.prisma.aiJob.updateMany({
+        where: { id: aiJob.id, status: AiJobStatus.processing },
         data: {
           status: AiJobStatus.failed,
           retryCount,
@@ -119,7 +129,41 @@ export class AiJobsProcessor {
           finishedAt: new Date(),
         },
       });
+      if (failed.count) await this.refreshRecordAiStatus(this.prisma, aiJob.recordId!);
       throw error;
     }
+  }
+
+  private readInputSnapshot(value: unknown) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return {} as Record<string, unknown>;
+    return value as Record<string, unknown>;
+  }
+
+  private sanitizeOutput(output: { suggested_title?: unknown; summary?: unknown; tags?: unknown }) {
+    const suggestedTitle = typeof output.suggested_title === 'string' ? output.suggested_title.trim().slice(0, 80) : null;
+    const summary = typeof output.summary === 'string' ? output.summary.trim().slice(0, 500) : null;
+    const tags = Array.isArray(output.tags)
+      ? Array.from(
+          new Set(
+            output.tags
+              .filter((tag): tag is string => typeof tag === 'string')
+              .map((tag) => tag.trim().replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 32))
+              .filter(Boolean),
+          ),
+        ).slice(0, 10)
+      : [];
+    return { suggested_title: suggestedTitle, summary, tags };
+  }
+
+  private async refreshRecordAiStatus(tx: Pick<PrismaService, 'aiJob' | 'record'>, recordId: bigint) {
+    const jobs = await tx.aiJob.findMany({ where: { recordId }, select: { status: true } });
+    const status = jobs.some((job) => job.status === AiJobStatus.pending || job.status === AiJobStatus.processing)
+      ? RecordAiStatus.pending
+      : jobs.some((job) => job.status === AiJobStatus.success)
+        ? RecordAiStatus.success
+        : jobs.some((job) => job.status === AiJobStatus.failed)
+          ? RecordAiStatus.failed
+          : RecordAiStatus.skipped;
+    await tx.record.updateMany({ where: { id: recordId, deletedAt: null }, data: { aiStatus: status } });
   }
 }

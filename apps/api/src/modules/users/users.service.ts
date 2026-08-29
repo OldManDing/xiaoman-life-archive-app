@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { ActorType, ArchiveExportRequestStatus, AuthType, MembershipType, Prisma, SupportTicketPriority, SupportTicketStatus } from '@prisma/client';
 import bcrypt from 'bcrypt';
 
@@ -10,11 +10,14 @@ import {
   USER_ACTIVE_STATUS,
 } from '../../shared/constants';
 import {
+  getMobileApkSha256,
+  getMobileApkSizeBytes,
   getMobileApkUrl,
   getMobileForceUpdate,
   getMobileLatestBuildNumber,
   getMobileLatestVersion,
   getMobileReleaseNotes,
+  getAppEnv,
   isHuaweiPushEnabled,
 } from '../../shared/env-config';
 import { parseMediaReference } from '../../shared/media-reference';
@@ -172,7 +175,11 @@ export class UsersService {
 
   async preferences(userId: bigint) {
     await this.findUserOrThrow(userId);
-    const latest = await this.prisma.auditLog.findFirst({
+    const auditLogClient = this.prisma.auditLog as unknown as {
+      findMany?: (args: unknown) => Promise<Array<{ metadata: Prisma.JsonValue | null; createdAt: Date }>>;
+      findFirst?: (args: unknown) => Promise<{ metadata: Prisma.JsonValue | null; createdAt: Date } | null>;
+    };
+    const historyQuery = {
       where: {
         actorType: ActorType.user,
         actorId: userId,
@@ -181,21 +188,46 @@ export class UsersService {
         targetId: userId,
       },
       orderBy: { createdAt: 'desc' },
+      take: 100,
       select: { metadata: true, createdAt: true },
-    });
+    };
+    let history: Array<{ metadata: Prisma.JsonValue | null; createdAt: Date }> = [];
+    if (typeof auditLogClient.findMany === 'function') {
+      history = await auditLogClient.findMany(historyQuery);
+    } else if (typeof auditLogClient.findFirst === 'function') {
+      const latestHistory = await auditLogClient.findFirst(historyQuery);
+      history = latestHistory ? [latestHistory] : [];
+    }
+
+    const merged = { ...DEFAULT_USER_PREFERENCES };
+    let allowMobileSearchResolved = false;
+    let showHistoryResolved = false;
+    for (const item of history) {
+      const value = this.toUserPreferences(item.metadata);
+      if (typeof (item.metadata as Record<string, unknown> | null)?.allow_mobile_search === 'boolean' && !allowMobileSearchResolved) {
+        merged.allow_mobile_search = value.allow_mobile_search;
+        allowMobileSearchResolved = true;
+      }
+      if (typeof (item.metadata as Record<string, unknown> | null)?.show_history_to_new_members === 'boolean' && !showHistoryResolved) {
+        merged.show_history_to_new_members = value.show_history_to_new_members;
+        showHistoryResolved = true;
+      }
+      if (allowMobileSearchResolved && showHistoryResolved) break;
+    }
+    const latest = history[0];
 
     return {
-      ...this.toUserPreferences(latest?.metadata),
+      ...merged,
       updated_at: latest?.createdAt.toISOString() ?? null,
     };
   }
 
   async updatePreferences(userId: bigint, dto: UpdatePreferencesDto, meta: AuditRequestMeta = {}) {
-    const current = await this.preferences(userId);
-    const next = {
-      allow_mobile_search: dto.allow_mobile_search ?? current.allow_mobile_search,
-      show_history_to_new_members: dto.show_history_to_new_members ?? current.show_history_to_new_members,
-    };
+    await this.findUserOrThrow(userId);
+    const next: Record<string, boolean> = {};
+    if (dto.allow_mobile_search !== undefined) next.allow_mobile_search = dto.allow_mobile_search;
+    if (dto.show_history_to_new_members !== undefined) next.show_history_to_new_members = dto.show_history_to_new_members;
+    if (!Object.keys(next).length) return this.preferences(userId);
 
     const updatedAt = new Date();
     await this.auditLogService.create({
@@ -209,7 +241,9 @@ export class UsersService {
       metadata: next,
     });
 
+    const merged = await this.preferences(userId);
     return {
+      ...merged,
       ...next,
       updated_at: updatedAt.toISOString(),
     };
@@ -237,8 +271,18 @@ export class UsersService {
 
   async registerDeviceToken(userId: bigint, dto: RegisterDeviceTokenDto) {
     await this.findUserOrThrow(userId);
+    if ((dto.provider === 'hms' && dto.platform !== 'android') || (dto.provider === 'apns' && dto.platform !== 'ios')) {
+      throw new BadRequestException('推送供应商与设备平台不匹配');
+    }
     const now = new Date();
     const tokenHash = hashToken(dto.push_token);
+    const existing = this.prisma.userDeviceToken.findUnique ? await this.prisma.userDeviceToken.findUnique({
+      where: { provider_tokenHash: { provider: dto.provider, tokenHash } },
+      select: { userId: true, status: true, deletedAt: true },
+    }) : null;
+    if (existing && existing.userId !== userId && existing.status === USER_ACTIVE_STATUS && !existing.deletedAt) {
+      throw new ConflictException('该设备令牌已绑定其他账号');
+    }
     const row = await this.prisma.userDeviceToken.upsert({
       where: {
         provider_tokenHash: {
@@ -308,8 +352,7 @@ export class UsersService {
     const currentVersion = dto.version.trim();
     const currentBuildNumber = Number.isFinite(dto.build_number) ? Math.max(0, Math.floor(dto.build_number)) : 0;
     const versionBehind = this.isMobileUpdateAvailable(currentVersion, currentBuildNumber, latestVersion, latestBuildNumber);
-    const canDownloadUpdate = Boolean(mobileConfig.apkUrl);
-    const updateAvailable = versionBehind && canDownloadUpdate;
+    const canDownloadUpdate = Boolean(mobileConfig.apkUrl && mobileConfig.apkSha256 && mobileConfig.apkSizeBytes);
 
     return {
       platform: dto.platform,
@@ -319,8 +362,11 @@ export class UsersService {
       latest_build_number: latestBuildNumber,
       release_notes: mobileConfig.releaseNotes,
       apk_url: mobileConfig.apkUrl,
-      update_available: updateAvailable,
-      force_update: updateAvailable && mobileConfig.forceUpdate,
+      apk_sha256: mobileConfig.apkSha256,
+      apk_size_bytes: mobileConfig.apkSizeBytes,
+      update_available: versionBehind,
+      download_available: versionBehind && canDownloadUpdate,
+      force_update: versionBehind && mobileConfig.forceUpdate && canDownloadUpdate,
       checked_at: new Date().toISOString(),
     };
   }
@@ -406,7 +452,7 @@ export class UsersService {
         targetType: 'membership_book_request',
       },
       orderBy: { createdAt: 'desc' },
-      take: 10,
+      take: 20,
     });
 
     return {
@@ -416,6 +462,20 @@ export class UsersService {
 
   async requestMembershipBook(userId: bigint, dto: CreateMembershipBookRequestDto, meta: AuditRequestMeta = {}) {
     const user = await this.findUserOrThrow(userId);
+    const year = dto.year ?? new Date().getFullYear();
+    const recent = await this.prisma.auditLog.findFirst({
+      where: {
+        actorType: ActorType.user,
+        actorId: userId,
+        action: MEMBERSHIP_BOOK_REQUEST_ACTION,
+        targetType: 'membership_book_request',
+      },
+      orderBy: { createdAt: 'desc' },
+      select: { metadata: true, createdAt: true },
+    });
+    if (recent && recent.createdAt.getTime() > Date.now() - 30 * 24 * 60 * 60 * 1000) {
+      throw new ConflictException('近期已提交过纪念册申请，请勿重复提交');
+    }
     const requestNo = generateBizNo('book');
     const createdAt = new Date();
 
@@ -429,7 +489,7 @@ export class UsersService {
       user_agent: meta.user_agent,
       metadata: {
         request_no: requestNo,
-        year: dto.year ?? new Date().getFullYear(),
+        year,
         status: 'submitted',
         contact: dto.contact || null,
         note: dto.note || null,
@@ -440,7 +500,7 @@ export class UsersService {
 
     return {
       request_no: requestNo,
-      year: dto.year ?? new Date().getFullYear(),
+      year,
       status: 'submitted',
       message: '纪念册申领已提交，我们会核对会员权益后联系你。',
       created_at: createdAt.toISOString(),
@@ -453,6 +513,48 @@ export class UsersService {
 
     const exportType = dto.export_type ?? 'all';
     const purpose = dto.purpose ?? 'backup';
+    const archiveExportClient = this.prisma.archiveExportRequest as unknown as {
+      findFirst?: (args: unknown) => Promise<any | null>;
+      findMany?: (args: unknown) => Promise<any[]>;
+    };
+    const existingRequestQuery = {
+      where: {
+        userId: user.id,
+        childId: child.id,
+        exportType,
+        purpose,
+        status: { in: [ArchiveExportRequestStatus.submitted, ArchiveExportRequestStatus.processing] },
+      },
+      orderBy: { createdAt: 'desc' },
+    };
+    const existingRequest = typeof archiveExportClient.findFirst === 'function'
+      ? await archiveExportClient.findFirst(existingRequestQuery)
+      : typeof archiveExportClient.findMany === 'function'
+        ? (await archiveExportClient.findMany(existingRequestQuery)).find((item) =>
+            item.exportType === exportType &&
+            item.purpose === purpose &&
+            (item.status === ArchiveExportRequestStatus.submitted || item.status === ArchiveExportRequestStatus.processing),
+          ) ?? null
+        : null;
+    if (existingRequest) {
+      return {
+        request_no: existingRequest.requestNo,
+        status: existingRequest.status,
+        message: '已有相同档案申请正在处理中',
+        created_at: existingRequest.createdAt.toISOString(),
+        summary: {
+          child_no: child.childNo,
+          child_name: child.name,
+          export_type: existingRequest.exportType,
+          purpose: existingRequest.purpose,
+          record_count: existingRequest.recordCount,
+          milestone_count: existingRequest.milestoneCount,
+          media_count: existingRequest.mediaCount,
+          first_record_time: existingRequest.firstRecordTime?.toISOString() ?? null,
+          latest_record_time: existingRequest.latestRecordTime?.toISOString() ?? null,
+        },
+      };
+    }
     const requestNo = generateBizNo(purpose === 'adult_handoff' ? 'handoff' : 'export');
     const recordWhere = {
       childId: child.id,
@@ -582,10 +684,13 @@ export class UsersService {
       where: {
         userId,
         ...(childId ? { childId } : {}),
+        ...(dto.export_type ? { exportType: dto.export_type } : {}),
+        ...(dto.purpose ? { purpose: dto.purpose } : {}),
       },
       include: { child: true },
       orderBy: { createdAt: 'desc' },
-      take: 10,
+      skip: ((dto.page ?? 1) - 1) * (dto.page_size ?? 20),
+      take: dto.page_size ?? 20,
     });
 
     return {
@@ -596,6 +701,9 @@ export class UsersService {
   async archiveExportSummary(userId: bigint, dto: ArchiveExportSummaryDto, meta: AuditRequestMeta = {}) {
     const user = await this.findUserOrThrow(userId);
     const { child } = await this.accessControlService.ensureChildOwner(userId, dto.child_no);
+    const exportType = dto.export_type ?? 'all';
+    const includeRecords = exportType === 'all' || exportType === 'text';
+    const includeMedia = exportType === 'all' || exportType === 'media';
     const records = await this.prisma.record.findMany({
       where: {
         childId: child.id,
@@ -604,7 +712,7 @@ export class UsersService {
       },
       include: {
         creator: true,
-        tags: true,
+        tags: includeRecords,
         media: {
           where: {
             deletedAt: null,
@@ -616,25 +724,27 @@ export class UsersService {
       orderBy: { eventTime: 'asc' },
     });
     const generatedAt = new Date();
-    const mediaList = records.flatMap((record) => record.media);
-    const milestoneCount = records.filter((record) => record.isMilestone).length;
+    const filteredRecords = includeRecords ? records : [];
+    const mediaList = includeMedia ? records.flatMap((record) => record.media) : [];
+    const exportRecords = includeRecords ? records : [];
+    const milestoneCount = exportRecords.filter((record) => record.isMilestone).length;
     const lines = [
       '年轮成长档案摘要',
       `生成时间：${formatArchiveDateTime(generatedAt)}`,
       `账号：${user.nickname}（${user.userNo}）`,
       `孩子：${child.name}（${child.childNo}）`,
       `家庭：${child.family.name}（${child.family.familyNo}）`,
-      `记录数量：${records.length}`,
+      `记录数量：${exportRecords.length}`,
       `里程碑数量：${milestoneCount}`,
       `媒体数量：${mediaList.length}`,
-      `最早记录：${formatArchiveDateTime(records[0]?.eventTime)}`,
-      `最新记录：${formatArchiveDateTime(records[records.length - 1]?.eventTime)}`,
+      `最早记录：${formatArchiveDateTime(exportRecords[0]?.eventTime)}`,
+      `最新记录：${formatArchiveDateTime(exportRecords[exportRecords.length - 1]?.eventTime)}`,
       '',
       '一、记录清单',
-      records.length ? '' : '暂无已发布记录。',
+      exportRecords.length ? '' : '暂无已发布记录。',
     ];
 
-    for (const [index, record] of records.entries()) {
+    for (const [index, record] of exportRecords.entries()) {
       const tags = record.tags.map((item) => item.tagName).join('、') || '无';
       lines.push(
         `${index + 1}. ${record.title || record.aiGeneratedTitle || '未命名记录'}`,
@@ -675,7 +785,7 @@ export class UsersService {
       metadata: {
         child_no: child.childNo,
         family_no: child.family.familyNo,
-        record_count: records.length,
+         record_count: exportRecords.length,
         milestone_count: milestoneCount,
         media_count: mediaList.length,
       },
@@ -691,8 +801,8 @@ export class UsersService {
         record_count: records.length,
         milestone_count: milestoneCount,
         media_count: mediaList.length,
-        first_record_time: records[0]?.eventTime.toISOString() ?? null,
-        latest_record_time: records[records.length - 1]?.eventTime.toISOString() ?? null,
+        first_record_time: exportRecords[0]?.eventTime.toISOString() ?? null,
+        latest_record_time: exportRecords[exportRecords.length - 1]?.eventTime.toISOString() ?? null,
       },
       content: `${lines.join('\n')}\n`,
     };
@@ -908,24 +1018,40 @@ export class UsersService {
     const rows = await this.prisma.systemConfig.findMany({
       where: {
         configKey: {
-          in: ['mobile_latest_version', 'mobile_latest_build_number', 'mobile_release_notes', 'mobile_apk_url', 'mobile_force_update'],
+          in: [
+            'mobile_latest_version',
+            'mobile_latest_build_number',
+            'mobile_release_notes',
+            'mobile_apk_url',
+            'mobile_apk_sha256',
+            'mobile_apk_size_bytes',
+            'mobile_force_update',
+          ],
         },
       },
       select: { configKey: true, value: true },
     });
     const values = new Map(rows.map((row) => [row.configKey, row.value.trim()]));
     const latestBuildNumber = Number(values.get('mobile_latest_build_number'));
+    const configuredApkUrl = values.get('mobile_apk_url');
+    const configuredApkSha256 = values.get('mobile_apk_sha256');
+    const configuredApkSizeBytes = values.get('mobile_apk_size_bytes');
 
     return {
       latestVersion: values.get('mobile_latest_version') || getMobileLatestVersion(),
       latestBuildNumber: Number.isInteger(latestBuildNumber) && latestBuildNumber >= 0 ? latestBuildNumber : getMobileLatestBuildNumber(),
       releaseNotes: values.get('mobile_release_notes') || getMobileReleaseNotes(),
-      apkUrl: values.get('mobile_apk_url') || getMobileApkUrl(),
+      apkUrl: this.parseMobileApkUrl(configuredApkUrl || getMobileApkUrl()),
+      apkSha256: this.parseMobileApkSha256(configuredApkSha256 || getMobileApkSha256()),
+      apkSizeBytes: this.parseMobileApkSizeBytes(configuredApkSizeBytes || getMobileApkSizeBytes()),
       forceUpdate: this.parseBooleanConfig(values.get('mobile_force_update'), getMobileForceUpdate()),
     };
   }
 
   private isMobileUpdateAvailable(currentVersion: string, currentBuildNumber: number, latestVersion: string, latestBuildNumber: number) {
+    // Android versionCode is authoritative whenever either side provides one.
+    // A same-build version-label mismatch is a configuration inconsistency, not
+    // a second update, and should not cause an update loop.
     if (latestBuildNumber > 0 || currentBuildNumber > 0) {
       return currentBuildNumber < latestBuildNumber;
     }
@@ -934,15 +1060,78 @@ export class UsersService {
   }
 
   private compareSemver(left: string, right: string) {
-    const leftParts = left.split(/[.-]/).map((item) => Number.parseInt(item, 10));
-    const rightParts = right.split(/[.-]/).map((item) => Number.parseInt(item, 10));
-    const length = Math.max(leftParts.length, rightParts.length, 3);
-    for (let index = 0; index < length; index += 1) {
-      const leftValue = Number.isFinite(leftParts[index]) ? leftParts[index] : 0;
-      const rightValue = Number.isFinite(rightParts[index]) ? rightParts[index] : 0;
+    const parse = (value: string) => {
+      const normalized = value.trim().replace(/^v/i, '');
+      const [withoutBuildMetadata] = normalized.split('+', 2);
+      const [coreText, preReleaseText] = withoutBuildMetadata.split('-', 2);
+      const core = coreText.split('.').map((part) => {
+        const parsed = Number.parseInt(part, 10);
+        return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+      });
+      while (core.length < 3) core.push(0);
+      return {
+        core,
+        preRelease: preReleaseText ? preReleaseText.split('.') : [],
+      };
+    };
+
+    const leftVersion = parse(left);
+    const rightVersion = parse(right);
+    const coreLength = Math.max(leftVersion.core.length, rightVersion.core.length, 3);
+    for (let index = 0; index < coreLength; index += 1) {
+      const leftValue = leftVersion.core[index] ?? 0;
+      const rightValue = rightVersion.core[index] ?? 0;
       if (leftValue !== rightValue) return leftValue - rightValue;
     }
+
+    const leftPre = leftVersion.preRelease;
+    const rightPre = rightVersion.preRelease;
+    if (!leftPre.length && !rightPre.length) return 0;
+    if (!leftPre.length) return 1;
+    if (!rightPre.length) return -1;
+
+    const preLength = Math.max(leftPre.length, rightPre.length);
+    for (let index = 0; index < preLength; index += 1) {
+      const leftPart = leftPre[index];
+      const rightPart = rightPre[index];
+      if (leftPart === undefined) return -1;
+      if (rightPart === undefined) return 1;
+      if (leftPart === rightPart) continue;
+      const leftNumber = /^\d+$/.test(leftPart) ? Number(leftPart) : null;
+      const rightNumber = /^\d+$/.test(rightPart) ? Number(rightPart) : null;
+      if (leftNumber !== null && rightNumber !== null) return leftNumber - rightNumber;
+      if (leftNumber !== null) return -1;
+      if (rightNumber !== null) return 1;
+      return leftPart < rightPart ? -1 : 1;
+    }
     return 0;
+  }
+
+  private parseMobileApkUrl(value: string | null) {
+    if (!value) return null;
+    try {
+      const parsed = new URL(value);
+      if (parsed.protocol === 'https:') return parsed.toString();
+      // Local emulator verification can use the host loopback bridge; production remains HTTPS-only.
+      const localHttpAllowed = ['local', 'test', 'development'].includes(getAppEnv()) &&
+        parsed.protocol === 'http:' &&
+        ['localhost', '127.0.0.1', '10.0.2.2'].includes(parsed.hostname);
+      return localHttpAllowed ? parsed.toString() : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private parseMobileApkSha256(value: string | null) {
+    if (!value) return null;
+    const normalized = value.trim().toLowerCase();
+    return /^[a-f0-9]{64}$/.test(normalized) ? normalized : null;
+  }
+
+  private parseMobileApkSizeBytes(value: string | number | null) {
+    if (value === null || value === '') return null;
+    const parsed = typeof value === 'number' ? value : Number(value.trim());
+    return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
   }
 
   private parseBooleanConfig(value: string | undefined, fallback: boolean) {
@@ -1106,6 +1295,7 @@ export class UsersService {
         mediaNo,
         uploaderUserId: userId,
         status: MEDIA_STATUS_READY,
+        deletedAt: null,
       },
       select: { objectKey: true, thumbnailObjectKey: true },
     });

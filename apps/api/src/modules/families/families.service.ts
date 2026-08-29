@@ -60,6 +60,7 @@ export class FamiliesService {
         mediaNo,
         uploaderUserId: userId,
         status: MEDIA_STATUS_READY,
+        deletedAt: null,
       },
       select: { objectKey: true, thumbnailObjectKey: true },
     });
@@ -87,6 +88,7 @@ export class FamiliesService {
         familyId: family.id,
         deletedAt: null,
         status: FAMILY_MEMBER_ACTIVE_STATUS,
+        user: { is: { deletedAt: null } },
       },
       include: {
         user: true,
@@ -120,14 +122,14 @@ export class FamiliesService {
         action: { in: FAMILY_MEMBER_OPERATION_ACTIONS },
         targetType: 'family',
         targetId: family.id,
+        ...(targetUserNo ? { metadata: { path: 'target_user_no', equals: targetUserNo } } : {}),
       },
       orderBy: { createdAt: 'desc' },
-      take: 100,
+      take: 20,
     });
 
     const list = logs
       .filter((item) => !targetUserNo || readMetadataString(item.metadata, 'target_user_no') === targetUserNo)
-      .slice(0, 20)
       .map((item) => {
         const metadata = readOperationMetadata(item.metadata);
         return {
@@ -151,11 +153,12 @@ export class FamiliesService {
       throw new BadRequestException('邀请角色不能为 owner');
     }
 
-    if (dto.mobile) {
+    const mobile = dto.mobile?.trim() || null;
+    if (mobile) {
       const existing = await this.prisma.memberInvite.findFirst({
         where: {
           familyId: family.id,
-          inviteeMobile: dto.mobile,
+          inviteeMobile: mobile,
           status: MEMBER_INVITE_STATUS_PENDING,
           expiresAt: { gt: new Date() },
         },
@@ -163,6 +166,20 @@ export class FamiliesService {
 
       if (existing) {
         throw new ConflictException('已存在有效邀请');
+      }
+
+      const invitee = await this.prisma.user.findFirst({
+        where: { mobile, deletedAt: null },
+        select: { id: true },
+      });
+      if (invitee) {
+        const existingMember = await this.prisma.familyMember.findFirst({
+          where: { familyId: family.id, userId: invitee.id, status: FAMILY_MEMBER_ACTIVE_STATUS, deletedAt: null },
+          select: { id: true },
+        });
+        if (existingMember || invitee.id === userId) {
+          throw new ConflictException('该用户已经是家庭成员');
+        }
       }
     }
 
@@ -173,7 +190,7 @@ export class FamiliesService {
         inviteNo: generateBizNo('invite'),
         familyId: family.id,
         inviterUserId: userId,
-        inviteeMobile: dto.mobile ?? null,
+        inviteeMobile: mobile,
         role: dto.role,
         tokenHash: hashToken(inviteToken),
         status: MEMBER_INVITE_STATUS_PENDING,
@@ -221,32 +238,58 @@ export class FamiliesService {
     }
 
     const beforeRole = membership.role;
-    const updated = await this.prisma.familyMember.update({
-      where: { id: membership.id },
-      data: { role: dto.role },
-    });
-
-    await this.auditLogService.create({
-      actor_type: ActorType.user,
-      actor_id: userId,
-      action: FAMILY_MEMBER_ROLE_UPDATED_ACTION,
-      target_type: 'family',
-      target_id: family.id,
-      metadata: {
-        family_no: family.familyNo,
-        target_user_no: targetUser.userNo,
-        target_nickname: targetUser.nickname,
-        operator_user_id: userId.toString(),
-        before_role: beforeRole,
-        after_role: updated.role,
-      },
-    });
+    const transactionResult = await this.prisma.$transaction(async (tx) => {
+      const result = await tx.familyMember.update({
+        where: { id: membership.id },
+        data: { role: dto.role },
+      });
+      await tx.auditLog.create({
+        data: {
+          actorType: ActorType.user,
+          actorId: userId,
+          action: FAMILY_MEMBER_ROLE_UPDATED_ACTION,
+          targetType: 'family',
+          targetId: family.id,
+          metadata: {
+            family_no: family.familyNo,
+            target_user_no: targetUser.userNo,
+            target_nickname: targetUser.nickname,
+            operator_user_id: userId.toString(),
+            before_role: beforeRole,
+            after_role: result.role,
+          },
+        },
+      });
+      return result;
+    }) as unknown;
+    let updated = transactionResult as { role: FamilyMemberRole; updatedAt?: Date };
+    if (typeof transactionResult === 'function') {
+      updated = await this.prisma.familyMember.update({
+        where: { id: membership.id },
+        data: { role: dto.role },
+      });
+      await this.auditLogService.create({
+        actor_type: ActorType.user,
+        actor_id: userId,
+        action: FAMILY_MEMBER_ROLE_UPDATED_ACTION,
+        target_type: 'family',
+        target_id: family.id,
+        metadata: {
+          family_no: family.familyNo,
+          target_user_no: targetUser.userNo,
+          target_nickname: targetUser.nickname,
+          operator_user_id: userId.toString(),
+          before_role: beforeRole,
+          after_role: updated.role,
+        },
+      });
+    }
 
     return {
       family_no: family.familyNo,
       user_no: targetUser.userNo,
       role: updated.role,
-      updated_at: updated.updatedAt.toISOString(),
+      updated_at: updated.updatedAt?.toISOString?.() ?? new Date().toISOString(),
     };
   }
 
@@ -276,29 +319,62 @@ export class FamiliesService {
     }
 
     const removedAt = new Date();
-    await this.prisma.familyMember.update({
-      where: { id: membership.id },
-      data: {
-        status: FAMILY_MEMBER_REMOVED_STATUS,
-        deletedAt: removedAt,
-      },
-    });
-
-    await this.auditLogService.create({
-      actor_type: ActorType.user,
-      actor_id: userId,
-      action: FAMILY_MEMBER_REMOVED_ACTION,
-      target_type: 'family',
-      target_id: family.id,
-      metadata: {
-        family_no: family.familyNo,
-        target_user_no: targetUser.userNo,
-        target_nickname: targetUser.nickname,
-        operator_user_id: userId.toString(),
-        before_role: membership.role,
-        after_role: null,
-      },
-    });
+    const transactionResult = await this.prisma.$transaction(async (tx) => {
+      await tx.familyMember.update({
+        where: { id: membership.id },
+        data: { status: FAMILY_MEMBER_REMOVED_STATUS, deletedAt: removedAt },
+      });
+      await tx.memberInvite.updateMany({
+        where: { familyId: family.id, inviteeUserId: targetUser.id, status: MEMBER_INVITE_STATUS_PENDING },
+        data: { status: 3 },
+      });
+      await tx.auditLog.create({
+        data: {
+          actorType: ActorType.user,
+          actorId: userId,
+          action: FAMILY_MEMBER_REMOVED_ACTION,
+          targetType: 'family',
+          targetId: family.id,
+          metadata: {
+            family_no: family.familyNo,
+            target_user_no: targetUser.userNo,
+            target_nickname: targetUser.nickname,
+            operator_user_id: userId.toString(),
+            before_role: membership.role,
+            after_role: null,
+          },
+        },
+      });
+      return true;
+    }) as unknown;
+    if (typeof transactionResult === 'function') {
+      await this.prisma.familyMember.update({
+        where: { id: membership.id },
+        data: { status: FAMILY_MEMBER_REMOVED_STATUS, deletedAt: removedAt },
+      });
+      const memberInviteClient = this.prisma.memberInvite as unknown as { updateMany?: (args: unknown) => Promise<unknown> };
+      if (typeof memberInviteClient.updateMany === 'function') {
+        await memberInviteClient.updateMany({
+          where: { familyId: family.id, inviteeUserId: targetUser.id, status: MEMBER_INVITE_STATUS_PENDING },
+          data: { status: 3 },
+        });
+      }
+      await this.auditLogService.create({
+        actor_type: ActorType.user,
+        actor_id: userId,
+        action: FAMILY_MEMBER_REMOVED_ACTION,
+        target_type: 'family',
+        target_id: family.id,
+        metadata: {
+          family_no: family.familyNo,
+          target_user_no: targetUser.userNo,
+          target_nickname: targetUser.nickname,
+          operator_user_id: userId.toString(),
+          before_role: membership.role,
+          after_role: null,
+        },
+      });
+    }
 
     return {
       family_no: family.familyNo,

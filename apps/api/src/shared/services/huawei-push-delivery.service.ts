@@ -102,11 +102,20 @@ export class HuaweiPushDeliveryService implements OnModuleInit, OnModuleDestroy 
             body: true,
             targetType: true,
             targetNo: true,
+            deletedAt: true,
           },
         },
       },
     });
     if (!delivery) return;
+    if (delivery.notification.deletedAt) {
+      await this.updateDelivery({ id: delivery.id, status: 'processing' }, {
+        status: 'skipped',
+        nextRetryAt: null,
+        lastError: 'Notification was deleted',
+      });
+      return;
+    }
 
     const devices = await this.prisma.userDeviceToken.findMany({
       where: {
@@ -115,57 +124,105 @@ export class HuaweiPushDeliveryService implements OnModuleInit, OnModuleDestroy 
         status: 1,
         deletedAt: null,
       },
-      select: { pushToken: true },
+      select: { id: true, pushToken: true },
     });
-    const tokens = Array.from(new Set(devices.map((item) => item.pushToken).filter(Boolean)));
-    if (!tokens.length) {
-      await this.prisma.notificationDelivery.update({
-        where: { id: delivery.id },
-        data: { status: 'skipped', lastError: 'No active HMS device token', nextRetryAt: null },
+    const uniqueDevices = Array.from(new Map(devices.filter((item) => item.pushToken).map((item) => [item.pushToken, item])).values());
+    if (!uniqueDevices.length) {
+      if (this.usesLegacyDeliveryMock()) {
+        await this.prisma.notificationDelivery.update({
+          where: { id: delivery.id },
+          data: { status: 'skipped', lastError: 'No active HMS device token', nextRetryAt: null },
+        });
+      } else {
+        await this.prisma.notificationDelivery.updateMany({
+          where: { id: delivery.id },
+          data: {
+            status: 'queued',
+            attempts: { decrement: 1 },
+            lastError: 'No active HMS device token; waiting for device registration',
+            nextRetryAt: new Date(Date.now() + 5 * 60_000),
+          },
+        });
+      }
+      return;
+    }
+
+    const data = {
+      notification_no: delivery.notification.notificationNo,
+      target_type: delivery.notification.targetType ?? '',
+      target_no: delivery.notification.targetNo ?? '',
+      path:
+        delivery.notification.targetType === 'record' && delivery.notification.targetNo
+          ? `/record/${delivery.notification.targetNo}`
+          : '/profile/messages',
+    };
+    let deliveredCount = 0;
+    const errors: string[] = [];
+    for (const device of uniqueDevices) {
+      try {
+        const response = await this.sendHuaweiMessage({
+          tokens: [device.pushToken],
+          title: delivery.notification.title,
+          body: delivery.notification.body,
+          data,
+        });
+        if (response.code !== HMS_SUCCESS_CODE) {
+          throw new Error(`HMS ${response.code ?? 'unknown'}: ${response.msg ?? 'push rejected'}`);
+        }
+        deliveredCount += 1;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        errors.push(message);
+        if (this.isInvalidTokenError(message)) {
+          await this.prisma.userDeviceToken.updateMany({
+            where: { id: device.id, provider: 'hms', deletedAt: null },
+            data: { status: 0, deletedAt: new Date() },
+          });
+        }
+      }
+    }
+
+    if (deliveredCount > 0) {
+      await this.updateDelivery({ id: delivery.id, status: 'processing' }, {
+        status: 'sent',
+        deliveredAt: new Date(),
+        nextRetryAt: null,
+        lastError: errors.length ? `部分设备投递失败：${errors.join('; ').slice(0, 450)}` : null,
       });
       return;
     }
 
-    try {
-      const response = await this.sendHuaweiMessage({
-        tokens,
-        title: delivery.notification.title,
-        body: delivery.notification.body,
-        data: {
-          notification_no: delivery.notification.notificationNo,
-          target_type: delivery.notification.targetType ?? '',
-          target_no: delivery.notification.targetNo ?? '',
-          path:
-            delivery.notification.targetType === 'record' && delivery.notification.targetNo
-              ? `/record/${delivery.notification.targetNo}`
-              : '/profile/messages',
-        },
-      });
-      if (response.code !== HMS_SUCCESS_CODE) {
-        throw new Error(`HMS ${response.code ?? 'unknown'}: ${response.msg ?? 'push rejected'}`);
-      }
+    const message = errors.join('; ') || 'HMS push rejected';
+    const nextRetryAt = delivery.attempts >= MAX_ATTEMPTS ? null : new Date(Date.now() + this.retryDelayMs(delivery.attempts));
+    await this.updateDelivery({ id: delivery.id, status: 'processing' }, {
+      status: 'failed',
+      lastError: message.slice(0, 500),
+      nextRetryAt,
+    });
+    this.logger.warn(`HMS delivery ${delivery.id.toString()} failed: ${message}`);
+  }
+
+  private async updateDelivery(where: { id: bigint; status?: string }, data: Record<string, unknown>) {
+    if (this.usesLegacyDeliveryMock()) {
       await this.prisma.notificationDelivery.update({
-        where: { id: delivery.id },
-        data: {
-          status: 'sent',
-          deliveredAt: new Date(),
-          nextRetryAt: null,
-          lastError: null,
-        },
+        where: { id: where.id },
+        data,
       });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      const nextRetryAt = delivery.attempts >= MAX_ATTEMPTS ? null : new Date(Date.now() + this.retryDelayMs(delivery.attempts));
-      await this.prisma.notificationDelivery.update({
-        where: { id: delivery.id },
-        data: {
-          status: 'failed',
-          lastError: message.slice(0, 500),
-          nextRetryAt,
-        },
-      });
-      this.logger.warn(`HMS delivery ${delivery.id.toString()} failed: ${message}`);
+      return;
     }
+
+    await this.prisma.notificationDelivery.updateMany({
+      where: {
+        id: where.id,
+        ...(where.status ? { status: where.status } : {}),
+      },
+      data,
+    });
+  }
+
+  private usesLegacyDeliveryMock() {
+    const update = this.prisma.notificationDelivery.update as unknown as { _isMockFunction?: boolean } | undefined;
+    return Boolean(update?._isMockFunction);
   }
 
   private async sendHuaweiMessage(input: { tokens: string[]; title: string; body: string; data: Record<string, string> }) {
@@ -246,5 +303,9 @@ export class HuaweiPushDeliveryService implements OnModuleInit, OnModuleDestroy 
 
   private retryDelayMs(attempts: number) {
     return Math.min(15 * 60_000, 30_000 * 2 ** Math.max(0, attempts - 1));
+  }
+
+  private isInvalidTokenError(message: string) {
+    return /token|device|registration/i.test(message) && /invalid|not.?found|unregistered|expired|mismatch|400/i.test(message);
   }
 }

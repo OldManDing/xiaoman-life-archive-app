@@ -1,71 +1,26 @@
 {
-  "status": "passed",
-  "checkedAt": "2026-06-15T21:28:10.484Z",
-  "api": "https://webapi.xmlga.top/api/v1/health",
-  "app": "https://nianlun.xmlga.top",
-  "admin": "https://nianlun.xmlga.top",
-  "providers": {
-    "sms": "disabled",
-    "storage": "minio",
-    "ai": "openai-compatible",
-    "map": "amap"
-  },
-  "checks": [
+  "status": "failed",
+  "checkedAt": "2026-08-20T11:37:47.152Z",
+  "checks": [],
+  "failures": [
     {
-      "name": "aiAccessControl",
-      "status": "passed",
-      "attempts": 1,
-      "data": {
-        "forbidden": true,
-        "message": "AI 功能仅对 AI 会员开放"
-      }
-    },
-    {
-      "name": "aiPreview",
-      "status": "passed",
-      "attempts": 1,
-      "data": {
-        "skipped": true,
-        "reason": "LIVE_AI_TEST_USER_CREDENTIAL not configured and live test user is not an AI member"
-      }
-    },
-    {
-      "name": "poi",
-      "status": "passed",
-      "attempts": 1,
-      "data": {
-        "keyword": "公园",
-        "count": 11,
-        "poiCount": 10,
-        "sources": [
-          "amap-regeo",
-          "amap"
-        ],
-        "sample": [
-          {
-            "name": "人民公园",
-            "city": "上海市",
-            "district": "黄浦区",
-            "source": "amap"
-          },
-          {
-            "name": "辅德里公园",
-            "city": "上海市",
-            "district": "静安区",
-            "source": "amap"
-          },
-          {
-            "name": "静安雕塑公园",
-            "city": "上海市",
-            "district": "静安区",
-            "source": "amap"
-          }
-        ]
-      }
+      "name": "readiness",
+      "error": "LIVE_TEST_USER_CREDENTIAL is required for live readiness checks"
     }
   ],
-  "failures": [],
-  "blockedRequirements": [],
-  "blockedRequirementDetails": [],
-  "nextActions": []
+  "blockedRequirements": [
+    "live readiness 总体验证"
+  ],
+  "blockedRequirementDetails": [
+    {
+      "requirement": "live readiness 总体验证",
+      "severity": "P0",
+      "owner": "发布负责人",
+      "evidence": "verify:live-readiness 总体入口、安全头、CORS、登录或 provider 聚合检查",
+      "next_action": "修复报告中的 readiness 失败项，然后重新执行 verify:live-readiness。"
+    }
+  ],
+  "nextActions": [
+    "修复报告中的 readiness 失败项，然后重新执行 verify:live-readiness。"
+  ]
 }

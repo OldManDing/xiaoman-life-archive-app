@@ -2,31 +2,35 @@ import { Injectable } from '@nestjs/common';
 import { GetObjectCommand, HeadObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-import { getStorageProviderName } from '../env-config';
+import { getStorageProviderName, getStorageBucket, getStorageEndpoint, getStorageSignedUrlExpiresIn, getStorageRegion, getStorageForcePathStyle, getStorageAccessKey, getStorageSecretKey } from '../env-config';
 
 @Injectable()
 export class StorageService {
   private readonly provider = getStorageProviderName();
-  private readonly bucket = process.env.STORAGE_BUCKET ?? 'xiaoman-archive-local';
-  private readonly endpoint = process.env.STORAGE_ENDPOINT;
-  private readonly expiresIn = Number(process.env.STORAGE_SIGNED_URL_EXPIRES_IN ?? 600);
+  private readonly bucket = getStorageBucket();
+  private readonly endpoint = getStorageEndpoint();
+  private readonly expiresIn = getStorageSignedUrlExpiresIn();
 
   private readonly s3Client = this.createS3Client();
+  private readonly mockObjects = new Map<string, { contentLength: number; contentType: string; etag: string }>();
 
   private createS3Client() {
     if (!this.isS3CompatibleProvider()) {
       return null;
     }
 
+    const accessKey = getStorageAccessKey();
+    const secretKey = getStorageSecretKey();
+
     return new S3Client({
-      region: process.env.STORAGE_REGION ?? 'auto',
+      region: getStorageRegion(),
       ...(this.endpoint ? { endpoint: this.endpoint } : {}),
-      forcePathStyle: String(process.env.STORAGE_FORCE_PATH_STYLE ?? 'true').toLowerCase() === 'true',
+      forcePathStyle: getStorageForcePathStyle(),
       credentials:
-        process.env.STORAGE_ACCESS_KEY && process.env.STORAGE_SECRET_KEY
+        accessKey && secretKey
           ? {
-              accessKeyId: process.env.STORAGE_ACCESS_KEY,
-              secretAccessKey: process.env.STORAGE_SECRET_KEY,
+              accessKeyId: accessKey,
+              secretAccessKey: secretKey,
             }
           : undefined,
     });
@@ -77,6 +81,15 @@ export class StorageService {
     };
   }
 
+  registerMockUpload(objectKey: string, contentLength: number, contentType: string) {
+    if (this.s3Client) return;
+    this.mockObjects.set(objectKey, {
+      contentLength,
+      contentType,
+      etag: `mock-${Buffer.from(objectKey).toString('base64url').slice(0, 32)}`,
+    });
+  }
+
   async createAccessUrl(objectKey: string) {
     if (this.s3Client) {
       const command = new GetObjectCommand({
@@ -103,7 +116,7 @@ export class StorageService {
   }
 
   async objectExists(objectKey: string) {
-    if (!this.s3Client) return true;
+    if (!this.s3Client) return this.mockObjects.has(objectKey);
 
     try {
       await this.s3Client.send(
@@ -125,11 +138,12 @@ export class StorageService {
 
   async headObject(objectKey: string) {
     if (!this.s3Client) {
+      const mockObject = this.mockObjects.get(objectKey);
       return {
-        exists: true,
-        content_length: null,
-        content_type: null,
-        etag: null,
+        exists: Boolean(mockObject),
+        content_length: mockObject?.contentLength ?? null,
+        content_type: mockObject?.contentType ?? null,
+        etag: mockObject?.etag ?? null,
         last_modified: null,
       };
     }

@@ -1,4 +1,4 @@
-import { IsEnum, IsInt, IsString, Max, Min } from 'class-validator';
+import { IsEnum, IsInt, IsNotEmpty, IsString, Max, MaxLength, Min } from 'class-validator';
 
 const mediaTypeValues = {
   image: 'image',
@@ -11,9 +11,12 @@ export class CreateUploadTokenDto {
   child_no!: string;
 
   @IsString()
+  @IsNotEmpty()
+  @MaxLength(255)
   file_name!: string;
 
   @IsString()
+  @MaxLength(128)
   mime_type!: string;
 
   @IsInt()

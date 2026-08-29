@@ -2,28 +2,12 @@
   "issues": [],
   "clicks": [
     {
-      "route": "/users",
-      "label": "重置密码"
+      "route": "/dashboard",
+      "label": "每日"
     },
     {
-      "route": "/users",
-      "label": "调整权益"
-    },
-    {
-      "route": "/users",
-      "label": "详情"
-    },
-    {
-      "route": "/users",
-      "label": "冻结"
-    },
-    {
-      "route": "/users",
-      "label": "重置密码"
-    },
-    {
-      "route": "/users",
-      "label": "调整权益"
+      "route": "/dashboard",
+      "label": "每月"
     },
     {
       "route": "/users",
@@ -31,15 +15,7 @@
     },
     {
       "route": "/users",
-      "label": "冻结"
-    },
-    {
-      "route": "/users",
-      "label": "重置密码"
-    },
-    {
-      "route": "/users",
-      "label": "调整权益"
+      "label": "更多操作"
     },
     {
       "route": "/users",
@@ -47,15 +23,7 @@
     },
     {
       "route": "/users",
-      "label": "冻结"
-    },
-    {
-      "route": "/users",
-      "label": "重置密码"
-    },
-    {
-      "route": "/users",
-      "label": "调整权益"
+      "label": "更多操作"
     },
     {
       "route": "/users",
@@ -63,15 +31,7 @@
     },
     {
       "route": "/users",
-      "label": "冻结"
-    },
-    {
-      "route": "/users",
-      "label": "重置密码"
-    },
-    {
-      "route": "/users",
-      "label": "调整权益"
+      "label": "更多操作"
     },
     {
       "route": "/users",
@@ -79,15 +39,7 @@
     },
     {
       "route": "/users",
-      "label": "冻结"
-    },
-    {
-      "route": "/users",
-      "label": "重置密码"
-    },
-    {
-      "route": "/users",
-      "label": "调整权益"
+      "label": "更多操作"
     },
     {
       "route": "/users",
@@ -95,15 +47,7 @@
     },
     {
       "route": "/users",
-      "label": "冻结"
-    },
-    {
-      "route": "/users",
-      "label": "重置密码"
-    },
-    {
-      "route": "/users",
-      "label": "调整权益"
+      "label": "更多操作"
     },
     {
       "route": "/users",
@@ -111,15 +55,7 @@
     },
     {
       "route": "/users",
-      "label": "冻结"
-    },
-    {
-      "route": "/users",
-      "label": "重置密码"
-    },
-    {
-      "route": "/users",
-      "label": "调整权益"
+      "label": "更多操作"
     },
     {
       "route": "/users",
@@ -127,15 +63,7 @@
     },
     {
       "route": "/users",
-      "label": "冻结"
-    },
-    {
-      "route": "/users",
-      "label": "重置密码"
-    },
-    {
-      "route": "/users",
-      "label": "调整权益"
+      "label": "更多操作"
     },
     {
       "route": "/users",
@@ -143,15 +71,7 @@
     },
     {
       "route": "/users",
-      "label": "冻结"
-    },
-    {
-      "route": "/users",
-      "label": "重置密码"
-    },
-    {
-      "route": "/users",
-      "label": "调整权益"
+      "label": "更多操作"
     },
     {
       "route": "/users",
@@ -159,15 +79,7 @@
     },
     {
       "route": "/users",
-      "label": "冻结"
-    },
-    {
-      "route": "/users",
-      "label": "重置密码"
-    },
-    {
-      "route": "/users",
-      "label": "调整权益"
+      "label": "更多操作"
     },
     {
       "route": "/users",
@@ -175,15 +87,7 @@
     },
     {
       "route": "/users",
-      "label": "冻结"
-    },
-    {
-      "route": "/users",
-      "label": "重置密码"
-    },
-    {
-      "route": "/users",
-      "label": "调整权益"
+      "label": "更多操作"
     },
     {
       "route": "/users",
@@ -191,15 +95,7 @@
     },
     {
       "route": "/users",
-      "label": "冻结"
-    },
-    {
-      "route": "/users",
-      "label": "重置密码"
-    },
-    {
-      "route": "/users",
-      "label": "调整权益"
+      "label": "更多操作"
     },
     {
       "route": "/users",
@@ -207,7 +103,47 @@
     },
     {
       "route": "/users",
-      "label": "冻结"
+      "label": "更多操作"
+    },
+    {
+      "route": "/users",
+      "label": "详情"
+    },
+    {
+      "route": "/users",
+      "label": "更多操作"
+    },
+    {
+      "route": "/users",
+      "label": "详情"
+    },
+    {
+      "route": "/users",
+      "label": "更多操作"
+    },
+    {
+      "route": "/users",
+      "label": "详情"
+    },
+    {
+      "route": "/users",
+      "label": "更多操作"
+    },
+    {
+      "route": "/users",
+      "label": "详情"
+    },
+    {
+      "route": "/users",
+      "label": "更多操作"
+    },
+    {
+      "route": "/users",
+      "label": "详情"
+    },
+    {
+      "route": "/users",
+      "label": "更多操作"
     },
     {
       "route": "/users",
@@ -231,10 +167,6 @@
     },
     {
       "route": "/invites",
-      "label": "撤销"
-    },
-    {
-      "route": "/invites",
       "label": "查询"
     },
     {
@@ -242,11 +174,15 @@
       "label": "生成邀请码"
     },
     {
-      "route": "/children",
-      "label": "详情"
+      "route": "/invites",
+      "label": "复制邀请码"
     },
     {
       "route": "/children",
+      "label": "详情"
+    },
+    {
+      "route": "/children",
       "label": "查询"
     },
     {
@@ -255,7 +191,7 @@
     },
     {
       "route": "/records",
-      "label": "下架"
+      "label": "更多操作"
     },
     {
       "route": "/records",
@@ -263,19 +199,39 @@
     },
     {
       "route": "/records",
-      "label": "下架"
+      "label": "更多操作"
     },
     {
       "route": "/records",
-      "label": "查询"
+      "label": "全部记录"
+    },
+    {
+      "route": "/records",
+      "label": "含图片"
+    },
+    {
+      "route": "/records",
+      "label": "含视频"
+    },
+    {
+      "route": "/records",
+      "label": "含录音"
+    },
+    {
+      "route": "/records",
+      "label": "媒体异常"
+    },
+    {
+      "route": "/records",
+      "label": "待处理"
+    },
+    {
+      "route": "/records",
+      "label": "风险标记"
     },
     {
       "route": "/media",
-      "label": "异常"
-    },
-    {
-      "route": "/media",
-      "label": "下架"
+      "label": "放大查看图片"
     },
     {
       "route": "/media",
@@ -283,11 +239,27 @@
     },
     {
       "route": "/media",
-      "label": "通过"
+      "label": "更多操作"
+    },
+    {
+      "route": "/media",
+      "label": "清空"
+    },
+    {
+      "route": "/media",
+      "label": "高级筛选"
     },
     {
       "route": "/media",
       "label": "查询"
+    },
+    {
+      "route": "/media",
+      "label": "全部类型"
+    },
+    {
+      "route": "/media",
+      "label": "全部状态"
     },
     {
       "route": "/ai-jobs",
@@ -295,11 +267,19 @@
     },
     {
       "route": "/ai-jobs",
+      "label": "更多操作"
+    },
+    {
+      "route": "/ai-jobs",
       "label": "查询"
+    },
+    {
+      "route": "/ai-jobs",
+      "label": "清空"
     },
     {
       "route": "/content-risks",
-      "label": "查询"
+      "label": "下一页"
     },
     {
       "route": "/content-risks",
@@ -331,11 +311,43 @@
     },
     {
       "route": "/archive-export-requests",
+      "label": "下一页"
+    },
+    {
+      "route": "/archive-export-requests",
+      "label": "查询"
+    },
+    {
+      "route": "/archive-export-requests",
+      "label": "清空"
+    },
+    {
+      "route": "/archive-export-requests",
       "label": "全部类型"
     },
     {
       "route": "/archive-export-requests",
       "label": "全部状态"
+    },
+    {
+      "route": "/system-config",
+      "label": "调整"
+    },
+    {
+      "route": "/system-config",
+      "label": "调整"
+    },
+    {
+      "route": "/system-config",
+      "label": "调整"
+    },
+    {
+      "route": "/system-config",
+      "label": "调整"
+    },
+    {
+      "route": "/system-config",
+      "label": "调整"
     },
     {
       "route": "/system-config",
@@ -367,6 +379,10 @@
     },
     {
       "route": "/audit-logs",
+      "label": "清空"
+    },
+    {
+      "route": "/audit-logs",
       "label": "全部动作"
     },
     {
@@ -382,14 +398,14 @@
     {
       "route": "/dashboard",
       "inputsTouched": 0,
-      "buttonCandidates": 0,
-      "buttonsClicked": 0
+      "buttonCandidates": 2,
+      "buttonsClicked": 2
     },
     {
       "route": "/users",
       "inputsTouched": 1,
-      "buttonCandidates": 54,
-      "buttonsClicked": 54
+      "buttonCandidates": 36,
+      "buttonsClicked": 36
     },
     {
       "route": "/families",
@@ -400,7 +416,7 @@
     {
       "route": "/invites",
       "inputsTouched": 3,
-      "buttonCandidates": 6,
+      "buttonCandidates": 12,
       "buttonsClicked": 4
     },
     {
@@ -412,38 +428,38 @@
     {
       "route": "/records",
       "inputsTouched": 1,
-      "buttonCandidates": 6,
-      "buttonsClicked": 5
+      "buttonCandidates": 13,
+      "buttonsClicked": 11
     },
     {
       "route": "/media",
       "inputsTouched": 1,
-      "buttonCandidates": 6,
-      "buttonsClicked": 5
+      "buttonCandidates": 8,
+      "buttonsClicked": 8
     },
     {
       "route": "/ai-jobs",
       "inputsTouched": 1,
-      "buttonCandidates": 3,
-      "buttonsClicked": 2
+      "buttonCandidates": 4,
+      "buttonsClicked": 4
     },
     {
       "route": "/content-risks",
       "inputsTouched": 1,
-      "buttonCandidates": 5,
+      "buttonCandidates": 6,
       "buttonsClicked": 4
     },
     {
       "route": "/support-tickets",
       "inputsTouched": 2,
-      "buttonCandidates": 73,
+      "buttonCandidates": 45,
       "buttonsClicked": 4
     },
     {
       "route": "/archive-export-requests",
       "inputsTouched": 1,
-      "buttonCandidates": 2,
-      "buttonsClicked": 2
+      "buttonCandidates": 45,
+      "buttonsClicked": 5
     },
     {
       "route": "/ops-readiness",
@@ -454,14 +470,14 @@
     {
       "route": "/system-config",
       "inputsTouched": 0,
-      "buttonCandidates": 5,
-      "buttonsClicked": 5
+      "buttonCandidates": 10,
+      "buttonsClicked": 10
     },
     {
       "route": "/audit-logs",
-      "inputsTouched": 3,
+      "inputsTouched": 1,
       "buttonCandidates": 15,
-      "buttonsClicked": 4
+      "buttonsClicked": 5
     }
   ],
   "runtimeErrors": [],

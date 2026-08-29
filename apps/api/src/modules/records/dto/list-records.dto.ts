@@ -1,4 +1,6 @@
-import { IsIn, IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsEnum, IsIn, IsISO8601, IsInt, IsOptional, IsString, Max, MaxLength, Min } from 'class-validator';
+import { RecordType } from '@prisma/client';
 
 export class ListRecordsDto {
   @IsString()
@@ -16,24 +18,27 @@ export class ListRecordsDto {
   page_size?: number;
 
   @IsOptional()
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
   @MaxLength(80)
   keyword?: string;
 
   @IsOptional()
-  @IsString()
-  record_type?: string;
+  @IsEnum(RecordType)
+  record_type?: RecordType;
 
   @IsOptional()
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
+  @MaxLength(32)
   tag?: string;
 
   @IsOptional()
-  @IsString()
+  @IsISO8601()
   start_time?: string;
 
   @IsOptional()
-  @IsString()
+  @IsISO8601()
   end_time?: string;
 
   @IsOptional()

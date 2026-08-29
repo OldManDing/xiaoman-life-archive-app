@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { createPortal } from 'react-dom';
-import { Children, forwardRef, isValidElement, useEffect, useId, useMemo, useRef, useState, type ChangeEvent, type CSSProperties, type ForwardedRef, type InputHTMLAttributes, type ReactElement, type ReactNode, type SelectHTMLAttributes } from 'react';
+import { Children, forwardRef, isValidElement, useEffect, useId, useMemo, useRef, useState, type ChangeEvent, type CSSProperties, type ForwardedRef, type InputHTMLAttributes, type ReactElement, type ReactNode, type RefObject, type SelectHTMLAttributes } from 'react';
 import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
 
 const pageShellStyle: CSSProperties = {
@@ -288,6 +288,44 @@ const assignDateInputRef = (ref: ForwardedRef<HTMLInputElement>, value: HTMLInpu
   if (ref) ref.current = value;
 };
 
+const focusableSelector = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+const useDialogFocus = (open: boolean, dialogRef: RefObject<HTMLElement | null>, restoreRef?: RefObject<HTMLElement | null>) => {
+  useEffect(() => {
+    if (!open) return undefined;
+    const previous = document.activeElement as HTMLElement | null;
+    const dialog = dialogRef.current;
+    const frame = window.requestAnimationFrame(() => {
+      const first = dialog?.querySelector<HTMLElement>(focusableSelector);
+      (first ?? dialog)?.focus?.();
+    });
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab' || !dialog) return;
+      const focusables = Array.from(dialog.querySelectorAll<HTMLElement>(focusableSelector));
+      if (!focusables.length) {
+        event.preventDefault();
+        dialog.focus?.();
+        return;
+      }
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      document.removeEventListener('keydown', onKeyDown);
+      (restoreRef?.current ?? previous)?.focus?.();
+    };
+  }, [dialogRef, open, restoreRef]);
+};
+
 type DateDraft = {
   year: number;
   month: number;
@@ -392,6 +430,9 @@ export const AppDateInput = forwardRef<HTMLInputElement, AppDateInputProps>(({
   ...props
 }, forwardedRef) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const triggerRef = useRef<HTMLSpanElement | null>(null);
+  const dialogRef = useRef<HTMLSpanElement | null>(null);
+  const dialogTitleId = useId();
   const [isPickerOpen, setPickerOpen] = useState(false);
   const [draft, setDraft] = useState<DateDraft>(() => parseDateInputValue(value ?? props.defaultValue, type));
   const isDateTime = type === 'datetime-local';
@@ -435,6 +476,8 @@ export const AppDateInput = forwardRef<HTMLInputElement, AppDateInputProps>(({
     setPickerOpen(true);
   };
 
+  useDialogFocus(isPickerOpen, dialogRef, triggerRef);
+
   const emitDateValue = (nextValue: string) => {
     const event = {
       target: { value: nextValue, name: props.name },
@@ -465,8 +508,20 @@ export const AppDateInput = forwardRef<HTMLInputElement, AppDateInputProps>(({
   return (
     <>
       <span
+        ref={triggerRef}
         className={['app-date-control', 'app-date-control-' + variant].filter(Boolean).join(' ')}
         onClick={openPicker}
+        role="button"
+        tabIndex={disabled ? -1 : 0}
+        aria-haspopup="dialog"
+        aria-expanded={isPickerOpen}
+        aria-label={typeof props['aria-label'] === 'string' ? `${props['aria-label']} 控件` : placeholder || (isDateTime ? '选择时间' : '选择日期')}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            openPicker();
+          }
+        }}
         style={{
           ...dateControlStyle,
           ...lineVariantStyle,
@@ -505,6 +560,8 @@ export const AppDateInput = forwardRef<HTMLInputElement, AppDateInputProps>(({
             event.preventDefault();
             openPicker();
           }}
+          tabIndex={-1}
+          aria-hidden="true"
           style={hiddenNativeDateInputStyle}
         />
         <Icon size={isDateTime ? 15 : 17} strokeWidth={2.05} color="var(--nl-muted-strong)" style={{ pointerEvents: 'none', opacity: variant === 'line' ? 0.7 : 0.82, flexShrink: 0 }} />
@@ -528,11 +585,11 @@ export const AppDateInput = forwardRef<HTMLInputElement, AppDateInputProps>(({
         <span className="app-date-sheet-backdrop" onMouseDown={(event) => {
           if (event.target === event.currentTarget) setPickerOpen(false);
         }}>
-          <span className="app-date-sheet" role="dialog" aria-modal="true" aria-label={typeof props['aria-label'] === 'string' ? props['aria-label'] : '选择日期'}>
+          <span ref={dialogRef} className="app-date-sheet" role="dialog" aria-modal="true" aria-label={typeof props['aria-label'] === 'string' ? props['aria-label'] : '选择日期'} tabIndex={-1}>
             <span className="app-date-sheet-header">
               <span>
                 <span className="app-date-sheet-kicker">{isDateTime ? '发生时间' : '日期'}</span>
-                <strong>{draft.year}年{padDatePart(draft.month)}月</strong>
+                <strong id={dialogTitleId}>{draft.year}年{padDatePart(draft.month)}月</strong>
               </span>
               <span className="app-date-sheet-actions">
                 <button type="button" onClick={() => setPickerOpen(false)}>取消</button>
@@ -567,6 +624,7 @@ export const AppDateInput = forwardRef<HTMLInputElement, AppDateInputProps>(({
                       isToday ? 'app-date-day-today' : '',
                     ].filter(Boolean).join(' ')}
                     onClick={() => setDraft((current) => ({ ...current, day }))}
+                    aria-pressed={selected}
                   >
                     {day}
                   </button>
@@ -664,11 +722,30 @@ export const AppSelect = ({
 }) => {
   const listboxId = useId();
   const rootRef = useRef<HTMLSpanElement | null>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const typeaheadRef = useRef('');
+  const typeaheadTimerRef = useRef<number | null>(null);
   const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const options = useMemo(() => optionsFromChildren(children), [children]);
-  const selectedValue = props.value == null ? '' : String(props.value);
+  const rawValue = props.value ?? props.defaultValue;
+  const selectedValue = typeof rawValue === 'string' || typeof rawValue === 'number' ? String(rawValue) : '';
   const selectedOption = options.find((option) => option.value === selectedValue) ?? options.find((option) => option.value === '') ?? options[0];
   const placeholder = !selectedValue || selectedOption?.value === '';
+  const firstEnabledIndex = () => options.findIndex((option) => !option.disabled);
+  const selectedIndex = options.findIndex((option) => option.value === selectedValue && !option.disabled);
+  const optionId = (index: number) => `${listboxId}-option-${index}`;
+
+  useEffect(() => {
+    if (!open) return;
+    setActiveIndex(selectedIndex >= 0 ? selectedIndex : firstEnabledIndex());
+  }, [open, options, selectedIndex]);
+
+  useEffect(() => {
+    if (!open || activeIndex < 0) return;
+    const option = document.getElementById(optionId(activeIndex));
+    option?.scrollIntoView?.({ block: 'nearest' });
+  }, [activeIndex, listboxId, open]);
 
   useEffect(() => {
     if (!open) return;
@@ -681,6 +758,7 @@ export const AppSelect = ({
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setOpen(false);
+        triggerRef.current?.focus();
       }
     };
 
@@ -692,6 +770,10 @@ export const AppSelect = ({
     };
   }, [open]);
 
+  useEffect(() => () => {
+    if (typeaheadTimerRef.current !== null) window.clearTimeout(typeaheadTimerRef.current);
+  }, []);
+
   const emitChange = (nextValue: string) => {
     const event = {
       target: { value: nextValue, name: props.name },
@@ -699,6 +781,24 @@ export const AppSelect = ({
     } as unknown as ChangeEvent<HTMLSelectElement>;
     props.onChange?.(event);
     setOpen(false);
+    triggerRef.current?.focus();
+  };
+
+  const moveActive = (delta: 1 | -1) => {
+    if (!options.length) return;
+    setActiveIndex((current) => {
+      const start = current >= 0 ? current : selectedIndex;
+      for (let step = 1; step <= options.length; step += 1) {
+        const candidate = (start + delta * step + options.length) % options.length;
+        if (!options[candidate]?.disabled) return candidate;
+      }
+      return current;
+    });
+  };
+
+  const selectActive = () => {
+    const option = options[activeIndex];
+    if (option && !option.disabled) emitChange(option.value);
   };
 
   return (
@@ -707,18 +807,65 @@ export const AppSelect = ({
         {children}
       </select>
       <button
+        ref={triggerRef}
         type="button"
         role="combobox"
         aria-label={props['aria-label']}
         aria-controls={listboxId}
         aria-expanded={open}
         aria-haspopup="listbox"
+        aria-activedescendant={open && activeIndex >= 0 ? optionId(activeIndex) : undefined}
         disabled={props.disabled}
         onClick={() => setOpen((current) => !current)}
         onKeyDown={(event) => {
-          if (event.key === 'ArrowDown' || event.key === 'Enter' || event.key === ' ') {
+          if (event.key === 'Escape') {
             event.preventDefault();
-            setOpen(true);
+            setOpen(false);
+            return;
+          }
+          if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            if (!open) setOpen(true);
+            else moveActive(1);
+            return;
+          }
+          if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            if (!open) setOpen(true);
+            else moveActive(-1);
+            return;
+          }
+          if (event.key === 'Home' && open) {
+            event.preventDefault();
+            setActiveIndex(firstEnabledIndex());
+            return;
+          }
+          if (event.key === 'End' && open) {
+            event.preventDefault();
+            for (let index = options.length - 1; index >= 0; index -= 1) {
+              if (!options[index]?.disabled) {
+                setActiveIndex(index);
+                break;
+              }
+            }
+            return;
+          }
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            if (open) selectActive();
+            else setOpen(true);
+            return;
+          }
+          if (event.key.length === 1 && !event.altKey && !event.ctrlKey && !event.metaKey) {
+            const nextQuery = `${typeaheadRef.current}${event.key}`.toLocaleLowerCase();
+            typeaheadRef.current = nextQuery;
+            const match = options.findIndex((option) => !option.disabled && option.label.toLocaleLowerCase().startsWith(nextQuery));
+            if (match >= 0) {
+              if (open) setActiveIndex(match);
+              else emitChange(options[match].value);
+            }
+            if (typeaheadTimerRef.current !== null) window.clearTimeout(typeaheadTimerRef.current);
+            typeaheadTimerRef.current = window.setTimeout(() => { typeaheadRef.current = ''; }, 500);
           }
         }}
         style={{
@@ -765,9 +912,12 @@ export const AppSelect = ({
             return (
               <button
                 key={`${option.value}-${index}`}
+                id={optionId(index)}
                 type="button"
                 role="option"
                 aria-selected={selected}
+                aria-disabled={option.disabled || undefined}
+                tabIndex={-1}
                 disabled={option.disabled}
                 onPointerDown={(event) => {
                   event.stopPropagation();
@@ -776,12 +926,15 @@ export const AppSelect = ({
                   event.stopPropagation();
                   emitChange(option.value);
                 }}
+                onMouseEnter={() => {
+                  if (!option.disabled) setActiveIndex(index);
+                }}
                 style={{
                   width: '100%',
                   minHeight: '44px',
                   border: 'none',
                   borderRadius: '8px',
-                  background: selected ? 'var(--nl-primary-soft)' : 'transparent',
+                    background: selected ? 'var(--nl-primary-soft)' : activeIndex === index ? 'var(--nl-surface-soft)' : 'transparent',
                   color: option.disabled ? 'var(--nl-muted-disabled)' : 'var(--nl-ink)',
                   padding: '7px 32px 7px 9px',
                   display: 'flex',
@@ -840,7 +993,22 @@ export const AppSegmentedControl = ({
           type="button"
           role="radio"
           aria-checked={selected}
+          tabIndex={selected || (!options.some((item) => item.value === value) && index === 0) ? 0 : -1}
           onClick={() => onChange(option.value)}
+          onKeyDown={(event) => {
+            if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight' && event.key !== 'Home' && event.key !== 'End') return;
+            event.preventDefault();
+            const delta = event.key === 'ArrowLeft' ? -1 : event.key === 'ArrowRight' ? 1 : 0;
+            const nextIndex = event.key === 'Home' ? 0 : event.key === 'End' ? options.length - 1 : (index + delta + options.length) % options.length;
+            const next = options[nextIndex];
+            if (next) {
+              onChange(next.value);
+              window.setTimeout(() => {
+                const target = event.currentTarget.parentElement?.querySelector<HTMLButtonElement>(`button:nth-of-type(${nextIndex + 1})`);
+                target?.focus();
+              }, 0);
+            }
+          }}
           style={{
             flex: '1 1 0',
             minWidth: 0,

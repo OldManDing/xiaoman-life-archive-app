@@ -74,6 +74,7 @@ describe('NotificationService', () => {
           readAt: null,
         }),
       ]),
+      skipDuplicates: true,
     });
     expect(prisma.userNotification.createMany.mock.calls[0][0].data).toHaveLength(1);
     expect(prisma.userDeviceToken.findMany).toHaveBeenCalledWith({
@@ -97,6 +98,7 @@ describe('NotificationService', () => {
           nextRetryAt: expect.any(Date),
         }),
       ],
+      skipDuplicates: true,
     });
     expect(huaweiPushDeliveryService.processPendingDeliveries).toHaveBeenCalled();
   });

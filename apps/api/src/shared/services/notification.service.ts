@@ -1,12 +1,16 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { createHash } from 'node:crypto';
 
 import { PrismaService } from '../../prisma/prisma.service';
 import { FAMILY_MEMBER_ACTIVE_STATUS } from '../constants';
 import { isHuaweiPushEnabled } from '../env-config';
-import { generateBizNo, normalizePage, normalizePageSize } from '../utils';
+import { normalizePage, normalizePageSize } from '../utils';
 import { HuaweiPushDeliveryService } from './huawei-push-delivery.service';
 
 const RECORD_PUBLISHED_NOTIFICATION_TYPE = 'family.record_published';
+
+const hashNotificationKey = (recordNo: string, userId: bigint) =>
+  createHash('sha256').update(`${recordNo}:${userId.toString()}`).digest('hex').slice(0, 27);
 
 export type RecordPublishedNotificationInput = {
   record_no: string;
@@ -72,10 +76,10 @@ export class NotificationService {
     });
     const existingRecipientIds = new Set(existing.map((item) => item.userId.toString()));
     const recordTitle = input.record_title?.trim() || '未命名记录';
-    const rows = recipientIds
-      .filter((userId) => !existingRecipientIds.has(userId.toString()))
-      .map((userId) => ({
-        notificationNo: generateBizNo('msg'),
+    const rows = recipientIds.filter((userId) => !existingRecipientIds.has(userId.toString())).map((userId) => ({
+        // Stable identifiers make retries idempotent even before the database
+        // unique constraint is deployed to an existing installation.
+        notificationNo: `msg_${hashNotificationKey(input.record_no, userId)}`,
         userId,
         familyId: input.family_id,
         actorUserId: input.actor_user_id,
@@ -91,16 +95,11 @@ export class NotificationService {
       return { created_count: 0 };
     }
 
-    await this.prisma.$transaction(async (tx) => {
-      await tx.userNotification.createMany({ data: rows });
+    const createdCount = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.userNotification.createMany({ data: rows, skipDuplicates: true });
       const createdNotifications = await tx.userNotification.findMany({
         where: {
-          userId: { in: rows.map((row) => row.userId) },
-          familyId: input.family_id,
-          notificationType: RECORD_PUBLISHED_NOTIFICATION_TYPE,
-          targetType: 'record',
-          targetNo: input.record_no,
-          deletedAt: null,
+          notificationNo: { in: rows.map((row) => row.notificationNo) },
         },
         select: { id: true, userId: true },
       });
@@ -122,9 +121,10 @@ export class NotificationService {
         providers.add(token.provider);
         providersByUserId.set(key, providers);
       }
-      const deliveryRows = createdNotifications.flatMap((notification) => {
+      const deliveryRows = createdNotifications.map((notification) => {
         const providers = Array.from(providersByUserId.get(notification.userId.toString()) ?? []);
-        return providers.map((provider) => ({
+        const provider = providers[0] ?? (isHuaweiPushEnabled() ? 'hms' : null);
+        return provider ? ({
           notificationId: notification.id,
           userId: notification.userId,
           channel: 'push',
@@ -132,16 +132,17 @@ export class NotificationService {
           status: 'queued',
           attempts: 0,
           nextRetryAt: new Date(),
-        }));
-      });
+        }) : null;
+      }).filter((row): row is NonNullable<typeof row> => row !== null);
       if (deliveryRows.length) {
-        await tx.notificationDelivery.createMany({ data: deliveryRows });
+        await tx.notificationDelivery.createMany({ data: deliveryRows, skipDuplicates: true });
       }
+      return Math.min(created.count, rows.length);
     });
     if (isHuaweiPushEnabled()) {
       void this.huaweiPushDeliveryService.processPendingDeliveries();
     }
-    return { created_count: rows.length };
+    return { created_count: createdCount };
   }
 
   async listUserNotifications(userId: bigint, pageInput?: number, pageSizeInput?: number) {
@@ -193,8 +194,8 @@ export class NotificationService {
     }
 
     const readAt = new Date();
-    await this.prisma.userNotification.update({
-      where: { id: notification.id },
+    await this.prisma.userNotification.updateMany({
+      where: { id: notification.id, userId, deletedAt: null, readAt: null },
       data: { readAt },
     });
 

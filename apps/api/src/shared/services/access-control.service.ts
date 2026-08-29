@@ -6,7 +6,13 @@ import {
 import { FamilyMemberRole } from '@prisma/client';
 
 import { PrismaService } from '../../prisma/prisma.service';
-import { FAMILY_MEMBER_ACTIVE_STATUS, MEDIA_STATUS_READY, RECORD_STATUS_DRAFT } from '../constants';
+import {
+  CHILD_STATUS_NORMAL,
+  FAMILY_MEMBER_ACTIVE_STATUS,
+  MEDIA_STATUS_READY,
+  RECORD_STATUS_DRAFT,
+  USER_ACTIVE_STATUS,
+} from '../constants';
 
 @Injectable()
 export class AccessControlService {
@@ -14,7 +20,7 @@ export class AccessControlService {
 
   async ensureFamilyReadable(userId: bigint, familyNo: string) {
     const family = await this.prisma.family.findFirst({
-      where: { familyNo, deletedAt: null },
+      where: { familyNo, status: USER_ACTIVE_STATUS, deletedAt: null },
     });
 
     if (!family) {
@@ -47,7 +53,12 @@ export class AccessControlService {
 
   async ensureChildReadable(userId: bigint, childNo: string) {
     const child = await this.prisma.child.findFirst({
-      where: { childNo, deletedAt: null },
+      where: {
+        childNo,
+        status: CHILD_STATUS_NORMAL,
+        deletedAt: null,
+        family: { status: USER_ACTIVE_STATUS, deletedAt: null },
+      },
       include: { family: true },
     });
 
@@ -81,11 +92,15 @@ export class AccessControlService {
 
   async ensureRecordReadable(userId: bigint, recordNo: string) {
     const record = await this.prisma.record.findFirst({
-      where: { recordNo, deletedAt: null },
+      where: {
+        recordNo,
+        deletedAt: null,
+        child: { status: CHILD_STATUS_NORMAL, deletedAt: null, family: { status: USER_ACTIVE_STATUS, deletedAt: null } },
+      },
       include: {
         child: true,
         creator: true,
-        media: { where: { status: MEDIA_STATUS_READY, deletedAt: null } },
+        media: { where: { status: MEDIA_STATUS_READY, deletedAt: null }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] },
         tags: true,
       },
     });
@@ -127,9 +142,50 @@ export class AccessControlService {
     return { record, membership };
   }
 
+  async ensureRecordRemovable(userId: bigint, recordNo: string) {
+    const record = await this.prisma.record.findFirst({
+      where: {
+        recordNo,
+        deletedAt: null,
+        child: { status: CHILD_STATUS_NORMAL, deletedAt: null, family: { status: USER_ACTIVE_STATUS, deletedAt: null } },
+      },
+      include: {
+        child: true,
+        creator: true,
+        media: { where: { status: MEDIA_STATUS_READY, deletedAt: null }, orderBy: [{ createdAt: 'asc' }, { id: 'asc' }] },
+        tags: true,
+      },
+    });
+
+    if (!record) throw new NotFoundException('记录不存在');
+
+    const membership = await this.prisma.familyMember.findFirst({
+      where: {
+        familyId: record.familyId,
+        userId,
+        status: FAMILY_MEMBER_ACTIVE_STATUS,
+        deletedAt: null,
+      },
+    });
+    if (!membership) throw new ForbiddenException('无权限访问该记录');
+
+    const isOwner = membership.role === FamilyMemberRole.owner;
+    const isOwnRecord = record.creatorUserId === userId;
+    const isEditor = membership.role === FamilyMemberRole.editor;
+    if (!isOwner && !(isEditor && isOwnRecord)) {
+      throw new ForbiddenException('无权限删除该记录');
+    }
+
+    return { record, membership };
+  }
+
   async ensureMediaReadable(userId: bigint, mediaNo: string) {
     const media = await this.prisma.recordMedia.findFirst({
-      where: { mediaNo, deletedAt: null },
+      where: {
+        mediaNo,
+        deletedAt: null,
+        child: { status: CHILD_STATUS_NORMAL, deletedAt: null, family: { status: USER_ACTIVE_STATUS, deletedAt: null } },
+      },
       include: { child: true },
     });
 

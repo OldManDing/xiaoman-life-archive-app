@@ -10,3 +10,17 @@ npm-debug.log
 Dockerfile*
 apps/web/dist
 apps/admin/dist
+artifacts
+output
+test-results
+playwright-report
+.playwright-cli
+.tmp
+.codex
+.codex-logs
+backup-*.sql
+*.png
+*.jpg
+*.jpeg
+*.webm
+*.mp4

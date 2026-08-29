@@ -22,8 +22,27 @@ export const formSubmitSpacingStyle = {
 
 export const formatDateTimeLocal = (value: string) => {
   const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
   const timezoneOffset = date.getTimezoneOffset() * 60_000;
   return new Date(date.getTime() - timezoneOffset).toISOString().slice(0, 16);
+};
+
+const appTimeZone = 'Asia/Shanghai';
+
+const parseDisplayDate = (value: string | Date | null | undefined) => {
+  if (!value) return null;
+  const date = value instanceof Date ? new Date(value.getTime()) : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+};
+
+export const formatAppDate = (value: string | Date | null | undefined, fallback = '时间待确认') => {
+  const date = parseDisplayDate(value);
+  return date ? date.toLocaleDateString('zh-CN', { timeZone: appTimeZone }) : fallback;
+};
+
+export const formatAppDateTime = (value: string | Date | null | undefined, fallback = '时间待确认') => {
+  const date = parseDisplayDate(value);
+  return date ? date.toLocaleString('zh-CN', { timeZone: appTimeZone, hour12: false }) : fallback;
 };
 
 const invalidQuestionMarkTextPattern = /^[?\uFF1F\uFFFD\s]+$/u;

@@ -1,5 +1,6 @@
 ﻿import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useRef } from 'react';
 import { Camera, ChevronRight, Clock, Copy, FileText, Image as ImageIcon, Mic, PlayCircle, Plus, UserMinus, UserPlus } from 'lucide-react';
 
 import { useAuth } from '../shared/AuthContext';
@@ -13,7 +14,7 @@ import { isSupportedImageFile, resolveFileMimeType, withResolvedFileMimeType } f
 import { normalizeUploadErrorMessage, readUploadMetadata } from '../shared/mediaMetadata';
 import { useCachedMediaUrl } from '../shared/useCachedMediaUrl';
 import { AppDateInput, AppSegmentedControl, Field, PageShell, Panel, compactPrimaryButtonStyle, compactSecondaryButtonStyle, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle, textareaStyle } from '../shared/ui';
-import { EmptyState, buttonRowStyle, formSubmitSpacingStyle, normalizeDisplayName, rowStyle } from './shared';
+import { EmptyState, buttonRowStyle, formatAppDate, formatAppDateTime, formSubmitSpacingStyle, normalizeDisplayName, rowStyle } from './shared';
 import { RefSectionTitle, isReferencePlaceholderAvatar, refCardStyle, refMutedTextStyle, refPageStyle, refSoftCardStyle, referenceAssets } from './reference-ui';
 
 const isPositiveStatusMessage = (message: string) => !/(失败|不能|请先|请至少|请输入|仅支持|无法|错误|暂时)/.test(message);
@@ -214,7 +215,7 @@ const RecentFamilyRecord = ({ record, creatorAvatarSrc, creatorAvatarMediaNo, cu
         <FamilyAvatar src={creatorAvatarSrc} mediaNo={creatorAvatarMediaNo} label={creatorName} size={32} />
         <span style={{ minWidth: 0, display: 'grid', gap: 2 }}>
           <strong style={{ fontSize: 14, lineHeight: 1.16, fontWeight: 700, color: 'var(--nl-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{creatorName} {getFamilyRecordActionLabel(record)}</strong>
-          <span style={{ color: 'var(--nl-muted)', fontSize: 11, fontWeight: 520 }}>{new Date(record.event_time).toLocaleString('zh-CN', { month: 'numeric', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false })}</span>
+          <span style={{ color: 'var(--nl-muted)', fontSize: 11, fontWeight: 520 }}>{formatAppDateTime(record.event_time)}</span>
         </span>
       </span>
       {hasCover && mediaKind !== 'audio' ? (
@@ -261,7 +262,7 @@ const FamilyMemberOperations = ({ operations }: { operations: FamilyMemberOperat
         {operations.slice(0, 4).map((operation) => (
           <div key={operation.operation_no} style={{ minHeight: 44, borderBottom: '1px solid var(--nl-border-muted)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, padding: '9px 0' }}>
             <span style={{ minWidth: 0, color: 'var(--nl-ink)', fontSize: 12, fontWeight: 560, lineHeight: 1.45, overflowWrap: 'anywhere' }}>{getFamilyMemberOperationText(operation)}</span>
-            <span style={{ flexShrink: 0, color: 'var(--nl-muted)', fontSize: 10, fontWeight: 600 }}>{new Date(operation.created_at).toLocaleDateString('zh-CN', { month: 'numeric', day: '2-digit' })}</span>
+            <span style={{ flexShrink: 0, color: 'var(--nl-muted)', fontSize: 10, fontWeight: 600 }}>{formatAppDate(operation.created_at)}</span>
           </div>
         ))}
       </div>
@@ -296,7 +297,7 @@ export const FamilyPage = () => {
 
   return (
     <div style={refPageStyle}>
-      <header style={{ padding: 'calc(26px + env(safe-area-inset-top)) var(--nl-content-inline) 8px', background: 'transparent' }}>
+      <header style={{ padding: 'calc(var(--nl-statusbar-top) + 12px) var(--nl-content-inline) 8px', background: 'transparent' }}>
         <h1 style={{ margin: 0, color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: 'var(--nl-title-page-size)', lineHeight: 1.12, fontWeight: 780 }}>家庭</h1>
       </header>
 
@@ -401,9 +402,16 @@ export const FamilyChildPage = () => {
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const formDirtyRef = useRef(false);
+  const loadedChildNoRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (data) {
+      if (loadedChildNoRef.current !== data.child_no) {
+        loadedChildNoRef.current = data.child_no;
+        formDirtyRef.current = false;
+      }
+      if (formDirtyRef.current) return;
       setForm({
         name: data.name,
         avatar_url: data.avatar_url ?? '',
@@ -430,6 +438,7 @@ export const FamilyChildPage = () => {
       const updated = await webApi.updateChild(activeChild.child_no, form);
       await refreshChildren();
       setActiveChild(updated);
+      formDirtyRef.current = false;
       setMessage('保存成功');
     } catch (err) {
       setMessage(err instanceof Error ? err.message : '保存失败');
@@ -491,7 +500,7 @@ export const FamilyChildPage = () => {
             </div>
             <p style={helperTextStyle}>状态：{childStatusLabel(data.status)} · 性别：{genderLabel(data.gender)}</p>
             <Field label="孩子姓名">
-              <input style={inputStyle} value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} />
+              <input style={inputStyle} value={form.name} onChange={(event) => { formDirtyRef.current = true; setForm((current) => ({ ...current, name: event.target.value })); }} />
             </Field>
             <Field label="生日">
               <AppDateInput
@@ -499,14 +508,14 @@ export const FamilyChildPage = () => {
                 value={form.birthday}
                 displayValue={form.birthday ? form.birthday.replace(/-/g, '/') : undefined}
                 placeholder="年/月/日"
-                onChange={(event) => setForm((current) => ({ ...current, birthday: event.target.value }))}
+                 onChange={(event) => { formDirtyRef.current = true; setForm((current) => ({ ...current, birthday: event.target.value })); }}
               />
             </Field>
             <Field label="性别">
               <AppSegmentedControl
                 ariaLabel="性别"
                 value={form.gender}
-                onChange={(value) => setForm((current) => ({ ...current, gender: value }))}
+                 onChange={(value) => { formDirtyRef.current = true; setForm((current) => ({ ...current, gender: value })); }}
                 options={[
                   { value: 'female', label: '女' },
                   { value: 'male', label: '男' },
@@ -515,10 +524,10 @@ export const FamilyChildPage = () => {
               />
             </Field>
             <Field label="出生地">
-              <input style={inputStyle} value={form.birth_place} onChange={(event) => setForm((current) => ({ ...current, birth_place: event.target.value }))} />
+              <input style={inputStyle} value={form.birth_place} onChange={(event) => { formDirtyRef.current = true; setForm((current) => ({ ...current, birth_place: event.target.value })); }} />
             </Field>
             <Field label="备注">
-              <textarea style={textareaStyle} value={form.remark} onChange={(event) => setForm((current) => ({ ...current, remark: event.target.value }))} />
+              <textarea style={textareaStyle} value={form.remark} onChange={(event) => { formDirtyRef.current = true; setForm((current) => ({ ...current, remark: event.target.value })); }} />
             </Field>
       {message ? <p style={{ ...helperTextStyle, color: isPositiveStatusMessage(message) ? 'var(--nl-success)' : 'var(--nl-danger)' }}>{message}</p> : null}
             <div style={{ ...buttonRowStyle, ...formSubmitSpacingStyle }}>
@@ -806,7 +815,7 @@ export const FamilyMemberDetailPage = () => {
                   </span>
                   <span style={{ minWidth: 0, flex: 1 }}>
                     <strong style={{ display: 'block', color: 'var(--nl-ink)', fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{record.title ?? '未命名记录'}</strong>
-                    <span style={{ display: 'block', marginTop: '4px', color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 600 }}>{new Date(record.event_time).toLocaleDateString('zh-CN')}</span>
+                    <span style={{ display: 'block', marginTop: '4px', color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 600 }}>{formatAppDate(record.event_time)}</span>
                   </span>
                 </button>
               )) : <Panel><EmptyState message="TA还没有发布过记录。" /></Panel>}
@@ -832,7 +841,7 @@ export const FamilyMemberDetailPage = () => {
                   <span style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'transparent', color: 'var(--nl-primary-2)', display: 'grid', placeItems: 'center' }}><Clock size={15} /></span>
                   加入时间
                 </span>
-                <span style={{ color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 700 }}>{member.joined_at ? new Date(member.joined_at).toLocaleDateString('zh-CN') : '未记录'}</span>
+                <span style={{ color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 700 }}>{formatAppDate(member.joined_at, '未记录')}</span>
               </div>
               {member.role !== 'owner' ? (
                 confirmingRemove ? (
@@ -959,7 +968,7 @@ export const FamilyInvitePage = () => {
               </button>
             </div>
             <p style={helperTextStyle}>邀请角色：{familyRoleLabel(inviteResult.role)}</p>
-            <p style={helperTextStyle}>失效时间：{new Date(inviteResult.expires_at).toLocaleString('zh-CN')}</p>
+            <p style={helperTextStyle}>失效时间：{formatAppDateTime(inviteResult.expires_at)}</p>
           </div>
         </Panel>
       ) : null}

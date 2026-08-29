@@ -129,9 +129,11 @@ test.describe('Front and admin button/API connectivity', () => {
     await recordRow.getByRole('button', { name: '详情' }).click();
     await expect(page.getByRole('dialog', { name: '成长记录详情' })).toBeVisible();
     await page.getByRole('button', { name: '关闭' }).click();
+    await recordRow.getByRole('button', { name: '更多操作' }).click();
     await recordRow.getByRole('button', { name: '下架' }).click();
     await confirmAdminAction(page, '自动化验证记录下架按钮');
     await expect(recordRow).toContainText('草稿');
+    await recordRow.getByRole('button', { name: '更多操作' }).click();
     await recordRow.getByRole('button', { name: '恢复' }).click();
     await confirmAdminAction(page, '自动化验证记录恢复按钮');
     await expect(recordRow).toContainText('已发布');
@@ -144,7 +146,8 @@ test.describe('Front and admin button/API connectivity', () => {
     await expect(page.getByRole('dialog', { name: '媒体详情' })).toBeVisible();
     await page.getByRole('button', { name: '关闭' }).click();
     await mediaRow.getByRole('button', { name: '更多操作' }).click();
-    await mediaRow.getByRole('button', { name: '标记异常' }).click();
+    await expect(page.getByRole('button', { name: '标记异常' })).toBeVisible();
+    await page.getByRole('button', { name: '标记异常' }).click();
     await confirmAdminAction(page, '自动化验证媒体异常按钮');
     await expect(mediaRow).toContainText('异常');
     await mediaRow.getByRole('button', { name: '更多操作' }).click();

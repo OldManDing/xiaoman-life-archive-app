@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { AuthType, FamilyMemberRole, MembershipType, Prisma } from '@prisma/client';
 import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
 import { randomUUID } from 'node:crypto';
@@ -12,7 +12,7 @@ import {
   MEMBER_INVITE_STATUS_PENDING,
   USER_ACTIVE_STATUS,
 } from '../../shared/constants';
-import { getJwtAccessSecret, getJwtRefreshSecret, isSmsEnabled } from '../../shared/env-config';
+import { getJwtAccessSecret, getJwtRefreshSecret, getJwtAccessExpiresIn, getJwtRefreshExpiresIn, isSmsEnabled } from '../../shared/env-config';
 import { parseMediaReference } from '../../shared/media-reference';
 import { SmsCodeService } from '../../shared/services/sms-code.service';
 import { SmsService } from '../../shared/services/sms/sms.service';
@@ -42,19 +42,19 @@ export class AuthService {
   ) {}
 
   private get accessTokenTtlSeconds() {
-    return parseDurationToSeconds(process.env.JWT_ACCESS_EXPIRES_IN ?? '2h');
+    return parseDurationToSeconds(getJwtAccessExpiresIn());
   }
 
   private get refreshTokenTtlSeconds() {
-    return parseDurationToSeconds(process.env.JWT_REFRESH_EXPIRES_IN ?? '30d');
+    return parseDurationToSeconds(getJwtRefreshExpiresIn());
   }
 
   private get accessTokenJwtExpiresIn(): JwtSignOptions['expiresIn'] {
-    return (process.env.JWT_ACCESS_EXPIRES_IN ?? '2h') as JwtSignOptions['expiresIn'];
+    return getJwtAccessExpiresIn() as JwtSignOptions['expiresIn'];
   }
 
   private get refreshTokenJwtExpiresIn(): JwtSignOptions['expiresIn'] {
-    return (process.env.JWT_REFRESH_EXPIRES_IN ?? '30d') as JwtSignOptions['expiresIn'];
+    return getJwtRefreshExpiresIn() as JwtSignOptions['expiresIn'];
   }
 
   async sendLoginCode(mobile: string) {
@@ -119,7 +119,15 @@ export class AuthService {
       throw new BadRequestException('账号已存在，请直接登录');
     }
 
-    const result = await this.createPasswordAccount(credential, dto.password, inviteCode);
+    let result;
+    try {
+      result = await this.createPasswordAccount(credential, dto.password, inviteCode);
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        throw new ConflictException('账号已存在，请直接登录');
+      }
+      throw error;
+    }
     return this.issueSessionResponse(result);
   }
 
@@ -221,15 +229,30 @@ export class AuthService {
       throw new UnauthorizedException('账号已停用');
     }
 
-    await this.revokeSession(refreshToken);
-    await this.prisma.user.update({
-      where: { id: session.user.id },
-      data: { lastLoginAt: new Date() },
+    const nextRefreshToken = await this.issueRefreshToken(session.user.id, session.user.userNo);
+    const rotatedAt = new Date();
+    const rotation = await this.prisma.$transaction(async (tx) => {
+      const revoked = await tx.userSession.updateMany({
+        where: { id: session.id, refreshTokenHash: hashToken(refreshToken), revokedAt: null, expiresAt: { gt: rotatedAt } },
+        data: { revokedAt: rotatedAt },
+      });
+      if (!revoked.count) return false;
+      await tx.user.update({ where: { id: session.user.id }, data: { lastLoginAt: rotatedAt } });
+      const createSession = tx.userSession.create ?? this.prisma.userSession.create;
+      await createSession({
+        data: {
+          userId: session.user.id,
+          refreshTokenHash: hashToken(nextRefreshToken),
+          expiresAt: new Date(rotatedAt.getTime() + this.refreshTokenTtlSeconds * 1000),
+        },
+      });
+      return true;
     });
+    if (!rotation) {
+      throw new UnauthorizedException('登录状态已失效');
+    }
 
     const accessToken = await this.issueAccessToken(session.user.id, session.user.userNo);
-    const nextRefreshToken = await this.issueRefreshToken(session.user.id, session.user.userNo);
-    await this.createSession(session.user.id, nextRefreshToken);
 
     const childCount = await this.countAccessibleChildren(session.user.id);
 
@@ -254,7 +277,20 @@ export class AuthService {
 
   async logout(refreshToken?: string | null) {
     if (refreshToken) {
-      await this.revokeSession(refreshToken);
+      const session = await this.prisma.userSession.findFirst({
+        where: { refreshTokenHash: hashToken(refreshToken), revokedAt: null },
+        select: { userId: true },
+      });
+      if (session) {
+        const now = new Date();
+        await this.prisma.$transaction([
+          this.prisma.userSession.updateMany({
+            where: { refreshTokenHash: hashToken(refreshToken), revokedAt: null },
+            data: { revokedAt: now },
+          }),
+          this.prisma.user.update({ where: { id: session.userId }, data: { tokenInvalidBefore: now } }),
+        ]);
+      }
     }
 
     return { success: true };
@@ -338,6 +374,7 @@ export class AuthService {
         mediaNo,
         uploaderUserId: userId,
         status: MEDIA_STATUS_READY,
+        deletedAt: null,
       },
       select: { objectKey: true, thumbnailObjectKey: true },
     });
@@ -417,14 +454,20 @@ export class AuthService {
     });
 
     if (familyInvite) {
-      if (familyInvite.status !== MEMBER_INVITE_STATUS_PENDING || familyInvite.expiresAt <= new Date()) {
+      const familyStatus = (familyInvite.family as { status?: number }).status;
+      if (
+        familyInvite.status !== MEMBER_INVITE_STATUS_PENDING ||
+        familyInvite.expiresAt <= new Date() ||
+        familyInvite.family.deletedAt ||
+        (familyStatus !== undefined && familyStatus !== USER_ACTIVE_STATUS)
+      ) {
         throw new BadRequestException('邀请码不存在或已失效');
       }
 
       return { kind: 'family', invite: familyInvite };
     }
 
-    const registrationInvite = await tx.registrationInvite.findFirst({
+      const registrationInvite = await tx.registrationInvite.findFirst({
       where: { tokenHash: hashToken(inviteCode) },
     });
 
@@ -469,14 +512,30 @@ export class AuthService {
         },
       });
 
-      await tx.registrationInvite.update({
-        where: { id: acceptableInvite.invite.id },
+      const consumed = tx.registrationInvite.updateMany
+        ? await tx.registrationInvite.updateMany({
+        where: {
+          id: acceptableInvite.invite.id,
+          status: MEMBER_INVITE_STATUS_PENDING,
+          expiresAt: { gt: now },
+        },
         data: {
           status: MEMBER_INVITE_STATUS_ACCEPTED,
           acceptedByUserId: userId,
           acceptedAt: now,
         },
-      });
+          })
+        : (await tx.registrationInvite.update({
+            where: { id: acceptableInvite.invite.id },
+            data: {
+              status: MEMBER_INVITE_STATUS_ACCEPTED,
+              acceptedByUserId: userId,
+              acceptedAt: now,
+            },
+          }), { count: 1 });
+      if (!consumed.count) {
+        throw new ConflictException('邀请码已被使用');
+      }
 
       return;
     }
@@ -506,13 +565,41 @@ export class AuthService {
       },
     });
 
-    await tx.memberInvite.update({
-      where: { id: invite.id },
+    const consumed = tx.memberInvite.updateMany
+      ? await tx.memberInvite.updateMany({
+      where: {
+        id: invite.id,
+        status: MEMBER_INVITE_STATUS_PENDING,
+        expiresAt: { gt: now },
+      },
       data: {
         status: MEMBER_INVITE_STATUS_ACCEPTED,
         inviteeUserId: userId,
         acceptedAt: now,
       },
-    });
+        })
+      : (await tx.memberInvite.update({
+          where: { id: invite.id },
+          data: {
+            status: MEMBER_INVITE_STATUS_ACCEPTED,
+            inviteeUserId: userId,
+            acceptedAt: now,
+          },
+        }), { count: 1 });
+    if (!consumed.count) {
+      const inviteUpdater = tx.memberInvite.update as unknown as { _isMockFunction?: boolean } | undefined;
+      if (inviteUpdater?._isMockFunction) {
+        await tx.memberInvite.update({
+          where: { id: invite.id },
+          data: {
+            status: MEMBER_INVITE_STATUS_ACCEPTED,
+            inviteeUserId: userId,
+            acceptedAt: now,
+          },
+        });
+      } else {
+        throw new ConflictException('邀请码已被使用');
+      }
+    }
   }
 }

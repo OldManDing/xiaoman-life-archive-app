@@ -1,8 +1,22 @@
-import { IsArray, IsBoolean, IsEnum, IsISO8601, IsOptional, IsString, MaxLength } from 'class-validator';
-import { RecordType } from '@prisma/client';
+import {
+  ArrayMaxSize,
+  ArrayUnique,
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsISO8601,
+  IsIn,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+} from 'class-validator';
+import { RecordType, VisibilityScope } from '@prisma/client';
 
 export class CreateRecordDto {
   @IsString()
+  @IsNotEmpty()
+  @MaxLength(32)
   child_no!: string;
 
   @IsEnum(RecordType)
@@ -15,14 +29,23 @@ export class CreateRecordDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(2000)
   content_text?: string;
 
   @IsOptional()
   @IsArray()
+  @ArrayMaxSize(20)
+  @ArrayUnique()
+  @IsString({ each: true })
+  @MaxLength(32, { each: true })
   media_nos?: string[];
 
   @IsOptional()
   @IsArray()
+  @ArrayMaxSize(20)
+  @ArrayUnique()
+  @IsString({ each: true })
+  @MaxLength(32, { each: true })
   tags?: string[];
 
   @IsOptional()
@@ -35,14 +58,14 @@ export class CreateRecordDto {
   location_text?: string;
 
   @IsOptional()
-  @IsString()
-  visibility_scope?: string;
+  @IsEnum(VisibilityScope)
+  visibility_scope?: VisibilityScope;
 
   @IsOptional()
   @IsBoolean()
   is_milestone?: boolean;
 
   @IsOptional()
-  @IsString()
-  status?: string;
+  @IsIn(['draft', 'published'])
+  status?: 'draft' | 'published';
 }

@@ -17,6 +17,8 @@ import { UpdateRecordDto } from './dto/update-record.dto';
 const uniqueTagNames = (tags: Array<{ tagName: string }>) => Array.from(new Set(tags.map((item) => item.tagName).filter(Boolean)));
 const coordinateLocationPattern = /^(?:手机定位|当前位置)?\s*(?:[·:：-]\s*)?[-+]?\d{1,2}(?:\.\d{3,})?\s*,\s*[-+]?\d{1,3}(?:\.\d{3,})?$/;
 const FAMILY_RECORD_PUBLISHED_ACTION = 'family.record_published';
+const RECORD_MEDIA_MAX_REFERENCES = 20;
+const RECORD_TAG_MAX_LENGTH = 32;
 
 export const normalizeRecordTypeForMedia = (recordType: RecordType, mediaNos: string[]): RecordType =>
   recordType === RecordType.text && mediaNos.length > 0 ? RecordType.mixed : recordType;
@@ -26,6 +28,40 @@ const normalizeRecordLocationText = (value?: string | null) => {
   const text = value?.trim() ?? '';
   if (!text) return null;
   return coordinateLocationPattern.test(text) ? '当前位置附近' : text;
+};
+
+const normalizeStringList = (values: string[] | undefined, maxLength: number) => {
+  if (values === undefined) return undefined;
+  const normalized = values.map((value) => value.trim()).filter(Boolean);
+  if (normalized.some((value) => value.length > maxLength)) {
+    throw new BadRequestException(`单项内容不能超过${maxLength}个字符`);
+  }
+  return Array.from(new Set(normalized));
+};
+
+const parseRecordDate = (value: string, field: string) => {
+  const parsed = new Date(value);
+  if (!Number.isFinite(parsed.getTime())) {
+    throw new BadRequestException(`${field}格式不正确`);
+  }
+  return parsed;
+};
+
+const parseRecordEventDate = (value: string, field = '发生时间') => {
+  const parsed = parseRecordDate(value, field);
+  if (parsed.getTime() > Date.now()) {
+    throw new BadRequestException(`${field}不能晚于当前时间`);
+  }
+  return parsed;
+};
+
+const parseListDateBoundary = (value: string, field: string, end = false) => {
+  const parsed = parseRecordDate(value, field);
+  if (end && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    parsed.setUTCDate(parsed.getUTCDate() + 1);
+    return { value: parsed, operator: 'lt' as const };
+  }
+  return { value: parsed, operator: end ? ('lte' as const) : ('gte' as const) };
 };
 
 const keywordEventTimeRange = (keyword: string) => {
@@ -80,17 +116,24 @@ export class RecordsService {
       throw new ForbiddenException('无权限创建记录');
     }
 
-    const mediaNos = dto.media_nos ?? [];
+    const mediaNos = normalizeStringList(dto.media_nos, 32) ?? [];
+    if (mediaNos.length > RECORD_MEDIA_MAX_REFERENCES) {
+      throw new BadRequestException(`每条记录最多关联${RECORD_MEDIA_MAX_REFERENCES}个媒体`);
+    }
+    const tags = normalizeStringList(dto.tags, RECORD_TAG_MAX_LENGTH) ?? [];
     const recordType = normalizeRecordTypeForMedia(dto.record_type, mediaNos);
-    this.ensureRecordPayload(dto.content_text, mediaNos, dto.visibility_scope);
+    const status = dto.status ?? 'published';
+    const visibilityScope = dto.visibility_scope ?? VisibilityScope.family;
+    this.ensureRecordPayload(dto.content_text, mediaNos, visibilityScope);
     this.ensureRecordPublishPayload({
-      status: dto.status,
+      status,
       recordType,
       title: dto.title,
       contentText: dto.content_text,
       mediaNos,
       eventTime: dto.event_time,
     });
+    if (dto.event_time) parseRecordEventDate(dto.event_time);
 
     const record = await this.prisma.$transaction(async (tx) => {
       const media = mediaNos.length
@@ -98,6 +141,8 @@ export class RecordsService {
             where: {
               mediaNo: { in: mediaNos },
               familyId: child.familyId,
+              childId: child.id,
+              recordId: null,
               status: MEDIA_STATUS_READY,
               deletedAt: null,
             },
@@ -118,29 +163,34 @@ export class RecordsService {
           recordType,
           title: dto.title,
           contentText: dto.content_text,
-          eventTime: dto.event_time ? new Date(dto.event_time) : new Date(),
+          eventTime: dto.event_time ? parseRecordEventDate(dto.event_time) : new Date(),
           locationText: normalizeRecordLocationText(dto.location_text),
-          visibilityScope: VisibilityScope.family,
+          visibilityScope,
           isMilestone: dto.is_milestone ?? false,
-          status: dto.status === 'draft' ? RECORD_STATUS_DRAFT : RECORD_STATUS_PUBLISHED,
-          publishedAt: dto.status === 'draft' ? null : new Date(),
+          status: status === 'draft' ? RECORD_STATUS_DRAFT : RECORD_STATUS_PUBLISHED,
+          publishedAt: status === 'draft' ? null : new Date(),
         },
       });
 
       if (media.length) {
-        await Promise.all(
-          media.map((item) =>
-            tx.recordMedia.update({
-              where: { id: item.id },
-              data: { recordId: created.id },
-            }),
-          ),
-        );
+        const claimed = await tx.recordMedia.updateMany({
+          where: {
+            id: { in: media.map((item) => item.id) },
+            childId: child.id,
+            recordId: null,
+            status: MEDIA_STATUS_READY,
+            deletedAt: null,
+          },
+          data: { recordId: created.id },
+        });
+        if (claimed.count !== media.length) {
+          throw new BadRequestException('媒体已被其他记录占用，请刷新后重试');
+        }
       }
 
-      if (dto.tags?.length) {
+      if (tags.length) {
         await tx.recordTag.createMany({
-          data: dto.tags.filter(Boolean).map((tag) => ({
+          data: tags.map((tag) => ({
             recordId: created.id,
             tagName: tag,
             source: RecordTagSource.user,
@@ -166,57 +216,67 @@ export class RecordsService {
 
     const keyword = dto.keyword?.trim();
     const keywordTimeRange = keyword ? keywordEventTimeRange(keyword) : null;
+    const visibilityWhere: Prisma.RecordWhereInput = dto.status === 'draft'
+      ? { status: RECORD_STATUS_DRAFT, creatorUserId: userId }
+      : dto.status === 'published'
+        ? { status: RECORD_STATUS_PUBLISHED }
+        : { OR: [{ status: RECORD_STATUS_PUBLISHED }, { status: RECORD_STATUS_DRAFT, creatorUserId: userId }] };
     const where: Prisma.RecordWhereInput = {
       childId: child.id,
       deletedAt: null,
-      ...(dto.status === 'draft'
-        ? { status: RECORD_STATUS_DRAFT, creatorUserId: userId }
-        : dto.status === 'published'
-          ? { status: RECORD_STATUS_PUBLISHED }
-          : { OR: [{ status: RECORD_STATUS_PUBLISHED }, { status: RECORD_STATUS_DRAFT, creatorUserId: userId }] }),
-      ...(dto.record_type ? { recordType: dto.record_type as never } : {}),
-      ...(dto.start_time || dto.end_time
-        ? {
-            eventTime: {
-              ...(dto.start_time ? { gte: new Date(dto.start_time) } : {}),
-              ...(dto.end_time ? { lte: new Date(dto.end_time) } : {}),
-            },
-          }
-        : {}),
-      ...(keyword
-        ? {
-            OR: [
-              { title: { contains: keyword } },
-              { contentText: { contains: keyword } },
-              { aiSummary: { contains: keyword } },
-              { locationText: { contains: keyword } },
-              { creator: { nickname: { contains: keyword } } },
-              { tags: { some: { tagName: { contains: keyword } } } },
-              ...(keywordTimeRange ? [{ eventTime: keywordTimeRange }] : []),
-            ],
-          }
-        : {}),
-      ...(dto.tag
-        ? {
-            tags: {
-              some: {
-                tagName: dto.tag,
-              },
-            },
-          }
-        : {}),
     };
 
+    if (dto.record_type) where.recordType = dto.record_type;
+    if (dto.start_time || dto.end_time) {
+      const eventTime: Prisma.DateTimeFilter = {};
+      if (dto.start_time) {
+        const boundary = parseListDateBoundary(dto.start_time, '开始时间');
+        eventTime.gte = boundary.value;
+      }
+      if (dto.end_time) {
+        const boundary = parseListDateBoundary(dto.end_time, '结束时间', true);
+        eventTime[boundary.operator] = boundary.value;
+      }
+      if (eventTime.gte && (eventTime.lte || eventTime.lt)) {
+        const end = eventTime.lte ?? eventTime.lt;
+        if (end && eventTime.gte >= end) throw new BadRequestException('开始时间不能晚于结束时间');
+      }
+      where.eventTime = eventTime;
+    }
+    if (keyword) {
+      where.AND = [
+        visibilityWhere,
+        {
+          OR: [
+          { title: { contains: keyword } },
+          { contentText: { contains: keyword } },
+          { aiSummary: { contains: keyword } },
+          { locationText: { contains: keyword } },
+          { creator: { nickname: { contains: keyword } } },
+          { tags: { some: { tagName: { contains: keyword } } } },
+          ...(keywordTimeRange ? [{ eventTime: keywordTimeRange }] : []),
+          ],
+        },
+      ];
+    } else {
+      Object.assign(where, visibilityWhere);
+    }
+    if (dto.tag) {
+      where.tags = { some: { tagName: dto.tag.trim() } };
+    }
     const [total, records] = await this.prisma.$transaction([
       this.prisma.record.count({ where }),
       this.prisma.record.findMany({
         where,
         include: {
           creator: true,
-          media: { where: { status: MEDIA_STATUS_READY, deletedAt: null } },
+          media: {
+            where: { status: MEDIA_STATUS_READY, deletedAt: null },
+            orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+          },
           tags: true,
         },
-        orderBy: { eventTime: 'desc' },
+        orderBy: [{ eventTime: 'desc' }, { id: 'desc' }],
         skip: (page - 1) * pageSize,
         take: pageSize,
       }),
@@ -240,9 +300,15 @@ export class RecordsService {
 
   async update(userId: bigint, recordNo: string, dto: UpdateRecordDto) {
     const { record } = await this.accessControlService.ensureRecordEditable(userId, recordNo);
-    const mergedMediaNos = dto.media_nos ?? record.media.map((item) => item.mediaNo);
+    const requestedMediaNos = normalizeStringList(dto.media_nos, 32);
+    if (requestedMediaNos && requestedMediaNos.length > RECORD_MEDIA_MAX_REFERENCES) {
+      throw new BadRequestException(`每条记录最多关联${RECORD_MEDIA_MAX_REFERENCES}个媒体`);
+    }
+    const mergedMediaNos = requestedMediaNos ?? record.media.map((item) => item.mediaNo);
+    const tags = normalizeStringList(dto.tags, RECORD_TAG_MAX_LENGTH);
     const recordType = normalizeRecordTypeForMedia(dto.record_type ?? record.recordType, mergedMediaNos);
-    this.ensureRecordPayload(dto.content_text ?? record.contentText, mergedMediaNos, dto.visibility_scope ?? 'family');
+    const visibilityScope = dto.visibility_scope ?? record.visibilityScope ?? VisibilityScope.family;
+    this.ensureRecordPayload(dto.content_text ?? record.contentText, mergedMediaNos, visibilityScope);
     this.ensureRecordPublishPayload({
       status: dto.status,
       recordType,
@@ -251,16 +317,19 @@ export class RecordsService {
       mediaNos: mergedMediaNos,
       eventTime: dto.event_time ?? record.eventTime.toISOString(),
     });
+    if (dto.event_time) parseRecordEventDate(dto.event_time);
 
     const shouldLogPublish = record.status !== RECORD_STATUS_PUBLISHED && dto.status === 'published';
 
     await this.prisma.$transaction(async (tx) => {
-      const nextMediaNos = dto.media_nos;
+      const nextMediaNos = requestedMediaNos;
       if (nextMediaNos) {
         const media = await tx.recordMedia.findMany({
           where: {
             mediaNo: { in: nextMediaNos },
             familyId: record.familyId,
+            childId: record.childId,
+            OR: [{ recordId: null }, { recordId: record.id }],
             status: MEDIA_STATUS_READY,
             deletedAt: null,
           },
@@ -270,44 +339,49 @@ export class RecordsService {
         }
         ensureRecordMediaCountLimits(media);
 
+        const claimed = await tx.recordMedia.updateMany({
+          where: {
+            id: { in: media.map((item) => item.id) },
+            childId: record.childId,
+            OR: [{ recordId: null }, { recordId: record.id }],
+            status: MEDIA_STATUS_READY,
+            deletedAt: null,
+          },
+          data: { recordId: record.id },
+        });
+        if (claimed.count !== media.length) {
+          throw new BadRequestException('媒体已被其他记录占用，请刷新后重试');
+        }
         await tx.recordMedia.updateMany({
-          where: { recordId: record.id },
+          where: { recordId: record.id, id: { notIn: media.map((item) => item.id) } },
           data: { recordId: null },
         });
-
-        await Promise.all(
-          media.map((item) =>
-            tx.recordMedia.update({
-              where: { id: item.id },
-              data: { recordId: record.id },
-            }),
-          ),
-        );
       } else {
         ensureRecordMediaCountLimits(record.media);
       }
 
-      await tx.record.update({
-        where: { id: record.id },
-        data: {
+      const recordData: Prisma.RecordUpdateInput = {
           recordType,
-          title: dto.title,
-          contentText: dto.content_text,
-          eventTime: dto.event_time ? new Date(dto.event_time) : undefined,
-          locationText: dto.location_text === undefined ? undefined : normalizeRecordLocationText(dto.location_text),
-          visibilityScope: dto.visibility_scope ? VisibilityScope.family : undefined,
-          isMilestone: dto.is_milestone,
-          status: dto.status ? (dto.status === 'draft' ? RECORD_STATUS_DRAFT : RECORD_STATUS_PUBLISHED) : undefined,
-          publishedAt:
-            dto.status === 'published' ? new Date() : dto.status === 'draft' ? null : undefined,
-        },
-      });
+          ...(dto.title !== undefined ? { title: dto.title } : {}),
+          ...(dto.content_text !== undefined ? { contentText: dto.content_text } : {}),
+          ...(dto.event_time ? { eventTime: parseRecordEventDate(dto.event_time) } : {}),
+          ...(dto.location_text !== undefined ? { locationText: normalizeRecordLocationText(dto.location_text) } : {}),
+          ...(dto.visibility_scope !== undefined ? { visibilityScope } : {}),
+          ...(dto.is_milestone !== undefined ? { isMilestone: dto.is_milestone } : {}),
+          ...(dto.status !== undefined
+            ? {
+                status: dto.status === 'draft' ? RECORD_STATUS_DRAFT : RECORD_STATUS_PUBLISHED,
+                publishedAt: dto.status === 'published' ? new Date() : null,
+              }
+            : {}),
+      };
+      await tx.record.update({ where: { id: record.id }, data: recordData });
 
-      if (dto.tags) {
+      if (tags !== undefined) {
         await tx.recordTag.deleteMany({ where: { recordId: record.id, source: RecordTagSource.user } });
-        if (dto.tags.length) {
+        if (tags.length) {
           await tx.recordTag.createMany({
-            data: dto.tags.filter(Boolean).map((tag) => ({
+            data: tags.map((tag) => ({
               recordId: record.id,
               tagName: tag,
               source: RecordTagSource.user,
@@ -326,11 +400,13 @@ export class RecordsService {
   }
 
   async remove(userId: bigint, recordNo: string) {
-    const { record } = await this.accessControlService.ensureRecordEditable(userId, recordNo);
-    await this.prisma.record.update({
-      where: { id: record.id },
-      data: { deletedAt: new Date() },
-    });
+    const { record } = await this.accessControlService.ensureRecordRemovable(userId, recordNo);
+    if (!record.deletedAt) {
+      await this.prisma.record.updateMany({
+        where: { id: record.id, deletedAt: null },
+        data: { deletedAt: new Date() },
+      });
+    }
 
     return {
       record_no: record.recordNo,
@@ -339,7 +415,7 @@ export class RecordsService {
   }
 
   private ensureRecordPayload(contentText?: string | null, mediaNos?: string[], visibilityScope?: string) {
-    if (!contentText && (!mediaNos || mediaNos.length === 0)) {
+    if (!contentText?.trim() && (!mediaNos || mediaNos.length === 0)) {
       throw new BadRequestException('正文和媒体至少保留一项');
     }
     if (visibilityScope && visibilityScope !== 'family') {
@@ -433,7 +509,7 @@ export class RecordsService {
   }) {
     const firstMedia = record.media[0];
     const [cover, creatorAvatarUrl] = await Promise.all([
-      firstMedia ? this.storageService.createAccessUrl(firstMedia.objectKey) : Promise.resolve(null),
+      firstMedia ? this.storageService.createAccessUrl(firstMedia.objectKey).catch(() => null) : Promise.resolve(null),
       this.resolveUserAvatarUrl(record.creator.id, record.creator.avatarUrl),
     ]);
 
@@ -553,11 +629,11 @@ export class RecordsService {
   ) {
     const mediaList = await Promise.all(
       record.media.map(async (item) => {
-        const access = await this.storageService.createAccessUrl(item.objectKey);
+        const access = await this.storageService.createAccessUrl(item.objectKey).catch(() => null);
         return {
           media_no: item.mediaNo,
           media_type: item.mediaType,
-          access_url: access.access_url,
+          access_url: access?.access_url ?? null,
           original_name: item.originalName,
           mime_type: item.mimeType,
           size_bytes: item.sizeBytes ? Number(item.sizeBytes) : null,

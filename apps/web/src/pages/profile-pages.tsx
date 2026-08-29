@@ -5,6 +5,8 @@ import { Bell, BookHeart, Camera, CheckCircle2, ChevronRight, DownloadCloud, Fil
 import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
 import type { AppUpdateCheckResponse, ArchiveExportRequestItem, ArchiveExportSummaryResponse, FeedbackTicketItem, MembershipBookRequestItem, NotificationUnreadCountResponse, RecordSummary, UserNotificationItem, UserNotificationsResponse } from '../shared/api/types';
+import { formatUpdateBytes, updateDownloadStateLabel, useAppUpdateDownload } from '../shared/appUpdateUi';
+import { hasVerifiedAppUpdateMetadata } from '../shared/appUpdater';
 import { useAsyncData, useStoredMediaUrl } from '../shared/hooks';
 import { membershipTypeLabel } from '../shared/labels';
 import { createPersistableAvatarPreview, saveLocalMediaPreview, saveRuntimeMediaPreview, toStoredMediaReference } from '../shared/localMediaPreview';
@@ -16,7 +18,7 @@ import { saveTextFileToDownloads } from '../shared/nativeExport';
 import { getNativeNotificationPermissionStatus, requestNativeNotificationPermission, type NativeNotificationPermissionStatus } from '../shared/nativeNotifications';
 import { useCachedMediaUrl } from '../shared/useCachedMediaUrl';
 import { AppSelect, Field, PageShell, Panel, compactSecondaryButtonStyle, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle, textareaStyle } from '../shared/ui';
-import { EmptyState, buttonRowStyle, normalizeDisplayName, rowStyle } from './shared';
+import { EmptyState, buttonRowStyle, formatAppDateTime, normalizeDisplayName, rowStyle } from './shared';
 import { RefAvatar, RefListRow, RefSectionTitle, isReferencePlaceholderAvatar, refPageStyle, referenceAssets } from './reference-ui';
 
 
@@ -391,7 +393,7 @@ const membershipBookStatusColor = (value: MembershipBookRequestItem['status']) =
   return 'var(--nl-muted)';
 };
 
-const formatProfileDateTime = (value: string | null) => (value ? new Date(value).toLocaleString('zh-CN', { hour12: false }) : '—');
+const formatProfileDateTime = (value: string | null) => formatAppDateTime(value, '—');
 const isTechnicalProfileName = (value: string) => /^(?:codex(?:ui)?\d[a-z0-9]*|native_[a-z0-9_]+|1\d{10})$/i.test(value.trim());
 
 export const ProfilePage = () => {
@@ -433,7 +435,7 @@ export const ProfilePage = () => {
   ];
   return (
     <div style={refPageStyle}>
-      <section style={{ background: 'transparent', padding: 'calc(26px + env(safe-area-inset-top)) var(--nl-content-inline) 24px', borderBottom: '1px solid var(--nl-border-soft)', borderRadius: 0, boxShadow: 'none', position: 'relative', overflow: 'hidden', display: 'grid', gap: 22 }}>
+      <section style={{ background: 'transparent', padding: 'calc(var(--nl-statusbar-top) + 12px) var(--nl-content-inline) 24px', borderBottom: '1px solid var(--nl-border-soft)', borderRadius: 0, boxShadow: 'none', position: 'relative', overflow: 'hidden', display: 'grid', gap: 22 }}>
         <div style={{ display: 'grid', gap: 8 }}>
           <span aria-hidden="true" style={{ width: 28, height: 2, background: 'var(--nl-primary-2)' }} />
           <h1 style={{ margin: 0, color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: 32, lineHeight: 1.06, fontWeight: 780 }}>我的档案</h1>
@@ -523,6 +525,7 @@ const NotificationListItem = ({
   return (
     <button
       type="button"
+      aria-label={`${title}${item.read_at ? '' : '，未读'}${item.target_type === 'record' && item.target_no ? '，查看记录' : ''}`}
       onClick={onClick}
       style={{
         width: '100%',
@@ -584,8 +587,14 @@ export const MessagesPage = () => {
 
   const openNotification = (item: UserNotificationItem) => {
     if (!item.read_at) {
+      const previousNotifications = notifications;
+      const previousUnreadCount = unreadCount;
       markItemReadLocally(item.notification_no);
-      void webApi.markNotificationRead(item.notification_no).catch(() => undefined);
+      void webApi.markNotificationRead(item.notification_no).catch(() => {
+        setNotifications(previousNotifications);
+        setUnreadCount(previousUnreadCount);
+        setMessage('消息状态同步失败，请稍后重试。');
+      });
     }
 
     if (item.target_type === 'record' && item.target_no) {
@@ -594,6 +603,8 @@ export const MessagesPage = () => {
   };
 
   const markAllRead = async () => {
+    const previousNotifications = notifications;
+    const previousUnreadCount = unreadCount;
     setMarkingAll(true);
     setMessage(null);
     try {
@@ -610,6 +621,8 @@ export const MessagesPage = () => {
       setUnreadCount({ unread_count: 0 });
       setMessage('全部已读');
     } catch {
+      setNotifications(previousNotifications);
+      setUnreadCount(previousUnreadCount);
       setMessage('操作失败，请稍后重试。');
     } finally {
       setMarkingAll(false);
@@ -648,6 +661,7 @@ export const NotificationSettingsPage = () => {
   const [settings, setSettings] = useState<LocalSettings>(() => loadLocalSettings());
   const [permissionStatus, setPermissionStatus] = useState<NativeNotificationPermissionStatus | 'checking'>('checking');
   const [message, setMessage] = useState<string | null>(null);
+  const [permissionBusy, setPermissionBusy] = useState(false);
   const [pushConnectionStatus, setPushConnectionStatus] = useState<HmsPushConnectionStatus>(() => getHmsPushConnectionStatus());
   const { data: notificationCount } = useAsyncData<NotificationUnreadCountResponse>(
     async () => webApi.notificationUnreadCount(),
@@ -655,9 +669,18 @@ export const NotificationSettingsPage = () => {
   );
 
   const refreshPermissionStatus = async () => {
+    if (permissionBusy) return;
+    setPermissionBusy(true);
     setPermissionStatus('checking');
-    const status = await getNativeNotificationPermissionStatus();
-    setPermissionStatus(status);
+    try {
+      const status = await getNativeNotificationPermissionStatus();
+      setPermissionStatus(status);
+    } catch {
+      setPermissionStatus('unknown');
+      setMessage('暂时无法读取系统通知权限，请稍后重试。');
+    } finally {
+      setPermissionBusy(false);
+    }
   };
 
   useEffect(() => {
@@ -682,16 +705,34 @@ export const NotificationSettingsPage = () => {
   };
 
   const requestPermission = async () => {
+    if (permissionBusy) return;
+    setPermissionBusy(true);
     setMessage(null);
-    const status = await requestNativeNotificationPermission();
+    let status: NativeNotificationPermissionStatus;
+    try {
+      status = await requestNativeNotificationPermission();
+    } catch {
+      setMessage('无法打开系统通知设置，请稍后重试。');
+      setPermissionBusy(false);
+      return;
+    }
     setPermissionStatus(status);
     if (status === 'granted') {
-      const connectionStatus = await setHmsRemotePushEnabled(settings.notificationPushEnabled && settings.notificationFamilyEnabled);
+      let connectionStatus: HmsPushConnectionStatus;
+      try {
+        connectionStatus = await setHmsRemotePushEnabled(settings.notificationPushEnabled && settings.notificationFamilyEnabled);
+      } catch {
+        setMessage('系统通知已开启，但设备注册失败，消息仍可在 App 内查看。');
+        setPermissionBusy(false);
+        return;
+      }
       setPushConnectionStatus(connectionStatus);
       setMessage(connectionStatus === 'registered' ? '手机通知已开启。' : '系统通知已开启，消息仍可在 App 内查看。');
+      setPermissionBusy(false);
       return;
     }
     setMessage('系统通知未开启，请在手机系统设置中允许通知。');
+    setPermissionBusy(false);
   };
 
   const unreadText = `${notificationCount?.unread_count ?? 0} 条未读`;
@@ -723,6 +764,8 @@ export const NotificationSettingsPage = () => {
               <button
                 type="button"
                 onClick={shouldShowPermissionButton ? requestPermission : refreshPermissionStatus}
+                disabled={permissionBusy}
+                aria-busy={permissionBusy}
                 style={{
                   minWidth: 82,
                   minHeight: 38,
@@ -739,7 +782,7 @@ export const NotificationSettingsPage = () => {
                   flexShrink: 0,
                 }}
               >
-                {shouldShowPermissionButton ? '开启通知' : '检查状态'}
+                {permissionBusy ? '处理中…' : shouldShowPermissionButton ? '开启通知' : '检查状态'}
               </button>
             </div>
             <div style={{ display: 'grid', gap: 6 }}>
@@ -1218,7 +1261,7 @@ export const ReportsPage = () => {
                   <button key={item.record_no} type="button" style={{ ...secondaryButtonStyle, borderRadius: '8px', textAlign: 'left', justifyContent: 'space-between' }} onClick={() => navigate(`/record/${item.record_no}`)}>
                     <span style={{ display: 'grid', gap: '4px' }}>
                       <span style={{ fontWeight: 700 }}>{item.title ?? '未命名记录'}</span>
-                      <span style={{ color: 'var(--nl-muted)', fontSize: '12px' }}>{new Date(item.event_time).toLocaleString('zh-CN', { hour12: false })}</span>
+                      <span style={{ color: 'var(--nl-muted)', fontSize: '12px' }}>{formatAppDateTime(item.event_time)}</span>
                     </span>
                     <ChevronRight size={16} />
                   </button>
@@ -1581,7 +1624,7 @@ export const MembershipPage = () => {
         </div>
         <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: '12px' }}>
           <p style={{ margin: 0, color: 'var(--nl-muted)', fontSize: '12px', lineHeight: 1.6 }}>
-            有效期：{user?.membership_expire_at ? new Date(user.membership_expire_at).toLocaleDateString('zh-CN') : '长期有效'}
+            有效期：{user?.membership_expire_at ? formatAppDateTime(user.membership_expire_at, '日期待确认') : '长期有效'}
           </p>
           <button type="button" style={{ ...secondaryButtonStyle, minHeight: '44px', padding: '8px 12px', color: 'var(--nl-ink)', fontSize: '12px' }} onClick={() => void refreshMembership()} disabled={refreshing}>
             {refreshing ? '刷新中' : '刷新状态'}
@@ -2195,6 +2238,7 @@ export const AboutPage = () => {
   const [checkingUpdate, setCheckingUpdate] = useState(false);
   const [updateResult, setUpdateResult] = useState<AppUpdateCheckResponse | null>(null);
   const [updateError, setUpdateError] = useState<string | null>(null);
+  const download = useAppUpdateDownload(updateResult);
 
   const checkUpdate = async () => {
     setCheckingUpdate(true);
@@ -2229,7 +2273,7 @@ export const AboutPage = () => {
       </section>
 
       <Panel style={{ padding: 0, overflow: 'hidden', borderRadius: 0, background: 'transparent', border: 'none', borderTop: '1px solid var(--nl-border-muted)', boxShadow: 'none' }}>
-        <AboutMenuLink icon={RefreshCw} label="检查更新" value={updateStatusText} isLast={!updateResult && !updateError} onClick={() => void checkUpdate()} />
+        <AboutMenuLink icon={RefreshCw} label="检查更新" value={updateStatusText} isLast={!updateResult && !updateError} onClick={checkingUpdate ? undefined : () => void checkUpdate()} />
         {updateError ? <p style={{ ...helperTextStyle, color: 'var(--nl-danger)', margin: 0, padding: '0 16px 14px' }}>{updateError}</p> : null}
         {updateResult?.update_available ? (
           <div style={{ borderTop: '1px solid var(--nl-border-muted)', padding: '14px 0 16px', display: 'grid', gap: '9px', background: 'transparent' }}>
@@ -2245,12 +2289,41 @@ export const AboutPage = () => {
               最新版本 {updateResult.latest_version}（构建 {updateResult.latest_build_number}）
             </p>
             {updateResult.release_notes ? <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.65, whiteSpace: 'pre-wrap' }}>{updateResult.release_notes}</p> : null}
-            {updateResult.apk_url ? (
-              <a href={updateResult.apk_url} target="_blank" rel="noreferrer" style={{ ...primaryButtonStyle, minHeight: '42px', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px' }}>
-                下载 APK
-              </a>
-            ) : null}
-            {!updateResult.apk_url ? <p style={{ ...helperTextStyle, margin: 0 }}>新版本已准备，应用市场审核后开放更新。</p> : null}
+            {hasVerifiedAppUpdateMetadata(updateResult) && updateResult.download_available !== false && updateResult.can_download_update !== false ? (
+              <div style={{ display: 'grid', gap: '8px' }}>
+                {download.state === 'downloading' || download.state === 'verifying' ? (
+                  <>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 650 }}>
+                      <span>{updateDownloadStateLabel(download.state)}</span>
+                      <span>{Math.round(download.progress)}%</span>
+                    </div>
+                    <div role="progressbar" aria-label={`更新下载进度 ${Math.round(download.progress)}%`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(download.progress)} style={{ height: '6px', borderRadius: '999px', overflow: 'hidden', background: 'var(--nl-border-muted)' }}>
+                      <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, download.progress))}%`, background: 'var(--nl-primary-gradient)', transition: 'width 0.2s ease' }} />
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ color: 'var(--nl-muted)', fontSize: '11px' }}>{formatUpdateBytes(download.downloadedBytes)}{download.totalBytes ? ` / ${formatUpdateBytes(download.totalBytes)}` : ''}</span>
+                      <button type="button" onClick={() => void download.cancelDownload()} style={{ ...secondaryButtonStyle, minHeight: '34px', padding: '0 11px' }}>取消</button>
+                    </div>
+                  </>
+                ) : download.state === 'ready' || download.state === 'permission' ? (
+                  <button type="button" onClick={() => void download.install()} style={{ ...primaryButtonStyle, minHeight: '42px', borderRadius: '8px' }}>
+                    {download.state === 'permission' ? '再次安装' : '安装更新'}
+                  </button>
+                ) : download.state === 'installing' ? (
+                  <button type="button" disabled style={{ ...primaryButtonStyle, minHeight: '42px', borderRadius: '8px', opacity: 0.65 }}>
+                    正在打开系统安装器
+                  </button>
+                ) : (
+                  <button type="button" onClick={() => void download.startDownload()} style={{ ...primaryButtonStyle, minHeight: '42px', borderRadius: '8px' }}>
+                    {download.state === 'error' ? '重试下载' : '下载并安装'}
+                  </button>
+                )}
+                {download.error ? <p style={{ ...helperTextStyle, margin: 0, color: 'var(--nl-danger)', whiteSpace: 'pre-wrap' }}>{download.error}</p> : null}
+                {download.state === 'installing' ? <p style={{ ...helperTextStyle, margin: 0 }}>{updateDownloadStateLabel(download.state)}</p> : null}
+              </div>
+            ) : (
+              <p style={{ ...helperTextStyle, margin: 0, color: 'var(--nl-danger)' }}>新版本已发布，但更新包暂不可下载，请稍后重试或联系管理员。</p>
+            )}
           </div>
         ) : null}
       </Panel>
@@ -2306,7 +2379,11 @@ export const ContactPage = () => {
               </span>
               <span style={{ minWidth: 0, display: 'grid', gap: '4px' }}>
                 <strong style={{ color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 660 }}>{item.title}</strong>
-                <span style={{ color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 600, overflowWrap: 'anywhere' }}>{item.value}</span>
+                {item.value.includes('@') ? (
+                  <a href={`mailto:${item.value}`} style={{ color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 600, overflowWrap: 'anywhere' }}>{item.value}</a>
+                ) : (
+                  <span style={{ color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 600, overflowWrap: 'anywhere' }}>{item.value}</span>
+                )}
                 <span style={{ color: 'var(--nl-muted)', fontSize: '12px', lineHeight: 1.55 }}>{item.detail}</span>
               </span>
             </div>

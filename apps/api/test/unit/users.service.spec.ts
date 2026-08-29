@@ -121,7 +121,7 @@ describe('UsersService', () => {
     expect(prisma.userAuthAccount.update).not.toHaveBeenCalled();
   });
 
-  it('does not advertise an app update when the APK URL is empty', async () => {
+  it('reports a version update even when the APK URL is not configured', async () => {
     const prisma = {
       user: {
         findFirst: jest.fn().mockResolvedValue(user),
@@ -148,7 +148,10 @@ describe('UsersService', () => {
       latest_version: '2.0.3',
       latest_build_number: 9,
       apk_url: null,
-      update_available: false,
+      apk_sha256: null,
+      apk_size_bytes: null,
+      update_available: true,
+      download_available: false,
       force_update: false,
     });
   });
@@ -164,6 +167,8 @@ describe('UsersService', () => {
           { configKey: 'mobile_latest_build_number', value: '9' },
           { configKey: 'mobile_release_notes', value: '新增首次进入海报介绍。' },
           { configKey: 'mobile_apk_url', value: 'https://download.example.com/nianlun-v2.0.3.apk' },
+          { configKey: 'mobile_apk_sha256', value: 'A'.repeat(64) },
+          { configKey: 'mobile_apk_size_bytes', value: '1234567' },
           { configKey: 'mobile_force_update', value: 'false' },
         ]),
       },
@@ -180,8 +185,90 @@ describe('UsersService', () => {
       latest_version: '2.0.3',
       latest_build_number: 9,
       apk_url: 'https://download.example.com/nianlun-v2.0.3.apk',
+      apk_sha256: 'a'.repeat(64),
+      apk_size_bytes: 1234567,
       update_available: true,
+      download_available: true,
       force_update: false,
     });
+  });
+
+  it('rejects non-HTTPS APK config without exposing a download URL', async () => {
+    const prisma = {
+      user: {
+        findFirst: jest.fn().mockResolvedValue(user),
+      },
+      systemConfig: {
+        findMany: jest.fn().mockResolvedValue([
+          { configKey: 'mobile_latest_version', value: '2.0.3' },
+          { configKey: 'mobile_latest_build_number', value: '9' },
+          { configKey: 'mobile_apk_url', value: 'http://download.example.com/nianlun.apk' },
+          { configKey: 'mobile_force_update', value: 'false' },
+        ]),
+      },
+    };
+    const service = new UsersService(prisma as never, {} as never, {} as never, {} as never, {} as never);
+
+    const result = await service.checkAppUpdate(user.id, {
+      platform: 'android',
+      version: '2.0.2',
+      build_number: 8,
+    });
+
+    expect(result).toMatchObject({
+      update_available: true,
+      download_available: false,
+      apk_url: null,
+    });
+  });
+
+  it('uses build number as the authoritative boundary when configured', async () => {
+    const prisma = {
+      user: {
+        findFirst: jest.fn().mockResolvedValue(user),
+      },
+      systemConfig: {
+        findMany: jest.fn().mockResolvedValue([
+          { configKey: 'mobile_latest_version', value: '2.0.3' },
+          { configKey: 'mobile_latest_build_number', value: '9' },
+          { configKey: 'mobile_apk_url', value: 'https://download.example.com/nianlun.apk' },
+          { configKey: 'mobile_force_update', value: 'false' },
+        ]),
+      },
+    };
+    const service = new UsersService(prisma as never, {} as never, {} as never, {} as never, {} as never);
+
+    await expect(
+      service.checkAppUpdate(user.id, { platform: 'android', version: '2.0.2', build_number: 9 }),
+    ).resolves.toMatchObject({ update_available: false, download_available: false });
+    await expect(
+      service.checkAppUpdate(user.id, { platform: 'android', version: '2.0.4', build_number: 10 }),
+    ).resolves.toMatchObject({ update_available: false, download_available: false });
+  });
+
+  it('compares prerelease versions when build numbers are unavailable', async () => {
+    const prisma = {
+      user: {
+        findFirst: jest.fn().mockResolvedValue(user),
+      },
+      systemConfig: {
+        findMany: jest.fn().mockResolvedValue([
+          { configKey: 'mobile_latest_version', value: '2.0.0' },
+          { configKey: 'mobile_latest_build_number', value: '0' },
+          { configKey: 'mobile_apk_url', value: 'https://download.example.com/nianlun.apk' },
+          { configKey: 'mobile_apk_sha256', value: 'B'.repeat(64) },
+          { configKey: 'mobile_apk_size_bytes', value: '1234567' },
+          { configKey: 'mobile_force_update', value: 'false' },
+        ]),
+      },
+    };
+    const service = new UsersService(prisma as never, {} as never, {} as never, {} as never, {} as never);
+
+    await expect(
+      service.checkAppUpdate(user.id, { platform: 'android', version: '2.0.0-beta.1', build_number: 0 }),
+    ).resolves.toMatchObject({ update_available: true, download_available: true });
+    await expect(
+      service.checkAppUpdate(user.id, { platform: 'android', version: '2.0.0', build_number: 0 }),
+    ).resolves.toMatchObject({ update_available: false, download_available: false });
   });
 });
