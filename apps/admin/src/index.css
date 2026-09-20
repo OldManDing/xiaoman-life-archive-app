@@ -7507,3 +7507,30 @@ table {
   font-size: 12px;
   align-self: center;
 }
+
+/* 定长标识列（用户编号等）不能被折行断开：AI 任务列表的「请求人」实测被折成
+   "u_demo_parent_0 / 01" 两行，既难读又撑高行高。给一个能容纳 18 位编号的宽度。 */
+.admin-table-panel .admin-responsive-table th[data-column='请求人'],
+.admin-table-panel .admin-responsive-table td[data-column='请求人'] {
+  width: 170px;
+  max-width: 170px;
+  overflow-wrap: normal;
+  word-break: keep-all;
+}
+
+/* 时间区间：开始/结束并排成一个组合控件。
+   原来它们是筛选栅格里的两个独立单元格，会被拆到不同行、列宽也不一致；
+   跨 2 列 + 最小 150px，保证「开始时间/结束时间」的提示文字不被截断。 */
+.admin-date-range {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(150px, 1fr));
+  gap: 8px;
+  min-width: 0;
+  grid-column: span 2;
+}
+
+@media (max-width: 520px) {
+  .admin-date-range {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

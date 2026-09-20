@@ -371,7 +371,7 @@ test.describe('Visual review smoke', () => {
       { path: '/users', heading: '账号管理', secondary: true },
       { path: '/families', heading: '家庭管理' },
       { path: '/invites', heading: '邀请码管理', secondary: true },
-      { path: '/children', heading: '孩子列表' },
+      { path: '/children', heading: '孩子档案' },
       { path: '/records', heading: '成长记录' },
       { path: '/media', heading: '媒体库' },
       { path: '/content-risks', heading: '内容风险' },

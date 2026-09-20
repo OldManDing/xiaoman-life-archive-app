@@ -1656,7 +1656,7 @@ export const ChildrenPage = () => {
   ], (item) => item.child_no);
 
   return (
-    <PageShell title="孩子列表" description="查询孩子档案、归属家庭与拥有者。">
+    <PageShell title="孩子档案" description="查询孩子档案、归属家庭与拥有者。">
       <SearchPanel {...state} />
       <ListSummary label="孩子档案概览" loading={state.loading} description="默认展示档案归属和状态，发现异常时进入详情核查家庭关系。">
         <SummaryStat label="本页头像可用" value={`${avatarReadyCount}/${currentChildren.length}`} tone={avatarReadyCount === currentChildren.length ? 'success' : 'warning'} />
@@ -1972,8 +1972,10 @@ export const MediaPage = () => {
               <input style={inputStyle} value={childNo} onChange={(event) => setChildNo(event.target.value)} placeholder="孩子编号" />
               <input style={inputStyle} value={familyNo} onChange={(event) => setFamilyNo(event.target.value)} placeholder="家庭编号" />
               <input style={inputStyle} value={uploaderUserNo} onChange={(event) => setUploaderUserNo(event.target.value)} placeholder="上传者编号" />
-              <AdminDateInput type="datetime-local" value={startTime} onChange={(event) => setStartTime(event.target.value)} aria-label="开始时间" placeholder="开始时间" />
-              <AdminDateInput type="datetime-local" value={endTime} onChange={(event) => setEndTime(event.target.value)} aria-label="结束时间" placeholder="结束时间" />
+              <div className="admin-date-range">
+                <AdminDateInput type="datetime-local" value={startTime} onChange={(event) => setStartTime(event.target.value)} aria-label="开始时间" placeholder="开始时间" />
+                <AdminDateInput type="datetime-local" value={endTime} onChange={(event) => setEndTime(event.target.value)} aria-label="结束时间" placeholder="结束时间" />
+              </div>
             </div>
           ) : null}
           <div className="admin-audit-filter-actions admin-row-actions-wrap" >
@@ -2229,8 +2231,10 @@ export const NotificationsPage = () => {
                 <option value="failed">投递失败</option>
                 <option value="skipped">已跳过</option>
               </AdminSelect>
-              <AdminDateInput type="datetime-local" value={startTime} onChange={(event) => setStartTime(event.target.value)} aria-label="开始时间" placeholder="开始时间" />
-              <AdminDateInput type="datetime-local" value={endTime} onChange={(event) => setEndTime(event.target.value)} aria-label="结束时间" placeholder="结束时间" />
+              <div className="admin-date-range">
+                <AdminDateInput type="datetime-local" value={startTime} onChange={(event) => setStartTime(event.target.value)} aria-label="开始时间" placeholder="开始时间" />
+                <AdminDateInput type="datetime-local" value={endTime} onChange={(event) => setEndTime(event.target.value)} aria-label="结束时间" placeholder="结束时间" />
+              </div>
             </div>
           ) : null}
           <div className="admin-audit-filter-actions admin-row-actions-wrap" >
@@ -2757,8 +2761,10 @@ export const AuditLogsPage = () => {
               ))}
             </AdminSelect>
             <input style={inputStyle} value={actorId} onChange={(event) => setActorId(event.target.value.replace(/[^\d]/g, ''))} inputMode="numeric" placeholder="操作者编号（后台账号 ID，数字）" />
-            <AdminDateInput type="datetime-local" value={startTime} onChange={(event) => setStartTime(event.target.value)} aria-label="开始时间" placeholder="开始时间" />
-            <AdminDateInput type="datetime-local" value={endTime} onChange={(event) => setEndTime(event.target.value)} aria-label="结束时间" placeholder="结束时间" />
+            <div className="admin-date-range">
+              <AdminDateInput type="datetime-local" value={startTime} onChange={(event) => setStartTime(event.target.value)} aria-label="开始时间" placeholder="开始时间" />
+              <AdminDateInput type="datetime-local" value={endTime} onChange={(event) => setEndTime(event.target.value)} aria-label="结束时间" placeholder="结束时间" />
+            </div>
           </div>
           <div className="admin-audit-filter-actions admin-row-actions-wrap" >
             <button type="submit" style={primaryButtonStyle} disabled={loading}>

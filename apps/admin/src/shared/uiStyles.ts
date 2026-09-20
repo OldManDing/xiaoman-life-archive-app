@@ -60,7 +60,9 @@ export const tableStyle: CSSProperties = {
 
 export const thTdStyle: CSSProperties = {
   textAlign: 'left',
-  padding: '11px 12px',
+  // 11px 的上下内边距让每行接近 70px，20 行就吃掉一屏；收到 9px 后仍保留分组感，
+  // 但一屏能多看 2~3 行（列表密度是运营最常抱怨的点）。
+  padding: '9px 12px',
   borderBottom: '1px solid #eceae6',
   fontSize: '13px',
   verticalAlign: 'top',

@@ -32,7 +32,7 @@ const navSections: NavSection[] = [
     // 需要多点两次才能到达，导航权重与实际使用频率倒挂。
     label: '运营处理',
     items: [
-      { to: '/media', label: '媒体审核', icon: Image },
+      { to: '/media', label: '媒体库', icon: Image },
       { to: '/content-risks', label: '内容风险', icon: ShieldAlert },
       { to: '/support-tickets', label: '客服反馈', icon: MessageSquareText },
       { to: '/archive-export-requests', label: '档案交付', icon: Archive },

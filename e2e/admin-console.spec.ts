@@ -120,7 +120,14 @@ test.describe('Admin console coverage', () => {
     await openAdminSection(page, '邀请码');
 
     await expect(page.getByRole('heading', { name: '邀请码管理' })).toBeVisible();
-    await expect(page.locator('.admin-responsive-table tbody tr').first()).toBeVisible();
+
+    // 自己先造一条待使用的邀请码：不依赖库里既有数据（清库后这条用例仍然有效）。
+    await page.getByRole('button', { name: '生成邀请码' }).click();
+    const reasonDialog = page.getByRole('dialog', { name: '生成注册邀请码' });
+    await expect(reasonDialog).toBeVisible();
+    await reasonDialog.getByLabel('操作原因').fill('自动化验证状态筛选');
+    await reasonDialog.getByRole('button', { name: '确认执行' }).click();
+    await expect(page.getByText('本次生成的邀请码')).toBeVisible();
 
     // 待使用 / 已过期 / 已撤销 混在一张表里没法用，必须能按状态筛（选完即重查）。
     await page.getByRole('combobox', { name: '邀请码状态' }).click();
@@ -151,8 +158,8 @@ test.describe('Admin console coverage', () => {
     await expect(page.getByRole('button', { name: '调整权益' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: '更多操作' })).toHaveCount(0);
 
-    // 媒体审核：没有审核动作
-    await page.getByRole('link', { name: '媒体审核', exact: true }).click();
+    // 媒体库：没有审核动作
+    await page.getByRole('link', { name: '媒体库', exact: true }).click();
     await expect(page.getByRole('heading', { name: '媒体库' })).toBeVisible();
     await expect(page.getByRole('button', { name: '更多操作' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: '通过' })).toHaveCount(0);
