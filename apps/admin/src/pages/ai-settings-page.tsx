@@ -300,7 +300,10 @@ export const AiSettingsPage = () => {
             </div>
             <div className="admin-ai-settings-status">
               <Badge tone={canEdit ? 'success' : 'warning'}>{canEdit ? '可编辑' : '只读'}</Badge>
-              <Badge tone={hasSecret ? 'success' : 'danger'}>{hasSecret ? 'Key 已配置' : 'Key 未配置'}</Badge>
+              {/* mock 供应商本来就不需要 Key，用 danger 会让人以为配置坏了。 */}
+              <Badge tone={hasSecret ? 'success' : form.provider === 'mock' ? 'neutral' : 'danger'}>
+                {hasSecret ? 'Key 已配置' : form.provider === 'mock' ? '模拟服务无需 Key' : 'Key 未配置'}
+              </Badge>
             </div>
           </div>
         </Panel>
@@ -320,9 +323,9 @@ export const AiSettingsPage = () => {
           />
           <ConfigSignal
             label="API Key"
-            value={hasSecret ? '已配置' : '未配置'}
+            value={hasSecret ? '已配置' : form.provider === 'mock' ? '无需配置' : '未配置'}
             helper="密钥不会回显，只能覆盖保存"
-            tone={hasSecret ? 'success' : 'danger'}
+            tone={hasSecret ? 'success' : form.provider === 'mock' ? 'neutral' : 'danger'}
           />
           <ConfigSignal
             label="最近调整"

@@ -1,4 +1,4 @@
-﻿import { mkdir } from 'node:fs/promises';
+import { mkdir } from 'node:fs/promises';
 import { resolve } from 'node:path';
 
 import { expect, test, type Page } from '@playwright/test';
@@ -356,5 +356,68 @@ test.describe('Visual review smoke', () => {
     await expectNoUnfinishedCopy(page);
     await expectNoPageOverflow(page);
     await saveScreenshot(page, 'admin-audit-log-mobile-long.png');
+  });
+
+  /**
+   * 逐页截图 + 溢出校验：前面几条只覆盖登录/总览/媒体库/审计日志四屏，
+   * 其余页面此前只有「路由能打开」级别的自动化，没有可人工复核的产物。
+   * 这条把 16 条路由全部落成截图（artifacts/admin-route-review/，已 gitignore），
+   * 每页同时断言 h1、无未完成文案、无横向溢出。
+   */
+  test('captures every Admin route without layout overflow', async ({ page }) => {
+    const routeReviewDir = resolve(process.cwd(), 'artifacts', 'admin-route-review');
+    const routes: Array<{ path: string; heading: string; secondary?: boolean; allowAcceptanceCopy?: boolean }> = [
+      { path: '/dashboard', heading: '后台总览' },
+      { path: '/users', heading: '账号管理', secondary: true },
+      { path: '/families', heading: '家庭管理' },
+      { path: '/invites', heading: '邀请码管理', secondary: true },
+      { path: '/children', heading: '孩子列表' },
+      { path: '/records', heading: '成长记录' },
+      { path: '/media', heading: '媒体库' },
+      { path: '/content-risks', heading: '内容风险' },
+      { path: '/support-tickets', heading: '客服反馈' },
+      { path: '/archive-export-requests', heading: '档案交付申请' },
+      { path: '/ai-jobs', heading: 'AI 任务列表', secondary: true },
+      { path: '/ai-settings', heading: 'AI 服务设置', secondary: true },
+      { path: '/notifications', heading: '通知管理', secondary: true },
+      // 「验收」在这一页是正常业务词（上线验收门禁），不是"未完成文案"占位符，故豁免该守卫。
+      { path: '/ops-readiness', heading: '系统运维', secondary: true, allowAcceptanceCopy: true },
+      { path: '/system-config', heading: '系统配置', secondary: true },
+      { path: '/audit-logs', heading: '审计日志', secondary: true },
+    ];
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await loginAdmin(page);
+    await mkdir(routeReviewDir, { recursive: true });
+
+    for (const route of routes) {
+      if (route.secondary) await openAdminMore(page);
+      const link = page.locator(`aside a[href="${route.path}"]`).first();
+      await expect(link).toBeVisible();
+      await link.click();
+      await expect(page).toHaveURL(new RegExp(`${route.path.replace('/', '\\/')}$`));
+      await expect(page.getByRole('heading', { name: route.heading, level: 1 })).toBeVisible();
+      // 列表页要在数据到位后再截图：否则会拍到「查询中…」+ 空表的加载态，
+      // 复核时看到的是半成品，而不是运营实际看到的页面。
+      await expect
+        .poll(
+          async () => {
+            const loading = await page.locator('.admin-main button:disabled', { hasText: '查询中' }).count();
+            if (loading > 0) return 'loading';
+            const hasTable = await page.locator('.admin-main .admin-responsive-table').count();
+            if (!hasTable) return 'ready';
+            const rows = await page.locator('.admin-main .admin-responsive-table tbody tr').count();
+            const empty = await page.locator('.admin-main .admin-empty-state').count();
+            return rows > 0 || empty > 0 ? 'ready' : 'pending';
+          },
+          { timeout: 10_000 },
+        )
+        .toBe('ready')
+        .catch(() => undefined);
+
+      if (!route.allowAcceptanceCopy) await expectNoUnfinishedCopy(page);
+      await expectNoPageOverflow(page);
+      await page.screenshot({ path: resolve(routeReviewDir, `admin${route.path.replace(/\//g, '-')}.png`), fullPage: true });
+    }
   });
 });

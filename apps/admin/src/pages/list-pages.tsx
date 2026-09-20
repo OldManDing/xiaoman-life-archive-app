@@ -133,9 +133,14 @@ const ListSummary = ({
     <div className="admin-list-summary">
       <strong>{label}</strong>
       {description ? <p className="admin-list-summary-description">{description}</p> : null}
-      {children ? <div className="admin-list-summary-pills">{children}</div> : null}
-      {/* 胶囊数字都是「当前页」派生值，必须显式说明口径，否则容易被读成全站总量。 */}
-      <p className="admin-list-summary-scope">以下数字只统计当前页，不代表全站总量。</p>
+      {children ? (
+        <div className="admin-list-summary-pills">
+          {children}
+          {/* 口径说明必须与胶囊同排：单独占一行时会被挤到最左侧，看起来像一句断掉的文字
+              （账号管理与成长记录页实测）。 */}
+          <span className="admin-list-summary-scope">以下数字只统计当前页，不代表全站总量。</span>
+        </div>
+      ) : null}
     </div>
   </section>
 );

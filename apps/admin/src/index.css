@@ -4401,7 +4401,9 @@ table {
   .admin-audit-filter-form > div.admin-audit-filter-actions,
   .admin-audit-filter-actions {
     display: flex;
-    justify-content: flex-end;
+    /* 桌面端也左对齐：右对齐会把按钮推到面板最右，中间留出整片空白
+       （这条选择器优先级高于文件后段的 .admin-audit-filter-actions，实际生效的是它）。 */
+    justify-content: flex-start;
     align-items: center;
   }
 
@@ -6302,7 +6304,9 @@ table {
 }
 
 .admin-audit-filter-actions {
-  justify-content: flex-end;
+  /* 原来是 flex-end：筛选控件在上、按钮被推到最右，面板中间空出一大片
+     （客服反馈/档案交付/审计日志/媒体库实测都是这样）。按钮紧跟筛选控件更符合"先筛再查"的视线顺序。 */
+  justify-content: flex-start;
   align-items: center;
 }
 
@@ -7497,8 +7501,9 @@ table {
   }
 }
 
-/* 列表概览的口径说明：胶囊数字来自当前页数据，文字上必须说清楚。 */
+/* 列表概览的口径说明：与胶囊同排，作为末位小字。 */
 .admin-list-summary-scope {
   color: #8b8073;
   font-size: 12px;
+  align-self: center;
 }
