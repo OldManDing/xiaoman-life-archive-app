@@ -18,11 +18,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const logout = useCallback(() => {
-    // 先通知服务端撤销会话；本地会话无论如何都要清掉，接口失败不阻塞退出。
-    void adminApi.logout().catch(() => undefined);
+    // 顺序很关键：先把当前 token 取出来显式交给撤销接口，再清本地会话。
+    // clearAccessTokenMemory() 是同步执行的，而 axios 的请求拦截器要到微任务里才读 token，
+    // 若先清本地，「退出登录」请求就会丢掉 Authorization 头 → 服务端返回 401 →
+    // 本地界面看起来退出了，服务端会话其实没有被撤销（E2E 巡检的 401 控制台报错就是这个）。
+    const revokeToken = getAccessToken();
     clearAccessTokenMemory();
     setAccessToken(null);
     setAdmin(null);
+    void adminApi.logout(revokeToken).catch(() => undefined);
   }, []);
 
   const value = useMemo<AuthContextValue>(

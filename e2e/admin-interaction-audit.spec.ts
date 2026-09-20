@@ -111,6 +111,32 @@ const waitForRouteButtons = async (page: Page, route: string) => {
     .toBeGreaterThan(0);
 };
 
+/**
+ * 列表页在首帧和查询期间会把按钮置为「查询中…」并禁用，而且在数据到位前既没有行也没有空态。
+ * 巡检如果在加载态就采集，会把「正在加载」误记成「按钮点不动」/「候选数不足」
+ * （实测会让 /system-config 只收集到 1 个候选、/users 只收集到搜索按钮）。
+ * 这里在采集前尽力等待页面退出加载态，超时则继续（由后续断言兜底）。
+ */
+const waitForRouteIdle = async (page: Page) => {
+  await expect
+    .poll(
+      async () => {
+        const loading = await page.locator('.admin-main button:disabled', { hasText: '查询中' }).count();
+        if (loading > 0) return 'loading';
+
+        const hasTable = await page.locator('.admin-main .admin-responsive-table').count();
+        if (!hasTable) return 'ready';
+
+        const rows = await page.locator('.admin-main .admin-responsive-table tbody tr').count();
+        const empty = await page.locator('.admin-main .admin-empty-state').count();
+        return rows > 0 || empty > 0 ? 'ready' : 'pending';
+      },
+      { timeout: 8_000 },
+    )
+    .toBe('ready')
+    .catch(() => undefined);
+};
+
 const isElementUsable = async (handle: ElementHandle<Element>) =>
   handle.evaluate((element) => {
     if (element.classList.contains('admin-select-native')) {
@@ -153,8 +179,10 @@ const fillVisibleControls = async (page: Page, route?: string) => {
   const preserveFilterValues = Boolean(route && routesWithFilterControls.has(route));
 
   for (const handle of handles) {
-    const usable = await isElementUsable(handle);
-    if (!usable.visible || usable.disabled || usable.readOnly) continue;
+    // 巡检过程中页面会重渲染（筛选、分页、状态更新），早期采集的句柄可能已经脱离 DOM。
+    // 这类句柄直接跳过；真正的 UI 问题由 collectStyleIssues 与 console/pageerror 负责捕获。
+    const usable = await isElementUsable(handle).catch(() => null);
+    if (!usable || !usable.visible || usable.disabled || usable.readOnly) continue;
 
     const info = await handle.evaluate((element) => {
       const tagName = element.tagName.toLowerCase();
@@ -166,10 +194,13 @@ const fillVisibleControls = async (page: Page, route?: string) => {
         currentValue: 'value' in element ? (element as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).value ?? '' : '',
         options: tagName === 'select' ? Array.from(select.options).map((option) => option.value) : [],
       };
-    });
+    }).catch(() => null);
+    if (!info) continue;
 
-    await handle.scrollIntoViewIfNeeded();
-    await handle.focus();
+    const scrolled = await handle.scrollIntoViewIfNeeded().then(() => true).catch(() => false);
+    if (!scrolled) continue;
+
+    await handle.focus().catch(() => undefined);
 
     try {
       if (info.tagName === 'select') {
@@ -355,16 +386,27 @@ const navigateWithinAdmin = async (page: Page, route: string) => {
 
 const clickVisibleButtons = async (page: Page, route: string, issues: AuditIssue[]) => {
   const clicked: ClickRecord[] = [];
+  // 诊断开关：E2E_AUDIT_DIAGNOSTICS=1 时打印每条路由的候选数与跳过原因，便于排查「点不到」。
+  const skips: string[] = [];
   const buttons = await page.$$('button');
   const candidates: Array<{ handle: ElementHandle<Element>; label: string; y: number; x: number }> = [];
 
   for (const handle of buttons) {
-    const usable = await isElementUsable(handle);
-    if (!usable.visible || usable.disabled) continue;
-    if (await isShellButton(handle)) continue;
-
     const label = await labelFor(handle);
-    if (logoutPattern.test(label) || stateChangingConfirmPattern.test(label)) continue;
+    const usable = await isElementUsable(handle);
+    if (!usable.visible || usable.disabled) {
+      skips.push(`${label}:not-usable(visible=${usable.visible},disabled=${usable.disabled})`);
+      continue;
+    }
+    if (await isShellButton(handle)) {
+      skips.push(`${label}:shell`);
+      continue;
+    }
+
+    if (logoutPattern.test(label) || stateChangingConfirmPattern.test(label)) {
+      skips.push(`${label}:confirm-pattern`);
+      continue;
+    }
 
     const box = await handle.boundingBox();
     candidates.push({ handle, label, x: box?.x ?? 0, y: box?.y ?? 0 });
@@ -372,21 +414,34 @@ const clickVisibleButtons = async (page: Page, route: string, issues: AuditIssue
 
   candidates.sort((left, right) => right.y - left.y || left.x - right.x);
 
+  if (process.env.E2E_AUDIT_DIAGNOSTICS === '1') {
+    console.log(`[audit] total_buttons=${buttons.length} candidates=${candidates.length} skips=${skips.join(' | ') || '(none)'}`);
+  }
+
   for (const candidate of candidates) {
     const clickedForRoute = clicked.filter((item) => item.route === route).length;
     if (clickedForRoute >= (maxAuditButtonsPerRoute[route] ?? Number.POSITIVE_INFINITY)) break;
     await closeOpenDialog(page);
     const attached = await candidate.handle.evaluate((element) => element.isConnected).catch(() => false);
-    if (!attached) continue;
+    if (!attached) {
+      skips.push(`${candidate.label}:detached-before-click`);
+      continue;
+    }
 
     const usable = await isElementUsable(candidate.handle).catch(() => ({ visible: false, disabled: false, readOnly: false }));
-    if (!usable.visible || usable.disabled) continue;
+    if (!usable.visible || usable.disabled) {
+      skips.push(`${candidate.label}:not-usable-after-collect`);
+      continue;
+    }
 
     try {
       await candidate.handle.scrollIntoViewIfNeeded();
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      if (/not attached to the DOM/i.test(message)) continue;
+      if (/not attached to the DOM/i.test(message)) {
+        skips.push(`${candidate.label}:detached-on-scroll`);
+        continue;
+      }
       throw error;
     }
 
@@ -397,7 +452,10 @@ const clickVisibleButtons = async (page: Page, route: string, issues: AuditIssue
       await closeOpenDialog(page);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      if (/not attached to the DOM/i.test(message)) continue;
+      if (/not attached to the DOM/i.test(message)) {
+        skips.push(`${candidate.label}:detached-on-click`);
+        continue;
+      }
 
       issues.push({
         route,
@@ -407,6 +465,10 @@ const clickVisibleButtons = async (page: Page, route: string, issues: AuditIssue
         message,
       });
     }
+  }
+
+  if (process.env.E2E_AUDIT_DIAGNOSTICS === '1' && skips.length) {
+    console.log(`[audit] ${route} skipped: ${skips.join(' | ')}`);
   }
 
   return { clicked, candidates: candidates.length };
@@ -444,8 +506,10 @@ test.describe('Admin exhaustive interaction audit', () => {
       await waitForSettledUi(page, 3_000);
       await prepareRouteForAudit(page, route);
       await waitForRouteButtons(page, route);
+      await waitForRouteIdle(page);
       const inputsTouched = await fillVisibleControls(page, route);
       await waitForRouteButtons(page, route);
+      await waitForRouteIdle(page);
       issues.push(...(await collectStyleIssues(page, route, 'desktop')));
       const clickResult = await clickVisibleButtons(page, route, issues);
       if (route === '/invites') {

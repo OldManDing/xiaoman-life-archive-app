@@ -727,8 +727,13 @@ export const adminApi = {
     return unwrap(response);
   },
 
-  async logout() {
-    const response = await request.post<ApiEnvelope<{ success: boolean }>>('/admin/auth/logout');
+  async logout(accessToken?: string | null) {
+    // 显式带上 token：调用方会在发起后立即清空本地会话，不能依赖请求拦截器再去读。
+    const response = await request.post<ApiEnvelope<{ success: boolean }>>(
+      '/admin/auth/logout',
+      undefined,
+      accessToken ? { headers: { Authorization: `Bearer ${accessToken}` } } : undefined,
+    );
     return unwrap(response);
   },
 

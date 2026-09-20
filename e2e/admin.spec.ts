@@ -3,7 +3,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { adminBaseURL, apiBaseURL, expectNoEnglishSeedCopy, loginAdmin, openAdminMore } from './helpers';
 
 const confirmAdminAction = async (page: Page, reason: string) => {
-  const dialog = page.getByRole('dialog', { name: /冻结用户|解冻用户|下架记录|恢复记录|通过媒体审核|标记媒体异常|下架媒体|受理客服反馈|解决客服反馈|关闭客服反馈|受理档案交付申请|完成档案交付申请|驳回档案交付申请/ });
+  const dialog = page.getByRole('dialog', { name: /冻结用户|解冻用户|下架记录|恢复记录|通过媒体审核|标记媒体异常|下架媒体|生成注册邀请码|撤销邀请码|受理客服反馈|解决客服反馈|关闭客服反馈|受理档案交付申请|完成档案交付申请|驳回档案交付申请/ });
   await expect(dialog).toBeVisible();
   await dialog.getByLabel('操作原因').fill(reason);
   await dialog.getByRole('button', { name: '确认执行' }).click();
@@ -110,6 +110,8 @@ test.describe('Admin critical journeys', () => {
 
     await expect(page.getByRole('heading', { name: '邀请码管理' })).toBeVisible();
     await page.getByRole('button', { name: '生成邀请码' }).click();
+    // 生成邀请码属于敏感操作：必须填写操作原因并写入审计（后端 DTO 也接受该字段）。
+    await confirmAdminAction(page, '自动化验证生成邀请码');
 
     await expect(page.getByText('本次生成的邀请码')).toBeVisible();
     await expect(page.getByText(/^NL-[0-9A-F]{6}-[0-9A-F]{6}$/)).toBeVisible();
@@ -200,6 +202,13 @@ test.describe('Admin critical journeys', () => {
     await requestRow.getByRole('button', { name: '受理' }).click();
     await confirmAdminAction(page, '自动化验证档案交付受理');
     await expect(requestRow).toContainText('处理中');
+
+    // 收尾到终态：档案交付申请接口对同一「孩子 + 导出范围 + 用途」是幂等的，
+    // 如果用例把申请留在「处理中」，下次运行会拿回这条旧单，「待处理」断言必然失败。
+    await requestRow.getByRole('button', { name: '更多操作' }).click();
+    await requestRow.getByRole('button', { name: '驳回' }).click();
+    await confirmAdminAction(page, '自动化验证档案交付驳回收尾');
+    await expect(requestRow).toContainText('已驳回');
     await expectNoEnglishSeedCopy(page);
   });
 
@@ -297,7 +306,8 @@ test.describe('Admin critical journeys', () => {
     mediaRow = page.getByRole('row', { name: /第一次自己吃饭/ });
     await expect(mediaRow).toContainText('已下架');
     await mediaRow.getByRole('button', { name: '更多操作' }).click();
-    await clickOpenAdminMenuAction(page, '通过');
+    // 已下架的媒体在界面上只提供「恢复」这一个动作（通过/标记异常/下架 对 removed 状态没有意义）。
+    await clickOpenAdminMenuAction(page, '恢复');
     await confirmAdminAction(page, '自动化验证媒体恢复可用按钮');
     await expect(page.getByRole('row', { name: /第一次自己吃饭/ })).toContainText('可用');
   });
