@@ -379,6 +379,31 @@ describe('App', () => {
     expect(screen.getByRole('button', { name: '每月' })).toHaveAttribute('aria-pressed', 'true');
   });
 
+  it('does not claim the system is healthy while the dashboard is still loading', async () => {
+    loginMock.mockResolvedValue({
+      access_token: 'admin-token',
+      expires_in: 7200,
+      admin: {
+        username: 'admin',
+        display_name: '系统管理员',
+        role: 'super_admin',
+      },
+    });
+    // 两个统计接口都挂起：此时待处理项恒为 0，页面绝不能因此显示「运行稳定」。
+    dashboardMock.mockReturnValue(new Promise<never>(() => {}));
+    opsReadinessMock.mockReturnValue(new Promise<never>(() => {}));
+
+    await renderWithRouter('/login');
+    fireEvent.change(screen.getByPlaceholderText('请输入用户名'), { target: { value: 'admin' } });
+    fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
+    fireEvent.click(screen.getByRole('button', { name: '进入管理后台' }));
+
+    expect(await screen.findByRole('heading', { name: '后台总览' })).toBeInTheDocument();
+    expect(await screen.findByText('正在加载运维数据')).toBeInTheDocument();
+    expect(screen.queryByText('当前没有待处理异常')).toBeNull();
+    expect(screen.queryByText('运行稳定')).toBeNull();
+  });
+
   it('logs in and loads the user list page', async () => {
     loginMock.mockResolvedValue({
       access_token: 'admin-token',

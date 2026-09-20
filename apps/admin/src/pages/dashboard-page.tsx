@@ -245,6 +245,19 @@ export const DashboardPage = () => {
       };
     }
 
+    // 数据还没回来时不能宣称「运行稳定」：此时 issueTotal 恒为 0，
+    // 会给管理员一个「无异常」的假信号（移动端首屏实测会看到这句话 + 全为「-」的卡片并存）。
+    if (loading) {
+      return {
+        tone: 'neutral' as const,
+        badge: '正在读取',
+        title: '正在加载运维数据',
+        description: '正在汇总风险、媒体、AI 任务与用户反馈的待处理项。',
+        primaryText: '前往系统运维',
+        primaryTo: '/ops-readiness',
+      };
+    }
+
     if (issueTotal > 0) {
       return {
         tone: 'warning' as const,
@@ -264,7 +277,7 @@ export const DashboardPage = () => {
       primaryText: '开始内容抽检',
       primaryTo: '/records',
     };
-  }, [contentRiskCount, failedJobCount, issueTotal, mediaExceptionCount, readinessError]);
+  }, [contentRiskCount, failedJobCount, issueTotal, loading, mediaExceptionCount, readinessError]);
 
   const priorityTasks = [
     {
@@ -282,7 +295,7 @@ export const DashboardPage = () => {
       icon: <ShieldAlert size={18} />,
       label: '内容风险',
       value: loading ? '-' : contentRiskCount,
-      helper: '查看已标记的成长记录',
+      helper: '进入风险队列集中处置',
       tone: contentRiskCount > 0 ? ('danger' as const) : ('neutral' as const),
     },
     {

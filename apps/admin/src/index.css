@@ -7470,6 +7470,11 @@ table {
     text-overflow: clip;
     word-break: break-all;
   }
+
+  /* 移动端分页的「跳至 N 页」会把「跳至」两个字竖着断开，强制与输入框同排。 */
+  .admin-pagination-jump {
+    white-space: nowrap;
+  }
 }
 
 /* 列表概览的口径说明：胶囊数字来自当前页数据，文字上必须说清楚。 */
