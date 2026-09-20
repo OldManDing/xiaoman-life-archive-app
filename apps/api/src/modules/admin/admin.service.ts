@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService, type JwtSignOptions } from '@nestjs/jwt';
 import { ActorType, AdminRole, AiJobStatus, ArchiveExportRequestStatus, AuthType, MediaType, MembershipType, Prisma, SupportTicketPriority, SupportTicketStatus } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
@@ -816,6 +816,8 @@ const providerValueLabel = (value: string) =>
 
 @Injectable()
 export class AdminService {
+  private readonly logger = new Logger(AdminService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
@@ -922,6 +924,9 @@ export class AdminService {
         avatar_url: item.avatarUrl,
         mobile: item.mobile,
         membership_type: item.membershipType,
+        // 列表里必须带上到期时间：后台「调整权益」从列表行直接发起，
+        // 缺这个字段会让付费用户的到期日回显为空，管理员重选即覆盖真实有效期。
+        membership_expire_at: item.membershipExpireAt?.toISOString() ?? null,
         status: statusToUserLabel(item.status),
         last_login_at: item.lastLoginAt?.toISOString() ?? null,
         created_at: item.createdAt.toISOString(),
@@ -2175,6 +2180,24 @@ export class AdminService {
       include: { updatedByAdmin: true },
     });
     const normalizedValue = this.normalizeSystemConfigValue(definition, dto.value);
+    // 移动发布配置联动校验：改版本号/构建号时若 APK 下载三件套不全，客户端会显示
+    // "有更新"却无法下载。提前报错，而不是等用户端踩坑。
+    if (definition.category === 'mobile_release' && ['mobile_latest_version', 'mobile_latest_build_number'].includes(configKey)) {
+      const siblings = await this.prisma.systemConfig.findMany({
+        where: { configKey: { in: ['mobile_apk_url', 'mobile_apk_sha256', 'mobile_apk_size_bytes'] } },
+        select: { configKey: true, value: true },
+      });
+      const siblingMap = new Map(siblings.map((row) => [row.configKey, row.value.trim()]));
+      const apkReady = siblingMap.get('mobile_apk_url') && siblingMap.get('mobile_apk_sha256') && siblingMap.get('mobile_apk_size_bytes');
+      const nextValues = new Map(siblingMap);
+      if (configKey === 'mobile_latest_build_number') nextValues.set('mobile_latest_build_number', normalizedValue);
+      if (!apkReady) {
+        this.logger.warn(
+          `mobile_release config "${configKey}" updated but APK download metadata (url/sha256/size) is incomplete — ` +
+          `clients will see an update prompt without a downloadable package.`,
+        );
+      }
+    }
     const updated = await this.prisma.systemConfig.upsert({
       where: { configKey },
       update: {

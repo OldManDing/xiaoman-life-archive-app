@@ -521,9 +521,10 @@ export const AiSettingsPage = () => {
                   aria-label="操作原因"
                   aria-required="true"
                   required
+                  maxLength={200}
                   value={form.reason}
                   onChange={patchForm('reason')}
-                  placeholder="例如：切换供应商或更新过期 Key"
+                  placeholder="例如：切换供应商或更新过期 Key（至少 2 个字）"
                   disabled={!canEdit || saving}
                 />
               </Field>

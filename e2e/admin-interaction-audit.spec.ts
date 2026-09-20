@@ -343,17 +343,8 @@ const navigateWithinAdmin = async (page: Page, route: string) => {
     await loginAdmin(page);
   }
 
-  if (route === '/media' || route === '/content-risks') {
-    await openAdminMore(page);
-    await page.locator('aside a[href="/ops-readiness"]').click();
-    await expect(page).toHaveURL(/\/ops-readiness$/);
-    const technicalEntry = route === '/media' ? '技术媒体库' : '风险队列';
-    await page.getByRole('link', { name: technicalEntry, exact: true }).click();
-    await expect(page).toHaveURL(new RegExp(`${route.replace('/', '\\/')}$`));
-    return;
-  }
-
-  if (['/users', '/invites', '/notifications', '/ai-settings', '/ai-jobs', '/support-tickets', '/archive-export-requests', '/ops-readiness', '/system-config', '/audit-logs'].includes(route)) {
+  // /media 与 /content-risks 已在主导航里（2026-09-20 信息架构调整），无需再从系统运维页绕行。
+  if (['/users', '/invites', '/notifications', '/ai-settings', '/ai-jobs', '/ops-readiness', '/system-config', '/audit-logs'].includes(route)) {
     await openAdminMore(page);
   }
   const link = page.locator(`aside a[href="${route}"]`).first();

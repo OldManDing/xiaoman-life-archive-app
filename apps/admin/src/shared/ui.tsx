@@ -77,6 +77,8 @@ export const AdminSelect = ({
   value,
   defaultValue,
   onChange,
+  'aria-label': ariaLabel,
+  'aria-labelledby': ariaLabelledBy,
   ...props
 }: SelectHTMLAttributes<HTMLSelectElement> & {
   children: ReactNode;
@@ -143,6 +145,10 @@ export const AdminSelect = ({
       ref={triggerRef}
       type="button"
       role="combobox"
+      // 原生 select 被 aria-hidden 隐藏，可访问名称必须落在真正可聚焦的触发按钮上，
+      // 否则读屏只会读出一个没有名字的「组合框」。
+      aria-label={ariaLabel}
+      aria-labelledby={ariaLabelledBy}
       aria-disabled={disabled || undefined}
       aria-expanded={open}
       aria-haspopup="listbox"

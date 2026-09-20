@@ -1,5 +1,6 @@
 import { Children, Fragment, cloneElement, isValidElement, useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { AlertTriangle, ArchiveX, AudioLines, Ban, CheckCircle2, ClipboardCheck, Crown, Eye, LockKeyhole, MoreHorizontal, RotateCcw, SlidersHorizontal, Snowflake, Video, XCircle } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { AlertTriangle, ArchiveX, AudioLines, Ban, CheckCircle2, ClipboardCheck, Crown, Eye, LockKeyhole, MoreHorizontal, RotateCcw, SlidersHorizontal, Snowflake, Video, X, XCircle } from 'lucide-react';
 
 import {
   adminApi,
@@ -53,7 +54,7 @@ import {
   userStatusLabel,
   visibilityScopeLabel,
 } from '../shared/labels';
-import { formatBytes, formatDateOnly, formatDateTime, getErrorMessage, optionalFilter, toIsoDateTime } from '../shared/format';
+import { formatBytes, formatDateOnly, formatDateTime, getErrorMessage, optionalFilter, toIsoDateTime, todayLocalDate } from '../shared/format';
 import { AdminButton, AdminDateInput, AdminSelect, Badge, EmptyState, PageShell, Panel } from '../shared/ui';
 import { inputStyle, mutedTextStyle, primaryButtonStyle, secondaryButtonStyle } from '../shared/uiStyles';
 import { AdminModal } from '../shared/modal';
@@ -121,6 +122,7 @@ const SummaryStat = ({ label, value, tone = 'neutral' }: { label: string; value:
 
 const ListSummary = ({
   label,
+  description,
   children,
 }: {
   label: string;
@@ -130,7 +132,10 @@ const ListSummary = ({
   <section className="admin-list-summary-panel" aria-label={label}>
     <div className="admin-list-summary">
       <strong>{label}</strong>
+      {description ? <p className="admin-list-summary-description">{description}</p> : null}
       {children ? <div className="admin-list-summary-pills">{children}</div> : null}
+      {/* 胶囊数字都是「当前页」派生值，必须显式说明口径，否则容易被读成全站总量。 */}
+      <p className="admin-list-summary-scope">以下数字只统计当前页，不代表全站总量。</p>
     </div>
   </section>
 );
@@ -159,6 +164,22 @@ const EntityWithAvatar = ({ avatarUrl, title, meta }: { avatarUrl?: string | nul
     <AvatarThumb src={avatarUrl} label={typeof title === 'string' ? title : ''} />
     <EntityTitle title={title} meta={meta} />
   </span>
+);
+
+/** 灯箱的显式关闭入口：此前只能靠「点空白处」或 Esc，鼠标用户不容易发现。 */
+const LightboxCloseButton = ({ onClose }: { onClose: () => void }) => (
+  <button
+    type="button"
+    className="admin-media-lightbox-close"
+    aria-label="关闭预览"
+    title="关闭预览"
+    onClick={(event) => {
+      event.stopPropagation();
+      onClose();
+    }}
+  >
+    <X size={18} strokeWidth={2.2} aria-hidden="true" />
+  </button>
 );
 
 const MediaThumb = ({ item, size = 72 }: { item: AdminMediaItem; size?: number }) => {
@@ -215,6 +236,7 @@ const MediaThumb = ({ item, size = 72 }: { item: AdminMediaItem; size?: number }
         )}
         {expanded && item.access_url ? (
           <div className="admin-media-lightbox" role="dialog" aria-modal="true" aria-label="视频预览" onClick={() => setExpanded(false)}>
+            <LightboxCloseButton onClose={() => setExpanded(false)} />
             <video src={item.access_url} controls autoPlay muted onClick={(event) => event.stopPropagation()}>
               当前浏览器不支持视频预览。
             </video>
@@ -255,6 +277,7 @@ const MediaThumb = ({ item, size = 72 }: { item: AdminMediaItem; size?: number }
       )}
       {expanded && item.access_url ? (
         <div className="admin-media-lightbox" role="dialog" aria-modal="true" aria-label={item.media_type === 'video' ? '视频预览' : '图片预览'} onClick={() => setExpanded(false)}>
+          <LightboxCloseButton onClose={() => setExpanded(false)} />
           {item.media_type === 'video' ? (
             <video src={item.access_url} controls autoPlay muted onClick={(event) => event.stopPropagation()}>
               当前浏览器不支持视频预览。
@@ -311,14 +334,24 @@ const ActionGroup = ({ children }: { children: ReactNode }) => {
 
 const ActionMenu = ({ children }: { children: ReactNode }) => {
   const [open, setOpen] = useState(false);
+  const shellRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!open) return;
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setOpen(false);
     };
+    // 与自绘下拉保持一致：点击别处（含另一行的「更多操作」）应自动收起，
+    // 否则可以同时摊开多个浮层，浮层也不会随滚动消失。
+    const closeOnOutsidePress = (event: MouseEvent) => {
+      if (!shellRef.current?.contains(event.target as Node)) setOpen(false);
+    };
     document.addEventListener('keydown', closeOnEscape);
-    return () => document.removeEventListener('keydown', closeOnEscape);
+    document.addEventListener('mousedown', closeOnOutsidePress);
+    return () => {
+      document.removeEventListener('keydown', closeOnEscape);
+      document.removeEventListener('mousedown', closeOnOutsidePress);
+    };
   }, [open]);
 
   const menuChildren = Children.map(children, (child) => {
@@ -333,7 +366,7 @@ const ActionMenu = ({ children }: { children: ReactNode }) => {
   });
 
   return (
-    <div className="admin-action-menu">
+    <div className="admin-action-menu" ref={shellRef}>
       <button type="button" className="admin-action-menu-trigger" aria-label="更多操作" title="更多操作" aria-expanded={open} aria-haspopup="menu" onClick={() => setOpen((current) => !current)}>
         <MoreHorizontal size={17} strokeWidth={2.2} />
       </button>
@@ -413,8 +446,9 @@ const useArchiveCompletionDialog = () => {
           处理备注
           <textarea
             value={dialog.note}
+            maxLength={500}
             onChange={(event) => setDialog((current) => (current ? { ...current, note: event.target.value, error: null } : current))}
-            placeholder="说明本次交付内容和核对结果"
+            placeholder="说明本次交付内容和核对结果（至少 2 个字）"
             autoFocus
           />
         </label>
@@ -422,6 +456,7 @@ const useArchiveCompletionDialog = () => {
           下载地址
           <input
             value={dialog.downloadUrl}
+            maxLength={512}
             onChange={(event) => setDialog((current) => (current ? { ...current, downloadUrl: event.target.value, error: null } : current))}
             placeholder="https://..."
           />
@@ -430,6 +465,7 @@ const useArchiveCompletionDialog = () => {
           文件 SHA256
           <input
             value={dialog.fileSha256}
+            maxLength={64}
             onChange={(event) => setDialog((current) => (current ? { ...current, fileSha256: event.target.value, error: null } : current))}
             placeholder="64 位 SHA256"
           />
@@ -438,8 +474,9 @@ const useArchiveCompletionDialog = () => {
           交付证据
           <textarea
             value={dialog.deliveryEvidence}
+            maxLength={500}
             onChange={(event) => setDialog((current) => (current ? { ...current, deliveryEvidence: event.target.value, error: null } : current))}
-            placeholder="例如：交付单号、客服记录或对象存储路径"
+            placeholder="例如：交付单号、客服记录或对象存储路径（至少 2 个字）"
           />
         </label>
         {dialog.error ? <p className="admin-modal-error">{dialog.error}</p> : null}
@@ -544,8 +581,9 @@ const useResetPasswordDialog = () => {
           操作原因
           <textarea
             value={dialog.reason}
+            maxLength={200}
             onChange={(event) => setDialog((current) => (current ? { ...current, reason: event.target.value, error: null } : current))}
-            placeholder="例如：用户本人申请重置，客服已核验身份"
+            placeholder="例如：用户本人申请重置，客服已核验身份（至少 2 个字）"
           />
         </label>
         {dialog.error ? <p className="admin-modal-error">{dialog.error}</p> : null}
@@ -572,8 +610,9 @@ const useResetPasswordDialog = () => {
                 setDialog((current) => (current ? { ...current, error: '两次输入的密码不一致' } : current));
                 return;
               }
-              if (!reason) {
-                setDialog((current) => (current ? { ...current, error: '请填写操作原因' } : current));
+              // 后端 reason 为 @MinLength(2)，前端同口径，避免只换来一次 400。
+              if (reason.length < 2) {
+                setDialog((current) => (current ? { ...current, error: '操作原因至少需要 2 个字' } : current));
                 return;
               }
               closeDialog({ new_password: newPassword, password_confirm: passwordConfirm, reason });
@@ -635,6 +674,7 @@ const useMembershipDialog = () => {
         <label className="admin-modal-field">
           权益类型
           <AdminSelect
+            aria-label="权益类型"
             value={dialog.membershipType}
             onChange={(event) =>
               setDialog((current) =>
@@ -656,7 +696,7 @@ const useMembershipDialog = () => {
             aria-label="到期日期"
             placeholder={dialog.membershipType === 'free' ? '基础会员无需设置' : '请选择到期日期'}
             value={dialog.expireDate}
-            min={new Date().toISOString().slice(0, 10)}
+            min={todayLocalDate()}
             disabled={dialog.membershipType === 'free'}
             title={dialog.membershipType === 'free' ? '基础会员无需设置到期日期' : '选择到期日期'}
             onChange={(event) => setDialog((current) => (current ? { ...current, expireDate: event.target.value, error: null } : current))}
@@ -666,8 +706,9 @@ const useMembershipDialog = () => {
           操作原因
           <textarea
             value={dialog.reason}
+            maxLength={200}
             onChange={(event) => setDialog((current) => (current ? { ...current, reason: event.target.value, error: null } : current))}
-            placeholder="例如：年付套餐开通、客服补偿、退款后回收权益"
+            placeholder="例如：年付套餐开通、客服补偿、退款后回收权益（至少 2 个字）"
           />
         </label>
         {dialog.error ? <p className="admin-modal-error">{dialog.error}</p> : null}
@@ -684,12 +725,12 @@ const useMembershipDialog = () => {
                 setDialog((current) => (current ? { ...current, error: '付费权益必须填写到期日期' } : current));
                 return;
               }
-              if (dialog.membershipType !== 'free' && dialog.expireDate < new Date().toISOString().slice(0, 10)) {
+              if (dialog.membershipType !== 'free' && dialog.expireDate < todayLocalDate()) {
                 setDialog((current) => (current ? { ...current, error: '到期日期不能早于今天' } : current));
                 return;
               }
-              if (!reason) {
-                setDialog((current) => (current ? { ...current, error: '请填写操作原因' } : current));
+              if (reason.length < 2) {
+                setDialog((current) => (current ? { ...current, error: '操作原因至少需要 2 个字' } : current));
                 return;
               }
               // 到期时刻按管理员本地时区的当天 23:59:59 计算，避免 UTC 硬编码造成时区偏移。
@@ -1392,11 +1433,19 @@ export const UsersPage = () => {
   const [actionMessage, setActionMessage] = useState<string | null>(null);
   const canResetPassword = admin?.role === 'super_admin';
   const canUpdateMembership = admin?.role === 'super_admin' || admin?.role === 'operator';
+  // 只读账号（viewer）在后端没有写权限，前端必须同步收敛，否则点下去只会拿到 403。
+  const canOperate = admin?.role === 'super_admin' || admin?.role === 'operator';
 
   const onToggleStatus = async (user: AdminUserItem) => {
     const nextStatus = user.status === 'active' ? 'disabled' : 'active';
     const actionName = nextStatus === 'disabled' ? '冻结用户' : '解冻用户';
-    const reason = await requestOperationReason(actionName);
+    const reason = await requestOperationReason(actionName, {
+      target: `${user.nickname}（${user.mobile ?? user.user_no}）`,
+      consequence:
+        nextStatus === 'disabled'
+          ? '冻结后该账号无法登录 App，家庭成员关系与已发布内容保留。'
+          : '解冻后该账号可以立即重新登录。',
+    });
     if (!reason) return;
 
     setActionError(null);
@@ -1478,9 +1527,11 @@ export const UsersPage = () => {
     formatDateTime(item.created_at),
     <ActionGroup key={`${item.user_no}-actions`}>
       <ActionButton icon={<Eye size={15} />} onClick={() => void detail.openDetail('用户详情', item.user_no, () => adminApi.getUserDetail(item.user_no))}>详情</ActionButton>
-      <ActionButton icon={item.status === 'active' ? <Snowflake size={15} /> : <CheckCircle2 size={15} />} onClick={() => void onToggleStatus(item)} disabled={updatingUserNo === item.user_no} tone={item.status === 'active' ? 'danger' : 'success'}>
-        {updatingUserNo === item.user_no ? '处理中…' : item.status === 'active' ? '冻结' : '解冻'}
-      </ActionButton>
+      {canOperate ? (
+        <ActionButton icon={item.status === 'active' ? <Snowflake size={15} /> : <CheckCircle2 size={15} />} onClick={() => void onToggleStatus(item)} disabled={updatingUserNo === item.user_no} tone={item.status === 'active' ? 'danger' : 'success'}>
+          {updatingUserNo === item.user_no ? '处理中…' : item.status === 'active' ? '冻结' : '解冻'}
+        </ActionButton>
+      ) : null}
       {canResetPassword ? (
         <ActionButton icon={<LockKeyhole size={15} />} onClick={() => void onResetPassword(item)} disabled={updatingUserNo === item.user_no} tone="warning">
           重置密码
@@ -1500,8 +1551,8 @@ export const UsersPage = () => {
     <PageShell title="账号管理" description="按关键字查询用户账号，处理冻结、解冻、登录信息核查和密码重置。">
       <SearchPanel {...state} />
       <ListSummary label="账号状态概览" description="默认展示用户列表，先看账号状态，再决定是否进入详情、冻结、解冻或重置登录密码。">
-        <SummaryStat label="当前页正常" value={activeUsers} tone="success" />
-        <SummaryStat label="当前页已冻结" value={disabledUsers} tone={disabledUsers > 0 ? 'danger' : 'neutral'} />
+        <SummaryStat label="本页正常" value={activeUsers} tone="success" />
+        <SummaryStat label="本页已冻结" value={disabledUsers} tone={disabledUsers > 0 ? 'danger' : 'neutral'} />
       </ListSummary>
       <ActionFeedback message={actionMessage} error={actionError} />
       {state.error ? <Panel><EmptyState message={`加载失败：${state.error}`} /></Panel> : null}
@@ -1551,10 +1602,10 @@ export const FamiliesPage = () => {
     <PageShell title="家庭管理" description="按家庭维度查看成员、孩子档案、成长资产和档案交付申请，方便运营处理家庭协作与长期托管问题。">
       <SearchPanel {...state} description="输入家庭编号、家庭名称、拥有者昵称或手机号后查询。" placeholder="家庭编号 / 家庭名称 / 拥有者" />
       <ListSummary label="家庭资产概览" description="家庭是孩子档案、成员协作、媒体资产和交付申请的归属中心；运营先按家庭定位，再进入详情核查成员和记录。">
-        <SummaryStat label="当前页家庭" value={currentFamilies.length} />
-        <SummaryStat label="当前页状态正常" value={activeFamilies} tone="success" />
-        <SummaryStat label="当前页孩子档案" value={totalChildren} />
-        <SummaryStat label="当前页成长记录" value={totalRecords} />
+        <SummaryStat label="本页家庭" value={currentFamilies.length} />
+        <SummaryStat label="本页状态正常" value={activeFamilies} tone="success" />
+        <SummaryStat label="本页孩子档案" value={totalChildren} />
+        <SummaryStat label="本页成长记录" value={totalRecords} />
       </ListSummary>
       {state.error ? <Panel><EmptyState message={`加载失败：${state.error}`} /></Panel> : null}
       <TableShell columns={['家庭', '拥有者', '资产规模', '交付申请', '状态', '创建时间', '操作']} rows={rows} emptyMessage="暂无匹配家庭。可按家庭编号、家庭名称或拥有者重新查询。" loading={state.loading} />
@@ -1586,9 +1637,9 @@ export const ChildrenPage = () => {
     <PageShell title="孩子列表" description="查询孩子档案、归属家庭与拥有者。">
       <SearchPanel {...state} />
       <ListSummary label="孩子档案概览" description="默认展示档案归属和状态，发现异常时进入详情核查家庭关系。">
-        <SummaryStat label="当前页头像可用" value={`${avatarReadyCount}/${currentChildren.length}`} tone={avatarReadyCount === currentChildren.length ? 'success' : 'warning'} />
-        <SummaryStat label="当前页档案" value={currentChildren.length} />
-        <SummaryStat label="当前页状态正常" value={activeChildren} tone="success" />
+        <SummaryStat label="本页头像可用" value={`${avatarReadyCount}/${currentChildren.length}`} tone={avatarReadyCount === currentChildren.length ? 'success' : 'warning'} />
+        <SummaryStat label="本页档案" value={currentChildren.length} />
+        <SummaryStat label="本页状态正常" value={activeChildren} tone="success" />
       </ListSummary>
       {state.error ? <Panel><EmptyState message={`加载失败：${state.error}`} /></Panel> : null}
       <TableShell columns={['孩子', '家庭', '拥有者', '出生地', '更新日期', '状态', '操作']} rows={rows} emptyMessage="暂无匹配孩子档案。可按孩子、家庭或拥有者重新查询。" loading={state.loading} />
@@ -1601,7 +1652,12 @@ export const ChildrenPage = () => {
 };
 
 export const RecordsPage = () => {
-  const [recordFilter, setRecordFilter] = useState<AdminRecordFilter>(() => normalizeRecordFilter(new URLSearchParams(window.location.search).get('record_filter')));
+  // 筛选状态直接由 URL 派生，而不是只在挂载时读一次 window.location：
+  // 这样从总览带参数跳转、浏览器前进/后退、分享带筛选的链接都能保持一致。
+  const [searchParams, setSearchParams] = useSearchParams();
+  const recordFilter = normalizeRecordFilter(searchParams.get('record_filter'));
+  const { admin } = useAdminAuth();
+  const canOperate = admin?.role === 'super_admin' || admin?.role === 'operator';
   const state = useAdminListPage<AdminRecordItem>((params) => adminApi.listRecords({ ...params, record_filter: recordFilter }));
   const detail = useDetailState<AdminRecordDetail>();
   const { requestOperationReason, reasonDialog } = useOperationReasonDialog();
@@ -1612,7 +1668,13 @@ export const RecordsPage = () => {
   const updateStatus = async (record: AdminRecordItem) => {
     const nextStatus = record.status === 'published' ? 'draft' : 'published';
     const actionName = nextStatus === 'draft' ? '下架记录' : '恢复记录';
-    const reason = await requestOperationReason(actionName);
+    const reason = await requestOperationReason(actionName, {
+      target: `${record.title ?? record.record_no} · ${record.child_name ?? record.child_no}`,
+      consequence:
+        nextStatus === 'draft'
+          ? `下架后该记录（含 ${record.media_count ?? 0} 个媒体）在家庭端不再展示。`
+          : '恢复后家庭成员可以重新看到这条记录。',
+    });
     if (!reason) return;
 
     setActionError(null);
@@ -1661,9 +1723,11 @@ export const RecordsPage = () => {
     formatDateTime(item.created_at),
     <ActionGroup key={`${item.record_no}-actions`}>
       <ActionButton icon={<Eye size={15} />} onClick={() => void detail.openDetail('成长记录详情', item.record_no, () => adminApi.getRecordDetail(item.record_no))}>详情</ActionButton>
-      <ActionButton icon={item.status === 'published' ? <ArchiveX size={15} /> : <RotateCcw size={15} />} onClick={() => void updateStatus(item)} disabled={updatingRecordNo === item.record_no} tone={item.status === 'published' ? 'danger' : 'success'}>
-        {updatingRecordNo === item.record_no ? '处理中…' : item.status === 'published' ? '下架' : '恢复'}
-      </ActionButton>
+      {canOperate ? (
+        <ActionButton icon={item.status === 'published' ? <ArchiveX size={15} /> : <RotateCcw size={15} />} onClick={() => void updateStatus(item)} disabled={updatingRecordNo === item.record_no} tone={item.status === 'published' ? 'danger' : 'success'}>
+          {updatingRecordNo === item.record_no ? '处理中…' : item.status === 'published' ? '下架' : '恢复'}
+        </ActionButton>
+      ) : null}
     </ActionGroup>,
   ], (item) => item.record_no);
 
@@ -1672,17 +1736,15 @@ export const RecordsPage = () => {
       <SearchPanel {...state} />
       <Panel className="admin-record-filter-panel">
         <div className="admin-record-filter-bar">
-          <div className="admin-record-filter-tabs" role="tablist" aria-label="成长记录筛选">
+          <div className="admin-record-filter-tabs" role="group" aria-label="成长记录筛选">
             {recordFilterOptions.map((item) => (
               <button
                 key={item.key}
                 type="button"
                 className={recordFilter === item.key ? 'is-active' : ''}
+                aria-pressed={recordFilter === item.key}
                 onClick={() => {
-                  setRecordFilter(item.key);
-                  // 基于当前路径写查询串，避免硬编码路径在子路径部署下失效。
-                  const query = item.key === 'all' ? '' : `?record_filter=${item.key}`;
-                  window.history.replaceState(null, '', `${window.location.pathname}${query}`);
+                  setSearchParams(item.key === 'all' ? {} : { record_filter: item.key }, { replace: true });
                 }}
               >
                 {item.label}
@@ -1692,10 +1754,10 @@ export const RecordsPage = () => {
         </div>
       </Panel>
       <ListSummary label="记录概览">
-        <SummaryStat label="当前页已发布" value={publishedRecords} tone="success" />
-        <SummaryStat label="当前页草稿" value={draftRecords} tone={draftRecords > 0 ? 'warning' : 'neutral'} />
-        <SummaryStat label="当前页媒体异常" value={mediaExceptionRecords} tone={mediaExceptionRecords > 0 ? 'warning' : 'neutral'} />
-        <SummaryStat label="当前页风险标记" value={riskFlagRecords} tone={riskFlagRecords > 0 ? 'danger' : 'neutral'} />
+        <SummaryStat label="本页已发布" value={publishedRecords} tone="success" />
+        <SummaryStat label="本页草稿" value={draftRecords} tone={draftRecords > 0 ? 'warning' : 'neutral'} />
+        <SummaryStat label="本页媒体异常" value={mediaExceptionRecords} tone={mediaExceptionRecords > 0 ? 'warning' : 'neutral'} />
+        <SummaryStat label="本页风险标记" value={riskFlagRecords} tone={riskFlagRecords > 0 ? 'danger' : 'neutral'} />
       </ListSummary>
       <ActionFeedback error={actionError} />
       {state.error ? <Panel><EmptyState message={`加载失败：${state.error}`} /></Panel> : null}
@@ -1711,6 +1773,8 @@ export const RecordsPage = () => {
 
 export const MediaPage = () => {
   const detail = useDetailState<AdminMediaDetail>();
+  const { admin } = useAdminAuth();
+  const canOperate = admin?.role === 'super_admin' || admin?.role === 'operator';
   const { requestOperationReason, reasonDialog } = useOperationReasonDialog();
   const [keyword, setKeyword] = useState('');
   const [mediaType, setMediaType] = useState('');
@@ -1723,7 +1787,8 @@ export const MediaPage = () => {
   const [endTime, setEndTime] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [loading, setLoading] = useState(false);
+  // 首帧即加载中，避免先闪一帧空态
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Awaited<ReturnType<typeof adminApi.listMedia>> | null>(null);
   const mediaAutoLoadedRef = useRef(false);
@@ -1794,7 +1859,15 @@ export const MediaPage = () => {
 
   const updateStatus = async (media: AdminMediaItem, status: 'ready' | 'failed' | 'removed') => {
     const actionName = status === 'ready' ? '通过媒体审核' : status === 'removed' ? '下架媒体' : '标记媒体异常';
-    const reason = await requestOperationReason(actionName);
+    const reason = await requestOperationReason(actionName, {
+      target: `${media.original_name ?? media.media_no} · ${mediaTypeLabel(media.media_type)}`,
+      consequence:
+        status === 'removed'
+          ? '下架后该媒体不再对家庭成员展示，记录本身保留。'
+          : status === 'failed'
+            ? '标记异常后该媒体会进入待处理队列，便于后续替换或重传。'
+            : '通过后该媒体对家庭成员正常展示。',
+    });
     if (!reason) return;
 
     setActionError(null);
@@ -1831,9 +1904,19 @@ export const MediaPage = () => {
     <Badge key={`${item.media_no}-type`} tone="info">{mediaTypeLabel(item.media_type)}</Badge>,
     <ActionGroup key={`${item.media_no}-actions`}>
       <ActionButton icon={<Eye size={15} />} onClick={() => void detail.openDetail('媒体详情', item.media_no, () => adminApi.getMediaDetail(item.media_no))}>详情</ActionButton>
-      <ActionButton icon={<CheckCircle2 size={15} />} onClick={() => updateStatus(item, 'ready')} disabled={updatingMediaNo === item.media_no} tone="success">通过</ActionButton>
-      <ActionButton icon={<AlertTriangle size={15} />} onClick={() => updateStatus(item, 'failed')} disabled={updatingMediaNo === item.media_no} tone="warning">标记异常</ActionButton>
-      <ActionButton icon={<ArchiveX size={15} />} onClick={() => updateStatus(item, 'removed')} disabled={updatingMediaNo === item.media_no} tone="danger">下架</ActionButton>
+      {canOperate ? (
+        item.status === 'removed' ? (
+          // 状态机约束：已下架的媒体只能「恢复为可用」。
+          // 此前 removed 状态仍然显示「通过」，等于允许一次点击悄悄撤销下架动作。
+          <ActionButton icon={<RotateCcw size={15} />} onClick={() => updateStatus(item, 'ready')} disabled={updatingMediaNo === item.media_no} tone="success">恢复</ActionButton>
+        ) : (
+          <>
+            <ActionButton icon={<CheckCircle2 size={15} />} onClick={() => updateStatus(item, 'ready')} disabled={updatingMediaNo === item.media_no} tone="success">通过</ActionButton>
+            <ActionButton icon={<AlertTriangle size={15} />} onClick={() => updateStatus(item, 'failed')} disabled={updatingMediaNo === item.media_no} tone="warning">标记异常</ActionButton>
+            <ActionButton icon={<ArchiveX size={15} />} onClick={() => updateStatus(item, 'removed')} disabled={updatingMediaNo === item.media_no} tone="danger">下架</ActionButton>
+          </>
+        )
+      ) : null}
     </ActionGroup>,
   ], (item) => item.media_no);
 
@@ -1843,13 +1926,13 @@ export const MediaPage = () => {
         <form className="admin-audit-filter-form admin-form-stack" onSubmit={(event) => void load(1, pageSize, event)}>
           <div className="admin-audit-filter-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(240px, 1fr) repeat(2, minmax(160px, 0.45fr))', gap: '10px' }}>
             <input style={inputStyle} value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="编号 / 文件 / 孩子 / 记录" />
-            <AdminSelect value={mediaType} onChange={(event) => setMediaType(event.target.value)}>
+            <AdminSelect aria-label="媒体类型" value={mediaType} onChange={(event) => setMediaType(event.target.value)}>
               <option value="">全部类型</option>
               <option value="image">图片</option>
               <option value="video">视频</option>
               <option value="audio">音频</option>
             </AdminSelect>
-            <AdminSelect value={status} onChange={(event) => setStatus(event.target.value)}>
+            <AdminSelect aria-label="媒体状态" value={status} onChange={(event) => setStatus(event.target.value)}>
               <option value="">全部状态</option>
               <option value="uploading">处理中</option>
               <option value="ready">可用</option>
@@ -1859,7 +1942,7 @@ export const MediaPage = () => {
           </div>
           {advancedFiltersOpen ? (
             <div className="admin-audit-filter-grid admin-advanced-filter-grid">
-              <AdminSelect value={linked} onChange={(event) => setLinked(event.target.value)}>
+              <AdminSelect aria-label="关联状态" value={linked} onChange={(event) => setLinked(event.target.value)}>
                 <option value="">全部关联</option>
                 <option value="linked">已关联记录</option>
                 <option value="unlinked">未关联记录</option>
@@ -1905,12 +1988,17 @@ export const MediaPage = () => {
 export const AIJobsPage = () => {
   const state = useAdminListPage<AdminAiJobItem>(adminApi.listAiJobs);
   const detail = useDetailState<AdminAiJobDetail>();
+  const { admin } = useAdminAuth();
+  const canOperate = admin?.role === 'super_admin' || admin?.role === 'operator';
   const { requestOperationReason, reasonDialog } = useOperationReasonDialog();
   const [updatingJobNo, setUpdatingJobNo] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
   const retryJob = async (job: AdminAiJobItem) => {
-    const reason = await requestOperationReason('重试 AI 任务');
+    const reason = await requestOperationReason('重试 AI 任务', {
+      target: `${job.job_no} · ${aiJobTypeLabel(job.job_type)}`,
+      consequence: '重试会重新调用 AI 服务，可能产生新的调用额度消耗。',
+    });
     if (!reason) return;
 
     setActionError(null);
@@ -1934,7 +2022,10 @@ export const AIJobsPage = () => {
   };
 
   const cancelJob = async (job: AdminAiJobItem) => {
-    const reason = await requestOperationReason('取消 AI 任务');
+    const reason = await requestOperationReason('取消 AI 任务', {
+      target: `${job.job_no} · ${aiJobTypeLabel(job.job_type)}`,
+      consequence: '取消后该任务不会再产出结果，如需重新生成要走重试。',
+    });
     if (!reason) return;
 
     setActionError(null);
@@ -1970,8 +2061,12 @@ export const AIJobsPage = () => {
     formatDateTime(item.created_at),
     <ActionGroup key={`${item.job_no}-actions`}>
       <ActionButton icon={<Eye size={15} />} onClick={() => void detail.openDetail('AI 任务详情', item.job_no, () => adminApi.getAiJobDetail(item.job_no))}>详情</ActionButton>
-      <ActionButton icon={<RotateCcw size={15} />} onClick={() => void retryJob(item)} disabled={updatingJobNo === item.job_no || !['failed', 'cancelled'].includes(item.status)} tone="success">重试</ActionButton>
-      <ActionButton icon={<Ban size={15} />} onClick={() => void cancelJob(item)} disabled={updatingJobNo === item.job_no || !['pending', 'processing'].includes(item.status)} tone="danger">取消</ActionButton>
+      {canOperate ? (
+        <>
+          <ActionButton icon={<RotateCcw size={15} />} onClick={() => void retryJob(item)} disabled={updatingJobNo === item.job_no || !['failed', 'cancelled'].includes(item.status)} tone="success">重试</ActionButton>
+          <ActionButton icon={<Ban size={15} />} onClick={() => void cancelJob(item)} disabled={updatingJobNo === item.job_no || !['pending', 'processing'].includes(item.status)} tone="danger">取消</ActionButton>
+        </>
+      ) : null}
     </ActionGroup>,
   ], (item) => item.job_no);
 
@@ -1979,8 +2074,8 @@ export const AIJobsPage = () => {
     <PageShell title="AI 任务列表" description="查看 AI 任务状态和失败原因。">
       <SearchPanel {...state} />
       <ListSummary label="AI 任务概览" description="默认展示任务队列，优先处理失败、卡住和待重试的链路。">
-        <SummaryStat label="当前页处理中/待处理" value={activeJobs} tone={activeJobs > 0 ? 'warning' : 'neutral'} />
-        <SummaryStat label="当前页失败" value={failedJobs} tone={failedJobs > 0 ? 'danger' : 'success'} />
+        <SummaryStat label="本页处理中/待处理" value={activeJobs} tone={activeJobs > 0 ? 'warning' : 'neutral'} />
+        <SummaryStat label="本页失败" value={failedJobs} tone={failedJobs > 0 ? 'danger' : 'success'} />
       </ListSummary>
       <ActionFeedback error={actionError} />
       {state.error ? <Panel><EmptyState message={`加载失败：${state.error}`} /></Panel> : null}
@@ -2004,7 +2099,8 @@ export const NotificationsPage = () => {
   const [endTime, setEndTime] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [loading, setLoading] = useState(false);
+  // 首帧即加载中，避免先闪一帧空态
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ list: AdminNotificationItem[]; page: number; page_size: number; total: number; has_more: boolean } | null>(null);
   const autoLoadedRef = useRef(false);
@@ -2087,7 +2183,7 @@ export const NotificationsPage = () => {
         <form className="admin-audit-filter-form admin-form-stack" onSubmit={(event) => void load(1, pageSize, event)}>
           <div className="admin-audit-filter-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(260px, 1fr) minmax(180px, 0.45fr)', gap: '10px' }}>
             <input style={inputStyle} value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="用户 / 家庭 / 通知 / 目标" />
-            <AdminSelect value={readState} onChange={(event) => setReadState(event.target.value)}>
+            <AdminSelect aria-label="已读状态" value={readState} onChange={(event) => setReadState(event.target.value)}>
               <option value="">全部已读状态</option>
               <option value="unread">未读</option>
               <option value="read">已读</option>
@@ -2095,7 +2191,7 @@ export const NotificationsPage = () => {
           </div>
           {advancedFiltersOpen ? (
             <div className="admin-audit-filter-grid admin-advanced-filter-grid">
-              <AdminSelect value={notificationType} onChange={(event) => setNotificationType(event.target.value)}>
+              <AdminSelect aria-label="通知类型" value={notificationType} onChange={(event) => setNotificationType(event.target.value)}>
                 <option value="">全部通知类型</option>
                 {notificationTypeValues.map((value) => (
                   <option key={value} value={value}>
@@ -2103,9 +2199,10 @@ export const NotificationsPage = () => {
                   </option>
                 ))}
               </AdminSelect>
-              <AdminSelect value={deliveryStatus} onChange={(event) => setDeliveryStatus(event.target.value)}>
+              <AdminSelect aria-label="投递状态" value={deliveryStatus} onChange={(event) => setDeliveryStatus(event.target.value)}>
                 <option value="">全部投递状态</option>
                 <option value="queued">待投递</option>
+                <option value="processing">投递中</option>
                 <option value="sent">已投递</option>
                 <option value="failed">投递失败</option>
                 <option value="skipped">已跳过</option>
@@ -2129,11 +2226,11 @@ export const NotificationsPage = () => {
         </form>
       </Panel>
       <ListSummary label="通知状态概览" description="默认展示最近通知，优先关注未读积压、待投递和投递异常；投递失败不作为普通用户提示文案直接铺在列表中。">
-        <SummaryStat label="当前页未读" value={unreadCount} tone={unreadCount > 0 ? 'warning' : 'success'} />
-        <SummaryStat label="当前页待投递" value={queuedDeliveryCount} tone={queuedDeliveryCount > 0 ? 'warning' : 'neutral'} />
-        <SummaryStat label="当前页投递失败" value={failedDeliveryCount} tone={failedDeliveryCount > 0 ? 'danger' : 'success'} />
+        <SummaryStat label="本页未读" value={unreadCount} tone={unreadCount > 0 ? 'warning' : 'success'} />
+        <SummaryStat label="本页待投递" value={queuedDeliveryCount} tone={queuedDeliveryCount > 0 ? 'warning' : 'neutral'} />
+        <SummaryStat label="本页投递失败" value={failedDeliveryCount} tone={failedDeliveryCount > 0 ? 'danger' : 'success'} />
       </ListSummary>
-      {error ? <Panel><EmptyState message="通知数据暂时不可用，请稍后重试或查看系统运维日志。" /></Panel> : null}
+      {error ? <Panel><EmptyState title="加载失败" message={`通知数据加载失败：${error}`} /></Panel> : null}
       <TableShell columns={['通知', '接收人', '家庭', '已读', '投递', '目标', '创建时间', '操作']} rows={rows} emptyMessage="暂无匹配通知。可清空筛选，或等待用户发布记录后生成家庭通知。" loading={loading} />
       {result ? <PaginationPanel page={result.page} pageSize={result.page_size} total={result.total} hasMore={result.has_more} loading={loading} onPrevPage={async () => { if (!loading && page > 1) await load(page - 1, pageSize); }} onNextPage={async () => { if (!loading && result.has_more) await load(page + 1, pageSize); }} onPageSizeChange={async (nextPageSize) => { if (!loading) await load(1, nextPageSize); }} onJumpToPage={async (nextPage) => { if (!loading) await load(nextPage, pageSize); }} /> : null}
       <DetailDrawer open={detail.state.open} title={detail.state.title} subtitle={detail.state.subtitle} loading={detail.state.loading} error={detail.state.error} onClose={detail.closeDetail} onRetry={detail.retryDetail}>
@@ -2153,7 +2250,8 @@ export const SupportTicketsPage = () => {
   const [priority, setPriority] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [loading, setLoading] = useState(false);
+  // 首帧即加载中，避免先闪一帧空态
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [updatingTicketNo, setUpdatingTicketNo] = useState<string | null>(null);
@@ -2212,7 +2310,13 @@ export const SupportTicketsPage = () => {
 
   const updateStatus = async (item: AdminSupportTicketItem, nextStatus: 'processing' | 'resolved' | 'closed') => {
     const actionName = nextStatus === 'processing' ? '受理客服反馈' : nextStatus === 'resolved' ? '解决客服反馈' : '关闭客服反馈';
-    const reason = await requestOperationReason(actionName);
+    const reason = await requestOperationReason(actionName, {
+      target: `${item.ticket_no} · ${item.user_name}${item.priority === 'child_safety' ? ' · 儿童安全' : ''}`,
+      consequence:
+        nextStatus === 'closed'
+          ? '关闭后该反馈进入终态，不再出现在待处理队列。'
+          : '状态变化会写入审计日志，用户可在 App 内看到处理进度。',
+    });
     if (!reason) return;
 
     setActionError(null);
@@ -2279,18 +2383,22 @@ export const SupportTicketsPage = () => {
           </div>
           <div className="admin-audit-filter-grid admin-filter-grid-auto" >
             <input style={inputStyle} value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="编号 / 用户 / 内容" />
-            <AdminSelect value={category} onChange={(event) => setCategory(event.target.value)}>
+            <AdminSelect aria-label="问题类型" value={category} onChange={(event) => setCategory(event.target.value)}>
               <option value="">全部类型</option>
-              <option value="数据异常">数据异常</option>
+              {/* 取值必须与用户端反馈表单保持一致（apps/web profile-pages 的 4 个选项），
+                  否则这两类反馈在后台永远筛不出来。 */}
               <option value="使用问题">使用问题</option>
+              <option value="页面显示">页面显示</option>
+              <option value="数据异常">数据异常</option>
+              <option value="功能建议">功能建议</option>
             </AdminSelect>
-            <AdminSelect value={priority} onChange={(event) => setPriority(event.target.value)}>
+            <AdminSelect aria-label="优先级" value={priority} onChange={(event) => setPriority(event.target.value)}>
               <option value="">全部优先级</option>
               <option value="child_safety">儿童安全</option>
               <option value="urgent">紧急</option>
               <option value="normal">普通</option>
             </AdminSelect>
-            <AdminSelect value={status} onChange={(event) => setStatus(event.target.value)}>
+            <AdminSelect aria-label="处理状态" value={status} onChange={(event) => setStatus(event.target.value)}>
               <option value="">全部状态</option>
               <option value="submitted">待处理</option>
               <option value="processing">处理中</option>
@@ -2309,9 +2417,9 @@ export const SupportTicketsPage = () => {
         </form>
       </Panel>
       <ListSummary label="客服反馈概览" description="儿童安全和待处理反馈优先进入值班视野；每次状态推进都会写入审计日志。">
-        <SummaryStat label="当前页待处理" value={submittedCount} tone={submittedCount > 0 ? 'warning' : 'neutral'} />
-        <SummaryStat label="当前页处理中" value={processingCount} tone={processingCount > 0 ? 'warning' : 'neutral'} />
-        <SummaryStat label="当前页儿童安全" value={childSafetyCount} tone={childSafetyCount > 0 ? 'danger' : 'neutral'} />
+        <SummaryStat label="本页待处理" value={submittedCount} tone={submittedCount > 0 ? 'warning' : 'neutral'} />
+        <SummaryStat label="本页处理中" value={processingCount} tone={processingCount > 0 ? 'warning' : 'neutral'} />
+        <SummaryStat label="本页儿童安全" value={childSafetyCount} tone={childSafetyCount > 0 ? 'danger' : 'neutral'} />
       </ListSummary>
       <ActionFeedback error={actionError} />
       {error ? <Panel><EmptyState message={`加载失败：${error}`} /></Panel> : null}
@@ -2335,7 +2443,8 @@ export const ArchiveExportRequestsPage = () => {
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [loading, setLoading] = useState(false);
+  // 首帧即加载中，避免先闪一帧空态
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [updatingRequestNo, setUpdatingRequestNo] = useState<string | null>(null);
@@ -2392,7 +2501,16 @@ export const ArchiveExportRequestsPage = () => {
   const updateStatus = async (item: AdminArchiveExportRequestItem, nextStatus: 'processing' | 'completed' | 'rejected') => {
     const actionName = nextStatus === 'processing' ? '受理档案交付申请' : nextStatus === 'completed' ? '完成档案交付申请' : '驳回档案交付申请';
     const completion = nextStatus === 'completed' ? await requestArchiveCompletion(item.request_no) : null;
-    const reason = nextStatus === 'completed' ? completion?.note ?? null : await requestOperationReason(actionName);
+    const reason =
+      nextStatus === 'completed'
+        ? completion?.note ?? null
+        : await requestOperationReason(actionName, {
+            target: `${item.request_no} · ${item.child_name}（${item.user_name}）`,
+            consequence:
+              nextStatus === 'rejected'
+                ? '驳回后申请人会看到驳回结果，需在备注里写清原因。'
+                : '受理后该申请进入处理中，申请人会收到进度变化。',
+          });
     if (!reason) return;
 
     setActionError(null);
@@ -2466,12 +2584,12 @@ export const ArchiveExportRequestsPage = () => {
           </div>
           <div className="admin-audit-filter-grid admin-filter-grid-auto" >
             <input style={inputStyle} value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="申请编号 / 孩子 / 申请人" />
-            <AdminSelect value={purpose} onChange={(event) => setPurpose(event.target.value)}>
+            <AdminSelect aria-label="申请类型" value={purpose} onChange={(event) => setPurpose(event.target.value)}>
               <option value="">全部类型</option>
               <option value="backup">档案打包</option>
               <option value="adult_handoff">成年移交</option>
             </AdminSelect>
-            <AdminSelect value={status} onChange={(event) => setStatus(event.target.value)}>
+            <AdminSelect aria-label="处理状态" value={status} onChange={(event) => setStatus(event.target.value)}>
               <option value="">全部状态</option>
               <option value="submitted">待处理</option>
               <option value="processing">处理中</option>
@@ -2490,9 +2608,9 @@ export const ArchiveExportRequestsPage = () => {
         </form>
       </Panel>
       <ListSummary label="交付申请概览" description="优先处理成年移交和待处理申请；每次状态推进都会写入审计，方便复盘责任链。">
-        <SummaryStat label="当前页待处理" value={submittedCount} tone={submittedCount > 0 ? 'warning' : 'neutral'} />
-        <SummaryStat label="当前页处理中" value={processingCount} tone={processingCount > 0 ? 'warning' : 'neutral'} />
-        <SummaryStat label="当前页成年移交" value={handoffCount} tone={handoffCount > 0 ? 'danger' : 'neutral'} />
+        <SummaryStat label="本页待处理" value={submittedCount} tone={submittedCount > 0 ? 'warning' : 'neutral'} />
+        <SummaryStat label="本页处理中" value={processingCount} tone={processingCount > 0 ? 'warning' : 'neutral'} />
+        <SummaryStat label="本页成年移交" value={handoffCount} tone={handoffCount > 0 ? 'danger' : 'neutral'} />
       </ListSummary>
       <ActionFeedback error={actionError} />
       {error ? <Panel><EmptyState message={`加载失败：${error}`} /></Panel> : null}
@@ -2517,7 +2635,8 @@ export const AuditLogsPage = () => {
   const [endTime, setEndTime] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [loading, setLoading] = useState(false);
+  // 首帧即加载中，避免先闪一帧空态
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<{ list: AdminAuditLogItem[]; page: number; page_size: number; total: number; has_more: boolean } | null>(null);
   const autoLoadedRef = useRef(false);
@@ -2598,8 +2717,8 @@ export const AuditLogsPage = () => {
             <p style={mutedTextStyle}>支持按关键字、动作、目标类型和发生时间筛选。</p>
           </div>
           <div className="admin-audit-filter-grid admin-filter-grid-auto" >
-            <input style={inputStyle} value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="关键字" />
-            <AdminSelect value={action} onChange={(event) => setAction(event.target.value)}>
+            <input style={inputStyle} value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="动作 / 目标类型关键字" />
+            <AdminSelect aria-label="动作" value={action} onChange={(event) => setAction(event.target.value)}>
               <option value="">全部动作</option>
               {auditActionValues.map((value) => (
                 <option key={value} value={value}>
@@ -2607,7 +2726,7 @@ export const AuditLogsPage = () => {
                 </option>
               ))}
             </AdminSelect>
-            <AdminSelect value={targetType} onChange={(event) => setTargetType(event.target.value)}>
+            <AdminSelect aria-label="目标类型" value={targetType} onChange={(event) => setTargetType(event.target.value)}>
               <option value="">全部目标类型</option>
               {auditTargetTypeValues.map((value) => (
                 <option key={value} value={value}>
@@ -2615,7 +2734,7 @@ export const AuditLogsPage = () => {
                 </option>
               ))}
             </AdminSelect>
-            <input style={inputStyle} value={actorId} onChange={(event) => setActorId(event.target.value)} placeholder="操作者编号（如 1）" />
+            <input style={inputStyle} value={actorId} onChange={(event) => setActorId(event.target.value.replace(/[^\d]/g, ''))} inputMode="numeric" placeholder="操作者编号（后台账号 ID，数字）" />
             <AdminDateInput type="datetime-local" value={startTime} onChange={(event) => setStartTime(event.target.value)} aria-label="开始时间" placeholder="开始时间" />
             <AdminDateInput type="datetime-local" value={endTime} onChange={(event) => setEndTime(event.target.value)} aria-label="结束时间" placeholder="结束时间" />
           </div>
@@ -2635,7 +2754,7 @@ export const AuditLogsPage = () => {
         </form>
       </Panel>
       <ListSummary label="审计日志概览" description="进入页面即展示最近留痕，筛选只用于缩小范围，不再让页面默认空白。">
-        <SummaryStat label="当前页留痕" value={currentLogs.length} />
+        <SummaryStat label="本页留痕" value={currentLogs.length} />
         <SummaryStat label="后台登录" value={recentLoginLogs} tone={recentLoginLogs > 0 ? 'success' : 'neutral'} />
       </ListSummary>
       {error ? <Panel><EmptyState message={`加载失败：${error}`} /></Panel> : null}

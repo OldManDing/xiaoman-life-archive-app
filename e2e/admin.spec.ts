@@ -220,8 +220,10 @@ test.describe('Admin critical journeys', () => {
     await expect(page.getByRole('row', { name: /备份保留周期/ })).toHaveCount(0);
     await expect(page.getByRole('link', { name: '技术媒体库', exact: true })).toBeVisible();
     await expect(page.getByRole('link', { name: '风险队列', exact: true })).toBeVisible();
-    await expect(page.locator('aside a[href="/media"]')).toHaveCount(0);
-    await expect(page.locator('aside a[href="/content-risks"]')).toHaveCount(0);
+    // 2026-09-20 信息架构调整：媒体审核与内容风险是运营日常入口，已进入主导航，
+    // 不再只靠「系统运维 → 技术入口」跳转；系统运维页的快捷入口保留。
+    await expect(page.locator('aside a[href="/media"]')).toHaveCount(1);
+    await expect(page.locator('aside a[href="/content-risks"]')).toHaveCount(1);
     await expectNoEnglishSeedCopy(page);
   });
 

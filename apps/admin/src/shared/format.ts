@@ -15,3 +15,13 @@ export const formatBytes = (value: number | null | undefined) => {
 export const toIsoDateTime = (value: string) => (value ? new Date(value).toISOString() : undefined);
 
 export const optionalFilter = (value: string | undefined) => value?.trim() || undefined;
+
+/**
+ * 本地时区的「今天」，格式 YYYY-MM-DD。
+ * 不能直接用 `new Date().toISOString().slice(0,10)`：那是 UTC 日期，
+ * 在东八区凌晨会返回「昨天」，导致日期选择器允许选到已经过去的一天。
+ */
+export const todayLocalDate = (now: Date = new Date()) => {
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 10);
+};

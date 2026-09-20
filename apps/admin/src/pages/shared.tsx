@@ -24,7 +24,9 @@ export const SearchPanel = ({
     {description ? <p className="admin-search-description">{description}</p> : null}
     <form className="admin-search-form" onSubmit={onSearch}>
       <div className="admin-search-controls">
-        <input className="admin-filter-control admin-search-keyword" value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder={placeholder} />
+        {/* 仅靠 placeholder 不构成可访问名称（占位文字一输入就消失，读屏也读不到稳定标签）。
+            placeholder 本身已经是描述性的，直接复用为 aria-label。 */}
+        <input className="admin-filter-control admin-search-keyword" aria-label={placeholder} value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder={placeholder} />
         <AdminButton className="admin-filter-button" tone="primary" type="submit" disabled={loading}>
           {loading ? '查询中…' : '查询'}
         </AdminButton>

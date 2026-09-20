@@ -151,20 +151,20 @@ export const ContentRisksPage = () => {
           </div>
           <div className="admin-audit-filter-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
             <input style={inputStyle} value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="编号 / 用户 / 内容" />
-            <AdminSelect value={category} onChange={(event) => setCategory(event.target.value)}>
+            <AdminSelect aria-label="风险类型" value={category} onChange={(event) => setCategory(event.target.value)}>
               <option value="">全部类型</option>
               <option value="content_safety">内容安全</option>
               <option value="media_exception">媒体异常</option>
               <option value="child_safety">儿童安全</option>
               <option value="ai_exception">AI 异常</option>
             </AdminSelect>
-            <AdminSelect value={severity} onChange={(event) => setSeverity(event.target.value)}>
+            <AdminSelect aria-label="风险级别" value={severity} onChange={(event) => setSeverity(event.target.value)}>
               <option value="">全部级别</option>
               <option value="p0">P0 阻塞</option>
               <option value="p1">P1 优先</option>
               <option value="p2">P2 关注</option>
             </AdminSelect>
-            <AdminSelect value={status} onChange={(event) => setStatus(event.target.value)}>
+            <AdminSelect aria-label="处理状态" value={status} onChange={(event) => setStatus(event.target.value)}>
               <option value="">全部状态</option>
               <option value="open">待处理</option>
               <option value="processing">处理中</option>
@@ -186,11 +186,11 @@ export const ContentRisksPage = () => {
         <div className="admin-row-between-top">
               <span className="admin-risk-summary-title">
             <AlertTriangle size={17} />
-            当前页风险概览
+            本页风险概览
           </span>
           <div className="admin-chip-row">
-            <Badge tone={p0Count > 0 ? 'danger' : 'success'}>当前页 P0：{p0Count}</Badge>
-            <Badge tone={openCount > 0 ? 'danger' : 'success'}>当前页待处理：{openCount}</Badge>
+            <Badge tone={p0Count > 0 ? 'danger' : 'success'}>本页 P0：{p0Count}</Badge>
+            <Badge tone={openCount > 0 ? 'danger' : 'success'}>本页待处理：{openCount}</Badge>
             <Badge tone="info">总数：{result?.total ?? 0}</Badge>
           </div>
         </div>

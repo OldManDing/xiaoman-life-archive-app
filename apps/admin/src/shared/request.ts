@@ -16,7 +16,10 @@ interface ApiEnvelope<T> {
   data: T;
 }
 
-type ErrorEnvelope = { message?: unknown };
+type ErrorEnvelope = {
+  message?: unknown;
+  data?: { fields?: Array<{ field?: unknown; reason?: unknown }> } | null;
+};
 
 const STATUS_MESSAGES: Record<number, string> = {
   400: '请求参数有误，请检查后重试',
@@ -26,10 +29,40 @@ const STATUS_MESSAGES: Record<number, string> = {
   429: '操作过于频繁，请稍后再试',
 };
 
+// class-validator 的英文原文形如「note must be longer than or equal to 2 characters」。
+// 后台 DTO 只映射了少数字段，未映射的会直接漏到界面，因此这里做一次兜底，避免出现英文报错。
+const UNMAPPED_VALIDATION_PATTERN = /^[a-z_][a-z0-9_]*\s+(must|should|is|are|can)\b/i;
+const UNMAPPED_VALIDATION_FALLBACK = '填写内容有误，请检查后重试';
+
+const readFieldReason = (body: ErrorEnvelope | undefined) => {
+  const fields = body?.data?.fields;
+  if (!Array.isArray(fields)) return null;
+
+  for (const field of fields) {
+    const reason = typeof field?.reason === 'string' ? field.reason.trim() : '';
+    if (!reason) continue;
+    return UNMAPPED_VALIDATION_PATTERN.test(reason) ? UNMAPPED_VALIDATION_FALLBACK : reason;
+  }
+
+  return null;
+};
+
 const toUserFacingError = (error: AxiosError) => {
   const status = error.response?.status;
-  const responseMessage = (error.response?.data as ErrorEnvelope | undefined)?.message;
+  const body = error.response?.data as ErrorEnvelope | undefined;
+  const responseMessage = body?.message;
+
+  // 校验失败时后端会给出 { message: '参数校验失败', data: { fields: [{ reason }] } }。
+  // 只显示「参数校验失败」等于什么都没说，必须优先透出字段级原因。
+  const fieldReason = readFieldReason(body);
+  if (fieldReason) {
+    return new Error(fieldReason);
+  }
+
   if (typeof responseMessage === 'string' && responseMessage.trim()) {
+    if (responseMessage === '参数校验失败') {
+      return new Error(UNMAPPED_VALIDATION_FALLBACK);
+    }
     return new Error(responseMessage);
   }
 
@@ -58,6 +91,7 @@ export interface AdminUserItem {
   avatar_url: string | null;
   mobile: string | null;
   membership_type: string;
+  membership_expire_at?: string | null;
   status: 'active' | 'disabled';
   last_login_at: string | null;
   created_at: string;
@@ -644,8 +678,15 @@ export interface AdminLoginResponse {
   };
 }
 
+// 后台与 API 可能不同源部署（例如后台在 nianlun.* 而接口在 webapi.*），
+// 因此 baseURL 必须允许通过构建期变量覆盖，未配置时才回退到同源 /api/v1。
+// 与 apps/web/src/shared/api/http.ts 的读取口径保持一致，避免两端口径分叉。
+const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
+
+export const apiBaseUrl = configuredApiBaseUrl ? configuredApiBaseUrl.replace(/\/+$/, '') : '/api/v1';
+
 const request = axios.create({
-  baseURL: '/api/v1',
+  baseURL: apiBaseUrl,
   withCredentials: true,
   timeout: 30000,
 });
@@ -687,12 +728,12 @@ export const adminApi = {
   },
 
   async logout() {
-    const response = await request.post<ApiEnvelope<{ changed: boolean }>>('/admin/auth/logout');
+    const response = await request.post<ApiEnvelope<{ success: boolean }>>('/admin/auth/logout');
     return unwrap(response);
   },
 
   async changePassword(payload: { current_password: string; new_password: string; new_password_confirm: string }) {
-    const response = await request.post<ApiEnvelope<{ changed: boolean }>>('/admin/auth/password', payload);
+    const response = await request.post<ApiEnvelope<{ success: boolean; revoked_sessions: number; changed_at: string }>>('/admin/auth/password', payload);
     return unwrap(response);
   },
 

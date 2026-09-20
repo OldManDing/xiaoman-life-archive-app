@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { Archive, BarChart3, BellRing, Bot, Database, FileText, House, KeyRound, LogOut, Menu, MessageSquareText, ServerCog, Settings2, ShieldCheck, SlidersHorizontal, UsersRound, X, type LucideIcon } from 'lucide-react';
+import { Archive, BarChart3, BellRing, Bot, Database, FileText, House, Image, KeyRound, LogOut, Menu, MessageSquareText, ServerCog, Settings2, ShieldAlert, ShieldCheck, SlidersHorizontal, UsersRound, X, type LucideIcon } from 'lucide-react';
 
 import { adminApi } from '../shared/request';
 import { getTokenExpiresAt } from '../shared/authMemory';
@@ -28,7 +28,18 @@ const navSections: NavSection[] = [
     ],
   },
   {
-    label: '运营',
+    // 日常运营队列。这四页是运营真正每天要处理的入口，此前只挂在「系统运维 → 技术入口」里，
+    // 需要多点两次才能到达，导航权重与实际使用频率倒挂。
+    label: '运营处理',
+    items: [
+      { to: '/media', label: '媒体审核', icon: Image },
+      { to: '/content-risks', label: '内容风险', icon: ShieldAlert },
+      { to: '/support-tickets', label: '客服反馈', icon: MessageSquareText },
+      { to: '/archive-export-requests', label: '档案交付', icon: Archive },
+    ],
+  },
+  {
+    label: '账号与通知',
     secondary: true,
     items: [
       { to: '/users', label: '账号管理', icon: UsersRound },
@@ -42,14 +53,6 @@ const navSections: NavSection[] = [
     items: [
       { to: '/ai-settings', label: 'AI 设置', icon: SlidersHorizontal },
       { to: '/ai-jobs', label: 'AI 任务', icon: Bot },
-    ],
-  },
-  {
-    label: '协作',
-    secondary: true,
-    items: [
-      { to: '/support-tickets', label: '客服反馈', icon: MessageSquareText },
-      { to: '/archive-export-requests', label: '档案交付', icon: Archive },
     ],
   },
   {

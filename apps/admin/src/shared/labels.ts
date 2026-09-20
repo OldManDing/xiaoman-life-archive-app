@@ -204,6 +204,8 @@ export const auditActorTypeLabel = (value: string | null | undefined) =>
 
 export const auditActionLabels: Record<string, string> = {
   admin_login: '后台登录',
+  admin_logout: '后台退出登录',
+  admin_change_password: '修改登录密码',
   admin_view_dashboard: '查看总览',
   admin_view_ops_readiness: '查看系统运维就绪',
   admin_view_user_detail: '查看用户详情',
@@ -232,6 +234,8 @@ export const auditActionLabels: Record<string, string> = {
   admin_list_system_configs: '查询系统配置',
   admin_list_audit_logs: '查询审计日志',
   admin_update_system_config: '调整系统配置',
+  admin_update_ai_settings: '调整 AI 服务设置',
+  admin_test_ai_settings: '测试 AI 服务连接',
   admin_update_user_membership: '调整用户套餐权益',
   admin_disable_user: '冻结用户',
   admin_activate_user: '解冻用户',
@@ -251,6 +255,9 @@ export const auditActionLabels: Record<string, string> = {
   'user.feedback_submitted': '用户提交客服反馈',
   'user.archive_export_requested': '用户申请档案打包',
   'user.adult_handoff_requested': '用户申请成年移交',
+  'user.archive_summary_downloaded': '用户下载档案摘要',
+  'user.password_changed': '用户修改密码',
+  'user.account_deleted': '用户注销账号',
   'seed.initialized': '初始化演示数据',
 };
 

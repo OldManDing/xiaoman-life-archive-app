@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useState, type CSSProperties, type ReactNode } from 'react';
 
 import { Maximize2, RotateCcw, X } from 'lucide-react';
 
@@ -196,6 +196,22 @@ export const JsonBlock = ({ value }: { value: unknown }) => (
   </pre>
 );
 
+/** 灯箱的显式关闭入口：此前只能靠「点空白处」或 Esc，鼠标用户不容易发现。 */
+const LightboxCloseButton = ({ onClose }: { onClose: () => void }) => (
+  <button
+    type="button"
+    className="admin-media-lightbox-close"
+    aria-label="关闭预览"
+    title="关闭预览"
+    onClick={(event) => {
+      event.stopPropagation();
+      onClose();
+    }}
+  >
+    <X size={18} strokeWidth={2.2} aria-hidden="true" />
+  </button>
+);
+
 const previewKind = (mediaType?: string | null, mimeType?: string | null) => {
   if (mediaType === 'image' || mimeType?.startsWith('image/')) return 'image';
   if (mediaType === 'video' || mimeType?.startsWith('video/')) return 'video';
@@ -263,6 +279,7 @@ export const MediaPreview = ({
         </button>
         {expanded && expandSrc ? (
           <div className="admin-media-lightbox" role="dialog" aria-modal="true" aria-label="图片预览" onClick={() => setExpanded(false)}>
+            <LightboxCloseButton onClose={() => setExpanded(false)} />
             <img src={expandSrc} alt={alt} onClick={(event) => event.stopPropagation()} />
           </div>
         ) : null}
@@ -283,6 +300,7 @@ export const MediaPreview = ({
         </div>
         {expanded && expandSrc ? (
           <div className="admin-media-lightbox" role="dialog" aria-modal="true" aria-label="视频预览" onClick={() => setExpanded(false)}>
+            <LightboxCloseButton onClose={() => setExpanded(false)} />
             <video src={expandSrc} controls autoPlay onClick={(event) => event.stopPropagation()}>
               当前浏览器不支持视频预览。
             </video>

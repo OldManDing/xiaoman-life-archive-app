@@ -8,7 +8,8 @@ export const useAdminListPage = <T,>(
   const [keyword, setKeyword] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [loading, setLoading] = useState(false);
+  // 首帧即视为加载中：否则会在请求发出前先渲染一次「暂无可处理数据」空态并可见地闪一下。
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AdminListResponse<T> | null>(null);
   const autoLoadedRef = useRef(false);

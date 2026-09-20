@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   font-family:
     "Microsoft YaHei",
     "PingFang SC",
@@ -97,12 +97,18 @@ textarea {
   --z-toast: 1300;
 }
 
+/* 焦点可见性：原来的 rgba(150,111,45,0.28) 在白底约 1.4:1、在深色侧栏约 1.38:1，
+   键盘用户基本看不到焦点。#8a6a2f 对白底约 5.0:1、对侧栏 #2b2419 约 3.1:1，两侧都达标。
+   同时把自绘的可聚焦控件（role=button 等）纳入同一套焦点语言。 */
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 select:focus-visible,
-textarea:focus-visible {
-  outline: 3px solid rgba(150, 111, 45, 0.28);
+textarea:focus-visible,
+[role='button']:focus-visible,
+[role='tab']:focus-visible,
+summary:focus-visible {
+  outline: 3px solid #8a6a2f;
   outline-offset: 2px;
 }
 
@@ -274,7 +280,7 @@ table {
 
 .admin-nav-section-label {
   padding: 0 10px;
-  color: rgba(255, 248, 237, 0.46);
+  color: rgba(255, 248, 237, 0.78);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -655,7 +661,9 @@ table {
 .admin-search-controls input::placeholder,
 .admin-audit-filter-form input::placeholder,
 .admin-audit-filter-form textarea::placeholder {
-  color: #a29686;
+  /* #a29686 在浅色底上仅约 2.9:1，占位文字常被当作字段说明来读，实测审计页日期筛选只有
+     3.44:1。加深到约 4.9:1，同时仍明显弱于正文，保留"这是提示"的视觉层次。 */
+  color: #7b7161;
 }
 
 .admin-search-controls button,
@@ -925,6 +933,10 @@ table {
   border-radius: 10px;
   background: #fffdf9;
   box-shadow: 0 18px 34px rgba(46, 34, 20, 0.14);
+  /* 动作多的行（媒体审核有 3 个动作）会把浮层顶出视口，自身必须可滚动。 */
+  max-height: min(320px, 60vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .admin-action-menu-popover .admin-action-button {
@@ -1029,6 +1041,9 @@ table {
   place-items: center;
   padding: 20px;
   background: rgba(34, 27, 18, 0.34);
+  /* 兜底：即使某个弹窗自身没限制高度，遮罩层也能滚动，避免内容不可达。 */
+  overflow: auto;
+  overscroll-behavior: contain;
 }
 
 .admin-modal-overlay {
@@ -1056,6 +1071,11 @@ table {
   gap: 16px;
   background: #ffffff;
   box-shadow: 0 24px 60px rgba(30, 24, 18, 0.16);
+  /* 弹窗内容可能超过视口（长表单/多个 textarea），必须自身可滚动，
+     否则关闭按钮和确认按钮会被裁掉且无法触达。 */
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .admin-modal-header {
@@ -1575,10 +1595,10 @@ table {
 
 .admin-select-trigger:focus-visible,
 .admin-date-input:focus-visible + .admin-date-display {
-  outline: 3px solid rgba(128, 107, 86, 0.22);
+  outline: 3px solid #8a6a2f;
   outline-offset: 2px;
-  border-color: #806b56;
-  box-shadow: 0 0 0 4px rgba(128, 107, 86, 0.08);
+  border-color: #8a6a2f;
+  box-shadow: 0 0 0 4px rgba(138, 106, 47, 0.16);
 }
 
 .admin-select-value {
@@ -1750,647 +1770,6 @@ table {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-}
-
-.admin-dashboard-error {
-  border: 1px solid #fecaca;
-  border-radius: 8px;
-  padding: 14px 16px;
-  background: #fff3f3;
-  color: #b42318;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.admin-dashboard-hero-grid,
-.admin-dashboard-core-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(320px, 0.76fr);
-  gap: 14px;
-  align-items: start;
-}
-
-.admin-dashboard-hero-grid {
-  align-items: stretch;
-}
-
-.admin-dashboard-hero-card,
-.admin-dashboard-side-card,
-.admin-dashboard-radar-card,
-.admin-dashboard-ai-card,
-.admin-dashboard-actions-card,
-.admin-dashboard-audit-card,
-.admin-dashboard-metric-card {
-  border: 1px solid rgba(28, 65, 57, 0.1);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 10px 28px rgba(74, 57, 40, 0.06);
-}
-
-.admin-dashboard-hero-card {
-  position: relative;
-  overflow: hidden;
-  padding: 24px;
-  display: block;
-  color: #f7f3eb;
-  min-height: 426px;
-}
-
-.admin-dashboard-hero-card::before,
-.admin-dashboard-hero-card::after {
-  display: none;
-}
-
-.admin-dashboard-hero-card::before {
-  display: none;
-}
-
-.admin-dashboard-hero-card::after {
-  display: none;
-}
-
-.admin-dashboard-hero-success {
-  background: #2b2419;
-}
-
-.admin-dashboard-hero-warning {
-  background: #553811;
-}
-
-.admin-dashboard-hero-danger {
-  background: #5b2220;
-}
-
-.admin-dashboard-workbench,
-.admin-dashboard-hero-body,
-.admin-dashboard-hero-actions {
-  position: relative;
-  z-index: 1;
-}
-
-.admin-dashboard-workbench {
-  display: grid;
-  min-height: 100%;
-  grid-template-rows: auto auto minmax(0, 1fr) auto;
-  gap: 20px;
-}
-
-.admin-dashboard-hero-status {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.admin-dashboard-chip,
-.admin-dashboard-hero-note,
-.admin-dashboard-section-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  width: fit-content;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-}
-
-.admin-dashboard-chip {
-  padding: 6px 10px;
-  color: #2b2419;
-  background: #f8f1df;
-  font-size: 11px;
-  letter-spacing: 0.04em;
-}
-
-.admin-dashboard-hero-note {
-  padding: 6px 10px;
-  color: rgba(255, 247, 238, 0.84);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.admin-dashboard-hero-body {
-  display: grid;
-  gap: 10px;
-}
-
-.admin-dashboard-hero-body h2 {
-  margin: 0;
-  max-width: none;
-  font-size: 34px;
-  line-height: 1.06;
-  letter-spacing: 0;
-}
-
-.admin-dashboard-hero-body p {
-  margin: 0;
-  max-width: 720px;
-  color: rgba(255, 248, 240, 0.84);
-  font-size: 15px;
-  line-height: 1.72;
-}
-
-.admin-dashboard-workbench-metrics {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  align-self: stretch;
-}
-
-.admin-dashboard-workbench-metric {
-  min-width: 0;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 8px;
-  min-height: 138px;
-  padding: 15px 14px;
-  color: #f8fbf8;
-  text-decoration: none;
-  display: grid;
-  align-content: space-between;
-  gap: 10px;
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.admin-dashboard-workbench-metric span {
-  color: rgba(255, 248, 240, 0.72);
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.admin-dashboard-workbench-metric strong {
-  color: #ffffff;
-  font-size: 34px;
-  line-height: 1;
-}
-
-.admin-dashboard-workbench-metric p {
-  margin: 0;
-  color: rgba(255, 248, 240, 0.78);
-  font-size: 12px;
-  line-height: 1.52;
-}
-
-.admin-dashboard-workbench-metric-success {
-  border-color: rgba(136, 218, 169, 0.45);
-}
-
-.admin-dashboard-workbench-metric-warning {
-  border-color: rgba(245, 190, 103, 0.55);
-}
-
-.admin-dashboard-workbench-metric-danger {
-  border-color: rgba(240, 147, 135, 0.55);
-}
-
-.admin-dashboard-hero-actions {
-  display: flex;
-  flex-wrap: nowrap;
-  gap: 8px;
-  justify-content: flex-start;
-  align-self: end;
-}
-
-.admin-dashboard-hero-actions a {
-  min-height: 38px;
-  padding: 0 14px;
-  font-size: 13px;
-  white-space: nowrap;
-}
-
-.admin-dashboard-side-card,
-.admin-dashboard-radar-card,
-.admin-dashboard-ai-card,
-.admin-dashboard-actions-card,
-.admin-dashboard-audit-card {
-  padding: 16px;
-}
-
-.admin-dashboard-section-title {
-  display: grid;
-  gap: 8px;
-}
-
-.admin-dashboard-section-eyebrow {
-  padding: 5px 9px;
-  color: #6f5d41;
-  background: #f6ebd9;
-}
-
-.admin-dashboard-section-title h2 {
-  margin: 0;
-  color: #221b12;
-  font-size: 20px;
-  line-height: 1;
-  letter-spacing: 0;
-}
-
-.admin-dashboard-section-title p {
-  margin: 0;
-  color: #756b5c;
-  font-size: 13px;
-  line-height: 1.68;
-}
-
-.admin-dashboard-signals {
-  margin-top: 12px;
-  display: grid;
-  gap: 8px;
-}
-
-.admin-dashboard-signal {
-  border-radius: 8px;
-  padding: 11px;
-  display: grid;
-  gap: 8px;
-  border: 1px solid transparent;
-}
-
-.admin-dashboard-signal div {
-  display: grid;
-  gap: 6px;
-}
-
-.admin-dashboard-signal span {
-  color: #756b5c;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-}
-
-.admin-dashboard-signal strong {
-  color: #221b12;
-  font-size: 18px;
-  line-height: 1.2;
-  letter-spacing: 0;
-}
-
-.admin-dashboard-signal p {
-  margin: 0;
-  color: #756b5c;
-  font-size: 12px;
-  line-height: 1.6;
-}
-
-.admin-dashboard-signal-neutral {
-  background: #f6f0e7;
-  border-color: #eadac3;
-}
-
-.admin-dashboard-signal-success {
-  background: #f7efe1;
-  border-color: #c7e9d4;
-}
-
-.admin-dashboard-signal-warning {
-  background: #fff4e2;
-  border-color: #f9d7a7;
-}
-
-.admin-dashboard-signal-danger {
-  background: #fff0ee;
-  border-color: #f4c3bb;
-}
-
-.admin-dashboard-metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.admin-dashboard-metric-card {
-  padding: 14px;
-  display: grid;
-  gap: 8px;
-  min-width: 0;
-}
-
-.admin-dashboard-metric-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: center;
-}
-
-.admin-dashboard-metric-head span {
-  color: #5e6a66;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.admin-dashboard-metric-head i {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
-  font-style: normal;
-  color: #4a3a22;
-  background: #edf3ef;
-}
-
-.admin-dashboard-metric-card strong {
-  color: #221b12;
-  font-size: 30px;
-  line-height: 1;
-  letter-spacing: 0;
-}
-
-.admin-dashboard-metric-card p {
-  margin: 0;
-  color: #5a6763;
-  font-size: 12px;
-  line-height: 1.6;
-}
-
-.admin-dashboard-process-card {
-  border: 1px solid rgba(28, 65, 57, 0.1);
-  border-radius: 8px;
-  padding: 16px;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 10px 28px rgba(74, 57, 40, 0.06);
-}
-
-.admin-dashboard-process-grid {
-  margin-top: 14px;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.admin-dashboard-process-step {
-  min-width: 0;
-  border: 1px solid #e5ded2;
-  border-radius: 8px;
-  padding: 13px;
-  color: #221b12;
-  text-decoration: none;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 8px 10px;
-  background: #fffaf3;
-}
-
-.admin-dashboard-process-step i {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  display: grid;
-  place-items: center;
-  color: #4a3a22;
-  background: #edf4ef;
-  font-style: normal;
-}
-
-.admin-dashboard-process-order {
-  grid-column: 1 / -1;
-  color: #7b6a50;
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-}
-
-.admin-dashboard-process-step strong {
-  align-self: center;
-  min-width: 0;
-  overflow: hidden;
-  color: #221b12;
-  font-size: 16px;
-  font-weight: 800;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.admin-dashboard-process-step p {
-  grid-column: 1 / -1;
-  margin: 0;
-  color: #5b6763;
-  font-size: 12px;
-  line-height: 1.6;
-}
-
-.admin-dashboard-process-step b {
-  justify-self: end;
-  align-self: center;
-  color: #4a3a22;
-  font-size: 24px;
-  line-height: 1;
-}
-
-.admin-dashboard-process-step-success {
-  background: #f3fbf5;
-  border-color: #cdebd6;
-}
-
-.admin-dashboard-process-step-warning {
-  background: #fff7e8;
-  border-color: #f1d4a3;
-}
-
-.admin-dashboard-process-step-danger {
-  background: #fff3f1;
-  border-color: #efc4bc;
-}
-
-.admin-dashboard-radar-list {
-  margin-top: 14px;
-  display: grid;
-  gap: 12px;
-}
-
-.admin-dashboard-radar-row {
-  display: grid;
-  gap: 10px;
-  padding: 14px 0;
-  border-bottom: 1px solid #ece2d3;
-}
-
-.admin-dashboard-radar-row:last-child {
-  padding-bottom: 0;
-  border-bottom: 0;
-}
-
-.admin-dashboard-radar-copy {
-  display: grid;
-  gap: 6px;
-}
-
-.admin-dashboard-radar-copy span {
-  color: #756b5c;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.05em;
-}
-
-.admin-dashboard-radar-copy strong {
-  color: #221b12;
-  font-size: 24px;
-  line-height: 1;
-  letter-spacing: 0;
-}
-
-.admin-dashboard-radar-copy p {
-  margin: 0;
-  color: #756b5c;
-  font-size: 12px;
-  line-height: 1.6;
-}
-
-.admin-dashboard-radar-bar-shell {
-  width: 100%;
-  height: 9px;
-  border-radius: 999px;
-  background: #eee6da;
-  overflow: hidden;
-}
-
-.admin-dashboard-radar-bar {
-  height: 100%;
-  border-radius: inherit;
-}
-
-.admin-dashboard-radar-bar-neutral {
-  background: #3a6f68;
-}
-
-.admin-dashboard-radar-bar-success {
-  background: #14784f;
-}
-
-.admin-dashboard-radar-bar-warning {
-  background: #b16a15;
-}
-
-.admin-dashboard-radar-bar-danger {
-  background: #b13c32;
-}
-
-.admin-dashboard-ai-card {
-  display: grid;
-  gap: 14px;
-  align-content: start;
-  background: rgba(255, 255, 255, 0.96);
-}
-
-.admin-dashboard-ai-summary {
-  display: grid;
-  gap: 4px;
-}
-
-.admin-dashboard-ai-summary strong {
-  color: #221b12;
-  font-size: 42px;
-  line-height: 0.96;
-  letter-spacing: 0;
-}
-
-.admin-dashboard-ai-summary span {
-  color: #64706c;
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.admin-dashboard-ai-list {
-  display: grid;
-  gap: 10px;
-}
-
-.admin-dashboard-ai-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 12px;
-  align-items: center;
-  border: 1px solid #e1e8e4;
-  border-radius: 8px;
-  padding: 10px 12px;
-  background: #f8faf9;
-}
-
-.admin-dashboard-ai-row-failed {
-  background: #fff7f7;
-}
-
-.admin-dashboard-ai-row span {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: #3d3323;
-  font-size: 14px;
-  font-weight: 800;
-}
-
-.admin-dashboard-ai-row strong {
-  color: #4a3a22;
-  font-size: 18px;
-}
-
-.admin-dashboard-ai-row-failed strong {
-  color: #b91c1c;
-}
-
-.admin-dashboard-ai-foot {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.admin-dashboard-ai-foot div {
-  border-radius: 8px;
-  padding: 12px;
-  background: #ffffff;
-  border: 1px solid rgba(35, 31, 27, 0.08);
-  display: grid;
-  gap: 4px;
-}
-
-.admin-dashboard-ai-foot span {
-  color: #65706b;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.admin-dashboard-ai-foot strong {
-  color: #221b12;
-  font-size: 22px;
-  line-height: 1;
-  letter-spacing: 0;
-}
-
-.admin-dashboard-charts-card {
-  border: 1px solid rgba(28, 65, 57, 0.1);
-  border-radius: 8px;
-  padding: 16px;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 10px 28px rgba(74, 57, 40, 0.06);
-}
-
-.admin-dashboard-charts-grid {
-  margin-top: 14px;
-  display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(260px, 0.7fr);
-  gap: 14px;
-}
-
-.admin-dashboard-chart-panel {
-  border: 1px solid #e8ddd0;
-  border-radius: 8px;
-  padding: 14px;
-  background: #fffaf3;
-  display: grid;
-  gap: 14px;
-}
-
-.admin-dashboard-chart-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  align-items: center;
-}
-
-.admin-dashboard-chart-head strong {
-  color: #221b12;
-  font-size: 18px;
-  line-height: 1;
-  letter-spacing: 0;
 }
 
 .admin-content-preview {
@@ -2746,6 +2125,26 @@ table {
   width: min(1180px, 94vw);
 }
 
+.admin-media-lightbox-close {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 1;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  background: rgba(15, 18, 20, 0.68);
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.admin-media-lightbox-close:hover {
+  background: rgba(15, 18, 20, 0.88);
+}
+
 .admin-media-preview-placeholder {
   min-height: 156px;
   border: 1px dashed #ded4c6;
@@ -2850,135 +2249,12 @@ table {
   background: #fff7f3;
 }
 
-.admin-dashboard-core-grid-compact {
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.72fr);
-}
-
 .admin-media-preview-open,
 .admin-media-preview-empty a {
   color: #4a3a22;
   font-size: 13px;
   font-weight: 800;
   text-decoration: none;
-}
-
-.admin-dashboard-chart-link {
-  color: #4a3a22;
-  font-size: 12px;
-  font-weight: 800;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.admin-dashboard-chart-stack,
-.admin-dashboard-chart-bars {
-  display: grid;
-  gap: 12px;
-}
-
-.admin-dashboard-chart-stack-bar,
-.admin-dashboard-chart-bar-track {
-  width: 100%;
-  height: 14px;
-  border-radius: 999px;
-  overflow: hidden;
-  background: #eee6da;
-  display: flex;
-}
-
-.admin-dashboard-chart-stack-segment,
-.admin-dashboard-chart-bar-fill {
-  height: 100%;
-  display: block;
-}
-
-.admin-dashboard-chart-stack-records,
-.admin-dashboard-chart-dot-records,
-.admin-dashboard-chart-bar-success {
-  background: #167e55;
-}
-
-.admin-dashboard-chart-stack-media,
-.admin-dashboard-chart-dot-media,
-.admin-dashboard-chart-bar-warning {
-  background: #c07a1d;
-}
-
-.admin-dashboard-chart-bar-danger {
-  background: #b63f34;
-}
-
-.admin-dashboard-chart-legend {
-  display: grid;
-  gap: 10px;
-}
-
-.admin-dashboard-chart-legend div,
-.admin-dashboard-chart-bar-copy {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  gap: 8px;
-  align-items: center;
-}
-
-.admin-dashboard-chart-legend span,
-.admin-dashboard-chart-bar-copy span,
-.admin-dashboard-kpi-grid span {
-  color: #756b5c;
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.admin-dashboard-chart-legend strong,
-.admin-dashboard-chart-bar-copy strong,
-.admin-dashboard-kpi-grid strong {
-  color: #221b12;
-  font-size: 16px;
-  line-height: 1;
-}
-
-.admin-dashboard-chart-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  display: inline-block;
-}
-
-.admin-dashboard-chart-bar-row {
-  display: grid;
-  gap: 8px;
-}
-
-.admin-dashboard-kpi-grid {
-  display: grid;
-  gap: 12px;
-}
-
-.admin-dashboard-kpi-grid div {
-  border-radius: 8px;
-  padding: 14px;
-  background: #ffffff;
-  border: 1px solid rgba(35, 31, 27, 0.08);
-  display: grid;
-  gap: 6px;
-}
-
-.admin-dashboard-kpi-grid p {
-  margin: 0;
-  color: #596561;
-  font-size: 12px;
-  line-height: 1.6;
-}
-
-.admin-dashboard-audit-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: center;
-  margin-bottom: 16px;
-  flex-wrap: wrap;
 }
 
 .admin-overview-error {
@@ -3835,19 +3111,14 @@ table {
     padding: 22px !important;
   }
 
-  .admin-dashboard-hero-grid,
-  .admin-dashboard-core-grid,
-  .admin-dashboard-charts-grid,
-  .admin-ai-settings-grid,
-  .admin-ai-settings-bottom-grid {
+      .admin-ai-settings-grid,
+    .admin-ai-settings-bottom-grid {
     grid-template-columns: 1fr !important;
   }
 
-  .admin-dashboard-metrics-grid,
-  .admin-dashboard-process-grid,
-  .admin-ai-settings-signals,
-  .admin-ai-settings-fields,
-  .admin-ai-settings-readonly-grid {
+      .admin-ai-settings-signals,
+    .admin-ai-settings-fields,
+    .admin-ai-settings-readonly-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
@@ -3918,21 +3189,14 @@ table {
     display: none !important;
   }
 
-  .admin-dashboard-hero-grid,
-  .admin-dashboard-core-grid,
-  .admin-dashboard-charts-grid,
-  .admin-ai-settings-grid,
-  .admin-ai-settings-bottom-grid {
+      .admin-ai-settings-grid,
+    .admin-ai-settings-bottom-grid {
     grid-template-columns: 1fr !important;
   }
 
-  .admin-dashboard-metrics-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  }
+  
 
-  .admin-dashboard-process-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  
 
   .admin-ai-settings-signals,
   .admin-ai-settings-fields,
@@ -4139,88 +3403,33 @@ table {
     border-radius: 8px !important;
   }
 
-  .admin-dashboard-hero-card,
-  .admin-dashboard-side-card,
-  .admin-dashboard-radar-card,
-  .admin-dashboard-ai-card,
-  .admin-dashboard-actions-card,
-  .admin-dashboard-audit-card,
-  .admin-dashboard-process-card,
-  .admin-dashboard-charts-card {
-    padding: 14px !important;
-    border-radius: 8px !important;
-  }
+  
 
-  .admin-dashboard-hero-card {
-    min-height: auto;
-  }
+  
 
-  .admin-dashboard-hero-grid,
-  .admin-dashboard-core-grid {
-    gap: 10px;
-  }
+  
 
-  .admin-dashboard-workbench {
-    grid-template-rows: auto;
-    gap: 10px;
-  }
+  
 
-  .admin-dashboard-hero-body {
-    gap: 4px;
-  }
+  
 
-  .admin-dashboard-workbench-metrics {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-  }
+  
 
-  .admin-dashboard-hero-actions {
-    flex-wrap: wrap;
-    justify-content: flex-start;
-  }
+  
 
-  .admin-dashboard-hero-body h2,
-  .admin-dashboard-section-title h2 {
-    font-size: 22px !important;
-    letter-spacing: 0 !important;
-  }
+  
 
-  .admin-dashboard-hero-body p,
-  .admin-dashboard-section-title p {
-    font-size: 12px !important;
-    line-height: 1.5 !important;
-  }
+  
 
-  .admin-dashboard-workbench-metric,
-  .admin-dashboard-process-step,
-  .admin-dashboard-metric-card {
-    min-height: auto;
-    padding: 9px !important;
-  }
+  
 
-  .admin-dashboard-workbench-metric {
-    min-height: 112px;
-    padding: 12px !important;
-    align-content: space-between;
-  }
+  
 
-  .admin-dashboard-workbench-metric strong,
-  .admin-dashboard-process-step b {
-    font-size: 20px !important;
-  }
+  
 
-  .admin-dashboard-metric-card strong,
-  .admin-dashboard-ai-summary strong,
-  .admin-dashboard-radar-copy strong,
-  .admin-dashboard-action-card strong {
-    font-size: 26px !important;
-  }
+  
 
-  .admin-dashboard-side-card .admin-dashboard-section-title p,
-  .admin-dashboard-process-card .admin-dashboard-section-title p,
-  .admin-dashboard-charts-card .admin-dashboard-section-title p {
-    display: none;
-  }
+  
 
   .admin-panel form > div:last-child,
   .admin-pagination,
@@ -4325,25 +3534,15 @@ table {
     font-weight: 800;
   }
 
-  .admin-dashboard-audit-table td:nth-child(1)::before {
-    content: "动作";
-  }
+  
 
-  .admin-dashboard-audit-table td:nth-child(2)::before {
-    content: "目标类型";
-  }
+  
 
-  .admin-dashboard-audit-table td:nth-child(3)::before {
-    content: "目标编号";
-  }
+  
 
-  .admin-dashboard-audit-table td:nth-child(4)::before {
-    content: "IP 地址";
-  }
+  
 
-  .admin-dashboard-audit-table td:nth-child(5)::before {
-    content: "发生时间";
-  }
+  
 
   .admin-action-group {
     display: grid !important;
@@ -4433,25 +3632,15 @@ table {
     border-radius: 8px;
   }
 
-  .admin-dashboard-metrics-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  }
+  
 
-  .admin-dashboard-ai-foot {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  
 
-  .admin-dashboard-workbench-metrics {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  
 
-  .admin-dashboard-process-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  
 
-  .admin-dashboard-hero-actions a {
-    width: auto !important;
-  }
+  
 }
 
 @media (max-width: 760px) {
@@ -4629,7 +3818,7 @@ table {
 }
 
 .admin-nav-section-secondary .admin-nav-section-label {
-  color: #897a66;
+  color: #b8a78d;
 }
 
 .admin-nav-section-secondary .admin-nav-section-items a {
@@ -4894,7 +4083,7 @@ table {
 }
 
 .admin-nav-section-label {
-  color: rgba(255, 248, 237, 0.45);
+  color: rgba(255, 248, 237, 0.78);
   letter-spacing: 0.12em;
 }
 .admin-main {
@@ -5143,8 +4332,11 @@ table {
 
 .admin-table-panel .admin-responsive-table th:last-child,
 .admin-table-panel .admin-responsive-table td:last-child {
-  width: 144px;
-  max-width: 144px;
+  /* 操作列宽度收口：历史上这里先后被写成 168px / 206px / 144px。
+     紧凑操作组 = 86px 主按钮 + 40px「更多」+ 6px 间距 = 132px，加左右 12px 单元格内边距，
+     144px 会裁切，因此统一为 158px 并去掉 max-width。 */
+  width: 158px;
+  max-width: none;
 }
 .admin-action-group {
   min-width: 0;
@@ -6142,7 +5334,7 @@ table {
 }
 
 .admin-overview-stat span {
-  color: #827a70;
+  color: #6f6659;
   font-size: 12px;
   font-weight: 600;
   line-height: 1.2;
@@ -6224,7 +5416,8 @@ table {
 }
 
 .admin-overview-stat-label {
-  color: #827a70;
+  /* #827a70 在 #faf9f6 底上只有 4.02:1，12px 正文需 4.5:1。加深到约 5.4:1。 */
+  color: #6f6659;
   font-size: 12px;
   font-weight: 600;
   line-height: 1.2;
@@ -6896,7 +6089,8 @@ table {
 }
 
 .admin-overview-trend-stat small {
-  color: #8a7f70;
+  /* #8a7f70 在卡片底上只有 3.92:1，11px 正文需 4.5:1。加深到约 5.3:1。 */
+  color: #6f6659;
   font-size: 11px;
   line-height: 1.2;
 }
@@ -6937,8 +6131,6 @@ table {
 .admin-overview-chart-series circle:focus-visible {
   r: 6;
 }
-
-
 
 .admin-overview-chart-empty {
   min-height: 220px;
@@ -7201,7 +6393,9 @@ table {
   --admin-control-surface: #fffaf1;
   --admin-control-border: #d8c7ad;
   --admin-control-text: #4a3a22;
-  --admin-control-muted: #9a8469;
+  /* 只用于日期控件未选择时的提示文字（.admin-date-display-empty）。
+     #9a8469 在 #fffaf1 上约 3.4:1，13px 正文不达标；#7a6650 约 5.3:1。 */
+  --admin-control-muted: #7a6650;
   --admin-control-icon: #6b5633;
 }
 
@@ -7584,7 +6778,6 @@ table {
   color-scheme: light;
 }
 
-
 /* ---- 分页控件与搜索输入的统一视觉 ---- */
 .admin-pagination select,
 .admin-pagination input {
@@ -7605,7 +6798,9 @@ table {
 .admin-pagination input::placeholder,
 .admin-filter-control::placeholder,
 .admin-search-keyword::placeholder {
-  color: #a29686;
+  /* 这里曾经写回 #a29686（约 2.9:1），把 660 行处刻意加深的占位色又改浅了。
+     统一跟随 660 行的取值，保证分页"跳至"输入框的提示文字同样可读。 */
+  color: #7b7161;
 }
 
 @media (min-width: 761px) {
@@ -7680,7 +6875,6 @@ table {
   }
 }
 
-
 /* ---- 登录页暖纸背景层次 ---- */
 .admin-auth-layout {
   background:
@@ -7688,7 +6882,6 @@ table {
     radial-gradient(900px 420px at 96% 6%, rgba(150, 111, 45, 0.1), transparent 58%),
     linear-gradient(180deg, #fbf7ef 0%, #f6f0e3 100%);
 }
-
 
 /* ---- 二轮：详情抽屉字段行化、默认头像中性、toast 移动端 ---- */
 .admin-detail-grid .admin-detail-list-item,
@@ -7717,7 +6910,6 @@ table {
     max-width: none;
   }
 }
-
 
 /* ---- 壳组件样式收编（原 PageShell/Panel 内联样式） ---- */
 .admin-page-shell {
@@ -7757,7 +6949,6 @@ table {
   padding: 16px;
   min-width: 0;
 }
-
 
 /* ---- 侧边栏导航/用户区规范样式（原 AdminLayout 内联收编） ---- */
 .admin-nav-link {
@@ -7846,7 +7037,6 @@ table {
   cursor: pointer;
 }
 
-
 /* ---- 详情抽屉字段排版（原内联收编） ---- */
 .admin-detail-title {
   margin: 0;
@@ -7890,7 +7080,6 @@ table {
   gap: 10px;
 }
 
-
 /* ---- 系统运维页内联收编 ---- */
 .admin-ops-section-title {
   margin: 0;
@@ -8006,7 +7195,6 @@ table {
   font-weight: 700;
 }
 
-
 /* ---- 系统运维页内联收编 ---- */
 .admin-ops-section-title {
   margin: 0;
@@ -8121,7 +7309,6 @@ table {
   font-size: 12px;
   font-weight: 700;
 }
-
 
 /* ---- 页面级内联收编（列表页/邀请码/内容风险/分页通用） ---- */
 .admin-row-actions-wrap {
@@ -8161,6 +7348,28 @@ table {
   color: #756b5c;
   font-size: 13px;
   line-height: 1.5;
+}
+
+/* 操作确认框的「对象 + 后果」区：破坏性操作必须让管理员看清作用范围。 */
+.admin-modal-context {
+  border: 1px solid rgba(139, 116, 79, 0.22);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #fdfaf4;
+}
+
+.admin-modal-context .admin-modal-subtitle {
+  margin: 0;
+  color: #3d3323;
+  font-weight: 700;
+  word-break: break-word;
+}
+
+.admin-modal-consequence {
+  margin: 6px 0 0;
+  color: #8a5a20;
+  font-size: 13px;
+  line-height: 1.6;
 }
 
 .admin-filter-head-title {
@@ -8243,9 +7452,28 @@ table {
   font-weight: 800;
 }
 
-.admin-invite-create-controls {
-  display: grid;
-  grid-template-columns: minmax(220px, 320px) minmax(160px, 220px) auto;
-  gap: 10px;
-  align-items: end;
+/* 移动端收口：文件后段（约 4896 行）的桌面规则会把 .admin-main 重新设成 100dvh 内部滚动容器，
+   与移动端「整页滚动」的布局冲突（双层滚动条 + 分页栏够不到）。这里用同优先级的后代规则覆盖回来。 */
+@media (max-width: 760px) {
+  .admin-main {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    overscroll-behavior: auto;
+  }
+
+  /* 卡片模式下邀请码是管理员要复制的主键，必须完整可读，不能被省略号截断。
+     （原来的 nowrap + ellipsis 规则在 7642 行，晚于卡片模式的 td:first-child 规则。） */
+  .admin-invites-table td:first-child {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    word-break: break-all;
+  }
+}
+
+/* 列表概览的口径说明：胶囊数字来自当前页数据，文字上必须说清楚。 */
+.admin-list-summary-scope {
+  color: #8b8073;
+  font-size: 12px;
 }

@@ -209,6 +209,7 @@ export const SystemConfigPage = () => {
               <span>配置值</span>
               {editing.value_type === 'select' ? (
                 <AdminSelect
+                  aria-label="配置值"
                   value={value}
                   onChange={(event) => setValue(event.target.value)}
                   disabled={!canEdit || saving}
@@ -249,8 +250,9 @@ export const SystemConfigPage = () => {
               <textarea
                 style={{ ...inputStyle, minHeight: '92px', resize: 'vertical' }}
                 value={reason}
+                maxLength={200}
                 onChange={(event) => setReason(event.target.value)}
-                placeholder="写清楚为什么调整该配置，便于审计复盘"
+                placeholder="写清楚为什么调整该配置，便于审计复盘（至少 2 个字）"
                 disabled={!canEdit || saving}
               />
             </label>

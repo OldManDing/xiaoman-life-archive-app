@@ -1,7 +1,9 @@
 import { IsISO8601, IsIn, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
 
 const readStates = ['unread', 'read'] as const;
-const deliveryStatuses = ['queued', 'sent', 'failed', 'skipped'] as const;
+// processing 是推送 worker 在投递进行中写入的状态（huawei-push-delivery.service），
+// 必须允许筛选，否则后台看不到「卡在投递中」的通知。
+const deliveryStatuses = ['queued', 'processing', 'sent', 'failed', 'skipped'] as const;
 
 export class AdminNotificationListDto {
   @IsOptional()

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { RefreshCw, Settings2 } from 'lucide-react';
 
@@ -67,34 +67,47 @@ export const OpsReadinessPage = () => {
   const [readiness, setReadiness] = useState<AdminOpsReadinessResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const mountedRef = useRef(true);
+
+  // 加载逻辑只有这一处：此前「重新读取」按钮写在「无数据且无错误」的分支里，
+  // 真正失败时反而没有重试入口（总览页却引导用户来这里重试）。
+  const loadReadiness = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const next = await adminApi.opsReadiness();
+      if (mountedRef.current) setReadiness(next);
+    } catch (err) {
+      if (mountedRef.current) setError(err instanceof Error ? err.message : '系统运维状态加载失败');
+    } finally {
+      if (mountedRef.current) setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    let active = true;
-
-    const load = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const next = await adminApi.opsReadiness();
-        if (active) setReadiness(next);
-      } catch (err) {
-        if (active) setError(err instanceof Error ? err.message : '系统运维状态加载失败');
-      } finally {
-        if (active) setLoading(false);
-      }
-    };
-
-    void load();
+    mountedRef.current = true;
+    // 与列表页保持一致：自动加载放到下一个宏任务，避免首屏在同一个渲染周期里级联 setState。
+    const timer = window.setTimeout(() => {
+      void loadReadiness();
+    }, 0);
     return () => {
-      active = false;
+      window.clearTimeout(timer);
+      mountedRef.current = false;
     };
-  }, []);
+  }, [loadReadiness]);
 
   const stats = readiness?.data_statistics;
 
   return (
     <PageShell title="系统运维" description="集中查看运行配置、数据体量、待处理风险和上线验收门禁，支撑日常运维判断。">
-      {error ? <EmptyState title="加载失败" message={error} /> : null}
+      {error ? (
+        <EmptyState title="加载失败" message={error}>
+          <AdminButton type="button" tone="secondary" disabled={loading} onClick={() => void loadReadiness()}>
+            <RefreshCw size={16} />
+            重新读取
+          </AdminButton>
+        </EmptyState>
+      ) : null}
       {loading ? <EmptyState title="正在加载" message="正在读取系统配置和运营统计。" /> : null}
 
       {readiness && stats ? (
@@ -113,6 +126,10 @@ export const OpsReadinessPage = () => {
                 <p style={mutedTextStyle}>环境：{readiness.environment.app_env}，端口：{readiness.environment.app_port}，检查时间：{formatDateTime(readiness.generated_at)}</p>
               </div>
               <Badge tone="info">运行状态</Badge>
+              <AdminButton type="button" tone="secondary" disabled={loading} onClick={() => void loadReadiness()}>
+                <RefreshCw size={16} />
+                {loading ? '读取中…' : '刷新'}
+              </AdminButton>
             </div>
             <div className="admin-ops-table-scroll admin-ops-table-scroll-auto">
               <table className="admin-ops-readiness-table admin-ops-provider-table admin-data-table">
@@ -235,19 +252,7 @@ export const OpsReadinessPage = () => {
 
       {!loading && !readiness && !error ? (
         <EmptyState title="暂无运维数据" message="系统暂未返回运维检查结果。">
-          <AdminButton
-            type="button"
-            tone="secondary"
-            onClick={() => {
-              setLoading(true);
-              setError(null);
-              void adminApi
-                .opsReadiness()
-                .then(setReadiness)
-                .catch((err) => setError(err instanceof Error ? err.message : '系统运维状态加载失败'))
-                .finally(() => setLoading(false));
-            }}
-          >
+          <AdminButton type="button" tone="secondary" disabled={loading} onClick={() => void loadReadiness()}>
             <RefreshCw size={16} />
             重新读取
           </AdminButton>

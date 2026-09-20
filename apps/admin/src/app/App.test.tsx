@@ -765,7 +765,9 @@ describe('App', () => {
     expect(expiryInput).toBeDisabled();
     expect(screen.getByText('基础会员无需设置')).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText('权益类型'), { target: { value: 'ai_plus' } });
+    // 通过自定义下拉真实交互（原生 select 是 aria-hidden 的实现细节，不再直接驱动它）。
+    fireEvent.click(screen.getByRole('combobox', { name: '权益类型' }));
+    fireEvent.click(screen.getByRole('option', { name: '增强整理会员' }));
     expect(expiryInput).not.toBeDisabled();
     expect(screen.getByText('请选择到期日期')).toBeInTheDocument();
     fireEvent.change(await screen.findByLabelText('到期日期'), { target: { value: '2099-12-31' } });
@@ -823,7 +825,7 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: '生成邀请码' }));
 
     // 生成邀请码也要求填写审计原因。
-    fireEvent.change(await screen.findByPlaceholderText('写清楚为什么要执行这次操作，方便审计复盘'), {
+    fireEvent.change(await screen.findByPlaceholderText('写清楚为什么要执行这次操作，方便审计复盘（至少 2 个字）'), {
       target: { value: '地推活动发放' },
     });
     fireEvent.click(screen.getByRole('button', { name: '确认执行' }));
@@ -1018,7 +1020,9 @@ describe('App', () => {
     await waitFor(() => {
       expect(listRecordsMock).toHaveBeenLastCalledWith({ keyword: undefined, page: 1, page_size: 20, record_filter: 'risk' });
     });
-    expect(window.location.search).toBe('?record_filter=risk');
+    // 筛选状态由路由 query 驱动（而不是挂载时读一次 window.location），
+    // 因此这里断言按钮的选中态，而不是 window.location.search。
+    expect(riskFilter).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('opens notification management from the admin navigation', async () => {
@@ -1372,5 +1376,57 @@ describe('App', () => {
 
     expect(await screen.findByRole('heading', { name: '账号管理' })).toBeInTheDocument();
     expect(moreButton).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('hides write actions from the read-only viewer role', async () => {
+    loginMock.mockResolvedValue({
+      access_token: 'admin-token',
+      expires_in: 7200,
+      admin: {
+        username: 'viewer',
+        display_name: '只读账号',
+        role: 'viewer',
+      },
+    });
+    listUsersMock.mockResolvedValue({
+      list: [
+        {
+          user_no: 'u_001',
+          nickname: '测试用户',
+          avatar_url: null,
+          mobile: '13800000000',
+          membership_type: 'free',
+          status: 'active',
+          last_login_at: null,
+          created_at: '2026-04-21T00:00:00.000Z',
+        },
+      ],
+      page: 1,
+      page_size: 20,
+      total: 1,
+      has_more: false,
+    });
+
+    await renderWithRouter('/login');
+
+    fireEvent.change(screen.getByPlaceholderText('请输入用户名'), { target: { value: 'viewer' } });
+    fireEvent.change(screen.getByPlaceholderText('请输入密码'), { target: { value: 'ChangeMe123!' } });
+    fireEvent.click(screen.getByRole('button', { name: '进入管理后台' }));
+
+    const usersLink = await findAdminLink('/users');
+    expect(usersLink).toBeTruthy();
+    fireEvent.click(usersLink!);
+
+    expect(await screen.findByRole('heading', { name: '账号管理' })).toBeInTheDocument();
+    expect(await screen.findByText('测试用户')).toBeInTheDocument();
+
+    // viewer 在后端没有写权限：冻结/重置密码/调整权益都不能出现在界面上，
+    // 否则点下去只会拿到 403。
+    expect(screen.queryByRole('button', { name: /冻结|解冻/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: '重置密码' })).toBeNull();
+    expect(screen.queryByRole('button', { name: '调整权益' })).toBeNull();
+    // 行内只剩「详情」一个动作，因此不会再渲染「更多操作」入口。
+    expect(screen.queryByRole('button', { name: '更多操作' })).toBeNull();
+    expect(screen.getByRole('button', { name: '详情' })).toBeInTheDocument();
   });
 });

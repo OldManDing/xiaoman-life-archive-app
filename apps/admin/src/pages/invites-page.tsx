@@ -7,6 +7,7 @@ import { formatDateTime, getErrorMessage } from '../shared/format';
 import { Badge, EmptyState, PageShell, Panel } from '../shared/ui';
 import { inputStyle, mutedTextStyle, primaryButtonStyle, secondaryButtonStyle } from '../shared/uiStyles';
 import { ActionButton } from './shared';
+import { useAdminAuth } from '../shared/useAdminAuth';
 import { useOperationReasonDialog } from '../shared/useOperationReasonDialog';
 import { formatListRows, useAdminListPage } from './list-page-state';
 import { PaginationPanel, SearchPanel, TableShell } from './shared';
@@ -24,6 +25,9 @@ const copyInviteCode = async (value: string) => {
 
 export const InvitesPage = () => {
   const state = useAdminListPage<AdminInviteItem>(adminApi.listInvites);
+  const { admin } = useAdminAuth();
+  // 生成/撤销邀请码在后端仅限 super_admin / operator，只读账号不应看到可用按钮。
+  const canOperate = admin?.role === 'super_admin' || admin?.role === 'operator';
   const { requestOperationReason, reasonDialog } = useOperationReasonDialog();
   const [mobile, setMobile] = useState('');
   const [expiresInHoursText, setExpiresInHoursText] = useState('168');
@@ -49,7 +53,10 @@ export const InvitesPage = () => {
     }
 
     // 生成邀请码也写入审计原因，保持敏感操作留痕口径一致。
-    const reason = await requestOperationReason('生成注册邀请码');
+    const reason = await requestOperationReason('生成注册邀请码', {
+      target: normalizedMobile ? `绑定手机号 ${normalizedMobile}` : '不绑定手机号（任何新用户可用）',
+      consequence: `有效期 ${expiresInHours} 小时，邀请码明文只在生成后显示一次。`,
+    });
     if (!reason) return;
 
     setCreating(true);
@@ -86,7 +93,10 @@ export const InvitesPage = () => {
   const onRevoke = async (invite: AdminInviteItem) => {
     if (invite.status !== 'pending') return;
     // 与其它敏感操作一致：撤销必须填写原因，并写入审计。
-    const reason = await requestOperationReason('撤销邀请码');
+    const reason = await requestOperationReason('撤销邀请码', {
+      target: `${invite.invite_no}${invite.invitee_mobile ? ` · 绑定 ${invite.invitee_mobile}` : ' · 不限手机号'}`,
+      consequence: '撤销后该邀请码立即失效，已使用的不受影响。',
+    });
     if (!reason) return;
 
     setCreateError(null);
@@ -120,13 +130,17 @@ export const InvitesPage = () => {
     formatDateTime(item.expires_at),
     formatDateTime(item.created_at),
     <div key={`${item.invite_no}-actions`} className="admin-action-group" style={{ gridTemplateColumns: '1fr', minWidth: '94px' }}>
-      <ActionButton
-        onClick={() => void onRevoke(item)}
-        disabled={item.status !== 'pending' || revokingInviteNo === item.invite_no}
-        tone="danger"
-      >
-        {revokingInviteNo === item.invite_no ? '撤销中…' : '撤销'}
-      </ActionButton>
+      {canOperate ? (
+        <ActionButton
+          onClick={() => void onRevoke(item)}
+          disabled={item.status !== 'pending' || revokingInviteNo === item.invite_no}
+          tone="danger"
+        >
+          {revokingInviteNo === item.invite_no ? '撤销中…' : '撤销'}
+        </ActionButton>
+      ) : (
+        <span className="admin-text-muted">只读</span>
+      )}
     </div>,
   ], (item) => item.invite_no);
 
@@ -143,24 +157,25 @@ export const InvitesPage = () => {
               <p style={mutedTextStyle}>可选绑定手机号；不绑定时，任何新用户拿到该码都能完成注册。</p>
             </div>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-              <Badge tone="neutral">当前页待使用 {pendingCount}</Badge>
-              <Badge tone="neutral">当前页已使用 {usedCount}</Badge>
+              <Badge tone="neutral">本页待使用 {pendingCount}</Badge>
+              <Badge tone="neutral">本页已使用 {usedCount}</Badge>
             </div>
           </div>
           <div className="admin-search-controls admin-invite-create-controls">
         <label className="admin-field-label">
               绑定手机号
-              <input style={inputStyle} value={mobile} onChange={(event) => setMobile(event.target.value)} placeholder="可选，例如 13800000000" />
+              <input style={inputStyle} value={mobile} onChange={(event) => setMobile(event.target.value)} placeholder="可选，例如 13800000000" disabled={!canOperate} />
             </label>
         <label className="admin-field-label">
               有效期（小时，1-720）
-              <input style={inputStyle} type="number" min={1} max={720} value={expiresInHoursText} onChange={(event) => setExpiresInHoursText(event.target.value)} />
+              <input style={inputStyle} type="number" min={1} max={720} value={expiresInHoursText} onChange={(event) => setExpiresInHoursText(event.target.value)} disabled={!canOperate} />
             </label>
-            <button type="submit" style={primaryButtonStyle} disabled={creating}>
+            <button type="submit" style={primaryButtonStyle} disabled={creating || !canOperate}>
               <Plus size={16} />
               {creating ? '生成中…' : '生成邀请码'}
             </button>
           </div>
+          {!canOperate ? <p style={mutedTextStyle}>当前账号为只读权限，无法生成或撤销邀请码。</p> : null}
           {createError ? <EmptyState title="操作失败" message={createError} /> : null}
           {createdInvite ? (
             <div className="admin-invite-result">

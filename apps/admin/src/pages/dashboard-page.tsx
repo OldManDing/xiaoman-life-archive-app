@@ -276,7 +276,9 @@ export const DashboardPage = () => {
       tone: failedJobCount > 0 ? ('danger' as const) : ('success' as const),
     },
     {
-      to: '/records?record_filter=risk',
+      // 这个数字来自运行统计里的内容风险项总数，因此跳转到风险队列页（口径一致），
+      // 而不是成长记录的「风险标记」筛选（口径不同，数字常对不上）。
+      to: '/content-risks',
       icon: <ShieldAlert size={18} />,
       label: '内容风险',
       value: loading ? '-' : contentRiskCount,
@@ -317,7 +319,9 @@ export const DashboardPage = () => {
       </section>
 
       <section className="admin-overview-grid">
-        <main className="admin-overview-main">
+        {/* AdminLayout 已经提供了页面唯一的 <main>，这里再用 <main> 会形成重复地标
+            （读屏会看到两个 main）。降级为命名 section。 */}
+        <section className="admin-overview-main" aria-label="后台总览工作区">
           <section className="admin-overview-section admin-overview-workbench">
             <div className="admin-overview-section-head">
               <h3>待处理</h3>
@@ -344,7 +348,7 @@ export const DashboardPage = () => {
               openRiskCount={contentRiskCount}
             />
           </section>
-        </main>
+        </section>
       </section>
     </PageShell>
   );

@@ -14,8 +14,15 @@ export class AdminRoleGuard implements CanActivate {
       context.getClass(),
     ]);
 
+    // fail-closed：没有显式声明 @AdminRoles 的后台路由一律拒绝。
+    //
+    // 此前这里是 `return true`（fail-open），意味着任何「忘了标注角色」的新路由
+    // 会对**所有已登录管理员（含 viewer）**放行 —— 一个静默的越权口子。
+    // 当前 41 条后台路由里只有 auth/login 没有标注，而它本身不挂这个守卫
+    // （只挂 ThrottlerGuard），所以改成默认拒绝不会影响任何现有功能，
+    // 只是让「新增路由忘记标注」从静默放开变成显式报错。
     if (!roles?.length) {
-      return true;
+      throw new ForbiddenException('该后台路由未声明所需角色，已按默认拒绝处理');
     }
 
     const request = context.switchToHttp().getRequest();
