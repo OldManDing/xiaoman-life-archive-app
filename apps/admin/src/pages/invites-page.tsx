@@ -1,10 +1,10 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Clipboard, KeyRound, Plus } from 'lucide-react';
 
 import { adminApi, type AdminInviteCreateResponse, type AdminInviteItem } from '../shared/request';
 import { inviteStatusLabel } from '../shared/labels';
 import { formatDateTime, getErrorMessage } from '../shared/format';
-import { Badge, EmptyState, PageShell, Panel } from '../shared/ui';
+import { AdminSelect, Badge, EmptyState, PageShell, Panel } from '../shared/ui';
 import { inputStyle, mutedTextStyle, primaryButtonStyle, secondaryButtonStyle } from '../shared/uiStyles';
 import { ActionButton } from './shared';
 import { useAdminAuth } from '../shared/useAdminAuth';
@@ -24,7 +24,9 @@ const copyInviteCode = async (value: string) => {
 };
 
 export const InvitesPage = () => {
-  const state = useAdminListPage<AdminInviteItem>(adminApi.listInvites);
+  const [inviteStatus, setInviteStatus] = useState('');
+  // 状态筛选走 loader 闭包（与成长记录的 record_filter 同一套做法）。
+  const state = useAdminListPage<AdminInviteItem>((params) => adminApi.listInvites({ ...params, status: inviteStatus || undefined }));
   const { admin } = useAdminAuth();
   // 生成/撤销邀请码在后端仅限 super_admin / operator，只读账号不应看到可用按钮。
   const canOperate = admin?.role === 'super_admin' || admin?.role === 'operator';
@@ -37,6 +39,14 @@ export const InvitesPage = () => {
   const [createMessage, setCreateMessage] = useState<string | null>(null);
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const [revokingInviteNo, setRevokingInviteNo] = useState<string | null>(null);
+
+  // 状态筛选变化后重新查询。不能在 onChange 里同步调 load：那里闭包捕获的还是旧 inviteStatus。
+  const inviteStatusRef = useRef(inviteStatus);
+  useEffect(() => {
+    if (inviteStatusRef.current === inviteStatus) return;
+    inviteStatusRef.current = inviteStatus;
+    void state.load(1, state.pageSize);
+  }, [inviteStatus, state]);
 
   const onCreateInvite = async (event: FormEvent) => {
     event.preventDefault();
@@ -195,6 +205,18 @@ export const InvitesPage = () => {
         </form>
       </Panel>
       <SearchPanel {...state} description="按邀请码编号、绑定手机号、创建人或使用人查询。" placeholder="输入邀请码编号或手机号" />
+      <Panel className="admin-invite-filter-panel">
+        <div className="admin-audit-filter-actions admin-row-actions-wrap">
+          {/* 选完即重查（见下方 effect），不再叠一个「查询」按钮：页面上已有搜索面板的查询按钮。 */}
+          <AdminSelect aria-label="邀请码状态" value={inviteStatus} onChange={(event) => setInviteStatus(event.target.value)}>
+            <option value="">全部状态</option>
+            <option value="pending">待使用</option>
+            <option value="accepted">已使用</option>
+            <option value="revoked">已撤销</option>
+            <option value="expired">已过期</option>
+          </AdminSelect>
+        </div>
+      </Panel>
       {state.error ? <Panel><EmptyState message={`加载失败：${state.error}`} /></Panel> : null}
       <TableShell
         className="admin-invites-table"

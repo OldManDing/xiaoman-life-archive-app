@@ -404,6 +404,9 @@ test.describe('Visual review smoke', () => {
           async () => {
             const loading = await page.locator('.admin-main button:disabled', { hasText: '查询中' }).count();
             if (loading > 0) return 'loading';
+            // 无表格的页面（如系统运维）用「正在加载」空态占位，同样要等它消失。
+            const loadingCard = await page.locator('.admin-main .admin-empty-state', { hasText: '正在加载' }).count();
+            if (loadingCard > 0) return 'loading';
             const hasTable = await page.locator('.admin-main .admin-responsive-table').count();
             if (!hasTable) return 'ready';
             const rows = await page.locator('.admin-main .admin-responsive-table tbody tr').count();

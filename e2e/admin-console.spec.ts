@@ -115,6 +115,28 @@ test.describe('Admin console coverage', () => {
     await expect(page).toHaveURL(/\/(records|media|support-tickets|ai-jobs)(\?|$)/);
   });
 
+  test('invite queue can be filtered by status', async ({ page }) => {
+    await loginAdmin(page);
+    await openAdminSection(page, '邀请码');
+
+    await expect(page.getByRole('heading', { name: '邀请码管理' })).toBeVisible();
+    await expect(page.locator('.admin-responsive-table tbody tr').first()).toBeVisible();
+
+    // 待使用 / 已过期 / 已撤销 混在一张表里没法用，必须能按状态筛（选完即重查）。
+    await page.getByRole('combobox', { name: '邀请码状态' }).click();
+    await page.getByRole('option', { name: '待使用' }).click();
+
+    await expect
+      .poll(
+        async () => {
+          const cells = await page.locator('.admin-responsive-table tbody td[data-label="状态"]').allInnerTexts();
+          return cells.length > 0 && cells.every((text) => text.includes('待使用'));
+        },
+        { timeout: 10_000 },
+      )
+      .toBe(true);
+  });
+
   test('read-only admin sees no write actions anywhere', async ({ page }) => {
     await loginAdminAs(page, 'viewer', 'ChangeMe123!');
     await expect(page.getByText('只读账号').first()).toBeVisible();

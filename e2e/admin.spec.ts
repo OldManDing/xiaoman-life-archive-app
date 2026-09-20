@@ -195,7 +195,12 @@ test.describe('Admin critical journeys', () => {
     await page.getByRole('link', { name: '档案交付', exact: true }).click();
 
     await expect(page.getByRole('heading', { name: '档案交付申请' })).toBeVisible();
+    // 该接口对同一「孩子 + 导出范围 + 用途」是幂等的：可能返回一条**历史**申请，
+    // 而列表按时间倒序分页，旧单不一定在第一页。因此按编号搜索，而不是假设它出现在首屏。
+    await page.getByPlaceholder('申请编号 / 孩子 / 申请人').fill(requestNo);
+    await page.getByRole('button', { name: '查询' }).click();
     const requestRow = page.getByRole('row', { name: new RegExp(requestNo) });
+    await expect(requestRow).toBeVisible();
     await expect(requestRow).toContainText('成年移交');
     await expect(requestRow).toContainText('待处理');
     await requestRow.getByRole('button', { name: '更多操作' }).click();

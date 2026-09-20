@@ -795,7 +795,7 @@ export const adminApi = {
     return unwrap(response);
   },
 
-  async listInvites(params: { keyword?: string; page?: number; page_size?: number }) {
+  async listInvites(params: { keyword?: string; status?: string; page?: number; page_size?: number }) {
     const response = await request.get<ApiEnvelope<AdminListResponse<AdminInviteItem>>>('/admin/invites', { params });
     return unwrap(response);
   },

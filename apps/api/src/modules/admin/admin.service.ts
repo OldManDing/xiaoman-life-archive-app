@@ -59,6 +59,7 @@ import { AdminArchiveExportRequestListDto } from './dto/admin-archive-export-req
 import { AdminContentRiskListDto } from './dto/admin-content-risk-list.dto';
 import { AdminChangePasswordDto } from './dto/admin-change-password.dto';
 import { AdminCreateInviteDto } from './dto/admin-create-invite.dto';
+import { AdminInviteListDto } from './dto/admin-invite-list.dto';
 import { AdminListDto, AdminRecordListDto } from './dto/admin-list.dto';
 import { AdminAuditLogListDto } from './dto/admin-audit-log-list.dto';
 import { AdminLoginDto } from './dto/admin-login.dto';
@@ -520,6 +521,17 @@ const statusToInviteLabel = (status: number, expiresAt: Date): 'pending' | 'acce
 };
 
 const createRegistrationInviteToken = () => `NL-${generateSecureToken(3).toUpperCase()}-${generateSecureToken(3).toUpperCase()}`;
+
+// 客服反馈的 topic 是给 App 内跳转用的英文 key（见 apps/web 的 helpFeedbackTopicConfig），
+// 不能直接当标题展示：内容风险列表里曾出现整列 "account-delete"，运营看不懂。
+const SUPPORT_TOPIC_LABELS: Record<string, string> = {
+  'account-delete': '申请注销账号',
+  membership: '咨询会员与账号服务',
+  'family-remove': '申请移出家庭成员',
+};
+
+const contentRiskTicketTitle = (ticket: { topic: string | null; category: string; content: string }) =>
+  (ticket.topic ? SUPPORT_TOPIC_LABELS[ticket.topic] : undefined) ?? (ticket.category || ticket.content.slice(0, 40));
 
 const getSystemConfigDefinition = (key: string) => SYSTEM_CONFIG_DEFINITIONS.find((item) => item.key === key);
 
@@ -1004,10 +1016,10 @@ export class AdminService {
     };
   }
 
-  async listInvites(admin: AuthenticatedAdmin, dto: AdminListDto, request: Request) {
+  async listInvites(admin: AuthenticatedAdmin, dto: AdminInviteListDto, request: Request) {
     const page = normalizePage(dto.page);
     const pageSize = normalizePageSize(dto.page_size);
-    const where: Prisma.RegistrationInviteWhereInput = dto.keyword
+    const keywordWhere: Prisma.RegistrationInviteWhereInput = dto.keyword
       ? {
           OR: [
             { inviteNo: { contains: dto.keyword } },
@@ -1017,6 +1029,22 @@ export class AdminService {
           ],
         }
       : {};
+
+    // 列表展示的「已过期」是派生状态（pending 且过期），筛选时必须翻译成对应的库内条件，
+    // 否则运营只能在一张混合表里肉眼找「待使用」。
+    const now = new Date();
+    const statusWhere: Prisma.RegistrationInviteWhereInput =
+      dto.status === 'expired'
+        ? { status: MEMBER_INVITE_STATUS_PENDING, expiresAt: { lte: now } }
+        : dto.status === 'pending'
+          ? { status: MEMBER_INVITE_STATUS_PENDING, expiresAt: { gt: now } }
+          : dto.status === 'accepted'
+            ? { status: MEMBER_INVITE_STATUS_ACCEPTED }
+            : dto.status === 'revoked'
+              ? { status: MEMBER_INVITE_STATUS_REVOKED }
+              : {};
+
+    const where: Prisma.RegistrationInviteWhereInput = { AND: [keywordWhere, statusWhere] };
 
     const [total, list] = await this.prisma.$transaction([
       this.prisma.registrationInvite.count({ where }),
@@ -1653,7 +1681,7 @@ export class AdminService {
         category: 'child_safety',
         severity: 'p0',
         status: this.supportTicketRiskStatus(ticket.status),
-        title: (ticket.topic ?? ticket.category).slice(0, 255),
+        title: contentRiskTicketTitle(ticket).slice(0, 255),
         subjectNo: ticket.user.userNo,
         subjectName: ticket.user.nickname,
         sourceType: 'support_ticket',
@@ -1815,7 +1843,7 @@ export class AdminService {
         category: 'child_safety',
         severity: 'p0',
         status: this.supportTicketRiskStatus(ticket.status),
-        title: ticket.topic ?? ticket.category,
+        title: contentRiskTicketTitle(ticket),
         subject_no: ticket.user.userNo,
         subject_name: ticket.user.nickname,
         source_type: 'support_ticket',

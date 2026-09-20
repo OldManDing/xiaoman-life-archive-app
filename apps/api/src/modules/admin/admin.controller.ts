@@ -14,6 +14,7 @@ import { AdminAuditLogListDto } from './dto/admin-audit-log-list.dto';
 import { AdminChangePasswordDto } from './dto/admin-change-password.dto';
 import { AdminCreateInviteDto } from './dto/admin-create-invite.dto';
 import { AdminListDto, AdminRecordListDto } from './dto/admin-list.dto';
+import { AdminInviteListDto } from './dto/admin-invite-list.dto';
 import { AdminLoginDto } from './dto/admin-login.dto';
 import { AdminMediaListDto } from './dto/admin-media-list.dto';
 import { AdminNotificationListDto } from './dto/admin-notification-list.dto';
@@ -140,7 +141,7 @@ export class AdminController {
   @UseGuards(AdminJwtAuthGuard, AdminRoleGuard)
   @AdminRoles(AdminRole.super_admin, AdminRole.operator, AdminRole.viewer)
   @Get('invites')
-  invites(@CurrentUser() admin: AuthenticatedAdmin, @Query() dto: AdminListDto, @Req() request: Request) {
+  invites(@CurrentUser() admin: AuthenticatedAdmin, @Query() dto: AdminInviteListDto, @Req() request: Request) {
     return this.adminService.listInvites(admin, dto, request);
   }
 

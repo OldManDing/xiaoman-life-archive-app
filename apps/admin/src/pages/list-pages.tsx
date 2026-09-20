@@ -113,20 +113,33 @@ const CompactText = ({ value, maxWidth = 220 }: { value: string | null | undefin
   );
 };
 
-const SummaryStat = ({ label, value, tone = 'neutral' }: { label: string; value: number | string; tone?: 'neutral' | 'success' | 'warning' | 'danger' }) => (
+const SummaryStat = ({
+  label,
+  value,
+  tone = 'neutral',
+  loading = false,
+}: {
+  label: string;
+  value: number | string;
+  tone?: 'neutral' | 'success' | 'warning' | 'danger';
+  loading?: boolean;
+}) => (
   <div className={`admin-list-summary-pill admin-list-summary-pill-${tone}`}>
     <span>{label}</span>
-    <strong>{value}</strong>
+    {/* 加载中显示 0 会被读成「确实没有异常」，与总览的「-」口径也不一致。 */}
+    <strong>{loading ? '—' : value}</strong>
   </div>
 );
 
 const ListSummary = ({
   label,
   description,
+  loading = false,
   children,
 }: {
   label: string;
   description?: string;
+  loading?: boolean;
   children?: ReactNode;
 }) => (
   <section className="admin-list-summary-panel" aria-label={label}>
@@ -135,7 +148,9 @@ const ListSummary = ({
       {description ? <p className="admin-list-summary-description">{description}</p> : null}
       {children ? (
         <div className="admin-list-summary-pills">
-          {children}
+          {loading
+            ? Children.map(children, (child) => (isValidElement<{ loading?: boolean }>(child) ? cloneElement(child, { loading: true }) : child))
+            : children}
           {/* 口径说明必须与胶囊同排：单独占一行时会被挤到最左侧，看起来像一句断掉的文字
               （账号管理与成长记录页实测）。 */}
           <span className="admin-list-summary-scope">以下数字只统计当前页，不代表全站总量。</span>
@@ -1524,7 +1539,9 @@ export const UsersPage = () => {
   const currentUsers = state.result?.list ?? [];
   const activeUsers = currentUsers.filter((item) => item.status === 'active').length;
   const disabledUsers = currentUsers.filter((item) => item.status === 'disabled').length;
-  const rows = formatListRows(currentUsers, (item) => [    <EntityTitle key={`${item.user_no}-profile`} title={item.nickname} meta={item.mobile} />,
+  const rows = formatListRows(currentUsers, (item) => [
+    // 手机号已经在下一列单独展示，这里再挂一次只会把行高撑成两行、降低列表密度。
+    <EntityTitle key={`${item.user_no}-profile`} title={item.nickname} meta={item.user_no} />,
     item.mobile,
     <Badge key={`${item.user_no}-membership`} tone="info">{membershipTypeLabel(item.membership_type)}</Badge>,
     <Badge key={`${item.user_no}-status`} tone={badgeToneForStatus(item.status)}>{userStatusLabel(item.status)}</Badge>,
@@ -1555,7 +1572,7 @@ export const UsersPage = () => {
   return (
     <PageShell title="账号管理" description="按关键字查询用户账号，处理冻结、解冻、登录信息核查和密码重置。">
       <SearchPanel {...state} />
-      <ListSummary label="账号状态概览" description="默认展示用户列表，先看账号状态，再决定是否进入详情、冻结、解冻或重置登录密码。">
+      <ListSummary label="账号状态概览" loading={state.loading} description="默认展示用户列表，先看账号状态，再决定是否进入详情、冻结、解冻或重置登录密码。">
         <SummaryStat label="本页正常" value={activeUsers} tone="success" />
         <SummaryStat label="本页已冻结" value={disabledUsers} tone={disabledUsers > 0 ? 'danger' : 'neutral'} />
       </ListSummary>
@@ -1606,7 +1623,7 @@ export const FamiliesPage = () => {
   return (
     <PageShell title="家庭管理" description="按家庭维度查看成员、孩子档案、成长资产和档案交付申请，方便运营处理家庭协作与长期托管问题。">
       <SearchPanel {...state} description="输入家庭编号、家庭名称、拥有者昵称或手机号后查询。" placeholder="家庭编号 / 家庭名称 / 拥有者" />
-      <ListSummary label="家庭资产概览" description="家庭是孩子档案、成员协作、媒体资产和交付申请的归属中心；运营先按家庭定位，再进入详情核查成员和记录。">
+      <ListSummary label="家庭资产概览" loading={state.loading} description="家庭是孩子档案、成员协作、媒体资产和交付申请的归属中心；运营先按家庭定位，再进入详情核查成员和记录。">
         <SummaryStat label="本页家庭" value={currentFamilies.length} />
         <SummaryStat label="本页状态正常" value={activeFamilies} tone="success" />
         <SummaryStat label="本页孩子档案" value={totalChildren} />
@@ -1641,7 +1658,7 @@ export const ChildrenPage = () => {
   return (
     <PageShell title="孩子列表" description="查询孩子档案、归属家庭与拥有者。">
       <SearchPanel {...state} />
-      <ListSummary label="孩子档案概览" description="默认展示档案归属和状态，发现异常时进入详情核查家庭关系。">
+      <ListSummary label="孩子档案概览" loading={state.loading} description="默认展示档案归属和状态，发现异常时进入详情核查家庭关系。">
         <SummaryStat label="本页头像可用" value={`${avatarReadyCount}/${currentChildren.length}`} tone={avatarReadyCount === currentChildren.length ? 'success' : 'warning'} />
         <SummaryStat label="本页档案" value={currentChildren.length} />
         <SummaryStat label="本页状态正常" value={activeChildren} tone="success" />
@@ -1758,7 +1775,7 @@ export const RecordsPage = () => {
           </div>
         </div>
       </Panel>
-      <ListSummary label="记录概览">
+      <ListSummary label="记录概览" loading={state.loading}>
         <SummaryStat label="本页已发布" value={publishedRecords} tone="success" />
         <SummaryStat label="本页草稿" value={draftRecords} tone={draftRecords > 0 ? 'warning' : 'neutral'} />
         <SummaryStat label="本页媒体异常" value={mediaExceptionRecords} tone={mediaExceptionRecords > 0 ? 'warning' : 'neutral'} />
@@ -2078,7 +2095,7 @@ export const AIJobsPage = () => {
   return (
     <PageShell title="AI 任务列表" description="查看 AI 任务状态和失败原因。">
       <SearchPanel {...state} />
-      <ListSummary label="AI 任务概览" description="默认展示任务队列，优先处理失败、卡住和待重试的链路。">
+      <ListSummary label="AI 任务概览" loading={state.loading} description="默认展示任务队列，优先处理失败、卡住和待重试的链路。">
         <SummaryStat label="本页处理中/待处理" value={activeJobs} tone={activeJobs > 0 ? 'warning' : 'neutral'} />
         <SummaryStat label="本页失败" value={failedJobs} tone={failedJobs > 0 ? 'danger' : 'success'} />
       </ListSummary>
@@ -2230,7 +2247,7 @@ export const NotificationsPage = () => {
           </div>
         </form>
       </Panel>
-      <ListSummary label="通知状态概览" description="默认展示最近通知，优先关注未读积压、待投递和投递异常；投递失败不作为普通用户提示文案直接铺在列表中。">
+      <ListSummary label="通知状态概览" loading={loading} description="默认展示最近通知，优先关注未读积压、待投递和投递异常；投递失败不作为普通用户提示文案直接铺在列表中。">
         <SummaryStat label="本页未读" value={unreadCount} tone={unreadCount > 0 ? 'warning' : 'success'} />
         <SummaryStat label="本页待投递" value={queuedDeliveryCount} tone={queuedDeliveryCount > 0 ? 'warning' : 'neutral'} />
         <SummaryStat label="本页投递失败" value={failedDeliveryCount} tone={failedDeliveryCount > 0 ? 'danger' : 'success'} />
@@ -2421,7 +2438,7 @@ export const SupportTicketsPage = () => {
           </div>
         </form>
       </Panel>
-      <ListSummary label="客服反馈概览" description="儿童安全和待处理反馈优先进入值班视野；每次状态推进都会写入审计日志。">
+      <ListSummary label="客服反馈概览" loading={loading} description="儿童安全和待处理反馈优先进入值班视野；每次状态推进都会写入审计日志。">
         <SummaryStat label="本页待处理" value={submittedCount} tone={submittedCount > 0 ? 'warning' : 'neutral'} />
         <SummaryStat label="本页处理中" value={processingCount} tone={processingCount > 0 ? 'warning' : 'neutral'} />
         <SummaryStat label="本页儿童安全" value={childSafetyCount} tone={childSafetyCount > 0 ? 'danger' : 'neutral'} />
@@ -2553,9 +2570,9 @@ export const ArchiveExportRequestsPage = () => {
     <EntityTitle key={`${item.request_no}-title`} title={item.request_no} meta={archiveExportPurposeLabel(item.purpose)} />,
     <EntityTitle key={`${item.request_no}-child`} title={item.child_name} meta={item.child_no} />,
     <EntityTitle key={`${item.request_no}-user`} title={item.user_name} meta={item.user_mobile ?? item.user_no} />,
-        <span key={`${item.request_no}-snapshot`} style={{ display: 'grid', gap: '4px', color: '#5d4d35', fontSize: '12px', fontWeight: 700 }}>
-      <span>{archiveExportTypeLabel(item.export_type)}</span>
-      <span>{item.record_count} 条记录 · {item.media_count} 个媒体 · {item.milestone_count} 个里程碑</span>
+        <span key={`${item.request_no}-snapshot`} style={{ display: 'grid', gap: '2px', color: '#5d4d35', fontSize: '12px', fontWeight: 700 }}>
+      <span>{archiveExportTypeLabel(item.export_type)} · {item.record_count} 条记录 · {item.media_count} 个媒体</span>
+      <span>{item.milestone_count} 个里程碑</span>
     </span>,
     <Badge key={`${item.request_no}-status`} tone={badgeToneForStatus(item.status)}>{archiveExportStatusLabel(item.status)}</Badge>,
     formatDateTime(item.created_at),
@@ -2612,7 +2629,7 @@ export const ArchiveExportRequestsPage = () => {
           </div>
         </form>
       </Panel>
-      <ListSummary label="交付申请概览" description="优先处理成年移交和待处理申请；每次状态推进都会写入审计，方便复盘责任链。">
+      <ListSummary label="交付申请概览" loading={loading} description="优先处理成年移交和待处理申请；每次状态推进都会写入审计，方便复盘责任链。">
         <SummaryStat label="本页待处理" value={submittedCount} tone={submittedCount > 0 ? 'warning' : 'neutral'} />
         <SummaryStat label="本页处理中" value={processingCount} tone={processingCount > 0 ? 'warning' : 'neutral'} />
         <SummaryStat label="本页成年移交" value={handoffCount} tone={handoffCount > 0 ? 'danger' : 'neutral'} />
@@ -2758,7 +2775,7 @@ export const AuditLogsPage = () => {
           </div>
         </form>
       </Panel>
-      <ListSummary label="审计日志概览" description="进入页面即展示最近留痕，筛选只用于缩小范围，不再让页面默认空白。">
+      <ListSummary label="审计日志概览" loading={loading} description="进入页面即展示最近留痕，筛选只用于缩小范围，不再让页面默认空白。">
         <SummaryStat label="本页留痕" value={currentLogs.length} />
         <SummaryStat label="后台登录" value={recentLoginLogs} tone={recentLoginLogs > 0 ? 'success' : 'neutral'} />
       </ListSummary>
