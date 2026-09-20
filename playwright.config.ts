@@ -43,5 +43,16 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
+    // 跨浏览器按需开启：默认只跑 chromium（快），需要时用
+    //   E2E_BROWSERS=firefox,webkit npx playwright test ...
+    // 前提是先执行 npx playwright install firefox webkit。
+    ...(process.env.E2E_BROWSERS ?? '')
+      .split(',')
+      .map((name) => name.trim())
+      .filter((name) => name === 'firefox' || name === 'webkit')
+      .map((name) => ({
+        name,
+        use: { ...devices[name === 'firefox' ? 'Desktop Firefox' : 'Desktop Safari'] },
+      })),
   ],
 });

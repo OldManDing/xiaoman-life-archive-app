@@ -40,7 +40,8 @@ export const LoginPage = () => {
       <form className="admin-login-card" onSubmit={onSubmit}>
         <div className="admin-login-card-head">
           <img src="/brand/nianlun-logo-64.png" alt="" className="admin-login-card-logo" width={46} height={46} aria-hidden="true" />
-          <h2>管理员登录</h2>
+          {/* 登录页是独立页面，主标题必须是 h1（无障碍审计规则：每页有且只有一个 h1）。 */}
+          <h1>管理员登录</h1>
         </div>
         <label className="admin-login-field">
           <span>用户名</span>

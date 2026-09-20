@@ -15,12 +15,23 @@ export async function loginWeb(page: Page) {
 }
 
 export async function loginAdmin(page: Page) {
+  await loginAdminAs(page, 'admin', 'ChangeMe123!');
+}
+
+/** 用任意后台账号登录（seed 里除了 admin 还有只读账号 viewer）。 */
+export async function loginAdminAs(page: Page, username: string, password: string) {
   await page.goto(`${adminBaseURL}/login`);
-  await page.getByPlaceholder('用户名').fill('admin');
-  await page.getByPlaceholder('密码').fill('ChangeMe123!');
+  await page.getByPlaceholder('用户名').fill(username);
+  await page.getByPlaceholder('密码').fill(password);
   await page.getByRole('button', { name: '进入管理后台' }).click();
   await expect(page).toHaveURL(/\/dashboard$/);
   await expect(page.getByRole('heading', { name: '后台总览' })).toBeVisible();
+}
+
+/** 打开「更多管理」面板并进入二级路由（面板在桌面端是侧栏内联展开）。 */
+export async function openAdminSection(page: Page, linkName: string) {
+  await openAdminMore(page);
+  await page.getByRole('link', { name: linkName, exact: true }).click();
 }
 
 export async function openAdminMore(page: Page) {

@@ -390,9 +390,9 @@ export const AiSettingsPage = () => {
             </div>
             {testResult ? (
               <div className={`admin-ai-settings-test-result admin-ai-settings-test-result-${testResult.status}`}>
-                {testResult.status === 'success' ? <CheckCircle2 size={22} /> : <XCircle size={22} />}
+                {testResult.status === 'success' ? <CheckCircle2 size={22} /> : testResult.status === 'skipped' ? <FlaskConical size={22} /> : <XCircle size={22} />}
                 <div>
-                  <strong>{testResult.status === 'success' ? '连接成功' : '连接失败'}</strong>
+                  <strong>{testResult.status === 'success' ? '连接成功' : testResult.status === 'skipped' ? '未执行真实测试' : '连接失败'}</strong>
                   <p>{testResult.message}</p>
                   <span>
                     {testResult.provider} / {testResult.model ?? '—'} / {testResult.latency_ms}ms
@@ -545,7 +545,14 @@ export const AiSettingsPage = () => {
       ) : null}
 
       {testDialog ? (
-        <AdminModal open={Boolean(testDialog)} title={testDialog.error ? '测试未完成' : testDialog.result?.status === 'success' ? '连接成功' : '连接失败'} eyebrow="连接测试" onClose={() => setTestDialog(null)} className="admin-ai-test-dialog">
+        <AdminModal
+          open={Boolean(testDialog)}
+          // skipped 表示「当前是 mock 供应商，没有真实发起调用」，不能当成连接失败来报。
+          title={testDialog.error ? '测试未完成' : testDialog.result?.status === 'success' ? '连接成功' : testDialog.result?.status === 'skipped' ? '未执行真实测试' : '连接失败'}
+          eyebrow="连接测试"
+          onClose={() => setTestDialog(null)}
+          className="admin-ai-test-dialog"
+        >
 
             {testDialog.error ? (
               <div className="admin-ai-test-dialog-error">
@@ -554,9 +561,15 @@ export const AiSettingsPage = () => {
               </div>
             ) : testDialog.result ? (
               <div className={`admin-ai-test-dialog-result admin-ai-test-dialog-result-${testDialog.result.status}`}>
-                {testDialog.result.status === 'success' ? <CheckCircle2 size={22} /> : <XCircle size={22} />}
+                {testDialog.result.status === 'success' ? <CheckCircle2 size={22} /> : testDialog.result.status === 'skipped' ? <FlaskConical size={22} /> : <XCircle size={22} />}
                 <div>
-                  <strong>{testDialog.result.status === 'success' ? 'AI 服务可以正常调用' : 'AI 服务暂时不可用'}</strong>
+                  <strong>
+                    {testDialog.result.status === 'success'
+                      ? 'AI 服务可以正常调用'
+                      : testDialog.result.status === 'skipped'
+                        ? '当前是模拟 AI 服务，未发起真实调用'
+                        : 'AI 服务暂时不可用'}
+                  </strong>
                   <p>{testDialog.result.message}</p>
                   <span>{testDialog.result.provider} / {testDialog.result.model ?? '—'} / {testDialog.result.latency_ms}ms</span>
                 </div>

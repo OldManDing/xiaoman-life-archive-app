@@ -19,8 +19,54 @@ import {
 } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import { createHash } from 'node:crypto';
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { createPlaceholderPhotoPng } from './placeholder-image';
 
 const prisma = new PrismaClient();
+
+// 演示占位图：暖色渐变 + 相机线稿。此前上传的是 1×1 像素，
+// 被 object-fit: cover 拉成一块纯黑方块，比 404 兜底还难看——
+// 占位图必须"看起来像一张图"。
+const DEMO_MEDIA_PLACEHOLDER = createPlaceholderPhotoPng(1200, 900);
+const DEMO_MEDIA_MIME = 'image/png';
+const DEMO_MEDIA_EXT = 'png';
+
+/**
+ * 种子只写 recordMedia 行、不上传对象时，前端会拿到 404 的签名 URL，
+ * 首页/时间轴首屏全部落到「照片暂时无法显示」占位。
+ * 这里按需把占位对象补进对象存储；存储不可用时只告警，不阻断 seed。
+ */
+async function uploadDemoMediaObjects(objectKeys: Array<string | null | undefined>) {
+  const keys = objectKeys.filter((key): key is string => Boolean(key));
+  if (!keys.length) return;
+  if ((process.env.STORAGE_PROVIDER ?? 'mock').toLowerCase() !== 'minio') return;
+
+  const endpoint = process.env.STORAGE_ENDPOINT;
+  const accessKeyId = process.env.STORAGE_ACCESS_KEY;
+  const secretAccessKey = process.env.STORAGE_SECRET_KEY;
+  const bucket = process.env.STORAGE_BUCKET ?? 'xiaoman-archive-local';
+  if (!endpoint || !accessKeyId || !secretAccessKey) return;
+
+  const client = new S3Client({
+    region: process.env.STORAGE_REGION ?? 'local',
+    endpoint,
+    forcePathStyle: true,
+    credentials: { accessKeyId, secretAccessKey },
+  });
+
+  for (const key of keys) {
+    try {
+      await client.send(new PutObjectCommand({
+        Bucket: bucket,
+        Key: key,
+        Body: DEMO_MEDIA_PLACEHOLDER,
+        ContentType: DEMO_MEDIA_MIME,
+      }));
+    } catch (error) {
+      console.warn(`[seed] 占位媒体上传失败（可忽略）: ${key} -> ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+}
 
 const ACTIVE_STATUS = 1;
 const FAMILY_MEMBER_ACTIVE_STATUS = 1;
@@ -234,6 +280,25 @@ async function main() {
     },
   });
 
+  // 只读管理员：后台角色模型只有 super_admin / operator / viewer（见 prisma/schema.prisma）。
+  // 这个账号用于验证「viewer 不应看到写操作，前端也不该把 403 留给用户去踩」，与 admin 同口令。
+  await prisma.adminUser.upsert({
+    where: { username: 'viewer' },
+    update: {
+      passwordHash: adminPasswordHash,
+      displayName: '只读账号',
+      role: AdminRole.viewer,
+      status: ACTIVE_STATUS,
+    },
+    create: {
+      username: 'viewer',
+      passwordHash: adminPasswordHash,
+      displayName: '只读账号',
+      role: AdminRole.viewer,
+      status: ACTIVE_STATUS,
+    },
+  });
+
   const family = await prisma.family.upsert({
     where: { familyNo: 'f_demo_001' },
     update: {
@@ -437,9 +502,16 @@ async function main() {
 
   const media = await prisma.recordMedia.upsert({
     where: { mediaNo: 'm_demo_001' },
+    // update 里也要写对象键/mime/尺寸，否则老库里的 .jpg 旧行不会收敛到新占位图
     update: {
       recordId: firstRecord.id,
       childId: child.id,
+      objectKey: `families/f_demo_001/children/c_demo_xiaoman_001/2026/04/m_demo_001.${DEMO_MEDIA_EXT}`,
+      thumbnailObjectKey: `families/f_demo_001/children/c_demo_xiaoman_001/2026/04/thumb_m_demo_001.${DEMO_MEDIA_EXT}`,
+      mimeType: DEMO_MEDIA_MIME,
+      sizeBytes: BigInt(DEMO_MEDIA_PLACEHOLDER.length),
+      width: 1200,
+      height: 900,
       status: MEDIA_READY_STATUS,
     },
     create: {
@@ -451,24 +523,29 @@ async function main() {
       mediaType: MediaType.image,
       storageProvider: 'mock',
       bucket: 'xiaoman-archive-local',
-      objectKey: 'families/f_demo_001/children/c_demo_xiaoman_001/2026/04/m_demo_001.jpg',
-      originalName: '第一次自己吃饭.jpg',
-      mimeType: 'image/jpeg',
-      sizeBytes: BigInt(512000),
+      objectKey: `families/f_demo_001/children/c_demo_xiaoman_001/2026/04/m_demo_001.${DEMO_MEDIA_EXT}`,
+      originalName: `第一次自己吃饭.${DEMO_MEDIA_EXT}`,
+      mimeType: DEMO_MEDIA_MIME,
+      sizeBytes: BigInt(DEMO_MEDIA_PLACEHOLDER.length),
       width: 1200,
       height: 900,
-      thumbnailObjectKey: 'families/f_demo_001/children/c_demo_xiaoman_001/2026/04/thumb_m_demo_001.jpg',
+      thumbnailObjectKey: `families/f_demo_001/children/c_demo_xiaoman_001/2026/04/thumb_m_demo_001.${DEMO_MEDIA_EXT}`,
       status: MEDIA_READY_STATUS,
     },
   });
 
-  await prisma.recordMedia.upsert({
+  await uploadDemoMediaObjects([media.objectKey, media.thumbnailObjectKey]);
+
+  const orphanMedia = await prisma.recordMedia.upsert({
     where: { mediaNo: 'm_demo_orphan_upload_001' },
     update: {
       recordId: null,
       familyId: family.id,
       childId: child.id,
       uploaderUserId: demoUser.id,
+      objectKey: `families/f_demo_001/children/c_demo_xiaoman_001/2026/04/m_demo_orphan_upload_001.${DEMO_MEDIA_EXT}`,
+      mimeType: DEMO_MEDIA_MIME,
+      sizeBytes: BigInt(DEMO_MEDIA_PLACEHOLDER.length),
       status: 1,
     },
     create: {
@@ -480,13 +557,15 @@ async function main() {
       mediaType: MediaType.image,
       storageProvider: 'mock',
       bucket: 'xiaoman-archive-local',
-      objectKey: 'families/f_demo_001/children/c_demo_xiaoman_001/2026/04/m_demo_orphan_upload_001.jpg',
-      originalName: '待确认照片.jpg',
-      mimeType: 'image/jpeg',
-      sizeBytes: BigInt(256000),
+      objectKey: `families/f_demo_001/children/c_demo_xiaoman_001/2026/04/m_demo_orphan_upload_001.${DEMO_MEDIA_EXT}`,
+      originalName: `待确认照片.${DEMO_MEDIA_EXT}`,
+      mimeType: DEMO_MEDIA_MIME,
+      sizeBytes: BigInt(DEMO_MEDIA_PLACEHOLDER.length),
       status: 1,
     },
   });
+
+  await uploadDemoMediaObjects([orphanMedia.objectKey, orphanMedia.thumbnailObjectKey]);
 
   await prisma.recordTag.upsert({
     where: {

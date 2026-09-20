@@ -348,6 +348,7 @@ table {
   height: 46px;
 }
 
+.admin-login-card h1,
 .admin-login-card h2 {
   margin: 0;
   color: #221b12;
@@ -3026,6 +3027,13 @@ table {
   color: #b42318;
 }
 
+/* skipped：当前是 mock 供应商，没有真实发起调用——既不是成功也不是失败。 */
+.admin-ai-settings-test-result-skipped {
+  border-color: #e2d3b4;
+  background: #fdf8ee;
+  color: #8a5a20;
+}
+
 .admin-ai-settings-test-result strong {
   display: block;
   color: #221b12;
@@ -3240,6 +3248,7 @@ table {
     gap: 12px;
   }
 
+  .admin-login-card h1,
   .admin-login-card h2 {
     font-size: 24px;
   }
@@ -5486,6 +5495,17 @@ table {
   border-color: #e4c9c2;
   background: #fff8f6;
   color: #a2493e;
+}
+
+/* 与 .admin-ai-settings-test-result-skipped 同义：mock 供应商未真实调用。 */
+.admin-ai-test-dialog-result-skipped {
+  border-color: #e2d3b4;
+  background: #fdf8ee;
+  color: #8a5a20;
+}
+
+.admin-ai-test-dialog-result-skipped strong {
+  color: #6f4715;
 }
 
 .admin-ai-test-dialog-result strong {
