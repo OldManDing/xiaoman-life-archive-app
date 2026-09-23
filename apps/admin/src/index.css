@@ -7377,6 +7377,19 @@ table {
   }
 }
 
+/* 下拉/展开类控件的图标要与展开状态联动，否则看不出「已展开」：
+   - 侧栏「更多管理」原来用汉堡图标（语义是主菜单/抽屉，容易被读成"打开导航"），已换成箭头；
+   - AdminSelect 的箭头原来一直朝下，展开时也不翻转。 */
+.admin-nav-more-trigger .admin-nav-more-icon,
+.admin-select-chevron {
+  transition: transform 0.16s ease;
+}
+
+.admin-nav-more-trigger[aria-expanded='true'] .admin-nav-more-icon,
+.admin-select-shell-open .admin-select-chevron {
+  transform: rotate(180deg);
+}
+
 /* 列表概览的口径说明：与胶囊同排，作为末位小字。
    色值从 #8b8073（白底 3.87:1，未达 AA）改为 #6f6558（白底 5.71 / 米白底 5.49）。 */
 .admin-list-summary-scope {

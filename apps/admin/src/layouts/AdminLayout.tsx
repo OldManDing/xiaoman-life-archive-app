@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { Archive, BarChart3, BellRing, Bot, Database, FileText, House, Image, KeyRound, LogOut, Menu, MessageSquareText, ServerCog, Settings2, ShieldAlert, ShieldCheck, SlidersHorizontal, UsersRound, X, type LucideIcon } from 'lucide-react';
+import { Archive, BarChart3, BellRing, Bot, ChevronDown, Database, FileText, House, Image, KeyRound, LogOut, MessageSquareText, ServerCog, Settings2, ShieldAlert, ShieldCheck, SlidersHorizontal, UsersRound, X, type LucideIcon } from 'lucide-react';
 
 import { adminApi } from '../shared/request';
 import { getTokenExpiresAt } from '../shared/authMemory';
@@ -215,7 +215,9 @@ export const AdminLayout = () => {
               aria-expanded={showMore}
               onClick={() => setMoreOpen((current) => !current)}
             >
-              <Menu className="admin-nav-more-icon" size={17} strokeWidth={2.2} />
+              {/* 触发器是「可展开面板」，不是主菜单：汉堡图标容易被读成"打开导航抽屉"。
+                  换成与 aria-expanded 联动的箭头（收起朝下、展开翻转朝上，见 index.css）。 */}
+              <ChevronDown className="admin-nav-more-icon" size={17} strokeWidth={2.2} />
               <span className="admin-nav-more-label-desktop">更多管理</span>
               <span className="admin-nav-more-label-mobile">更多</span>
             </button>
