@@ -1,3 +1,23 @@
+/*
+ * 后台管理样式单文件（约 7400 行）。改动前请先读这段分层约定 —— 这里的历史问题不是"重复定义"
+ * 本身，而是"同名选择器在不同位置分层覆盖"，导致改一处样式常常看不到效果。
+ *
+ * 分层顺序（越靠后优先级越高，同选择器时后一条胜出）：
+ *   1. 基础与令牌：:root 变量、reset、字体与配色          （文件开头 ~L1–L500）
+ *   2. 布局骨架：.admin-layout / .admin-sidebar / .admin-main / 顶部栏
+ *   3. 通用组件：面板、表格、按钮、徽章、抽屉、弹窗、分页
+ *   4. 页面级微调：.admin-<页面>-* 前缀的局部样式
+ *   5. 响应式：@media (max-width: 960px / 760px / 520px) 分段收口
+ *   6. 末尾"收编区"：集中覆盖前面几层里互相打架的规则（有注释说明被覆盖的原因）
+ *
+ * 新增样式的落位建议：
+ *   - 通用外观改动 → 改第 3 层对应组件的权威规则，不要在末尾再叠一条；
+ *   - 只影响某页 → 放第 4 层，并用 .admin-<页面>- 前缀；
+ *   - 必须覆盖前面规则时 → 放第 6 层并写明为什么（同选择器 + 同声明的前置副本可以直接删）。
+ *
+ * 2026-09-23 已删除 30 条"同选择器 + 同声明"的前置冗余（-158 行），
+ * 并用计算样式对照脚本验证过渲染结果逐属性不变（见 e2e/css-parity-probe.spec.ts）。
+ */
 :root {
   font-family:
     "Microsoft YaHei",
@@ -271,11 +291,6 @@ table {
 .admin-nav-sections {
   display: grid;
   gap: 18px;
-}
-
-.admin-nav-section {
-  display: grid;
-  gap: 6px;
 }
 
 .admin-nav-section-label {
@@ -1323,10 +1338,6 @@ table {
   gap: 5px;
 }
 
-.admin-system-config-name strong {
-  color: #221b12;
-}
-
 .admin-system-config-name span {
   color: #756b5c;
   font-size: 12px;
@@ -1634,11 +1645,6 @@ table {
   pointer-events: none;
   position: relative;
   z-index: 3;
-}
-
-.admin-date-display-empty {
-  color: #a29686;
-  font-weight: 600;
 }
 
 .admin-date-display-value {
@@ -2563,8 +2569,6 @@ table {
   background: transparent;
 }
 
-.admin-overview-stat:last-child { border-right: 0; }
-
 .admin-overview-stat span,
 .admin-overview-ai-list span,
 .admin-overview-audit-list span {
@@ -2761,9 +2765,6 @@ table {
     min-width: 0;
   }
 
-  .admin-overview-stat strong {
-    font-size: 28px !important;
-  }
 }
 
 .admin-ai-settings-grid,
@@ -3619,9 +3620,6 @@ table {
     width: 100%;
   }
 
-  .admin-detail-grid {
-    grid-template-columns: 1fr !important;
-  }
 }
 
 @media (max-width: 420px) {
@@ -3653,11 +3651,6 @@ table {
 }
 
 @media (max-width: 760px) {
-  .admin-sidebar .admin-nav-more-content .admin-nav-section-items {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 6px;
-  }
 }
 
 /* Final hierarchy pass: fewer navigation layers, stable action columns, and no decorative gradients. */
@@ -3737,14 +3730,6 @@ table {
   }
 
   .admin-sidebar > .admin-nav-sections > .admin-nav-section {
-    display: contents;
-  }
-
-  .admin-sidebar > .admin-nav-sections > .admin-nav-section > .admin-nav-section-label {
-    display: none;
-  }
-
-  .admin-sidebar > .admin-nav-sections > .admin-nav-section > .admin-nav-section-items {
     display: contents;
   }
 
@@ -5306,15 +5291,6 @@ table {
   font-size: 13px;
   font-weight: 600;
   line-height: 1.35;
-}
-
-.admin-date-display-empty {
-  color: #a29686;
-  font-weight: 600;
-}
-
-.admin-date-input-icon {
-  color: #756b5c;
 }
 
 /* Data scale is a single quiet band; the values should read as one system, not three cards. */
@@ -7105,120 +7081,6 @@ table {
 }
 
 /* ---- 系统运维页内联收编 ---- */
-.admin-ops-section-title {
-  margin: 0;
-  font-size: 18px;
-  color: #221b12;
-}
-
-.admin-ops-section-title-tight {
-  margin-bottom: 12px;
-}
-
-.admin-ops-report-title {
-  margin: 0;
-  font-size: 15px;
-  color: #221b12;
-}
-
-.admin-ops-panel-head {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: wrap;
-  align-items: center;
-  margin-bottom: 12px;
-}
-
-.admin-ops-stat-grid-auto {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
-  align-items: stretch;
-}
-
-.admin-ops-stat-card {
-  display: grid;
-  gap: 8px;
-  background: #ffffff;
-  border: 1px solid rgba(35, 31, 27, 0.1);
-  border-radius: 10px;
-  padding: 16px;
-  box-shadow: 0 16px 38px rgba(30, 24, 18, 0.045);
-}
-
-.admin-ops-stat-label {
-  color: #756b5c;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.admin-ops-stat-num {
-  color: #221b12;
-  font-size: 28px;
-  line-height: 1;
-}
-
-.admin-ops-table-scroll-auto {
-  overflow-x: auto;
-}
-
-.admin-ops-report-block {
-  border-top: 1px solid #ded4c6;
-  margin-top: 14px;
-  padding-top: 14px;
-  display: grid;
-  gap: 10px;
-}
-
-.admin-ops-report-head {
-  display: flex;
-  gap: 10px;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-}
-
-.admin-ops-report-list {
-  display: grid;
-  gap: 6px;
-}
-
-.admin-ops-sev-p0 {
-  color: #9f1239;
-}
-
-.admin-ops-sev-p1 {
-  color: #9a3412;
-}
-
-.admin-ops-entry-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.admin-ops-action-list {
-  display: grid;
-  gap: 10px;
-}
-
-.admin-ops-action-link {
-  text-decoration: none;
-}
-
-.admin-ops-action-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-}
-
-.admin-ops-action-helper {
-  color: #756b5c;
-  font-size: 12px;
-  font-weight: 700;
-}
-
 /* ---- 系统运维页内联收编 ---- */
 .admin-ops-section-title {
   margin: 0;
