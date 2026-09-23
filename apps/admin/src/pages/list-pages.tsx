@@ -1,4 +1,4 @@
-import { Children, Fragment, cloneElement, isValidElement, useCallback, useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
+import { Children, Fragment, cloneElement, isValidElement, useEffect, useRef, useState, type ReactNode } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { AlertTriangle, ArchiveX, AudioLines, Ban, CheckCircle2, ClipboardCheck, Crown, Eye, LockKeyhole, MoreHorizontal, RotateCcw, SlidersHorizontal, Snowflake, Video, X, XCircle } from 'lucide-react';
 
@@ -14,7 +14,6 @@ import {
   type AdminFamilyItem,
   type AdminMediaDetail,
   type AdminMediaItem,
-  type AdminMediaListParams,
   type AdminNotificationItem,
   type AdminRecordDetail,
   type AdminRecordFilter,
@@ -395,42 +394,11 @@ const ActionMenu = ({ children }: { children: ReactNode }) => {
   );
 };
 
-type AuditFilterOverride = {
-  keyword?: string;
-  action?: string;
-  targetType?: string;
-  actorId?: string;
-  startTime?: string;
-  endTime?: string;
-};
-
-type ArchiveExportRequestFilterOverride = {
-  keyword?: string;
-  purpose?: string;
-  status?: string;
-};
-
-type NotificationFilterOverride = {
-  keyword?: string;
-  readState?: string;
-  notificationType?: string;
-  deliveryStatus?: string;
-  startTime?: string;
-  endTime?: string;
-};
-
 type ArchiveExportCompletionRequest = {
   note: string;
   download_url?: string;
   file_sha256?: string;
   delivery_evidence?: string;
-};
-
-type SupportTicketFilterOverride = {
-  keyword?: string;
-  category?: string;
-  status?: string;
-  priority?: string;
 };
 
 const useArchiveCompletionDialog = () => {
@@ -1798,7 +1766,6 @@ export const MediaPage = () => {
   const { admin } = useAdminAuth();
   const canOperate = admin?.role === 'super_admin' || admin?.role === 'operator';
   const { requestOperationReason, reasonDialog } = useOperationReasonDialog();
-  const [keyword, setKeyword] = useState('');
   const [mediaType, setMediaType] = useState('');
   const [status, setStatus] = useState('');
   const [linked, setLinked] = useState('');
@@ -1807,56 +1774,32 @@ export const MediaPage = () => {
   const [uploaderUserNo, setUploaderUserNo] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
-  // 首帧即加载中，避免先闪一帧空态
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<Awaited<ReturnType<typeof adminApi.listMedia>> | null>(null);
-  const mediaAutoLoadedRef = useRef(false);
   const [updatingMediaNo, setUpdatingMediaNo] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
-  const mediaLoadRequestRef = useRef(0);
 
-  const load = useCallback(async (nextPage = page, nextPageSize = pageSize, event?: FormEvent, override?: Partial<AdminMediaListParams>) => {
-    event?.preventDefault();
-    const requestId = ++mediaLoadRequestRef.current;
-    setLoading(true);
-    setError(null);
-    try {
-      const next = await adminApi.listMedia({
-        keyword: optionalFilter(override?.keyword ?? keyword),
-        media_type: optionalFilter(override?.media_type ?? mediaType),
-        status: optionalFilter(override?.status ?? status),
-        linked: optionalFilter(override?.linked ?? linked),
-        child_no: optionalFilter(override?.child_no ?? childNo),
-        family_no: optionalFilter(override?.family_no ?? familyNo),
-        uploader_user_no: optionalFilter(override?.uploader_user_no ?? uploaderUserNo),
-        start_time: override?.start_time ?? toIsoDateTime(startTime),
-        end_time: override?.end_time ?? toIsoDateTime(endTime),
-         page: nextPage,
-         page_size: nextPageSize,
-       });
-      if (requestId !== mediaLoadRequestRef.current) return;
-      setResult(next);
-      setPage(next.page);
-      setPageSize(next.page_size);
-    } catch (err) {
-      if (requestId !== mediaLoadRequestRef.current) return;
-      setError(getErrorMessage(err));
-    } finally {
-      if (requestId === mediaLoadRequestRef.current) setLoading(false);
-    }
-  }, [childNo, endTime, familyNo, keyword, linked, mediaType, page, pageSize, startTime, status, uploaderUserNo]);
+  // 列表脚手架（分页/加载/错误/请求版本号）统一由 hook 提供；本页只声明筛选值，
+  // 变化后 hook 自动回到第 1 页重查。「清空」也不再需要 override 参数。
+  const state = useAdminListPage<AdminMediaItem>(
+    (params) =>
+      adminApi.listMedia({
+        keyword: params.keyword,
+        page: params.page,
+        page_size: params.page_size,
+        media_type: optionalFilter(mediaType),
+        status: optionalFilter(status),
+        linked: optionalFilter(linked),
+        child_no: optionalFilter(childNo),
+        family_no: optionalFilter(familyNo),
+        uploader_user_no: optionalFilter(uploaderUserNo),
+        start_time: toIsoDateTime(startTime),
+        end_time: toIsoDateTime(endTime),
+      }),
+    { filters: { mediaType, status, linked, childNo, familyNo, uploaderUserNo, startTime, endTime } },
+  );
+  const { keyword, setKeyword, pageSize, loading, error, result, load } = state;
 
-  useEffect(() => {
-    if (mediaAutoLoadedRef.current) return;
-    mediaAutoLoadedRef.current = true;
-    void load(1, pageSize);
-  }, [load, pageSize]);
-
-  const clearFilters = async () => {
+  const clearFilters = () => {
     setKeyword('');
     setMediaType('');
     setStatus('');
@@ -1866,17 +1809,7 @@ export const MediaPage = () => {
     setUploaderUserNo('');
     setStartTime('');
     setEndTime('');
-    await load(1, pageSize, undefined, {
-      keyword: '',
-      media_type: '',
-      status: '',
-      linked: '',
-      child_no: '',
-      family_no: '',
-      uploader_user_no: '',
-      start_time: undefined,
-      end_time: undefined,
-    });
+    state.reloadAfterFiltersReset();
   };
 
   const updateStatus = async (media: AdminMediaItem, status: 'ready' | 'failed' | 'removed') => {
@@ -1896,7 +1829,7 @@ export const MediaPage = () => {
     setUpdatingMediaNo(media.media_no);
     try {
       const updated = await adminApi.updateMediaStatus(media.media_no, { status, reason });
-      setResult((current) =>
+      state.updateResult((current) =>
         current
           ? {
               ...current,
@@ -2000,7 +1933,7 @@ export const MediaPage = () => {
       <ActionFeedback error={actionError} />
       {error ? <Panel><EmptyState message={`加载失败：${error}`} /></Panel> : null}
       <TableShell className="admin-media-table" columns={['媒体', '状态', '孩子', '上传者', '类型', '操作']} rows={rows} emptyMessage="暂无媒体" loading={loading} />
-      {result ? <PaginationPanel page={result.page} pageSize={result.page_size} total={result.total} hasMore={result.has_more} loading={loading} onPrevPage={() => load(page - 1, pageSize)} onNextPage={() => load(page + 1, pageSize)} onPageSizeChange={(nextPageSize) => load(1, nextPageSize)} onJumpToPage={(nextPage) => load(nextPage, pageSize)} /> : null}
+      {result ? <PaginationPanel page={result.page} pageSize={result.page_size} total={result.total} hasMore={result.has_more} loading={loading} onPrevPage={state.onPrevPage} onNextPage={state.onNextPage} onPageSizeChange={state.onPageSizeChange} onJumpToPage={state.onJumpToPage} /> : null}
       <DetailDrawer open={detail.state.open} title={detail.state.title} subtitle={detail.state.subtitle} loading={detail.state.loading} error={detail.state.error} onClose={detail.closeDetail} onRetry={detail.retryDetail}>
         {detail.state.data ? <MediaDetailContent data={detail.state.data} /> : null}
       </DetailDrawer>
@@ -2115,76 +2048,40 @@ export const AIJobsPage = () => {
 
 export const NotificationsPage = () => {
   const detail = useDetailState<AdminNotificationItem>();
-  const [keyword, setKeyword] = useState('');
   const [readState, setReadState] = useState('');
   const [notificationType, setNotificationType] = useState('');
   const [deliveryStatus, setDeliveryStatus] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
-  // 首帧即加载中，避免先闪一帧空态
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<{ list: AdminNotificationItem[]; page: number; page_size: number; total: number; has_more: boolean } | null>(null);
-  const autoLoadedRef = useRef(false);
-  const requestVersionRef = useRef(0);
   const [advancedFiltersOpen, setAdvancedFiltersOpen] = useState(false);
 
-  const load = useCallback(async (nextPage = page, nextPageSize = pageSize, event?: FormEvent, override?: NotificationFilterOverride) => {
-    event?.preventDefault();
-    const requestVersion = ++requestVersionRef.current;
-    setLoading(true);
-    setError(null);
-    try {
-      const activeKeyword = (override?.keyword ?? keyword).trim();
-      const activeReadState = override?.readState ?? readState;
-      const activeNotificationType = override?.notificationType ?? notificationType;
-      const activeDeliveryStatus = override?.deliveryStatus ?? deliveryStatus;
-      const activeStartTime = override?.startTime ?? startTime;
-      const activeEndTime = override?.endTime ?? endTime;
-      const next = await adminApi.listNotifications({
-        keyword: activeKeyword || undefined,
-        read_state: activeReadState || undefined,
-        notification_type: activeNotificationType || undefined,
-        delivery_status: activeDeliveryStatus || undefined,
-        start_time: toIsoDateTime(activeStartTime),
-        end_time: toIsoDateTime(activeEndTime),
-        page: nextPage,
-        page_size: nextPageSize,
-      });
-      if (requestVersionRef.current !== requestVersion) return;
-      setResult(next);
-      setPage(next.page);
-      setPageSize(next.page_size);
-    } catch (err) {
-      if (requestVersionRef.current !== requestVersion) return;
-      setError(getErrorMessage(err));
-    } finally {
-      if (requestVersionRef.current === requestVersion) {
-        setLoading(false);
-      }
-    }
-  }, [deliveryStatus, endTime, keyword, notificationType, page, pageSize, readState, startTime]);
+  // 分页/加载/错误/请求版本号这些脚手架统一由 hook 提供；本页只声明自己的筛选值，
+  // 变化后 hook 会自动回到第 1 页重查（此前这里是 70 行手写状态机，五页各一份）。
+  const state = useAdminListPage<AdminNotificationItem>(
+    (params) =>
+      adminApi.listNotifications({
+        keyword: params.keyword,
+        page: params.page,
+        page_size: params.page_size,
+        read_state: readState || undefined,
+        notification_type: notificationType || undefined,
+        delivery_status: deliveryStatus || undefined,
+        start_time: toIsoDateTime(startTime),
+        end_time: toIsoDateTime(endTime),
+      }),
+    { filters: { readState, notificationType, deliveryStatus, startTime, endTime } },
+  );
+  const { keyword, setKeyword, pageSize, loading, error, result, load } = state;
 
-  const clearFilters = async () => {
+  const clearFilters = () => {
     setKeyword('');
     setReadState('');
     setNotificationType('');
     setDeliveryStatus('');
     setStartTime('');
     setEndTime('');
-    await load(1, pageSize, undefined, { keyword: '', readState: '', notificationType: '', deliveryStatus: '', startTime: '', endTime: '' });
+    state.reloadAfterFiltersReset();
   };
-
-  useEffect(() => {
-    if (autoLoadedRef.current) return;
-    autoLoadedRef.current = true;
-    const timer = window.setTimeout(() => {
-      void load(1, pageSize);
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, [load, pageSize]);
 
   const currentNotifications = result?.list ?? [];
   const unreadCount = currentNotifications.filter((item) => !item.read_at).length;
@@ -2258,7 +2155,7 @@ export const NotificationsPage = () => {
       </ListSummary>
       {error ? <Panel><EmptyState title="加载失败" message={`通知数据加载失败：${error}`} /></Panel> : null}
       <TableShell columns={['通知', '接收人', '家庭', '已读', '投递', '目标', '创建时间', '操作']} rows={rows} emptyMessage="暂无匹配通知。可清空筛选，或等待用户发布记录后生成家庭通知。" loading={loading} />
-      {result ? <PaginationPanel page={result.page} pageSize={result.page_size} total={result.total} hasMore={result.has_more} loading={loading} onPrevPage={async () => { if (!loading && page > 1) await load(page - 1, pageSize); }} onNextPage={async () => { if (!loading && result.has_more) await load(page + 1, pageSize); }} onPageSizeChange={async (nextPageSize) => { if (!loading) await load(1, nextPageSize); }} onJumpToPage={async (nextPage) => { if (!loading) await load(nextPage, pageSize); }} /> : null}
+      {result ? <PaginationPanel page={result.page} pageSize={result.page_size} total={result.total} hasMore={result.has_more} loading={loading} onPrevPage={state.onPrevPage} onNextPage={state.onNextPage} onPageSizeChange={state.onPageSizeChange} onJumpToPage={state.onJumpToPage} /> : null}
       <DetailDrawer open={detail.state.open} title={detail.state.title} subtitle={detail.state.subtitle} loading={detail.state.loading} error={detail.state.error} onClose={detail.closeDetail} onRetry={detail.retryDetail}>
         {detail.state.data ? <NotificationDetailContent data={detail.state.data} /> : null}
       </DetailDrawer>
@@ -2270,69 +2167,34 @@ export const SupportTicketsPage = () => {
   const detail = useDetailState<AdminSupportTicketItem>();
   const { admin } = useAdminAuth();
   const { requestOperationReason, reasonDialog } = useOperationReasonDialog();
-  const [keyword, setKeyword] = useState('');
   const [category, setCategory] = useState('');
   const [status, setStatus] = useState('');
   const [priority, setPriority] = useState('');
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
-  // 首帧即加载中，避免先闪一帧空态
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [updatingTicketNo, setUpdatingTicketNo] = useState<string | null>(null);
-  const [result, setResult] = useState<{ list: AdminSupportTicketItem[]; page: number; page_size: number; total: number; has_more: boolean } | null>(null);
-  const autoLoadedRef = useRef(false);
-  const requestVersionRef = useRef(0);
 
-  const load = useCallback(async (nextPage = page, nextPageSize = pageSize, event?: FormEvent, override?: SupportTicketFilterOverride) => {
-    event?.preventDefault();
-    const requestVersion = ++requestVersionRef.current;
-    setLoading(true);
-    setError(null);
-    try {
-      const activeKeyword = (override?.keyword ?? keyword).trim();
-      const activeCategory = (override?.category ?? category).trim();
-      const activeStatus = override?.status ?? status;
-      const activePriority = override?.priority ?? priority;
-      const next = await adminApi.listSupportTickets({
-        keyword: activeKeyword || undefined,
-        category: activeCategory || undefined,
-        status: activeStatus || undefined,
-        priority: activePriority || undefined,
-        page: nextPage,
-        page_size: nextPageSize,
-      });
-      if (requestVersionRef.current !== requestVersion) return;
-      setResult(next);
-      setPage(next.page);
-      setPageSize(next.page_size);
-    } catch (err) {
-      if (requestVersionRef.current !== requestVersion) return;
-      setError(getErrorMessage(err));
-    } finally {
-      if (requestVersionRef.current === requestVersion) {
-        setLoading(false);
-      }
-    }
-  }, [category, keyword, page, pageSize, priority, status]);
+  // 列表脚手架（分页/加载/错误/请求版本）统一由 hook 提供，本页只声明筛选值。
+  const state = useAdminListPage<AdminSupportTicketItem>(
+    (params) =>
+      adminApi.listSupportTickets({
+        keyword: params.keyword,
+        page: params.page,
+        page_size: params.page_size,
+        category: category.trim() || undefined,
+        status: status || undefined,
+        priority: priority || undefined,
+      }),
+    { filters: { category, status, priority } },
+  );
+  const { keyword, setKeyword, pageSize, loading, error, result, load } = state;
 
-  const clearFilters = async () => {
+  const clearFilters = () => {
     setKeyword('');
     setCategory('');
     setStatus('');
     setPriority('');
-    await load(1, pageSize, undefined, { keyword: '', category: '', status: '', priority: '' });
+    state.reloadAfterFiltersReset();
   };
-
-  useEffect(() => {
-    if (autoLoadedRef.current) return;
-    autoLoadedRef.current = true;
-    const timer = window.setTimeout(() => {
-      void load(1, pageSize);
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, [load, pageSize]);
 
   const updateStatus = async (item: AdminSupportTicketItem, nextStatus: 'processing' | 'resolved' | 'closed') => {
     const actionName = nextStatus === 'processing' ? '受理客服反馈' : nextStatus === 'resolved' ? '解决客服反馈' : '关闭客服反馈';
@@ -2349,7 +2211,7 @@ export const SupportTicketsPage = () => {
     setUpdatingTicketNo(item.ticket_no);
     try {
       const updated = await adminApi.updateSupportTicketStatus(item.ticket_no, { status: nextStatus, note: reason });
-      setResult((current) =>
+      state.updateResult((current) =>
         current
           ? {
               ...current,
@@ -2450,7 +2312,7 @@ export const SupportTicketsPage = () => {
       <ActionFeedback error={actionError} />
       {error ? <Panel><EmptyState message={`加载失败：${error}`} /></Panel> : null}
       <TableShell columns={['反馈编号', '提交人', '反馈内容', '优先级', '状态', '提交时间', '操作']} rows={rows} emptyMessage="暂无客服反馈。用户可在 App 的帮助与反馈页提交问题。" loading={loading} />
-      {result ? <PaginationPanel page={result.page} pageSize={result.page_size} total={result.total} hasMore={result.has_more} loading={loading} onPrevPage={async () => { if (!loading && page > 1) await load(page - 1, pageSize); }} onNextPage={async () => { if (!loading && result.has_more) await load(page + 1, pageSize); }} onPageSizeChange={async (nextPageSize) => { if (!loading) await load(1, nextPageSize); }} onJumpToPage={async (nextPage) => { if (!loading) await load(nextPage, pageSize); }} /> : null}
+      {result ? <PaginationPanel page={result.page} pageSize={result.page_size} total={result.total} hasMore={result.has_more} loading={loading} onPrevPage={state.onPrevPage} onNextPage={state.onNextPage} onPageSizeChange={state.onPageSizeChange} onJumpToPage={state.onJumpToPage} /> : null}
       <DetailDrawer open={detail.state.open} title={detail.state.title} subtitle={detail.state.subtitle} loading={detail.state.loading} error={detail.state.error} onClose={detail.closeDetail} onRetry={detail.retryDetail}>
         {detail.state.data ? <SupportTicketDetailContent data={detail.state.data} /> : null}
       </DetailDrawer>
@@ -2464,65 +2326,31 @@ export const ArchiveExportRequestsPage = () => {
   const { admin } = useAdminAuth();
   const { requestOperationReason, reasonDialog } = useOperationReasonDialog();
   const { requestArchiveCompletion, completionDialog } = useArchiveCompletionDialog();
-  const [keyword, setKeyword] = useState('');
   const [purpose, setPurpose] = useState('');
   const [status, setStatus] = useState('');
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
-  // 首帧即加载中，避免先闪一帧空态
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [updatingRequestNo, setUpdatingRequestNo] = useState<string | null>(null);
-  const [result, setResult] = useState<{ list: AdminArchiveExportRequestItem[]; page: number; page_size: number; total: number; has_more: boolean } | null>(null);
-  const autoLoadedRef = useRef(false);
-  const requestVersionRef = useRef(0);
 
-  const load = useCallback(async (nextPage = page, nextPageSize = pageSize, event?: FormEvent, override?: ArchiveExportRequestFilterOverride) => {
-    event?.preventDefault();
-    const requestVersion = ++requestVersionRef.current;
-    setLoading(true);
-    setError(null);
-    try {
-      const activeKeyword = (override?.keyword ?? keyword).trim();
-      const activePurpose = override?.purpose ?? purpose;
-      const activeStatus = override?.status ?? status;
-      const next = await adminApi.listArchiveExportRequests({
-        keyword: activeKeyword || undefined,
-        purpose: activePurpose || undefined,
-        status: activeStatus || undefined,
-        page: nextPage,
-        page_size: nextPageSize,
-      });
-      if (requestVersionRef.current !== requestVersion) return;
-      setResult(next);
-      setPage(next.page);
-      setPageSize(next.page_size);
-    } catch (err) {
-      if (requestVersionRef.current !== requestVersion) return;
-      setError(getErrorMessage(err));
-    } finally {
-      if (requestVersionRef.current === requestVersion) {
-        setLoading(false);
-      }
-    }
-  }, [keyword, page, pageSize, purpose, status]);
+  // 列表脚手架统一由 hook 提供，本页只声明筛选值。
+  const state = useAdminListPage<AdminArchiveExportRequestItem>(
+    (params) =>
+      adminApi.listArchiveExportRequests({
+        keyword: params.keyword,
+        page: params.page,
+        page_size: params.page_size,
+        purpose: purpose || undefined,
+        status: status || undefined,
+      }),
+    { filters: { purpose, status } },
+  );
+  const { keyword, setKeyword, pageSize, loading, error, result, load } = state;
 
-  const clearFilters = async () => {
+  const clearFilters = () => {
     setKeyword('');
     setPurpose('');
     setStatus('');
-    await load(1, pageSize, undefined, { keyword: '', purpose: '', status: '' });
+    state.reloadAfterFiltersReset();
   };
-
-  useEffect(() => {
-    if (autoLoadedRef.current) return;
-    autoLoadedRef.current = true;
-    const timer = window.setTimeout(() => {
-      void load(1, pageSize);
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, [load, pageSize]);
 
   const updateStatus = async (item: AdminArchiveExportRequestItem, nextStatus: 'processing' | 'completed' | 'rejected') => {
     const actionName = nextStatus === 'processing' ? '受理档案交付申请' : nextStatus === 'completed' ? '完成档案交付申请' : '驳回档案交付申请';
@@ -2547,7 +2375,7 @@ export const ArchiveExportRequestsPage = () => {
         note: reason,
         ...(completion ?? {}),
       });
-      setResult((current) =>
+      state.updateResult((current) =>
         current
           ? {
               ...current,
@@ -2641,7 +2469,7 @@ export const ArchiveExportRequestsPage = () => {
       <ActionFeedback error={actionError} />
       {error ? <Panel><EmptyState message={`加载失败：${error}`} /></Panel> : null}
       <TableShell columns={['申请编号', '孩子档案', '申请人', '资产快照', '状态', '提交时间', '操作']} rows={rows} emptyMessage="暂无档案交付申请。可清空筛选，或提醒用户在导出与备份页提交云端打包申请。" loading={loading} />
-      {result ? <PaginationPanel page={result.page} pageSize={result.page_size} total={result.total} hasMore={result.has_more} loading={loading} onPrevPage={async () => { if (!loading && page > 1) await load(page - 1, pageSize); }} onNextPage={async () => { if (!loading && result.has_more) await load(page + 1, pageSize); }} onPageSizeChange={async (nextPageSize) => { if (!loading) await load(1, nextPageSize); }} onJumpToPage={async (nextPage) => { if (!loading) await load(nextPage, pageSize); }} /> : null}
+      {result ? <PaginationPanel page={result.page} pageSize={result.page_size} total={result.total} hasMore={result.has_more} loading={loading} onPrevPage={state.onPrevPage} onNextPage={state.onNextPage} onPageSizeChange={state.onPageSizeChange} onJumpToPage={state.onJumpToPage} /> : null}
       <DetailDrawer open={detail.state.open} title={detail.state.title} subtitle={detail.state.subtitle} loading={detail.state.loading} error={detail.state.error} onClose={detail.closeDetail} onRetry={detail.retryDetail}>
         {detail.state.data ? <ArchiveExportRequestDetailContent data={detail.state.data} /> : null}
       </DetailDrawer>
@@ -2653,75 +2481,38 @@ export const ArchiveExportRequestsPage = () => {
 
 export const AuditLogsPage = () => {
   const detail = useDetailState<AdminAuditLogItem>();
-  const [keyword, setKeyword] = useState('');
   const [action, setAction] = useState('');
   const [targetType, setTargetType] = useState('');
   const [actorId, setActorId] = useState('');
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
-  // 首帧即加载中，避免先闪一帧空态
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<{ list: AdminAuditLogItem[]; page: number; page_size: number; total: number; has_more: boolean } | null>(null);
-  const autoLoadedRef = useRef(false);
-  const requestVersionRef = useRef(0);
 
-  const load = useCallback(async (nextPage = page, nextPageSize = pageSize, event?: FormEvent, override?: AuditFilterOverride) => {
-    event?.preventDefault();
-    const requestVersion = ++requestVersionRef.current;
-    setLoading(true);
-    setError(null);
-    try {
-      const activeKeyword = (override?.keyword ?? keyword).trim();
-      const activeAction = override?.action ?? action;
-      const activeTargetType = override?.targetType ?? targetType;
-      const activeActorId = (override?.actorId ?? actorId).trim();
-      const activeStartTime = override?.startTime ?? startTime;
-      const activeEndTime = override?.endTime ?? endTime;
-      const next = await adminApi.listAuditLogs({
-        keyword: activeKeyword || undefined,
-        action: activeAction || undefined,
-        target_type: activeTargetType || undefined,
-        actor_id: activeActorId || undefined,
-        start_time: toIsoDateTime(activeStartTime),
-        end_time: toIsoDateTime(activeEndTime),
-        page: nextPage,
-        page_size: nextPageSize,
-      });
-      if (requestVersionRef.current !== requestVersion) return;
-      setResult(next);
-      setPage(next.page);
-      setPageSize(next.page_size);
-    } catch (err) {
-      if (requestVersionRef.current !== requestVersion) return;
-      setError(getErrorMessage(err));
-    } finally {
-      if (requestVersionRef.current === requestVersion) {
-        setLoading(false);
-      }
-    }
-  }, [action, actorId, endTime, keyword, page, pageSize, startTime, targetType]);
+  // 列表脚手架（分页/加载/错误/请求版本）统一由 hook 提供，本页只声明筛选值。
+  const state = useAdminListPage<AdminAuditLogItem>(
+    (params) =>
+      adminApi.listAuditLogs({
+        keyword: params.keyword,
+        page: params.page,
+        page_size: params.page_size,
+        action: action || undefined,
+        target_type: targetType || undefined,
+        actor_id: actorId.trim() || undefined,
+        start_time: toIsoDateTime(startTime),
+        end_time: toIsoDateTime(endTime),
+      }),
+    { filters: { action, targetType, actorId, startTime, endTime } },
+  );
+  const { keyword, setKeyword, pageSize, loading, error, result, load } = state;
 
-  const clearFilters = async () => {
+  const clearFilters = () => {
     setKeyword('');
     setAction('');
     setTargetType('');
     setActorId('');
     setStartTime('');
     setEndTime('');
-    await load(1, pageSize, undefined, { keyword: '', action: '', targetType: '', actorId: '', startTime: '', endTime: '' });
+    state.reloadAfterFiltersReset();
   };
-
-  useEffect(() => {
-    if (autoLoadedRef.current) return;
-    autoLoadedRef.current = true;
-    const timer = window.setTimeout(() => {
-      void load(1, pageSize);
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, [load, pageSize]);
 
   const currentLogs = result?.list ?? [];
   const recentLoginLogs = currentLogs.filter((item) => item.action === 'admin_login').length;
@@ -2787,7 +2578,7 @@ export const AuditLogsPage = () => {
       </ListSummary>
       {error ? <Panel><EmptyState message={`加载失败：${error}`} /></Panel> : null}
       <TableShell columns={['动作', '目标类型', '目标编号', '操作者', '创建时间', '操作']} rows={rows} emptyMessage="暂无匹配审计日志。可缩短时间范围、清空动作筛选，或回到总览查看最近留痕。" loading={loading} />
-      {result ? <PaginationPanel page={result.page} pageSize={result.page_size} total={result.total} hasMore={result.has_more} loading={loading} onPrevPage={async () => { if (!loading && page > 1) await load(page - 1, pageSize); }} onNextPage={async () => { if (!loading && result.has_more) await load(page + 1, pageSize); }} onPageSizeChange={async (nextPageSize) => { if (!loading) await load(1, nextPageSize); }} onJumpToPage={async (nextPage) => { if (!loading) await load(nextPage, pageSize); }} /> : null}
+      {result ? <PaginationPanel page={result.page} pageSize={result.page_size} total={result.total} hasMore={result.has_more} loading={loading} onPrevPage={state.onPrevPage} onNextPage={state.onNextPage} onPageSizeChange={state.onPageSizeChange} onJumpToPage={state.onJumpToPage} /> : null}
       <DetailDrawer open={detail.state.open} title={detail.state.title} subtitle={detail.state.subtitle} loading={detail.state.loading} error={detail.state.error} onClose={detail.closeDetail} onRetry={detail.retryDetail}>
         {detail.state.data ? <AuditLogDetailContent data={detail.state.data} /> : null}
       </DetailDrawer>
