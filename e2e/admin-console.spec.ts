@@ -13,7 +13,10 @@ test.describe('Admin console coverage', () => {
     await openAdminSection(page, 'AI 设置');
 
     await expect(page.getByRole('heading', { name: 'AI 服务设置' })).toBeVisible();
-    await expect(page.getByText('Key 已配置').or(page.getByText('Key 未配置'))).toBeVisible();
+    // mock 供应商下 Key 徽章显示「模拟服务无需 Key」，所以三种文案都算通过。
+    await expect(
+      page.getByText('Key 已配置').or(page.getByText('Key 未配置')).or(page.getByText('模拟服务无需 Key')),
+    ).toBeVisible();
 
     await page.getByRole('button', { name: '修改 AI 设置' }).click();
     const editor = page.getByRole('dialog', { name: '修改 AI 设置' });

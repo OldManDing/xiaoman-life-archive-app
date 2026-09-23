@@ -3,7 +3,7 @@ import { resolve } from 'node:path';
 
 import { expect, test, type Page } from '@playwright/test';
 
-import { adminBaseURL, expectNoEnglishSeedCopy, expectNoTechnicalTestCopy, expectNoUnfinishedCopy, loginAdmin, loginWeb, openAdminMore, webBaseURL } from './helpers';
+import { adminBaseURL, expectNoEnglishSeedCopy, expectNoTechnicalTestCopy, expectNoUnfinishedCopy, loginAdmin, loginWeb, navigateToAdminRoute, openAdminMore, webBaseURL } from './helpers';
 
 const visualDir = resolve(process.cwd(), 'artifacts', 'visual-review-current');
 
@@ -391,11 +391,7 @@ test.describe('Visual review smoke', () => {
     await mkdir(routeReviewDir, { recursive: true });
 
     for (const route of routes) {
-      if (route.secondary) await openAdminMore(page);
-      const link = page.locator(`aside a[href="${route.path}"]`).first();
-      await expect(link).toBeVisible();
-      await link.click();
-      await expect(page).toHaveURL(new RegExp(`${route.path.replace('/', '\\/')}$`));
+      await navigateToAdminRoute(page, route.path);
       await expect(page.getByRole('heading', { name: route.heading, level: 1 })).toBeVisible();
       // 列表页要在数据到位后再截图：否则会拍到「查询中…」+ 空表的加载态，
       // 复核时看到的是半成品，而不是运营实际看到的页面。

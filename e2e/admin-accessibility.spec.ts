@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
-import { adminBaseURL, loginAdmin, openAdminMore } from './helpers';
+import { adminBaseURL, loginAdmin, navigateToAdminRoute } from './helpers';
 
 /**
  * 后台无障碍审计（不引入 axe 依赖，覆盖最关键、最容易回归的几条规则）：
@@ -33,8 +33,6 @@ const adminRoutes = [
   '/system-config',
   '/audit-logs',
 ];
-
-const secondaryRoutes = new Set(['/users', '/invites', '/notifications', '/ai-settings', '/ai-jobs', '/ops-readiness', '/system-config', '/audit-logs']);
 
 type Violation = { rule: string; detail: string };
 
@@ -157,16 +155,14 @@ test.describe('Admin accessibility audit', () => {
   });
 
   test('every admin route exposes named controls without duplicate ids', async ({ page }) => {
+    // 16 条路由逐条走查，默认 45s 不够（每条路由还有一次就绪等待）。
+    test.setTimeout(180_000);
     await loginAdmin(page);
     const failures: string[] = [];
 
     for (const route of adminRoutes) {
-      if (secondaryRoutes.has(route)) await openAdminMore(page);
-      const link = page.locator(`aside a[href="${route}"]`).first();
-      await expect(link).toBeVisible();
-      await link.click();
-      await expect(page).toHaveURL(new RegExp(`${route.replace('/', '\\/')}$`));
-      await page.waitForLoadState('networkidle', { timeout: 3_000 }).catch(() => undefined);
+      await navigateToAdminRoute(page, route);
+      await page.waitForLoadState('networkidle', { timeout: 1_500 }).catch(() => undefined);
 
       const violations = await collectViolations(page, route);
       if (violations.length) failures.push(formatViolations(route, violations));
