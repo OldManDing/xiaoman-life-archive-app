@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { AlertTriangle, ExternalLink, ShieldAlert } from 'lucide-react';
 
 import { adminApi, type AdminContentRiskItem, type AdminListResponse } from '../shared/request';
@@ -9,6 +9,12 @@ import { inputStyle, mutedTextStyle, secondaryButtonStyle } from '../shared/uiSt
 import { PaginationPanel, TableShell } from './shared';
 
 const pageSize = 20;
+
+const contentRiskCategoryValues = ['content_safety', 'media_exception', 'child_safety', 'ai_exception'] as const;
+
+/** 只接受后端认可的类别值：URL 参数来自首页卡片的跳转，值不合法时按"未筛选"处理。 */
+const normalizeContentRiskCategory = (value: string | null) =>
+  (contentRiskCategoryValues as readonly string[]).includes(value ?? '') ? (value as string) : '';
 
 const categoryLabel = (value: AdminContentRiskItem['category']) =>
   ({
@@ -48,8 +54,11 @@ const RiskTitle = ({ item }: { item: AdminContentRiskItem }) => (
 
 export const ContentRisksPage = () => {
   const [result, setResult] = useState<AdminListResponse<AdminContentRiskItem> | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  // 支持 ?category=：首页「记录风险」卡片跳过来时（category=content_safety）列表数量要和卡片一致。
+  const initialCategory = normalizeContentRiskCategory(searchParams.get('category'));
   const [keyword, setKeyword] = useState('');
-  const [category, setCategory] = useState('');
+  const [category, setCategory] = useState(initialCategory);
   const [severity, setSeverity] = useState('');
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
@@ -85,7 +94,12 @@ export const ContentRisksPage = () => {
 
     const loadInitial = async () => {
       try {
-        const data = await adminApi.listContentRisks({ page: 1, page_size: pageSize });
+        // 首屏必须带上 URL 里的类别：原来这里不带任何筛选，从首页卡片带参跳过来也会显示未筛选的数量。
+        const data = await adminApi.listContentRisks({
+          page: 1,
+          page_size: pageSize,
+          category: initialCategory || undefined,
+        });
         if (!active) return;
         setResult(data);
         setPage(1);
@@ -100,7 +114,7 @@ export const ContentRisksPage = () => {
     return () => {
       active = false;
     };
-  }, []);
+  }, [initialCategory]);
 
   const onSearch = async (event?: FormEvent) => {
     event?.preventDefault();
@@ -112,6 +126,7 @@ export const ContentRisksPage = () => {
     setCategory('');
     setSeverity('');
     setStatus('');
+    setSearchParams({}, { replace: true });
     await load(1, { keyword: '', category: '', severity: '', status: '' });
   };
 
@@ -151,7 +166,18 @@ export const ContentRisksPage = () => {
           </div>
           <div className="admin-audit-filter-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
             <input style={inputStyle} value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="编号 / 用户 / 内容" />
-            <AdminSelect aria-label="风险类型" value={category} onChange={(event) => setCategory(event.target.value)}>
+            <AdminSelect
+              aria-label="风险类型"
+              value={category}
+              onChange={(event) => {
+                const next = event.target.value;
+                setCategory(next);
+                // 与 URL 同步：首页「记录风险」卡片带 ?category=content_safety 跳过来，
+                // 这里选完也要让地址栏保持一致（可刷新、可分享）。
+                setSearchParams(next ? { category: next } : {}, { replace: true });
+                void load(1, { category: next });
+              }}
+            >
               <option value="">全部类型</option>
               <option value="content_safety">内容安全</option>
               <option value="media_exception">媒体异常</option>

@@ -229,7 +229,14 @@ export const DashboardPage = () => {
   const mediaExceptionCount = readiness?.data_statistics.media_exceptions ?? 0;
   const failedJobCount = readiness?.data_statistics.failed_ai_jobs ?? failedAiCount;
   const openSupportCount = readiness?.data_statistics.open_support_tickets ?? 0;
-  const issueTotal = contentRiskCount + mediaExceptionCount + failedJobCount + openSupportCount;
+  const recordRiskCount = readiness?.data_statistics.record_content_risks ?? 0;
+  // 「待处理」总数直接用后端算好的**并集**。
+  // 之前的写法是 content_risks + 媒体异常 + AI 失败 + 待处理反馈，而 content_risks 本身
+  // 已包含媒体异常与 AI 失败、待处理反馈已包含儿童安全工单 —— 于是后两者被算了两遍，
+  // 页面上还会出现「合计 27 项」与三张卡片相加对不上的情况。
+  const issueTotal =
+    readiness?.data_statistics.pending_total ??
+    recordRiskCount + mediaExceptionCount + failedJobCount + openSupportCount;
   const trendPoints = dashboard?.trend?.[trendMode] ?? [];
 
   // 运维数据不可用时不允许声称"运行稳定"，改为中性提示。
@@ -265,7 +272,16 @@ export const DashboardPage = () => {
         title: '今日先清理异常项',
         description: '按风险、媒体、AI 和用户反馈顺序处理。',
         primaryText: '开始处理',
-        primaryTo: contentRiskCount || mediaExceptionCount ? '/records' : failedJobCount ? '/ai-jobs' : '/support-tickets',
+        // 风险桶优先去聚合队列（内容风险含记录文本、媒体异常、儿童安全与 AI 失败），
+        // 否则去各自的具体队列 —— 不再指向口径不同的成长记录「风险标记」筛选。
+        primaryTo:
+          contentRiskCount > 0
+            ? '/content-risks'
+            : mediaExceptionCount > 0
+              ? '/records?record_filter=media_exception'
+              : failedJobCount > 0
+                ? '/ai-jobs'
+                : '/support-tickets',
       };
     }
 
@@ -279,6 +295,9 @@ export const DashboardPage = () => {
     };
   }, [contentRiskCount, failedJobCount, issueTotal, loading, mediaExceptionCount, readinessError]);
 
+  // 四条**互斥**的待处理队列，相加正好等于上方「待处理」合计（并集）。
+  // 之前的「内容风险」卡片用的是聚合值（已含媒体异常、AI 失败、儿童安全工单），与另外两张卡片
+  // 重叠，于是会出现「合计 27 项」但卡片相加只有 17 的情况。聚合队列改从侧栏与首屏主按钮进入。
   const priorityTasks = [
     {
       to: '/ai-jobs',
@@ -289,14 +308,14 @@ export const DashboardPage = () => {
       tone: failedJobCount > 0 ? ('danger' as const) : ('success' as const),
     },
     {
-      // 这个数字来自运行统计里的内容风险项总数，因此跳转到风险队列页（口径一致），
-      // 而不是成长记录的「风险标记」筛选（口径不同，数字常对不上）。
-      to: '/content-risks',
+      // 用内容风险队列里「记录文本风险」这一类（content_safety），与媒体异常、AI 失败不重叠；
+      // 带上 category 参数后跳转过去的列表数量与卡片一致。
+      to: '/content-risks?category=content_safety',
       icon: <ShieldAlert size={18} />,
-      label: '内容风险',
-      value: loading ? '-' : contentRiskCount,
-      helper: '进入风险队列集中处置',
-      tone: contentRiskCount > 0 ? ('danger' as const) : ('neutral' as const),
+      label: '记录风险',
+      value: loading ? '-' : recordRiskCount,
+      helper: '成长记录里的敏感文本待复核',
+      tone: recordRiskCount > 0 ? ('danger' as const) : ('neutral' as const),
     },
     {
       to: '/records?record_filter=media_exception',
@@ -311,7 +330,7 @@ export const DashboardPage = () => {
       icon: <MessageSquareText size={18} />,
       label: '待处理反馈',
       value: loading ? '-' : openSupportCount,
-      helper: '回复用户提交的问题',
+      helper: '儿童安全优先，其余按提交时间',
       tone: openSupportCount > 0 ? ('warning' as const) : ('neutral' as const),
     },
   ];

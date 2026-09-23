@@ -147,6 +147,31 @@ test.describe('Admin console coverage', () => {
       .toBe(true);
   });
 
+  test('dashboard pending total equals the sum of its queues', async ({ page }) => {
+    await loginAdmin(page);
+
+    const header = page.locator('.admin-overview-workbench .admin-overview-section-head span');
+    await expect(header).not.toHaveText('正在同步', { timeout: 15_000 });
+
+    // 「待处理」合计必须等于四张卡片之和。
+    // 曾经的写法把 content_risks（已含媒体异常与 AI 失败）又加了媒体异常与 AI 失败，
+    // 于是出现「合计 27 项」但卡片相加只有 17 的情况。
+    const cards = await page.locator('.admin-overview-task-list a.admin-overview-task').evaluateAll((nodes) =>
+      nodes.map((node) => ({
+        label: node.querySelector('strong')?.textContent?.trim() ?? '',
+        value: Number.parseInt(node.querySelector('b')?.textContent?.trim() ?? '', 10),
+      })),
+    );
+    const headerText = (await header.innerText()).trim();
+    const total = headerText === '已清空' ? 0 : Number.parseInt(headerText, 10);
+    const sum = cards.reduce((acc, item) => acc + (Number.isNaN(item.value) ? 0 : item.value), 0);
+    const detail = cards.map((item) => `${item.label}:${item.value}`).join(' + ');
+
+    expect(cards.length, '待处理卡片数量').toBe(4);
+    expect(Number.isNaN(total), `待处理合计应可解析，实际 "${headerText}"`).toBe(false);
+    expect(sum, `卡片相加（${detail}）应等于待处理合计 ${total}`).toBe(total);
+  });
+
   test('read-only admin sees no write actions anywhere', async ({ page }) => {
     await loginAdminAs(page, 'viewer', 'ChangeMe123!');
     await expect(page.getByText('只读账号').first()).toBeVisible();

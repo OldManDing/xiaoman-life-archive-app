@@ -173,6 +173,15 @@ export interface AdminOpsReadinessResponse {
     media_exceptions: number;
     failed_media: number;
     failed_ai_jobs: number;
+    /**
+     * 首页「待处理」总数：各队列的**并集**（媒体异常与 AI 失败已含在 content_risks 里，
+     * 儿童安全工单已含在 open_support_tickets 里，不能重复相加）。
+     */
+    pending_total: number;
+    /** 内容风险队列里属于「记录文本风险」的那部分（content_safety 类别）。 */
+    record_content_risks: number;
+    /** 儿童安全工单数（同时计在 open_support_tickets 内）。 */
+    child_safety_tickets: number;
   };
   release_gates: {
     status: 'ready' | 'warning' | 'blocked';

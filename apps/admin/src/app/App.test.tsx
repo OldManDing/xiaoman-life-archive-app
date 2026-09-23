@@ -162,6 +162,12 @@ describe('App', () => {
         media_exceptions: 0,
         failed_media: 0,
         failed_ai_jobs: 0,
+        // 与上面的数字自洽：pending_total = record_content_risks(2) + media_exceptions(0)
+        // + failed_ai_jobs(0) + open_support_tickets(1) = 3；child_safety_tickets 已含在
+        // open_support_tickets 里，不额外相加。
+        pending_total: 3,
+        record_content_risks: 2,
+        child_safety_tickets: 0,
       },
       release_gates: {
         status: 'warning',

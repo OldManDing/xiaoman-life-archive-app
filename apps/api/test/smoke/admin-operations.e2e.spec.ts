@@ -634,6 +634,18 @@ describe('Admin operations contract', () => {
         expect.objectContaining({ key: 'ai', label: 'AI 服务' }),
       ]),
     );
+
+    // 两个口径必须自洽（不写死数字，改成断言关系）：
+    //   内容风险聚合 = 记录风险 + 儿童安全 + 媒体异常 + AI 失败
+    //   待处理总数（并集）= 记录风险 + 媒体异常 + AI 失败 + 待处理反馈
+    //     —— 后两项已分别含在聚合与反馈里，不能再各加一遍（首页曾因此把总数算成两倍）。
+    const statistics = response.body.data.data_statistics;
+    expect(statistics.content_risks).toBe(
+      statistics.record_content_risks + statistics.child_safety_tickets + statistics.media_exceptions + statistics.failed_ai_jobs,
+    );
+    expect(statistics.pending_total).toBe(
+      statistics.record_content_risks + statistics.media_exceptions + statistics.failed_ai_jobs + statistics.open_support_tickets,
+    );
     expect(response.body.data.action_items).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ label: '复验真实 provider', to: '/ops-readiness' }),

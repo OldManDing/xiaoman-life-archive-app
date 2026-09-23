@@ -2632,6 +2632,12 @@ export class AdminService {
         media_exceptions: mediaExceptionCount,
         failed_media: failedMediaCount,
         failed_ai_jobs: failedAiJobCount,
+        // 首页「待处理」= 各队列的并集。contentRiskCount 已经把媒体异常与 AI 失败算进去，
+        // childSafetyTicketCount 也已经含在 openSupportTicketCount 里，所以这里只加这四项。
+        // （此前前端把 content_risks 与媒体异常/AI 失败再加一遍，导致后两者被重复计数。）
+        pending_total: recordContentRiskCount + mediaExceptionCount + failedAiJobCount + openSupportTicketCount,
+        record_content_risks: recordContentRiskCount,
+        child_safety_tickets: childSafetyTicketCount,
       },
       release_gates: {
         status: liveReadinessReportStatus,
