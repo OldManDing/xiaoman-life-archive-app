@@ -278,7 +278,7 @@ export const DashboardPage = () => {
           contentRiskCount > 0
             ? '/content-risks'
             : mediaExceptionCount > 0
-              ? '/records?record_filter=media_exception'
+              ? '/media?status=failed'
               : failedJobCount > 0
                 ? '/ai-jobs'
                 : '/support-tickets',
@@ -318,7 +318,9 @@ export const DashboardPage = () => {
       tone: recordRiskCount > 0 ? ('danger' as const) : ('neutral' as const),
     },
     {
-      to: '/records?record_filter=media_exception',
+      // 数字是**媒体行**口径（上传/转码失败），所以要跳到媒体库的「异常」筛选，
+      // 而不是成长记录的「媒体异常」筛选（记录口径，数字对不上）。
+      to: '/media?status=failed',
       icon: <Image size={18} />,
       label: '媒体异常',
       value: loading ? '-' : mediaExceptionCount,

@@ -646,6 +646,10 @@ describe('Admin operations contract', () => {
     expect(statistics.pending_total).toBe(
       statistics.record_content_risks + statistics.media_exceptions + statistics.failed_ai_jobs + statistics.open_support_tickets,
     );
+    // 「媒体异常」与「失败媒体」必须是同一个口径（上传/转码失败）：
+    // 曾经把「上传中」和「未关联记录」也算进媒体异常，首页数字会随上传跳动、
+    // 且点进目标页查不到那些行。
+    expect(statistics.media_exceptions).toBe(statistics.failed_media);
     expect(response.body.data.action_items).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ label: '复验真实 provider', to: '/ops-readiness' }),

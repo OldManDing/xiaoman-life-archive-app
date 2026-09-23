@@ -468,9 +468,17 @@ const contentRiskKeywordWhere: Prisma.RecordWhereInput[] = CONTENT_RISK_KEYWORDS
   { title: { contains: item.keyword } },
   { contentText: { contains: item.keyword } },
 ]);
-const mediaExceptionCondition: Prisma.RecordMediaWhereInput = {
-  OR: [{ status: { in: [MEDIA_STATUS_UPLOADING, MEDIA_STATUS_FAILED] } }, { recordId: null }],
-};
+/**
+ * 「媒体异常」= 上传/转码失败，需要人工处理。
+ *
+ * 原来还包含「上传中(uploading)」和「未关联记录」：
+ * - 上传中是正常瞬时状态 —— 任何人正在上传都会让首页数字跳一下，不是异常；
+ * - 未关联记录的媒体不属于任何记录，在成长记录的「媒体异常」筛选里根本查不到，
+ *   于是首页卡片显示 N、点进去列表却是空的（本机实测就是这种：1 条未关联的上传中媒体）。
+ * 媒体库的状态筛选里 failed 的标签本来就是「异常」，改为与它对齐。
+ * 未关联的孤儿媒体仍可在媒体库用「关联 = 未关联」筛出来。
+ */
+const mediaExceptionCondition: Prisma.RecordMediaWhereInput = { status: MEDIA_STATUS_FAILED };
 
 type ArchiveExportRequestWithRelations = Prisma.ArchiveExportRequestGetPayload<{
   include: {
@@ -1456,7 +1464,8 @@ export class AdminService {
     }
 
     if (filter === 'media_exception') {
-      and.push({ media: { some: { deletedAt: null, status: { in: [MEDIA_STATUS_UPLOADING, MEDIA_STATUS_FAILED] } } } });
+      // 与媒体库的「异常」口径一致：只算上传/转码失败（上传中是正常瞬时状态）。
+      and.push({ media: { some: { deletedAt: null, status: MEDIA_STATUS_FAILED } } });
     }
 
     if (filter === 'pending') {
@@ -1623,7 +1632,8 @@ export class AdminService {
         take,
       }),
       this.prisma.recordMedia.findMany({
-        where: { OR: [{ status: { in: [MEDIA_STATUS_UPLOADING, MEDIA_STATUS_FAILED] } }, { recordId: null }], deletedAt: null },
+        // 内容风险队列里的「媒体异常」用同一口径（只算失败），与首页计数、媒体库筛选一致。
+        where: { ...mediaExceptionCondition, deletedAt: null },
         include: { child: true, record: true },
         orderBy: { createdAt: 'desc' },
         take,

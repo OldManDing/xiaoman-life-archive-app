@@ -1767,7 +1767,13 @@ export const MediaPage = () => {
   const canOperate = admin?.role === 'super_admin' || admin?.role === 'operator';
   const { requestOperationReason, reasonDialog } = useOperationReasonDialog();
   const [mediaType, setMediaType] = useState('');
-  const [status, setStatus] = useState('');
+  // 支持 ?status=：首页「媒体异常」卡片跳到 /media?status=failed，首屏必须带上筛选，
+  // 否则列表数量与卡片数字对不上（媒体库的 failed 标签就是「异常」）。
+  const [mediaSearchParams] = useSearchParams();
+  const [status, setStatus] = useState(() => {
+    const value = mediaSearchParams.get('status') ?? '';
+    return ['uploading', 'ready', 'failed', 'removed'].includes(value) ? value : '';
+  });
   const [linked, setLinked] = useState('');
   const [childNo, setChildNo] = useState('');
   const [familyNo, setFamilyNo] = useState('');

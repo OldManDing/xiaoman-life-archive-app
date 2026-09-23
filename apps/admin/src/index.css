@@ -986,23 +986,6 @@ table {
   font-weight: 700;
 }
 
-.admin-nav-more-trigger::after {
-  content: '';
-  float: right;
-  width: 7px;
-  height: 7px;
-  margin-top: 5px;
-  border-right: 2px solid rgba(255, 248, 237, 0.5);
-  border-bottom: 2px solid rgba(255, 248, 237, 0.5);
-  transform: rotate(45deg);
-  transition: transform 0.16s ease;
-}
-
-.admin-nav-more-trigger[aria-expanded='true']::after {
-  transform: rotate(225deg);
-  margin-top: 9px;
-}
-
 .admin-nav-more-trigger:hover {
   color: #fff8ed;
   background: rgba(255, 248, 237, 0.06);
@@ -3332,11 +3315,6 @@ table {
     font-size: 12px;
   }
 
-  .admin-nav-more-trigger::after {
-    margin-left: 8px;
-    float: none;
-  }
-
   .admin-nav-more-backdrop {
     position: fixed;
     z-index: var(--z-nav-panel-backdrop);
@@ -4068,14 +4046,6 @@ table {
   text-align: left;
 }
 
-.admin-nav-more-trigger::after {
-  content: '＋';
-}
-
-.admin-nav-more-trigger[aria-expanded='true']::after {
-  content: '－';
-}
-
 .admin-nav-section-label {
   color: rgba(255, 248, 237, 0.78);
   letter-spacing: 0.12em;
@@ -4764,10 +4734,6 @@ table {
     white-space: nowrap;
   }
 
-  .admin-nav-more-trigger::after {
-    display: none;
-  }
-
   .admin-nav-more-trigger {
     display: inline-flex;
     align-items: center;
@@ -4870,7 +4836,6 @@ table {
   content: none;
 }
 
-.admin-nav-more-icon,
 .admin-nav-more-label-mobile {
   display: none;
 }
@@ -7378,8 +7343,22 @@ table {
 }
 
 /* 下拉/展开类控件的图标要与展开状态联动，否则看不出「已展开」：
-   - 侧栏「更多管理」原来用汉堡图标（语义是主菜单/抽屉，容易被读成"打开导航"），已换成箭头；
+   - 侧栏「更多管理」原来叠了三套指示：一条 CSS 用 border 拼的箭头（::after，rotate 45°），
+     又有一处把同一个 ::after 的 content 覆盖成全角「＋/－」（边框与旋转仍生效，于是变成一个
+     歪斜小方框里塞着加减号的怪图标），宽屏还整体隐藏图标。现已全部删除，只留一个 SVG 箭头，
+     并且它在所有断点都显示、与文字同一行对齐（与其他导航项"图标 + 文字"的形态一致）。
    - AdminSelect 的箭头原来一直朝下，展开时也不翻转。 */
+.admin-nav-more-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+}
+
+.admin-nav-more-icon {
+  display: block;
+}
+
 .admin-nav-more-trigger .admin-nav-more-icon,
 .admin-select-chevron {
   transition: transform 0.16s ease;
