@@ -27,6 +27,7 @@
     "verify:production-env": "node scripts/verify-production-config.cjs --env .env.production",
     "verify:security-baseline": "node scripts/verify-security-baseline.cjs",
     "verify:live-readiness": "node scripts/verify-live-readiness.cjs",
+    "verify:live-preflight": "node scripts/verify-live-readiness.cjs --preflight",
     "sync:mobile": "npm run sync -w apps/mobile",
     "mobile:add:android": "npm run add:android -w apps/mobile",
     "mobile:add:ios": "npm run add:ios -w apps/mobile",

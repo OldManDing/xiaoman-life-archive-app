@@ -92,6 +92,135 @@ function optionalEnv(name) {
   return String(process.env[name] || '').trim();
 }
 
+// 联调需要准备的环境变量清单（离线预检用，不联网）。
+// 直接跑完整检查会在第一个缺失项就退出，运维改一个变量跑一次很费时间，所以先给一次列全。
+const READINESS_ENV_PLAN = [
+  {
+    name: 'LIVE_TEST_USER_CREDENTIAL',
+    required: true,
+    purpose: '线上测试账号（手机号或用户编号），用于登录 App API 跑 AI / POI 检查',
+    example: '13800000000',
+  },
+  {
+    name: 'LIVE_TEST_USER_PASSWORD',
+    required: true,
+    purpose: '上面这个账号的密码',
+    example: 'DemoUser123!',
+  },
+  {
+    name: 'LIVE_AI_TEST_USER_CREDENTIAL',
+    required: false,
+    purpose: 'AI 会员账号（测试账号本身不是 AI 会员时用它；与密码必须同时给）',
+    example: '13900000000',
+  },
+  {
+    name: 'LIVE_AI_TEST_USER_PASSWORD',
+    required: false,
+    purpose: '上面的 AI 会员账号密码',
+    example: 'DemoUser123!',
+  },
+  {
+    name: 'LIVE_API_BASE_URL',
+    required: false,
+    purpose: '线上 API 地址（默认 https://webapi.xmlga.top）',
+    example: 'https://webapi.xmlga.top',
+  },
+  {
+    name: 'LIVE_APP_BASE_URL',
+    required: false,
+    purpose: '线上 App/后台入口（默认 https://nianlun.xmlga.top）',
+    example: 'https://nianlun.xmlga.top',
+  },
+  {
+    name: 'LIVE_ADMIN_BASE_URL',
+    required: false,
+    purpose: '后台独立域名（与 App 不同域时填，默认同上）',
+    example: 'https://admin.xmlga.top',
+  },
+  {
+    name: 'LIVE_EXPECT_MAP_PROVIDER',
+    required: false,
+    purpose: '期望的地图供应商（默认 amap）',
+    example: 'amap',
+  },
+  {
+    name: 'LIVE_POI_TEST_KEYWORD',
+    required: false,
+    purpose: 'POI 检索用的关键词（默认 公园）',
+    example: '公园',
+  },
+  {
+    name: 'LIVE_POI_TEST_LATITUDE',
+    required: false,
+    purpose: 'POI 检索中心点纬度（默认 31.2304，上海）',
+    example: '31.2304',
+  },
+  {
+    name: 'LIVE_POI_TEST_LONGITUDE',
+    required: false,
+    purpose: 'POI 检索中心点经度（默认 121.4737）',
+    example: '121.4737',
+  },
+  {
+    name: 'LIVE_READINESS_MAX_ATTEMPTS',
+    required: false,
+    purpose: '可重试失败的最大尝试次数（默认 2）',
+    example: '2',
+  },
+  {
+    name: 'LIVE_READINESS_RETRY_DELAY_MS',
+    required: false,
+    purpose: '重试间隔毫秒（默认 1200）',
+    example: '1200',
+  },
+  {
+    name: 'LIVE_READINESS_ALLOW_P1_DEFERRALS',
+    required: false,
+    purpose: '允许 P1 项延后（置 1 时，仅剩 P1 未过可判 conditional_pass）',
+    example: '0',
+  },
+];
+
+const isPreflight = () =>
+  process.argv.includes('--preflight') || ['1', 'true', 'yes', 'on'].includes(String(process.env.LIVE_READINESS_PREFLIGHT || '').trim().toLowerCase());
+
+function runPreflight() {
+  const missingRequired = [];
+  const missingOptional = [];
+
+  console.log('上线联调预检（离线，不联网、不写报告）');
+  console.log('');
+  console.log('需要准备的环境变量：');
+  for (const item of READINESS_ENV_PLAN) {
+    const value = optionalEnv(item.name);
+    const status = value ? '已设置' : item.required ? '缺失（必填）' : '未设置（有默认值）';
+    console.log(`  [${status}] ${item.name}`);
+    console.log(`      用途：${item.purpose}`);
+    if (!value) console.log(`      示例：${item.example}`);
+    if (!value && item.required) missingRequired.push(item.name);
+    if (!value && !item.required) missingOptional.push(item.name);
+  }
+
+  console.log('');
+  console.log('另外需要确认（这些由部署侧配置，脚本只能连上后校验）：');
+  console.log('  - 线上 API /health 的 providers.storage / providers.ai 不能是 mock 或 disabled');
+  console.log(`  - providers.map 必须等于 ${optionalEnv('LIVE_EXPECT_MAP_PROVIDER') || 'amap'}`);
+  console.log('  - API 与入口页要带安全响应头，且 CORS 只放行 App 域名并允许凭据');
+  console.log('  - runtime.app_env 必须是 production，database 必须是 up');
+
+  console.log('');
+  if (missingRequired.length) {
+    console.error(`预检未通过：还缺 ${missingRequired.length} 个必填变量 —— ${missingRequired.join(', ')}`);
+    console.error('补齐后重新执行：npm run verify:live-preflight');
+    process.exitCode = 1;
+    return;
+  }
+
+  console.log(`预检通过：必填变量已就绪${missingOptional.length ? `（可选变量未设置 ${missingOptional.length} 个，将使用默认值）` : ''}。`);
+  console.log('下一步：npm run verify:live-readiness（会联网校验，并把报告写到');
+  console.log('       artifacts/app-live-audit/live-readiness-latest.json，后台「系统运维 → 上线验收门禁」读这份报告）。');
+}
+
 async function parseJsonResponse(response, label) {
   try {
     return await response.json();
@@ -467,6 +596,11 @@ async function runReadinessCheck(name, fn) {
 }
 
 async function main() {
+  if (isPreflight()) {
+    runPreflight();
+    return;
+  }
+
   const apiBaseUrl = normalizeBaseUrl(process.env.LIVE_API_BASE_URL || process.env.API_BASE_URL, 'https://webapi.xmlga.top');
   const appBaseUrl = normalizeBaseUrl(process.env.LIVE_APP_BASE_URL || process.env.APP_BASE_URL, 'https://nianlun.xmlga.top');
   const adminBaseUrl = normalizeBaseUrl(process.env.LIVE_ADMIN_BASE_URL || process.env.ADMIN_BASE_URL, appBaseUrl);
