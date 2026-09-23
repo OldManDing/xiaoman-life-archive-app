@@ -134,7 +134,9 @@ export const PaginationPanel = ({
               disabled={loading}
               aria-label="每页条数"
               onChange={(event) => void onPageSizeChange(Number(event.target.value))}
-              style={{ minHeight: '32px', padding: '4px 8px', borderRadius: '8px', border: '1px solid rgba(35, 31, 27, 0.12)', background: '#fff' }}
+              // 原来内联 32px：移动端点按目标偏小，且与旁边 42px 的分页按钮不齐。
+              // 内联样式优先级高于 CSS 规则，只能在这里改。
+              style={{ minHeight: '44px', padding: '4px 8px', borderRadius: '8px', border: '1px solid rgba(35, 31, 27, 0.12)', background: '#fff' }}
             >
               {PAGE_SIZE_OPTIONS.map((size) => (
                 <option key={size} value={size}>{size} 条</option>
@@ -159,7 +161,7 @@ export const PaginationPanel = ({
                   void submitJump();
                 }
               }}
-              style={{ width: '72px', minHeight: '32px', padding: '4px 8px', borderRadius: '8px', border: '1px solid rgba(35, 31, 27, 0.12)' }}
+              style={{ width: '72px', minHeight: '44px', padding: '4px 8px', borderRadius: '8px', border: '1px solid rgba(35, 31, 27, 0.12)' }}
             />
             页
             <AdminButton type="button" tone="secondary" disabled={loading || !jumpValue} onClick={() => void submitJump()}>
@@ -228,7 +230,9 @@ export const ActionButton = ({
     type="button"
     onClick={onClick}
     disabled={disabled}
-    style={{ opacity: disabled ? 0.62 : 1, cursor: disabled ? 'not-allowed' : 'pointer' }}
+    // 不再用内联 opacity 压暗：内联优先级高于 CSS，会把 .admin-action-button:disabled 的
+    // 禁用样式（实色浅灰、无背景）整个盖掉，混色后 12px 的「撤销」只有 2.4~3.0:1，糊成一片。
+    style={{ cursor: disabled ? 'not-allowed' : 'pointer' }}
   >
     {icon}
     {children}

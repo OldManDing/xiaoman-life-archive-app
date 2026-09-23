@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Test } from '@nestjs/testing';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 import request from 'supertest';
 
 import { AppModule } from '../../src/app.module';
@@ -878,7 +878,9 @@ describe('Admin operations contract', () => {
         status: 'ready',
         report: expect.objectContaining({
           status: 'passed',
-          path: reportFile,
+          // 对外只暴露展示用路径：报告落在项目目录之外时退回文件名，
+          // 不能把服务器绝对路径（这里是临时目录全路径）发给前端。
+          path: basename(reportFile),
         }),
       });
       expect(response.body.data.release_gates.checks).toEqual(

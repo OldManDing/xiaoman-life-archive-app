@@ -4,7 +4,7 @@ import { ActorType, AdminRole, AiJobStatus, ArchiveExportRequestStatus, AuthType
 import * as bcrypt from 'bcrypt';
 import { Request } from 'express';
 import { existsSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { basename, isAbsolute, relative, resolve, sep } from 'node:path';
 import { randomUUID } from 'node:crypto';
 
 import { AiJobsQueue } from '../ai-jobs/ai-jobs.queue';
@@ -570,6 +570,20 @@ const resolveLiveReadinessReportPath = () => {
   return resolve(process.cwd(), configured || DEFAULT_LIVE_READINESS_REPORT_PATH);
 };
 
+/**
+ * 报告路径对外展示用的形式。
+ * 接口原来直接把 resolve() 出来的绝对路径发给前端，后台「上线验收门禁」页面上就出现了
+ * 形如 F:\https-github-com-...\artifacts\app-live-audit\live-readiness-latest.json 的
+ * 服务器本地路径 —— 既难看又泄漏部署目录结构。这里只给项目相对路径，落在项目外时退回文件名。
+ */
+const liveReadinessReportDisplayPath = (absolutePath: string) => {
+  const relativePath = relative(process.cwd(), absolutePath);
+  if (relativePath && !relativePath.startsWith('..') && !isAbsolute(relativePath)) {
+    return relativePath.split(sep).join('/');
+  }
+  return basename(absolutePath);
+};
+
 const reportFailureSummary = (failure: { error?: string } | undefined) => {
   const value = failure?.error?.trim();
   if (!value) return null;
@@ -673,7 +687,7 @@ const readLiveReadinessReport = (now: Date): LiveReadinessReportEvidence => {
 
   if (!existsSync(reportPath)) {
     return {
-      path: reportPath,
+      path: liveReadinessReportDisplayPath(reportPath),
       status: 'missing',
       checked_at: null,
       age_hours: null,
@@ -731,7 +745,7 @@ const readLiveReadinessReport = (now: Date): LiveReadinessReportEvidence => {
     const blockedRequirementDetails = normalizeRequirementDetails(parsed.blockedRequirementDetails, blockedRequirements);
     const nextActions = Array.isArray(parsed.nextActions) ? parsed.nextActions.filter((item) => typeof item === 'string') : [];
     const base = {
-      path: reportPath,
+      path: liveReadinessReportDisplayPath(reportPath),
       checked_at: checkedAt,
       age_hours: ageHours,
       providers: parsed.providers && typeof parsed.providers === 'object' ? parsed.providers : null,
@@ -748,7 +762,7 @@ const readLiveReadinessReport = (now: Date): LiveReadinessReportEvidence => {
     return { ...base, status: parsed.status as 'passed' | 'conditional_pass' };
   } catch {
     return {
-      path: reportPath,
+      path: liveReadinessReportDisplayPath(reportPath),
       status: 'invalid',
       checked_at: null,
       age_hours: null,
