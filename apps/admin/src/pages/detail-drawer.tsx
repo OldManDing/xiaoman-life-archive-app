@@ -128,13 +128,13 @@ export const DetailDrawer = ({
           </div>
         </Panel>
 
-        {loading ? <Panel><p style={{ margin: 0, color: '#756b5c' }}>加载中…</p></Panel> : null}
+        {loading ? <Panel><p style={{ margin: 0, color: '#756b5c' }}>正在加载数据…</p></Panel> : null}
         {error ? (
           <Panel>
             <p style={{ margin: '0 0 10px', color: '#b91c1c', fontWeight: 700 }}>{error}</p>
             {onRetry ? (
               <button type="button" className="admin-action-button admin-action-button-secondary" onClick={onRetry}>
-                <RotateCcw size={15} />
+                <RotateCcw size={16} />
                 重试
               </button>
             ) : null}
@@ -295,7 +295,7 @@ export const MediaPreview = ({
             当前浏览器不支持视频预览。
           </video>
           <button type="button" className="admin-media-preview-expand-video" onClick={() => setExpanded(true)} aria-label="放大查看视频" title="放大查看视频">
-            <Maximize2 size={15} strokeWidth={2.2} />
+            <Maximize2 size={16} strokeWidth={2.2} />
           </button>
         </div>
         {expanded && expandSrc ? (

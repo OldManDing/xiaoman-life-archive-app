@@ -257,7 +257,7 @@ export const DashboardPage = () => {
     if (loading) {
       return {
         tone: 'neutral' as const,
-        badge: '正在读取',
+        badge: '正在加载',
         title: '正在加载运维数据',
         description: '正在汇总风险、媒体、AI 任务与用户反馈的待处理项。',
         primaryText: '前往系统运维',
@@ -359,7 +359,7 @@ export const DashboardPage = () => {
           <section className="admin-overview-section admin-overview-workbench">
             <div className="admin-overview-section-head">
               <h3>待处理</h3>
-              <span>{loading ? '正在同步' : issueTotal > 0 ? `${issueTotal} 项` : '已清空'}</span>
+              <span>{loading ? '正在加载数据' : issueTotal > 0 ? `${issueTotal} 项` : '已清空'}</span>
             </div>
             <div className="admin-overview-task-list">
               {priorityTasks.map((task) => (

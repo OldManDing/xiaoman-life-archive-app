@@ -141,7 +141,7 @@ export const ContentRisksPage = () => {
         item.subject_name ? `${item.subject_name}（${item.subject_no}）` : item.subject_no ?? '—',
         formatDateTime(item.created_at),
         <Link key={`${item.risk_no}-action`} className="admin-table-action-link" to={item.action_to} style={{ ...secondaryButtonStyle, textDecoration: 'none', minHeight: '38px', justifyContent: 'center' }}>
-          <ExternalLink size={15} />
+          <ExternalLink size={16} />
           {item.action_label}
         </Link>,
       ],
@@ -211,7 +211,7 @@ export const ContentRisksPage = () => {
       <Panel>
         <div className="admin-row-between-top">
               <span className="admin-risk-summary-title">
-            <AlertTriangle size={17} />
+            <AlertTriangle size={18} />
             本页风险概览
           </span>
           <div className="admin-chip-row">

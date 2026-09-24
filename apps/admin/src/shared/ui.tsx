@@ -218,7 +218,7 @@ export const AdminSelect = ({
             }}
           >
             <span>{option.label}</span>
-            {option.value === selectedValue ? <Check size={15} strokeWidth={2.4} /> : null}
+            {option.value === selectedValue ? <Check size={16} strokeWidth={2.4} /> : null}
           </button>
         ))}
       </span>

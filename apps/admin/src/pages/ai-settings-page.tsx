@@ -292,7 +292,7 @@ export const AiSettingsPage = () => {
           <div className="admin-ai-settings-hero">
             <div>
               <span className="admin-ai-settings-eyebrow">
-                <Bot size={15} />
+                <Bot size={16} />
                 当前 AI 通道
               </span>
               <h2>{aiProviderLabel(form.provider)}</h2>
@@ -385,7 +385,7 @@ export const AiSettingsPage = () => {
           <div className="admin-ai-settings-test-card">
             <div>
               <span className="admin-ai-settings-eyebrow">
-                <FlaskConical size={15} />
+                <FlaskConical size={16} />
                 连接测试
               </span>
               <h2>测试当前已保存配置</h2>
@@ -411,7 +411,7 @@ export const AiSettingsPage = () => {
         <Panel>
           <div className="admin-ai-settings-safety">
             <span className="admin-ai-settings-eyebrow">
-              <ShieldCheck size={15} />
+              <ShieldCheck size={16} />
               安全边界
             </span>
             <ul>

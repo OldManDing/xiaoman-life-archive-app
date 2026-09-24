@@ -387,7 +387,7 @@ const ActionMenu = ({ children }: { children: ReactNode }) => {
   return (
     <div className="admin-action-menu" ref={shellRef}>
       <button type="button" className="admin-action-menu-trigger" aria-label="更多操作" title="更多操作" aria-expanded={open} aria-haspopup="menu" onClick={() => setOpen((current) => !current)}>
-        <MoreHorizontal size={17} strokeWidth={2.2} />
+        <MoreHorizontal size={18} strokeWidth={2.2} />
       </button>
       {open ? <div className="admin-action-menu-popover" role="menu">{menuChildren}</div> : null}
     </div>
@@ -863,7 +863,7 @@ const UserDetailContent = ({
       />
       {canUpdateMembership ? (
         <div className="admin-row-end">
-          <ActionButton icon={<Crown size={15} />} onClick={onUpdateMembership} tone="success">
+          <ActionButton icon={<Crown size={16} />} onClick={onUpdateMembership} tone="success">
             调整权益
           </ActionButton>
         </div>
@@ -883,7 +883,7 @@ const UserDetailContent = ({
       />
       {canResetPassword ? (
         <div className="admin-row-end">
-          <ActionButton icon={<LockKeyhole size={15} />} onClick={onResetPassword} tone="warning">
+          <ActionButton icon={<LockKeyhole size={16} />} onClick={onResetPassword} tone="warning">
             重置密码
           </ActionButton>
         </div>
@@ -1516,19 +1516,19 @@ export const UsersPage = () => {
     formatDateTime(item.last_login_at),
     formatDateTime(item.created_at),
     <ActionGroup key={`${item.user_no}-actions`}>
-      <ActionButton icon={<Eye size={15} />} onClick={() => void detail.openDetail('用户详情', item.user_no, () => adminApi.getUserDetail(item.user_no))}>详情</ActionButton>
+      <ActionButton icon={<Eye size={16} />} onClick={() => void detail.openDetail('用户详情', item.user_no, () => adminApi.getUserDetail(item.user_no))}>详情</ActionButton>
       {canOperate ? (
-        <ActionButton icon={item.status === 'active' ? <Snowflake size={15} /> : <CheckCircle2 size={15} />} onClick={() => void onToggleStatus(item)} disabled={updatingUserNo === item.user_no} tone={item.status === 'active' ? 'danger' : 'success'}>
+        <ActionButton icon={item.status === 'active' ? <Snowflake size={16} /> : <CheckCircle2 size={16} />} onClick={() => void onToggleStatus(item)} disabled={updatingUserNo === item.user_no} tone={item.status === 'active' ? 'danger' : 'success'}>
           {updatingUserNo === item.user_no ? '处理中…' : item.status === 'active' ? '冻结' : '解冻'}
         </ActionButton>
       ) : null}
       {canResetPassword ? (
-        <ActionButton icon={<LockKeyhole size={15} />} onClick={() => void onResetPassword(item)} disabled={updatingUserNo === item.user_no} tone="warning">
+        <ActionButton icon={<LockKeyhole size={16} />} onClick={() => void onResetPassword(item)} disabled={updatingUserNo === item.user_no} tone="warning">
           重置密码
         </ActionButton>
       ) : null}
       {canUpdateMembership ? (
-        <ActionButton icon={<Crown size={15} />} onClick={() => void onUpdateMembership(item)} disabled={updatingUserNo === item.user_no} tone="success">
+        <ActionButton icon={<Crown size={16} />} onClick={() => void onUpdateMembership(item)} disabled={updatingUserNo === item.user_no} tone="success">
           调整权益
         </ActionButton>
       ) : null}
@@ -1585,7 +1585,7 @@ export const FamiliesPage = () => {
     `${item.archive_export_requests_count} 项`,
     <Badge key={`${item.family_no}-status`} tone={badgeToneForStatus(item.status)}>{familyStatusLabel(item.status)}</Badge>,
     formatDateTime(item.created_at),
-    <ActionButton key={`${item.family_no}-detail`} icon={<Eye size={15} />} onClick={() => void detail.openDetail('家庭详情', item.family_no, () => adminApi.getFamilyDetail(item.family_no))}>详情</ActionButton>,
+    <ActionButton key={`${item.family_no}-detail`} icon={<Eye size={16} />} onClick={() => void detail.openDetail('家庭详情', item.family_no, () => adminApi.getFamilyDetail(item.family_no))}>详情</ActionButton>,
   ], (item) => item.family_no);
 
   return (
@@ -1620,7 +1620,7 @@ export const ChildrenPage = () => {
     item.birth_place ?? '—',
     formatDateOnly(item.updated_at ?? item.created_at),
     <Badge key={item.child_no} tone={badgeToneForStatus(item.status)}>{childStatusLabel(item.status)}</Badge>,
-    <ActionButton key={`${item.child_no}-detail`} icon={<Eye size={15} />} onClick={() => void detail.openDetail('孩子档案详情', item.child_no, () => adminApi.getChildDetail(item.child_no))}>详情</ActionButton>,
+    <ActionButton key={`${item.child_no}-detail`} icon={<Eye size={16} />} onClick={() => void detail.openDetail('孩子档案详情', item.child_no, () => adminApi.getChildDetail(item.child_no))}>详情</ActionButton>,
   ], (item) => item.child_no);
 
   return (
@@ -1712,9 +1712,9 @@ export const RecordsPage = () => {
     <Badge key={`${item.record_no}-status`} tone={badgeToneForStatus(item.status)}>{recordStatusLabel(item.status)}</Badge>,
     formatDateTime(item.created_at),
     <ActionGroup key={`${item.record_no}-actions`}>
-      <ActionButton icon={<Eye size={15} />} onClick={() => void detail.openDetail('成长记录详情', item.record_no, () => adminApi.getRecordDetail(item.record_no))}>详情</ActionButton>
+      <ActionButton icon={<Eye size={16} />} onClick={() => void detail.openDetail('成长记录详情', item.record_no, () => adminApi.getRecordDetail(item.record_no))}>详情</ActionButton>
       {canOperate ? (
-        <ActionButton icon={item.status === 'published' ? <ArchiveX size={15} /> : <RotateCcw size={15} />} onClick={() => void updateStatus(item)} disabled={updatingRecordNo === item.record_no} tone={item.status === 'published' ? 'danger' : 'success'}>
+        <ActionButton icon={item.status === 'published' ? <ArchiveX size={16} /> : <RotateCcw size={16} />} onClick={() => void updateStatus(item)} disabled={updatingRecordNo === item.record_no} tone={item.status === 'published' ? 'danger' : 'success'}>
           {updatingRecordNo === item.record_no ? '处理中…' : item.status === 'published' ? '下架' : '恢复'}
         </ActionButton>
       ) : null}
@@ -1864,17 +1864,17 @@ export const MediaPage = () => {
     <CompactText key={`${item.media_no}-uploader`} value={item.uploader_name ?? item.uploader_user_no} maxWidth={150} />,
     <Badge key={`${item.media_no}-type`} tone="info">{mediaTypeLabel(item.media_type)}</Badge>,
     <ActionGroup key={`${item.media_no}-actions`}>
-      <ActionButton icon={<Eye size={15} />} onClick={() => void detail.openDetail('媒体详情', item.media_no, () => adminApi.getMediaDetail(item.media_no))}>详情</ActionButton>
+      <ActionButton icon={<Eye size={16} />} onClick={() => void detail.openDetail('媒体详情', item.media_no, () => adminApi.getMediaDetail(item.media_no))}>详情</ActionButton>
       {canOperate ? (
         item.status === 'removed' ? (
           // 状态机约束：已下架的媒体只能「恢复为可用」。
           // 此前 removed 状态仍然显示「通过」，等于允许一次点击悄悄撤销下架动作。
-          <ActionButton icon={<RotateCcw size={15} />} onClick={() => updateStatus(item, 'ready')} disabled={updatingMediaNo === item.media_no} tone="success">恢复</ActionButton>
+          <ActionButton icon={<RotateCcw size={16} />} onClick={() => updateStatus(item, 'ready')} disabled={updatingMediaNo === item.media_no} tone="success">恢复</ActionButton>
         ) : (
           <>
-            <ActionButton icon={<CheckCircle2 size={15} />} onClick={() => updateStatus(item, 'ready')} disabled={updatingMediaNo === item.media_no} tone="success">通过</ActionButton>
-            <ActionButton icon={<AlertTriangle size={15} />} onClick={() => updateStatus(item, 'failed')} disabled={updatingMediaNo === item.media_no} tone="warning">标记异常</ActionButton>
-            <ActionButton icon={<ArchiveX size={15} />} onClick={() => updateStatus(item, 'removed')} disabled={updatingMediaNo === item.media_no} tone="danger">下架</ActionButton>
+            <ActionButton icon={<CheckCircle2 size={16} />} onClick={() => updateStatus(item, 'ready')} disabled={updatingMediaNo === item.media_no} tone="success">通过</ActionButton>
+            <ActionButton icon={<AlertTriangle size={16} />} onClick={() => updateStatus(item, 'failed')} disabled={updatingMediaNo === item.media_no} tone="warning">标记异常</ActionButton>
+            <ActionButton icon={<ArchiveX size={16} />} onClick={() => updateStatus(item, 'removed')} disabled={updatingMediaNo === item.media_no} tone="danger">下架</ActionButton>
           </>
         )
       ) : null}
@@ -1925,7 +1925,7 @@ export const MediaPage = () => {
               清空
             </AdminButton>
             <AdminButton type="button" tone="ghost" disabled={loading} onClick={() => setAdvancedFiltersOpen((current) => !current)}>
-              <SlidersHorizontal size={15} />
+              <SlidersHorizontal size={16} />
               {advancedFiltersOpen ? '收起筛选' : '高级筛选'}
             </AdminButton>
           </div>
@@ -2023,11 +2023,11 @@ export const AIJobsPage = () => {
     item.error_message,
     formatDateTime(item.created_at),
     <ActionGroup key={`${item.job_no}-actions`}>
-      <ActionButton icon={<Eye size={15} />} onClick={() => void detail.openDetail('AI 任务详情', item.job_no, () => adminApi.getAiJobDetail(item.job_no))}>详情</ActionButton>
+      <ActionButton icon={<Eye size={16} />} onClick={() => void detail.openDetail('AI 任务详情', item.job_no, () => adminApi.getAiJobDetail(item.job_no))}>详情</ActionButton>
       {canOperate ? (
         <>
-          <ActionButton icon={<RotateCcw size={15} />} onClick={() => void retryJob(item)} disabled={updatingJobNo === item.job_no || !['failed', 'cancelled'].includes(item.status)} tone="success">重试</ActionButton>
-          <ActionButton icon={<Ban size={15} />} onClick={() => void cancelJob(item)} disabled={updatingJobNo === item.job_no || !['pending', 'processing'].includes(item.status)} tone="danger">取消</ActionButton>
+          <ActionButton icon={<RotateCcw size={16} />} onClick={() => void retryJob(item)} disabled={updatingJobNo === item.job_no || !['failed', 'cancelled'].includes(item.status)} tone="success">重试</ActionButton>
+          <ActionButton icon={<Ban size={16} />} onClick={() => void cancelJob(item)} disabled={updatingJobNo === item.job_no || !['pending', 'processing'].includes(item.status)} tone="danger">取消</ActionButton>
         </>
       ) : null}
     </ActionGroup>,
@@ -2101,7 +2101,7 @@ export const NotificationsPage = () => {
     <NotificationDeliveryBadges key={`${item.notification_no}-delivery`} item={item} />,
     <CompactText key={`${item.notification_no}-target`} value={item.target_no ? `${item.target_type ?? 'target'}:${item.target_no}` : null} maxWidth={160} />,
     formatDateTime(item.created_at),
-    <ActionButton key={`${item.notification_no}-detail`} icon={<Eye size={15} />} onClick={() => void detail.openDetail('通知详情', item.notification_no, () => adminApi.getNotificationDetail(item.notification_no))}>详情</ActionButton>,
+    <ActionButton key={`${item.notification_no}-detail`} icon={<Eye size={16} />} onClick={() => void detail.openDetail('通知详情', item.notification_no, () => adminApi.getNotificationDetail(item.notification_no))}>详情</ActionButton>,
   ], (item) => item.notification_no);
 
   return (
@@ -2148,7 +2148,7 @@ export const NotificationsPage = () => {
               清空
             </AdminButton>
             <AdminButton type="button" tone="ghost" disabled={loading} onClick={() => setAdvancedFiltersOpen((current) => !current)}>
-              <SlidersHorizontal size={15} />
+              <SlidersHorizontal size={16} />
               {advancedFiltersOpen ? '收起筛选' : '高级筛选'}
             </AdminButton>
           </div>
@@ -2248,19 +2248,19 @@ export const SupportTicketsPage = () => {
     <Badge key={`${item.ticket_no}-status`} tone={badgeToneForStatus(item.status)}>{supportTicketStatusLabel(item.status)}</Badge>,
     formatDateTime(item.created_at),
     <ActionGroup key={`${item.ticket_no}-actions`}>
-      <ActionButton icon={<Eye size={15} />} onClick={() => void detail.openDetail('客服反馈详情', item.ticket_no, () => adminApi.getSupportTicketDetail(item.ticket_no))}>详情</ActionButton>
+      <ActionButton icon={<Eye size={16} />} onClick={() => void detail.openDetail('客服反馈详情', item.ticket_no, () => adminApi.getSupportTicketDetail(item.ticket_no))}>详情</ActionButton>
       {canUpdateStatus && item.status === 'submitted' ? (
-        <ActionButton tone="warning" icon={<ClipboardCheck size={15} />} disabled={updatingTicketNo === item.ticket_no} onClick={() => void updateStatus(item, 'processing')}>
+        <ActionButton tone="warning" icon={<ClipboardCheck size={16} />} disabled={updatingTicketNo === item.ticket_no} onClick={() => void updateStatus(item, 'processing')}>
           受理
         </ActionButton>
       ) : null}
       {canUpdateStatus && (item.status === 'submitted' || item.status === 'processing') ? (
-        <ActionButton tone="success" icon={<CheckCircle2 size={15} />} disabled={updatingTicketNo === item.ticket_no} onClick={() => void updateStatus(item, 'resolved')}>
+        <ActionButton tone="success" icon={<CheckCircle2 size={16} />} disabled={updatingTicketNo === item.ticket_no} onClick={() => void updateStatus(item, 'resolved')}>
           解决
         </ActionButton>
       ) : null}
       {canUpdateStatus && item.status !== 'closed' ? (
-        <ActionButton tone="danger" icon={<XCircle size={15} />} disabled={updatingTicketNo === item.ticket_no} onClick={() => void updateStatus(item, 'closed')}>
+        <ActionButton tone="danger" icon={<XCircle size={16} />} disabled={updatingTicketNo === item.ticket_no} onClick={() => void updateStatus(item, 'closed')}>
           关闭
         </ActionButton>
       ) : null}
@@ -2415,18 +2415,18 @@ export const ArchiveExportRequestsPage = () => {
     <Badge key={`${item.request_no}-status`} tone={badgeToneForStatus(item.status)}>{archiveExportStatusLabel(item.status)}</Badge>,
     formatDateTime(item.created_at),
     <ActionGroup key={`${item.request_no}-actions`}>
-      <ActionButton icon={<Eye size={15} />} onClick={() => void detail.openDetail('档案交付申请详情', item.request_no, () => adminApi.getArchiveExportRequestDetail(item.request_no))}>详情</ActionButton>
+      <ActionButton icon={<Eye size={16} />} onClick={() => void detail.openDetail('档案交付申请详情', item.request_no, () => adminApi.getArchiveExportRequestDetail(item.request_no))}>详情</ActionButton>
       {canUpdateStatus && item.status === 'submitted' ? (
-        <ActionButton tone="warning" icon={<ClipboardCheck size={15} />} disabled={updatingRequestNo === item.request_no} onClick={() => void updateStatus(item, 'processing')}>
+        <ActionButton tone="warning" icon={<ClipboardCheck size={16} />} disabled={updatingRequestNo === item.request_no} onClick={() => void updateStatus(item, 'processing')}>
           受理
         </ActionButton>
       ) : null}
       {canUpdateStatus && (item.status === 'submitted' || item.status === 'processing') ? (
         <>
-          <ActionButton tone="success" icon={<CheckCircle2 size={15} />} disabled={updatingRequestNo === item.request_no} onClick={() => void updateStatus(item, 'completed')}>
+          <ActionButton tone="success" icon={<CheckCircle2 size={16} />} disabled={updatingRequestNo === item.request_no} onClick={() => void updateStatus(item, 'completed')}>
             完成
           </ActionButton>
-          <ActionButton tone="danger" icon={<XCircle size={15} />} disabled={updatingRequestNo === item.request_no} onClick={() => void updateStatus(item, 'rejected')}>
+          <ActionButton tone="danger" icon={<XCircle size={16} />} disabled={updatingRequestNo === item.request_no} onClick={() => void updateStatus(item, 'rejected')}>
             驳回
           </ActionButton>
         </>
@@ -2528,7 +2528,7 @@ export const AuditLogsPage = () => {
     item.target_id,
     `${auditActorTypeLabel(item.actor_type)} #${item.actor_id}`,
     formatDateTime(item.created_at),
-    <ActionButton key={`${item.actor_id}-${item.created_at}-${item.action}`} icon={<Eye size={15} />} onClick={() => void detail.openDetail('审计日志详情', item.action, async () => item)}>详情</ActionButton>,
+    <ActionButton key={`${item.actor_id}-${item.created_at}-${item.action}`} icon={<Eye size={16} />} onClick={() => void detail.openDetail('审计日志详情', item.action, async () => item)}>详情</ActionButton>,
   ], (item) => `${item.actor_id}-${item.created_at}-${item.action}-${item.target_id ?? ''}`);
 
   return (

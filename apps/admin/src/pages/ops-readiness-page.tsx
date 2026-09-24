@@ -108,7 +108,7 @@ export const OpsReadinessPage = () => {
           </AdminButton>
         </EmptyState>
       ) : null}
-      {loading ? <EmptyState title="正在加载" message="正在读取系统配置和运营统计。" /> : null}
+      {loading ? <EmptyState title="正在加载数据" message="正在读取系统配置和运营统计。" /> : null}
 
       {readiness && stats ? (
         <>
@@ -239,7 +239,7 @@ export const OpsReadinessPage = () => {
                   className="admin-ops-action-link"
                 >
                   <span className="admin-ops-action-label">
-                    <Settings2 size={17} />
+                    <Settings2 size={18} />
                     <span>{item.label}</span>
                   </span>
                   <span className="admin-ops-action-helper">{item.helper}</span>

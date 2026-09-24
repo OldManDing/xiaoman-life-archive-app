@@ -2695,11 +2695,6 @@ table {
     gap: 20px;
   }
 
-  .admin-overview-hero-copy h2 {
-    font-size: 30px !important;
-    line-height: 1.08;
-  }
-
   .admin-overview-hero-copy p {
     font-size: 13px;
     line-height: 1.62;
@@ -5628,10 +5623,6 @@ table {
     gap: 12px !important;
   }
 
-  .admin-system-config-hero h2 {
-    font-size: 20px !important;
-  }
-
   .admin-system-config-status {
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     gap: 0 !important;
@@ -7367,6 +7358,41 @@ table {
 .admin-nav-more-trigger[aria-expanded='true'] .admin-nav-more-icon,
 .admin-select-shell-open .admin-select-chevron {
   transform: rotate(180deg);
+}
+
+/* P1 一致性收编（2026-09-24）：
+   1) 区块标题统一到两档 —— 页面 hero 28px（窄屏 22px）、区块/表单/弹窗 20px。
+      此前各页各写一套，渲染出 18/22/24/29 四种字号（同级标题在不同页面大小不同）。
+      这里同时删掉了两处历史 !important（.admin-overview-hero-copy h2 的 30px、
+      .admin-system-config-hero h2 的 20px），它们会把本块的规则顶掉。
+   2) 图标尺寸统一为三档：16（行内/表格）/ 18（按钮/导航/控件）/ 22（英雄区/空态）。
+      尺寸来自组件 size 属性，改不到 CSS 里，这里只做记录；
+      原来源码里有 15(39 处) 与 17(8 处) 两个"随手值"，已归一。 */
+.admin-login-card h1,
+.admin-login-card h2,
+.admin-list-hero h2,
+.admin-overview-hero-copy h2,
+.admin-ai-settings-hero h2,
+.admin-system-config-hero h2 {
+  font-size: 28px;
+}
+
+.admin-modal-header h2,
+.admin-ai-settings-form-head h2,
+.admin-ai-settings-test-card h2,
+.admin-system-config-form-head h2 {
+  font-size: 20px;
+}
+
+@media (max-width: 760px) {
+  .admin-login-card h1,
+  .admin-login-card h2,
+  .admin-list-hero h2,
+  .admin-overview-hero-copy h2,
+  .admin-ai-settings-hero h2,
+  .admin-system-config-hero h2 {
+    font-size: 22px;
+  }
 }
 
 /* 列表概览的口径说明：与胶囊同排，作为末位小字。

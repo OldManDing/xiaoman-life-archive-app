@@ -151,7 +151,7 @@ test.describe('Admin console coverage', () => {
     await loginAdmin(page);
 
     const header = page.locator('.admin-overview-workbench .admin-overview-section-head span');
-    await expect(header).not.toHaveText('正在同步', { timeout: 15_000 });
+    await expect(header).not.toHaveText('正在加载数据', { timeout: 15_000 });
 
     // 「待处理」合计必须等于四张卡片之和。
     // 曾经的写法把 content_risks（已含媒体异常与 AI 失败）又加了媒体异常与 AI 失败，

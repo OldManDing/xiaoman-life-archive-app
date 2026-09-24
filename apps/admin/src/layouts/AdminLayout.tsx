@@ -200,7 +200,7 @@ export const AdminLayout = () => {
               <div className="admin-nav-section-items">
                 {section.items.map((item) => (
                   <NavLink key={item.to} to={item.to} className={navLinkClassName} aria-label={item.label} onClick={closeMore}>
-                    <item.icon size={17} strokeWidth={2.2} />
+                    <item.icon size={18} strokeWidth={2.2} />
                     <span>{item.label}</span>
                   </NavLink>
                 ))}
@@ -217,7 +217,7 @@ export const AdminLayout = () => {
             >
               {/* 触发器是「可展开面板」，不是主菜单：汉堡图标容易被读成"打开导航抽屉"。
                   换成与 aria-expanded 联动的箭头（收起朝下、展开翻转朝上，见 index.css）。 */}
-              <ChevronDown className="admin-nav-more-icon" size={17} strokeWidth={2.2} />
+              <ChevronDown className="admin-nav-more-icon" size={18} strokeWidth={2.2} />
               <span className="admin-nav-more-label-desktop">更多管理</span>
               <span className="admin-nav-more-label-mobile">更多</span>
             </button>
@@ -226,7 +226,7 @@ export const AdminLayout = () => {
               <div className="admin-nav-more-content">
                 <div className="admin-nav-more-heading">
                   <strong>更多管理</strong>
-                  <button type="button" aria-label="关闭面板" title="关闭面板" onClick={closeMore}><X size={17} /></button>
+                  <button type="button" aria-label="关闭面板" title="关闭面板" onClick={closeMore}><X size={18} /></button>
                 </div>
               {secondarySections.map((section) => (
                 <section key={section.label} className="admin-nav-section admin-nav-section-secondary">
@@ -242,7 +242,7 @@ export const AdminLayout = () => {
                           if (isMobileViewport) setMoreOpen(false);
                         }}
                       >
-                        <item.icon size={17} strokeWidth={2.2} />
+                        <item.icon size={18} strokeWidth={2.2} />
                         <span>{item.label}</span>
                       </NavLink>
                     ))}
@@ -261,7 +261,7 @@ export const AdminLayout = () => {
                         if (isMobileViewport) setMoreOpen(false);
                       }}
                     >
-                      <ShieldCheck size={17} strokeWidth={2.2} />
+                      <ShieldCheck size={18} strokeWidth={2.2} />
                       <span>审计日志</span>
                     </NavLink>
                   </div>

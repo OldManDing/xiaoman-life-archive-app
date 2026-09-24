@@ -31,7 +31,7 @@ const AuditLogsPage = lazyPage(() => import('../pages/list-pages'), 'AuditLogsPa
 
 const RouteFallback = () => (
   <div className="admin-route-fallback" role="status" aria-live="polite">
-    页面加载中…
+    正在加载页面…
   </div>
 );
 
