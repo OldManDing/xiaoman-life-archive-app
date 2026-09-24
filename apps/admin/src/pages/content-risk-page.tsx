@@ -93,7 +93,16 @@ export const ContentRisksPage = () => {
         <Badge key={`${item.risk_no}-category`} tone="info">{categoryLabel(item.category)}</Badge>,
         <Badge key={`${item.risk_no}-severity`} tone={badgeTone(item.severity)}>{severityLabel(item.severity)}</Badge>,
         <Badge key={`${item.risk_no}-status`} tone={badgeTone(item.status)}>{statusLabel(item.status)}</Badge>,
-        item.subject_name ? `${item.subject_name}（${item.subject_no}）` : item.subject_no ?? '—',
+        // 关联对象拆成两行（名字 / 编号）：原来拼成「名字（编号）」在 137px 的列里会折三行，
+        // 还把右括号孤立到单独一行，看着像坏掉。两行形态也与其它表格单元一致。
+        item.subject_name ? (
+          <span className="admin-entity-title">
+            <strong>{item.subject_name}</strong>
+            <span>{item.subject_no ?? '—'}</span>
+          </span>
+        ) : (
+          item.subject_no ?? '—'
+        ),
         formatDateTime(item.created_at),
         <Link key={`${item.risk_no}-action`} className="admin-table-action-link" to={item.action_to} style={{ ...secondaryButtonStyle, textDecoration: 'none', minHeight: '38px', justifyContent: 'center' }}>
           <ExternalLink size={16} />

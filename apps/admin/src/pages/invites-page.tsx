@@ -204,19 +204,16 @@ export const InvitesPage = () => {
           {copyMessage ? <p style={mutedTextStyle}>{copyMessage}</p> : null}
         </form>
       </Panel>
-      <SearchPanel {...state} description="按邀请码编号、绑定手机号、创建人或使用人查询。" placeholder="输入邀请码编号或手机号" />
-      <Panel className="admin-invite-filter-panel">
-        <div className="admin-audit-filter-actions admin-row-actions-wrap">
-          {/* 选完即重查（见下方 effect），不再叠一个「查询」按钮：页面上已有搜索面板的查询按钮。 */}
-          <AdminSelect aria-label="邀请码状态" value={inviteStatus} onChange={(event) => setInviteStatus(event.target.value)}>
-            <option value="">全部状态</option>
-            <option value="pending">待使用</option>
-            <option value="accepted">已使用</option>
-            <option value="revoked">已撤销</option>
-            <option value="expired">已过期</option>
-          </AdminSelect>
-        </div>
-      </Panel>
+      {/* 状态下拉放进搜索面板同一行：原来它独占一个整宽面板，中间空一大片，看着像没加载出来。 */}
+      <SearchPanel {...state} description="按邀请码编号、绑定手机号、创建人或使用人查询。" placeholder="输入邀请码编号或手机号">
+        <AdminSelect aria-label="邀请码状态" value={inviteStatus} onChange={(event) => setInviteStatus(event.target.value)}>
+          <option value="">全部状态</option>
+          <option value="pending">待使用</option>
+          <option value="accepted">已使用</option>
+          <option value="revoked">已撤销</option>
+          <option value="expired">已过期</option>
+        </AdminSelect>
+      </SearchPanel>
       {state.error ? <Panel><EmptyState message={`加载失败：${state.error}`} /></Panel> : null}
       <TableShell
         className="admin-invites-table"

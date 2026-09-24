@@ -1857,7 +1857,9 @@ export const MediaPage = () => {
   const rows = formatListRows(currentMedia, (item) => [
     <span key={`${item.media_no}-file`} className="admin-media-list-file">
       <MediaThumb item={item} />
-      <EntityTitle title={item.original_name ?? mediaTypeLabel(item.media_type)} meta={`${formatBytes(item.size_bytes)} · ${formatDateTime(item.created_at)}`} />
+      {/* 媒体日期有用，但「体积 · 完整时间」在缩略图旁边只剩一行位置、时间会被截掉；
+          这里只到「日」，具体时分在详情抽屉里看。 */}
+      <EntityTitle title={item.original_name ?? mediaTypeLabel(item.media_type)} meta={`${formatBytes(item.size_bytes)} · ${formatDateOnly(item.created_at)}`} />
     </span>,
     <MediaReviewCell key={`${item.media_no}-review`} item={item} />,
     item.child_name ?? item.child_no ?? '未关联孩子',
@@ -2408,9 +2410,10 @@ export const ArchiveExportRequestsPage = () => {
     <EntityTitle key={`${item.request_no}-title`} title={item.request_no} meta={archiveExportPurposeLabel(item.purpose)} />,
     <EntityTitle key={`${item.request_no}-child`} title={item.child_name} meta={item.child_no} />,
     <EntityTitle key={`${item.request_no}-user`} title={item.user_name} meta={item.user_mobile ?? item.user_no} />,
-        <span key={`${item.request_no}-snapshot`} style={{ display: 'grid', gap: '2px', color: '#5d4d35', fontSize: '12px', fontWeight: 700 }}>
-      <span>{archiveExportTypeLabel(item.export_type)} · {item.record_count} 条记录 · {item.media_count} 个媒体</span>
-      <span>{item.milestone_count} 个里程碑</span>
+    // 资产快照原本折两行（类型与数量 / 里程碑），把行高撑到约 96px；合成单行后约 60px。
+    // 列宽同步在 CSS 里给到能容纳整句。
+    <span key={`${item.request_no}-snapshot`} style={{ display: 'block', color: '#5d4d35', fontSize: '12px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+      <span>{archiveExportTypeLabel(item.export_type)} · {item.record_count} 条记录 · {item.media_count} 个媒体 · {item.milestone_count} 个里程碑</span>
     </span>,
     <Badge key={`${item.request_no}-status`} tone={badgeToneForStatus(item.status)}>{archiveExportStatusLabel(item.status)}</Badge>,
     formatDateTime(item.created_at),

@@ -11,6 +11,7 @@ export const SearchPanel = ({
   onClearSearch,
   description,
   placeholder = '输入关键字筛选',
+  children,
 }: {
   keyword: string;
   setKeyword: (value: string) => void;
@@ -19,6 +20,8 @@ export const SearchPanel = ({
   onClearSearch: () => Promise<void>;
   description?: string;
   placeholder?: string;
+  /** 额外的筛选控件（如邀请码的状态下拉），排在同一行、查询按钮左侧。 */
+  children?: ReactNode;
 }) => (
   <div className="admin-search-panel">
     {description ? <p className="admin-search-description">{description}</p> : null}
@@ -27,6 +30,7 @@ export const SearchPanel = ({
         {/* 仅靠 placeholder 不构成可访问名称（占位文字一输入就消失，读屏也读不到稳定标签）。
             placeholder 本身已经是描述性的，直接复用为 aria-label。 */}
         <input className="admin-filter-control admin-search-keyword" aria-label={placeholder} value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder={placeholder} />
+        {children}
         <AdminButton className="admin-filter-button" tone="primary" type="submit" disabled={loading}>
           {loading ? '查询中…' : '查询'}
         </AdminButton>

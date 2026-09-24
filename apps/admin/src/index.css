@@ -1245,6 +1245,12 @@ table {
   color: #7d7162;
   font-size: 12px;
   line-height: 1.45;
+  /* 次级信息（用户编号、msg_xxx、家庭编号等）原来会折成 2~3 行，把行高从约 60px 撑到 100px 以上。
+     改为单行省略；完整值在详情抽屉里可见。 */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .admin-table-panel {
@@ -7290,6 +7296,10 @@ table {
 .admin-risk-title-reason {
   color: var(--muted);
   font-size: 12px;
+  /* 风险说明是模板文案，单行省略即可（原来折两行，把每行撑到约 90px）。 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .admin-risk-note {
@@ -7437,6 +7447,62 @@ table {
 .admin-system-config-actions button[type="submit"] {
   font-size: 13px;
   font-weight: 800;
+}
+
+/* 搜索行支持插入额外筛选控件（例如邀请码的状态下拉）。
+   搜索行默认是「输入框 + 两个按钮」的三列栅格，插入第四个控件时最后一个按钮会掉到第二行并拉满整宽
+   （截图实测：清空按钮独占一行）。有四个以上控件时补一列，输入框仍占满剩余空间。 */
+.admin-search-controls:has(> :nth-child(4)) {
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
+}
+
+/* 客服反馈的「反馈内容」是这一页最该看的列，原来只有约 130px、一条内容被截到十来个字。
+   按 data-column 指定宽度（TableShell 会给每个单元格标注 data-column）；
+   加宽内容列会挤到别的列，所以同时给这张表定好各列宽度，避免「修一处截断、多两处截断」。 */
+.admin-table-panel .admin-responsive-table th[data-column='反馈内容'],
+.admin-table-panel .admin-responsive-table td[data-column='反馈内容'] {
+  width: 300px;
+}
+
+.admin-table-panel .admin-responsive-table th[data-column='反馈编号'],
+.admin-table-panel .admin-responsive-table td[data-column='反馈编号'] {
+  width: 150px;
+}
+
+.admin-table-panel .admin-responsive-table th[data-column='提交人'],
+.admin-table-panel .admin-responsive-table td[data-column='提交人'] {
+  width: 120px;
+}
+
+/* 档案交付的「资产快照」合成单行后需要更宽的列（约 26 字），否则会立刻被省略号截掉。
+   但加宽快照会挤掉「申请编号」——它是运营搜单的主键，截到 8 个字符就不能用了。
+   所以这张表按重要性固定列宽：编号 165 + 孩子 132 + 申请人 100 + 快照 280 + 状态 90 + 时间 130 + 操作 158。 */
+.admin-table-panel .admin-responsive-table th[data-column='资产快照'],
+.admin-table-panel .admin-responsive-table td[data-column='资产快照'] {
+  width: 280px;
+}
+
+.admin-table-panel .admin-responsive-table th[data-column='申请编号'],
+.admin-table-panel .admin-responsive-table td[data-column='申请编号'] {
+  width: 165px;
+}
+
+.admin-table-panel .admin-responsive-table th[data-column='孩子档案'],
+.admin-table-panel .admin-responsive-table td[data-column='孩子档案'] {
+  width: 132px;
+}
+
+/* 媒体库的「媒体」列要同时放下缩略图和「体积 · 日期」，否则日期又会被截掉。 */
+.admin-media-table th[data-column='媒体'],
+.admin-media-table td[data-column='媒体'] {
+  width: 240px;
+}
+
+/* 时间/日期类单元格一律不折行：原来窄一点就把「2026/9/24 14:44:10」拆成两行，
+   既难看又让行高翻倍。适用于所有列表。 */
+.admin-table-panel .admin-responsive-table td[data-column$='时间'],
+.admin-table-panel .admin-responsive-table td[data-column$='日期'] {
+  white-space: nowrap;
 }
 
 /* 列表概览的口径说明：与胶囊同排，作为末位小字。

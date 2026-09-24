@@ -400,16 +400,17 @@ test.describe('Visual review smoke', () => {
           async () => {
             const loading = await page.locator('.admin-main button:disabled', { hasText: '查询中' }).count();
             if (loading > 0) return 'loading';
-            // 无表格的页面（如系统运维）用「正在加载」空态占位，同样要等它消失。
-            const loadingCard = await page.locator('.admin-main .admin-empty-state', { hasText: '正在加载' }).count();
-            if (loadingCard > 0) return 'loading';
+            // 无表格页面（系统运维）用「正在加载」空态占位；总览这类页面则是 hero 文案 + 「-」占位，
+            // 两者都要等它消失，否则会把加载态当成就绪拍下来（总览首屏曾被拍成全「-」）。
+            const loadingCopy = await page.locator('.admin-main', { hasText: '正在加载' }).count();
+            if (loadingCopy > 0) return 'loading';
             const hasTable = await page.locator('.admin-main .admin-responsive-table').count();
             if (!hasTable) return 'ready';
             const rows = await page.locator('.admin-main .admin-responsive-table tbody tr').count();
             const empty = await page.locator('.admin-main .admin-empty-state').count();
             return rows > 0 || empty > 0 ? 'ready' : 'pending';
           },
-          { timeout: 10_000 },
+          { timeout: 12_000 },
         )
         .toBe('ready')
         .catch(() => undefined);
