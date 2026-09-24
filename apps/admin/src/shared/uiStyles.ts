@@ -41,7 +41,7 @@ export const inputStyle: CSSProperties = {
 export const primaryButtonStyle: CSSProperties = {
   border: '1px solid #3f3322',
   borderRadius: 'var(--radius-lg)',
-  padding: '9px 14px',
+  padding: '8px 14px',
   background: '#3f3322',
   color: 'var(--paper)',
   fontWeight: 800,
@@ -70,7 +70,8 @@ export const thTdStyle: CSSProperties = {
   textAlign: 'left',
   // 11px 的上下内边距让每行接近 70px，20 行就吃掉一屏；收到 9px 后仍保留分组感，
   // 但一屏能多看 2~3 行（列表密度是运营最常抱怨的点）。
-  padding: '9px 12px',
+  // 与 CSS 侧同一套间距尺度（偶数像素）：9px → 8px，行高也更省一点。
+  padding: '8px 12px',
   borderBottom: '1px solid #eceae6',
   fontSize: '13px',
   verticalAlign: 'top',
@@ -96,7 +97,7 @@ export const badgeStyle: CSSProperties = {
   alignItems: 'center',
   minHeight: '24px',
   borderRadius: '999px',
-  padding: '3px 9px',
+  padding: '2px 8px',
   border: '1px solid rgba(139, 116, 79, 0.18)',
   background: '#f7efe1',
   color: '#4d412f',

@@ -137,13 +137,16 @@ export const SystemConfigPage = () => {
         <strong>{item.label}</strong>
         <span>{item.description}</span>
       </span>,
+      // 原来徽章、值、来源各占一行（行高约 110px）。改成「徽章 + 来源/类型」一行、值单独一行：
+      // 两行即可，值也更醒目。
       <span key={`${item.config_key}-status`} className="admin-system-config-status-cell">
-        <Badge tone="info">{categoryLabel(item.category)}</Badge>
+        <span className="admin-system-config-status-head">
+          <Badge tone="info">{categoryLabel(item.category)}</Badge>
+          <small>
+            {item.source === 'admin' ? '后台配置' : '环境变量'} · {valueTypeLabel(item.value_type)}
+          </small>
+        </span>
         <strong>{displayValue(item)}</strong>
-        <small>
-          <span>{item.source === 'admin' ? '后台配置' : '环境变量'}</span>
-          <span> · {valueTypeLabel(item.value_type)}</span>
-        </small>
       </span>,
       item.updated_by_name ? `${item.updated_by_name} / ${formatDateTime(item.updated_at)}` : '—',
       <AdminButton key={`${item.config_key}-action`} type="button" tone="secondary" disabled={!canEdit} onClick={() => startEdit(item)}>
