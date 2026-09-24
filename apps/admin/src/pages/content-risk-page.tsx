@@ -1,14 +1,13 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { AlertTriangle, ExternalLink, ShieldAlert } from 'lucide-react';
 
-import { adminApi, type AdminContentRiskItem, type AdminListResponse } from '../shared/request';
+import { adminApi, type AdminContentRiskItem } from '../shared/request';
 import { formatDateTime } from '../shared/format';
 import { AdminButton, AdminSelect, Badge, EmptyState, PageShell, Panel } from '../shared/ui';
 import { inputStyle, mutedTextStyle, secondaryButtonStyle } from '../shared/uiStyles';
+import { useAdminListPage } from './list-page-state';
 import { PaginationPanel, TableShell } from './shared';
-
-const pageSize = 20;
 
 const contentRiskCategoryValues = ['content_safety', 'media_exception', 'child_safety', 'ai_exception'] as const;
 
@@ -53,81 +52,37 @@ const RiskTitle = ({ item }: { item: AdminContentRiskItem }) => (
 );
 
 export const ContentRisksPage = () => {
-  const [result, setResult] = useState<AdminListResponse<AdminContentRiskItem> | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   // 支持 ?category=：首页「记录风险」卡片跳过来时（category=content_safety）列表数量要和卡片一致。
   const initialCategory = normalizeContentRiskCategory(searchParams.get('category'));
-  const [keyword, setKeyword] = useState('');
   const [category, setCategory] = useState(initialCategory);
   const [severity, setSeverity] = useState('');
   const [status, setStatus] = useState('');
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(
-    async (nextPage = page, override?: { keyword?: string; category?: string; severity?: string; status?: string }) => {
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await adminApi.listContentRisks({
-          keyword: (override?.keyword ?? keyword).trim() || undefined,
-          category: (override?.category ?? category) || undefined,
-          severity: (override?.severity ?? severity) || undefined,
-          status: (override?.status ?? status) || undefined,
-          page: nextPage,
-          page_size: pageSize,
-        });
-        setResult(data);
-        setPage(nextPage);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : '内容风险队列加载失败');
-      } finally {
-        setLoading(false);
-      }
-    },
-    [category, keyword, page, severity, status],
+  // 列表脚手架（分页 / 加载中 / 错误 / 请求版本号）统一由 hook 提供。
+  // 本页原来是手写的一套：没有请求版本号保护，快速切换筛选时旧响应可能覆盖新响应，
+  // 而且首屏请求不带筛选（带 ?category= 跳进来也显示未筛选的数量）。
+  const state = useAdminListPage<AdminContentRiskItem>(
+    (params) =>
+      adminApi.listContentRisks({
+        keyword: params.keyword,
+        page: params.page,
+        page_size: params.page_size,
+        category: category || undefined,
+        severity: severity || undefined,
+        status: status || undefined,
+      }),
+    { filters: { category, severity, status } },
   );
+  const { keyword, setKeyword, loading, error, result } = state;
 
-  useEffect(() => {
-    let active = true;
-
-    const loadInitial = async () => {
-      try {
-        // 首屏必须带上 URL 里的类别：原来这里不带任何筛选，从首页卡片带参跳过来也会显示未筛选的数量。
-        const data = await adminApi.listContentRisks({
-          page: 1,
-          page_size: pageSize,
-          category: initialCategory || undefined,
-        });
-        if (!active) return;
-        setResult(data);
-        setPage(1);
-      } catch (err) {
-        if (active) setError(err instanceof Error ? err.message : '内容风险队列加载失败');
-      } finally {
-        if (active) setLoading(false);
-      }
-    };
-
-    void loadInitial();
-    return () => {
-      active = false;
-    };
-  }, [initialCategory]);
-
-  const onSearch = async (event?: FormEvent) => {
-    event?.preventDefault();
-    await load(1);
-  };
-
-  const onClear = async () => {
+  const onClear = () => {
     setKeyword('');
     setCategory('');
     setSeverity('');
     setStatus('');
     setSearchParams({}, { replace: true });
-    await load(1, { keyword: '', category: '', severity: '', status: '' });
+    state.reloadAfterFiltersReset();
   };
 
   const rows =
@@ -153,7 +108,7 @@ export const ContentRisksPage = () => {
   return (
     <PageShell title="内容风险" description="集中复核敏感文本、异常媒体、儿童安全反馈和失败 AI 任务，运营可从这里跳转到对应处理队列。">
       <Panel>
-        <form className="admin-audit-filter-form" onSubmit={onSearch} style={{ display: 'grid', gap: '12px' }}>
+        <form className="admin-audit-filter-form" onSubmit={(event) => void state.onSearch(event)} style={{ display: 'grid', gap: '12px' }}>
           <div className="admin-row-between-top">
             <div>
           <strong style={{ display: 'block', color: '#221b12', marginBottom: '4px' }}>筛选条件</strong>
@@ -173,9 +128,8 @@ export const ContentRisksPage = () => {
                 const next = event.target.value;
                 setCategory(next);
                 // 与 URL 同步：首页「记录风险」卡片带 ?category=content_safety 跳过来，
-                // 这里选完也要让地址栏保持一致（可刷新、可分享）。
+                // 这里选完也要让地址栏保持一致（可刷新、可分享）；重新取数由 hook 的 filters 变化触发。
                 setSearchParams(next ? { category: next } : {}, { replace: true });
-                void load(1, { category: next });
               }}
             >
               <option value="">全部类型</option>
@@ -231,12 +185,8 @@ export const ContentRisksPage = () => {
           total={result.total}
           hasMore={result.has_more}
           loading={loading}
-          onPrevPage={async () => {
-            if (!loading && page > 1) await load(page - 1);
-          }}
-          onNextPage={async () => {
-            if (!loading && result.has_more) await load(page + 1);
-          }}
+          onPrevPage={state.onPrevPage}
+          onNextPage={state.onNextPage}
         />
       ) : null}
     </PageShell>

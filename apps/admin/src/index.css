@@ -7370,8 +7370,9 @@ table {
 }
 
 /* P1 一致性收编（2026-09-24）：
-   1) 区块标题统一到两档 —— 页面 hero 28px（窄屏 22px）、区块/表单/弹窗 20px。
-      此前各页各写一套，渲染出 18/22/24/29 四种字号（同级标题在不同页面大小不同）。
+   1) 区块标题统一到三档 —— 页面 h1 30px、hero h2 24px（窄屏 20px）、区块/表单/弹窗 h2 20px。
+      此前各页各写一套，渲染出 18/22/24/29 四种字号（同级标题在不同页面大小不同）；
+      hero 原为 28px，与 h1 只差 2px、层级看不出来，P2-c 降到 24px。
       这里同时删掉了两处历史 !important（.admin-overview-hero-copy h2 的 30px、
       .admin-system-config-hero h2 的 20px），它们会把本块的规则顶掉。
    2) 图标尺寸统一为三档：16（行内/表格）/ 18（按钮/导航/控件）/ 22（英雄区/空态）。
@@ -7383,7 +7384,7 @@ table {
 .admin-overview-hero-copy h2,
 .admin-ai-settings-hero h2,
 .admin-system-config-hero h2 {
-  font-size: 28px;
+  font-size: 24px;
 }
 
 .admin-modal-header h2,
@@ -7400,8 +7401,42 @@ table {
   .admin-overview-hero-copy h2,
   .admin-ai-settings-hero h2,
   .admin-system-config-hero h2 {
-    font-size: 22px;
+    font-size: 20px;
   }
+}
+
+/* P3-b 按钮外观收敛（2026-09-24）：
+   此前全站渲染出近 20 种按钮外观，其中三类属于"没有理由的不一致"——
+   主按钮两种棕色（#3f3322 与 #4a3a22）、圆角 8px 与 10px 混用、高度 40/42/44px 三种。
+   这里各收敛为一个值；作用域不限定 .admin-main，因为弹窗/抽屉是 portal 到 body 的。
+   首屏 CTA（.admin-overview-primary-action）只统一色与圆角，保留自己的字号以示强调。 */
+.admin-button,
+.admin-filter-button {
+  min-height: 40px;
+  border-radius: var(--radius-lg);
+}
+
+.admin-action-button {
+  border-radius: var(--radius-lg);
+}
+
+.admin-button-primary,
+.admin-filter-button-primary,
+.admin-action-button-primary,
+.admin-overview-primary-action,
+.admin-system-config-actions button[type="submit"] {
+  border-color: #3f3322;
+  background: #3f3322;
+  border-radius: var(--radius-lg);
+  color: var(--paper);
+}
+
+.admin-button-primary,
+.admin-filter-button-primary,
+.admin-action-button-primary,
+.admin-system-config-actions button[type="submit"] {
+  font-size: 13px;
+  font-weight: 800;
 }
 
 /* 列表概览的口径说明：与胶囊同排，作为末位小字。
