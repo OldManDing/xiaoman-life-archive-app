@@ -55,7 +55,7 @@ import {
 } from '../shared/labels';
 import { formatBytes, formatDateOnly, formatDateTime, getErrorMessage, optionalFilter, toIsoDateTime, todayLocalDate } from '../shared/format';
 import { AdminButton, AdminDateInput, AdminSelect, Badge, EmptyState, PageShell, Panel } from '../shared/ui';
-import { inputStyle, mutedTextStyle, primaryButtonStyle, secondaryButtonStyle } from '../shared/uiStyles';
+import { inputStyle, primaryButtonStyle, secondaryButtonStyle } from '../shared/uiStyles';
 import { AdminModal } from '../shared/modal';
 import { useAdminAuth } from '../shared/useAdminAuth';
 import { DetailDrawer, DetailGrid, DetailList, DetailSection, JsonBlock, MediaPreview } from './detail-drawer';
@@ -1538,9 +1538,9 @@ export const UsersPage = () => {
   );
 
   return (
-    <PageShell title="账号管理" description="按关键字查询用户账号，处理冻结、解冻、登录信息核查和密码重置。">
+    <PageShell title="账号管理">
       <SearchPanel {...state} />
-      <ListSummary label="账号状态概览" loading={state.loading} description="默认展示用户列表，先看账号状态，再决定是否进入详情、冻结、解冻或重置登录密码。">
+      <ListSummary label="账号状态概览" loading={state.loading}>
         <SummaryStat label="本页正常" value={activeUsers} tone="success" />
         <SummaryStat label="本页已冻结" value={disabledUsers} tone={disabledUsers > 0 ? 'danger' : 'neutral'} />
       </ListSummary>
@@ -1589,9 +1589,9 @@ export const FamiliesPage = () => {
   ], (item) => item.family_no);
 
   return (
-    <PageShell title="家庭管理" description="按家庭维度查看成员、孩子档案、成长资产和档案交付申请，方便运营处理家庭协作与长期托管问题。">
-      <SearchPanel {...state} description="输入家庭编号、家庭名称、拥有者昵称或手机号后查询。" placeholder="家庭编号 / 家庭名称 / 拥有者" />
-      <ListSummary label="家庭资产概览" loading={state.loading} description="家庭是孩子档案、成员协作、媒体资产和交付申请的归属中心；运营先按家庭定位，再进入详情核查成员和记录。">
+    <PageShell title="家庭管理">
+      <SearchPanel {...state} placeholder="家庭编号 / 家庭名称 / 拥有者" />
+      <ListSummary label="家庭资产概览" loading={state.loading}>
         <SummaryStat label="本页家庭" value={currentFamilies.length} />
         <SummaryStat label="本页状态正常" value={activeFamilies} tone="success" />
         <SummaryStat label="本页孩子档案" value={totalChildren} />
@@ -1624,9 +1624,9 @@ export const ChildrenPage = () => {
   ], (item) => item.child_no);
 
   return (
-    <PageShell title="孩子档案" description="查询孩子档案、归属家庭与拥有者。">
+    <PageShell title="孩子档案">
       <SearchPanel {...state} />
-      <ListSummary label="孩子档案概览" loading={state.loading} description="默认展示档案归属和状态，发现异常时进入详情核查家庭关系。">
+      <ListSummary label="孩子档案概览" loading={state.loading}>
         <SummaryStat label="本页头像可用" value={`${avatarReadyCount}/${currentChildren.length}`} tone={avatarReadyCount === currentChildren.length ? 'success' : 'warning'} />
         <SummaryStat label="本页档案" value={currentChildren.length} />
         <SummaryStat label="本页状态正常" value={activeChildren} tone="success" />
@@ -2036,9 +2036,9 @@ export const AIJobsPage = () => {
   ], (item) => item.job_no);
 
   return (
-    <PageShell title="AI 任务列表" description="查看 AI 任务状态和失败原因。">
+    <PageShell title="AI 任务列表">
       <SearchPanel {...state} />
-      <ListSummary label="AI 任务概览" loading={state.loading} description="默认展示任务队列，优先处理失败、卡住和待重试的链路。">
+      <ListSummary label="AI 任务概览" loading={state.loading}>
         <SummaryStat label="本页处理中/待处理" value={activeJobs} tone={activeJobs > 0 ? 'warning' : 'neutral'} />
         <SummaryStat label="本页失败" value={failedJobs} tone={failedJobs > 0 ? 'danger' : 'success'} />
       </ListSummary>
@@ -2107,7 +2107,7 @@ export const NotificationsPage = () => {
   ], (item) => item.notification_no);
 
   return (
-    <PageShell title="通知管理" description="查看站内消息和手机通知投递状态，定位家庭成员收不到通知、推送失败和未读积压问题。">
+    <PageShell title="通知管理">
       <Panel>
         <form className="admin-audit-filter-form admin-form-stack" onSubmit={(event) => void load(1, pageSize, event)}>
           <div className="admin-audit-filter-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(260px, 1fr) minmax(180px, 0.45fr)', gap: '10px' }}>
@@ -2156,7 +2156,7 @@ export const NotificationsPage = () => {
           </div>
         </form>
       </Panel>
-      <ListSummary label="通知状态概览" loading={loading} description="默认展示最近通知，优先关注未读积压、待投递和投递异常；投递失败不作为普通用户提示文案直接铺在列表中。">
+      <ListSummary label="通知状态概览" loading={loading}>
         <SummaryStat label="本页未读" value={unreadCount} tone={unreadCount > 0 ? 'warning' : 'success'} />
         <SummaryStat label="本页待投递" value={queuedDeliveryCount} tone={queuedDeliveryCount > 0 ? 'warning' : 'neutral'} />
         <SummaryStat label="本页投递失败" value={failedDeliveryCount} tone={failedDeliveryCount > 0 ? 'danger' : 'success'} />
@@ -2270,12 +2270,11 @@ export const SupportTicketsPage = () => {
   ], (item) => item.ticket_no);
 
   return (
-    <PageShell title="客服反馈" description="集中处理用户在帮助与反馈提交的问题、账号注销和儿童信息保护诉求，避免客服事项只散落在审计日志中。">
+    <PageShell title="客服反馈">
       <Panel>
         <form className="admin-audit-filter-form admin-form-stack" onSubmit={(event) => void load(1, pageSize, event)}>
           <div>
           <strong className="admin-filter-head-title">筛选条件</strong>
-            <p style={mutedTextStyle}>支持按反馈编号、提交人、联系方式、问题内容、类型、优先级和处理状态筛选。</p>
           </div>
           <div className="admin-audit-filter-grid admin-filter-grid-auto" >
             <input style={inputStyle} value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="编号 / 用户 / 内容" />
@@ -2312,7 +2311,7 @@ export const SupportTicketsPage = () => {
           </div>
         </form>
       </Panel>
-      <ListSummary label="客服反馈概览" loading={loading} description="儿童安全和待处理反馈优先进入值班视野；每次状态推进都会写入审计日志。">
+      <ListSummary label="客服反馈概览" loading={loading}>
         <SummaryStat label="本页待处理" value={submittedCount} tone={submittedCount > 0 ? 'warning' : 'neutral'} />
         <SummaryStat label="本页处理中" value={processingCount} tone={processingCount > 0 ? 'warning' : 'neutral'} />
         <SummaryStat label="本页儿童安全" value={childSafetyCount} tone={childSafetyCount > 0 ? 'danger' : 'neutral'} />
@@ -2438,12 +2437,11 @@ export const ArchiveExportRequestsPage = () => {
   ], (item) => item.request_no);
 
   return (
-    <PageShell title="档案交付申请" description="集中处理用户发起的云端档案打包和成年移交准备，避免长期资产交付只停留在审计日志里。">
+    <PageShell title="档案交付申请">
       <Panel>
         <form className="admin-audit-filter-form admin-form-stack" onSubmit={(event) => void load(1, pageSize, event)}>
           <div>
           <strong className="admin-filter-head-title">筛选条件</strong>
-            <p style={mutedTextStyle}>支持按申请编号、孩子、家庭、申请人、联系方式、申请类型和处理状态筛选。</p>
           </div>
           <div className="admin-audit-filter-grid admin-filter-grid-auto" >
             <input style={inputStyle} value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="申请编号 / 孩子 / 申请人" />
@@ -2470,7 +2468,7 @@ export const ArchiveExportRequestsPage = () => {
           </div>
         </form>
       </Panel>
-      <ListSummary label="交付申请概览" loading={loading} description="优先处理成年移交和待处理申请；每次状态推进都会写入审计，方便复盘责任链。">
+      <ListSummary label="交付申请概览" loading={loading}>
         <SummaryStat label="本页待处理" value={submittedCount} tone={submittedCount > 0 ? 'warning' : 'neutral'} />
         <SummaryStat label="本页处理中" value={processingCount} tone={processingCount > 0 ? 'warning' : 'neutral'} />
         <SummaryStat label="本页成年移交" value={handoffCount} tone={handoffCount > 0 ? 'danger' : 'neutral'} />
@@ -2535,12 +2533,11 @@ export const AuditLogsPage = () => {
   ], (item) => `${item.actor_id}-${item.created_at}-${item.action}-${item.target_id ?? ''}`);
 
   return (
-    <PageShell title="审计日志" description="查看后台关键行为和访问记录。仅超级管理员可见。">
+    <PageShell title="审计日志">
       <Panel>
         <form className="admin-audit-filter-form admin-form-stack" onSubmit={(event) => void load(1, pageSize, event)}>
           <div>
             <strong className="admin-filter-head-title">筛选条件</strong>
-            <p style={mutedTextStyle}>支持按关键字、动作、目标类型和发生时间筛选。</p>
           </div>
           <div className="admin-audit-filter-grid admin-filter-grid-auto" >
             <input style={inputStyle} value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="动作 / 目标类型关键字" />
@@ -2581,7 +2578,7 @@ export const AuditLogsPage = () => {
           </div>
         </form>
       </Panel>
-      <ListSummary label="审计日志概览" loading={loading} description="进入页面即展示最近留痕，筛选只用于缩小范围，不再让页面默认空白。">
+      <ListSummary label="审计日志概览" loading={loading}>
         <SummaryStat label="本页留痕" value={currentLogs.length} />
         <SummaryStat label="后台登录" value={recentLoginLogs} tone={recentLoginLogs > 0 ? 'success' : 'neutral'} />
       </ListSummary>

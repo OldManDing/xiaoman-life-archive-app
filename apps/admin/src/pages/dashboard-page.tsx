@@ -10,21 +10,18 @@ const PriorityLink = ({
   icon,
   label,
   value,
-  helper,
   tone,
 }: {
   to: string;
   icon: ReactNode;
   label: string;
   value: string | number;
-  helper: string;
   tone: 'success' | 'warning' | 'danger' | 'neutral';
 }) => (
   <Link to={to} className={`admin-overview-task admin-overview-task-${tone}`}>
     <span className="admin-overview-task-icon">{icon}</span>
     <span className="admin-overview-task-copy">
       <strong>{label}</strong>
-      <small>{helper}</small>
     </span>
     <b>{value}</b>
   </Link>
@@ -219,9 +216,6 @@ export const DashboardPage = () => {
 
   const aiStats = dashboard?.ai_job_status_distribution ?? [];
   const failedAiCount = aiStats.find((item) => item.status === 'failed')?.count ?? 0;
-  const successAiCount = aiStats.find((item) => item.status === 'success')?.count ?? 0;
-  const aiTotal = aiStats.reduce((sum, item) => sum + item.count, 0);
-  const aiSuccessRate = aiTotal > 0 ? Math.round((successAiCount / aiTotal) * 100) : 0;
   const userTotal = dashboard?.totals.users ?? 0;
   const childTotal = dashboard?.totals.children ?? 0;
   const recordTotal = dashboard?.totals.records ?? 0;
@@ -259,7 +253,6 @@ export const DashboardPage = () => {
         tone: 'neutral' as const,
         badge: '正在加载',
         title: '正在加载运维数据',
-        description: '正在汇总风险、媒体、AI 任务与用户反馈的待处理项。',
         primaryText: '前往系统运维',
         primaryTo: '/ops-readiness',
       };
@@ -270,7 +263,6 @@ export const DashboardPage = () => {
         tone: 'warning' as const,
         badge: `${issueTotal} 项待处理`,
         title: '今日先清理异常项',
-        description: '按风险、媒体、AI 和用户反馈顺序处理。',
         primaryText: '开始处理',
         // 风险桶优先去聚合队列（内容风险含记录文本、媒体异常、儿童安全与 AI 失败），
         // 否则去各自的具体队列 —— 不再指向口径不同的成长记录「风险标记」筛选。
@@ -289,7 +281,6 @@ export const DashboardPage = () => {
       tone: 'success' as const,
       badge: '运行稳定',
       title: '当前没有待处理异常',
-      description: '可进入成长记录进行日常抽检。',
       primaryText: '开始内容抽检',
       primaryTo: '/records',
     };
@@ -304,7 +295,6 @@ export const DashboardPage = () => {
       icon: failedJobCount > 0 ? <AlertTriangle size={18} /> : <CheckCircle2 size={18} />,
       label: failedJobCount > 0 ? 'AI 失败任务' : 'AI 链路正常',
       value: loading ? '-' : failedJobCount,
-      helper: failedJobCount > 0 ? '检查供应商响应与任务重试' : `${aiSuccessRate}% 成功率`,
       tone: failedJobCount > 0 ? ('danger' as const) : ('success' as const),
     },
     {
@@ -314,7 +304,6 @@ export const DashboardPage = () => {
       icon: <ShieldAlert size={18} />,
       label: '记录风险',
       value: loading ? '-' : recordRiskCount,
-      helper: '成长记录里的敏感文本待复核',
       tone: recordRiskCount > 0 ? ('danger' as const) : ('neutral' as const),
     },
     {
@@ -324,7 +313,6 @@ export const DashboardPage = () => {
       icon: <Image size={18} />,
       label: '媒体异常',
       value: loading ? '-' : mediaExceptionCount,
-      helper: '检查上传、转码与播放状态',
       tone: mediaExceptionCount > 0 ? ('warning' as const) : ('neutral' as const),
     },
     {
@@ -332,7 +320,6 @@ export const DashboardPage = () => {
       icon: <MessageSquareText size={18} />,
       label: '待处理反馈',
       value: loading ? '-' : openSupportCount,
-      helper: '儿童安全优先，其余按提交时间',
       tone: openSupportCount > 0 ? ('warning' as const) : ('neutral' as const),
     },
   ];
@@ -345,7 +332,8 @@ export const DashboardPage = () => {
         <div className="admin-overview-hero-copy">
           <span>{headline.badge}</span>
           <h2>{headline.title}</h2>
-          <p>{headline.description}</p>
+          {/* 说明句按需求去掉；只有错误态还带一句原因（读运维数据失败），那属于错误信息，保留。 */}
+          {headline.description ? <p>{headline.description}</p> : null}
         </div>
         <div className="admin-overview-hero-actions">
           <Link className="admin-overview-primary-action" to={headline.primaryTo}>{headline.primaryText}</Link>

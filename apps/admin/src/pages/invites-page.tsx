@@ -155,7 +155,7 @@ export const InvitesPage = () => {
   ], (item) => item.invite_no);
 
   return (
-    <PageShell title="邀请码管理" description="运营在这里生成新用户注册用的邀请码；用户注册成功后会自动创建自己的家庭。">
+    <PageShell title="邀请码管理">
       <Panel>
         <form onSubmit={onCreateInvite} className="admin-form-stack-lg">
           <div className="admin-row-between-top">
@@ -164,7 +164,6 @@ export const InvitesPage = () => {
                 <KeyRound size={18} />
                 生成注册邀请码
               </strong>
-              <p style={mutedTextStyle}>可选绑定手机号；不绑定时，任何新用户拿到该码都能完成注册。</p>
             </div>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
               <Badge tone="neutral">本页待使用 {pendingCount}</Badge>
@@ -205,7 +204,7 @@ export const InvitesPage = () => {
         </form>
       </Panel>
       {/* 状态下拉放进搜索面板同一行：原来它独占一个整宽面板，中间空一大片，看着像没加载出来。 */}
-      <SearchPanel {...state} description="按邀请码编号、绑定手机号、创建人或使用人查询。" placeholder="输入邀请码编号或手机号">
+      <SearchPanel {...state} placeholder="输入邀请码编号或手机号">
         <AdminSelect aria-label="邀请码状态" value={inviteStatus} onChange={(event) => setInviteStatus(event.target.value)}>
           <option value="">全部状态</option>
           <option value="pending">待使用</option>

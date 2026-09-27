@@ -157,7 +157,7 @@ export const SystemConfigPage = () => {
   }));
 
   return (
-    <PageShell title="系统配置" description="维护移动端版本更新参数。AI 供应商、模型和 Key 请在「AI 设置」中集中管理。">
+    <PageShell title="系统配置">
       {error ? <Panel><EmptyState title="操作失败" message={error} /></Panel> : null}
       {message ? <Panel><p style={{ ...mutedTextStyle, margin: 0 }}>{message}</p></Panel> : null}
 
@@ -168,7 +168,6 @@ export const SystemConfigPage = () => {
             配置工作台
           </span>
           <h2>只保留运维必须修改的配置。</h2>
-          <p>这里只保留已经接入运行链路的通用配置；AI 供应商相关内容继续放在 AI 设置。</p>
         </div>
         <div className="admin-system-config-status">
           <div>

@@ -99,7 +99,7 @@ export const OpsReadinessPage = () => {
   const stats = readiness?.data_statistics;
 
   return (
-    <PageShell title="系统运维" description="集中查看运行配置、数据体量、待处理风险和上线验收门禁，支撑日常运维判断。">
+    <PageShell title="系统运维">
       {error ? (
         <EmptyState title="加载失败" message={error}>
           <AdminButton type="button" tone="secondary" disabled={loading} onClick={() => void loadReadiness()}>
@@ -150,7 +150,6 @@ export const OpsReadinessPage = () => {
             <div className="admin-ops-panel-head">
               <div>
         <h2 className="admin-ops-section-title">上线验收门禁</h2>
-                <p style={mutedTextStyle}>真实 AI 和地点 POI 必须以登录后的 live readiness 结果为准，不能只看 provider 名称。</p>
               </div>
               <Badge tone={statusTone(readiness.release_gates.status)}>线上复验{statusLabel(readiness.release_gates.status)}</Badge>
             </div>

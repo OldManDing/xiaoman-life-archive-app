@@ -1223,7 +1223,9 @@ describe('App', () => {
     });
     expect(await screen.findByText('移动端最新版本')).toBeInTheDocument();
     expect(screen.queryByText('AI API Key')).not.toBeInTheDocument();
-    expect(screen.getAllByText('环境变量').length).toBeGreaterThan(0);
+    // 「当前状态」列已改成「分类徽章 + 来源·类型」一行 + 值一行，来源与类型合成同一段文本，
+    // 所以这里用正则匹配包含关系，而不是要求「环境变量」是独立文本节点。
+    expect(screen.getAllByText(/环境变量/).length).toBeGreaterThan(0);
 
     fireEvent.click(screen.getAllByRole('button', { name: '调整' })[0]);
     fireEvent.change(screen.getByLabelText('配置值'), { target: { value: '2.0.8' } });

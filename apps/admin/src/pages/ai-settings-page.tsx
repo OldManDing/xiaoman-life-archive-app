@@ -274,7 +274,7 @@ export const AiSettingsPage = () => {
   };
 
   return (
-    <PageShell title="AI 服务设置" description="集中管理 AI 供应商、接口地址、模型、API Key、超时和额度。密钥只允许覆盖保存，不会明文回显。">
+    <PageShell title="AI 服务设置">
       {error ? (
         <Panel>
           <EmptyState title="操作未完成" message={error} />
@@ -296,7 +296,6 @@ export const AiSettingsPage = () => {
                 当前 AI 通道
               </span>
               <h2>{aiProviderLabel(form.provider)}</h2>
-              <p>这里管理的是实际运行时读取的 AI 配置。后台保存后，服务会优先使用数据库配置，未覆盖的字段继续使用环境变量。</p>
             </div>
             <div className="admin-ai-settings-status">
               <Badge tone={canEdit ? 'success' : 'warning'}>{canEdit ? '可编辑' : '只读'}</Badge>

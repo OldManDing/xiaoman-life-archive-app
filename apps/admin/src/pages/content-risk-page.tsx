@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { AlertTriangle, ExternalLink, ShieldAlert } from 'lucide-react';
+import { AlertTriangle, ExternalLink } from 'lucide-react';
 
 import { adminApi, type AdminContentRiskItem } from '../shared/request';
 import { formatDateTime } from '../shared/format';
 import { AdminButton, AdminSelect, Badge, EmptyState, PageShell, Panel } from '../shared/ui';
-import { inputStyle, mutedTextStyle, secondaryButtonStyle } from '../shared/uiStyles';
+import { inputStyle, secondaryButtonStyle } from '../shared/uiStyles';
 import { useAdminListPage } from './list-page-state';
 import { PaginationPanel, TableShell } from './shared';
 
@@ -115,18 +115,13 @@ export const ContentRisksPage = () => {
   const p0Count = result?.list.filter((item) => item.severity === 'p0').length ?? 0;
 
   return (
-    <PageShell title="内容风险" description="集中复核敏感文本、异常媒体、儿童安全反馈和失败 AI 任务，运营可从这里跳转到对应处理队列。">
+    <PageShell title="内容风险">
       <Panel>
         <form className="admin-audit-filter-form" onSubmit={(event) => void state.onSearch(event)} style={{ display: 'grid', gap: '12px' }}>
           <div className="admin-row-between-top">
             <div>
           <strong style={{ display: 'block', color: '#221b12', marginBottom: '4px' }}>筛选条件</strong>
-              <p style={mutedTextStyle}>支持按风险内容、编号、孩子、用户或处理来源筛选。</p>
             </div>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: '#756b5c', fontSize: '13px', fontWeight: 600 }}>
-              <ShieldAlert size={16} />
-              本页只做风险归集，实际处置在记录、媒体、客服或 AI 队列完成。
-            </span>
           </div>
           <div className="admin-audit-filter-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px' }}>
             <input style={inputStyle} value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="编号 / 用户 / 内容" />
