@@ -80,7 +80,7 @@ textarea {
 .admin-data-table td {
   text-align: left;
   padding: 10px 12px;
-  border-bottom: 1px solid #eceae6;
+  border-bottom: 1px solid var(--line-soft);
   font-size: 13px;
   vertical-align: top;
   color: #2d2a26;
@@ -114,14 +114,17 @@ textarea {
   --surface-warm: #f7efe1;
   --line-soft: #e3ded3;
   --on-dark: #fff8ed;
-  --line: rgba(35, 31, 27, 0.12);
+  --line: var(--line);
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 10px;
   --radius-full: 999px;
-  --shadow-sm: 0 6px 16px rgba(30, 24, 18, 0.08);
-  --shadow-md: 0 16px 38px rgba(30, 24, 18, 0.12);
-  --shadow-lg: 0 24px 60px rgba(30, 24, 18, 0.16);
+  /* 阴影三档（2026-09-27 收敛）：值取自原先使用最多的一族，并把混进来的偏蓝阴影
+     rgba(15,23,42,0.05)（slate 色调，与暖棕配色不搭）一并并入暖色系。
+     原先 32 个不同阴影、22 个只出现一次。 */
+  --shadow-sm: 0 8px 24px rgba(30, 24, 18, 0.045);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
   --z-raised: 30;
   --z-nav-panel-backdrop: 89;
   --z-nav-panel: 90;
@@ -408,7 +411,7 @@ table {
 }
 
 .admin-empty-state {
-  border: 1px dashed #ded4c6;
+  border: 1px dashed var(--line-soft);
   border-radius: var(--radius-lg);
   padding: 18px;
   background: #fbf8f1;
@@ -593,7 +596,7 @@ table {
 .admin-search-panel {
   border-color: rgba(35, 31, 27, 0.1);
   background: var(--surface);
-  box-shadow: 0 16px 38px rgba(30, 24, 18, 0.045);
+  box-shadow: var(--shadow-md);
   overflow: visible;
   position: relative;
   z-index: var(--z-raised);
@@ -603,7 +606,7 @@ table {
 .admin-panel:has(.admin-audit-filter-form) {
   border-color: rgba(35, 31, 27, 0.1);
   background: var(--surface);
-  box-shadow: 0 16px 38px rgba(30, 24, 18, 0.045);
+  box-shadow: var(--shadow-md);
   overflow: visible;
   position: relative;
   z-index: var(--z-raised);
@@ -670,7 +673,7 @@ table {
 .admin-audit-filter-form .admin-select-trigger,
 .admin-audit-filter-form .admin-date-display {
   min-height: 42px;
-  border: 1px solid rgba(35, 31, 27, 0.12);
+  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   padding: 10px 12px;
   background: var(--surface);
@@ -886,7 +889,7 @@ table {
   min-height: 40px;
   border-radius: var(--radius-md);
   padding: 6px 10px;
-  border: 1px solid #ded4c6;
+  border: 1px solid var(--line-soft);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -935,7 +938,9 @@ table {
 .admin-action-menu-trigger {
   width: 100%;
   min-height: 40px;
-  border: 1px solid #ded4c6;
+  /* 原来没有 padding，用的是浏览器默认的 1px 6px（不在间距尺度上）。显式给一个尺度内的值。 */
+  padding: 0 10px;
+  border: 1px solid var(--line-soft);
   border-radius: var(--radius-md);
   display: inline-flex;
   align-items: center;
@@ -1077,7 +1082,7 @@ table {
 .admin-modal {
   animation: admin-pop-in 0.18s ease-out;
   width: min(460px, 100%);
-  border: 1px solid rgba(35, 31, 27, 0.12);
+  border: 1px solid var(--line);
   border-radius: var(--radius-md);
   padding: 18px;
   display: grid;
@@ -1162,7 +1167,7 @@ table {
 .admin-modal-field textarea {
   min-height: 92px;
   resize: none;
-  border: 1px solid rgba(35, 31, 27, 0.12);
+  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   padding: 10px 12px;
   color: var(--ink);
@@ -1184,7 +1189,7 @@ table {
   gap: 18px;
   align-items: center;
   background: var(--surface);
-  box-shadow: 0 18px 42px rgba(30, 24, 18, 0.045);
+  box-shadow: var(--shadow-md);
 }
 
 .admin-list-hero > div:first-child {
@@ -1345,6 +1350,11 @@ table {
   color: var(--muted);
   font-size: 12px;
   line-height: 1.6;
+  /* 说明文字单行省略（原来折两行，把行高撑到约 88px）；完整说明在 title 提示里。 */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .admin-system-config-form,
@@ -1567,7 +1577,7 @@ table {
   color: var(--ink);
   line-height: 1.35;
   font-size: 13px;
-  border: 1px solid rgba(35, 31, 27, 0.12);
+  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
@@ -1632,7 +1642,7 @@ table {
 .admin-date-display {
   width: 100%;
   min-height: 42px;
-  border: 1px solid rgba(35, 31, 27, 0.12);
+  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   padding: 10px 42px 10px 12px;
   display: flex;
@@ -1666,7 +1676,7 @@ table {
   right: 0;
   max-height: min(320px, 48vh);
   overflow-y: auto;
-  border: 1px solid #ded4c6;
+  border: 1px solid var(--line-soft);
   border-radius: var(--radius-md);
   padding: 6px;
   background: var(--surface);
@@ -2157,7 +2167,7 @@ table {
 
 .admin-media-preview-placeholder {
   min-height: 156px;
-  border: 1px dashed #ded4c6;
+  border: 1px dashed var(--line-soft);
   border-radius: var(--radius-md);
   padding: 18px;
   display: grid;
@@ -2232,7 +2242,7 @@ table {
 }
 
 .admin-media-preview-empty {
-  border: 1px dashed #ded4c6;
+  border: 1px dashed var(--line-soft);
   border-radius: var(--radius-md);
   padding: 18px;
   display: grid;
@@ -3495,7 +3505,7 @@ table {
     border-radius: var(--radius-md);
     overflow: hidden;
     background: var(--surface);
-    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.05);
+    box-shadow: var(--shadow-sm);
   }
 
   .admin-responsive-table td {
@@ -3932,7 +3942,7 @@ table {
   top: 0;
   z-index: 4;
   border-color: rgba(126, 92, 45, 0.14);
-  box-shadow: 0 8px 22px rgba(47, 35, 20, 0.07);
+  box-shadow: var(--shadow-lg);
 }
 
 .admin-drawer-header button {
@@ -4199,7 +4209,7 @@ table {
   top: 18px;
   border-color: rgba(35, 31, 27, 0.1);
   background: var(--surface);
-  box-shadow: 0 16px 38px rgba(30, 24, 18, 0.045);
+  box-shadow: var(--shadow-md);
   border-radius: 12px;
 }
 
@@ -4435,7 +4445,7 @@ table {
     width: 100%;
     min-width: 0;
     margin-top: 2px;
-    box-shadow: 0 14px 26px rgba(46, 34, 20, 0.1);
+    box-shadow: var(--shadow-lg);
   }
 
   .admin-responsive-table tr:has(.admin-action-menu-popover) {
@@ -4472,7 +4482,7 @@ table {
     border-radius: var(--radius-md);
     overflow: visible;
     background: var(--surface);
-    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.05);
+    box-shadow: var(--shadow-sm);
   }
 
   .admin-media-table .admin-responsive-table td {
@@ -4545,7 +4555,7 @@ table {
     border-radius: var(--radius-md);
     overflow: hidden;
     background: var(--surface);
-    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.05);
+    box-shadow: var(--shadow-sm);
   }
 
   .admin-users-table .admin-responsive-table td {
@@ -4661,7 +4671,7 @@ table {
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 4px 10px;
     padding: 12px 0;
-    border-bottom: 1px solid #eee9e1;
+    border-bottom: 1px solid var(--line-soft);
   }
 
   .admin-ops-readiness-table .admin-ops-status-row:last-child {
@@ -4821,10 +4831,10 @@ table {
 .admin-table-panel,
 .admin-system-config-hero,
 .admin-system-config-editor {
-  border-color: #e6e3de;
+  border-color: var(--line-soft);
   border-radius: var(--radius-md);
   background: var(--surface);
-  box-shadow: 0 8px 24px rgba(31, 29, 26, 0.045);
+  box-shadow: var(--shadow-sm);
 }
 
 .admin-responsive-table th {
@@ -4835,7 +4845,7 @@ table {
 
 .admin-responsive-table td {
   color: #2d2a26;
-  border-bottom-color: #eceae6;
+  border-bottom-color: var(--line-soft);
 }
 
 .admin-responsive-table tbody tr:hover {
@@ -4881,7 +4891,7 @@ table {
 .admin-button:disabled,
 .admin-pagination-actions .admin-button:disabled,
 .admin-pagination-actions button:disabled {
-  border-color: #e4e1dc;
+  border-color: var(--line-soft);
   /* 原 #9a948b 在 #f5f4f2 上只有 2.74:1，分页栏的「上一页/跳转」几乎是糊的。
      禁用态虽然不受 WCAG 对比度约束，但"看不清"就是看不清；#736c60 在灰底 4.73、白底 5.19，
      同时明显浅于启用态文字，禁用语义仍然清晰。 */
@@ -4952,10 +4962,10 @@ table {
     display: grid;
     gap: 0;
     overflow: visible;
-    border: 1px solid #e3e0da;
+    border: 1px solid var(--line-soft);
     border-radius: var(--radius-md);
     background: var(--surface);
-    box-shadow: 0 6px 18px rgba(31, 29, 26, 0.045);
+    box-shadow: var(--shadow-sm);
   }
 
   .admin-table-panel:not(.admin-users-table):not(.admin-media-table) .admin-responsive-table td {
@@ -4970,7 +4980,7 @@ table {
     padding: 10px 12px;
     white-space: normal;
     overflow-wrap: anywhere;
-    border-bottom: 1px solid #eceae6;
+    border-bottom: 1px solid var(--line-soft);
     background: var(--surface);
     box-shadow: none;
   }
@@ -5157,9 +5167,9 @@ table {
   }
 
   .admin-responsive-table tr {
-    border-color: #e3e0da;
+    border-color: var(--line-soft);
     background: var(--surface);
-    box-shadow: 0 6px 18px rgba(31, 29, 26, 0.045);
+    box-shadow: var(--shadow-sm);
   }
 
   .admin-responsive-table td,
@@ -5191,7 +5201,7 @@ table {
     display: grid !important;
     gap: 0 !important;
     overflow: hidden;
-    border: 1px solid #e6e3de;
+    border: 1px solid var(--line-soft);
     border-radius: var(--radius-md);
     background: var(--surface);
   }
@@ -5201,7 +5211,7 @@ table {
     min-height: 0 !important;
     padding: 12px 14px !important;
     border: 0 !important;
-    border-bottom: 1px solid #eceae6 !important;
+    border-bottom: 1px solid var(--line-soft) !important;
     border-radius: 0 !important;
     background: var(--surface) !important;
     box-shadow: none !important;
@@ -5248,7 +5258,7 @@ table {
 .admin-action-button-secondary,
 .admin-system-config-list button,
 .admin-system-config-actions button[type="button"] {
-  border-color: #ded8cf;
+  border-color: var(--line-soft);
   background: var(--surface);
   color: #5d4f3c;
 }
@@ -5272,7 +5282,7 @@ table {
 .admin-select-trigger,
 .admin-date-display {
   border-radius: var(--radius-md);
-  border-color: #ded8cf;
+  border-color: var(--line-soft);
   background: var(--surface);
   color: var(--ink);
 }
@@ -5554,7 +5564,7 @@ table {
   align-items: center;
   background: var(--surface);
   color: var(--ink);
-  box-shadow: 0 18px 42px rgba(30, 24, 18, 0.045);
+  box-shadow: var(--shadow-md);
   border-color: rgba(35, 31, 27, 0.1);
 }
 
@@ -5600,7 +5610,7 @@ table {
 .admin-detail-list {
   gap: 0;
   overflow: hidden;
-  border: 1px solid #e8e3da;
+  border: 1px solid var(--line-soft);
   border-radius: var(--radius-md);
   background: var(--surface);
 }
@@ -5608,7 +5618,7 @@ table {
 .admin-detail-list-item,
 .admin-detail-grid > .admin-detail-list-item {
   border: 0;
-  border-bottom: 1px solid #eee9e1;
+  border-bottom: 1px solid var(--line-soft);
   border-radius: 0;
   background: var(--surface);
   box-shadow: none;
@@ -5656,13 +5666,13 @@ table {
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     gap: 0 !important;
     overflow: hidden;
-    border: 1px solid #e8e3da;
+    border: 1px solid var(--line-soft);
     border-radius: var(--radius-md);
   }
 
   .admin-system-config-status div {
     border: 0 !important;
-    border-right: 1px solid #eee9e1 !important;
+    border-right: 1px solid var(--line-soft) !important;
     border-radius: 0 !important;
     padding: 10px 8px !important;
     background: var(--surface) !important;
@@ -5694,7 +5704,7 @@ table {
     display: grid;
     gap: 0;
     overflow: hidden;
-    border: 1px solid #e8e3da;
+    border: 1px solid var(--line-soft);
     border-radius: var(--radius-md);
     background: var(--surface);
   }
@@ -5706,7 +5716,7 @@ table {
     align-items: center;
     padding: 12px 14px;
     border: 0;
-    border-bottom: 1px solid #eee9e1;
+    border-bottom: 1px solid var(--line-soft);
     border-radius: 0;
     background: var(--surface);
     box-shadow: none;
@@ -5841,7 +5851,7 @@ table {
     display: grid;
     gap: 0;
     overflow: hidden;
-    border: 1px solid #e8e3da;
+    border: 1px solid var(--line-soft);
     border-radius: var(--radius-md);
     background: var(--surface);
   }
@@ -5853,7 +5863,7 @@ table {
     align-items: center;
     padding: 12px 14px;
     border: 0;
-    border-bottom: 1px solid #eee9e1;
+    border-bottom: 1px solid var(--line-soft);
     border-radius: 0;
     background: var(--surface);
     box-shadow: none;
@@ -6208,10 +6218,10 @@ table {
   min-width: 0;
   margin: 0;
   padding: 14px;
-  border: 1px solid #e6e3de;
+  border: 1px solid var(--line-soft);
   border-radius: var(--radius-md);
   background: var(--surface);
-  box-shadow: 0 8px 24px rgba(31, 29, 26, 0.045);
+  box-shadow: var(--shadow-sm);
   overflow: visible;
 }
 
@@ -6252,7 +6262,7 @@ table {
 .admin-audit-filter-form .admin-date-display {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #ded8cf;
+  border: 1px solid var(--line-soft);
   background: var(--surface);
   color: var(--ink);
   box-shadow: none;
@@ -6283,7 +6293,7 @@ table {
 
 .admin-search-controls .admin-filter-button-secondary,
 .admin-audit-filter-actions button:last-child {
-  border-color: #ded8cf;
+  border-color: var(--line-soft);
   background: var(--surface);
   color: #5d4f3c;
 }
@@ -6624,7 +6634,7 @@ table {
 /* Date fields share the same geometry, tone, and focus language as every admin control. */
 #root .admin-layout .admin-date-display {
   min-height: 42px;
-  border: 1px solid #ded8cf;
+  border: 1px solid var(--line-soft);
   border-radius: var(--admin-control-radius);
   padding: 10px 42px 10px 12px;
   background: var(--surface);
@@ -6681,10 +6691,10 @@ table {
 
 /* Tables use one rounded outer frame with quiet inner separators. */
 #root .admin-layout .admin-table-panel {
-  border: 1px solid #ded8cf;
+  border: 1px solid var(--line-soft);
   border-radius: var(--admin-control-radius);
   background: var(--surface);
-  box-shadow: 0 8px 24px rgba(31, 29, 26, 0.045);
+  box-shadow: var(--shadow-sm);
 }
 
 #root .admin-layout .admin-table-panel .admin-table-scroll {
@@ -6720,12 +6730,12 @@ table {
 
 @media (max-width: 960px) {
   #root .admin-layout .admin-table-panel:not(.admin-system-config-table) .admin-responsive-table tr {
-    border: 1px solid #ded8cf;
+    border: 1px solid var(--line-soft);
     border-radius: var(--admin-control-radius);
   }
 
   #root .admin-layout .admin-system-config-table .admin-responsive-table tbody {
-    border-color: #ded8cf;
+    border-color: var(--line-soft);
     border-radius: var(--admin-control-radius);
   }
 }
@@ -6770,7 +6780,7 @@ table {
 .admin-pagination select,
 .admin-pagination input {
   border-radius: var(--radius-md);
-  border: 1px solid rgba(35, 31, 27, 0.12);
+  border: 1px solid var(--line);
   background: var(--surface);
   color: var(--ink);
   font-size: 13px;
@@ -6931,7 +6941,7 @@ table {
 }
 .admin-panel {
   border-radius: var(--radius-lg);
-  box-shadow: 0 16px 38px rgba(30, 24, 18, 0.045);
+  box-shadow: var(--shadow-md);
   position: relative;
   overflow: visible;
   border-color: rgba(81, 61, 35, 0.12);
@@ -7112,7 +7122,7 @@ table {
   border: 1px solid rgba(35, 31, 27, 0.1);
   border-radius: var(--radius-lg);
   padding: 16px;
-  box-shadow: 0 16px 38px rgba(30, 24, 18, 0.045);
+  box-shadow: var(--shadow-md);
 }
 
 .admin-ops-stat-label {
@@ -7132,7 +7142,7 @@ table {
 }
 
 .admin-ops-report-block {
-  border-top: 1px solid #ded4c6;
+  border-top: 1px solid var(--line-soft);
   margin-top: 14px;
   padding-top: 14px;
   display: grid;

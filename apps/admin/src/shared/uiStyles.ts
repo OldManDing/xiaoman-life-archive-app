@@ -13,7 +13,7 @@ export const cardStyle: CSSProperties = {
   border: '1px solid rgba(35, 31, 27, 0.1)',
   borderRadius: 'var(--radius-lg)',
   padding: '16px',
-  boxShadow: '0 16px 38px rgba(30, 24, 18, 0.045)',
+  boxShadow: 'var(--shadow-md)',
 };
 
 export const headingStyle: CSSProperties = {
@@ -72,7 +72,7 @@ export const thTdStyle: CSSProperties = {
   // 但一屏能多看 2~3 行（列表密度是运营最常抱怨的点）。
   // 与 CSS 侧同一套间距尺度（偶数像素）：9px → 8px，行高也更省一点。
   padding: '8px 12px',
-  borderBottom: '1px solid #eceae6',
+  borderBottom: '1px solid var(--line-soft)',
   fontSize: '13px',
   verticalAlign: 'top',
   color: '#2d2a26',

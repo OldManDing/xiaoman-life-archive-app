@@ -135,7 +135,8 @@ export const SystemConfigPage = () => {
     cells: [
       <span key={`${item.config_key}-label`} className="admin-system-config-name">
         <strong>{item.label}</strong>
-        <span>{item.description}</span>
+        {/* title 让被省略的说明可 hover 查看；原来说明折 2 行把行高撑到约 88px。 */}
+        <span title={item.description}>{item.description}</span>
       </span>,
       // 原来徽章、值、来源各占一行（行高约 110px）。改成「徽章 + 来源/类型」一行、值单独一行：
       // 两行即可，值也更醒目。
