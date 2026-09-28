@@ -1,4 +1,5 @@
 import { Children, Fragment, cloneElement, isValidElement, useEffect, useRef, useState, type ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import { AlertTriangle, ArchiveX, AudioLines, Ban, CheckCircle2, ClipboardCheck, Crown, Eye, LockKeyhole, MoreHorizontal, RotateCcw, SlidersHorizontal, Snowflake, Video, X, XCircle } from 'lucide-react';
 
@@ -294,18 +295,23 @@ const MediaThumb = ({ item, size = 72 }: { item: AdminMediaItem; size?: number }
       ) : (
         thumb
       )}
-      {expanded && item.access_url ? (
-        <div className="admin-media-lightbox" role="dialog" aria-modal="true" aria-label={item.media_type === 'video' ? '视频预览' : '图片预览'} onClick={() => setExpanded(false)}>
-          <LightboxCloseButton onClose={() => setExpanded(false)} />
-          {item.media_type === 'video' ? (
-            <video src={item.access_url} controls autoPlay muted onClick={(event) => event.stopPropagation()}>
-              当前浏览器不支持视频预览。
-            </video>
-          ) : (
-            <img src={item.access_url} alt={item.original_name ?? item.media_no} onClick={(event) => event.stopPropagation()} />
-          )}
-        </div>
-      ) : null}
+      {/* 弹层必须 portal 到 body：表格行上有 transform（悬停位移），带 transform 的祖先会成为
+          position: fixed 的包含块 —— 弹层会被困在这一行里（实测遮罩只有 982x89，而视口是 1280x720）。 */}
+      {expanded && item.access_url
+        ? createPortal(
+            <div className="admin-media-lightbox" role="dialog" aria-modal="true" aria-label={item.media_type === 'video' ? '视频预览' : '图片预览'} onClick={() => setExpanded(false)}>
+              <LightboxCloseButton onClose={() => setExpanded(false)} />
+              {item.media_type === 'video' ? (
+                <video src={item.access_url} controls autoPlay muted onClick={(event) => event.stopPropagation()}>
+                  当前浏览器不支持视频预览。
+                </video>
+              ) : (
+                <img src={item.access_url} alt={item.original_name ?? item.media_no} onClick={(event) => event.stopPropagation()} />
+              )}
+            </div>,
+            document.body,
+          )
+        : null}
     </>
   );
 };
