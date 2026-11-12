@@ -3052,3 +3052,26 @@ button.set-row {
 .is-create.record-form-page {
   padding-bottom: 196px !important;
 }
+
+/* 11：分组标题再压到设计稿 24 */
+.set-group-title {
+  font-size: 24px !important;
+}
+
+/* 10：消息卡再收一档 */
+.msg-card {
+  min-height: 64px !important;
+  padding: 8px 16px 8px 18px !important;
+}
+
+/* 03：详情大标题在 90 基础上再放大一档 */
+.rd-title,
+.rd-hero-title {
+  font-size: 34px !important;
+  font-weight: 600 !important;
+}
+
+/* 04：给固定 CTA 留足滚动空间，chips 不被裁 */
+.is-create.record-form-page {
+  padding-bottom: 236px !important;
+}
