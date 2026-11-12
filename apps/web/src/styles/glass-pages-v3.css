@@ -2198,3 +2198,186 @@ button.set-row {
 .is-create .record-editor-title-row {
   padding: 22px 18px 8px !important;
 }
+
+/* ---------------- 08 登录（手机号 + 短信验证码） ---------------- */
+.lg-page {
+  min-height: 100dvh;
+  background: linear-gradient(170deg, #fdf2e5 0%, #f8e2cf 60%, #f4d6bf 100%);
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+.lg-hero {
+  position: relative;
+  height: 50vh;
+  min-height: 330px;
+  overflow: hidden;
+}
+
+.lg-hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.lg-hero-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(40, 25, 12, 0.02) 38%, rgba(253, 242, 229, 0.82) 78%, #fdf2e5 100%);
+}
+
+.lg-brand {
+  position: absolute;
+  left: 22px;
+  bottom: 18px;
+  color: var(--nl-ink);
+}
+
+.lg-brand-mark {
+  position: absolute;
+  left: -2px;
+  top: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: #e9a05a;
+}
+
+.lg-brand-name {
+  margin: 0 0 0 24px;
+  font-family: var(--nl-font-display);
+  font-size: 46px;
+  line-height: 1;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.lg-brand-rule {
+  display: block;
+  width: 128px;
+  height: 1.5px;
+  margin: 14px 0 10px;
+  background: rgba(58, 42, 28, 0.5);
+}
+
+.lg-brand-slogan {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.lg-body {
+  position: relative;
+  margin-top: 4px;
+  padding: 0 20px calc(28px + env(safe-area-inset-bottom));
+  display: grid;
+  gap: 16px;
+}
+
+.lg-field-card {
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  background: rgba(255, 252, 247, 0.92);
+  box-shadow: 0 14px 32px rgba(150, 95, 50, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  overflow: hidden;
+}
+
+.lg-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 64px;
+  padding: 0 18px;
+  border-bottom: 1px solid rgba(58, 42, 28, 0.08);
+}
+
+.lg-row:last-child {
+  border-bottom: none;
+}
+
+.lg-row input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 44px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--nl-ink);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.lg-code-button {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 0 2px;
+  border: none;
+  background: transparent;
+  color: var(--nl-accent);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lg-code-button:disabled {
+  color: var(--nl-muted-placeholder);
+  cursor: not-allowed;
+}
+
+.lg-submit {
+  min-height: 54px;
+  border: none;
+  border-radius: 999px;
+  background: #a9581b;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 14px 30px rgba(169, 88, 27, 0.24);
+}
+
+.lg-submit:disabled {
+  background: rgba(111, 87, 69, 0.2);
+  color: rgba(58, 42, 28, 0.5);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.lg-error {
+  margin: 0;
+  color: #c0392b;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.lg-agreement {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: var(--nl-muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.lg-agreement input {
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  accent-color: #a9581b;
+}
+
+.lg-link {
+  color: var(--nl-accent);
+  text-decoration: none;
+}
+
+.lg-footnote {
+  margin: 0;
+  text-align: center;
+  color: var(--nl-muted);
+  font-size: 13px;
+  font-weight: 500;
+}

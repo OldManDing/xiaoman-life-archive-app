@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties, type ChangeEvent, type FocusEvent, type FormEvent, type KeyboardEvent, type MouseEvent as ReactMouseEvent, type RefObject } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { CalendarDays, Camera, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { CalendarDays, Camera, ChevronLeft, ChevronRight, ShieldCheck, Smartphone } from 'lucide-react';
 
 import { useAuth } from '../shared/AuthContext';
 import { BrandBootMotion } from '../components/BrandBootMotion';
@@ -431,58 +431,18 @@ export const WelcomePage = () => {
 
 export const LoginPage = () => {
   const navigate = useNavigate();
-  const { login, register, isAuthenticated, needsOnboarding } = useAuth();
-  const [initialDraft] = useState(readLoginFormDraft);
-  const [mode, setMode] = useState<AuthMode>(initialDraft.mode);
-  const [form, setForm] = useState<AuthFormState>({ ...initialDraft.form });
-  const [acceptedAgreement, setAcceptedAgreement] = useState(initialDraft.acceptedAgreement);
+  const { login, isAuthenticated, needsOnboarding } = useAuth();
+  const [phone, setPhone] = useState('');
+  const [code, setCode] = useState('');
+  const [acceptedAgreement, setAcceptedAgreement] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [countdown, setCountdown] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const credentialInputRef = useRef<HTMLInputElement>(null);
-  const passwordInputRef = useRef<HTMLInputElement>(null);
-  const passwordConfirmInputRef = useRef<HTMLInputElement>(null);
-  const inviteCodeInputRef = useRef<HTMLInputElement>(null);
-  const canSubmit =
-    acceptedAgreement &&
-    form.credential.trim().length > 0 &&
-    form.password.length > 0 &&
-    (mode === 'login' || form.password_confirm.length > 0);
 
-  const persistDraft = (nextMode: AuthMode, nextForm: AuthFormState, nextAcceptedAgreement: boolean) => {
-    saveLoginFormDraft({
-      mode: nextMode,
-      form: { ...nextForm },
-      acceptedAgreement: nextAcceptedAgreement,
-    });
-  };
-
-  const updateMode = (nextMode: AuthMode) => {
-    setMode(nextMode);
-    persistDraft(nextMode, form, acceptedAgreement);
-    setError(null);
-  };
-
-  const updateFormField = (field: keyof AuthFormState, value: string) => {
-    setForm((current) => {
-      const nextForm = { ...current, [field]: value };
-      persistDraft(mode, nextForm, acceptedAgreement);
-      return nextForm;
-    });
-  };
-
-  const updateAcceptedAgreement = (checked: boolean) => {
-    setAcceptedAgreement(checked);
-    persistDraft(mode, form, checked);
-  };
-
-  const openLegalPage = () => {
-    persistDraft(mode, form, acceptedAgreement);
-    navigate('/legal');
-  };
-
-  const goBackFromLogin = () => {
-    navigate('/welcome', { replace: true });
-  };
+  const normalizedPhone = phone.trim();
+  const canSubmit = acceptedAgreement && /^1\d{10}$/.test(normalizedPhone) && code.trim().length >= 4;
+  const canSendCode = /^1\d{10}$/.test(normalizedPhone) && countdown <= 0 && !sending;
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -491,243 +451,116 @@ export const LoginPage = () => {
   }, [isAuthenticated, navigate, needsOnboarding]);
 
   useEffect(() => {
-    saveLoginFormDraft({
-      mode,
-      form: { ...form },
-      acceptedAgreement,
-    });
-  }, [acceptedAgreement, form, mode]);
+    if (countdown <= 0) return undefined;
+    const timer = window.setTimeout(() => setCountdown((current) => Math.max(0, current - 1)), 1000);
+    return () => window.clearTimeout(timer);
+  }, [countdown]);
 
-  const scrollInputIntoView = (input: HTMLInputElement | null) => {
-    window.setTimeout(() => {
-      input?.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'smooth' });
-    }, 120);
+  const sendCode = async () => {
+    if (!canSendCode) return;
+    setSending(true);
+    setError(null);
+    try {
+      await webApi.sendCode(normalizedPhone);
+      setCountdown(60);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '验证码发送失败，请稍后重试');
+    } finally {
+      setSending(false);
+    }
   };
 
-  const onInputFocus = (event: FocusEvent<HTMLInputElement>) => {
-    scrollInputIntoView(event.currentTarget);
-  };
-
-  const focusNextInputOnEnter = (event: KeyboardEvent<HTMLInputElement>, nextInputRef: RefObject<HTMLInputElement>) => {
-    if (event.key !== 'Enter') return;
-    event.preventDefault();
-    nextInputRef.current?.focus();
-    scrollInputIntoView(nextInputRef.current);
-  };
-
-  const submitAuth = async () => {
+  const submit = async () => {
     if (submitting) return;
     if (!acceptedAgreement) {
       setError('请先阅读并同意用户协议和隐私政策');
       return;
     }
-
+    if (!/^1\d{10}$/.test(normalizedPhone)) {
+      setError('请输入正确的 11 位手机号');
+      return;
+    }
+    if (code.trim().length < 4) {
+      setError('请输入短信验证码');
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
-      const credentialError = validateCredential(form.credential);
-      if (credentialError) {
-        setError(credentialError);
-        return;
-      }
-
-      const passwordError = validatePassword(form.password, '密码', mode === 'login' ? 72 : 12);
-      if (passwordError) {
-        setError(passwordError);
-        return;
-      }
-
-      if (mode === 'login') {
-        await login({
-          login_type: 'password',
-          credential: form.credential.trim(),
-          password: form.password,
-        });
-        clearLoginFormDraft();
-      } else {
-        const passwordConfirmError = validatePassword(form.password_confirm, '确认密码', 12);
-        if (passwordConfirmError) {
-          setError(passwordConfirmError);
-          return;
-        }
-
-        if (form.password !== form.password_confirm) {
-          setError('两次输入的密码不一致');
-          return;
-        }
-
-        const inviteCode = form.invite_code.trim();
-        if (inviteCode) {
-          const inviteCodeError = validateInviteCode(inviteCode);
-          if (inviteCodeError) {
-            setError(inviteCodeError);
-            return;
-          }
-        }
-
-        await register({
-          credential: form.credential.trim(),
-          password: form.password,
-          password_confirm: form.password_confirm,
-          ...(inviteCode ? { invite_code: inviteCode } : {}),
-        });
-        clearLoginFormDraft();
-      }
+      await login({ login_type: 'sms', credential: normalizedPhone, code: code.trim() });
     } catch (err) {
-      const message = err instanceof Error ? err.message : mode === 'login' ? '登录失败，请稍后重试' : '注册失败，请稍后重试';
-      setError(normalizeAuthErrorMessage(mode, message));
+      setError(err instanceof Error ? err.message : '登录失败，请稍后重试');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const submitOnEnter = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key !== 'Enter') return;
-    event.preventDefault();
-    void submitAuth();
-  };
-
-  const onPasswordKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (mode === 'login') {
-      submitOnEnter(event);
-      return;
-    }
-    focusNextInputOnEnter(event, passwordConfirmInputRef);
-  };
-
-  const onSubmit = (event: FormEvent) => {
-    event.preventDefault();
-    void submitAuth();
-  };
-
   return (
-    <PageShell title="登录注册" hideHeader>
-      <div style={authPageContentStyle}>
-        <button type="button" aria-label="返回" onClick={goBackFromLogin} style={authBackButtonStyle}>
-          <ChevronLeft size={18} strokeWidth={2.4} />
-          返回
-        </button>
-        <section style={authHeroStyle} aria-label="年轮品牌">
-          <img src="/brand/nianlun-logo-192.png" alt="年轮" width={72} height={72} style={authLogoStyle} />
-          <div>
-            <h1 style={authTitleStyle}>登录注册</h1>
-          </div>
-        </section>
-        <Panel style={authPanelStyle}>
-          <form onSubmit={onSubmit} style={authFormStyle} noValidate>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-            <button
-              type="button"
-              style={mode === 'login' ? primaryButtonStyle : secondaryButtonStyle}
-              onClick={() => updateMode('login')}
-            >
-              登录
-            </button>
-            <button
-              type="button"
-              style={mode === 'register' ? primaryButtonStyle : secondaryButtonStyle}
-              onClick={() => updateMode('register')}
-            >
-              注册
-            </button>
-          </div>
-          <Field label="账号">
-            <input
-              ref={credentialInputRef}
-              style={inputStyle}
-              value={form.credential}
-              onChange={(event) => updateFormField('credential', event.target.value)}
-              onFocus={onInputFocus}
-              onKeyDown={(event) => focusNextInputOnEnter(event, passwordInputRef)}
-              placeholder="账号"
-              autoComplete="username"
-              inputMode="email"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-              enterKeyHint="next"
-            />
-          </Field>
-          <Field label="密码">
-            <input
-              ref={passwordInputRef}
-              style={inputStyle}
-              type="password"
-              value={form.password}
-              onChange={(event) => updateFormField('password', event.target.value)}
-              onFocus={onInputFocus}
-              onKeyDown={onPasswordKeyDown}
-              placeholder="密码"
-              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-              enterKeyHint={mode === 'login' ? 'done' : 'next'}
-              maxLength={mode === 'login' ? 72 : 12}
-            />
-          </Field>
-          {mode === 'register' ? (
-            <>
-              <Field label="确认密码">
-                <input
-                  ref={passwordConfirmInputRef}
-                  style={inputStyle}
-                  type="password"
-                  value={form.password_confirm}
-                  onChange={(event) => updateFormField('password_confirm', event.target.value)}
-                  onFocus={onInputFocus}
-                  onKeyDown={(event) => focusNextInputOnEnter(event, inviteCodeInputRef)}
-                  placeholder="确认密码"
-                  autoComplete="new-password"
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  enterKeyHint="next"
-                  maxLength={12}
-                />
-              </Field>
-              <Field label="邀请码">
-                <input
-                  ref={inviteCodeInputRef}
-                  style={inputStyle}
-                  value={form.invite_code}
-                  onChange={(event) => updateFormField('invite_code', event.target.value)}
-                  onFocus={onInputFocus}
-                  onKeyDown={submitOnEnter}
-                  placeholder="邀请码"
-                  autoComplete="one-time-code"
-                  autoCapitalize="characters"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  enterKeyHint="done"
-                />
-              </Field>
-            </>
-          ) : null}
-          <label style={authAgreementStyle}>
-            <input
-              type="checkbox"
-              checked={acceptedAgreement}
-              onChange={(event) => updateAcceptedAgreement(event.target.checked)}
-              style={authCheckboxStyle(acceptedAgreement)}
-            />
-            <span style={authAgreementTextStyle}>
-              我已阅读并同意《用户协议》《隐私政策》和《儿童个人信息保护规则》
-            </span>
-          </label>
-        {error ? <p style={{ ...helperTextStyle, color: 'var(--nl-danger)' }}>{error}</p> : null}
-          <button type="button" style={{ ...secondaryButtonStyle, justifyContent: 'center' }} onClick={openLegalPage}>
-            协议与隐私
-          </button>
-          <button type="submit" style={submitting || !canSubmit ? disabledSubmitButtonStyle : primaryButtonStyle} disabled={submitting || !canSubmit}>
-            {submitting ? (mode === 'login' ? '登录中…' : '注册中…') : mode === 'login' ? '进入年轮' : '注册并进入'}
-          </button>
-          </form>
-        </Panel>
+    <div className="lg-page">
+      <div className="lg-hero" aria-hidden="true">
+        <img src="/photos/login-hero.jpg" alt="" />
+        <div className="lg-hero-scrim" />
+        <div className="lg-brand">
+          <span className="lg-brand-mark" aria-hidden="true" />
+          <h1 className="lg-brand-name">年轮</h1>
+          <span className="lg-brand-rule" aria-hidden="true" />
+          <p className="lg-brand-slogan">把每一天，都留给以后</p>
+        </div>
       </div>
-    </PageShell>
+
+      <div className="lg-body">
+        <div className="lg-field-card">
+          <label className="lg-row">
+            <Smartphone size={22} strokeWidth={1.7} color="var(--nl-ink)" />
+            <input
+              aria-label="手机号"
+              inputMode="tel"
+              autoComplete="tel"
+              value={phone}
+              onChange={(event) => setPhone(event.target.value.replace(/[^\d]/g, '').slice(0, 11))}
+              placeholder="手机号"
+            />
+          </label>
+          <div className="lg-row">
+            <ShieldCheck size={22} strokeWidth={1.7} color="var(--nl-ink)" />
+            <input
+              aria-label="验证码"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              value={code}
+              onChange={(event) => setCode(event.target.value.replace(/[^\d]/g, '').slice(0, 6))}
+              placeholder="验证码"
+            />
+            <button type="button" className="lg-code-button" onClick={() => void sendCode()} disabled={!canSendCode}>
+              {countdown > 0 ? `${countdown}s` : sending ? '发送中' : '获取验证码'}
+            </button>
+          </div>
+        </div>
+
+        {error ? <p className="lg-error" role="alert">{error}</p> : null}
+
+        <button type="button" className="lg-submit" onClick={() => void submit()} disabled={!canSubmit || submitting}>
+          {submitting ? '登录中…' : '登录 / 注册'}
+        </button>
+
+        <label className="lg-agreement">
+          <input
+            type="checkbox"
+            checked={acceptedAgreement}
+            onChange={(event) => setAcceptedAgreement(event.target.checked)}
+          />
+          <span>
+            已阅读并同意 <Link to="/legal?doc=terms" className="lg-link">《用户协议》</Link> 和{' '}
+            <Link to="/legal?doc=privacy" className="lg-link">《隐私政策》</Link>
+          </span>
+        </label>
+
+        <p className="lg-footnote">未注册的手机号将自动创建账号</p>
+      </div>
+    </div>
   );
 };
+
 
 export const OnboardingChildPage = () => {
   const navigate = useNavigate();

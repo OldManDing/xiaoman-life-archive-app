@@ -35,11 +35,9 @@ import type {
   UserProfile,
 } from './types';
 
-export interface LoginPayload {
-  login_type: 'password';
-  credential: string;
-  password: string;
-}
+export type LoginPayload =
+  | { login_type: 'password'; credential: string; password: string }
+  | { login_type: 'sms'; credential: string; code: string };
 
 export interface RegisterPayload {
   credential: string;
