@@ -2697,3 +2697,26 @@ button.set-row {
   font-weight: 600;
   letter-spacing: 0.02em;
 }
+
+.invite-shell .app-topbar h1 {
+  font-size: 30px !important;
+  font-weight: 500 !important;
+}
+
+.invite-shell .app-panel {
+  border-radius: 24px !important;
+  overflow: hidden;
+  box-shadow: 0 14px 32px rgba(150, 95, 50, 0.12) !important;
+}
+
+.invite-section-title {
+  color: var(--nl-ink);
+  font-family: var(--nl-font-display);
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.invite-shell section > div[style*="minHeight"] {
+  border-radius: 18px;
+}

@@ -1022,12 +1022,12 @@ export const FamilyInvitePage = () => {
   const invitedMembers = members.filter((member) => member.role !== 'owner');
 
   return (
-    <PageShell title="邀请家人" backTo="/family">
+    <PageShell title="邀请家人" backTo="/family" className="invite-shell">
       <Panel style={{ padding: 0, overflow: 'hidden' }}>
         <img
           src="/photos/hero-park.jpg"
           alt="家人在公园里一起看着孩子"
-          style={{ display: 'block', width: '100%', height: 176, objectFit: 'cover' }}
+          style={{ display: 'block', width: '100%', height: 196, objectFit: 'cover' }}
         />
         <div style={{ display: 'grid', gap: 12, padding: '18px 18px 20px' }}>
           <div style={{ display: 'grid', gap: 4 }}>
@@ -1073,10 +1073,10 @@ export const FamilyInvitePage = () => {
                   display: 'block',
                   marginTop: 2,
                   color: 'var(--nl-ink)',
-                  fontSize: 24,
-                  fontWeight: 700,
+                  fontSize: 30,
+                  fontWeight: 600,
                   lineHeight: 1.2,
-                  letterSpacing: '0.14em',
+                  letterSpacing: '0.12em',
                   fontVariantNumeric: 'tabular-nums',
                   wordBreak: 'break-all',
                 }}
@@ -1134,7 +1134,7 @@ export const FamilyInvitePage = () => {
 
       <section aria-label="已邀请" style={{ display: 'grid', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <strong style={{ color: 'var(--nl-ink)', fontSize: 15, fontWeight: 700 }}>已邀请</strong>
+          <strong className="invite-section-title">已邀请</strong>
           <span aria-hidden="true" style={{ flex: 1, height: 1, background: 'var(--nl-border-soft)' }} />
         </div>
         {invitedMembers.length ? invitedMembers.map((member) => {
