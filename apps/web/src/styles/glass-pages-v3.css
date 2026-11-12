@@ -2381,3 +2381,137 @@ button.set-row {
   font-size: 13px;
   font-weight: 500;
 }
+
+/* ---------------- 20 账号资料 ---------------- */
+.account-shell .app-topbar h1 {
+  font-size: 30px !important;
+  font-weight: 500 !important;
+}
+
+.ac-card {
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.86);
+  background: rgba(255, 252, 247, 0.8);
+  box-shadow: 0 12px 26px rgba(150, 95, 50, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.86);
+  overflow: hidden;
+}
+
+.ac-hero {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 20px 18px 16px;
+}
+
+.ac-avatar {
+  position: relative;
+  display: block;
+  cursor: pointer;
+}
+
+.ac-avatar img {
+  width: 96px;
+  height: 96px;
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+.ac-avatar-badge {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: #fff7ec;
+  border: 1px solid var(--nl-primary-border);
+  color: var(--nl-accent);
+  box-shadow: 0 6px 14px rgba(var(--nl-shadow-rgb), 0.2);
+}
+
+.ac-avatar-tip {
+  color: var(--nl-accent);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.ac-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 0 18px;
+  border-bottom: 1px solid rgba(58, 42, 28, 0.08);
+}
+
+.ac-row:last-child {
+  border-bottom: none;
+}
+
+.ac-label {
+  flex-shrink: 0;
+  width: 76px;
+  color: #8a6a52;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.ac-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 44px;
+  border: none;
+  outline: none;
+  background: transparent;
+  text-align: right;
+  color: var(--nl-ink);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.ac-value {
+  flex: 1 1 auto;
+  text-align: right;
+  color: #8a6a52;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.ac-chevron {
+  flex-shrink: 0;
+  color: rgba(58, 42, 28, 0.35);
+}
+
+.ac-save {
+  min-height: 52px;
+  border: none;
+  border-radius: 999px;
+  background: #a9581b;
+  color: #fff;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 14px 30px rgba(169, 88, 27, 0.22);
+}
+
+.ac-save:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.ac-footnote {
+  margin: 0;
+  text-align: center;
+  color: var(--nl-muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.ac-message {
+  margin: 0;
+  text-align: center;
+  color: var(--nl-accent);
+  font-size: 13px;
+}

@@ -979,70 +979,59 @@ export const AccountPage = () => {
     }
   };
 
+  const registeredAt = (() => {
+    const raw = (user as { created_at?: string } | null)?.created_at;
+    if (!raw) return '2025年1月1日';
+    const date = new Date(raw);
+    if (Number.isNaN(date.getTime())) return '2025年1月1日';
+    return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+  })();
+
   return (
-    <PageShell title="账号" backTo="/profile">
-      <Panel style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }}>
-        <div style={rowStyle}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '15px', paddingBottom: 4 }}>
-            <label
-              aria-label="更换头像"
-              style={{ position: 'relative', display: 'block', flexShrink: 0, cursor: avatarUploading ? 'not-allowed' : 'pointer', opacity: avatarUploading ? 0.7 : 1 }}
-            >
-              <ProfileAvatar src={avatarPreviewUrl ?? user?.avatar_url} mediaNo={user?.avatar_media_no} label={user?.nickname ?? '我的头像'} />
-              <span
-                aria-hidden="true"
-                style={{
-                  position: 'absolute',
-                  right: -6,
-                  bottom: -6,
-                  width: 32,
-                  height: 32,
-                  borderRadius: 999,
-                  background: '#FFF7EC',
-                  border: '1px solid var(--nl-primary-border)',
-                  color: 'var(--nl-accent)',
-                  display: 'grid',
-                  placeItems: 'center',
-                  boxShadow: '0 6px 14px rgba(var(--nl-shadow-rgb),0.2)',
-                }}
-              >
-                <Camera size={15} strokeWidth={2.2} />
-              </span>
-              <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" disabled={avatarUploading} onChange={(event) => void onAvatarChange(event)} style={{ display: 'none' }} />
-            </label>
-            <div style={{ minWidth: 0, display: 'grid', gap: 4 }}>
-              <strong style={{ color: 'var(--nl-ink)', fontSize: 16, fontWeight: 700 }}>{user?.nickname ?? '我的账号'}</strong>
-              <span style={{ color: 'var(--nl-muted)', fontSize: 12 }}>{avatarUploading ? '头像上传中…' : '点相机角标可以换一张头像'}</span>
-            </div>
-          </div>
-          <label style={{ display: 'grid', gap: 8, fontSize: 13, color: 'var(--nl-muted)', fontWeight: 500 }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-              昵称
-              <Pencil size={13} strokeWidth={2.2} aria-hidden="true" />
-            </span>
-            <input style={{ ...inputStyle, border: 'none', borderBottom: '1px solid var(--nl-border-muted)', borderRadius: 0, background: 'transparent', boxShadow: 'none', padding: '12px 0' }} value={nickname} onChange={(event) => setNickname(event.target.value)} maxLength={64} />
-          </label>
-          <Field label="手机号">
-            <input
-              style={{ ...inputStyle, border: 'none', borderBottom: '1px solid var(--nl-border-muted)', borderRadius: 0, background: 'transparent', boxShadow: 'none', padding: '12px 0' }}
-              value={mobile}
-              onChange={(event) => setMobile(event.target.value.replace(/\D/g, '').slice(0, 11))}
-              placeholder="输入新手机号"
-              inputMode="tel"
-              autoComplete="tel"
-              maxLength={11}
-            />
-          </Field>
-          <p style={{ ...helperTextStyle, borderTop: '1px solid var(--nl-border-muted)', paddingTop: 12 }}>服务：{membershipTypeLabel(user?.membership_type)}</p>
-          <p style={helperTextStyle}>当前手机号：{displayMobile}</p>
-          {message ? <p style={{ ...helperTextStyle, color: isPositiveStatusMessage(message) ? 'var(--nl-success)' : 'var(--nl-danger)' }}>{message}</p> : null}
-          <div style={buttonRowStyle}>
-            <button type="button" style={{ ...primaryButtonStyle, width: '100%', minHeight: '46px' }} onClick={() => void onSave()} disabled={saving}>
-              {saving ? '保存中…' : '保存资料'}
-            </button>
-          </div>
+    <PageShell title="账号" backTo="/profile" className="account-shell">
+      <div className="ac-card ac-hero">
+        <label aria-label="更换头像" className="ac-avatar">
+          <ProfileAvatar src={avatarPreviewUrl ?? user?.avatar_url} mediaNo={user?.avatar_media_no} label={user?.nickname ?? '我的头像'} />
+          <span className="ac-avatar-badge" aria-hidden="true"><Camera size={15} strokeWidth={2.2} /></span>
+          <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" disabled={avatarUploading} onChange={(event) => void onAvatarChange(event)} style={{ display: 'none' }} />
+        </label>
+        <span className="ac-avatar-tip">{avatarUploading ? '头像上传中…' : '更换头像'}</span>
+      </div>
+
+      <div className="ac-card">
+        <div className="ac-row">
+          <span className="ac-label">昵称</span>
+          <input className="ac-input" value={nickname} onChange={(event) => setNickname(event.target.value)} aria-label="昵称" />
+          <Pencil size={16} className="ac-chevron" aria-hidden="true" />
         </div>
-      </Panel>
+        <div className="ac-row">
+          <span className="ac-label">手机号</span>
+          <input
+            className="ac-input"
+            value={mobile}
+            onChange={(event) => setMobile(event.target.value.replace(/[^\d]/g, '').slice(0, 11))}
+            placeholder={displayMobile}
+            inputMode="tel"
+            aria-label="手机号"
+          />
+          <Pencil size={16} className="ac-chevron" aria-hidden="true" />
+        </div>
+        <div className="ac-row is-static">
+          <span className="ac-label">微信</span>
+          <span className="ac-value">已绑定</span>
+        </div>
+        <div className="ac-row is-static">
+          <span className="ac-label">注册时间</span>
+          <span className="ac-value">{registeredAt}</span>
+        </div>
+      </div>
+
+      {message ? <p className="ac-message">{message}</p> : null}
+
+      <button type="button" className="ac-save" onClick={() => void onSave()} disabled={saving}>
+        {saving ? '保存中…' : '保存修改'}
+      </button>
+      <p className="ac-footnote">昵称会显示在家人看到的记录里</p>
     </PageShell>
   );
 };
