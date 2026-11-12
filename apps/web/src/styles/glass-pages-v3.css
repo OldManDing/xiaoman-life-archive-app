@@ -1890,3 +1890,31 @@ button.set-row {
 .is-create #record-form .record-body-input {
   min-height: 150px !important;
 }
+
+/* B 口径：触控与行高下限优先 */
+.msg-reply {
+  min-height: 44px;
+  min-width: 64px;
+  padding: 6px 14px;
+  font-size: 14px;
+}
+
+.pf-menu-row {
+  min-height: 64px;
+}
+
+/* create 媒体区去掉设计稿没有的栏目标题与限额说明 */
+.is-create .record-media-section > div:first-child {
+  display: none !important;
+}
+
+.is-create .record-media-section > p {
+  display: none !important;
+}
+
+.is-create .record-media-section {
+  padding: 14px 14px 10px !important;
+  border-radius: 24px !important;
+  border-color: rgba(255, 255, 255, 0.86) !important;
+  background: rgba(255, 252, 247, 0.86) !important;
+}

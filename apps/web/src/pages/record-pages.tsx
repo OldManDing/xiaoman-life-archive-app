@@ -2586,6 +2586,7 @@ const RecordForm = ({
 
           {showMediaSection ? (
             <section
+              className="record-media-section"
               style={{
                 order: 0,
                 display: 'grid',
