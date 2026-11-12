@@ -2126,10 +2126,10 @@ export const AccountDeletionPage = () => {
                     <p key={item} style={{ margin: 0, fontSize: '13px', lineHeight: 1.6 }}>{item}</p>
                   ))}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px', marginTop: '4px' }}>
-                    <button type="button" style={{ ...secondaryButtonStyle, minHeight: '42px', borderRadius: '8px', boxShadow: 'none', color: 'var(--nl-primary-2)' }} onClick={() => navigate('/family/members')}>
+                    <button type="button" style={{ ...secondaryButtonStyle, minHeight: '48px', borderRadius: '8px', boxShadow: 'none', color: 'var(--nl-primary-2)', whiteSpace: 'nowrap', fontSize: 13 }} onClick={() => navigate('/family/members')}>
                       去处理成员
                     </button>
-                    <button type="button" style={{ ...secondaryButtonStyle, minHeight: '42px', borderRadius: '8px', boxShadow: 'none', color: 'var(--nl-primary-2)' }} onClick={() => navigate('/profile/help?topic=account-delete')}>
+                    <button type="button" style={{ ...secondaryButtonStyle, minHeight: '48px', borderRadius: '8px', boxShadow: 'none', color: 'var(--nl-primary-2)', whiteSpace: 'nowrap', fontSize: 13 }} onClick={() => navigate('/profile/help?topic=account-delete')}>
                       提交协助
                     </button>
                   </div>

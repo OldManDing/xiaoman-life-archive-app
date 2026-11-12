@@ -2759,6 +2759,7 @@ const RecordForm = ({
                 </button>
               ) : null}
             </div>
+              <div className="record-body-card">
               <span className="record-field-label">这一刻发生了什么</span>
               <textarea
                 ref={contentInputRef}
@@ -2783,6 +2784,7 @@ const RecordForm = ({
                 setForm((current) => ({ ...current, content_text: event.target.value }));
               }}
             />
+              </div>
               {canUseAi ? (
                 <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.58, fontSize: '11.5px' }}>
                   整理建议仅作参考，失败不影响记录。

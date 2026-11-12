@@ -3075,3 +3075,67 @@ button.set-row {
 .is-create.record-form-page {
   padding-bottom: 236px !important;
 }
+
+/* P1：08 登录对比度 */
+.lg-row input::placeholder {
+  color: #7a6754 !important;
+  opacity: 1;
+}
+
+.lg-code-button {
+  color: #8a4a16 !important;
+}
+
+/* P1：20 手机号值颜色 */
+.ac-input::placeholder {
+  color: #6b5a4a !important;
+  opacity: 1;
+}
+
+.ac-value {
+  color: #6b5a4a !important;
+}
+
+/* P1：04 正文 label 收进卡内 */
+.is-create .record-body-card {
+  display: grid;
+  gap: 4px;
+  padding: 14px 18px 10px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  background: rgba(255, 252, 247, 0.94);
+  box-shadow: 0 10px 24px rgba(150, 95, 50, 0.1);
+}
+
+.is-create .record-body-card .record-field-label {
+  margin: 0;
+  padding: 0;
+}
+
+.is-create .record-body-card .record-body-input {
+  min-height: 118px !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+/* P1：03 详情底部留白 */
+.record-detail-page,
+.rd-page {
+  padding-bottom: 120px;
+}
+
+/* 04 媒体区与标题卡距离压缩 */
+.is-create .record-media-section {
+  margin-bottom: -4px !important;
+}
+
+.is-create #record-form .record-body-card .record-body-input {
+  min-height: 118px !important;
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  font-size: 16px !important;
+}
