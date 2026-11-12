@@ -2331,6 +2331,7 @@ const RecordForm = ({
 
   return (
     <div
+      className={`record-form-page${mode === 'create' ? ' is-create' : ''}`}
       style={{
         minHeight: '100dvh',
         background: 'var(--nl-page-bg)',
@@ -2341,13 +2342,31 @@ const RecordForm = ({
       }}
     >
         <AppTopBar
-          title=""
+          title={mode === 'create' ? '记一笔' : ''}
           backLabel={mode === 'create' ? '取消' : '返回'}
           backVariant={mode === 'create' ? 'text' : 'icon'}
           onBack={leaveRecordForm}
           style={{ position: 'relative', top: 'auto', margin: '0 -18px 8px', padding: 'calc(var(--nl-statusbar-top) + 12px) 18px 10px' }}
           action={
-            mode === 'edit' ? (
+            mode === 'create' ? (
+              <button
+                type="button"
+                onClick={() => void submitRecord('draft')}
+                disabled={submitting}
+                style={{
+                  minHeight: 44,
+                  border: 'none',
+                  background: 'transparent',
+                  color: 'var(--nl-ink)',
+                  fontSize: 15,
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  padding: '0 4px',
+                }}
+              >
+                草稿
+              </button>
+            ) : mode === 'edit' ? (
               <button
                 type="button"
                 aria-label="更多操作"
@@ -2584,7 +2603,7 @@ const RecordForm = ({
                 <strong style={{ color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-sans)', fontSize: '16px', lineHeight: 1.2, fontWeight: 720 }}>影像与声音</strong>
                 {uploading ? <span style={{ minWidth: 0, color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>正在上传…</span> : null}
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
+              <div className="record-media-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
                 {form.record_type === 'video' ? (
                   <>
                     <MediaActionButton icon={<Video size={17} strokeWidth={2.2} />} label="拍摄视频" displayLabel="视频" onClick={() => { if (ensureMediaCountAvailable('video')) triggerMediaInput(videoCaptureInputRef.current); }} disabled={uploading || audioRecording} />

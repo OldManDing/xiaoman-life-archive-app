@@ -1342,3 +1342,24 @@
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
 }
+
+/* ---------------- 04 新建记录（create 态脚手架） ---------------- */
+.record-form-page {
+  background: transparent !important;
+}
+
+.is-create .record-workspace-masthead {
+  display: none !important;
+}
+
+.is-create .record-media-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+.is-create .record-media-grid > * {
+  min-height: 112px !important;
+  border: 1.5px dashed rgba(169, 88, 27, 0.32) !important;
+  border-radius: 22px !important;
+  background: rgba(255, 250, 244, 0.42) !important;
+  box-shadow: none !important;
+}
