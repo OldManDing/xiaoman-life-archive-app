@@ -1881,7 +1881,7 @@ export const SecurityPage = () => {
   };
 
   return (
-    <PageShell title="账号与安全" backTo="/profile">
+    <PageShell className="info-shell" title="账号与安全" backTo="/profile">
       <Panel style={{ padding: 0, overflow: 'hidden', borderRadius: 0, background: 'transparent', border: 'none', borderTop: '1px solid var(--nl-border-muted)', boxShadow: 'none' }}>
         {rows.map((item, index) => {
           const Icon = item.icon;
@@ -2065,7 +2065,7 @@ export const AccountDeletionPage = () => {
   };
 
   return (
-    <PageShell title="注销账号" backTo="/profile/security">
+    <PageShell className="info-shell" title="注销账号" backTo="/profile/security">
       <Panel style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }}>
         <div style={rowStyle}>
           <strong style={{ color: 'var(--nl-ink)', fontSize: '16px', fontWeight: 720 }}>注销前检查</strong>
@@ -2286,7 +2286,7 @@ export const HelpFeedbackPage = () => {
   };
 
   return (
-    <PageShell title="帮助与反馈" backTo="/profile">
+    <PageShell className="info-shell" title="帮助与反馈" backTo="/profile">
       <Panel style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }}>
         <div style={rowStyle}>
           <strong style={{ color: 'var(--nl-ink)', fontSize: '16px', fontWeight: 720 }}>提交反馈</strong>
@@ -2379,6 +2379,7 @@ const AboutMenuLink = ({
 }) => (
   <button
     type="button"
+    className="info-row"
     onClick={onClick}
     style={{
       width: '100%',
@@ -2441,7 +2442,7 @@ export const AboutPage = () => {
   const updateStatusText = checkingUpdate ? '检查中' : updateResult ? (updateResult.update_available ? (updateResult.force_update ? '强制更新' : '有更新') : '已是最新') : '手动检查';
 
   return (
-    <PageShell title="关于我们" backTo="/profile">
+    <PageShell title="关于我们" backTo="/profile" className="info-shell">
       <section style={{ display: 'grid', justifyItems: 'center', padding: '18px 0 12px' }}>
         <img
           src="/brand/nianlun-logo-192.png"
@@ -2454,7 +2455,7 @@ export const AboutPage = () => {
         <p style={{ margin: '6px 0 0', color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 600 }}>版本 {appVersion}（构建 {appBuildNumber} · {appBuildTimeText}）</p>
       </section>
 
-      <Panel style={{ padding: 0, overflow: 'hidden', borderRadius: 0, background: 'transparent', border: 'none', borderTop: '1px solid var(--nl-border-muted)', boxShadow: 'none' }}>
+      <div className="info-card">
         <AboutMenuLink icon={RefreshCw} label="检查更新" value={updateStatusText} isLast={!updateResult && !updateError} onClick={checkingUpdate ? undefined : () => void checkUpdate()} />
         {updateError ? <p style={{ ...helperTextStyle, color: 'var(--nl-danger)', margin: 0, padding: '0 16px 14px' }}>{updateError}</p> : null}
         {updateResult?.update_available ? (
@@ -2508,16 +2509,16 @@ export const AboutPage = () => {
             )}
           </div>
         ) : null}
-      </Panel>
+      </div>
 
-      <Panel style={{ padding: 0, overflow: 'hidden', borderRadius: 0, background: 'transparent', border: 'none', borderTop: '1px solid var(--nl-border-muted)', boxShadow: 'none' }}>
+      <div className="info-card">
         <AboutMenuLink icon={FileText} label="用户服务协议" onClick={() => navigate('/profile/legal')} />
         <AboutMenuLink icon={Shield} label="隐私政策" isLast onClick={() => navigate('/profile/legal')} />
-      </Panel>
+      </div>
 
-      <Panel style={{ padding: 0, overflow: 'hidden', borderRadius: 0, background: 'transparent', border: 'none', borderTop: '1px solid var(--nl-border-muted)', boxShadow: 'none' }}>
+      <div className="info-card">
         <AboutMenuLink icon={Mail} label="联系我们" value="联系方式" isLast onClick={() => navigate('/profile/contact')} />
-      </Panel>
+      </div>
 
       <div style={{ textAlign: 'center', color: 'var(--nl-muted)', fontSize: '10px', lineHeight: 1.7, paddingTop: '8px' }}>
         <p style={{ margin: 0 }}>年轮 © 2026</p>
@@ -2545,7 +2546,7 @@ export const ContactPage = () => {
   };
 
   return (
-    <PageShell title="联系我们" backTo="/profile/about">
+    <PageShell className="info-shell" title="联系我们" backTo="/profile/about">
       <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.7 }}>账号、档案、隐私和数据交付相关事项，都可以在这里找到我们。</p>
 
       <Panel style={{ padding: 0, overflow: 'hidden', borderRadius: 0, background: 'transparent', border: 'none', borderTop: '1px solid var(--nl-border-muted)', boxShadow: 'none' }}>
