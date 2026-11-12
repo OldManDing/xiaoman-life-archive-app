@@ -930,7 +930,12 @@ export const AccountPage = () => {
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
-  const displayMobile = settings.hideMobileMask ? '已隐藏' : user?.mobile ?? '当前未提供';
+  const maskMobile = (value?: string | null) => {
+    const raw = (value ?? '').trim();
+    if (!raw) return '当前未提供';
+    return raw.length >= 7 ? `${raw.slice(0, 3)}****${raw.slice(-4)}` : raw;
+  };
+  const displayMobile = settings.hideMobileMask ? '已隐藏' : maskMobile(user?.mobile);
 
   useEffect(() => {
     setNickname(user?.nickname ?? '');

@@ -3139,3 +3139,44 @@ button.set-row {
   padding: 0 !important;
   font-size: 16px !important;
 }
+
+/* P0 修复：04 CTA 回到文档流，不再遮挡任何卡片 */
+.is-create .record-inline-submit {
+  position: static !important;
+  left: auto;
+  right: auto;
+  bottom: auto !important;
+  margin: 10px 0 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  backdrop-filter: none !important;
+}
+
+.is-create.record-form-page {
+  padding-bottom: 40px !important;
+}
+
+/* 压缩首屏，让 CTA 尽量靠近可视区 */
+.is-create .record-editor-card {
+  gap: 10px !important;
+}
+
+.is-create .record-body-card {
+  padding: 12px 16px 8px !important;
+}
+
+.is-create #record-form .record-body-card .record-body-input {
+  min-height: 100px !important;
+}
+
+.is-create .record-media-grid > * {
+  min-height: 104px !important;
+}
+
+/* 27：确认按钮安全区 */
+.delete-shell,
+.info-shell {
+  padding-bottom: calc(34px + env(safe-area-inset-bottom)) !important;
+}
