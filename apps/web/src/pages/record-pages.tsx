@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState, type ChangeEvent, type CSSProperties, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type CSSProperties, type FormEvent } from 'react';
 import { AlertCircle, BookOpen, CheckCircle2, Clock, Eye, FileAudio, FileText, Image, ImagePlus, MapPin, Mic, MoreHorizontal, PlayCircle, RotateCcw, Ruler, Sparkles, Square, Star, Tag, Video, X } from 'lucide-react';
 import { Camera, CameraResultType, CameraSource, type GalleryPhoto, type Photo } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
@@ -1495,6 +1495,10 @@ const RecordForm = ({
   const [moreMediaOpen, setMoreMediaOpen] = useState(normalizedInitialValue.record_type === 'audio' || normalizedInitialValue.record_type === 'video');
   const [fullscreenMedia, setFullscreenMedia] = useState<FullscreenMediaPreview | null>(null);
   const [discardConfirmOpen, setDiscardConfirmOpen] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const recordParams = useParams<{ record_no: string }>();
   const mediaPreviewsRef = useRef<MediaPreview[]>(normalizedInitialValue.media_items);
   const failedUploadFilesRef = useRef(new Map<string, { file: File; options: { durationFallbackSeconds?: number | null } }>());
   const titleInputRef = useRef<HTMLInputElement | null>(null);
@@ -2281,6 +2285,21 @@ const RecordForm = ({
   const isDraftRecord = form.status === 'draft';
   const primarySubmitLabel = mode === 'create' || isDraftRecord ? '发布' : '保存';
 
+  const confirmDeleteRecord = async () => {
+    if (!recordParams.record_no) return;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await webApi.deleteRecord(recordParams.record_no);
+      setDeleteConfirmOpen(false);
+      navigate('/timeline', { replace: true });
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : '删除失败');
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const useCurrentLocation = async () => {
     setLocationLoading(true);
     setError(null);
@@ -2316,7 +2335,7 @@ const RecordForm = ({
         minHeight: '100dvh',
         background: 'var(--nl-page-bg)',
         color: 'var(--nl-ink)',
-        padding: '0 18px calc(40px + env(safe-area-inset-bottom))',
+        padding: '0 18px calc(132px + env(safe-area-inset-bottom))',
         boxSizing: 'border-box',
         overflowX: 'hidden',
       }}
@@ -2328,28 +2347,30 @@ const RecordForm = ({
           onBack={leaveRecordForm}
           style={{ position: 'relative', top: 'auto', margin: '0 -18px 8px', padding: 'calc(var(--nl-statusbar-top) + 12px) 18px 10px' }}
           action={
-            <button
-              type="submit"
-              form="record-form"
-              aria-label={primarySubmitLabel}
-              style={{
-                minHeight: '38px',
-                border: 'none',
-                borderRadius: '999px',
-                background: 'linear-gradient(135deg, #b06a4a 0%, #8f4f36 70%)',
-                color: '#ffffff',
-                padding: '0 20px',
-                fontSize: '14px',
-                fontWeight: 740,
-                letterSpacing: '0.04em',
-                cursor: submitting || uploading || audioRecording ? 'not-allowed' : 'pointer',
-                opacity: submitting || uploading || audioRecording ? 0.65 : 1,
-                boxShadow: '0 8px 18px rgba(143, 79, 54, 0.28)',
-              }}
-              disabled={submitting || uploading || audioRecording}
-            >
-              {pendingAction === 'publish' ? `${primarySubmitLabel}中…` : primarySubmitLabel}
-            </button>
+            mode === 'edit' ? (
+              <button
+                type="button"
+                aria-label="更多操作"
+                aria-haspopup="dialog"
+                onClick={() => setDeleteConfirmOpen(true)}
+                style={{
+                  width: 44,
+                  height: 44,
+                  border: 'none',
+                  borderRadius: 999,
+                  background: 'transparent',
+                  color: 'var(--nl-ink)',
+                  fontSize: 20,
+                  fontWeight: 700,
+                  letterSpacing: '0.12em',
+                  cursor: 'pointer',
+                  display: 'grid',
+                  placeItems: 'center',
+                }}
+              >
+                ···
+              </button>
+            ) : undefined
           }
         />
         <header className="record-workspace-masthead" style={{ display: 'grid', gap: '6px', padding: '2px 2px 14px' }}>
@@ -2980,19 +3001,67 @@ const RecordForm = ({
             </span>
           </button>
 
+        </form>
+
+        {typeof document !== 'undefined' ? createPortal(
+        <div
+          style={{
+            position: 'fixed',
+            left: 18,
+            right: 18,
+            bottom: 'calc(12px + env(safe-area-inset-bottom))',
+            zIndex: 30,
+            display: 'grid',
+            gap: 8,
+            padding: '10px 10px 12px',
+            borderRadius: 'var(--nl-radius-float, 26px)',
+            background: 'var(--nl-glass-surface)',
+            border: '1px solid var(--nl-glass-border)',
+            WebkitBackdropFilter: 'blur(20px) saturate(1.05)',
+            backdropFilter: 'blur(20px) saturate(1.05)',
+            boxShadow: '0 14px 34px rgba(146, 96, 52, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.7)',
+          }}
+        >
+          <button
+            type="submit"
+            form="record-form"
+            aria-label={primarySubmitLabel}
+            style={primaryButtonStyle}
+            disabled={submitting || uploading || audioRecording}
+          >
+            {pendingAction === 'publish' ? `${primarySubmitLabel}中…` : primarySubmitLabel}
+          </button>
           {mode === 'create' || isDraftRecord ? (
             <button
               type="button"
-              className="nl-form-draft-button"
-              style={{ order: 5, width: '100%', marginTop: '2px' }}
               onClick={() => void submitRecord('draft')}
               disabled={submitting || uploading || audioRecording}
+              style={{
+                minHeight: 44,
+                border: 'none',
+                background: 'transparent',
+                color: 'var(--nl-muted-strong)',
+                fontSize: 14,
+                fontWeight: 600,
+                cursor: submitting || uploading || audioRecording ? 'not-allowed' : 'pointer',
+              }}
             >
-              {pendingAction === 'draft' ? '保存中…' : '保存草稿'}
+              {pendingAction === 'draft' ? '保存中…' : '先存草稿'}
             </button>
           ) : null}
+        </div>,
+        document.body,
+        ) : null}
 
-        </form>
+        {deleteConfirmOpen ? (
+          <DeleteRecordConfirmDialog
+            recordTitle={form.title || '这条记录'}
+            deleting={deleting}
+            error={deleteError}
+            onCancel={() => { setDeleteConfirmOpen(false); setDeleteError(null); }}
+            onConfirm={() => void confirmDeleteRecord()}
+          />
+        ) : null}
         {noticeMessage ? (
           <NoticeDialog
             tone={error ? 'error' : 'success'}
@@ -3338,17 +3407,37 @@ export const ViewRecordPage = () => {
             </Panel>
           ) : null}
 
-          <div style={{ ...buttonRowStyle, gridTemplateColumns: 'minmax(0, 1fr)', gap: '8px', paddingTop: '4px' }}>
-            <button type="button" style={{ ...primaryButtonStyle, width: '100%', minWidth: 0, minHeight: '48px', justifyContent: 'center' }} onClick={() => navigate(`/record/${data.record_no}/edit`)}>
-              编辑记录
+          {typeof document !== 'undefined' ? createPortal(
+          <div
+            className="app-detail-float-bar"
+            style={{
+              position: 'fixed',
+              left: 20,
+              right: 20,
+              bottom: 'calc(16px + env(safe-area-inset-bottom))',
+              zIndex: 30,
+              display: 'grid',
+              gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
+              gap: 10,
+              padding: 10,
+              borderRadius: 'var(--nl-radius-float, 26px)',
+              background: 'var(--nl-glass-surface)',
+              border: '1px solid var(--nl-glass-border)',
+              WebkitBackdropFilter: 'blur(20px) saturate(1.05)',
+              backdropFilter: 'blur(20px) saturate(1.05)',
+              boxShadow: '0 14px 34px rgba(146, 96, 52, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.7)',
+            }}
+          >
+            <button type="button" style={{ ...primaryButtonStyle, minHeight: 48, width: '100%' }} onClick={() => navigate(`/record/${data.record_no}/edit`)}>
+              编辑
             </button>
-            <button type="button" style={{ width: 'fit-content', minHeight: '42px', justifySelf: 'center', border: 'none', background: 'transparent', color: 'var(--nl-danger)', padding: '8px 14px', fontSize: '12px', fontWeight: 560, cursor: deleting ? 'not-allowed' : 'pointer', opacity: deleting ? 0.64 : 0.78 }} onClick={() => {
-              setDeleteError(null);
-              setDeleteConfirmOpen(true);
-            }} disabled={deleting}>
-              {deleting ? '删除中…' : '删除记录'}
+            <button type="button" style={{ ...secondaryButtonStyle, minHeight: 48, width: '100%' }} onClick={() => navigate(`/record/${data.record_no}/edit?focus=content`)}>
+              回应一句
             </button>
-          </div>
+          </div>,
+          document.body,
+          ) : null}
+          <div aria-hidden="true" style={{ height: 'calc(96px + env(safe-area-inset-bottom))' }} />
         </article>
       ) : null}
       {data && deleteConfirmOpen ? (
@@ -3370,6 +3459,8 @@ export const ViewRecordPage = () => {
 export const EditRecordPage = () => {
   const navigate = useNavigate();
   const params = useParams<{ record_no: string }>();
+  const [searchParams] = useSearchParams();
+  const initialFocus = searchParams.get('focus') === 'content' ? 'content' : null;
   const { data, loading, error } = useAsyncData<RecordDetail | null>(
     async () => {
       if (!params.record_no) return null;
@@ -3423,6 +3514,7 @@ export const EditRecordPage = () => {
   return (
     <RecordForm
       mode="edit"
+      initialFocus={initialFocus}
       initialValue={initialValue}
       onSubmit={async (value) => {
         if (!params.record_no) return;

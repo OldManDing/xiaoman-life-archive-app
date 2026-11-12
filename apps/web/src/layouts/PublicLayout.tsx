@@ -8,7 +8,7 @@ export const PublicLayout = () => {
         minHeight: '100dvh',
         maxWidth: '430px',
         margin: '0 auto',
-        background: 'var(--nl-page-bg)',
+        background: 'transparent',
         color: 'var(--nl-ink)',
         overflowX: 'hidden',
         padding: '0 0 40px',

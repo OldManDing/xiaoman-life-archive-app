@@ -6,11 +6,11 @@ import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, Clock } fr
 const pageShellStyle: CSSProperties = {
   display: 'grid',
   alignContent: 'start',
-  gap: '18px',
+  gap: '20px',
   minHeight: 'var(--nl-page-min-height, 100dvh)',
   gridTemplateColumns: 'minmax(0, 1fr)',
   padding: '0 var(--nl-content-inline) calc(40px + env(safe-area-inset-bottom))',
-  background: 'var(--nl-page-bg)',
+  background: 'transparent',
   color: 'var(--nl-ink)',
   overflowX: 'hidden',
   animation: 'app-page-enter 260ms cubic-bezier(0.22, 1, 0.36, 1) both',
@@ -18,12 +18,12 @@ const pageShellStyle: CSSProperties = {
 
 const cardStyle: CSSProperties = {
   background: 'var(--nl-card-bg)',
-  borderRadius: '8px',
-  padding: '16px',
-  border: '1px solid var(--nl-border-soft)',
-  boxShadow: 'var(--nl-shadow-sm)',
-  WebkitBackdropFilter: 'blur(16px) saturate(1.02)',
-  backdropFilter: 'blur(16px) saturate(1.02)',
+  borderRadius: 'var(--nl-radius-card, 24px)',
+  padding: '18px',
+  border: '1px solid var(--nl-glass-border)',
+  boxShadow: '0 10px 24px rgba(146, 96, 52, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.66)',
+  WebkitBackdropFilter: 'blur(12px) saturate(1.02)',
+  backdropFilter: 'blur(12px) saturate(1.02)',
 };
 
 const headingStyle: CSSProperties = {
@@ -31,8 +31,9 @@ const headingStyle: CSSProperties = {
   color: 'var(--nl-ink)',
   fontFamily: 'var(--nl-font-display)',
   fontSize: 'var(--nl-title-page-size)',
-  fontWeight: 780,
-  lineHeight: 1.12,
+  fontWeight: 600,
+  letterSpacing: '0.02em',
+  lineHeight: 1.3,
 };
 
 const backControlStyle: CSSProperties = {
@@ -74,21 +75,21 @@ const topBarBackStyle = (variant: 'icon' | 'pill' | 'text'): CSSProperties => {
 
   if (variant === 'icon') {
     return {
-      minHeight: '38px',
-      width: '38px',
-      height: '38px',
+      minHeight: '44px',
+      width: '44px',
+      height: '44px',
       padding: 0,
       gap: 0,
-      border: 'none',
-      background: 'transparent',
-      borderRadius: 0,
-      color: 'var(--nl-muted-strong)',
+      border: '1px solid rgba(255, 255, 255, 0.72)',
+      background: 'rgba(255, 255, 255, 0.58)',
+      borderRadius: 'var(--nl-radius-pill, 999px)',
+      color: 'var(--nl-ink)',
       display: 'inline-flex',
       alignItems: 'center',
       justifyContent: 'center',
       textDecoration: 'none',
       cursor: 'pointer',
-      boxShadow: 'none',
+      boxShadow: '0 6px 16px rgba(146, 96, 52, 0.12)',
     };
   }
 
@@ -127,14 +128,16 @@ export const AppTopBar = ({
     <header
       style={{
         position: 'sticky',
-        top: 0,
+        top: 'calc(8px + env(safe-area-inset-top))',
         zIndex: 3,
-        padding: 'calc(16px + env(safe-area-inset-top)) var(--nl-content-inline) 8px',
-        background: background === 'var(--nl-glass-strong)' ? 'var(--nl-topbar-bg)' : background,
-        borderBottom: '1px solid transparent',
-        WebkitBackdropFilter: 'none',
-        backdropFilter: 'none',
-        boxShadow: 'none',
+        margin: '0 16px',
+        padding: '6px 10px',
+        borderRadius: 'var(--nl-radius-float, 26px)',
+        background: background === 'var(--nl-glass-strong)' ? 'var(--nl-glass-surface)' : background,
+        border: '1px solid var(--nl-glass-border)',
+        WebkitBackdropFilter: 'blur(18px) saturate(1.05)',
+        backdropFilter: 'blur(18px) saturate(1.05)',
+        boxShadow: '0 12px 30px rgba(146, 96, 52, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.7)',
         ...style,
       }}
     >
@@ -165,9 +168,10 @@ export const AppTopBar = ({
               ...headingStyle,
               minWidth: 0,
               textAlign: 'center',
-              fontFamily: 'var(--nl-font-sans)',
-              fontSize: '16px',
-              fontWeight: 680,
+              fontFamily: 'var(--nl-font-display)',
+              fontSize: '20px',
+              fontWeight: 600,
+              letterSpacing: '0.02em',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
@@ -191,6 +195,7 @@ export const PageShell = ({
   backTo,
   onBack,
   backLabel = '返回',
+  action,
   children,
 }: {
   title: string;
@@ -199,23 +204,20 @@ export const PageShell = ({
   backTo?: string;
   onBack?: () => void;
   backLabel?: string;
+  action?: ReactNode;
   children: ReactNode;
 }) => (
   <section className="app-page-shell" style={pageShellStyle}>
     {!hideHeader ? (
       backTo || onBack ? (
         <>
-          <AppTopBar title="" backTo={backTo} onBack={onBack} backLabel={backLabel} style={{ margin: '0 -22px' }} />
-          <header className="page-shell-masthead" style={{ display: 'grid', gap: '9px', padding: '4px 0 8px' }}>
-            <span aria-hidden="true" style={{ width: '28px', height: '2px', background: 'var(--nl-primary-2)' }} />
-            <h1 style={{ ...headingStyle, fontSize: '29px', lineHeight: 1.08 }}>{title}</h1>
-            {description ? <p style={{ margin: 0, maxWidth: '34em', color: 'var(--nl-muted)', lineHeight: 1.65, fontSize: '13px', fontWeight: 500 }}>{description}</p> : null}
-          </header>
+          <AppTopBar title={title} backTo={backTo} onBack={onBack} backLabel={backLabel} action={action} style={{ margin: '10px -6px 0' }} />
+          {description ? <p style={{ margin: '-6px 4px 0', color: 'var(--nl-muted)', lineHeight: 1.6, fontSize: '13px' }}>{description}</p> : null}
         </>
       ) : (
-        <header style={{ padding: 'calc(30px + env(safe-area-inset-top)) 0 2px', display: 'grid', gap: '6px' }}>
+        <header style={{ padding: 'calc(30px + env(safe-area-inset-top)) 2px 2px', display: 'grid', gap: '8px' }}>
           <h1 style={headingStyle}>{title}</h1>
-          {description ? <p style={{ margin: '4px 0 0', color: 'var(--nl-muted)', lineHeight: 1.6, fontSize: '13px', fontWeight: 500 }}>{description}</p> : null}
+          {description ? <p style={{ margin: 0, color: 'var(--nl-muted)', lineHeight: 1.6, fontSize: '13px' }}>{description}</p> : null}
         </header>
       )
     ) : null}
@@ -228,7 +230,7 @@ export const Panel = ({ children, style }: { children: ReactNode; style?: CSSPro
 );
 
 export const Field = ({ label, children }: { label: string; children: ReactNode }) => (
-  <label style={{ display: 'grid', gap: '7px', fontSize: '12px', color: 'var(--nl-muted)', fontWeight: 580 }}>
+  <label style={{ display: 'grid', gap: '8px', fontSize: '13px', color: 'var(--nl-muted)', fontWeight: 500 }}>
     <span>{label}</span>
     {children}
   </label>
@@ -237,15 +239,15 @@ export const Field = ({ label, children }: { label: string; children: ReactNode 
 export const inputStyle: CSSProperties = {
   width: '100%',
   boxSizing: 'border-box',
-  minHeight: '48px',
-  borderRadius: '8px',
-  border: '1px solid var(--nl-border-soft)',
-  padding: '13px 14px',
+  minHeight: '52px',
+  borderRadius: 'var(--nl-radius-control, 16px)',
+  border: '1px solid rgba(58, 42, 28, 0.1)',
+  padding: '14px 16px',
   fontSize: '15px',
   color: 'var(--nl-ink)',
-  background: 'var(--nl-control-bg)',
+  background: 'rgba(255, 255, 255, 0.52)',
   outline: 'none',
-  boxShadow: 'inset 0 1px 0 var(--nl-inset-highlight)',
+  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.66)',
   transition: 'border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease',
 };
 
@@ -664,21 +666,21 @@ export const AppDateInput = forwardRef<HTMLInputElement, AppDateInputProps>(({
 
 export const selectControlStyle: CSSProperties = {
   width: '100%',
-  minHeight: '44px',
-  borderRadius: '8px',
+  minHeight: '48px',
+  borderRadius: 'var(--nl-radius-control, 16px)',
   borderWidth: '1px',
   borderStyle: 'solid',
-  borderColor: 'var(--nl-border-soft)',
-  padding: '10px 13px',
+  borderColor: 'rgba(58, 42, 28, 0.1)',
+  padding: '11px 15px',
   boxSizing: 'border-box',
   color: 'var(--nl-ink)',
-  background: 'var(--nl-control-bg)',
-  fontSize: '14px',
+  background: 'rgba(255, 255, 255, 0.52)',
+  fontSize: '15px',
   lineHeight: 1.35,
-  fontWeight: 560,
+  fontWeight: 500,
   cursor: 'pointer',
   outline: 'none',
-  boxShadow: 'inset 0 1px 0 var(--nl-inset-highlight)',
+  boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.66)',
   transition: 'border-color 0.16s ease, box-shadow 0.16s ease, background-color 0.16s ease',
 };
 
@@ -1017,10 +1019,13 @@ export const AppSegmentedControl = ({
              borderRadius: '11px',
             background: selected ? 'var(--nl-primary-soft)' : 'transparent',
             color: selected ? 'var(--nl-primary-2)' : 'var(--nl-muted)',
-            fontSize: options.length > 4 ? '12px' : '13px',
+            fontSize: options.length > 2 ? '12px' : '13px',
+            lineHeight: 1.25,
             fontWeight: selected ? 660 : 540,
             cursor: 'pointer',
-            whiteSpace: 'nowrap',
+            whiteSpace: options.length > 2 ? 'normal' : 'nowrap',
+            overflowWrap: 'anywhere',
+            padding: '6px 4px',
             transition: 'background-color 0.16s ease, color 0.16s ease',
           }}
         >
@@ -1038,14 +1043,15 @@ export const textareaStyle: CSSProperties = {
 };
 
 export const primaryButtonStyle: CSSProperties = {
-  minHeight: '48px',
-  border: '1px solid var(--nl-primary-border)',
-  borderRadius: '8px',
-  padding: '12px 18px',
+  minHeight: '52px',
+  border: '1px solid transparent',
+  borderRadius: 'var(--nl-radius-control, 16px)',
+  padding: '14px 20px',
   background: 'var(--nl-primary-gradient)',
   color: 'var(--nl-on-primary)',
-  fontSize: '15px',
-  fontWeight: 700,
+  fontSize: '16px',
+  fontWeight: 600,
+  letterSpacing: '0.01em',
   cursor: 'pointer',
   display: 'inline-flex',
   alignItems: 'center',
@@ -1053,16 +1059,16 @@ export const primaryButtonStyle: CSSProperties = {
   gap: '8px',
   lineHeight: 1.2,
   textDecoration: 'none',
-  boxShadow: '0 10px 24px rgba(var(--nl-shadow-rgb),0.1), inset 0 1px 0 var(--nl-inset-highlight-faint)',
+  boxShadow: '0 12px 26px rgba(169, 88, 27, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.18)',
   transition: 'transform 0.14s ease, box-shadow 0.16s ease, background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, opacity 0.16s ease',
 };
 
 export const secondaryButtonStyle: CSSProperties = {
   ...primaryButtonStyle,
-  border: '1px solid var(--nl-border-soft)',
-  background: 'var(--nl-control-bg)',
-  color: 'var(--nl-muted-strong)',
-  boxShadow: 'inset 0 1px 0 var(--nl-inset-highlight)',
+  border: '1px solid var(--nl-glass-border)',
+  background: 'rgba(255, 250, 244, 0.66)',
+  color: 'var(--nl-ink)',
+  boxShadow: '0 6px 16px rgba(146, 96, 52, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.66)',
 };
 
 export const compactPrimaryButtonStyle: CSSProperties = {

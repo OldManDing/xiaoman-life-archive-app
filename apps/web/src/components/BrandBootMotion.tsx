@@ -47,11 +47,10 @@ const logoStyle: CSSProperties = {
 
 const timelineTrackStyle: CSSProperties = {
   width: '168px',
-  height: '2px',
-  display: 'grid',
-  gridTemplateColumns: 'repeat(4, 1fr)',
-  gap: '9px',
-  alignItems: 'center',
+  height: '3px',
+  borderRadius: '999px',
+  overflow: 'hidden',
+  background: 'rgba(var(--nl-accent-rgb),0.16)',
 };
 
 const recoveryStyle: CSSProperties = {
@@ -98,9 +97,26 @@ export const BrandBootMotion = ({ showRecovery = false, onRetry, onExit }: Brand
           50% { transform: translateY(-2px) scale(1.015); }
         }
 
-        @keyframes nlBootLineReveal {
-          0%, 100% { opacity: 0.28; transform: scaleX(0.36); }
-          45%, 65% { opacity: 1; transform: scaleX(1); }
+        @keyframes nlBootProgress {
+          0% { transform: translateX(-110%); }
+          100% { transform: translateX(260%); }
+        }
+
+        .nl-boot-progress {
+          display: block;
+          width: 40%;
+          height: 100%;
+          border-radius: 999px;
+          background: rgba(var(--nl-accent-rgb),0.62);
+          animation: nlBootProgress 1.8s ease-in-out infinite;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .nl-boot-ring,
+          .nl-boot-logo,
+          .nl-boot-progress {
+            animation: none !important;
+          }
         }
 
         .nl-boot-ring {
@@ -142,26 +158,6 @@ export const BrandBootMotion = ({ showRecovery = false, onRetry, onExit }: Brand
         .nl-boot-logo {
           animation: nlBootLogoSettle 2.4s ease-in-out infinite;
         }
-
-        .nl-boot-line {
-          height: 1px;
-          border-radius: 999px;
-          background: rgba(var(--nl-accent-rgb),0.56);
-          transform-origin: left center;
-          animation: nlBootLineReveal 1.9s ease-in-out infinite;
-        }
-
-        .nl-boot-line:nth-child(2) { animation-delay: 0.16s; opacity: 0.66; }
-        .nl-boot-line:nth-child(3) { animation-delay: 0.32s; opacity: 0.56; }
-        .nl-boot-line:nth-child(4) { animation-delay: 0.48s; opacity: 0.46; }
-
-        @media (prefers-reduced-motion: reduce) {
-          .nl-boot-ring,
-          .nl-boot-logo,
-          .nl-boot-line {
-            animation: none !important;
-          }
-        }
       `}
     </style>
 
@@ -178,10 +174,8 @@ export const BrandBootMotion = ({ showRecovery = false, onRetry, onExit }: Brand
         <span style={{ color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 520 }}>家庭影像档案</span>
       </div>
 
-      <div aria-hidden="true" style={timelineTrackStyle}>
-        {[0, 1, 2, 3].map((item) => (
-          <span key={item} className="nl-boot-line" />
-        ))}
+      <div role="progressbar" aria-label="正在加载" style={timelineTrackStyle}>
+        <span className="nl-boot-progress" />
       </div>
     </section>
 

@@ -23,7 +23,7 @@ export const isReferencePlaceholderAvatar = (src?: string | null) => {
 
 export const refPageStyle: CSSProperties = {
   minHeight: 'var(--nl-page-min-height, 100dvh)',
-  background: 'var(--nl-page-bg)',
+  background: 'transparent',
   color: 'var(--nl-ink)',
   overflowX: 'hidden',
   animation: 'app-page-enter 260ms cubic-bezier(0.22, 1, 0.36, 1) both',
@@ -37,43 +37,43 @@ export const refContentStyle: CSSProperties = {
 };
 
 export const refCardStyle: CSSProperties = {
-  borderRadius: '8px',
-  border: '1px solid var(--nl-border-soft)',
+  borderRadius: 'var(--nl-radius-card, 24px)',
+  border: '1px solid var(--nl-glass-border)',
   background: 'var(--nl-card-bg)',
-  boxShadow: 'var(--nl-shadow-sm)',
-  WebkitBackdropFilter: 'none',
-  backdropFilter: 'none',
+  boxShadow: '0 10px 24px rgba(146, 96, 52, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.66)',
+  WebkitBackdropFilter: 'blur(12px) saturate(1.02)',
+  backdropFilter: 'blur(12px) saturate(1.02)',
 };
 
 export const refSoftCardStyle: CSSProperties = {
   ...refCardStyle,
-  borderRadius: '8px',
+  borderRadius: 'var(--nl-radius-card, 24px)',
 };
 
 export const refPrimaryButtonStyle: CSSProperties = {
-  minHeight: '48px',
-  border: '1px solid var(--nl-primary-border)',
-  borderRadius: '8px',
-  background: 'var(--nl-primary-2)',
+  minHeight: '52px',
+  border: '1px solid transparent',
+  borderRadius: 'var(--nl-radius-control, 16px)',
+  background: 'var(--nl-primary-gradient)',
   color: 'var(--nl-on-primary)',
-  padding: '12px 18px',
-  fontSize: '15px',
-  fontWeight: 700,
+  padding: '14px 20px',
+  fontSize: '16px',
+  fontWeight: 600,
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
   gap: '8px',
   cursor: 'pointer',
-  boxShadow: '0 10px 22px rgba(var(--nl-shadow-rgb),0.11)',
+  boxShadow: '0 12px 26px rgba(169, 88, 27, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.18)',
   transition: 'transform 0.18s ease, background-color 0.18s ease, border-color 0.18s ease',
 };
 
 export const refSecondaryButtonStyle: CSSProperties = {
   ...refPrimaryButtonStyle,
-  border: '1px solid var(--nl-border-soft)',
-  background: 'var(--nl-control-bg)',
-  color: 'var(--nl-muted-strong)',
-  boxShadow: 'inset 0 1px 0 var(--nl-inset-highlight)',
+  border: '1px solid var(--nl-glass-border)',
+  background: 'rgba(255, 250, 244, 0.66)',
+  color: 'var(--nl-ink)',
+  boxShadow: '0 6px 16px rgba(146, 96, 52, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.66)',
 };
 
 export const refMutedTextStyle: CSSProperties = {
@@ -113,40 +113,42 @@ export const RefTopBar = ({
     <header
       style={{
         position: 'sticky',
-        top: 0,
+        top: 'calc(8px + env(safe-area-inset-top))',
         zIndex: 4,
+        margin: '0 16px',
         minHeight: '52px',
-        padding: 'calc(16px + env(safe-area-inset-top)) 16px 8px',
-      borderBottom: '1px solid transparent',
-      background: 'var(--nl-topbar-bg)',
-      WebkitBackdropFilter: 'blur(16px) saturate(1.01)',
-      backdropFilter: 'blur(16px) saturate(1.01)',
-      boxShadow: 'none',
+        padding: '6px 10px',
+      border: '1px solid rgba(255, 255, 255, 0.72)',
+      borderRadius: '26px',
+      background: 'rgba(255, 250, 244, 0.78)',
+      WebkitBackdropFilter: 'blur(18px) saturate(1.05)',
+      backdropFilter: 'blur(18px) saturate(1.05)',
+      boxShadow: '0 12px 30px rgba(146, 96, 52, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.7)',
         display: 'grid',
         gridTemplateColumns: '52px minmax(0, 1fr) 52px',
         alignItems: 'center',
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center' }}>{backNode}</div>
-      <h1 style={{ margin: 0, textAlign: 'center', color: 'var(--nl-ink)', fontSize: '16px', fontWeight: 680, lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</h1>
+      <h1 style={{ margin: 0, textAlign: 'center', color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '20px', fontWeight: 600, letterSpacing: '0.02em', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</h1>
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>{action ?? <span />}</div>
     </header>
   );
 };
 
 const topBackButtonStyle: CSSProperties = {
-  width: '40px',
-  minWidth: '40px',
-  height: '40px',
-  border: 'none',
-  borderRadius: 0,
-  background: 'transparent',
-  color: 'var(--nl-muted-strong)',
+  width: '44px',
+  minWidth: '44px',
+  height: '44px',
+  border: '1px solid rgba(255, 255, 255, 0.72)',
+  borderRadius: '999px',
+  background: 'rgba(255, 255, 255, 0.58)',
+  color: 'var(--nl-ink)',
   display: 'grid',
   placeItems: 'center',
   textDecoration: 'none',
   cursor: 'pointer',
-  boxShadow: 'none',
+  boxShadow: '0 6px 16px rgba(146, 96, 52, 0.12)',
 };
 
 export const RefAvatar = ({
@@ -225,7 +227,7 @@ export const RefListRow = ({
       width: '100%',
       minHeight: '64px',
       border: 'none',
-      borderBottom: isLast ? 'none' : '1px solid rgba(var(--nl-shadow-rgb),0.07)',
+      borderBottom: isLast ? 'none' : '1px solid rgba(58, 42, 28, 0.08)',
       background: 'transparent',
       padding: '14px 0',
       display: 'flex',
@@ -239,8 +241,8 @@ export const RefListRow = ({
     }}
   >
     <span style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: 0, flex: '1 1 auto' }}>
-      {icon ? <span style={{ width: '28px', height: '34px', borderRadius: 0, background: 'transparent', border: 'none', color: danger ? 'var(--nl-danger)' : 'var(--nl-primary-2)', display: 'grid', placeItems: 'center', flexShrink: 0, boxShadow: 'none' }}>{icon}</span> : null}
-      <span style={{ fontSize: '15px', fontWeight: 680, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{title}</span>
+      {icon ? <span style={{ width: '28px', height: '34px', borderRadius: 0, background: 'transparent', border: 'none', color: danger ? 'var(--nl-danger)' : 'var(--nl-accent)', display: 'grid', placeItems: 'center', flexShrink: 0, boxShadow: 'none' }}>{icon}</span> : null}
+      <span style={{ fontSize: '15px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>{title}</span>
     </span>
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', color: danger ? 'var(--nl-danger)' : 'var(--nl-muted)', fontSize: '12px', fontWeight: 500, flexShrink: 0 }}>
       {value}
@@ -252,18 +254,18 @@ export const RefListRow = ({
 export const RefChip = ({ children, active }: { children: ReactNode; active?: boolean }) => (
   <span
     style={{
-      minHeight: '38px',
-      borderRadius: '8px',
-      padding: '8px 12px',
+      minHeight: '30px',
+      borderRadius: '999px',
+      padding: '7px 14px',
       display: 'inline-flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: active ? 'var(--nl-primary-soft)' : 'transparent',
-      color: active ? 'var(--nl-primary-2)' : 'var(--nl-muted-strong)',
-      border: active ? '1px solid var(--nl-primary-line)' : '1px solid var(--nl-border-muted)',
+      background: active ? 'rgba(233, 160, 90, 0.26)' : 'rgba(255, 255, 255, 0.4)',
+      color: active ? 'var(--nl-ink)' : 'var(--nl-muted)',
+      border: active ? '1px solid rgba(169, 88, 27, 0.32)' : '1px solid rgba(58, 42, 28, 0.08)',
       boxShadow: 'none',
       fontSize: '12px',
-      fontWeight: active ? 620 : 540,
+      fontWeight: active ? 600 : 500,
       whiteSpace: 'nowrap',
     }}
   >
