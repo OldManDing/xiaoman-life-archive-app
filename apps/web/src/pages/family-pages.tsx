@@ -623,7 +623,7 @@ export const FamilyMembersPage = () => {
   const hiddenMemberCount = Math.max(members.length - visibleMembers.length, 0);
 
   return (
-    <PageShell title="家庭成员" backTo="/family">
+    <PageShell title="家庭成员" backTo="/family" className="account-shell">
       <Panel style={{ padding: 0, background: 'transparent', border: 'none', boxShadow: 'none' }}>
         {!activeChild?.family_no ? <EmptyState message="当前孩子尚未关联家庭编号。" /> : null}
         {loading ? <EmptyState message="正在加载家庭成员…" /> : null}
@@ -635,7 +635,7 @@ export const FamilyMembersPage = () => {
               {members.filter((member) => member.status !== 0).length} 位家人
               {members.filter((member) => member.status === 0).length ? ` · ${members.filter((member) => member.status === 0).length} 位待接受` : ''}
             </p>
-            <section style={{ borderRadius: 0, border: 'none', borderBottom: '1px solid var(--nl-border-muted)', background: 'transparent', padding: '0 0 14px', display: 'grid', gap: '10px' }}>
+            <section className="perm-card">
               <strong style={{ color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 700 }}>权限说明</strong>
               <div style={{ display: 'grid', gap: '10px' }}>
                 {rolePermissionItems.map((item) => (
@@ -658,9 +658,9 @@ export const FamilyMembersPage = () => {
               ) : null}
             </div>
             {visibleMembers.map((member) => (
-              <section key={member.user_no} style={{ border: 'none', borderBottom: '1px solid var(--nl-border-muted)', borderRadius: 0, padding: '0 0 16px', background: 'transparent', display: 'grid', gap: '12px' }}>
+              <section key={member.user_no} className="member-row-card">
                 <div style={{ display: 'flex', gap: '13px', alignItems: 'center', minWidth: 0 }}>
-                  <FamilyAvatar src={member.avatar_url} mediaNo={member.avatar_media_no} label={getFamilyMemberDisplayName(member)} size={48} radius="8px" />
+                  <FamilyAvatar src={member.avatar_url} mediaNo={member.avatar_media_no} label={getFamilyMemberDisplayName(member)} size={56} radius="999px" />
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                       <strong style={{ minWidth: 0, maxWidth: '100%', fontSize: '16px', color: 'var(--nl-ink)', fontWeight: 720, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflowWrap: 'anywhere' }}>{getFamilyMemberDisplayName(member)}</strong>
@@ -813,14 +813,14 @@ export const FamilyMemberDetailPage = () => {
   const roleColor = member?.role === 'owner' ? 'var(--nl-primary-2)' : member?.role === 'editor' ? 'var(--nl-muted-strong)' : 'var(--nl-muted-strong)';
   const roleBg = 'transparent';
   return (
-    <PageShell title="家人资料" backTo="/family">
+    <PageShell title="家人资料" backTo="/family" className="account-shell">
       {loading ? <Panel><EmptyState message="正在加载家人资料…" /></Panel> : null}
       {!loading && !member ? <Panel><EmptyState message="未找到该家庭成员。" /></Panel> : null}
       {member ? (
         <>
           <Panel style={{ display: 'grid', gap: '18px', padding: '8px 0 22px', borderRadius: 0, background: 'transparent', border: 'none', boxShadow: 'none' }}>
             <div style={{ display: 'grid', gridTemplateColumns: '72px minmax(0, 1fr)', gap: '16px', alignItems: 'center' }}>
-              <FamilyAvatar src={resolveFamilyMemberAvatarSrc(member, user)} mediaNo={resolveFamilyMemberAvatarMediaNo(member, user)} label={memberName} size={72} />
+              <FamilyAvatar src={resolveFamilyMemberAvatarSrc(member, user)} mediaNo={resolveFamilyMemberAvatarMediaNo(member, user)} label={memberName} size={96} />
               <div style={{ minWidth: 0, display: 'grid', gap: '7px', justifyItems: 'start' }}>
                 <h2 title={memberName} style={{ margin: 0, width: '100%', color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '22px', lineHeight: 1.12, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{memberName}</h2>
                 <span style={{ borderRadius: '6px', background: roleBg, color: roleColor, border: '1px solid var(--nl-border-muted)', padding: '4px 8px', fontSize: '11px', fontWeight: 650, whiteSpace: 'nowrap' }}>{familyRoleLabel(member.role)}</span>
@@ -839,7 +839,7 @@ export const FamilyMemberDetailPage = () => {
           </Panel>
 
           <section>
-            <h2 style={{ margin: '0 0 12px 2px', color: 'var(--nl-ink)', fontSize: '15px', fontWeight: 720 }}>记录</h2>
+            <h2 className="fam-detail-title">记录</h2>
             <div style={{ display: 'grid', gap: '10px' }}>
               {memberRecords.length ? memberRecords.map((record) => (
                 <button key={record.record_no} type="button" onClick={() => navigate(`/record/${record.record_no}`)} style={{ width: '100%', minHeight: '62px', border: 'none', borderBottom: '1px solid var(--nl-border-muted)', borderRadius: 0, background: 'transparent', padding: '11px 0', display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left', cursor: 'pointer', boxShadow: 'none' }}>
@@ -856,7 +856,7 @@ export const FamilyMemberDetailPage = () => {
           </section>
 
           <section>
-            <h2 style={{ margin: '0 0 12px 2px', color: 'var(--nl-ink)', fontSize: '15px', fontWeight: 720 }}>权限</h2>
+            <h2 className="fam-detail-title">权限</h2>
             <Panel style={{ padding: 0, overflow: 'hidden', borderRadius: 0, background: 'transparent', border: 'none', borderTop: '1px solid var(--nl-border-muted)', boxShadow: 'none' }}>
               <div style={{ borderBottom: '1px solid var(--nl-border-muted)', background: 'transparent', padding: '13px 0', display: 'grid', gap: '10px' }}>
                 <span style={{ color: 'var(--nl-muted)', fontSize: '12px', lineHeight: 1.55 }}>只读成员可查看家庭档案；可编辑成员可发布和修改记录。</span>
