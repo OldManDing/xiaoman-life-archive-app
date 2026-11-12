@@ -2072,3 +2072,50 @@ button.set-row {
 .fam-member-row {
   min-height: 74px;
 }
+
+/* 06：设计稿用的是浅米色激活块；头像去白环 */
+.app-bottom-nav.is-quiet .app-bottom-nav-link.is-active {
+  background: #fdefdc;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 6px 14px rgba(150, 95, 50, 0.08);
+}
+
+.pf-hero img {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* 07：清除键 44 灰底圆、命中高亮柔色 */
+.search-clear {
+  width: 44px;
+  height: 44px;
+  margin-right: -6px;
+  border-radius: 999px;
+  background: #ada49b;
+  color: #fff;
+}
+
+.search-clear:hover {
+  background: #9c938a;
+}
+
+.search-title mark {
+  background: #f8d79b;
+  border-radius: 6px;
+  padding: 0 3px;
+}
+
+/* 10：标题改暖棕、常规字重 */
+.msg-title {
+  color: #5a3a22;
+  font-weight: 400;
+}
+
+/* 11：行高落到规范下限 64 */
+.set-row {
+  min-height: 64px;
+}
+
+.set-body strong {
+  font-size: 16px;
+}

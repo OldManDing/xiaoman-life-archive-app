@@ -2729,7 +2729,7 @@ const RecordForm = ({
                   background: 'transparent',
                   boxSizing: 'border-box',
                 }}
-                placeholder="标题"
+                placeholder="给这一刻起个名字"
                 value={form.title}
                 onChange={(event) => {
                   setError(null);
