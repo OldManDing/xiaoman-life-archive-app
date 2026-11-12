@@ -2587,3 +2587,49 @@ button.set-row {
   box-shadow: none !important;
   padding: 14px 16px !important;
 }
+
+.notify-status-card {
+  display: grid;
+  gap: 6px;
+  padding: 14px 18px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.86);
+  background: rgba(255, 252, 247, 0.82);
+  box-shadow: 0 12px 26px rgba(150, 95, 50, 0.1);
+}
+
+.notify-status-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--nl-muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.notify-status-head button {
+  min-height: 44px;
+  padding: 0 8px;
+  border: none;
+  background: transparent;
+  color: var(--nl-accent);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.notify-status-title {
+  color: #5a3a22;
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.notify-status-desc {
+  color: var(--nl-muted);
+  font-size: 13px;
+}
+
+.set-row.is-last::after {
+  display: none;
+}

@@ -811,84 +811,112 @@ export const NotificationSettingsPage = () => {
           : '手机通知待开启';
   const shouldShowPermissionButton = permissionStatus !== 'checking' && permissionStatus !== 'granted' && permissionStatus !== 'web';
 
+  const [notifyPrefs, setNotifyPrefs] = useState<Record<string, boolean>>(() => {
+    const defaults: Record<string, boolean> = {
+      daily: true,
+      birthday: true,
+      milestone: true,
+      familyRecord: true,
+      familyReply: true,
+      familyJoin: true,
+      quiet: false,
+    };
+    try {
+      const raw = window.localStorage.getItem('nianlun:notification-prefs');
+      return raw ? { ...defaults, ...(JSON.parse(raw) as Record<string, boolean>) } : defaults;
+    } catch {
+      return defaults;
+    }
+  });
+
+  const toggleNotifyPref = (key: string) => {
+    setNotifyPrefs((current) => {
+      const next = { ...current, [key]: !current[key] };
+      try {
+        window.localStorage.setItem('nianlun:notification-prefs', JSON.stringify(next));
+      } catch {
+        // ignore storage failures
+      }
+      return next;
+    });
+  };
+
+  const notifyGroups: Array<{ title: string; items: Array<{ key: string; label: string; desc?: string }> }> = [
+    {
+      title: '提醒',
+      items: [
+        { key: 'daily', label: '每天提醒我记录', desc: '晚上 8:00' },
+        { key: 'birthday', label: '孩子生日提醒', desc: '提前 3 天' },
+        { key: 'milestone', label: '里程碑提醒' },
+      ],
+    },
+    {
+      title: '家人的动态',
+      items: [
+        { key: 'familyRecord', label: '有人新增记录' },
+        { key: 'familyReply', label: '有人评论或回应' },
+        { key: 'familyJoin', label: '有人加入家庭' },
+      ],
+    },
+    {
+      title: '免打扰',
+      items: [{ key: 'quiet', label: '免打扰时段', desc: '22:00 – 07:00' }],
+    },
+  ];
+
   return (
-    <PageShell title="通知管理" backTo="/profile">
-      <div style={{ display: 'grid', gap: 22 }}>
-        <section
-          style={{
-            display: 'grid',
-            gap: 12,
-            padding: '2px 0 16px',
-            borderBottom: '1px solid rgba(var(--nl-shadow-rgb),0.08)',
-          }}
-        >
-          <div style={{ display: 'grid', gap: 9 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
-              <strong style={{ color: 'var(--nl-ink)', fontSize: 14, fontWeight: 680 }}>手机通知状态</strong>
-              <button
-                type="button"
-                onClick={shouldShowPermissionButton ? requestPermission : refreshPermissionStatus}
-                disabled={permissionBusy}
-                aria-busy={permissionBusy}
-                style={{
-                  minWidth: 82,
-                  minHeight: 38,
-                  borderRadius: 8,
-                  border: '1px solid rgba(var(--nl-shadow-rgb),0.1)',
-                  background: 'var(--nl-control-bg)',
-                  color: 'var(--nl-primary-2)',
-                  padding: '0 13px',
-                  fontSize: 11,
-                  fontWeight: 720,
-                  whiteSpace: 'nowrap',
-                  boxShadow: 'none',
-                  cursor: 'pointer',
-                  flexShrink: 0,
-                }}
-              >
-                {permissionBusy ? '处理中…' : shouldShowPermissionButton ? '开启通知' : '检查状态'}
+    <PageShell title="通知设置" backTo="/profile" className="settings-shell">
+      <div className="notify-status-card">
+        <div className="notify-status-head">
+          <span>手机通知状态</span>
+          <button type="button" onClick={shouldShowPermissionButton ? requestPermission : refreshPermissionStatus} disabled={permissionBusy}>
+            {permissionBusy ? '处理中…' : shouldShowPermissionButton ? '开启通知' : '检查状态'}
+          </button>
+        </div>
+        <strong className="notify-status-title">{remotePushText}</strong>
+        <span className="notify-status-desc">{permissionText} · {unreadText}</span>
+      </div>
+
+      <div style={{ display: 'grid', gap: 18 }}>
+        {notifyGroups.map((group) => (
+          <section className="set-group" key={group.title} aria-label={group.title}>
+            <h2 className="set-group-title">{group.title}</h2>
+            <div className="set-card">
+              {group.items.map((item, index) => {
+                const enabled = Boolean(notifyPrefs[item.key]);
+                return (
+                  <div className={index === group.items.length - 1 ? 'set-row is-static is-last' : 'set-row is-static'} key={item.key}>
+                    <span className="set-body"><strong>{item.label}</strong>{item.desc ? <small>{item.desc}</small> : null}</span>
+                    <button type="button" aria-label={item.label} aria-pressed={enabled} style={toggleButtonStyle(enabled)} onClick={() => toggleNotifyPref(item.key)}>
+                      <span style={toggleTrackStyle(enabled)}><span style={toggleKnobStyle(enabled)} /></span>
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        ))}
+
+        <section className="set-group" aria-label="手机系统">
+          <h2 className="set-group-title">手机系统</h2>
+          <div className="set-card">
+            <div className="set-row is-static">
+              <span className="set-body"><strong>手机通知</strong><small>允许年轮发送系统通知</small></span>
+              <button type="button" aria-label="手机通知" aria-pressed={settings.notificationPushEnabled} style={toggleButtonStyle(settings.notificationPushEnabled)} onClick={() => void updateSetting('notificationPushEnabled')}>
+                <span style={toggleTrackStyle(settings.notificationPushEnabled)}><span style={toggleKnobStyle(settings.notificationPushEnabled)} /></span>
               </button>
             </div>
-            <div style={{ display: 'grid', gap: 6 }}>
-              <strong style={{ color: 'var(--nl-primary-2)', fontSize: 18, lineHeight: 1.18, fontWeight: 700 }}>{remotePushText}</strong>
-              <span style={{ color: 'var(--nl-muted)', fontSize: 12, lineHeight: 1.5, maxWidth: 332 }}>
-                <span>{permissionText}</span>
-                <span aria-hidden="true"> · </span>
-                <span>{unreadText}</span>
-              </span>
+            <div className="set-row is-static is-last">
+              <span className="set-body"><strong>版本更新提醒</strong></span>
+              <button type="button" aria-label="版本更新提醒" aria-pressed={settings.notificationUpdateEnabled} style={toggleButtonStyle(settings.notificationUpdateEnabled)} onClick={() => void updateSetting('notificationUpdateEnabled')} disabled={!settings.notificationPushEnabled}>
+                <span style={toggleTrackStyle(settings.notificationUpdateEnabled)}><span style={toggleKnobStyle(settings.notificationUpdateEnabled)} /></span>
+              </button>
             </div>
           </div>
         </section>
-
-        <section style={{ display: 'grid', gap: 8 }}>
-          <RefSectionTitle>通知偏好</RefSectionTitle>
-          <div style={{ background: 'transparent', overflow: 'hidden' }}>
-            <NotificationSwitchRow
-              title="手机通知"
-              checked={settings.notificationPushEnabled}
-              onChange={() => void updateSetting('notificationPushEnabled')}
-            />
-            <NotificationSwitchRow
-              title="家庭动态通知"
-              checked={settings.notificationFamilyEnabled}
-              disabled={!settings.notificationPushEnabled}
-              onChange={() => void updateSetting('notificationFamilyEnabled')}
-            />
-            <NotificationSwitchRow
-              title="版本更新提醒"
-              checked={settings.notificationUpdateEnabled}
-              disabled={!settings.notificationPushEnabled}
-              onChange={() => void updateSetting('notificationUpdateEnabled')}
-            />
-          </div>
-        </section>
-
-        {message ? (
-          <p style={{ ...helperTextStyle, color: isPositiveStatusMessage(message) ? 'var(--nl-success)' : 'var(--nl-danger)' }}>
-            {message}
-          </p>
-        ) : null}
       </div>
+
+      {message ? <p className="ac-message">{message}</p> : null}
     </PageShell>
   );
 };
