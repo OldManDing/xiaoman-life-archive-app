@@ -3294,3 +3294,29 @@ button.set-row {
   top: 8px !important;
   left: 16px !important;
 }
+
+/* 02：年份胶囊去外描边、选中换浅橙 */
+.tl-years {
+  border: none !important;
+}
+
+.tl-year.is-active {
+  background: #f7cf98 !important;
+  box-shadow: none !important;
+}
+
+/* 05：meta 收成单行 */
+.fam-hero-meta {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+
+.fam-hero-meta > * {
+  flex-shrink: 0;
+}
