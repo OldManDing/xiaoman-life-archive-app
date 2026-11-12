@@ -1918,3 +1918,116 @@ button.set-row {
   border-color: rgba(255, 255, 255, 0.86) !important;
   background: rgba(255, 252, 247, 0.86) !important;
 }
+
+/* create 底部提交条：实底，避免下层字段文字透过玻璃 */
+.is-create .record-submit-bar {
+  background: #fbeee0 !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.72) !important;
+  box-shadow: 0 -10px 26px rgba(150, 95, 50, 0.08) !important;
+}
+
+/* 04 create：提交按钮回到文档流，避免遮住字段 */
+.record-inline-submit {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+  padding-bottom: 24px;
+}
+
+.record-inline-submit-button {
+  width: 100%;
+  min-height: 54px;
+  border: none;
+  border-radius: 999px;
+  background: #a9581b;
+  color: #fff;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 14px 30px rgba(169, 88, 27, 0.22);
+}
+
+.record-inline-submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.record-inline-submit p {
+  margin: 0;
+  text-align: center;
+  color: var(--nl-muted);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* 10 消息：卡高与未读点 */
+.msg-card {
+  min-height: 78px;
+  padding: 12px 16px 12px 18px;
+}
+
+.msg-list {
+  gap: 12px;
+}
+
+.msg-dot {
+  width: 12px;
+  height: 12px;
+  left: -3px;
+  border: 2px solid #fffaf4;
+  box-shadow: 0 2px 6px rgba(150, 95, 50, 0.2);
+}
+
+.msg-segmented button.is-active {
+  background: #f5be7e;
+}
+
+/* 11 设置：标题字号、行高、内缩分隔线 */
+.settings-shell .app-topbar h1 {
+  font-size: 32px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.04em;
+}
+
+.messages-shell .app-topbar h1 {
+  font-size: 30px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.04em;
+}
+
+.set-row {
+  min-height: 72px;
+  position: relative;
+  border-bottom: none;
+}
+
+.set-row:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 56px;
+  right: 18px;
+  bottom: 0;
+  height: 1px;
+  background: rgba(58, 42, 28, 0.08);
+}
+
+.set-body strong {
+  font-size: 18px;
+}
+
+.set-card {
+  background: rgba(255, 252, 247, 0.82);
+}
+
+.is-create .record-inline-submit {
+  order: 9;
+}
+
+.is-create .record-media-section {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}

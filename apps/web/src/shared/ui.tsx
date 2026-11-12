@@ -197,6 +197,7 @@ export const PageShell = ({
   onBack,
   backLabel = '返回',
   action,
+  className,
   children,
 }: {
   title: string;
@@ -206,9 +207,10 @@ export const PageShell = ({
   onBack?: () => void;
   backLabel?: string;
   action?: ReactNode;
+  className?: string;
   children: ReactNode;
 }) => (
-  <section className="app-page-shell" style={pageShellStyle}>
+  <section className={`app-page-shell${className ? ` ${className}` : ''}`} style={pageShellStyle}>
     {!hideHeader ? (
       backTo || onBack ? (
         <>

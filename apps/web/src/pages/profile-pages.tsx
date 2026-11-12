@@ -579,7 +579,7 @@ const MessageCard = ({ item, onClick }: { item: UserNotificationItem; onClick: (
   const body = normalizeNotificationCopy(item.body);
   const avatar = messageAvatarFor(item);
   const isSystem = item.notification_type === 'system';
-  const hasReply = item.target_type === 'record' && Boolean(item.target_no);
+  const hasReply = item.notification_type !== 'system' && item.target_type === 'record' && Boolean(item.target_no);
   return (
     <button type="button" className="msg-card" onClick={onClick}>
       {!item.read_at ? <span className="msg-dot" aria-label="未读" /> : null}
@@ -683,6 +683,7 @@ export const MessagesPage = () => {
     <PageShell
       title="消息"
       backTo="/profile"
+      className="messages-shell"
       action={
         <button
           type="button"
@@ -1147,7 +1148,7 @@ export const SettingsPage = () => {
   };
 
   return (
-    <PageShell title="设置" backTo="/profile">
+    <PageShell title="设置" backTo="/profile" className="settings-shell">
       <section className="set-group" aria-label="记录">
         <h2 className="set-group-title">记录</h2>
         <div className="set-card">

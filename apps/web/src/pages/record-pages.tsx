@@ -3065,10 +3065,25 @@ const RecordForm = ({
             </span>
           </button>
 
+          {mode === 'create' ? (
+            <div className="record-inline-submit">
+              <button
+                type="submit"
+                form="record-form"
+                className="record-inline-submit-button"
+                disabled={submitting || uploading || audioRecording}
+              >
+                {pendingAction === 'publish' ? '保存中…' : '保存这条记录'}
+              </button>
+              <p>仅家人可见</p>
+            </div>
+          ) : null}
+
         </form>
 
-        {typeof document !== 'undefined' ? createPortal(
+        {mode !== 'create' && typeof document !== 'undefined' ? createPortal(
         <div
+          className="record-submit-bar"
           style={{
             position: 'fixed',
             left: 18,
@@ -3089,15 +3104,13 @@ const RecordForm = ({
           <button
             type="submit"
             form="record-form"
-            aria-label={mode === 'create' ? '保存这条记录' : primarySubmitLabel}
+            aria-label={primarySubmitLabel}
             style={{ ...primaryButtonStyle, borderRadius: 999, minHeight: 52 }}
             disabled={submitting || uploading || audioRecording}
           >
-            {pendingAction === 'publish'
-              ? `${mode === 'create' ? '保存这条记录' : primarySubmitLabel}中…`
-              : mode === 'create' ? '保存这条记录' : primarySubmitLabel}
+            {pendingAction === 'publish' ? `${primarySubmitLabel}中…` : primarySubmitLabel}
           </button>
-          {mode !== 'create' && isDraftRecord ? (
+          {isDraftRecord ? (
             <button
               type="button"
               onClick={() => void submitRecord('draft')}
@@ -3114,9 +3127,6 @@ const RecordForm = ({
             >
               {pendingAction === 'draft' ? '保存中…' : '先存草稿'}
             </button>
-          ) : null}
-          {mode === 'create' ? (
-            <p style={{ margin: 0, textAlign: 'center', color: 'var(--nl-muted)', fontSize: 13, fontWeight: 500 }}>仅家人可见</p>
           ) : null}
         </div>,
         document.body,
