@@ -310,121 +310,52 @@ export const WelcomePage = () => {
     navigate('/auth/login', { replace: true });
   };
 
-  const openLegalDocument = (event: ReactMouseEvent<HTMLButtonElement>, target: string) => {
-    event.preventDefault();
-    event.stopPropagation();
-    navigate(`/legal?doc=${target}`);
-  };
-
   return (
-    <main style={{ minHeight: '100dvh', boxSizing: 'border-box', display: 'grid', gridTemplateRows: 'minmax(0, 1fr) auto', gap: 16, padding: 'calc(16px + env(safe-area-inset-top)) 0 max(24px, env(safe-area-inset-bottom))', overflow: 'hidden' }}>
-      <section style={{ display: 'grid', alignContent: 'center', gap: 14, minHeight: 0 }}>
-        <div
-          aria-label="年轮介绍海报"
-          style={{
-            display: 'grid',
-            gridAutoFlow: 'column',
-            gridAutoColumns: 'minmax(284px, 82vw)',
-            gap: 14,
-            overflowX: 'auto',
-            overscrollBehaviorX: 'contain',
-            scrollSnapType: 'x mandatory',
-            scrollbarWidth: 'none',
-            padding: '0 20px 2px',
-            WebkitOverflowScrolling: 'touch',
-          }}
-        >
-          {welcomePosters.map((poster, index) => (
-            <article
-              key={poster.src}
-              aria-label={poster.label}
-              style={{
-                position: 'relative',
-                scrollSnapAlign: 'center',
-                aspectRatio: '9 / 16',
-                minHeight: 0,
-                maxHeight: 'min(68dvh, 640px)',
-                borderRadius: 10,
-                overflow: 'hidden',
-                border: '1px solid var(--nl-border-soft)',
-                background: 'var(--nl-surface-soft)',
-                boxShadow: index === 0 ? '0 30px 70px rgba(var(--nl-shadow-rgb),0.18)' : '0 18px 42px rgba(var(--nl-shadow-rgb),0.12)',
-              }}
-            >
-              <img
-                src={poster.src}
-                alt={poster.alt}
-                decoding={index === 0 ? 'sync' : 'async'}
-                loading={index === 0 ? 'eager' : 'lazy'}
-                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-              />
-            </article>
-          ))}
+    <main className="wl-page">
+      <button type="button" className="wl-skip" onClick={continueToLogin}>跳过</button>
+
+      <div className="wl-hero">
+        <img src="/photos/welcome-hero.jpg" alt="孩子在水边张开手臂" />
+        <div className="wl-hero-scrim" aria-hidden="true" />
+      </div>
+
+      <div className="wl-body">
+        <h1 className="wl-title">把每一个第一次，<br />都留下来</h1>
+        <p className="wl-subtitle">照片、语音、一句话，家人都能一起记录</p>
+
+        <div className="wl-features">
+          <div className="wl-feature">
+            <span className="wl-feature-icon"><Camera size={20} strokeWidth={1.8} /></span>
+            <span>记录成长</span>
+          </div>
+          <div className="wl-feature">
+            <span className="wl-feature-icon"><CalendarDays size={20} strokeWidth={1.8} /></span>
+            <span>家人共写</span>
+          </div>
+          <div className="wl-feature">
+            <span className="wl-feature-icon"><ChevronRight size={20} strokeWidth={1.8} /></span>
+            <span>一键成书</span>
+          </div>
         </div>
 
-        <div role="tablist" aria-label="介绍页面" style={{ display: 'flex', justifyContent: 'center', gap: 6 }}>
-          {welcomePosters.map((poster, index) => (
-            <button
-              key={poster.src}
-              type="button"
-              role="tab"
-              aria-label={`查看${poster.label}`}
-              aria-selected={index === 0}
-              tabIndex={index === 0 ? 0 : -1}
-              onClick={() => document.querySelector<HTMLElement>(`[aria-label="${poster.label}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' })}
-              style={{
-                width: index === 0 ? 18 : 6,
-                height: 6,
-                borderRadius: 99,
-                background: index === 0 ? 'rgba(var(--nl-primary-rgb),0.58)' : 'rgba(var(--nl-muted-rgb),0.28)',
-                border: 'none',
-                padding: 0,
-                cursor: 'pointer',
-              }}
-            />
-          ))}
-        </div>
-      </section>
-
-      <section style={{ display: 'grid', gap: 12, padding: '0 20px' }}>
-        <label style={authAgreementStyle}>
+        <label className="lg-agreement wl-agreement">
           <input
             type="checkbox"
             checked={acceptedAgreement}
             onChange={(event) => setAcceptedAgreement(event.target.checked)}
             aria-label="同意用户协议、隐私政策和儿童个人信息保护规则"
-            style={authCheckboxStyle(acceptedAgreement)}
           />
-          <span style={authAgreementTextStyle}>
-            我已阅读并同意
-            <button type="button" onClick={(event) => openLegalDocument(event, 'terms')} style={inlineLegalLinkStyle}>《用户协议》</button>
-            <button type="button" onClick={(event) => openLegalDocument(event, 'privacy')} style={inlineLegalLinkStyle}>《隐私政策》</button>
-            和
-            <button type="button" onClick={(event) => openLegalDocument(event, 'child')} style={inlineLegalLinkStyle}>《儿童个人信息保护规则》</button>
+          <span>
+            已阅读并同意 <Link to="/legal?doc=terms" className="lg-link">《用户协议》</Link> 和{' '}
+            <Link to="/legal?doc=privacy" className="lg-link">《隐私政策》</Link>
           </span>
         </label>
-        <button
-          type="button"
-          onClick={startNow}
-          disabled={!acceptedAgreement}
-          aria-disabled={!acceptedAgreement}
-          style={acceptedAgreement ? primaryButtonStyle : disabledSubmitButtonStyle}
-        >
-          开始使用
+
+        <button type="button" className="wl-start" onClick={startNow} disabled={!acceptedAgreement}>
+          开始记录
         </button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button type="button" onClick={continueToLogin} style={{ ...secondaryButtonStyle, minHeight: 44, flex: '1 1 0', fontSize: 15 }}>
-            跳过
-          </button>
-          <button
-            type="button"
-            onClick={continueToLogin}
-            style={{ minHeight: 44, flex: '1 1 0', border: 'none', background: 'transparent', color: 'var(--nl-accent)', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}
-          >
-            已有账号？登录
-          </button>
-        </div>
-      </section>
+        <button type="button" className="wl-login" onClick={continueToLogin}>已有账号？登录</button>
+      </div>
     </main>
   );
 };

@@ -2780,3 +2780,135 @@ button.set-row {
   background: rgba(255, 252, 247, 0.72) !important;
   padding: 10px 16px !important;
 }
+
+/* ---------------- 14 欢迎页 ---------------- */
+.wl-page {
+  position: relative;
+  min-height: 100dvh;
+  background: linear-gradient(175deg, #fdf3e6 0%, #f8e3cf 100%);
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+.wl-skip {
+  position: absolute;
+  top: calc(14px + env(safe-area-inset-top));
+  right: 16px;
+  z-index: 3;
+  min-height: 44px;
+  padding: 0 12px;
+  border: none;
+  background: rgba(255, 250, 244, 0.72);
+  border-radius: 999px;
+  color: var(--nl-muted-strong);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+}
+
+.wl-hero {
+  position: relative;
+  height: 46vh;
+  min-height: 300px;
+  overflow: hidden;
+  border-radius: 0 0 32px 32px;
+}
+
+.wl-hero img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.wl-hero-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(40, 25, 12, 0) 55%, rgba(253, 243, 230, 0.9) 100%);
+}
+
+.wl-body {
+  flex: 1 1 auto;
+  display: grid;
+  gap: 14px;
+  padding: 8px 22px calc(24px + env(safe-area-inset-bottom));
+  align-content: start;
+}
+
+.wl-title {
+  margin: 0;
+  color: var(--nl-ink);
+  font-family: var(--nl-font-display);
+  font-size: 34px;
+  line-height: 1.28;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.wl-subtitle {
+  margin: 0;
+  color: var(--nl-muted);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.wl-features {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 4px 0 2px;
+}
+
+.wl-feature {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 14px 6px;
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.86);
+  background: rgba(255, 252, 247, 0.78);
+  color: var(--nl-muted-strong);
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.wl-feature-icon {
+  color: var(--nl-accent);
+  display: grid;
+  place-items: center;
+}
+
+.wl-agreement {
+  margin-top: 4px;
+}
+
+.wl-start {
+  min-height: 54px;
+  border: none;
+  border-radius: 999px;
+  background: #a9581b;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 14px 30px rgba(169, 88, 27, 0.24);
+}
+
+.wl-start:disabled {
+  background: rgba(111, 87, 69, 0.2);
+  color: rgba(58, 42, 28, 0.5);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.wl-login {
+  min-height: 44px;
+  border: none;
+  background: transparent;
+  color: var(--nl-accent);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
