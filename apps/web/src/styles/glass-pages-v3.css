@@ -3473,3 +3473,34 @@ button.set-row {
   white-space: normal !important;
   flex-shrink: 0 !important;
 }
+
+/* 01：今日 CTA 回归琥珀胶囊 */
+.nl-home-today-cta {
+  background: #f8ce93 !important;
+  border: none !important;
+  border-radius: 24px !important;
+  min-height: 48px !important;
+  padding: 0 18px !important;
+  color: #3a2a1e !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  box-shadow: none !important;
+}
+
+/* 06：退出登录回归暖棕单行，去红与副标题 */
+.pf-logout {
+  color: #5a3a22 !important;
+}
+
+.pf-logout strong {
+  color: #5a3a22 !important;
+  font-size: 16px !important;
+}
+
+.pf-logout small {
+  display: none !important;
+}
+
+.pf-logout-icon {
+  color: #8a4e14 !important;
+}
