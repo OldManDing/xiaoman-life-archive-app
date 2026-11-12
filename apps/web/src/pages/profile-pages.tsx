@@ -313,8 +313,8 @@ const toggleTrackStyle = (enabled: boolean) =>
     width: '51px',
     height: '31px',
     borderRadius: '999px',
-    border: enabled ? '1px solid rgba(var(--nl-primary-rgb),0.28)' : '1px solid var(--nl-switch-off-line)',
-    background: enabled ? 'var(--nl-primary)' : 'var(--nl-switch-off)',
+    border: 'none',
+    background: enabled ? '#c0742f' : '#e7d8c6',
     padding: '3px',
     display: 'flex',
     alignItems: 'center',
@@ -323,11 +323,11 @@ const toggleTrackStyle = (enabled: boolean) =>
   }) as const;
 
 const toggleKnobStyle = (enabled: boolean) => ({
-  width: '23px',
-  height: '23px',
+  width: '25px',
+  height: '25px',
   borderRadius: '999px',
   background: '#FFFFFF',
-  border: enabled ? '1px solid transparent' : '1px solid rgba(139, 113, 96, 0.4)',
+  border: 'none',
   boxShadow: '0 2px 6px rgba(var(--nl-shadow-rgb),0.18)',
 }) as const;
 
