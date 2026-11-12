@@ -3370,3 +3370,90 @@ button.set-row {
   left: -5px !important;
   box-shadow: 0 2px 6px rgba(150, 95, 50, 0.18) !important;
 }
+
+/* 01：三条冲 90 */
+.nl-home-today-cta {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 2px !important;
+  min-height: 44px;
+  color: #8a4a16 !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+}
+
+.app-bottom-nav:not(.is-quiet) .app-bottom-nav-link.is-active {
+  background: #fee3bc !important;
+  color: #5a3a22 !important;
+  box-shadow: none !important;
+}
+
+.nl-home-day-cards {
+  margin-left: -3px;
+  margin-right: -3px;
+}
+
+.nl-home-day-cards .nl-moment-card.is-featured {
+  border-radius: 28px !important;
+}
+
+/* 02：月标题、日期压字、渐变 */
+.tl-month-select select,
+.tl-month-select {
+  font-size: 35px !important;
+  font-weight: 600 !important;
+}
+
+.tl-thumb-date,
+.tl-tile-date {
+  font-size: 14px !important;
+}
+
+.tl-tile-scrim {
+  background: linear-gradient(180deg, rgba(30, 22, 16, 0) 45%, rgba(30, 22, 16, 0.55) 100%) !important;
+}
+
+/* 05：meta 不再被裁 */
+.fam-hero-meta {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fam-hero-meta > * {
+  min-width: 0;
+  flex-shrink: 1 !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fam-member-row {
+  min-height: 54px !important;
+}
+
+.fam-hero-title {
+  font-size: 30px !important;
+}
+
+/* 06：行高、图标、字、统计数字 */
+.pf-menu-row {
+  min-height: 40px !important;
+  padding: 2px 18px !important;
+}
+
+.pf-menu-label {
+  font-size: 15px !important;
+}
+
+.pf-menu-glyph svg,
+.pf-menu-row svg {
+  width: 20px;
+  height: 20px;
+}
+
+.pf-stats strong {
+  font-size: 23px !important;
+}
