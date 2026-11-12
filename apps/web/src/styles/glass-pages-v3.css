@@ -2633,3 +2633,38 @@ button.set-row {
 .set-row.is-last::after {
   display: none;
 }
+
+.archive-shell .app-topbar h1 {
+  font-size: 30px !important;
+  font-weight: 500 !important;
+}
+
+.archive-shell form {
+  display: grid;
+  gap: 14px;
+}
+
+.ac-row .app-segmented {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ac-row .app-date-input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ac-row input {
+  text-align: right;
+}
+
+.ac-row .app-segmented > * {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0 6px;
+  white-space: nowrap;
+}
+
+.ac-row .app-segmented {
+  display: flex;
+}

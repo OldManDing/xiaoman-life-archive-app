@@ -476,13 +476,13 @@ export const FamilyChildPage = () => {
   };
 
   return (
-    <PageShell title="孩子档案" backTo="/family">
+    <PageShell title="孩子档案" backTo="/family" className="archive-shell">
       <Panel style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }}>
         {loading ? <EmptyState message="正在加载孩子资料…" /> : null}
         {error ? <EmptyState message={`加载失败：${error}`} /> : null}
         {!loading && !error && data ? (
           <form onSubmit={onSubmit} style={rowStyle}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <div className="ac-card ac-hero" style={{ display: 'grid', justifyItems: 'center', gap: 10 }}>
               <label
                 aria-label="更换孩子头像"
                 style={{ position: 'relative', display: 'block', flexShrink: 0, cursor: avatarUploading ? 'not-allowed' : 'pointer', opacity: avatarUploading ? 0.7 : 1 }}
@@ -516,37 +516,43 @@ export const FamilyChildPage = () => {
                 </span>
               </div>
             </div>
-            <p style={helperTextStyle}>状态：{childStatusLabel(data.status)} · 性别：{genderLabel(data.gender)}</p>
-            <Field label="孩子姓名">
-              <input style={inputStyle} value={form.name} onChange={(event) => { formDirtyRef.current = true; setForm((current) => ({ ...current, name: event.target.value })); }} />
-            </Field>
-            <Field label="生日">
-              <AppDateInput
-                aria-label="生日"
-                value={form.birthday}
-                displayValue={form.birthday ? form.birthday.replace(/-/g, '/') : undefined}
-                placeholder="年/月/日"
-                 onChange={(event) => { formDirtyRef.current = true; setForm((current) => ({ ...current, birthday: event.target.value })); }}
-              />
-            </Field>
-            <Field label="性别">
-              <AppSegmentedControl
-                ariaLabel="性别"
-                value={form.gender}
-                 onChange={(value) => { formDirtyRef.current = true; setForm((current) => ({ ...current, gender: value })); }}
-                options={[
-                  { value: 'female', label: '女' },
-                  { value: 'male', label: '男' },
-                  { value: 'unknown', label: '未知' },
-                ]}
-              />
-            </Field>
-            <Field label="出生地">
-              <input style={inputStyle} value={form.birth_place} onChange={(event) => { formDirtyRef.current = true; setForm((current) => ({ ...current, birth_place: event.target.value })); }} />
-            </Field>
-            <Field label="备注">
-              <textarea style={textareaStyle} value={form.remark} onChange={(event) => { formDirtyRef.current = true; setForm((current) => ({ ...current, remark: event.target.value })); }} />
-            </Field>
+            <div className="ac-card" style={{ display: 'grid' }}>
+              <div className="ac-row">
+                <span className="ac-label">名字</span>
+                <input className="ac-input" value={form.name} onChange={(event) => { formDirtyRef.current = true; setForm((current) => ({ ...current, name: event.target.value })); }} aria-label="孩子姓名" />
+              </div>
+              <div className="ac-row">
+                <span className="ac-label">出生日期</span>
+                <AppDateInput
+                  aria-label="生日"
+                  value={form.birthday}
+                  displayValue={form.birthday ? form.birthday.replace(/-/g, '/') : undefined}
+                  placeholder="年/月/日"
+                  onChange={(event) => { formDirtyRef.current = true; setForm((current) => ({ ...current, birthday: event.target.value })); }}
+                />
+              </div>
+              <div className="ac-row">
+                <span className="ac-label">性别</span>
+                <AppSegmentedControl
+                  ariaLabel="性别"
+                  value={form.gender}
+                  onChange={(value) => { formDirtyRef.current = true; setForm((current) => ({ ...current, gender: value })); }}
+                  options={[
+                    { value: 'female', label: '女' },
+                    { value: 'male', label: '男' },
+                    { value: 'unknown', label: '未知' },
+                  ]}
+                />
+              </div>
+              <div className="ac-row">
+                <span className="ac-label">出生地</span>
+                <input className="ac-input" value={form.birth_place} onChange={(event) => { formDirtyRef.current = true; setForm((current) => ({ ...current, birth_place: event.target.value })); }} aria-label="出生地" />
+              </div>
+              <div className="ac-row is-textarea">
+                <span className="ac-label">备注</span>
+                <textarea className="ac-input" style={{ textAlign: 'left', minHeight: 44 }} value={form.remark} onChange={(event) => { formDirtyRef.current = true; setForm((current) => ({ ...current, remark: event.target.value })); }} aria-label="备注" />
+              </div>
+            </div>
       {message ? <p style={{ ...helperTextStyle, color: isPositiveStatusMessage(message) ? 'var(--nl-success)' : 'var(--nl-danger)' }}>{message}</p> : null}
             <div style={{ ...buttonRowStyle, ...formSubmitSpacingStyle }}>
               <button type="submit" style={primaryButtonStyle} disabled={saving}>
