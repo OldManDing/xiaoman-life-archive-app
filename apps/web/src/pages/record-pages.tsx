@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type CSSProperties, type FormEvent } from 'react';
-import { AlertCircle, BookOpen, CheckCircle2, ChevronLeft, Clock, Eye, FileAudio, FileText, Image, ImagePlus, MapPin, Mic, MoreHorizontal, PlayCircle, RotateCcw, Ruler, Sparkles, Square, Star, Tag, Video, X } from 'lucide-react';
+import { AlertCircle, BookOpen, CheckCircle2, ChevronLeft, ChevronRight, Clock, Eye, FileAudio, FileText, Image, ImagePlus, MapPin, Mic, MoreHorizontal, PlayCircle, RotateCcw, Ruler, Sparkles, Square, Star, Tag, Video, X } from 'lucide-react';
 import { Camera, CameraResultType, CameraSource, type GalleryPhoto, type Photo } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 import type { PointerEvent as ReactPointerEvent, ReactNode, RefObject } from 'react';
@@ -2758,6 +2758,7 @@ const RecordForm = ({
                 </button>
               ) : null}
             </div>
+              <span className="record-field-label">这一刻发生了什么</span>
               <textarea
                 ref={contentInputRef}
                 className="record-body-input"
@@ -2823,13 +2824,14 @@ const RecordForm = ({
           </div>
           ) : null}
 
-          <div style={{ order: 2, display: 'grid', gap: '6px', borderRadius: 0, border: 'none', borderBottom: '1px solid var(--nl-border-muted)', background: 'transparent', padding: '0 0 11px' }}>
+          <div className="record-details" style={{ order: 2, display: 'grid', gap: '6px', borderRadius: 0, border: 'none', borderBottom: '1px solid var(--nl-border-muted)', background: 'transparent', padding: '0 0 11px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-              <span style={{ color: 'var(--nl-ink)', fontSize: '15px', fontWeight: 620 }}>补充详情</span>
+              <span className="record-details-title" style={{ color: 'var(--nl-ink)', fontSize: '15px', fontWeight: 620 }}>补充详情</span>
             </div>
 
             <section style={{ display: 'grid', gap: '8px' }}>
               <div
+                className="record-location-row"
                 style={{
                   minHeight: '46px',
                   borderRadius: 0,
@@ -2933,7 +2935,7 @@ const RecordForm = ({
                 </div>
               ) : null}
 
-              <div style={{ position: 'relative' }}>
+              <div className="record-tag-select" style={{ position: 'relative' }}>
                 <Tag size={15} strokeWidth={2.2} style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: 'var(--nl-muted)', pointerEvents: 'none', zIndex: 1 }} />
                 <AppSelect
                   aria-label="选择标签"
@@ -2965,13 +2967,34 @@ const RecordForm = ({
               </div>
 
               {selectedTags.length ? (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px', paddingTop: '1px' }}>
+                <div className="record-tag-chips" style={{ display: 'flex', flexWrap: 'wrap', gap: '7px', paddingTop: '1px' }}>
                   {selectedTags.map((tag, index) => (
                     <button key={`${tag}-${index}`} type="button" onClick={() => removeSelectedTag(tag)} style={{ ...selectedChipButtonStyle, minHeight: '34px', padding: '5px 9px', fontSize: '11px' }}>
                       #{tag}
                       <X size={12} strokeWidth={2.4} />
                     </button>
                   ))}
+                </div>
+              ) : null}
+              {mode === 'create' ? (
+                <div className="record-quick-tags">
+                  {tagOptions.slice(0, 4).map((tag) => (
+                    <button
+                      key={`quick-${tag}`}
+                      type="button"
+                      className={selectedTags.includes(tag) ? 'is-on' : ''}
+                      onClick={() => (selectedTags.includes(tag) ? removeSelectedTag(tag) : addSelectedTag(tag))}
+                    >
+                      {tag}
+                    </button>
+                  ))}
+                </div>
+              ) : null}
+              {mode === 'create' ? (
+                <div className="record-recorder">
+                  <img src="/photos/people/grandma-real.jpg" alt="" />
+                  <span>记录人 {user?.nickname ?? ''}</span>
+                  <ChevronRight size={18} strokeWidth={1.9} aria-hidden="true" />
                 </div>
               ) : null}
             </section>
@@ -3065,13 +3088,15 @@ const RecordForm = ({
           <button
             type="submit"
             form="record-form"
-            aria-label={primarySubmitLabel}
-            style={primaryButtonStyle}
+            aria-label={mode === 'create' ? '保存这条记录' : primarySubmitLabel}
+            style={{ ...primaryButtonStyle, borderRadius: 999, minHeight: 52 }}
             disabled={submitting || uploading || audioRecording}
           >
-            {pendingAction === 'publish' ? `${primarySubmitLabel}中…` : primarySubmitLabel}
+            {pendingAction === 'publish'
+              ? `${mode === 'create' ? '保存这条记录' : primarySubmitLabel}中…`
+              : mode === 'create' ? '保存这条记录' : primarySubmitLabel}
           </button>
-          {mode === 'create' || isDraftRecord ? (
+          {mode !== 'create' && isDraftRecord ? (
             <button
               type="button"
               onClick={() => void submitRecord('draft')}
@@ -3088,6 +3113,9 @@ const RecordForm = ({
             >
               {pendingAction === 'draft' ? '保存中…' : '先存草稿'}
             </button>
+          ) : null}
+          {mode === 'create' ? (
+            <p style={{ margin: 0, textAlign: 'center', color: 'var(--nl-muted)', fontSize: 13, fontWeight: 500 }}>仅家人可见</p>
           ) : null}
         </div>,
         document.body,

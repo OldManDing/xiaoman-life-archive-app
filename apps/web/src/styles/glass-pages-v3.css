@@ -1780,3 +1780,113 @@ button.set-row {
   padding: 4px 10px;
   font-size: 13px;
 }
+
+/* create：详情区做成设计稿的 pill 行 + chip 行 */
+.is-create #record-form > section[aria-label="记录方式"],
+.is-create #record-form > button[aria-label="切换里程碑记录"] {
+  display: none !important;
+}
+
+.is-create #record-form > section:first-of-type {
+  order: 2 !important;
+}
+
+.is-create .record-details {
+  order: 3 !important;
+  border-bottom: none !important;
+  padding-bottom: 0 !important;
+  gap: 12px !important;
+}
+
+.is-create .record-details-title {
+  display: none !important;
+}
+
+.is-create .record-location-row {
+  min-height: 64px !important;
+  border-radius: 22px !important;
+  border: 1px solid rgba(255, 255, 255, 0.88) !important;
+  background: rgba(255, 252, 247, 0.92) !important;
+  box-shadow: 0 8px 20px rgba(150, 95, 50, 0.08) !important;
+}
+
+.is-create .record-location-row input {
+  min-height: 64px !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  padding-left: 44px !important;
+}
+
+.is-create .record-location-row svg {
+  left: 16px !important;
+}
+
+.is-create .record-tag-select,
+.is-create .record-tag-chips {
+  display: none !important;
+}
+
+.record-quick-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.record-quick-tags button {
+  min-height: 46px;
+  padding: 8px 20px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  background: rgba(255, 252, 247, 0.8);
+  color: var(--nl-ink);
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.record-quick-tags button.is-on {
+  background: #f4bd5a;
+  border-color: rgba(169, 88, 27, 0.2);
+}
+
+.record-recorder {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 0 16px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.88);
+  background: rgba(255, 252, 247, 0.92);
+  box-shadow: 0 8px 20px rgba(150, 95, 50, 0.08);
+  color: var(--nl-ink);
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.record-recorder img {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  object-fit: cover;
+}
+
+.record-recorder span {
+  flex: 1 1 auto;
+}
+
+.record-recorder svg {
+  color: rgba(58, 42, 28, 0.4);
+}
+
+.is-create #record-form > section[aria-label="记录类型"] {
+  display: none !important;
+}
+
+.is-create .record-media-grid > * {
+  min-height: 128px !important;
+}
+
+.is-create #record-form .record-body-input {
+  min-height: 150px !important;
+}
