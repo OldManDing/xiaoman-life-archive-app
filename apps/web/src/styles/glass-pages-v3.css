@@ -3504,3 +3504,23 @@ button.set-row {
 .pf-logout-icon {
   color: #8a4e14 !important;
 }
+
+/* 02：底部压字更接近设计稿 */
+.tl-tile-scrim {
+  background: linear-gradient(180deg, rgba(30, 22, 16, 0) 42%, rgba(30, 22, 16, 0.62) 100%) !important;
+}
+
+.tl-tile-date,
+.tl-thumb-date {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: #fff !important;
+}
+
+.tl-tile {
+  aspect-ratio: 1 / 1.08;
+}
+
+.tl-grid {
+  gap: 10px !important;
+}
