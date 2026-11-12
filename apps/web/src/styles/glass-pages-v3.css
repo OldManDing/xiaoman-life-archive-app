@@ -3013,3 +3013,42 @@ button.set-row {
   background: #f7cf98 !important;
   color: #5a3a22 !important;
 }
+
+/* 04：常驻主 CTA（粘底） */
+.is-create .record-inline-submit {
+  position: sticky;
+  bottom: calc(10px + env(safe-area-inset-bottom));
+  z-index: 5;
+  margin: 6px -2px -6px;
+  padding: 10px 10px 12px;
+  border-radius: 26px;
+  background: rgba(255, 250, 243, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 14px 34px rgba(150, 95, 50, 0.16);
+  backdrop-filter: blur(12px);
+}
+
+.is-create .record-recorder {
+  order: -1;
+}
+
+.is-create .record-quick-tags {
+  order: 0;
+}
+
+.is-create .record-inline-submit {
+  position: fixed !important;
+  left: 18px;
+  right: 18px;
+  bottom: calc(12px + env(safe-area-inset-bottom)) !important;
+  z-index: 30;
+  margin: 0;
+  background: #fbeee0;
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 -8px 26px rgba(150, 95, 50, 0.1);
+  backdrop-filter: none;
+}
+
+.is-create.record-form-page {
+  padding-bottom: 196px !important;
+}
