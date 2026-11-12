@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type CSSProperties, type FormEvent } from 'react';
-import { AlertCircle, BookOpen, CheckCircle2, Clock, Eye, FileAudio, FileText, Image, ImagePlus, MapPin, Mic, MoreHorizontal, PlayCircle, RotateCcw, Ruler, Sparkles, Square, Star, Tag, Video, X } from 'lucide-react';
+import { AlertCircle, BookOpen, CheckCircle2, ChevronLeft, Clock, Eye, FileAudio, FileText, Image, ImagePlus, MapPin, Mic, MoreHorizontal, PlayCircle, RotateCcw, Ruler, Sparkles, Square, Star, Tag, Video, X } from 'lucide-react';
 import { Camera, CameraResultType, CameraSource, type GalleryPhoto, type Photo } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 import type { PointerEvent as ReactPointerEvent, ReactNode, RefObject } from 'react';
@@ -3145,6 +3145,7 @@ export const ViewRecordPage = () => {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [fullscreenMedia, setFullscreenMedia] = useState<FullscreenMediaPreview | null>(null);
   const [primaryMediaLoadFailed, setPrimaryMediaLoadFailed] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
 
   useEffect(() => {
     if (!aiJob || !['pending', 'processing'].includes(aiJob.status)) return;
@@ -3253,24 +3254,55 @@ export const ViewRecordPage = () => {
     { label: '地点', value: normalizeLocationText(data.location_text) || '未填写' },
     { label: '状态', value: recordStatusLabel(data.status) },
   ] : [];
+  const rdMetaText = data ? (() => {
+    const stamp = new Intl.DateTimeFormat('zh-CN', {
+      timeZone: 'Asia/Shanghai',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    }).format(new Date(data.event_time));
+    const place = normalizeLocationText(data.location_text);
+    return place ? `${stamp} · ${place}` : stamp;
+  })() : '';
+  const rdContentText = data?.content_text ?? '暂无正文';
+  const rdLeadTag = data?.tags.find((tag) => tag && rdContentText.includes(tag)) ?? null;
+  const rdPhotoCount = data?.media_list.filter((media) => media.media_type === 'image').length ?? 0;
+  const rdMilestone = Boolean(data && (data.is_milestone || data.record_type === 'milestone'));
 
   return (
     <PageShell
       title="记录详情"
       hideHeader
     >
-      <AppTopBar
-        title=""
-        backTo="/timeline"
-        onBack={() => {
-        if (window.history.length > 1) {
-          navigate(-1);
-          return;
-        }
-        navigate('/timeline');
-      }}
-        style={{ margin: '0 calc(var(--nl-content-inline) * -1)' }}
-      />
+      <div className="rd-topbar">
+        <button
+          type="button"
+          aria-label="返回"
+          onClick={() => {
+            if (window.history.length > 1) {
+              navigate(-1);
+              return;
+            }
+            navigate('/timeline');
+          }}
+        >
+          <ChevronLeft size={22} strokeWidth={1.9} />
+        </button>
+        <div className="rd-topbar-right">
+          <button type="button" aria-label="更多操作" aria-haspopup="menu" aria-expanded={moreOpen} onClick={() => setMoreOpen((current) => !current)}>
+            <MoreHorizontal size={22} strokeWidth={2} />
+          </button>
+          {moreOpen && data ? (
+            <div className="rd-menu" role="menu">
+              <button type="button" role="menuitem" onClick={() => { setMoreOpen(false); navigate(`/record/${data.record_no}/edit`); }}>编辑记录</button>
+              <button type="button" role="menuitem" className="is-danger" onClick={() => { setMoreOpen(false); setDeleteConfirmOpen(true); }}>删除记录</button>
+            </div>
+          ) : null}
+        </div>
+      </div>
       {loading ? <Panel><EmptyState message="正在加载记录详情…" /></Panel> : null}
       {error ? <Panel><EmptyState message={`加载失败：${error}`} /></Panel> : null}
       {data ? (
@@ -3283,7 +3315,7 @@ export const ViewRecordPage = () => {
                 </div>
               ) : (
                 <div
-                  className="nl-media-interaction"
+                  className="nl-media-interaction rd-hero"
                   data-testid="record-primary-media-preview"
                   aria-label={mediaPreviewLabel(primaryMedia.media_type)}
                   role={primaryMediaOpenable ? 'button' : undefined}
@@ -3328,29 +3360,26 @@ export const ViewRecordPage = () => {
                     </div>
                   )}
                   <span aria-hidden="true" style={{ position: 'absolute', inset: '45% 0 0', background: 'linear-gradient(180deg, rgba(20,16,12,0), rgba(20,16,12,0.5))', pointerEvents: 'none' }} />
-                  {data.media_list.length > 1 ? (
-                    <span style={{ position: 'absolute', right: 18, bottom: 18, color: 'var(--nl-on-dark)', fontSize: 12, fontWeight: 820, textShadow: 'var(--nl-text-shadow-hero)' }}>
-                      01 / {String(data.media_list.length).padStart(2, '0')}
-                    </span>
-                  ) : null}
                 </div>
               )
             ) : null}
-            <div style={{ padding: primaryMedia && primaryMediaUrl ? '24px 2px 0' : '8px 0 0', display: 'grid', gap: '20px' }}>
-              <div style={{ display: 'grid', gap: '9px' }}>
-                <span style={{ color: 'var(--nl-muted)', fontSize: 12, lineHeight: 1.25, fontWeight: 720 }}>{detailMetaText}</span>
-                <h1 style={{ margin: 0, color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '31px', lineHeight: 1.08, fontWeight: 780 }}>{displayTitle}</h1>
+            <div className="rd-body">
+              <p className="rd-meta">{rdMetaText}</p>
+              <h1 className="rd-title">{displayTitle}</h1>
+              <div className="rd-chips">
+                {rdMilestone ? <span className="rd-chip is-amber">里程碑</span> : null}
+                {rdPhotoCount ? <span className="rd-chip">照片 {rdPhotoCount}</span> : null}
+                {data.tags.filter((tag) => tag !== rdLeadTag).slice(0, 2).map((tag, index) => <span key={`${data.record_no}-chip-${tag}-${index}`} className="rd-chip is-plain">#{tag}</span>)}
               </div>
-              <p style={{ margin: 0, color: 'var(--nl-muted-strong)', fontSize: '15px', lineHeight: 1.9, fontWeight: 450, whiteSpace: 'pre-wrap' }}>{data.content_text ?? '暂无正文'}</p>
-              <div style={{ display: 'grid', borderTop: '1px solid var(--nl-border-soft)' }}>
-                {detailMetadataItems.map((item) => (
-                  <div key={item.label} style={{ minHeight: 42, display: 'grid', gridTemplateColumns: '72px minmax(0, 1fr)', gap: 12, alignItems: 'center', borderBottom: '1px solid var(--nl-border-soft)', padding: '8px 0' }}>
-                    <span style={{ color: 'var(--nl-muted)', fontSize: 11, lineHeight: 1.3, fontWeight: 620 }}>{item.label}</span>
-                    <span style={{ color: 'var(--nl-muted-strong)', fontSize: 12, lineHeight: 1.45, fontWeight: 560, textAlign: 'right', overflowWrap: 'anywhere' }}>{item.value}</span>
-                  </div>
-                ))}
-              </div>
-              {data.tags.length ? <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px 12px' }}>{data.tags.map((tag, index) => <span key={`${data.record_no}-${tag}-${index}`} style={{ color: 'var(--nl-primary-2)', fontSize: 11, fontWeight: 620 }}>#{tag}</span>)}</div> : null}
+              <p className="rd-copy">
+                {rdLeadTag && rdContentText.includes(rdLeadTag) ? (
+                  <>
+                    {rdContentText.slice(0, rdContentText.indexOf(rdLeadTag))}
+                    <mark className="rd-mark">{rdLeadTag}</mark>
+                    {rdContentText.slice(rdContentText.indexOf(rdLeadTag) + rdLeadTag.length)}
+                  </>
+                ) : rdContentText}
+              </p>
             </div>
           </section>
 
@@ -3392,19 +3421,11 @@ export const ViewRecordPage = () => {
               ) : null}
 
           {secondaryMediaList.length > 0 ? (
-            <Panel style={{ padding: '15px 0 0', borderRadius: 0, border: 'none', borderTop: '1px solid var(--nl-border-muted)', background: 'transparent', boxShadow: 'none' }}>
-              <div style={{ display: 'grid', gap: '10px' }}>
-                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '12px' }}>
-                  <strong style={{ color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 700 }}>关联媒体</strong>
-                  <span style={{ color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 600 }}>{data.media_list.length} 项</span>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
-                  {secondaryMediaList.map((media) => (
-                    <MediaPreviewTile key={media.media_no} media={media} compact onOpen={setFullscreenMedia} />
-                  ))}
-                </div>
-              </div>
-            </Panel>
+            <div className="rd-gallery">
+              {secondaryMediaList.map((media) => (
+                <MediaPreviewTile key={media.media_no} media={media} compact onOpen={setFullscreenMedia} />
+              ))}
+            </div>
           ) : null}
 
           {typeof document !== 'undefined' ? createPortal(
@@ -3428,10 +3449,10 @@ export const ViewRecordPage = () => {
               boxShadow: '0 14px 34px rgba(146, 96, 52, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.7)',
             }}
           >
-            <button type="button" style={{ ...primaryButtonStyle, minHeight: 48, width: '100%' }} onClick={() => navigate(`/record/${data.record_no}/edit`)}>
+            <button type="button" style={{ ...secondaryButtonStyle, minHeight: 48, width: '100%', borderRadius: 999 }} onClick={() => navigate(`/record/${data.record_no}/edit`)}>
               编辑
             </button>
-            <button type="button" style={{ ...secondaryButtonStyle, minHeight: 48, width: '100%' }} onClick={() => navigate(`/record/${data.record_no}/edit?focus=content`)}>
+            <button type="button" style={{ ...primaryButtonStyle, minHeight: 48, width: '100%', borderRadius: 999 }} onClick={() => navigate(`/record/${data.record_no}/edit?focus=content`)}>
               回应一句
             </button>
           </div>,
