@@ -1,0 +1,497 @@
+/* ============================================================
+   首页视觉重设计 v2 · 「画册 / 画廊」
+   ------------------------------------------------------------
+   设计判断（相对 v1 的修正）：
+   v1 的问题是把"档案感"做成了"配置说明页"——满屏分割线、
+   低对比灰褐字、小胶囊元素，整体发灰发闷。真正的质感来自：
+   大图、大字、克制用色、极少装饰。
+
+   本版三条原则：
+   1. 照片即主角：首图铺满，标题压在图上（渐变蒙版保证可读）
+   2. 只用三种文字色：墨 / 中灰 / 淡灰，取消一切装饰线
+   3. 极度克制的点缀：唯一彩色是里程碑的青铜色
+
+   范围：仅视觉层，不改 DOM / 交互 / 数据
+   回滚：删除 main.tsx 中本文件的 import
+   ============================================================ */
+
+/* ---------- 1. 色板：象牙纸 + 近黑墨 + 青铜点缀 ---------- */
+.nl-home-page,
+.app-layout.is-home {
+  --nl-home-paper: #f6f2ea;
+  --nl-home-paper-deep: #e8e1d4;
+  --nl-home-surface: #f6f2ea;
+  --nl-home-ink: #14120f;
+  --nl-home-strong: #2b2620;
+  --nl-home-muted: #6a6055;
+  --nl-home-faint: #9c9184;
+  --nl-home-rule: rgba(20, 18, 15, 0.1);
+  --nl-home-rule-strong: rgba(20, 18, 15, 0.22);
+  --nl-home-brand: #7a4a2e;
+  --nl-home-brand-soft: #ede2d3;
+  --nl-home-clay: #a9714b;
+
+  --nl-home-radius-sm: 0;
+  --nl-home-radius-md: 0;
+  --nl-home-radius-lg: 0;
+  --nl-home-shadow: none;
+
+  background: var(--nl-home-paper) !important;
+  color: var(--nl-home-ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.app-layout.is-home .app-main-scroll {
+  background: var(--nl-home-paper);
+}
+
+/* ---------- 2. 头部：只留名字与年龄，不要任何线 ---------- */
+.nl-home-header {
+  padding: 26px 24px 10px;
+  background: var(--nl-home-paper);
+  border-bottom: 0;
+}
+
+.nl-home-header-row {
+  gap: 16px;
+}
+
+.nl-home-heading {
+  gap: 14px;
+}
+
+/* 头像退成极小的圆形标记，不做视觉焦点 */
+.nl-home-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 0;
+  background: var(--nl-home-paper-deep);
+  color: var(--nl-home-muted);
+  font-family: var(--nl-font-display);
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.nl-home-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* 视觉标语：一行极小的高位字距标注，压在名字上方 */
+.nl-home-header-row::before {
+  content: '人生档案馆';
+  position: absolute;
+  top: -14px;
+  left: 0;
+  font-family: var(--nl-font-sans);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.34em;
+  color: var(--nl-home-faint);
+}
+
+.nl-home-header-row {
+  position: relative;
+}
+
+.nl-home-title {
+  font-family: var(--nl-font-display);
+  font-size: 27px;
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  color: var(--nl-home-ink);
+}
+
+.nl-home-subtitle {
+  margin-top: 6px;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  line-height: 1.4;
+  color: var(--nl-home-faint);
+}
+
+/* 「记录」：纯文字按钮，去掉色块 */
+.nl-home-record-button {
+  min-height: 40px;
+  padding: 0;
+  gap: 5px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--nl-home-brand);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  box-shadow: none;
+}
+
+.nl-home-record-button:active {
+  transform: none;
+  opacity: 0.6;
+  background: transparent;
+}
+
+/* ---------- 3. 流：只用留白分隔，不要分割线 ---------- */
+.nl-home-stream {
+  gap: 0;
+  padding: 14px 24px 64px;
+}
+
+/* 日期组：日期要紧贴自己那一条，而不是悬在两条中间 */
+.nl-home-day-group {
+  margin-top: 46px;
+  display: block;
+}
+
+.nl-home-day-group:first-child {
+  margin-top: 10px;
+}
+
+.nl-home-day-group,
+.nl-home-day-group.is-single {
+  gap: 0;
+}
+
+.nl-home-day-head {
+  display: block;
+  padding: 0;
+  /* 14 → 7：让日期与自己那条的距离，明显小于与上一条的距离 */
+  margin: 0 0 7px 0;
+  border-bottom: 0;
+}
+
+.nl-home-day-head::after {
+  content: none;
+}
+
+/* 日期成为重音：13px、墨色、适中字距。原来是 10px 淡灰，几乎读不到 */
+.nl-home-day-title {
+  display: block;
+  margin: 0;
+  font-family: var(--nl-font-sans);
+  font-size: 13px;
+  font-weight: 640;
+  line-height: 1.4;
+  letter-spacing: 0.1em;
+  color: var(--nl-home-strong);
+}
+
+.nl-home-day-count {
+  display: block;
+  margin-top: 4px;
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  color: var(--nl-home-faint);
+}
+
+.nl-home-day-cards {
+  gap: 30px;
+  display: grid;
+}
+
+/* ---------- 4. 首图卡：照片出血铺满，标题压在图上 ---------- */
+.nl-home-day-cards .nl-moment-card.is-featured {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto;
+  gap: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+  background: #14120f;
+  /* 出血：抵消 .nl-home-stream 的 24px 内边距，让首图顶到屏幕两侧 */
+  margin-left: -24px;
+  margin-right: -24px;
+  /* 卡片自带 width:100%，只靠负边距会变成"只向左边出血"，这里显式补足宽度 */
+  width: calc(100% + 48px);
+}
+
+/* 媒体与文字叠在同一格 */
+.nl-home-day-cards .nl-moment-card.is-featured .nl-moment-media {
+  grid-area: 1 / 1;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  border-radius: 0;
+  outline: 0;
+  background: var(--nl-home-paper-deep);
+}
+
+/* 底部渐变蒙版：原来从 34% 就开始压暗，把画面焦点（手和玩具）一起压掉了。
+   下移到 52% 起步，只压住文字区 */
+.nl-home-day-cards .nl-moment-card.is-featured .nl-moment-media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(20, 18, 15, 0) 52%,
+    rgba(20, 18, 15, 0.16) 68%,
+    rgba(20, 18, 15, 0.88) 100%
+  );
+  pointer-events: none;
+}
+
+.nl-home-day-cards .nl-moment-card.is-featured .nl-moment-body {
+  grid-area: 1 / 1;
+  align-self: end;
+  z-index: 2;
+  gap: 10px;
+  padding: 26px 24px 24px;
+}
+
+.nl-home-day-cards .nl-moment-card.is-featured .nl-moment-meta {
+  color: rgba(255, 252, 246, 0.72);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+}
+
+.nl-home-day-cards .nl-moment-card.is-featured .nl-moment-title,
+.nl-home-day-cards .nl-moment-card.is-featured.is-text-card .nl-moment-title {
+  font-family: var(--nl-font-display);
+  font-size: 23px;
+  font-weight: 600;
+  line-height: 1.32;
+  letter-spacing: 0.01em;
+  color: #fffdf8;
+  -webkit-line-clamp: 3;
+  text-shadow: 0 1px 18px rgba(0, 0, 0, 0.28);
+}
+
+.nl-home-day-cards .nl-moment-card.is-featured .nl-moment-excerpt,
+.nl-home-day-cards .nl-moment-card.is-featured.is-text-card .nl-moment-excerpt {
+  font-family: var(--nl-font-sans);
+  font-size: 12px;
+  line-height: 1.75;
+  color: rgba(255, 252, 246, 0.76);
+  -webkit-line-clamp: 2;
+}
+
+.nl-home-day-cards .nl-moment-card.is-featured .nl-moment-summary {
+  color: rgba(255, 252, 246, 0.7);
+  font-size: 12px;
+}
+
+/* 首图没有照片时（纯文字），退回浅色排版 */
+.nl-home-day-cards .nl-moment-card.is-featured.is-text-card:not(:has(.nl-moment-media)) {
+  background: transparent;
+}
+
+.nl-home-day-cards .nl-moment-card.is-featured.is-text-card:not(:has(.nl-moment-media)) .nl-moment-title {
+  color: var(--nl-home-ink);
+  text-shadow: none;
+}
+
+/* ---------- 5. 普通条目：文字恒在左轴，缩略图靠右 ---------- */
+/* 关键：让"有图"和"无图"的标题都从同一条左轴起步。
+   之前图在左时，有图的文字起于 x≈124、无图起于 x≈24，
+   滚动时标题左缘来回跳 100px，这是"结构松散"的真正来源。 */
+.nl-home-day-cards .nl-moment-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  align-items: start;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.nl-home-day-cards .nl-moment-card:not(.is-text-card):not(.is-featured) {
+  grid-template-columns: minmax(0, 1fr) 84px;
+  gap: 16px;
+}
+
+.nl-home-day-cards .nl-moment-card:not(.is-text-card):not(.is-featured) .nl-moment-body {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.nl-home-day-cards .nl-moment-card:not(.is-text-card):not(.is-featured) .nl-moment-media {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.nl-home-day-cards .nl-moment-media {
+  border-radius: 0;
+  outline: 0;
+  border: 0;
+  aspect-ratio: 1 / 1;
+  background: var(--nl-home-paper-deep);
+}
+
+.nl-home-day-cards .nl-moment-body {
+  gap: 6px;
+  padding: 2px 0 0;
+  align-content: start;
+}
+
+.nl-home-day-cards .nl-moment-title,
+.nl-home-day-cards .nl-moment-card.is-text-card .nl-moment-title {
+  font-family: var(--nl-font-display);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  color: var(--nl-home-ink);
+  -webkit-line-clamp: 2;
+}
+
+.nl-home-day-cards .nl-moment-excerpt,
+.nl-home-day-cards .nl-moment-card.is-text-card .nl-moment-excerpt {
+  font-family: var(--nl-font-sans);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.8;
+  letter-spacing: 0.01em;
+  color: var(--nl-home-muted);
+  -webkit-line-clamp: 3;
+}
+
+.nl-home-day-cards .nl-moment-summary {
+  font-size: 12px;
+  line-height: 1.8;
+  color: var(--nl-home-muted);
+}
+
+/* 元信息：9.5px/淡灰(#9c9184) 在纸色上只有 2.7:1，祖辈根本读不到。
+   提到 11px + 中灰 #6a6055，对比度约 5.4:1 */
+.nl-home-day-cards .nl-moment-meta {
+  font-family: var(--nl-font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: var(--nl-home-muted);
+  order: -1;
+  margin-bottom: 4px;
+}
+
+/* 里程碑：只留一个极小青铜色标记，不要胶囊 */
+.nl-home-day-cards .nl-moment-milestone {
+  top: 0;
+  right: 0;
+  border-radius: 0;
+  padding: 6px 10px;
+  background: rgba(20, 18, 15, 0.55);
+  color: #f1e4d2;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.nl-home-day-cards .nl-moment-milestone-inline {
+  color: var(--nl-home-clay);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+}
+
+/* 语音卡 */
+.nl-home-day-cards .nl-moment-media.is-audio {
+  border-radius: 0;
+  background: var(--nl-home-paper-deep);
+  color: var(--nl-home-muted);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+}
+
+/* ---------- 6. 页脚统计 ---------- */
+.nl-home-stream-footer {
+  margin-top: 44px;
+  padding: 0;
+  border: 0;
+}
+
+.nl-home-total {
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  color: var(--nl-home-faint);
+}
+
+/* ---------- 7. 空态：大留白，不喊口号 ---------- */
+.nl-home-empty-hero {
+  margin: 56px 0 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  text-align: left;
+}
+
+.nl-home-empty-icon {
+  display: none;
+}
+
+.nl-home-empty-title {
+  font-family: var(--nl-font-display);
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: 0.01em;
+  color: var(--nl-home-ink);
+}
+
+.nl-home-empty-copy {
+  margin: 12px 0 0;
+  max-width: 22em;
+  font-size: 12px;
+  line-height: 1.9;
+  letter-spacing: 0.01em;
+  color: var(--nl-home-muted);
+}
+
+.nl-home-status {
+  padding: 40px 0;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--nl-home-faint);
+}
+
+/* ---------- 8. 底部导航：去掉色块与指示条 ---------- */
+.app-layout.is-home .app-bottom-nav {
+  background: var(--nl-home-paper) !important;
+  border-top: 0 !important;
+  box-shadow: none !important;
+}
+
+.app-layout.is-home .app-bottom-nav .app-bottom-nav-link {
+  color: var(--nl-home-faint);
+}
+
+.app-layout.is-home .app-bottom-nav .app-bottom-nav-link.is-active,
+.app-layout.is-home .app-bottom-nav .app-bottom-nav-link.is-active .app-bottom-nav-label {
+  color: var(--nl-home-ink) !important;
+  font-weight: 700;
+}
+
+.app-layout.is-home .app-bottom-nav .app-bottom-nav-link.is-active .app-bottom-nav-icon {
+  background: transparent !important;
+  color: var(--nl-home-ink) !important;
+  transform: none;
+}
+
+.app-layout.is-home .app-bottom-nav .app-bottom-nav-link.is-active::before {
+  content: none;
+  background: transparent !important;
+}
+
+/* ---------- 9. 交互反馈：轻微降透明度，不做位移 ---------- */
+.nl-home-day-cards .nl-moment-card:active {
+  transform: none;
+  opacity: 0.78;
+}
+
+.nl-home-day-cards .nl-moment-card:focus-visible {
+  outline: 2px solid var(--nl-home-brand);
+  outline-offset: 6px;
+}

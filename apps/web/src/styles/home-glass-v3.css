@@ -1,0 +1,385 @@
+/* ============================================================
+   首页 / 时间轴 / 家庭 / 我的 / 搜索：视觉对齐 v3「暖光玻璃」
+   ------------------------------------------------------------
+   目的：把 01–07 的「素纸 · 绿」视觉层替换为设计稿的暖琥珀玻璃，
+   只改视觉，不改 DOM 结构与数据。
+   引入位置：main.tsx 中 design-system-v3.css 之后。
+   回滚：删除该 import，即回到旧的画册风。
+   ============================================================ */
+
+/* ---------- 1. 统一首页调色板到 v3 令牌 ---------- */
+.app-layout.is-home,
+.nl-home-page {
+  --nl-home-paper: transparent;
+  --nl-home-paper-deep: rgba(255, 250, 244, 0.72);
+  --nl-home-surface: rgba(255, 250, 244, 0.62);
+  --nl-home-ink: #3a2a1e;
+  --nl-home-strong: #4a3729;
+  --nl-home-muted: #6f5745;
+  --nl-home-faint: #8b7160;
+  --nl-home-rule: rgba(58, 42, 28, 0.1);
+  --nl-home-rule-strong: rgba(58, 42, 28, 0.2);
+  --nl-home-brand: #8a4e14;
+  --nl-home-brand-soft: rgba(233, 160, 90, 0.24);
+  --nl-home-clay: #a9581b;
+  --nl-home-radius-sm: 14px;
+  --nl-home-radius-md: 18px;
+  --nl-home-radius-lg: 24px;
+  --nl-home-shadow: 0 10px 24px rgba(146, 96, 52, 0.1);
+
+  background: transparent !important;
+  color: var(--nl-home-ink);
+}
+
+.app-layout.is-home .app-main-scroll,
+.app-layout.is-home .app-page-shell {
+  background: transparent !important;
+}
+
+/* ---------- 2. 头部：玻璃胶囊 ---------- */
+.nl-home-header {
+  background: transparent !important;
+  border-bottom: 0 !important;
+  padding: 8px 16px 4px !important;
+}
+
+.nl-home-header-row {
+  min-height: 64px;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px;
+  border-radius: 26px;
+  background: var(--nl-glass-surface);
+  border: 1px solid var(--nl-glass-border);
+  -webkit-backdrop-filter: blur(20px) saturate(1.05);
+  backdrop-filter: blur(20px) saturate(1.05);
+  box-shadow: 0 12px 30px rgba(146, 96, 52, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.nl-home-header-row::before {
+  display: none !important;
+}
+
+.nl-home-avatar {
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.86) !important;
+  box-shadow: 0 6px 14px rgba(146, 96, 52, 0.16) !important;
+}
+
+.nl-home-title {
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  color: var(--nl-ink) !important;
+  letter-spacing: 0.01em;
+}
+
+.nl-home-subtitle {
+  font-size: 13px !important;
+  color: var(--nl-muted) !important;
+}
+
+.nl-home-title-age {
+  margin-left: 8px;
+  color: var(--nl-ink);
+  font-family: var(--nl-font-body, inherit);
+  font-size: 17px;
+  font-weight: 500;
+}
+
+.nl-home-header-chevron {
+  margin-left: auto;
+  display: grid;
+  place-items: center;
+  color: rgba(58, 42, 28, 0.52);
+  flex-shrink: 0;
+}
+
+/* 头部右侧「记录」按钮：设计稿里没有，收成小的文字入口 */
+.nl-home-record-button {
+  min-height: 44px !important;
+  border: 1px solid var(--nl-primary-border) !important;
+  border-radius: 999px !important;
+  background: var(--nl-primary-soft) !important;
+  color: var(--nl-accent) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  box-shadow: none !important;
+}
+
+/* ---------- 3. 日期标题：衬线 + 琥珀竖条 ---------- */
+.nl-home-day-head {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 2px 4px 14px !important;
+  border-bottom: 0 !important;
+}
+
+.nl-home-day-head::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 9px;
+  bottom: 6px;
+  width: 3px;
+  border-radius: 999px;
+  background: var(--nl-amber, #e9a05a);
+}
+
+.nl-home-day-title {
+  margin: 0;
+  font-family: var(--nl-font-display) !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  color: var(--nl-ink) !important;
+  letter-spacing: 0.01em;
+}
+
+.nl-home-day-count {
+  font-size: 13px !important;
+  color: var(--nl-muted) !important;
+  font-weight: 500 !important;
+}
+
+/* ---------- 4. 首图卡：照片 + 底部 scrim + 衬线标题 ---------- */
+.nl-home-day-cards .nl-moment-card.is-featured {
+  position: relative;
+  display: block;
+  padding: 0 !important;
+  border-radius: 24px !important;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  box-shadow: 0 16px 36px rgba(146, 96, 52, 0.18) !important;
+  background: var(--nl-surface-soft);
+}
+
+.nl-home-day-cards .nl-moment-card.is-featured .nl-moment-media {
+  aspect-ratio: 21 / 10 !important;
+  border-radius: 0 !important;
+  display: block;
+}
+
+.nl-home-day-cards .nl-moment-card.is-featured .nl-moment-media::after {
+  content: '';
+  position: absolute;
+  inset: 42% 0 0;
+  background: linear-gradient(180deg, rgba(28, 20, 14, 0) 0%, rgba(28, 20, 14, 0.62) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.nl-moment-featured-overlay {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 18px;
+  z-index: 2;
+  display: grid;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.nl-moment-featured-title {
+  margin: 0;
+  color: #fffaf4;
+  font-family: var(--nl-font-display);
+  font-size: 26px;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.34);
+}
+
+.nl-moment-featured-rule {
+  width: 40px;
+  height: 1.5px;
+  border-radius: 999px;
+  background: rgba(255, 250, 244, 0.9);
+}
+
+/* 首图卡不显示卡片下方正文，标题已经压在图里 */
+.nl-home-day-cards .nl-moment-card.is-featured .nl-moment-body {
+  display: none !important;
+}
+
+/* ---------- 5. 普通行：玻璃卡 + 缩略图 + chevron ---------- */
+.nl-home-day-cards .nl-moment-card:not(.is-featured) {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 10px 14px 10px 10px !important;
+  border: 1px solid rgba(255, 255, 255, 0.62) !important;
+  border-radius: 18px !important;
+  background: rgba(255, 250, 244, 0.58) !important;
+  box-shadow: 0 8px 22px rgba(146, 96, 52, 0.09) !important;
+}
+
+.nl-home-day-cards .nl-moment-card:not(.is-featured) .nl-moment-media {
+  width: 56px;
+  height: 56px;
+  aspect-ratio: 1;
+  border-radius: 14px !important;
+  overflow: hidden;
+}
+
+.nl-home-day-cards .nl-moment-card:not(.is-featured) .nl-moment-body {
+  display: grid;
+  gap: 4px;
+  padding: 0 !important;
+  align-content: center;
+}
+
+.nl-home-day-cards .nl-moment-card:not(.is-featured) .nl-moment-title {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: var(--nl-ink) !important;
+}
+
+.nl-home-day-cards .nl-moment-card:not(.is-featured) .nl-moment-meta {
+  font-size: 12px !important;
+  color: var(--nl-muted) !important;
+  order: 2;
+}
+
+.nl-home-day-cards .nl-moment-card:not(.is-featured) .nl-moment-summary,
+.nl-home-day-cards .nl-moment-card:not(.is-featured) .nl-moment-excerpt {
+  display: none !important;
+}
+
+/* 纯文字卡：整行玻璃卡 */
+.nl-home-day-cards .nl-moment-card.is-text-card:not(.is-featured) {
+  grid-template-columns: minmax(0, 1fr) 16px;
+}
+
+.nl-home-day-cards .nl-moment-card.is-text-card:not(.is-featured) .nl-moment-body {
+  gap: 6px;
+}
+
+/* 行尾 chevron（用伪元素，避免改 DOM） */
+.nl-home-day-cards .nl-moment-card:not(.is-featured)::after {
+  content: '';
+  width: 9px;
+  height: 9px;
+  border-right: 1.8px solid var(--nl-muted);
+  border-bottom: 1.8px solid var(--nl-muted);
+  transform: rotate(-45deg);
+  justify-self: center;
+  align-self: center;
+  opacity: 0.7;
+}
+
+/* ---------- 6. 「今天还没记录 / 记一笔」行 ---------- */
+.nl-home-today {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 56px;
+  padding: 8px 10px 8px 16px;
+  border-radius: 999px;
+  background: rgba(255, 250, 244, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.66);
+  box-shadow: 0 8px 22px rgba(146, 96, 52, 0.09);
+}
+
+.nl-home-today-text {
+  color: var(--nl-ink);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.nl-home-today-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(233, 160, 90, 0.34);
+  color: #3a2a1e;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ---------- 7. 底部导航：琥珀激活 ---------- */
+.app-layout.is-home .app-bottom-nav {
+  background: var(--nl-glass-surface) !important;
+  border-top: 0 !important;
+  border: 1px solid var(--nl-glass-border);
+  box-shadow: 0 14px 34px rgba(146, 96, 52, 0.18) !important;
+}
+
+.app-layout.is-home .app-bottom-nav .app-bottom-nav-link.is-active,
+.app-layout.is-home .app-bottom-nav .app-bottom-nav-link.is-active .app-bottom-nav-label {
+  color: var(--nl-accent) !important;
+}
+
+.app-layout.is-home .app-bottom-nav .app-bottom-nav-link.is-active .app-bottom-nav-icon {
+  background: rgba(233, 160, 90, 0.24) !important;
+  color: var(--nl-accent) !important;
+  border-radius: 999px;
+}
+
+/* ---------- 8. 时间轴：三列相册格 + 日期白字压图 ---------- */
+.tl-month-head h2 {
+  font-family: var(--nl-font-display) !important;
+  font-size: 24px !important;
+  font-weight: 600 !important;
+  color: var(--nl-ink) !important;
+}
+
+.tl-month-head span {
+  background: var(--nl-primary-soft) !important;
+  color: var(--nl-accent) !important;
+}
+
+.tl-day-head strong {
+  color: var(--nl-ink) !important;
+  font-size: 14px !important;
+}
+
+.tl-day-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+}
+
+.tl-thumb,
+.tl-textcard {
+  border-radius: 18px !important;
+}
+
+.tl-thumb::after {
+  content: '';
+  position: absolute;
+  inset: 52% 0 0;
+  background: linear-gradient(180deg, rgba(24, 16, 10, 0) 0%, rgba(24, 16, 10, 0.88) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.tl-thumb-date {
+  position: absolute;
+  left: 10px;
+  bottom: 9px;
+  z-index: 2;
+  color: #fffaf4;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.42);
+  pointer-events: none;
+}
+
+.tl-textcard {
+  grid-column: span 3 !important;
+  background: rgba(255, 250, 244, 0.62) !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+}

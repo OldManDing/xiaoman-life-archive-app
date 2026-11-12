@@ -1,19 +1,23 @@
-﻿import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Camera,
   ChevronDown,
   ChevronLeft,
+  ChevronRight,
   Edit3,
   FileText,
+  Filter,
   MapPin,
   Mic,
   Play,
   PlayCircle,
   Search,
+  SearchX,
   SlidersHorizontal,
   Sparkles,
   Star,
+  X,
 } from 'lucide-react';
 
 import { useAuth } from '../shared/AuthContext';
@@ -86,6 +90,15 @@ const sortHomeRecords = (records: RecordSummary[]) => [...records].sort((left, r
   return rightTime - leftTime;
 });
 
+const CN_DIGITS = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+const cnNumber = (value: number) => {
+  if (value <= 10) return value === 10 ? '十' : CN_DIGITS[value];
+  if (value < 20) return `十${CN_DIGITS[value % 10] ?? ''}`;
+  const tens = Math.floor(value / 10);
+  const ones = value % 10;
+  return `${CN_DIGITS[tens]}十${ones ? CN_DIGITS[ones] : ''}`;
+};
+
 type HomeDayGroup = {
   key: string;
   label: string;
@@ -104,9 +117,12 @@ const groupRecordsByDay = (records: RecordSummary[]): HomeDayGroup[] => {
     let group = groups.find((item) => item.key === key);
     if (!group) {
       const date = parseSafeDate(record.event_time);
-      const fallbackLabel = !date
+      // 设计稿用中文月日；跨年时补年份避免歧义
+      const monthNumber = Number(datePart(record.event_time, 'month'));
+      const dayNumber = Number(datePart(record.event_time, 'day'));
+      const fallbackLabel = !date || !monthNumber || !dayNumber
         ? '更早'
-        : `${datePart(record.event_time, 'month')}月${datePart(record.event_time, 'day')}日 ${formatWeekdayShort(record.event_time)}`;
+        : `${cnNumber(monthNumber)}月${cnNumber(dayNumber)}日 ${formatWeekdayShort(record.event_time)}`;
       group = {
         key,
         label: key === todayKey ? '今天' : key === yesterdayKey ? '昨天' : fallbackLabel,
@@ -475,7 +491,13 @@ const MomentCard = ({ record, featured = false, onClick }: { record: RecordSumma
             active={featured || isVisible}
             fallbackSrc={null}
           />
-          {record.is_milestone || record.record_type === 'milestone' ? <MomentMilestoneBadge /> : null}
+          {!featured && (record.is_milestone || record.record_type === 'milestone') ? <MomentMilestoneBadge /> : null}
+          {featured ? (
+            <span className="nl-moment-featured-overlay">
+              <strong className="nl-moment-featured-title">{title}</strong>
+              <span className="nl-moment-featured-rule" aria-hidden="true" />
+            </span>
+          ) : null}
         </span>
       ) : null}
       {isAudio ? (
@@ -535,6 +557,8 @@ export const HomePage = () => {
   const childRequiredTarget = (path: string) => activeChild ? path : '/onboarding/child?mode=add';
   const showHeaderRecord = Boolean(activeChild && !loading && !error);
   const today = new Date();
+  const todayKey = toLocalDateKey(today);
+  const hasTodayRecord = dayGroups.some((group) => group.key === todayKey);
 
   return (
     <div className="nl-home-page" style={{ ...refPageStyle, minHeight: 'auto' }}>
@@ -549,9 +573,9 @@ export const HomePage = () => {
                 <span className="nl-home-id-text">
                   <h1 className="nl-home-title-row">
                     <span className="nl-home-title">{childName}</span>
+                    <span className="nl-home-title-age">· {activeChild?.current_age_display ?? '等待第一份档案'}</span>
                     {children.length > 1 ? <ChevronDown size={17} color="var(--nl-home-muted)" aria-hidden="true" /> : null}
                   </h1>
-                  <span className="nl-home-subtitle">{today.getMonth() + 1}月{today.getDate()}日 · {activeChild?.current_age_display ?? '等待第一份档案'}</span>
                 </span>
               </div>
               <button
@@ -561,14 +585,9 @@ export const HomePage = () => {
                 aria-label={children.length > 1 ? `切换孩子，当前为${childName}` : activeChild ? `查看${childName}档案` : '选择孩子档案'}
               />
             </div>
-            {showHeaderRecord ? (
-              <div className="nl-home-header-actions">
-                <button type="button" className="nl-home-record-button" onClick={() => navigate(childRequiredTarget('/record/create'))}>
-                  <Edit3 size={17} strokeWidth={2} aria-hidden="true" />
-                  <span>记录</span>
-                </button>
-              </div>
-            ) : null}
+            <span className="nl-home-header-chevron" aria-hidden="true">
+              <ChevronRight size={22} strokeWidth={1.8} />
+            </span>
           </div>
         </header>
 
@@ -588,12 +607,20 @@ export const HomePage = () => {
             </section>
           ) : null}
 
-          {activeChild && !loading && !error && dayGroups.map((group) => (
+          {activeChild && !loading && !error && dayGroups.map((group, groupIndex) => (
             <section key={group.key} className={`nl-home-day-group${group.records.length === 1 ? ' is-single' : ''}`} aria-label={`${group.label}的记录`}>
               <div className="nl-home-day-head">
                 <h2 className="nl-home-day-title">{group.label}</h2>
-                {group.records.length > 1 ? <span className="nl-home-day-count">{group.records.length} 条</span> : null}
+                <span className="nl-home-day-count">{group.records.length} 条</span>
               </div>
+              {groupIndex === 0 && !hasTodayRecord ? (
+                <div className="nl-home-today">
+                  <span className="nl-home-today-text">今天还没记录</span>
+                  <button type="button" className="nl-home-today-cta" onClick={() => navigate(childRequiredTarget('/record/create'))}>
+                    记一笔 <span aria-hidden="true">＋</span>
+                  </button>
+                </div>
+              ) : null}
               <div className="nl-home-day-cards">
                 {group.records.map((record) => (
                   <MomentCard key={record.record_no} record={record} featured={record.record_no === records[0]?.record_no} onClick={() => navigate(`/record/${record.record_no}`)} />
@@ -641,6 +668,59 @@ const writeSearchHistory = (history: string[], scope?: string | null) => {
 const uniqueSearchValues = (values: Array<string | null | undefined>) =>
   Array.from(new Set(values.map((value) => value?.trim()).filter((value): value is string => Boolean(value))));
 
+
+const SEARCH_SUGGESTIONS = ['海边', '生日', '公园'];
+
+const formatSearchDate = (value: string) => {
+  const date = parseSafeDate(value);
+  if (!date) return '日期待定';
+  return new Intl.DateTimeFormat('zh-CN', { timeZone: appTimeZone, year: 'numeric', month: 'long', day: 'numeric' }).format(date);
+};
+
+const highlightKeyword = (text: string, keyword: string) => {
+  const kw = keyword.trim();
+  if (!kw) return text;
+  const index = text.toLowerCase().indexOf(kw.toLowerCase());
+  if (index < 0) return text;
+  return (
+    <>
+      {text.slice(0, index)}
+      <mark>{text.slice(index, index + kw.length)}</mark>
+      {text.slice(index + kw.length)}
+    </>
+  );
+};
+
+const searchMediaKindLabel = (record: RecordSummary) => {
+  const kind = record.cover_media_type ?? (record.record_type === 'video' ? 'video' : record.record_type === 'audio' ? 'audio' : null);
+  if (kind === 'video') return '视频';
+  if (kind === 'audio') return '语音';
+  if (record.cover_url || record.cover_media_no) return '照片';
+  return '文字';
+};
+
+const SearchResultRow = ({ record, keyword, onClick }: { record: RecordSummary; keyword: string; onClick: () => void }) => {
+  const kindLabel = searchMediaKindLabel(record);
+  const hasPhoto = kindLabel === '照片';
+  return (
+    <button type="button" className="search-row" onClick={onClick}>
+      {hasPhoto && record.cover_url ? (
+        <img className="search-thumb" src={record.cover_url} alt="" loading="lazy" decoding="async" />
+      ) : (
+        <span className="search-thumb" aria-hidden="true">
+          <FileText size={28} strokeWidth={1.5} />
+        </span>
+      )}
+      <span className="search-body">
+        <span className="search-title">{highlightKeyword(record.title ?? '未命名记录', keyword)}</span>
+        <span className="search-meta">{[formatSearchDate(record.event_time), record.location_text].filter(Boolean).join(' · ')}</span>
+      </span>
+      <span className="search-kind">{kindLabel}</span>
+      <ChevronRight size={18} strokeWidth={1.9} className="search-chevron" />
+    </button>
+  );
+};
+
 export const SearchPage = () => {
   const { activeChild, user } = useAuth();
   const navigate = useNavigate();
@@ -669,8 +749,6 @@ export const SearchPage = () => {
     [activeChild?.child_no, searchKeyword],
   );
   const records = data ?? [];
-  const resultTags = uniqueSearchValues(records.flatMap((record) => record.tags ?? [])).slice(0, 8);
-  const resultLocations = uniqueSearchValues(records.map((record) => record.location_text)).slice(0, 8);
   const commitSearch = (value: string) => {
     const next = value.trim();
     if (!next) return;
@@ -682,19 +760,15 @@ export const SearchPage = () => {
       return updated;
     });
   };
-  const clearSearchHistory = () => {
-    setHistory([]);
-    writeSearchHistory([], searchScope);
-  };
 
   return (
-    <div style={refPageStyle}>
-      <header style={{ position: 'sticky', top: 0, zIndex: 4, minHeight: 'calc(64px + var(--nl-statusbar-top))', padding: 'calc(var(--nl-statusbar-top) + 2px) 14px 10px', borderBottom: '1px solid transparent', background: 'var(--nl-topbar-bg)', WebkitBackdropFilter: 'blur(18px) saturate(1.02)', backdropFilter: 'blur(18px) saturate(1.02)', display: 'grid', gridTemplateColumns: '44px minmax(0, 1fr) 48px', gap: 8, alignItems: 'center', boxShadow: 'none' }}>
-        <button type="button" aria-label="返回" onClick={() => navigate(-1)} style={{ border: 'none', background: 'transparent', width: 44, height: 44, display: 'grid', placeItems: 'center', color: 'var(--nl-ink)', cursor: 'pointer' }}>
-          <ChevronLeft size={19} />
+    <div className="search-page">
+      <header className="search-head">
+        <button type="button" className="search-back" aria-label="返回" onClick={() => navigate(-1)}>
+          <ChevronLeft size={22} strokeWidth={1.9} />
         </button>
-        <label style={{ minWidth: 0, height: 44, borderRadius: 8, background: 'rgba(var(--nl-surface-rgb),0.12)', border: '1px solid var(--nl-border-soft)', display: 'flex', alignItems: 'center', gap: 7, padding: '0 12px', color: 'var(--nl-muted)', boxShadow: 'inset 0 1px 0 var(--nl-inset-highlight)' }}>
-          <Search size={15} />
+        <label className="search-field">
+          <Search size={18} strokeWidth={1.9} />
           <input
             aria-label="搜索关键词"
             value={keyword}
@@ -703,109 +777,83 @@ export const SearchPage = () => {
               if (event.key === 'Enter') commitSearch(keyword);
             }}
             placeholder="搜索记录"
-            style={{ width: '100%', minWidth: 0, minHeight: 44, border: 'none', outline: 'none', background: 'transparent', color: 'var(--nl-ink)', fontSize: 13, fontWeight: 520, textOverflow: 'ellipsis' }}
           />
-        </label>
-        <button type="button" onClick={() => commitSearch(keyword)} style={{ minWidth: 48, minHeight: 44, borderRadius: 8, border: '1px solid rgba(var(--nl-primary-rgb),0.24)', background: 'transparent', color: 'var(--nl-primary-2)', fontSize: 12, fontWeight: 560, cursor: 'pointer' }}>搜索</button>
-      </header>
-      <main style={{ ...refContentStyle, paddingTop: 18 }}>
-        <section>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <h2 style={{ margin: 0, color: 'var(--nl-ink)', fontSize: 14, fontWeight: 620 }}>搜索历史</h2>
-            {history.length ? <button type="button" onClick={clearSearchHistory} style={{ minWidth: 44, minHeight: 44, border: 'none', background: 'transparent', color: 'var(--nl-muted)', fontSize: 12, fontWeight: 520, cursor: 'pointer' }}>清空</button> : null}
-          </div>
-          {history.length ? (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-              {history.map((item) => (
-                <button key={item} type="button" onClick={() => commitSearch(item)} style={{ minHeight: 44, border: 'none', background: 'transparent', padding: 0, cursor: 'pointer' }}>
-                  <RefChip>{item}</RefChip>
-                </button>
-              ))}
-            </div>
-          ) : null}
-        </section>
-        {!normalizedKeyword && loading ? (
-          <section style={{ borderTop: '1px solid var(--nl-border-muted)', padding: '14px 0 0', display: 'grid', gap: 13 }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--nl-muted-strong)', fontSize: 13, fontWeight: 560 }}>
-              <Search size={15} />
-              正在搜索
-            </span>
-            <div style={{ display: 'grid', gap: 9 }}>
-              {[0, 1].map((item) => (
-                <span key={item} style={{ height: 52, borderRadius: 8, border: '1px solid var(--nl-border-muted)', background: 'transparent' }} />
-              ))}
-            </div>
-          </section>
-        ) : null}
-        {!normalizedKeyword && records.length ? (
-          <section style={{ display: 'grid', gap: 10 }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>
-              <h2 style={{ margin: 0, color: 'var(--nl-ink)', fontSize: 14, fontWeight: 620 }}>最近记录</h2>
-            </div>
-            <div style={{ display: 'grid', gap: 10 }}>
-              {records.slice(0, 2).map((record) => (
-                <RecordSummaryCard key={record.record_no} record={record} onClick={() => navigate(`/record/${record.record_no}`)} />
-              ))}
-            </div>
-          </section>
-        ) : null}
-        {!normalizedKeyword && !loading && !records.length ? (
-          <section style={{ borderTop: '1px solid var(--nl-border-muted)', padding: '14px 0 0', display: 'grid', gap: 13 }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--nl-ink)', fontSize: 14, fontWeight: 620 }}>
-              <Sparkles size={16} />
-              暂无记录
-            </span>
-            <button type="button" onClick={() => navigate('/record/create')} style={{ ...refSecondaryButtonStyle, width: '100%', minHeight: 42 }}>
-              记录
+          {normalizedKeyword ? (
+            <button type="button" className="search-clear" aria-label="清空搜索词" onClick={() => setKeyword('')}>
+              <X size={18} strokeWidth={2.1} />
             </button>
+          ) : null}
+        </label>
+        <button type="button" className="search-cancel" onClick={() => navigate(-1)}>取消</button>
+      </header>
+
+      <main className="search-main">
+        <section>
+          <h2 className="search-recent-title">最近搜索</h2>
+          <div className="search-chips">
+            {(history.length ? history.slice(0, 5) : SEARCH_SUGGESTIONS).map((item) => (
+              <button key={item} type="button" className="search-chip" onClick={() => commitSearch(item)}>{item}</button>
+            ))}
+          </div>
+        </section>
+
+        {!normalizedKeyword ? (
+          <section>
+            <div className="search-count-row">
+              <h2 className="search-count">最近记录</h2>
+            </div>
+            {loading ? <EmptyState message="正在加载最近记录…" /> : null}
+            {!loading && records.length ? (
+              <div className="search-list">
+                {records.slice(0, 4).map((record) => (
+                  <SearchResultRow key={record.record_no} record={record} keyword="" onClick={() => navigate(`/record/${record.record_no}`)} />
+                ))}
+              </div>
+            ) : null}
+            {!loading && !records.length ? (
+              <div style={{ display: 'grid', justifyItems: 'center', gap: 14, padding: '32px 0 12px', textAlign: 'center' }}>
+                <EmptyState message="还没有记录，先去记一笔吧。" />
+                <button type="button" onClick={() => navigate('/record/create')} style={{ ...refPrimaryButtonStyle, minHeight: 44, padding: '10px 22px', fontSize: 15 }}>
+                  去记录
+                </button>
+              </div>
+            ) : null}
           </section>
-        ) : null}
-        {normalizedKeyword ? (
-          <section style={{ display: 'grid', gap: 10 }}>
-            <h2 style={{ margin: '0 0 2px', color: 'var(--nl-ink)', fontSize: 14, fontWeight: 620 }}>搜索结果</h2>
-            {loading ? <EmptyState message="正在查找匹配的成长记录…" /> : null}
+        ) : (
+          <section>
+            <div className="search-count-row">
+              <h2 className="search-count">{loading ? '正在搜索…' : `找到 ${records.length} 条`}</h2>
+              <span className="search-filter" aria-hidden="true">
+                <Filter size={22} strokeWidth={1.8} />
+              </span>
+            </div>
             {error ? <EmptyState message={`搜索失败：${error}`} /> : null}
             {!loading && !error && records.length ? (
-              <>
-                {records.length >= 50 ? <p style={{ ...helperTextStyle, margin: 0 }}>仅展示前 50 条结果，可继续缩小关键词范围。</p> : null}
-                {resultTags.length ? (
-                <div style={{ display: 'grid', gap: 8 }}>
-                  <h3 style={{ margin: 0, color: 'var(--nl-muted-strong)', fontSize: 12, fontWeight: 560 }}>标签结果</h3>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                    {resultTags.map((item) => (
-                      <button key={item} type="button" onClick={() => commitSearch(item)} style={{ minHeight: 44, border: 'none', background: 'transparent', padding: 0, cursor: 'pointer' }}>
-                        <span style={{ display: 'inline-flex', minHeight: 40, borderRadius: 8, padding: '9px 12px', alignItems: 'center', color: 'var(--nl-primary-2)', background: 'transparent', border: '1px solid rgba(var(--nl-primary-rgb),0.22)', fontSize: 12, fontWeight: 520 }}>#{item}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                ) : null}
-
-                {resultLocations.length ? (
-                <div style={{ display: 'grid', gap: 8 }}>
-                  <h3 style={{ margin: 0, color: 'var(--nl-muted-strong)', fontSize: 12, fontWeight: 560 }}>地点结果</h3>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-                    {resultLocations.map((item) => (
-                      <button key={item} type="button" onClick={() => commitSearch(item)} style={{ minHeight: 44, border: 'none', background: 'transparent', padding: 0, cursor: 'pointer' }}>
-                        <span style={{ display: 'inline-flex', minHeight: 40, borderRadius: 8, padding: '9px 12px', alignItems: 'center', gap: 6, color: 'var(--nl-primary-2)', background: 'transparent', border: '1px solid rgba(var(--nl-primary-rgb),0.22)', fontSize: 12, fontWeight: 520 }}>
-                          <MapPin size={13} />
-                          {item}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                ) : null}
-
-                <div style={{ display: 'grid', gap: 10 }}>
-                  <h3 style={{ margin: 0, color: 'var(--nl-muted-strong)', fontSize: 12, fontWeight: 560 }}>匹配记录</h3>
-                  {records.map((record) => <RecordSummaryCard key={record.record_no} record={record} onClick={() => navigate(`/record/${record.record_no}`)} />)}
-                </div>
-              </>
+              <div className="search-list">
+                {records.map((record) => (
+                  <SearchResultRow
+                    key={record.record_no}
+                    record={record}
+                    keyword={normalizedKeyword}
+                    onClick={() => navigate(`/record/${record.record_no}`)}
+                  />
+                ))}
+              </div>
             ) : null}
-            {!loading && !error && !records.length ? <EmptyState message="没有匹配记录。" /> : null}
+            {!loading && !error && !records.length ? (
+              <div style={{ display: 'grid', justifyItems: 'center', gap: 14, padding: '48px 0 28px', textAlign: 'center' }}>
+                <span aria-hidden="true" style={{ width: 96, height: 96, borderRadius: '50%', background: 'rgba(255, 250, 244, 0.72)', border: '1px solid rgba(255, 255, 255, 0.72)', display: 'grid', placeItems: 'center', color: 'var(--nl-accent)', boxShadow: '0 12px 30px rgba(146, 96, 52, 0.14)' }}>
+                  <SearchX size={36} strokeWidth={1.6} />
+                </span>
+                <strong style={{ fontFamily: 'var(--nl-font-display)', fontSize: 24, fontWeight: 600, letterSpacing: '0.02em', color: 'var(--nl-ink)', lineHeight: 1.3 }}>没有找到「{normalizedKeyword}」</strong>
+                <p style={{ ...helperTextStyle, margin: 0, fontSize: 13, maxWidth: 268 }}>换个词试试，或者去时间轴看看这一年</p>
+                <button type="button" onClick={() => navigate('/timeline')} style={{ ...refSecondaryButtonStyle, minHeight: 44, padding: '10px 20px', fontSize: 14, fontWeight: 500 }}>
+                  去时间轴看看
+                </button>
+              </div>
+            ) : null}
           </section>
-        ) : null}
+        )}
       </main>
     </div>
   );
@@ -866,6 +914,43 @@ const TimelineDayThumb = ({ record, ageLabel, onClick }: { record: RecordSummary
           <Star size={11} strokeWidth={2.4} fill="currentColor" />
         </span>
       ) : null}
+      <span className="tl-thumb-date">{formatDay(record.event_time)}日</span>
+    </button>
+  );
+};
+
+const TimelineWallTile = ({ record, onClick }: { record: RecordSummary; onClick: () => void }) => {
+  const mediaKind = getMediaKind(record);
+  const coverUrl = useCachedMediaUrl(record.cover_media_no, record.cover_url, mediaKind ?? 'image', {
+    cacheRemote: mediaKind !== 'audio',
+  });
+  const isMilestone = record.is_milestone || record.record_type === 'milestone';
+  const src = coverUrl || record.cover_url || null;
+  const hasCover = Boolean(src) && mediaKind !== 'audio';
+  const month = Number(datePart(record.event_time, 'month'));
+  const day = Number(datePart(record.event_time, 'day'));
+  const dateLabel = month && day ? `${month}月${day}日` : '日期待定';
+
+  return (
+    <button
+      type="button"
+      className={`tl-tile${hasCover ? '' : ' is-text'}`}
+      onClick={onClick}
+      aria-label={`${dateLabel}，${record.title ?? '未命名记录'}`}
+    >
+      {hasCover ? (
+        <img className="tl-tile-img" src={src as string} alt="" loading="lazy" decoding="async" />
+      ) : (
+        <span className="tl-tile-text">
+          <FileText size={22} strokeWidth={1.5} aria-hidden="true" />
+          <span>{record.title ?? '未命名记录'}</span>
+        </span>
+      )}
+      <span className="tl-tile-scrim" aria-hidden="true" />
+      <span className="tl-tile-date">
+        {isMilestone ? <span className="tl-tile-dot" aria-hidden="true" /> : null}
+        {dateLabel}
+      </span>
     </button>
   );
 };
@@ -873,288 +958,114 @@ const TimelineDayThumb = ({ record, ageLabel, onClick }: { record: RecordSummary
 export const TimelinePage = () => {
   const navigate = useNavigate();
   const { activeChild } = useAuth();
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [recordTypeFilter, setRecordTypeFilter] = useState<'all' | 'mixed' | 'video' | 'text' | 'audio' | 'milestone'>('all');
-  const [tagFilter, setTagFilter] = useState<string | null>(null);
-  const [selectedYear, setSelectedYear] = useState(String(new Date().getFullYear()));
+  const [selectedYear, setSelectedYear] = useState('');
+  const [selectedMonth, setSelectedMonth] = useState('');
   const { data, loading, error } = useAsyncData(
     async () => {
       if (!activeChild) return null;
       return webApi.listRecords({
         child_no: activeChild.child_no,
         page: 1,
-        page_size: 40,
+        page_size: 100,
         status: 'published',
-        record_type: recordTypeFilter === 'all' || recordTypeFilter === 'milestone' ? undefined : recordTypeFilter,
-        tag: tagFilter ?? undefined,
       });
     },
-    [activeChild?.child_no, recordTypeFilter, tagFilter],
+    [activeChild?.child_no],
   );
 
-  const filters = [
-    { label: '全部', value: 'all' as const },
-    { label: '照片', value: 'mixed' as const },
-    { label: '视频', value: 'video' as const },
-    { label: '文字', value: 'text' as const },
-    { label: '语音', value: 'audio' as const },
-    { label: '里程碑', value: 'milestone' as const },
-  ];
   const records = data?.list ?? [];
-  const typeFilteredRecords = recordTypeFilter === 'milestone' ? records.filter((record) => record.is_milestone || record.record_type === 'milestone') : records;
-  const visibleRecords = typeFilteredRecords;
-  const tags = Array.from(new Set(records.flatMap((record) => record.tags ?? [])));
-  const activeTypeLabel = filters.find((filter) => filter.value === recordTypeFilter)?.label ?? '全部';
-  const hasActiveFilter = recordTypeFilter !== 'all' || Boolean(tagFilter);
-  const activeFilterText = `${activeTypeLabel}${tagFilter ? ` / #${tagFilter}` : ''}`;
-  const clearFilters = () => {
-    setRecordTypeFilter('all');
-    setTagFilter(null);
-  };
-  const visibleYearOptions = Array.from(new Set(visibleRecords.map((record) => getRecordYear(record.event_time)))).sort((a, b) => Number(b) - Number(a));
-  const fallbackYear = new Date().getFullYear();
-  const yearOptions = Array.from(new Set([...visibleYearOptions, ...Array.from({ length: 4 }, (_, index) => String(fallbackYear - index))])).sort((a, b) => Number(b) - Number(a)).slice(0, 4);
-  const yearRecordCount = useMemo(() => {
-    const counts = new Map<string, number>();
-    visibleRecords.forEach((record) => {
-      const year = getRecordYear(record.event_time);
-      counts.set(year, (counts.get(year) ?? 0) + 1);
-    });
-    return counts;
-  }, [visibleRecords]);
+  const yearOptions = Array.from(new Set(records.map((record) => getRecordYear(record.event_time))))
+    .filter((year) => year && year !== '0')
+    .sort((left, right) => Number(right) - Number(left));
+  const didDefaultYearRef = useRef(false);
   useEffect(() => {
-    const firstYear = yearOptions[0];
-    if (firstYear && !yearOptions.includes(selectedYear)) {
-      setSelectedYear(firstYear);
+    if (didDefaultYearRef.current || !records.length) return;
+    didDefaultYearRef.current = true;
+    if (yearOptions.length && !yearOptions.includes(selectedYear)) setSelectedYear(yearOptions[0]);
+  }, [records.length, selectedYear, yearOptions]);
+
+  const activeYear = selectedYear || yearOptions[0] || String(new Date().getFullYear());
+  const yearRecords = records.filter((record) => getRecordYear(record.event_time) === activeYear);
+  const monthOptions = Array.from(new Set(yearRecords.map((record) => Number(datePart(record.event_time, 'month')))))
+    .filter((month) => Number.isFinite(month) && month > 0)
+    .sort((left, right) => right - left);
+  const monthKeyList = monthOptions.join(',');
+  useEffect(() => {
+    if (!monthOptions.length) return;
+    if (!monthOptions.some((month) => String(month) === selectedMonth)) {
+      setSelectedMonth(String(monthOptions[0]));
     }
-  }, [selectedYear, yearOptions]);
-  const timelineRecords = visibleRecords.filter((record) => getRecordYear(record.event_time) === selectedYear);
-  const timelineMonthGroups = useMemo(() => {
-    const groups: Array<{
-      key: string;
-      label: string;
-      days: Array<{ key: string; day: string; weekday: string; records: RecordSummary[] }>;
-    }> = [];
-    timelineRecords.forEach((record) => {
-      const monthKey = formatArchiveMonthTitle(record.event_time);
-      let monthGroup = groups.find((item) => item.key === monthKey);
-      if (!monthGroup) {
-        monthGroup = { key: monthKey, label: monthKey, days: [] };
-        groups.push(monthGroup);
-      }
-      const dayKey = toLocalDateKey(record.event_time) || record.event_time.slice(0, 10);
-      let dayGroup = monthGroup.days.find((item) => item.key === dayKey);
-      if (!dayGroup) {
-        const nextDayGroup = { key: dayKey, day: String(formatDay(record.event_time)), weekday: formatWeekdayShort(record.event_time), records: [] as RecordSummary[] };
-        monthGroup.days.push(nextDayGroup);
-        dayGroup = nextDayGroup;
-      }
-      dayGroup.records.push(record);
-    });
-    return groups;
-  }, [timelineRecords]);
-  const showFilterEmptyState = Boolean(activeChild && !loading && !error && hasActiveFilter && visibleRecords.length === 0);
-  const showNoRecordsState = Boolean(activeChild && !loading && !error && !hasActiveFilter && records.length === 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [monthKeyList, selectedMonth]);
+  const activeMonth = selectedMonth || String(monthOptions[0] ?? '');
+  const monthRecords = activeMonth === 'all'
+    ? yearRecords
+    : yearRecords.filter((record) => String(Number(datePart(record.event_time, 'month'))) === activeMonth);
+  const sortedRecords = [...monthRecords].sort((left, right) => (
+    (parseSafeDate(right.event_time)?.getTime() ?? 0) - (parseSafeDate(left.event_time)?.getTime() ?? 0)
+  ));
+  const milestoneCount = yearRecords.filter((record) => record.is_milestone || record.record_type === 'milestone').length;
+  const yearLabel = activeYear === yearOptions[0] ? '今年' : `${activeYear}年`;
+  const bigTitle = activeMonth && activeMonth !== 'all' ? `${cnNumber(Number(activeMonth))}月` : `${activeYear}年`;
+
   return (
-    <div style={refPageStyle}>
-      <header style={{ position: 'sticky', top: 0, zIndex: 4, background: 'var(--nl-topbar-bg)', WebkitBackdropFilter: 'blur(18px) saturate(1.02)', backdropFilter: 'blur(18px) saturate(1.02)', padding: 'calc(var(--nl-statusbar-top) + 6px) var(--nl-content-inline) 12px', borderBottom: '1px solid var(--nl-border-soft)', transition: 'border-color 0.18s ease', boxShadow: '0 8px 22px rgba(var(--nl-shadow-rgb),0.04)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 13 }}>
-          <div style={{ display: 'grid', gap: 3, minWidth: 0, flex: 1 }}>
-            <span style={{ color: 'var(--nl-primary)', fontSize: 10, lineHeight: 1, fontWeight: 800, letterSpacing: '0.12em' }}>GROWTH / TIMELINE</span>
-            <h1 style={{ margin: 0, color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: 30, fontWeight: 780, lineHeight: 1.04 }}>时间轴</h1>
-            <span style={{ color: 'var(--nl-muted)', fontSize: 11, fontWeight: 560 }}>{normalizeDisplayName(activeChild?.name, '孩子')}的成长时间线</span>
-          </div>
-          <button type="button" aria-label="筛选记录" aria-pressed={filterOpen} onClick={() => setFilterOpen((current) => !current)} style={{ width: 44, height: 44, border: filterOpen || hasActiveFilter ? '1px solid var(--nl-primary)' : '1px solid var(--nl-border-muted)', borderRadius: 8, flexShrink: 0, background: filterOpen || hasActiveFilter ? 'var(--nl-primary)' : 'var(--nl-card-bg-strong)', color: filterOpen || hasActiveFilter ? 'var(--nl-on-primary)' : 'var(--nl-ink)', display: 'grid', placeItems: 'center', cursor: 'pointer', boxShadow: '0 7px 16px rgba(var(--nl-shadow-rgb),0.06)' }}>
-            <SlidersHorizontal size={20} />
-          </button>
-        </div>
-        <div style={{ display: 'grid', gridAutoFlow: 'column', gridAutoColumns: 'minmax(64px, 1fr)', gap: 7, overflowX: 'auto', paddingBottom: 10 }}>
-          {yearOptions.map((year) => {
-            const active = selectedYear === year;
-            const count = yearRecordCount.get(year) ?? 0;
-            return (
-              <button key={year} type="button" aria-label={`${year}年`} aria-pressed={active} onClick={() => setSelectedYear(year)} style={{ minWidth: 64, minHeight: 43, border: active ? '1px solid rgba(var(--nl-primary-rgb),0.24)' : '1px solid var(--nl-border-soft)', borderRadius: 8, background: active ? 'var(--nl-plan-lilac)' : 'var(--nl-card-bg-strong)', color: active ? 'var(--nl-primary-2)' : count > 0 ? 'var(--nl-muted-strong)' : 'var(--nl-muted)', padding: '5px 6px', display: 'grid', gap: 2, placeItems: 'center', fontSize: 11, fontWeight: active ? 750 : 550, boxShadow: active ? '0 7px 16px rgba(var(--nl-primary-rgb),0.1)' : 'none', cursor: 'pointer', flexShrink: 0, opacity: count > 0 || active ? 1 : 0.58 }}>
-                <span>{year}</span>
-                <span style={{ fontSize: 9, lineHeight: 1, fontWeight: 500 }}>{count > 0 ? `${count}条` : '暂无'}</span>
-              </button>
-            );
-          })}
-        </div>
-        <div aria-label="快速筛选记录类型" style={{ display: 'flex', gap: 7, overflowX: 'auto', paddingBottom: 2, scrollbarWidth: 'none' }}>
-          {filters.map((filter) => {
-            const active = recordTypeFilter === filter.value;
-            return (
+    <div className="tl-page">
+      <header className="tl-head">
+        <div className="tl-controls">
+          <div className="tl-years" role="tablist" aria-label="年份">
+            {yearOptions.map((year) => (
               <button
-                key={`quick-${filter.value}`}
+                key={year}
                 type="button"
-                aria-label={`快速筛选：${filter.label}`}
-                aria-pressed={active}
-                onClick={() => setRecordTypeFilter(filter.value)}
-                style={{ minHeight: 34, minWidth: 54, border: active ? '1px solid var(--nl-primary)' : '1px solid var(--nl-border-muted)', borderRadius: 999, background: active ? 'var(--nl-primary)' : 'var(--nl-surface-soft)', color: active ? 'var(--nl-on-primary)' : 'var(--nl-muted-strong)', padding: '6px 11px', fontSize: 11, fontWeight: active ? 750 : 560, whiteSpace: 'nowrap', cursor: 'pointer', boxShadow: active ? '0 7px 16px rgba(var(--nl-primary-rgb),0.18)' : 'none' }}
+                role="tab"
+                aria-selected={year === activeYear}
+                className={`tl-year${year === activeYear ? ' is-active' : ''}`}
+                onClick={() => {
+                  setSelectedYear(year);
+                  setSelectedMonth('all');
+                }}
               >
-                {filter.label}
+                {year}
               </button>
-            );
-          })}
+            ))}
+          </div>
+          <label className="tl-month-select">
+            <select
+              aria-label="月份"
+              value={activeMonth}
+              onChange={(event) => setSelectedMonth(event.target.value)}
+            >
+              <option value="all">全年</option>
+              {monthOptions.map((month) => (
+                <option key={month} value={String(month)}>{month}月</option>
+              ))}
+            </select>
+            <ChevronDown size={18} strokeWidth={2} aria-hidden="true" />
+          </label>
         </div>
-        {hasActiveFilter && !filterOpen ? (
-          <button
-            type="button"
-            aria-label="清除当前筛选"
-            onClick={clearFilters}
-            style={{
-              minHeight: 34,
-              border: 'none',
-              borderBottom: '1px solid var(--nl-border-strong)',
-              borderRadius: 0,
-              background: 'transparent',
-              color: 'var(--nl-muted-strong)',
-              padding: '6px 10px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 6,
-              fontSize: 12,
-              fontWeight: 520,
-              cursor: 'pointer',
-            }}
-          >
-            筛选：{activeFilterText}
-          </button>
-        ) : null}
+        <h1 className="tl-big-title">{bigTitle}</h1>
+        <p className="tl-summary">{yearLabel} {yearRecords.length} 条 · 里程碑 {milestoneCount} 个</p>
       </header>
 
-      <main style={{ ...refContentStyle, display: 'flex', flexDirection: 'column', minHeight: 'calc(var(--nl-page-min-height, 100dvh) - 132px)', boxSizing: 'border-box', padding: '14px var(--nl-content-inline) 50px', gap: 14 }}>
-        {filterOpen ? (
-          <div
-            style={{
-              borderRadius: 8,
-              border: '1px solid var(--nl-border-soft)',
-              background: 'rgba(var(--nl-surface-rgb),0.52)',
-              padding: 14,
-              display: 'grid',
-              gap: 14,
-              boxShadow: 'var(--nl-shadow-sm)',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-              <strong style={{ color: 'var(--nl-ink)', fontSize: 14, fontWeight: 620 }}>筛选记录</strong>
-              {hasActiveFilter ? (
-                <button
-                  type="button"
-                  onClick={clearFilters}
-                  style={{ minHeight: 32, border: '1px solid rgba(var(--nl-primary-rgb),0.22)', borderRadius: 8, background: 'transparent', color: 'var(--nl-primary-2)', padding: '0 10px', fontSize: 12, fontWeight: 560, cursor: 'pointer' }}
-                >
-                  清除
-                </button>
-              ) : null}
-            </div>
-            <div style={{ display: 'grid', gap: 8 }}>
-              <span style={{ color: 'var(--nl-muted)', fontSize: 11, fontWeight: 520, letterSpacing: 0 }}>记录类型</span>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {filters.map((filter) => {
-                  const active = recordTypeFilter === filter.value;
-                  return (
-                    <button
-                      key={filter.value}
-                      type="button"
-                      aria-pressed={active}
-                      onClick={() => setRecordTypeFilter(filter.value)}
-                      style={{
-                        minHeight: 38,
-                        border: active ? '1px solid rgba(var(--nl-primary-rgb),0.3)' : '1px solid var(--nl-border-muted)',
-                        borderRadius: 8,
-                        background: active ? 'rgba(var(--nl-primary-rgb),0.12)' : 'transparent',
-                        color: active ? 'var(--nl-primary-2)' : 'var(--nl-ink)',
-                        padding: '8px 12px',
-                        fontSize: 12,
-                        fontWeight: active ? 620 : 520,
-                        cursor: 'pointer',
-                        boxShadow: 'none',
-                      }}
-                    >
-                      {filter.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-            <div style={{ display: 'grid', gap: 8 }}>
-              <span style={{ color: 'var(--nl-muted)', fontSize: 11, fontWeight: 520, letterSpacing: 0 }}>标签</span>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {tags.length ? tags.map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    aria-pressed={tagFilter === tag}
-                    onClick={() => setTagFilter((current) => (current === tag ? null : tag))}
-                    style={{
-                      minHeight: 36,
-                      border: tagFilter === tag ? '1px solid rgba(var(--nl-primary-rgb),0.3)' : '1px solid var(--nl-border-muted)',
-                      borderRadius: 8,
-                      background: tagFilter === tag ? 'rgba(var(--nl-primary-rgb),0.12)' : 'transparent',
-                      color: tagFilter === tag ? 'var(--nl-primary-2)' : 'var(--nl-muted-strong)',
-                      padding: '7px 11px',
-                      fontSize: 12,
-                      fontWeight: tagFilter === tag ? 620 : 520,
-                      cursor: 'pointer',
-                    }}
-                  >
-                    #{tag}
-                  </button>
-                )) : <span style={{ color: 'var(--nl-muted)', fontSize: 12, fontWeight: 520 }}>当前记录还没有可用标签。</span>}
-              </div>
-            </div>
-          </div>
-        ) : null}
+      <main className="tl-main">
         {!activeChild ? <EmptyState message="请先选择孩子。" /> : null}
         {loading ? <EmptyState message="正在加载记录列表…" /> : null}
         {error ? <EmptyState message={`加载失败：${error}`} /> : null}
-        {!loading && !error && activeChild && timelineRecords.length ? (
-          <div style={{ display: 'grid', gap: 22, padding: '5px 0 18px' }}>
-            {timelineMonthGroups.map((group) => (
-              <section key={group.key} style={{ display: 'grid', gap: 12 }}>
-                <header className="tl-month-head">
-                  <h2>{group.label.replace('.', ' 年 ')} 月</h2>
-                  <span>{group.days.reduce((count, day) => count + day.records.length, 0)} 条记录</span>
-                </header>
-                {group.days.map((day) => (
-                  <section key={day.key} className="tl-day">
-                    <div className="tl-day-head">
-                      <strong>{day.day}日</strong>
-                      <span>{day.weekday}{day.records.length > 1 ? ` · ${day.records.length} 条` : ''}</span>
-                    </div>
-                    <div className="tl-day-grid">
-                      {day.records.map((record) => (
-                        <TimelineDayThumb
-                          key={record.record_no}
-                          record={record}
-                          ageLabel={formatAgeAtEvent(activeChild.birthday, record.event_time)}
-                          onClick={() => navigate(`/record/${record.record_no}`)}
-                        />
-                      ))}
-                    </div>
-                  </section>
-                ))}
-              </section>
+        {!loading && !error && activeChild && sortedRecords.length ? (
+          <div className="tl-grid">
+            {sortedRecords.map((record) => (
+              <TimelineWallTile
+                key={record.record_no}
+                record={record}
+                onClick={() => navigate(`/record/${record.record_no}`)}
+              />
             ))}
           </div>
         ) : null}
-        {activeChild && !loading && !error && visibleRecords.length > 0 && !timelineRecords.length ? (
-          <div style={{ ...refCardStyle, padding: 18, display: 'grid', gap: 12 }}>
-            <EmptyState message={`${selectedYear}年还没有记录。`} />
-          </div>
-        ) : null}
-        {showFilterEmptyState ? (
-          <div style={{ ...refCardStyle, padding: 18, display: 'grid', gap: 12 }}>
-            <EmptyState message={`没有符合「${activeFilterText}」的记录。`} />
-            <button type="button" onClick={clearFilters} style={refPrimaryButtonStyle}>清除筛选</button>
-          </div>
-        ) : null}
-        {showNoRecordsState ? (
-          <div style={{ ...refCardStyle, padding: 18, display: 'grid', gap: 12 }}>
-            <EmptyState message="暂无记录。" />
-            <button type="button" onClick={() => navigate('/record/create')} style={refPrimaryButtonStyle}>记录</button>
+        {!loading && !error && activeChild && !sortedRecords.length ? (
+          <div className="tl-empty">
+            <EmptyState message={records.length ? `${bigTitle}还没有记录。` : '还没有记录，去记下第一刻吧。'} />
+            <button type="button" className="tl-empty-cta" onClick={() => navigate('/record/create')}>去记录</button>
           </div>
         ) : null}
       </main>

@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
-import { Clock, Edit3, Home, User, Users } from 'lucide-react';
+import { Clock, Home, SquarePen, User, Users } from 'lucide-react';
 import { useEffect, useState, type CSSProperties } from 'react';
 
 import { webApi } from '../shared/api/webApi';
@@ -168,19 +168,19 @@ const AppUpdateNotice = ({ bottomOffset }: { bottomOffset: string }) => {
 
 export const AppLayout = () => {
   const location = useLocation();
-  const bottomNavClearance = 'calc(70px + env(safe-area-inset-bottom))';
+  const bottomNavClearance = 'calc(96px + env(safe-area-inset-bottom))';
   const tabScrollPadding = '32px';
   const navItems = [
     { to: '/home', label: '首页', icon: Home },
     { to: '/timeline', label: '时间轴', icon: Clock },
-    { to: '/record/create', label: '记录', icon: Edit3 },
+    { to: '/record/create', label: '记录', icon: SquarePen },
     { to: '/family', label: '家庭', icon: Users },
     { to: '/profile', label: '我的', icon: User },
   ];
   const tabPaths = new Set(['/home', '/timeline', '/family', '/profile']);
   const showBottomNav = tabPaths.has(location.pathname);
   const isHome = location.pathname === '/home';
-  const updateNoticeBottom = showBottomNav ? 'calc(68px + env(safe-area-inset-bottom))' : '16px';
+  const updateNoticeBottom = showBottomNav ? 'calc(96px + env(safe-area-inset-bottom))' : '16px';
 
   return (
     <div
@@ -218,30 +218,29 @@ export const AppLayout = () => {
         <Outlet />
       </main>
       {showBottomNav ? <nav
-        className="app-bottom-nav"
+        className={`app-bottom-nav${location.pathname.startsWith('/profile') ? ' is-quiet' : ''}`}
         aria-label="主导航"
         style={{
           position: 'fixed',
-          left: '50%',
-          bottom: 0,
-          transform: 'translateX(-50%)',
-          width: '100%',
-          maxWidth: '430px',
-          minHeight: 'calc(70px + env(safe-area-inset-bottom))',
-          height: 'calc(70px + env(safe-area-inset-bottom))',
-          borderTop: '1px solid var(--nl-border-soft)',
-          borderRight: 'none',
-          borderBottom: 'none',
-          borderLeft: 'none',
-          borderRadius: 0,
-          background: 'var(--nl-surface)',
+          left: '16px',
+          right: '16px',
+          bottom: 'calc(12px + env(safe-area-inset-bottom))',
+          margin: '0 auto',
+          width: 'auto',
+          maxWidth: '398px',
+          minHeight: '64px',
+          height: '64px',
+          border: '1px solid rgba(255, 255, 255, 0.72)',
+          borderRadius: '26px',
+          background: 'rgba(255, 250, 244, 0.78)',
+          WebkitBackdropFilter: 'blur(20px) saturate(1.06)',
+          backdropFilter: 'blur(20px) saturate(1.06)',
           display: 'flex',
           justifyContent: 'space-around',
           alignItems: 'center',
           zIndex: 10,
-          marginTop: 'auto',
-          padding: '3px 14px max(9px, env(safe-area-inset-bottom))',
-          boxShadow: 'none',
+          padding: '0 8px',
+          boxShadow: '0 14px 34px rgba(146, 96, 52, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.74)',
           boxSizing: 'border-box',
         }}
       >
@@ -258,11 +257,11 @@ export const AppLayout = () => {
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: '3px',
+                gap: '2px',
                 textDecoration: 'none',
                 color: isActive ? 'var(--nl-nav-active)' : 'var(--nl-nav-muted)',
-                fontSize: '10px',
-                fontWeight: isActive ? 650 : 500,
+                fontSize: '10.5px',
+                fontWeight: isActive ? 600 : 500,
                 position: 'relative',
                 minHeight: '48px',
                 justifyContent: 'center',
@@ -273,23 +272,23 @@ export const AppLayout = () => {
                   <span
                     className="app-bottom-nav-icon"
                     style={{
-                    width: isActive ? '30px' : '28px',
-                    height: isActive ? '28px' : '26px',
+                    width: '36px',
+                    height: '28px',
                     marginTop: 0,
-                    borderRadius: 0,
+                    borderRadius: '14px',
                     display: 'grid',
                     placeItems: 'center',
-                    background: 'transparent',
+                    background: isActive ? 'rgba(233, 160, 90, 0.24)' : 'transparent',
                     color: isActive ? 'var(--nl-nav-active)' : 'var(--nl-nav-muted)',
                     boxShadow: 'none',
                     border: 'none',
                     transform: 'none',
-                    transition: 'transform 0.18s ease, color 0.18s ease',
+                    transition: 'background-color 0.18s ease, color 0.18s ease',
                   }}
                   >
-                    <Icon size={isActive ? 20 : 19} strokeWidth={isActive ? 2.15 : 1.8} />
+                    <Icon size={20} strokeWidth={isActive ? 2 : 1.8} />
                   </span>
-                  <span className="app-bottom-nav-label" style={{ lineHeight: 1, marginTop: 0, fontWeight: isActive ? 650 : undefined }}>{item.label}</span>
+                  <span className="app-bottom-nav-label" style={{ lineHeight: 1, marginTop: 0, fontWeight: isActive ? 600 : undefined }}>{item.label}</span>
                 </>
               )}
             </NavLink>

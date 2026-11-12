@@ -1,6 +1,6 @@
-﻿import { useEffect, useRef, useState, type CSSProperties, type ChangeEvent, type FocusEvent, type FormEvent, type KeyboardEvent, type RefObject } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ChangeEvent, type FocusEvent, type FormEvent, type KeyboardEvent, type MouseEvent as ReactMouseEvent, type RefObject } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Camera, ChevronLeft } from 'lucide-react';
+import { CalendarDays, Camera, ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { useAuth } from '../shared/AuthContext';
 import { BrandBootMotion } from '../components/BrandBootMotion';
@@ -253,6 +253,19 @@ const authAgreementTextStyle: CSSProperties = {
   minWidth: 0,
 };
 
+const inlineLegalLinkStyle: CSSProperties = {
+  display: 'inline',
+  padding: 0,
+  border: 'none',
+  background: 'transparent',
+  color: 'var(--nl-accent)',
+  font: 'inherit',
+  fontWeight: 600,
+  textDecoration: 'underline',
+  textUnderlineOffset: '3px',
+  cursor: 'pointer',
+};
+
 const disabledSubmitButtonStyle: CSSProperties = {
   ...primaryButtonStyle,
   background: 'rgba(var(--nl-surface-strong-rgb),0.44)',
@@ -284,10 +297,23 @@ const welcomePosters = [
 
 export const WelcomePage = () => {
   const navigate = useNavigate();
+  const [acceptedAgreement, setAcceptedAgreement] = useState(false);
 
   const continueToLogin = () => {
     markWelcomeIntroSeen();
     navigate('/auth/login', { replace: true });
+  };
+
+  const startNow = () => {
+    if (!acceptedAgreement) return;
+    markWelcomeIntroSeen();
+    navigate('/auth/login', { replace: true });
+  };
+
+  const openLegalDocument = (event: ReactMouseEvent<HTMLButtonElement>, target: string) => {
+    event.preventDefault();
+    event.stopPropagation();
+    navigate(`/legal?doc=${target}`);
   };
 
   return (
@@ -360,9 +386,44 @@ export const WelcomePage = () => {
         </div>
       </section>
 
-      <section style={{ display: 'grid', gap: 10, padding: '0 20px' }}>
-        <button type="button" onClick={continueToLogin} style={primaryButtonStyle}>开始使用</button>
-        <button type="button" onClick={continueToLogin} style={{ ...secondaryButtonStyle, justifyContent: 'center' }}>跳过</button>
+      <section style={{ display: 'grid', gap: 12, padding: '0 20px' }}>
+        <label style={authAgreementStyle}>
+          <input
+            type="checkbox"
+            checked={acceptedAgreement}
+            onChange={(event) => setAcceptedAgreement(event.target.checked)}
+            aria-label="同意用户协议、隐私政策和儿童个人信息保护规则"
+            style={authCheckboxStyle(acceptedAgreement)}
+          />
+          <span style={authAgreementTextStyle}>
+            我已阅读并同意
+            <button type="button" onClick={(event) => openLegalDocument(event, 'terms')} style={inlineLegalLinkStyle}>《用户协议》</button>
+            <button type="button" onClick={(event) => openLegalDocument(event, 'privacy')} style={inlineLegalLinkStyle}>《隐私政策》</button>
+            和
+            <button type="button" onClick={(event) => openLegalDocument(event, 'child')} style={inlineLegalLinkStyle}>《儿童个人信息保护规则》</button>
+          </span>
+        </label>
+        <button
+          type="button"
+          onClick={startNow}
+          disabled={!acceptedAgreement}
+          aria-disabled={!acceptedAgreement}
+          style={acceptedAgreement ? primaryButtonStyle : disabledSubmitButtonStyle}
+        >
+          开始使用
+        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button type="button" onClick={continueToLogin} style={{ ...secondaryButtonStyle, minHeight: 44, flex: '1 1 0', fontSize: 15 }}>
+            跳过
+          </button>
+          <button
+            type="button"
+            onClick={continueToLogin}
+            style={{ minHeight: 44, flex: '1 1 0', border: 'none', background: 'transparent', color: 'var(--nl-accent)', fontSize: 15, fontWeight: 600, cursor: 'pointer' }}
+          >
+            已有账号？登录
+          </button>
+        </div>
       </section>
     </main>
   );
@@ -651,7 +712,7 @@ export const LoginPage = () => {
               style={authCheckboxStyle(acceptedAgreement)}
             />
             <span style={authAgreementTextStyle}>
-              我已阅读并同意《用户协议》和《隐私政策》
+              我已阅读并同意《用户协议》《隐私政策》和《儿童个人信息保护规则》
             </span>
           </label>
         {error ? <p style={{ ...helperTextStyle, color: 'var(--nl-danger)' }}>{error}</p> : null}
@@ -671,13 +732,13 @@ export const LoginPage = () => {
 export const OnboardingChildPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { completeOnboarding, needsOnboarding, refreshChildren, setActiveChild } = useAuth();
+  const { completeOnboarding, needsOnboarding, refreshChildren, setActiveChild, skipOnboarding } = useAuth();
   const isAddingChild = searchParams.get('mode') === 'add';
   const [form, setForm] = useState({
     name: '',
     avatar_url: '',
     birthday: '',
-    gender: 'male',
+    gender: 'female',
     birth_place: '',
     remark: '',
   });
@@ -749,74 +810,117 @@ export const OnboardingChildPage = () => {
   };
 
   return (
-    <PageShell title={isAddingChild ? '添加宝宝档案' : '完善宝宝信息'} backTo={isAddingChild ? '/profile' : undefined}>
-      <form onSubmit={onSubmit} style={{ ...rowStyle, gap: '22px' }}>
-        <div style={{ display: 'grid', justifyItems: 'center', gap: '9px', paddingTop: '2px' }}>
-          <label style={{ width: '96px', height: '96px', borderRadius: '8px', border: '1px solid var(--nl-border-muted)', background: 'rgba(var(--nl-surface-strong-rgb),0.3)', display: 'grid', placeItems: 'center', color: 'var(--nl-muted)', position: 'relative', cursor: 'pointer', overflow: 'hidden', boxShadow: '0 14px 30px rgba(var(--nl-shadow-rgb),0.18)' }}>
-            {childAvatarPreviewSrc && !avatarPreviewFailed ? <img src={childAvatarPreviewSrc} alt="宝宝头像预览" decoding="async" onError={() => setAvatarPreviewFailed(true)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <Camera size={34} strokeWidth={1.9} />}
+    <div className="onb-page">
+      <div className="onb-top">
+        {isAddingChild ? (
+          <button type="button" className="onb-back" aria-label="返回" onClick={() => navigate('/profile')}>
+            <ChevronLeft size={22} strokeWidth={1.9} />
+          </button>
+        ) : <span />}
+        <span className="onb-dots" aria-hidden="true">
+          <span className="onb-dot is-active" />
+          <span className="onb-dot" />
+          <span className="onb-dot" />
+        </span>
+        {isAddingChild ? (
+          <button type="button" className="onb-skip" onClick={() => navigate('/profile')}>跳过</button>
+        ) : (
+          <button
+            type="button"
+            className="onb-skip"
+            onClick={() => {
+              skipOnboarding();
+              navigate('/home', { replace: true });
+            }}
+          >
+            跳过
+          </button>
+        )}
+      </div>
+
+      <form onSubmit={onSubmit} style={{ display: 'contents' }}>
+        <div className="onb-avatar-wrap">
+          <label className="onb-avatar">
+            {childAvatarPreviewSrc && !avatarPreviewFailed ? (
+              <img src={childAvatarPreviewSrc} alt="宝宝头像预览" decoding="async" onError={() => setAvatarPreviewFailed(true)} />
+            ) : (
+              <Camera size={54} strokeWidth={1.4} />
+            )}
             <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" onChange={onAvatarChange} style={{ display: 'none' }} />
           </label>
         </div>
 
-        <Panel style={{ padding: 0, borderRadius: '8px', overflow: 'hidden', background: 'rgba(var(--nl-surface-rgb),0.12)', border: '1px solid var(--nl-border-muted)', boxShadow: 'inset 0 1px 0 var(--nl-inset-highlight)' }}>
-          <div style={{ display: 'grid' }}>
-            <div style={{ padding: '16px', borderBottom: '1px solid var(--nl-border-muted)' }}>
-            <Field label="宝宝小名">
-              <input style={{ ...inputStyle, border: 'none', padding: 0, minHeight: '44px' }} value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} placeholder="小名" />
-            </Field>
-            </div>
-            <div style={{ padding: '16px', borderBottom: '1px solid var(--nl-border-muted)' }}>
-            <Field label="性别">
-              <div role="radiogroup" aria-label="性别" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
-                {[
-                  { value: 'male', label: '男孩' },
-                  { value: 'female', label: '女孩' },
-                ].map((item) => {
-                  const selected = form.gender === item.value;
-                  return (
-                    <button
-                      key={item.value}
-                      type="button"
-                      role="radio"
-                      aria-checked={selected}
-                      onClick={() => setForm((current) => ({ ...current, gender: item.value }))}
-                      style={{
-                        minHeight: '44px',
-                        borderRadius: '8px',
-                        border: selected ? '1px solid var(--nl-primary-line)' : '1px solid var(--nl-border-muted)',
-                        background: selected ? 'rgba(var(--nl-primary-rgb),0.12)' : 'rgba(var(--nl-surface-rgb),0.14)',
-                        color: selected ? 'var(--nl-ink)' : 'var(--nl-muted-strong)',
-                        fontSize: '13px',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      {item.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </Field>
-            </div>
-            <div style={{ padding: '16px' }}>
-            <Field label="出生日期">
-              <AppDateInput
+        <h1 className="onb-title">先认识一下{form.name.trim() || '宝宝'}</h1>
+        <p className="onb-sub">这些信息只会给家人看到</p>
+
+        <div className="onb-card">
+          <div className="onb-row">
+            <span className="onb-label">宝贝的名字</span>
+            <input
+              className="onb-input"
+              aria-label="宝贝的名字"
+              value={form.name}
+              onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+              placeholder="小名"
+              autoComplete="off"
+            />
+          </div>
+
+          <div className="onb-row">
+            <CalendarDays size={22} strokeWidth={1.7} color="var(--nl-ink)" />
+            <label className="onb-date">
+              <span className="onb-date-value">
+                {form.birthday
+                  ? (() => {
+                    const [year, month, day] = form.birthday.split('-');
+                    return year && month && day ? `${Number(year)}年${Number(month)}月${Number(day)}日` : form.birthday;
+                  })()
+                  : '年/月/日'}
+              </span>
+              <span className="onb-date-hint">出生时间可选</span>
+              <input
+                type="date"
+                className="onb-date-input"
                 aria-label="出生日期"
                 value={form.birthday}
-                displayValue={form.birthday ? form.birthday.replace(/-/g, '/') : undefined}
-                placeholder="年/月/日"
                 onChange={(event) => setForm((current) => ({ ...current, birthday: event.target.value }))}
               />
-            </Field>
+            </label>
+            <ChevronRight size={20} strokeWidth={1.8} color="rgba(58,42,28,0.45)" />
+          </div>
+
+          <div className="onb-row">
+            <span className="onb-label">性别</span>
+            <div role="radiogroup" aria-label="性别" className="onb-gender">
+              {[
+                { value: 'female', label: '女孩' },
+                { value: 'male', label: '男孩' },
+              ].map((item) => {
+                const selected = form.gender === item.value;
+                return (
+                  <button
+                    key={item.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={selected}
+                    onClick={() => setForm((current) => ({ ...current, gender: item.value }))}
+                    className={`onb-gender-opt${selected ? ' is-selected' : ''}`}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
-        </Panel>
+        </div>
 
-        {error ? <p style={{ ...helperTextStyle, color: 'var(--nl-danger)' }}>{error}</p> : null}
-        <button type="submit" style={{ ...primaryButtonStyle, width: '100%', minHeight: '48px' }} disabled={submitting}>
-          {submitting ? '提交中…' : '完成创建'}
+        {error ? <p className="onb-error">{error}</p> : null}
+
+        <button type="submit" className="onb-submit" disabled={submitting}>
+          {submitting ? '提交中…' : '继续'}
         </button>
+        <p className="onb-foot">随时可以在「家庭」里修改</p>
       </form>
-    </PageShell>
+    </div>
   );
 };

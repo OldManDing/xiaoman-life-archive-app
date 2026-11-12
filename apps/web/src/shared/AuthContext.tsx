@@ -23,6 +23,7 @@ interface AuthContextValue {
   setActiveChild: (child: ChildRecord | null) => void;
   refreshChildren: () => Promise<ChildRecord[]>;
   completeOnboarding: (child: ChildRecord) => void;
+  skipOnboarding: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -35,6 +36,26 @@ const shouldSkipAnonymousRefresh = () => {
   if (window.location.pathname === '/legal') return true;
   if (window.location.pathname === '/auth/login') return !hasStoredSessionHint();
   return false;
+};
+
+// 「先逛逛」：建档页点跳过时按账号记住，本次会话不再强制回建档页；建档成功后自然失效
+const onboardingSkipKey = (userNo?: string | null) => `nianlun.onboarding.skipped:${userNo ?? 'anon'}`;
+const hasSkippedOnboarding = (userNo?: string | null) => {
+  if (typeof window === 'undefined') return false;
+  try {
+    return window.sessionStorage.getItem(onboardingSkipKey(userNo)) === '1';
+  } catch {
+    return false;
+  }
+};
+const rememberOnboardingSkip = (userNo?: string | null, skipped = true) => {
+  if (typeof window === 'undefined') return;
+  try {
+    if (skipped) window.sessionStorage.setItem(onboardingSkipKey(userNo), '1');
+    else window.sessionStorage.removeItem(onboardingSkipKey(userNo));
+  } catch {
+    // 部分内嵌 WebView 会禁用 storage，跳过仍应在当前内存状态内生效
+  }
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -78,7 +99,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setAccessToken(payload.access_token);
       setLocalSettingsScope(payload.user.user_no);
       setUser(payload.user);
-      setNeedsOnboarding(payload.need_create_child);
+      setNeedsOnboarding(payload.need_create_child && !hasSkippedOnboarding(payload.user.user_no));
 
       if (!payload.need_create_child) {
         await refreshChildren();
@@ -105,7 +126,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setUser(profile);
           const nextChildren = await refreshChildren();
           if (!isCurrentBootstrapRun()) return;
-          setNeedsOnboarding(nextChildren.length === 0);
+          setNeedsOnboarding(nextChildren.length === 0 && !hasSkippedOnboarding(profile.user_no));
         } catch {
           const session = await webApi.refresh();
           if (!isCurrentBootstrapRun()) return;
@@ -191,10 +212,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const completeOnboarding = useCallback((child: ChildRecord) => {
+    rememberOnboardingSkip(child.owner_user_no ?? null, false);
     setNeedsOnboarding(false);
     setChildrenList([child]);
     setActiveChildState(child);
   }, []);
+
+  const skipOnboarding = useCallback(() => {
+    rememberOnboardingSkip(user?.user_no ?? null, true);
+    setNeedsOnboarding(false);
+  }, [user?.user_no]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -213,6 +240,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setActiveChild,
       refreshChildren,
       completeOnboarding,
+      skipOnboarding,
     }),
     [
       accessToken,
@@ -228,6 +256,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       refreshChildren,
       setUserProfile,
       setActiveChild,
+      skipOnboarding,
       user,
     ],
   );

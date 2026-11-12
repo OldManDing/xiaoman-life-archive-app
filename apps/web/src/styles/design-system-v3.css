@@ -1,0 +1,284 @@
+/* ============================================================
+   年轮 · 全站视觉系统 v3「暖光玻璃」
+   ------------------------------------------------------------
+   规范来源：artifacts/design-directions/DESIGN-SPEC-v2.md
+   设计稿：artifacts/design-directions/screens-v5/（含 01–28）
+
+   本文件只做三件事：
+   1) 把 --nl-* 语义令牌映射到暖光玻璃色板（全站 inline style 靠 var() 自动跟随）
+   2) 铺全局底：暖光渐变 + 右上角 320px 径向光
+   3) 统一玻璃三级的质感与降级策略
+
+   回滚：删除 main.tsx 中本文件的 import。
+   ============================================================ */
+
+:root {
+  /* ---- 底 ---- */
+  --nl-page-bg: #fdf6ec;
+  --nl-bg: #fdf6ec;
+  --nl-bg-warm: #f6dccb;
+  --nl-surface: rgba(255, 250, 244, 0.55);
+  --nl-surface-strong: rgba(255, 250, 244, 0.72);
+  --nl-surface-soft: #fffaf4;
+  --nl-surface-rgb: 255, 250, 244;
+  --nl-surface-strong-rgb: 250, 238, 226;
+
+  /* ---- 玻璃 ---- */
+  --nl-glass-surface: rgba(255, 250, 244, 0.72);
+  --nl-glass-strong: rgba(255, 250, 244, 0.82);
+  --nl-glass-soft: rgba(255, 250, 244, 0.56);
+  --nl-glass-border: rgba(255, 255, 255, 0.66);
+  --nl-glass-highlight: rgba(255, 255, 255, 0.78);
+  --nl-glass-shadow: 0 12px 30px rgba(146, 96, 52, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  --nl-dialog-bg: #fffaf4;
+  --nl-popover-bg: #fffaf4;
+
+  /* ---- 卡片 / 控件 ---- */
+  --nl-card-bg: rgba(255, 250, 244, 0.62);
+  --nl-card-bg-strong: #fffaf4;
+  --nl-control-bg: rgba(255, 255, 255, 0.52);
+  --nl-control-bg-active: #fffaf4;
+  --nl-topbar-bg: rgba(255, 250, 244, 0.72);
+  --nl-nav-bg: rgba(255, 250, 244, 0.78);
+  --nl-nav-muted: #6f5745;
+  --nl-nav-active: #8a4e14;
+
+  /* ---- 文字 ---- */
+  --nl-ink: #3a2a1e;
+  --nl-muted: #6f5745;
+  --nl-muted-strong: #4a3729;
+  --nl-muted-placeholder: rgba(111, 87, 69, 0.56);
+  --nl-muted-disabled: rgba(111, 87, 69, 0.38);
+
+  /* ---- 线 ---- */
+  --nl-border: rgba(58, 42, 28, 0.12);
+  --nl-border-soft: rgba(58, 42, 28, 0.08);
+  --nl-border-muted: rgba(58, 42, 28, 0.14);
+  --nl-border-strong: rgba(58, 42, 28, 0.24);
+  --nl-border-image: rgba(255, 255, 255, 0.92);
+
+  /* ---- 主色（实心按钮 / 链接） ---- */
+  --nl-primary: #a9581b;
+  --nl-primary-2: #a9581b;
+  --nl-primary-rgb: 169, 88, 27;
+  --nl-primary-soft: rgba(200, 140, 70, 0.14);
+  --nl-primary-line: rgba(169, 88, 27, 0.22);
+  --nl-primary-border: rgba(169, 88, 27, 0.28);
+  --nl-primary-gradient: #a9581b;
+  --nl-on-primary: #ffffff;
+
+  /* ---- 语义色 ---- */
+  --nl-accent: #8a4e14;
+  --nl-accent-rgb: 138, 78, 20;
+  --nl-success: #3e7a55;
+  --nl-success-rgb: 62, 122, 85;
+  --nl-danger: #c0392b;
+  --nl-danger-rgb: 192, 57, 43;
+  --nl-danger-soft: rgba(192, 57, 43, 0.1);
+  --nl-danger-line: rgba(192, 57, 43, 0.22);
+  --nl-danger-border: rgba(192, 57, 43, 0.3);
+  --nl-warning: #a9581b;
+
+  /* ---- 开关：off 必须可辨识（≥3:1） ---- */
+  --nl-switch-off: #d8c7b6;
+  --nl-switch-off-line: #8b7160;
+
+  /* ---- 暖色阴影（禁止黑色阴影） ---- */
+  --nl-shadow-rgb: 146, 96, 52;
+  --nl-glow: 0 0 0 1px rgba(255, 255, 255, 0.4), 0 22px 56px rgba(146, 96, 52, 0.14);
+  --nl-shadow-sm: 0 8px 22px rgba(146, 96, 52, 0.09), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  --nl-shadow-md: 0 14px 34px rgba(146, 96, 52, 0.13), inset 0 1px 0 rgba(255, 255, 255, 0.74);
+  --nl-shadow-float: 0 20px 48px rgba(146, 96, 52, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.78);
+  --nl-dialog-shadow: 0 28px 70px rgba(146, 96, 52, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.82);
+
+  /* ---- 字体阶梯 ---- */
+  --nl-title-page-size: 30px;
+  --nl-title-display-size: 34px;
+  --nl-title-section-size: 15px;
+  --nl-content-inline: 20px;
+  --nl-section-gap: 28px;
+
+  /* ---- 形状 ---- */
+  --nl-radius-float: 26px;
+  --nl-radius-card: 24px;
+  --nl-radius-row: 18px;
+  --nl-radius-thumb: 14px;
+  --nl-radius-control: 16px;
+  --nl-radius-pill: 999px;
+
+  color-scheme: light;
+}
+
+/* ---------- 全局底：暖光渐变 + 右上角径向光 ---------- */
+html {
+  background: #fdf6ec;
+}
+
+body,
+#root {
+  background:
+    radial-gradient(400px 400px at 100% 0%, rgba(231, 148, 74, 0.42), rgba(231, 148, 74, 0) 72%),
+    radial-gradient(440px 340px at 6% 42%, rgba(245, 214, 178, 0.5), rgba(245, 214, 178, 0) 72%),
+    radial-gradient(400px 320px at 100% 72%, rgba(245, 214, 178, 0.4), rgba(245, 214, 178, 0) 72%),
+    radial-gradient(520px 420px at 0% 100%, rgba(233, 160, 90, 0.16), rgba(233, 160, 90, 0) 70%),
+    linear-gradient(160deg, #fbeee0 0%, #f8e4d2 54%, #f3d3bd 100%);
+  background-attachment: fixed;
+  background-color: #fbeee0;
+}
+
+body::after {
+  background: transparent;
+}
+
+.app-layout {
+  background:
+    radial-gradient(400px 400px at 100% 0%, rgba(231, 148, 74, 0.38), rgba(231, 148, 74, 0) 72%),
+    radial-gradient(440px 340px at 6% 42%, rgba(245, 214, 178, 0.46), rgba(245, 214, 178, 0) 72%),
+    radial-gradient(400px 320px at 100% 72%, rgba(245, 214, 178, 0.36), rgba(245, 214, 178, 0) 72%),
+    radial-gradient(520px 420px at 0% 100%, rgba(233, 160, 90, 0.14), rgba(233, 160, 90, 0) 70%),
+    linear-gradient(160deg, #fbeee0 0%, #f8e4d2 54%, #f3d3bd 100%) !important;
+  background-attachment: fixed !important;
+}
+
+.app-main-scroll,
+.app-page-shell,
+.ref-page,
+.nl-home-page {
+  background: transparent !important;
+}
+
+/* 选中态：暖琥珀，不用系统蓝 */
+::selection {
+  background: rgba(233, 160, 90, 0.42);
+  color: #3a2a1e;
+}
+
+/* 键盘焦点：暖色描边，不刺眼但可见 */
+:where(button, a, input, select, textarea, [role="button"]):focus-visible {
+  outline: 2px solid rgba(169, 88, 27, 0.55);
+  outline-offset: 2px;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: #a9581b;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: rgba(111, 87, 69, 0.56);
+}
+
+/* ---------- 玻璃三级 ---------- */
+/* L1 悬浮：顶部工具条 / 底部导航 / 详情浮条 */
+.app-page-shell > header:first-child,
+.app-topbar,
+.app-bottom-nav,
+.app-detail-float-bar {
+  -webkit-backdrop-filter: blur(20px) saturate(1.05);
+  backdrop-filter: blur(20px) saturate(1.05);
+}
+
+/* L2 内容卡：只在支持背板模糊时加 blur，避免低端机掉帧 */
+@media (min-width: 0px) {
+  .app-panel {
+    -webkit-backdrop-filter: blur(12px) saturate(1.02);
+    backdrop-filter: blur(12px) saturate(1.02);
+  }
+}
+
+/* L3 列表行不给 blur（性能） */
+.nl-list-row,
+.ref-list-row {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* ---------- 降级 ---------- */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .app-panel,
+  .app-bottom-nav,
+  .app-page-shell > header:first-child {
+    background: rgba(255, 250, 244, 0.96) !important;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .app-panel,
+  .app-bottom-nav,
+  .app-page-shell > header:first-child,
+  .app-layout {
+    background: #fbf1e6 !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+}
+
+/* ---------- 长辈模式：全局放大，禁止逐屏调字号 ---------- */
+html[data-elder="true"] {
+  font-size: 118%;
+}
+
+/* ---------- 夜间暖光 ---------- */
+html[data-theme="night"] {
+  --nl-page-bg: #2a1d15;
+  --nl-ink: #f6e6d4;
+  --nl-muted: #cbb29a;
+  --nl-muted-strong: #e4cdb6;
+  --nl-card-bg: rgba(58, 40, 30, 0.7);
+  --nl-control-bg: rgba(58, 40, 30, 0.55);
+  --nl-control-bg-active: #3b2a1f;
+  --nl-topbar-bg: rgba(42, 29, 21, 0.82);
+  --nl-border-soft: rgba(246, 230, 212, 0.1);
+  --nl-border-muted: rgba(246, 230, 212, 0.16);
+  --nl-border-strong: rgba(246, 230, 212, 0.26);
+  --nl-on-primary: #fffaf4;
+}
+
+html[data-theme="night"] body,
+html[data-theme="night"] #root,
+html[data-theme="night"] .app-layout {
+  background:
+    radial-gradient(320px 320px at 100% 0%, rgba(169, 88, 27, 0.24), rgba(169, 88, 27, 0) 70%),
+    linear-gradient(165deg, #2f2118 0%, #2a1d15 60%, #241913 100%) !important;
+  background-attachment: fixed !important;
+}
+
+/* 让 body 的暖光渐变透出来：global.css 的 .app-layout::before 原本铺了纯色底 */
+.app-layout::before {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* 底部导航激活态：按设计稿 02/05/06 的琥珀圆角块（不是图标小圆点） */
+.app-bottom-nav-link.is-active {
+  margin: 0 4px;
+  min-height: 52px !important;
+  border-radius: 20px;
+  background: linear-gradient(180deg, #f7b556 0%, #f2a33c 100%);
+  color: #3a2a1e !important;
+  box-shadow: 0 8px 18px rgba(200, 120, 40, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.34);
+}
+
+.app-bottom-nav-link.is-active .app-bottom-nav-icon {
+  background: transparent !important;
+  color: #3a2a1e !important;
+}
+
+.app-bottom-nav-link.is-active .app-bottom-nav-label {
+  color: #3a2a1e !important;
+  font-weight: 700 !important;
+}
+
+/* 06「我的」设计稿用的是淡桃激活块，与 02/05 的饱和琥珀不同 */
+.app-bottom-nav.is-quiet .app-bottom-nav-link.is-active {
+  background: #f7e3cc;
+  color: #4a3729 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 6px 14px rgba(150, 95, 50, 0.12);
+}
+
+.app-bottom-nav.is-quiet .app-bottom-nav-link.is-active .app-bottom-nav-icon,
+.app-bottom-nav.is-quiet .app-bottom-nav-link.is-active .app-bottom-nav-label {
+  color: #4a3729 !important;
+}
+
