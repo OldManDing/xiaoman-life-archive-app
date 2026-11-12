@@ -3320,3 +3320,40 @@ button.set-row {
 .fam-hero-meta > * {
   flex-shrink: 0;
 }
+
+/* 07：chip 视觉压到设计稿，热区仍 44 */
+.search-chip {
+  box-sizing: border-box !important;
+  min-height: clamp(29px, 3.4vh, 32px) !important;
+  padding: 2px 15px !important;
+  font-size: 14px !important;
+}
+
+.search-chip::after {
+  content: '';
+  position: absolute;
+  inset: -7px;
+}
+
+.search-clear {
+  box-sizing: border-box;
+  width: 34px !important;
+  height: 34px !important;
+  position: relative;
+}
+
+.search-clear::after {
+  content: '';
+  position: absolute;
+  inset: -5px;
+}
+
+/* 10：卡高按 border-box 计算 */
+.msg-card {
+  box-sizing: border-box !important;
+}
+
+/* 11：分组标题按设计稿再降一档（仍 ≥13） */
+.set-group-title {
+  font-size: 15px !important;
+}
