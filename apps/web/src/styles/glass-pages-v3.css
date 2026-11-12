@@ -3457,3 +3457,19 @@ button.set-row {
 .pf-stats strong {
   font-size: 23px !important;
 }
+
+/* 05：meta 不再截断——允许换行，宁可两行也不裁字 */
+.fam-hero-meta {
+  flex-wrap: wrap !important;
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  row-gap: 2px;
+}
+
+.fam-hero-meta > * {
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: normal !important;
+  flex-shrink: 0 !important;
+}
