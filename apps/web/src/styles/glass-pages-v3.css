@@ -1363,3 +1363,94 @@
   background: rgba(255, 250, 244, 0.42) !important;
   box-shadow: none !important;
 }
+
+.is-create .app-topbar {
+  margin: 8px 0 0 !important;
+  padding: 10px 12px !important;
+  border-radius: 24px !important;
+}
+
+.is-create .app-topbar h1 {
+  font-size: 30px !important;
+}
+
+.is-create .app-topbar button:first-child {
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  background: rgba(255, 250, 244, 0.92) !important;
+  box-shadow: 0 6px 16px rgba(146, 96, 52, 0.12) !important;
+  color: var(--nl-ink) !important;
+  font-size: 26px !important;
+  font-weight: 400 !important;
+  line-height: 1 !important;
+}
+
+.is-create #record-form > section:first-of-type {
+  order: 3 !important;
+  padding: 10px 16px !important;
+  border: 1px solid rgba(255, 255, 255, 0.82) !important;
+  border-radius: 22px !important;
+  background: rgba(255, 250, 244, 0.72) !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.is-create #record-form > section:first-of-type button[aria-label^="切换孩子"] {
+  display: none !important;
+}
+
+.is-create .record-media-grid > * {
+  min-height: 148px !important;
+  border-radius: 24px !important;
+}
+
+/* create 顶栏：只把「×」做成圆形，草稿保持文字 */
+.is-create .app-topbar button[aria-label="×"] {
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  background: rgba(255, 250, 244, 0.92) !important;
+  box-shadow: 0 6px 16px rgba(146, 96, 52, 0.12) !important;
+  color: var(--nl-ink) !important;
+  font-size: 26px !important;
+  font-weight: 400 !important;
+  line-height: 1 !important;
+}
+
+.is-create .app-topbar > div > div:last-child button {
+  width: auto !important;
+  min-width: 0 !important;
+  height: 44px !important;
+  padding: 0 4px !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--nl-ink) !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  white-space: nowrap !important;
+}
+
+/* 媒体块图标去掉圆底，贴近设计稿 */
+.is-create .record-media-grid > button > span:first-child {
+  width: auto !important;
+  height: auto !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.is-create .record-media-grid > button > span:last-child {
+  font-size: 16px !important;
+}
+
+/* 日期行回到内容顶部，避免被 order 推走 */
+.is-create #record-form > section:first-of-type {
+  order: -1 !important;
+}

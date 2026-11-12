@@ -126,6 +126,7 @@ export const AppTopBar = ({
 
   return (
     <header
+      className="app-topbar"
       style={{
         position: 'sticky',
         top: 'calc(8px + env(safe-area-inset-top))',

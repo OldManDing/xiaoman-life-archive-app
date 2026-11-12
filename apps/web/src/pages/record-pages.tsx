@@ -2343,7 +2343,7 @@ const RecordForm = ({
     >
         <AppTopBar
           title={mode === 'create' ? '记一笔' : ''}
-          backLabel={mode === 'create' ? '取消' : '返回'}
+          backLabel={mode === 'create' ? '×' : '返回'}
           backVariant={mode === 'create' ? 'text' : 'icon'}
           onBack={leaveRecordForm}
           style={{ position: 'relative', top: 'auto', margin: '0 -18px 8px', padding: 'calc(var(--nl-statusbar-top) + 12px) 18px 10px' }}
@@ -2621,6 +2621,18 @@ const RecordForm = ({
                     />
                     <MediaActionButton icon={<FileAudio size={17} strokeWidth={2.2} />} label="上传语音" displayLabel="上传语音" onClick={() => triggerMediaInput(audioLibraryInputRef.current)} disabled={uploading || audioRecording} />
                   </>
+                ) : mode === 'create' ? (
+                  <>
+                    <MediaActionButton icon={<ImagePlus size={20} strokeWidth={2} />} label="添加照片" displayLabel="添加照片" onClick={() => void openNativeGalleryImages()} disabled={uploading || audioRecording} />
+                    <MediaActionButton
+                      icon={audioRecording ? <Square size={18} strokeWidth={2.4} fill="currentColor" /> : <Mic size={20} strokeWidth={2} />}
+                      label={audioRecording ? '停止录音' : '按住说话'}
+                      displayLabel={audioRecording ? `停止 ${formatRecordingTime(audioRecordingSeconds)}` : '按住说话'}
+                      onClick={() => (audioRecording ? stopAudioRecording() : void startAudioRecording())}
+                      disabled={uploading}
+                      style={audioRecording ? { color: 'var(--nl-danger)', background: 'var(--nl-danger-soft)', border: '1.5px dashed var(--nl-danger-line)' } : undefined}
+                    />
+                  </>
                 ) : (
                   <>
                     <MediaActionButton icon={<ImagePlus size={17} strokeWidth={2.2} />} label="拍照记录" displayLabel="拍照" onClick={() => void openNativePhotoCapture()} disabled={uploading || audioRecording} />
@@ -2629,6 +2641,15 @@ const RecordForm = ({
                   </>
                 )}
               </div>
+              {mode === 'create' ? (
+                <button
+                  type="button"
+                  onClick={() => setMoreMediaOpen((current) => !current)}
+                  style={{ justifySelf: 'center', minHeight: 44, border: 'none', background: 'transparent', color: 'var(--nl-accent)', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
+                >
+                  {moreMediaOpen ? '收起更多方式' : '更多方式（视频 / 语音上传）'}
+                </button>
+              ) : null}
               <p style={{ margin: '0', color: 'var(--nl-muted)', fontSize: '10.5px', lineHeight: 1.45, fontWeight: 500, textAlign: 'center' }}>{getMediaLimitHint()}</p>
               {form.record_type !== 'audio' && form.record_type !== 'video' && moreMediaOpen ? (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px', borderTop: '1px solid var(--nl-border-soft)', paddingTop: '12px' }}>
