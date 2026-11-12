@@ -3180,3 +3180,14 @@ button.set-row {
 .info-shell {
   padding-bottom: calc(34px + env(safe-area-inset-bottom)) !important;
 }
+
+/* 终审：08 获取验证码禁用态也保持可读对比 */
+.lg-code-button:disabled {
+  color: #8a4a16 !important;
+  opacity: 0.72;
+}
+
+/* 04：chips 行底部再让出一点空间，避免贴边被视口裁切 */
+.is-create .record-quick-tags {
+  padding-bottom: 6px;
+}
