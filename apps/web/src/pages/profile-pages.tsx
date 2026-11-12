@@ -1,7 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Bell, BookHeart, Unlink, Camera, CheckCircle2, ChevronRight, Copy, DownloadCloud, FileBox, FileText, HelpCircle, Home, Info, KeyRound, Lock, LogOut, Mail, Pencil, RefreshCw, Settings, Shield, ShieldCheck, Smartphone, Type, UserPlus, UserRound, Users } from 'lucide-react';
+import { Bell, BookHeart, Unlink, Camera, CheckCircle2, ChevronRight, Copy, DownloadCloud, FileBox, FileText, HelpCircle, Home, Info, KeyRound, Lock, LogOut, Mail, Moon, Pencil, RefreshCw, Settings, Shield, ShieldCheck, Smartphone, Trash2, Type, UserPlus, UserRound, Users } from 'lucide-react';
 
 import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
@@ -551,10 +551,64 @@ const NotificationListItem = ({
   );
 };
 
+const MESSAGE_AVATARS: Array<[RegExp, string]> = [
+  [/妈妈|母亲/, '/photos/people/mom.jpg'],
+  [/爸爸|父亲/, '/photos/people/dad.jpg'],
+  [/外婆|奶奶|姥姥/, '/photos/people/grandma-real.jpg'],
+];
+
+const messageAvatarFor = (item: UserNotificationItem) => {
+  const name = `${item.actor_nickname ?? ''} ${item.title ?? ''}`;
+  const hit = MESSAGE_AVATARS.find(([pattern]) => pattern.test(name));
+  return hit ? hit[1] : null;
+};
+
+const formatMessageTime = (value: string) => {
+  const time = new Date(value).getTime();
+  if (!Number.isFinite(time)) return '';
+  const diff = Date.now() - time;
+  if (diff < 60_000) return '刚刚';
+  if (diff < 3_600_000) return `${Math.floor(diff / 60_000)} 分钟前`;
+  if (diff < 86_400_000) return `${Math.floor(diff / 3_600_000)} 小时前`;
+  if (diff < 172_800_000) return '昨天';
+  return `${Math.floor(diff / 86_400_000)} 天前`;
+};
+
+const MessageCard = ({ item, onClick }: { item: UserNotificationItem; onClick: () => void }) => {
+  const title = normalizeNotificationCopy(item.title) || '消息';
+  const body = normalizeNotificationCopy(item.body);
+  const avatar = messageAvatarFor(item);
+  const isSystem = item.notification_type === 'system';
+  const hasReply = item.target_type === 'record' && Boolean(item.target_no);
+  return (
+    <button type="button" className="msg-card" onClick={onClick}>
+      {!item.read_at ? <span className="msg-dot" aria-label="未读" /> : null}
+      {isSystem ? (
+        <span className="msg-avatar is-system" aria-hidden="true">
+          <DownloadCloud size={24} strokeWidth={1.7} />
+        </span>
+      ) : avatar ? (
+        <img className="msg-avatar" src={avatar} alt="" />
+      ) : (
+        <span className="msg-avatar" aria-hidden="true">{title.slice(0, 1)}</span>
+      )}
+      <span className="msg-body">
+        <strong className="msg-title">{title}</strong>
+        {body ? <span className="msg-text">{body}</span> : null}
+      </span>
+      <span className="msg-side">
+        <span className="msg-time">{formatMessageTime(item.created_at)}</span>
+        {hasReply ? <span className="msg-reply">回应</span> : null}
+      </span>
+    </button>
+  );
+};
+
 export const MessagesPage = () => {
   const navigate = useNavigate();
   const [message, setMessage] = useState<string | null>(null);
   const [markingAll, setMarkingAll] = useState(false);
+  const [filter, setFilter] = useState<'all' | 'unread'>('all');
   const {
     data: notifications,
     loading,
@@ -566,6 +620,7 @@ export const MessagesPage = () => {
   );
   const list = notifications?.list ?? [];
   const unreadTotal = unreadCount?.unread_count ?? 0;
+  const visibleList = filter === 'unread' ? list.filter((item) => !item.read_at) : list;
 
   const markItemReadLocally = (notificationNo: string) => {
     const readAt = new Date().toISOString();
@@ -625,29 +680,32 @@ export const MessagesPage = () => {
   };
 
   return (
-    <PageShell title="消息" backTo="/profile">
-      <section style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', padding: '4px 0 2px' }}>
-        <strong style={{ color: 'var(--nl-ink)', fontSize: '15px', fontWeight: 700 }}>{unreadTotal > 0 ? `${unreadTotal} 条未读` : '暂无未读'}</strong>
-        {unreadTotal > 0 ? (
-          <button type="button" onClick={() => void markAllRead()} disabled={markingAll} style={{ ...compactSecondaryButtonStyle, minHeight: '36px', padding: '7px 12px', fontSize: '12px' }}>
-            {markingAll ? '处理中' : '全部已读'}
-          </button>
-        ) : null}
-      </section>
+    <PageShell
+      title="消息"
+      backTo="/profile"
+      action={
+        <button
+          type="button"
+          onClick={() => void markAllRead()}
+          disabled={markingAll || unreadTotal === 0}
+          style={{ minHeight: 44, border: 'none', background: 'transparent', color: unreadTotal ? 'var(--nl-accent)' : 'var(--nl-muted)', fontSize: 15, fontWeight: 500, cursor: unreadTotal ? 'pointer' : 'default' }}
+        >
+          {markingAll ? '处理中' : '全部已读'}
+        </button>
+      }
+    >
+      <div className="msg-segmented" role="tablist" aria-label="消息筛选">
+        <button type="button" role="tab" aria-selected={filter === 'all'} className={filter === 'all' ? 'is-active' : ''} onClick={() => setFilter('all')}>全部</button>
+        <button type="button" role="tab" aria-selected={filter === 'unread'} className={filter === 'unread' ? 'is-active' : ''} onClick={() => setFilter('unread')}>未读 {unreadTotal}</button>
+      </div>
       {message ? <p style={{ ...helperTextStyle, color: isPositiveStatusMessage(message) ? 'var(--nl-success)' : 'var(--nl-danger)', margin: 0 }}>{message}</p> : null}
-
-      <Panel style={{ padding: 0, overflow: 'hidden', borderRadius: 0, background: 'transparent', border: 'none', borderTop: '1px solid var(--nl-border-muted)', boxShadow: 'none' }}>
-        {loading ? <p style={{ ...helperTextStyle, padding: '14px 0', margin: 0 }}>同步中…</p> : null}
-        {!loading && list.length === 0 ? <EmptyState message="暂无消息" /> : null}
-        {list.map((item, index) => (
-          <NotificationListItem
-            key={item.notification_no}
-            item={item}
-            onClick={() => openNotification(item)}
-            isLast={index === list.length - 1}
-          />
+      {loading ? <p style={{ ...helperTextStyle, margin: 0 }}>同步中…</p> : null}
+      {!loading && visibleList.length === 0 ? <EmptyState message={filter === 'unread' ? '没有未读消息' : '暂无消息'} /> : null}
+      <div className="msg-list">
+        {visibleList.map((item) => (
+          <MessageCard key={item.notification_no} item={item} onClick={() => openNotification(item)} />
         ))}
-      </Panel>
+      </div>
     </PageShell>
   );
 };
@@ -1023,6 +1081,7 @@ const saveDisplayPreferences = (preferences: DisplayPreferences) => {
 };
 
 export const SettingsPage = () => {
+  const navigate = useNavigate();
   const [settings, setSettings] = useState<LocalSettings>(() => loadLocalSettings());
   const [message, setMessage] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
@@ -1072,83 +1131,105 @@ export const SettingsPage = () => {
     }
   };
 
+  const appVersion = import.meta.env.VITE_APP_VERSION ?? '2.0.4';
+  const clearLocalCaches = () => {
+    try {
+      const keys: string[] = [];
+      for (let index = 0; index < window.localStorage.length; index += 1) {
+        const key = window.localStorage.key(index);
+        if (key && (key.startsWith('nianlun.search.history') || key.startsWith('nianlun.media') || key.startsWith('nianlun.runtime-media'))) keys.push(key);
+      }
+      keys.forEach((key) => window.localStorage.removeItem(key));
+      setMessage('本机缓存已清理。');
+    } catch {
+      setMessage('当前环境无法清理缓存。');
+    }
+  };
+
   return (
     <PageShell title="设置" backTo="/profile">
-      <section aria-label="显示与阅读" style={{ display: 'grid', gap: 10 }}>
-        <strong style={{ color: 'var(--nl-ink)', fontSize: 15, fontWeight: 700 }}>显示与阅读</strong>
-        <Panel style={{ padding: 0, overflow: 'hidden', borderRadius: 'var(--nl-radius-row, 18px)' }}>
-          {[
-            { key: 'elder' as const, title: '长辈模式', description: '全站字放大一档，按钮和文字更好读' },
-            { key: 'night' as const, title: '夜间暖光', description: '晚上把底色换成暖棕，不刺眼' },
-          ].map((item, index) => {
-            const enabled = display[item.key];
-            return (
-              <div key={item.key} style={{ ...settingsRowStyle, minHeight: 68, padding: '14px 16px', borderBottom: index === 0 ? '1px solid var(--nl-border-soft)' : 'none', gap: 12 }}>
-                <div style={{ minWidth: 0, display: 'grid', gap: 2 }}>
-                  <strong style={{ display: 'block', color: 'var(--nl-ink)', fontSize: 15, fontWeight: 600 }}>{item.title}</strong>
-                  <span style={{ color: 'var(--nl-muted)', fontSize: 12, lineHeight: 1.5 }}>{item.description}</span>
-                </div>
-                <button
-                  type="button"
-                  aria-label={item.title}
-                  aria-pressed={enabled}
-                  style={toggleButtonStyle(enabled)}
-                  onClick={() => setDisplay((current) => ({ ...current, [item.key]: !current[item.key] }))}
-                >
-                  <span style={toggleTrackStyle(enabled)}>
-                    <span style={toggleKnobStyle(enabled)} />
-                  </span>
-                </button>
-              </div>
-            );
-          })}
-        </Panel>
+      <section className="set-group" aria-label="记录">
+        <h2 className="set-group-title">记录</h2>
+        <div className="set-card">
+          <button type="button" className="set-row" onClick={() => navigate('/profile/notifications')}>
+            <span className="set-icon"><Bell size={22} strokeWidth={1.8} /></span>
+            <span className="set-body"><strong>通知提醒</strong><small>开启家庭成员动态提醒</small></span>
+            <ChevronRight size={18} className="set-chevron" />
+          </button>
+          <button type="button" className="set-row" onClick={() => setMessage('当前默认仅家庭成员可见。')}>
+            <span className="set-icon"><ShieldCheck size={22} strokeWidth={1.8} /></span>
+            <span className="set-body"><strong>默认可见范围</strong><small>新记录默认对家人可见</small></span>
+            <span className="set-value">仅家庭成员</span>
+            <ChevronRight size={18} className="set-chevron" />
+          </button>
+          <div className="set-row is-static">
+            <span className="set-icon"><Users size={22} strokeWidth={1.8} /></span>
+            <span className="set-body"><strong>手机号搜索</strong><small>允许家人通过手机号找到你</small></span>
+            <button type="button" aria-label="手机号搜索" aria-pressed={!settings.hideMobileMask} style={toggleButtonStyle(!settings.hideMobileMask)} onClick={() => void updateSetting('hideMobileMask')} disabled={syncing}>
+              <span style={toggleTrackStyle(!settings.hideMobileMask)}><span style={toggleKnobStyle(!settings.hideMobileMask)} /></span>
+            </button>
+          </div>
+        </div>
       </section>
 
-      <section aria-label="隐私与可见范围" style={{ display: 'grid', gap: 10 }}>
-        <strong style={{ color: 'var(--nl-ink)', fontSize: 15, fontWeight: 700 }}>隐私与可见范围</strong>
-        <Panel style={{ padding: 0, overflow: 'hidden', borderRadius: 0, background: 'transparent', border: 'none', borderTop: '1px solid var(--nl-border-muted)', boxShadow: 'none' }}>
-          <button
-            type="button"
-            onClick={() => setMessage('当前默认仅家庭成员可见。')}
-            style={{ ...settingsRowStyle, width: '100%', border: 'none', borderBottom: '1px solid var(--nl-border-muted)', background: 'transparent', padding: '17px 0', textAlign: 'left', cursor: 'pointer' }}
-          >
-            <span style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0 }}>
-              <ShieldCheck size={18} color="var(--nl-primary-2)" />
-              <span style={{ color: 'var(--nl-muted-strong)', fontSize: '14px', fontWeight: 700 }}>默认可见范围</span>
-            </span>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 700 }}>
-              仅家庭成员
-              <ChevronRight size={15} />
-            </span>
-          </button>
-          <div style={{ padding: '14px 0', borderBottom: '1px solid var(--nl-border-muted)', background: 'transparent', display: 'grid', gap: '8px' }}>
-            <strong style={{ color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 700 }}>可见规则</strong>
-            <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.65 }}>家庭管理员可管理成员与权限；可编辑成员可补充记录；只读成员只能查看家庭成员可见的内容。</p>
-          </div>
+      <section className="set-group" aria-label="长辈与阅读">
+        <h2 className="set-group-title">长辈与阅读</h2>
+        <div className="set-card">
           {[
-            { key: 'hideMobileMask' as const, title: '手机号搜索', icon: Users, inverted: true },
-            { key: 'showHistoryToNewMembers' as const, title: '向新成员展示历史时间轴', icon: RefreshCw },
+            { key: 'elder' as const, icon: <Type size={22} strokeWidth={1.8} />, title: '长辈模式', description: '字号 ×1.2 · 加大行高' },
+            { key: 'night' as const, icon: <Moon size={22} strokeWidth={1.8} />, title: '夜间暖光', description: '深色底 · 低亮度' },
           ].map((item) => {
-            const Icon = item.icon;
-            const enabled = item.inverted ? !settings[item.key] : settings[item.key];
+            const enabled = display[item.key];
             return (
-              <div key={item.key} style={{ ...settingsRowStyle, padding: '17px 0', borderBottom: '1px solid var(--nl-border-muted)' }}>
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', minWidth: 0 }}>
-                  <Icon size={18} color="var(--nl-primary-2)" />
-                  <strong style={{ display: 'block', color: 'var(--nl-muted-strong)', fontSize: '14px' }}>{item.title}</strong>
-                </div>
-                <button type="button" aria-label={item.title} aria-pressed={enabled} style={toggleButtonStyle(enabled)} onClick={() => void updateSetting(item.key)} disabled={syncing}>
-                  <span style={toggleTrackStyle(enabled)}>
-                    <span style={toggleKnobStyle(enabled)} />
-                  </span>
+              <div key={item.key} className="set-row is-static">
+                <span className="set-icon">{item.icon}</span>
+                <span className="set-body"><strong>{item.title}</strong><small>{item.description}</small></span>
+                <button type="button" aria-label={item.title} aria-pressed={enabled} style={toggleButtonStyle(enabled)} onClick={() => setDisplay((current) => ({ ...current, [item.key]: !current[item.key] }))}>
+                  <span style={toggleTrackStyle(enabled)}><span style={toggleKnobStyle(enabled)} /></span>
                 </button>
               </div>
             );
           })}
-        </Panel>
+        </div>
       </section>
+
+      <section className="set-group" aria-label="数据">
+        <h2 className="set-group-title">数据</h2>
+        <div className="set-card">
+          <button type="button" className="set-row" onClick={() => navigate('/profile/help')}>
+            <span className="set-icon"><DownloadCloud size={22} strokeWidth={1.8} /></span>
+            <span className="set-body"><strong>导出与备份</strong><small>申请导出全部记录</small></span>
+            <ChevronRight size={18} className="set-chevron" />
+          </button>
+          <button type="button" className="set-row" onClick={clearLocalCaches}>
+            <span className="set-icon"><Trash2 size={22} strokeWidth={1.8} /></span>
+            <span className="set-body"><strong>清理本机缓存</strong><small>搜索记录与本地预览</small></span>
+          </button>
+        </div>
+      </section>
+
+      <section className="set-group" aria-label="关于">
+        <h2 className="set-group-title">关于</h2>
+        <div className="set-card">
+          <button type="button" className="set-row" onClick={() => navigate('/profile/legal?doc=privacy')}>
+            <span className="set-icon"><ShieldCheck size={22} strokeWidth={1.8} /></span>
+            <span className="set-body"><strong>隐私政策</strong></span>
+            <ChevronRight size={18} className="set-chevron" />
+          </button>
+          <button type="button" className="set-row" onClick={() => navigate('/profile/legal?doc=terms')}>
+            <span className="set-icon"><FileText size={22} strokeWidth={1.8} /></span>
+            <span className="set-body"><strong>用户协议</strong></span>
+            <ChevronRight size={18} className="set-chevron" />
+          </button>
+          <div className="set-row is-static">
+            <span className="set-icon"><Info size={22} strokeWidth={1.8} /></span>
+            <span className="set-body"><strong>版本 {appVersion}</strong></span>
+          </div>
+        </div>
+      </section>
+
       {message ? <p style={{ ...helperTextStyle, color: 'var(--nl-success)' }}>{message}</p> : null}
+      <p className="set-footer">年轮 · 留住每一天</p>
     </PageShell>
   );
 };
