@@ -1923,7 +1923,7 @@ export const SecurityPage = () => {
         })}
       </Panel>
       {passwordPanelOpen ? (
-      <Panel style={{ borderRadius: '8px', background: 'transparent', border: 'none', boxShadow: 'none' }}>
+      <Panel className="info-card security-form" style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: '16px 18px' }}>
         <form onSubmit={(event) => void submitPasswordChange(event)} style={rowStyle}>
           <strong>修改登录密码</strong>
           <Field label="当前密码">
@@ -1970,7 +1970,7 @@ export const SecurityPage = () => {
         </form>
       </Panel>
       ) : null}
-      <button type="button" onClick={() => navigate('/profile/account-delete')} style={{ ...secondaryButtonStyle, width: '100%', color: 'var(--nl-danger)', justifyContent: 'center', minHeight: '48px', marginTop: '10px', borderRadius: '8px', background: 'transparent', border: '1px solid var(--nl-danger-soft)' }}>
+      <button type="button" className="info-danger-row" onClick={() => navigate('/profile/account-delete')} style={{ ...secondaryButtonStyle, width: '100%', color: 'var(--nl-danger)', justifyContent: 'center', minHeight: '48px', marginTop: '10px', borderRadius: '8px', background: 'transparent', border: '1px solid var(--nl-danger-soft)' }}>
         注销账号
       </button>
     </PageShell>

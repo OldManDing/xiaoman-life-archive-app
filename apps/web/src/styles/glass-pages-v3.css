@@ -2567,3 +2567,15 @@ button.set-row {
   padding-left: 18px !important;
   padding-right: 18px !important;
 }
+
+.info-danger-row {
+  background: rgba(255, 252, 247, 0.82) !important;
+  border: 1px solid rgba(255, 255, 255, 0.86) !important;
+  border-radius: 24px !important;
+  min-height: 56px !important;
+  box-shadow: 0 12px 26px rgba(150, 95, 50, 0.08) !important;
+}
+
+.security-form strong {
+  font-size: 16px;
+}
