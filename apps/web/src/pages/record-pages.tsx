@@ -2331,7 +2331,7 @@ const RecordForm = ({
 
   return (
     <div
-      className={`record-form-page${mode === 'create' ? ' is-create' : ''}`}
+      className={`record-form-page${mode === 'create' ? ' is-create' : ' is-edit'}`}
       style={{
         minHeight: '100dvh',
         background: 'var(--nl-page-bg)',

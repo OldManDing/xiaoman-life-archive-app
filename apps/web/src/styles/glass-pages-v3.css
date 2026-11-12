@@ -2720,3 +2720,63 @@ button.set-row {
 .invite-shell section > div[style*="minHeight"] {
   border-radius: 18px;
 }
+
+/* ---------------- 15 编辑记录：沿用 create 的卡片语言 ---------------- */
+.is-edit .record-editor-title-row {
+  position: relative;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 10px !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.9) !important;
+  border-radius: 22px !important;
+  background: rgba(255, 252, 247, 0.94) !important;
+  padding: 22px 18px 10px !important;
+  box-shadow: 0 10px 24px rgba(150, 95, 50, 0.1) !important;
+}
+
+.is-edit .record-editor-title-row::before {
+  content: '标题';
+  position: absolute;
+  left: 18px;
+  top: 8px;
+  color: var(--nl-muted);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.is-edit #record-form .record-title-input {
+  min-height: 44px !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  font-size: 22px !important;
+  font-weight: 500 !important;
+}
+
+.is-edit #record-form .record-body-input {
+  min-height: 150px !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  border-radius: 22px !important;
+  background: rgba(255, 252, 247, 0.94) !important;
+  box-shadow: 0 10px 24px rgba(150, 95, 50, 0.1) !important;
+  padding: 18px 20px !important;
+  font-size: 16px !important;
+  line-height: 1.7 !important;
+}
+
+.is-edit .record-media-section {
+  border-radius: 24px !important;
+  border-color: rgba(255, 255, 255, 0.86) !important;
+  background: rgba(255, 252, 247, 0.86) !important;
+}
+
+.is-edit #record-form > section:first-of-type {
+  border-radius: 22px !important;
+  border: 1px solid rgba(255, 255, 255, 0.82) !important;
+  background: rgba(255, 252, 247, 0.72) !important;
+  padding: 10px 16px !important;
+}
