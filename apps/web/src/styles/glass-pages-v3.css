@@ -3524,3 +3524,250 @@ button.set-row {
 .tl-grid {
   gap: 10px !important;
 }
+
+/* ===== 视觉质感重置（评审：执行层，非风格层） ===== */
+:root {
+  --nl-glass-surface: rgba(255, 250, 244, 0.82);
+  --nl-glass-border: rgba(58, 42, 28, 0.06);
+  --nl-shadow-sm: 0 1px 2px rgba(146, 96, 52, 0.05), 0 6px 16px rgba(146, 96, 52, 0.06);
+  --nl-shadow-md: 0 1px 2px rgba(146, 96, 52, 0.05), 0 10px 24px rgba(146, 96, 52, 0.07);
+  --nl-shadow-float: 0 2px 6px rgba(146, 96, 52, 0.06), 0 16px 36px rgba(146, 96, 52, 0.10);
+  --nl-radius-card: 22px;
+  --nl-radius-row: 16px;
+}
+
+body,
+.app-layout {
+  background: #fcf5ec !important;
+  background-image: radial-gradient(320px at 88% 0%, rgba(233, 160, 90, 0.16), transparent 70%) !important;
+  background-attachment: scroll !important;
+}
+
+.app-layout::before {
+  display: none !important;
+}
+
+/* 内容卡：实纸，不用玻璃 */
+.app-panel,
+.rc-card,
+.msg-card,
+.ac-card,
+.set-card,
+.info-card,
+.member-row-card,
+.fam-hero,
+.nl-moment-card,
+.record-editor-card {
+  background: rgba(255, 251, 245, 0.96) !important;
+  border: 1px solid rgba(58, 42, 28, 0.07) !important;
+  box-shadow: 0 1px 2px rgba(146, 96, 52, 0.05), 0 8px 20px rgba(146, 96, 52, 0.06) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* 只有顶部胶囊与底部导航保留玻璃 */
+.app-topbar,
+.app-bottom-nav {
+  background: rgba(255, 250, 244, 0.82) !important;
+  border: 1px solid rgba(58, 42, 28, 0.06) !important;
+  box-shadow: 0 1px 2px rgba(146, 96, 52, 0.05), 0 8px 24px rgba(146, 96, 52, 0.10) !important;
+  backdrop-filter: blur(18px) saturate(1.1) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.1) !important;
+}
+
+.app-bottom-nav {
+  border-radius: 24px !important;
+}
+
+.app-bottom-nav-link.is-active,
+.app-bottom-nav.is-quiet .app-bottom-nav-link.is-active {
+  border-radius: 16px !important;
+  background: rgba(233, 160, 90, 0.20) !important;
+  color: #8a4e14 !important;
+}
+
+/* 行密度回归可用性 */
+.pf-menu-row {
+  min-height: 64px !important;
+  padding: 2px 18px !important;
+}
+
+.set-row {
+  min-height: 56px !important;
+}
+
+/* 标签与强调色不再被 alpha 洗淡 */
+.rd-chip,
+.search-chip {
+  background: rgba(233, 160, 90, 0.16) !important;
+  border: 1px solid rgba(169, 88, 27, 0.20) !important;
+  color: #5a3a22 !important;
+}
+
+.rd-body mark,
+.search-title mark {
+  background: rgba(233, 160, 90, 0.26) !important;
+  border-radius: 0 !important;
+  color: inherit !important;
+}
+
+/* 04：媒体位从虚线改成实边，降低"未完成"感 */
+.is-create .record-media-grid > * {
+  border: 1px solid rgba(169, 88, 27, 0.16) !important;
+  background: rgba(255, 251, 245, 0.9) !important;
+}
+
+/* 衬线字重统一 500 */
+.nl-home-day-title,
+.set-group-title,
+.fam-hero-title,
+.fam-detail-title,
+.info-card h2,
+.app-topbar h1 {
+  font-weight: 500 !important;
+}
+
+/* 高特异性覆盖：首页卡片阴影/描边 */
+.nl-home-day-cards .nl-moment-card.is-featured,
+.nl-home-day-cards .nl-moment-card:not(.is-featured) {
+  background: rgba(255, 251, 245, 0.96) !important;
+  border: 1px solid rgba(58, 42, 28, 0.07) !important;
+  box-shadow: 0 1px 2px rgba(146, 96, 52, 0.05), 0 8px 20px rgba(146, 96, 52, 0.06) !important;
+}
+
+.nl-home-day-cards .nl-moment-card.is-featured {
+  border-radius: 24px !important;
+}
+
+/* 导航与顶栏 */
+.app-bottom-nav,
+.app-topbar {
+  background: rgba(255, 250, 244, 0.82) !important;
+  border: 1px solid rgba(58, 42, 28, 0.06) !important;
+  box-shadow: 0 1px 2px rgba(146, 96, 52, 0.05), 0 8px 24px rgba(146, 96, 52, 0.1) !important;
+  backdrop-filter: blur(18px) saturate(1.1) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.1) !important;
+}
+
+/* ===== 尺度重置：去掉 vh 放大器，统一字号/行高/圆角轴 ===== */
+:root {
+  --nl-vgap: 12px;
+  --nl-vpad: 16px;
+  --nl-vrow: 44px;
+  --nl-vmedia: 120px;
+  --nl-vbody: 104px;
+}
+
+.pf-menu-row {
+  min-height: 44px !important;
+  padding: 2px 20px !important;
+}
+
+.pf-menu-label {
+  font-size: 14.5px !important;
+}
+
+.set-row {
+  min-height: 44px !important;
+  padding: 4px 20px !important;
+}
+
+.set-row:has(small) {
+  min-height: 52px !important;
+}
+
+.set-body strong {
+  font-size: 14px !important;
+}
+
+.set-body small {
+  font-size: 12px !important;
+}
+
+.set-group-title {
+  font-size: 13px !important;
+  letter-spacing: 0.04em;
+}
+
+.pf-logout {
+  min-height: 56px !important;
+}
+
+.app-bottom-nav {
+  padding: 6px 10px !important;
+}
+
+.app-bottom-nav-link {
+  min-height: 44px !important;
+  border-radius: 14px !important;
+}
+
+.app-bottom-nav-link svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* 字号层级：页面标题 24、姓名 22、主视觉 22、详情标题 22 */
+.app-topbar h1,
+.settings-shell .app-topbar h1,
+.messages-shell .app-topbar h1,
+.info-shell .app-topbar h1,
+.account-shell .app-topbar h1,
+.archive-shell .app-topbar h1,
+.invite-shell .app-topbar h1 {
+  font-size: 24px !important;
+  font-weight: 500 !important;
+}
+
+.pf-hero-name,
+.fam-hero-title,
+.fam-detail-title,
+.rd-title,
+.rd-hero-title,
+.nl-moment-featured-title {
+  font-size: 22px !important;
+}
+
+.nl-home-day-title {
+  font-size: 19px !important;
+}
+
+/* 圆角必须小于内边距 */
+.app-panel,
+.ac-card,
+.set-card,
+.info-card,
+.msg-card,
+.member-row-card,
+.record-editor-card,
+.fam-hero,
+.rc-card {
+  border-radius: 18px !important;
+}
+
+.ac-row,
+.set-row,
+.info-row,
+.member-row-card,
+.msg-card {
+  border-radius: 14px !important;
+}
+
+.fr-card,
+.fam-member-row {
+  border-radius: 14px !important;
+}
+
+/* 04：媒体与正文高度固定，不再随屏高 */
+.is-create .record-media-grid > * {
+  min-height: 120px !important;
+}
+
+.is-create #record-form .record-body-card .record-body-input {
+  min-height: 104px !important;
+}
+
+.is-create .record-location-row,
+.is-create .record-recorder {
+  min-height: 48px !important;
+}

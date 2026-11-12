@@ -310,12 +310,12 @@ const toggleButtonStyle = (enabled: boolean) =>
 
 const toggleTrackStyle = (enabled: boolean) =>
   ({
-    width: '51px',
-    height: '31px',
+    width: '44px',
+    height: '26px',
     borderRadius: '999px',
-    border: 'none',
-    background: enabled ? '#c0742f' : '#e7d8c6',
-    padding: '3px',
+    border: enabled ? 'none' : '1px solid #8b7160',
+    background: enabled ? '#c0742f' : '#c7b09c',
+    padding: '2px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: enabled ? 'flex-end' : 'flex-start',
@@ -323,12 +323,12 @@ const toggleTrackStyle = (enabled: boolean) =>
   }) as const;
 
 const toggleKnobStyle = (enabled: boolean) => ({
-  width: '25px',
-  height: '25px',
+  width: '20px',
+  height: '20px',
   borderRadius: '999px',
   background: '#FFFFFF',
   border: 'none',
-  boxShadow: '0 2px 6px rgba(var(--nl-shadow-rgb),0.18)',
+  boxShadow: '0 1px 3px rgba(var(--nl-shadow-rgb),0.18)',
 }) as const;
 
 const toMonthKey = (value: string | Date) => {
