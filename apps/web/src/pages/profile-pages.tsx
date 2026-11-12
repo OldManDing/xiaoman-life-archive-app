@@ -1882,7 +1882,7 @@ export const SecurityPage = () => {
 
   return (
     <PageShell className="info-shell" title="账号与安全" backTo="/profile">
-      <Panel style={{ padding: 0, overflow: 'hidden', borderRadius: 0, background: 'transparent', border: 'none', borderTop: '1px solid var(--nl-border-muted)', boxShadow: 'none' }}>
+      <Panel className="info-card" style={{ padding: 0, overflow: 'hidden', background: 'transparent', border: 'none', boxShadow: 'none' }}>
         {rows.map((item, index) => {
           const Icon = item.icon;
           const clickable = Boolean(item.onClick);
@@ -2549,7 +2549,7 @@ export const ContactPage = () => {
     <PageShell className="info-shell" title="联系我们" backTo="/profile/about">
       <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.7 }}>账号、档案、隐私和数据交付相关事项，都可以在这里找到我们。</p>
 
-      <Panel style={{ padding: 0, overflow: 'hidden', borderRadius: 0, background: 'transparent', border: 'none', borderTop: '1px solid var(--nl-border-muted)', boxShadow: 'none' }}>
+      <Panel className="info-card" style={{ padding: 0, overflow: 'hidden', background: 'transparent', border: 'none', boxShadow: 'none' }}>
         {contacts.map((item, index) => {
           const Icon = item.icon;
           const copyable = item.value.includes('@');
@@ -2646,6 +2646,7 @@ export const LegalPage = () => {
     <PageShell
       title={isAboutPage ? '关于我们' : '关于与协议'}
       backTo={backTo}
+      className="info-shell"
       action={
         <button
           type="button"

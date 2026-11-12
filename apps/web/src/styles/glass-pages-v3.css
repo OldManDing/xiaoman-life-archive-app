@@ -2541,3 +2541,16 @@ button.set-row {
 .info-row:hover {
   background: rgba(255, 244, 230, 0.6) !important;
 }
+
+.info-card > div {
+  padding-left: 18px !important;
+  padding-right: 18px !important;
+}
+
+.info-shell .app-segmented {
+  border-radius: 999px;
+}
+
+.info-shell h2 {
+  font-family: var(--nl-font-display);
+}

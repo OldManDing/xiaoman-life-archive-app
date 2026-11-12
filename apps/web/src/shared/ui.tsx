@@ -228,8 +228,8 @@ export const PageShell = ({
   </section>
 );
 
-export const Panel = ({ children, style }: { children: ReactNode; style?: CSSProperties }) => (
-  <div className="app-panel" style={{ ...cardStyle, ...style }}>{children}</div>
+export const Panel = ({ children, style, className }: { children: ReactNode; style?: CSSProperties; className?: string }) => (
+  <div className={`app-panel${className ? ` ${className}` : ''}`} style={{ ...cardStyle, ...style }}>{children}</div>
 );
 
 export const Field = ({ label, children }: { label: string; children: ReactNode }) => (
