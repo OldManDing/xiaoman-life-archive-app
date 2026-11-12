@@ -2912,3 +2912,104 @@ button.set-row {
   font-weight: 600;
   cursor: pointer;
 }
+
+/* 03：回应一句改竖向琥珀渐变 */
+.app-detail-float-bar > button:last-child {
+  background: linear-gradient(180deg, #c17a2a 0%, #a65e1b 100%) !important;
+}
+
+/* 09：大标题加粗放大、头像内层实心盘 */
+.onb-title {
+  font-size: 31px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em !important;
+}
+
+.onb-avatar {
+  position: relative;
+}
+
+.onb-avatar::after {
+  content: '';
+  position: absolute;
+  inset: 18px;
+  border-radius: 999px;
+  background: rgba(233, 160, 90, 0.22);
+  pointer-events: none;
+}
+
+/* 10：去头像白环、回应胶囊与时间 */
+.msg-avatar {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.msg-reply {
+  min-height: 31px !important;
+  min-width: 55px !important;
+  padding: 2px 12px !important;
+  font-size: 13px !important;
+  position: relative;
+}
+
+.msg-reply::after {
+  content: '';
+  position: absolute;
+  inset: -7px;
+}
+
+.msg-time {
+  font-size: 15px !important;
+}
+
+/* 11：分组标题缩小、行高压到设计稿密度、底部留白 */
+.set-group-title {
+  font-size: 23px !important;
+}
+
+.set-row {
+  min-height: 40px !important;
+  padding: 2px 18px !important;
+}
+
+.settings-shell {
+  padding-bottom: 28px !important;
+}
+
+.set-footer {
+  padding-bottom: 12px;
+}
+
+/* 06：统计数字缩小、头卡收紧 */
+.pf-stats strong {
+  font-size: 26px !important;
+}
+
+.pf-hero {
+  padding: 12px 16px !important;
+}
+
+/* 07：chip 与清除键 */
+.search-chip {
+  min-height: 29px !important;
+  padding: 2px 15px !important;
+}
+
+.search-clear {
+  width: 44px !important;
+  height: 44px !important;
+  margin-right: 0 !important;
+}
+
+/* 02：年份胶囊去描边、选中换浅橙 */
+.nl-year-pill,
+.nl-year-chip {
+  border: none !important;
+}
+
+.nl-year-pill.is-active,
+.nl-year-chip.is-active {
+  background: #f7cf98 !important;
+  color: #5a3a22 !important;
+}

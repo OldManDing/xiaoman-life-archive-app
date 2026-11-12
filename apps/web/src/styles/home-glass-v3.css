@@ -383,3 +383,10 @@
   background: rgba(255, 250, 244, 0.62) !important;
   border: 1px solid rgba(255, 255, 255, 0.6) !important;
 }
+
+.nl-home-day-title {
+  font-family: var(--nl-font-display);
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
