@@ -2066,7 +2066,7 @@ export const AccountDeletionPage = () => {
 
   return (
     <PageShell className="info-shell" title="注销账号" backTo="/profile/security">
-      <Panel style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }}>
+      <Panel className="info-card" style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: '16px 18px' }}>
         <div style={rowStyle}>
           <strong style={{ color: 'var(--nl-ink)', fontSize: '16px', fontWeight: 720 }}>注销前检查</strong>
           <p style={helperTextStyle}>系统会先检查家庭所有权和儿童信息。</p>
@@ -2116,7 +2116,7 @@ export const AccountDeletionPage = () => {
           ) : null}
         </div>
       </Panel>
-      <Panel style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}>
+      <Panel className="info-card" style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: '16px 18px' }}>
         <form style={rowStyle} onSubmit={(event) => void submit(event)}>
           <strong style={{ color: 'var(--nl-ink)', fontSize: '16px', fontWeight: 720 }}>确认信息</strong>
           <Field label="登录密码">
