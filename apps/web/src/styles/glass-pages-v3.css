@@ -4405,3 +4405,60 @@ button[aria-disabled='true'] {
 .account-shell h2 {
   line-height: 1.2;
 }
+
+/* 15：编辑态给底部保存条留足空间 */
+.is-edit.record-form-page {
+  padding-bottom: calc(220px + env(safe-area-inset-bottom)) !important;
+}
+
+/* 18：单选圈深描边，未选态也可见 */
+.account-shell input[type='radio'],
+.info-shell input[type='radio'],
+.app-page-shell input[type='radio'] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 22px !important;
+  height: 22px !important;
+  border: 2px solid #8a6a52 !important;
+  border-radius: 50% !important;
+  background: #fff !important;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.account-shell input[type='radio']:checked,
+.info-shell input[type='radio']:checked,
+.app-page-shell input[type='radio']:checked {
+  border-color: #a9581b !important;
+}
+
+.account-shell input[type='radio']:checked::after,
+.info-shell input[type='radio']:checked::after,
+.app-page-shell input[type='radio']:checked::after {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: #a9581b;
+}
+
+/* 18：保存权限条不贴屏底 */
+.account-shell {
+  padding-bottom: calc(140px + env(safe-area-inset-bottom)) !important;
+}
+
+.account-shell > button:last-child,
+.account-shell > .app-panel:last-child {
+  margin-bottom: 16px !important;
+}
+
+/* 21：最近搜索胶囊 44 高 */
+.search-chips .search-chip {
+  min-height: 44px !important;
+  height: 44px !important;
+  display: inline-flex !important;
+  align-items: center;
+  padding: 0 18px !important;
+  box-sizing: border-box !important;
+  line-height: 1.2 !important;
+}
