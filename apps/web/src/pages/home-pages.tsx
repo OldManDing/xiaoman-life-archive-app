@@ -829,13 +829,15 @@ export const SearchPage = () => {
           </section>
         ) : (
           <section>
-            <div className="search-count-row">
-              <h2 className="search-count">{searchBusy ? '正在搜索…' : `找到 ${resultTotal} 条${records.length < resultTotal ? ` · 显示前 ${records.length} 条` : ''}`}</h2>
-              <span className="search-filter">
-                <Filter size={18} strokeWidth={1.8} />
-                <span>筛选</span>
-              </span>
-            </div>
+            {searchBusy || resultTotal > 0 ? (
+              <div className="search-count-row">
+                <h2 className="search-count">{searchBusy ? '正在搜索…' : `找到 ${resultTotal} 条${records.length < resultTotal ? ` · 显示前 ${records.length} 条` : ''}`}</h2>
+                <span className="search-filter">
+                  <Filter size={18} strokeWidth={1.8} />
+                  <span>筛选</span>
+                </span>
+              </div>
+            ) : null}
             {error ? <EmptyState message={`搜索失败：${error}`} /> : null}
             {!loading && !error && records.length ? (
               <div className="search-list">
@@ -856,7 +858,7 @@ export const SearchPage = () => {
                 </span>
                 <strong style={{ fontFamily: 'var(--nl-font-display)', fontSize: 24, fontWeight: 600, letterSpacing: '0.02em', color: 'var(--nl-ink)', lineHeight: 1.3 }}>没有找到「{normalizedKeyword}」</strong>
                 <p style={{ ...helperTextStyle, margin: 0, fontSize: 13, maxWidth: 268 }}>换个词试试，或者去时间轴看看这一年</p>
-                <button type="button" onClick={() => navigate('/timeline')} style={{ ...refSecondaryButtonStyle, minHeight: 44, padding: '10px 20px', fontSize: 14, fontWeight: 500 }}>
+                <button type="button" onClick={() => navigate('/timeline')} style={{ minHeight: 44, padding: '0 24px', borderRadius: 999, border: 'none', background: 'var(--nl-primary)', color: '#fff', fontSize: 14, fontWeight: 600 }}>
                   去时间轴看看
                 </button>
               </div>

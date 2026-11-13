@@ -2668,6 +2668,7 @@ const RecordForm = ({
               {mode === 'create' ? (
                 <button
                   type="button"
+                  className="record-more-toggle"
                   onClick={() => setMoreMediaOpen((current) => !current)}
                   style={{ justifySelf: 'center', minHeight: 44, border: 'none', background: 'transparent', color: 'var(--nl-accent)', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
                 >

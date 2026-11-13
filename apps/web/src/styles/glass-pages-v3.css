@@ -4621,3 +4621,54 @@ button[aria-disabled='true'] {
     padding-top: 4px !important;
   }
 }
+
+/* 04：与设计稿对齐——隐藏重复入口、压缩媒体块、保存吸底 */
+.is-create .record-more-toggle {
+  display: none !important;
+}
+
+.is-create .record-media-grid > * {
+  min-height: 148px !important;
+}
+
+.is-create .record-inline-submit {
+  position: sticky !important;
+  bottom: calc(10px + env(safe-area-inset-bottom)) !important;
+  z-index: 20 !important;
+  margin: 14px 0 6px !important;
+  padding: 8px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 250, 244, 0.92) !important;
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  box-shadow: 0 10px 26px rgba(146, 96, 52, 0.16) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+}
+
+.is-create .record-inline-submit-button {
+  width: 100% !important;
+  min-height: 48px !important;
+  border-radius: 999px !important;
+  background: #a9581b !important;
+  color: #fff !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+}
+
+/* 04 第二轮：保存常驻底部 + 媒体块压到 150 */
+.is-create .record-inline-submit {
+  position: fixed !important;
+  left: 16px !important;
+  right: 16px !important;
+  bottom: calc(12px + env(safe-area-inset-bottom)) !important;
+  margin: 0 !important;
+}
+.is-create .record-media-grid > * {
+  height: 150px !important;
+  min-height: 150px !important;
+  max-height: 150px !important;
+  aspect-ratio: auto !important;
+}
+.record-form-page.is-create {
+  padding-bottom: calc(150px + env(safe-area-inset-bottom)) !important;
+}

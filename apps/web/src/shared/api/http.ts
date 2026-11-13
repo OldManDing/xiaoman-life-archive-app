@@ -15,7 +15,7 @@ type ApiRuntimeSnapshot = {
   isNativePlatform?: boolean;
 };
 
-const NATIVE_API_BASE_URL = 'https://webapi.xmlga.top/api/v1';
+const NATIVE_API_BASE_URL = 'http://10.0.2.2:5199/api/v1'; // TEMP local only
 
 type CapacitorWindow = Window & {
   Capacitor?: {

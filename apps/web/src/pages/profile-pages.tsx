@@ -1,7 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Bell, BookHeart, AlertCircle, Unlink, Camera, CheckCircle2, ChevronRight, Copy, DownloadCloud, FileBox, FileText, HelpCircle, Home, Info, KeyRound, Lock, LogOut, Mail, Moon, Pencil, RefreshCw, Settings, Shield, ShieldCheck, Smartphone, Trash2, Type, UserPlus, UserRound, Users } from 'lucide-react';
+import { AlertTriangle, Bell, BookHeart, AlertCircle, Unlink, Camera, CheckCircle2, ChevronRight, Copy, DownloadCloud, FileBox, FileText, HelpCircle, Home, Info, KeyRound, Lock, LogOut, Mail, Moon, Pencil, RefreshCw, Settings, Shield, ShieldCheck, Smartphone, Trash2, Type, UserPlus, UserRound, Users } from 'lucide-react';
 
 import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
@@ -1889,7 +1889,7 @@ export const MembershipPage = () => {
 export const SecurityPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [passwordPanelOpen, setPasswordPanelOpen] = useState(false);
+  const [passwordPanelOpen, setPasswordPanelOpen] = useState(true);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [newPasswordConfirm, setNewPasswordConfirm] = useState('');
@@ -1897,7 +1897,7 @@ export const SecurityPage = () => {
   const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
 
   const rows = [
-    { title: '手机号码', value: user?.mobile ?? '当前未提供', icon: Smartphone, action: '修改', onClick: () => navigate('/profile/account') },
+    { title: '手机号码', value: user?.mobile ? user.mobile.replace(/^(\d{3})\d{4}(\d{4})$/, '$1 **** $2') : '当前未提供', icon: Smartphone, action: '修改', onClick: () => navigate('/profile/account') },
     {
       title: '登录密码',
       value: '已设置',
@@ -2140,28 +2140,34 @@ export const AccountDeletionPage = () => {
     <PageShell className="info-shell" title="注销账号" backTo="/profile/security">
       <Panel className="info-card" style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: '16px 18px' }}>
         <div style={rowStyle}>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', borderRadius: '14px', background: 'rgba(var(--nl-danger-rgb, 168, 72, 44), 0.10)', border: '1px solid rgba(var(--nl-danger-rgb, 168, 72, 44), 0.22)', padding: '12px 14px' }}>
+            <AlertTriangle size={18} strokeWidth={2} style={{ color: 'var(--nl-danger)', flexShrink: 0, marginTop: 2 }} aria-hidden="true" />
+            <div style={{ display: 'grid', gap: 2 }}>
+              <strong style={{ color: 'var(--nl-danger)', fontSize: 14, fontWeight: 700 }}>注销后不可恢复</strong>
+              <p style={{ margin: 0, color: 'var(--nl-muted-strong)', fontSize: 13, lineHeight: 1.55 }}>账号、密码与家庭成员关系会立即失效。</p>
+            </div>
+          </div>
           <strong style={{ color: 'var(--nl-ink)', fontSize: '16px', fontWeight: 720 }}>注销前检查</strong>
-          <p style={helperTextStyle}>系统会先检查家庭所有权和儿童信息。</p>
           {loading ? <p style={helperTextStyle}>正在检查当前账号状态…</p> : null}
           {!loading && check ? (
             <div style={{ display: 'grid', gap: '10px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
-                <Panel style={{ padding: '14px 16px', borderRadius: '8px', boxShadow: 'none', background: 'rgba(var(--nl-surface-rgb),0.14)', border: '1px solid var(--nl-border-muted)' }}>
-                  <strong style={{ fontSize: '20px', color: 'var(--nl-ink)' }}>{check.summary.owned_family_count}</strong>
-                  <p style={helperTextStyle}>拥有家庭</p>
-                </Panel>
-                <Panel style={{ padding: '14px 16px', borderRadius: '8px', boxShadow: 'none', background: 'rgba(var(--nl-surface-rgb),0.14)', border: '1px solid var(--nl-border-muted)' }}>
-                  <strong style={{ fontSize: '20px', color: 'var(--nl-ink)' }}>{check.summary.joined_family_count}</strong>
-                  <p style={helperTextStyle}>加入家庭</p>
-                </Panel>
-                <Panel style={{ padding: '14px 16px', borderRadius: '8px', boxShadow: 'none', background: 'rgba(var(--nl-surface-rgb),0.14)', border: '1px solid var(--nl-border-muted)' }}>
-                  <strong style={{ fontSize: '20px', color: 'var(--nl-ink)' }}>{check.summary.active_child_count}</strong>
-                  <p style={helperTextStyle}>孩子档案</p>
-                </Panel>
-                <Panel style={{ padding: '14px 16px', borderRadius: '8px', boxShadow: 'none', background: 'rgba(var(--nl-surface-rgb),0.14)', border: '1px solid var(--nl-border-muted)' }}>
-                  <strong style={{ fontSize: '20px', color: 'var(--nl-ink)' }}>{check.summary.active_record_count}</strong>
-                  <p style={helperTextStyle}>有效记录</p>
-                </Panel>
+                <div style={{ padding: '12px 14px', borderRadius: '12px', background: 'rgba(var(--nl-surface-rgb),0.30)', display: 'grid', gap: 2 }}>
+                  <strong style={{ fontSize: '22px', color: 'var(--nl-ink)' }}>{check.summary.owned_family_count}</strong>
+                  <p style={{ ...helperTextStyle, margin: 0 }}>拥有家庭</p>
+                </div>
+                <div style={{ padding: '12px 14px', borderRadius: '12px', background: 'rgba(var(--nl-surface-rgb),0.30)', display: 'grid', gap: 2 }}>
+                  <strong style={{ fontSize: '22px', color: 'var(--nl-ink)' }}>{check.summary.joined_family_count}</strong>
+                  <p style={{ ...helperTextStyle, margin: 0 }}>加入家庭</p>
+                </div>
+                <div style={{ padding: '12px 14px', borderRadius: '12px', background: 'rgba(var(--nl-surface-rgb),0.30)', display: 'grid', gap: 2 }}>
+                  <strong style={{ fontSize: '22px', color: 'var(--nl-ink)' }}>{check.summary.active_child_count}</strong>
+                  <p style={{ ...helperTextStyle, margin: 0 }}>孩子档案</p>
+                </div>
+                <div style={{ padding: '12px 14px', borderRadius: '12px', background: 'rgba(var(--nl-surface-rgb),0.30)', display: 'grid', gap: 2 }}>
+                  <strong style={{ fontSize: '22px', color: 'var(--nl-ink)' }}>{check.summary.active_record_count}</strong>
+                  <p style={{ ...helperTextStyle, margin: 0 }}>有效记录</p>
+                </div>
               </div>
               {check.blockers.length ? (
                 <div style={{ borderRadius: '8px', background: 'rgba(var(--nl-primary-rgb),0.12)', border: '1px solid rgba(var(--nl-primary-rgb),0.24)', padding: '14px 16px', color: 'var(--nl-primary-2)', display: 'grid', gap: '8px' }}>
@@ -2191,11 +2197,11 @@ export const AccountDeletionPage = () => {
       <Panel className="info-card" style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: '16px 18px' }}>
         <form style={rowStyle} onSubmit={(event) => void submit(event)}>
           <strong style={{ color: 'var(--nl-ink)', fontSize: '16px', fontWeight: 720 }}>确认信息</strong>
+          <Field label={`确认文案（输入“${check?.confirm_text ?? '注销账号'}”）`}>
+            <input style={inputStyle} value={confirmText} onChange={(event) => setConfirmText(event.target.value)} placeholder={check?.confirm_text ?? '注销账号'} />
+          </Field>
           <Field label="登录密码">
             <input style={inputStyle} type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="请输入当前登录密码" />
-          </Field>
-          <Field label={`确认文案（输入“${check?.confirm_text ?? '确认注销'}”）`}>
-            <input style={inputStyle} value={confirmText} onChange={(event) => setConfirmText(event.target.value)} placeholder={check?.confirm_text ?? '确认注销'} />
           </Field>
           {message ? <p style={{ ...helperTextStyle, color: message.includes('已') ? 'var(--nl-success)' : 'var(--nl-danger)' }}>{message}</p> : null}
           {(() => {
