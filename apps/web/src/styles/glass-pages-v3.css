@@ -3771,3 +3771,221 @@ body,
 .is-create .record-recorder {
   min-height: 48px !important;
 }
+
+/* ===== 玻璃增强：让透明真正可见 ===== */
+/* 底纹：两团暖光 + 极细年轮弧线，给玻璃提供“背后的东西” */
+body,
+.app-layout {
+  background-color: #fbf3e7 !important;
+  background-image:
+    radial-gradient(420px at 14% 8%, rgba(233, 160, 90, 0.22), transparent 62%),
+    radial-gradient(360px at 96% 42%, rgba(214, 138, 96, 0.16), transparent 66%),
+    radial-gradient(300px at 40% 96%, rgba(233, 160, 90, 0.14), transparent 70%) !important;
+  background-attachment: fixed !important;
+}
+
+/* 顶部胶囊与底部导航：真正的玻璃 */
+.app-topbar,
+.app-bottom-nav {
+  background: rgba(255, 250, 244, 0.56) !important;
+  border: 1px solid rgba(255, 255, 255, 0.55) !important;
+  box-shadow:
+    0 1px 1px rgba(146, 96, 52, 0.04),
+    0 10px 26px rgba(146, 96, 52, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65) !important;
+  backdrop-filter: blur(26px) saturate(1.35) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(1.35) !important;
+}
+
+/* 内容卡：半透明磨砂，不再是不透明白纸 */
+.msg-card,
+.ac-card,
+.set-card,
+.info-card,
+.member-row-card,
+.fam-hero,
+.app-panel {
+  background: rgba(255, 251, 245, 0.72) !important;
+  border: 1px solid rgba(255, 255, 255, 0.42) !important;
+  box-shadow:
+    0 1px 1px rgba(146, 96, 52, 0.04),
+    0 10px 24px rgba(146, 96, 52, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+  backdrop-filter: blur(14px) saturate(1.15) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(1.15) !important;
+}
+
+/* 首页记录条与今日胶囊也吃玻璃 */
+.nl-home-today,
+.nl-moment-card:not(.is-featured) {
+  background: rgba(255, 251, 245, 0.68) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
+  backdrop-filter: blur(12px) saturate(1.1) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(1.1) !important;
+}
+
+/* 浮层：详情操作栏 / 新建提交条 */
+.app-detail-float-bar,
+.is-create .record-inline-submit {
+  background: rgba(255, 250, 244, 0.55) !important;
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  box-shadow:
+    0 2px 6px rgba(146, 96, 52, 0.05),
+    0 16px 34px rgba(146, 96, 52, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+  backdrop-filter: blur(24px) saturate(1.3) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(1.3) !important;
+}
+
+/* 输入类保持更实，避免文字糊 */
+.lg-field-card,
+.record-body-card,
+.record-editor-title-row,
+.record-location-row,
+.record-recorder {
+  background: rgba(255, 252, 247, 0.86) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+}
+
+/* 玻璃的“背后”：一张失焦家庭照 + 暖雾，让透明真正被看见 */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(180deg, rgba(253, 243, 230, 0.72), rgba(250, 232, 214, 0.86)),
+    url('/photos/hero-park.jpg');
+  background-size: cover, cover;
+  background-position: center, center 30%;
+  filter: blur(26px) saturate(1.15);
+  opacity: 0.55;
+}
+
+#root,
+.app-layout {
+  position: relative;
+  z-index: 1;
+}
+
+/* 玻璃再透一档 */
+.app-topbar,
+.app-bottom-nav {
+  background: rgba(255, 250, 244, 0.5) !important;
+  backdrop-filter: blur(24px) saturate(1.4) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(1.4) !important;
+}
+
+.msg-card,
+.ac-card,
+.set-card,
+.info-card,
+.member-row-card,
+.fam-hero,
+.app-panel,
+.nl-moment-card:not(.is-featured) {
+  background: rgba(255, 251, 245, 0.62) !important;
+  backdrop-filter: blur(16px) saturate(1.2) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+}
+
+.nl-home-today {
+  background: rgba(255, 251, 245, 0.58) !important;
+  backdrop-filter: blur(14px) saturate(1.2) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(1.2) !important;
+}
+
+/* 让底层照片层透出来：布局层必须透明 */
+.app-layout,
+.app-main-scroll,
+.app-page-shell,
+.app-page {
+  background: transparent !important;
+  background-image: none !important;
+}
+
+body {
+  background-color: #fbf3e7 !important;
+  background-image: none !important;
+}
+
+/* 玻璃：高特异性覆盖首页卡与导航 */
+.nl-home-day-cards .nl-moment-card.is-featured,
+.nl-home-day-cards .nl-moment-card:not(.is-featured),
+.nl-home-today {
+  background: rgba(255, 251, 245, 0.62) !important;
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  box-shadow:
+    0 1px 1px rgba(146, 96, 52, 0.04),
+    0 10px 24px rgba(146, 96, 52, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+  backdrop-filter: blur(16px) saturate(1.2) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.2) !important;
+}
+
+.nl-home-day-cards .nl-moment-card.is-featured {
+  background: rgba(255, 251, 245, 0.3) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+}
+
+.app-topbar,
+.app-bottom-nav {
+  background: rgba(255, 250, 244, 0.5) !important;
+  backdrop-filter: blur(24px) saturate(1.4) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(1.4) !important;
+}
+
+/* 背后照片更清晰一点，玻璃才看得出来 */
+body::before {
+  opacity: 0.85 !important;
+  filter: blur(20px) saturate(1.2) !important;
+  background-image:
+    linear-gradient(180deg, rgba(253, 243, 230, 0.55), rgba(250, 232, 214, 0.72)),
+    url('/photos/hero-park.jpg') !important;
+}
+
+.msg-card,
+.ac-card,
+.set-card,
+.info-card,
+.member-row-card,
+.fam-hero,
+.app-panel {
+  background: rgba(255, 251, 245, 0.55) !important;
+  backdrop-filter: blur(18px) saturate(1.25) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.25) !important;
+}
+
+/* 背景层：root 透明，让失焦照片层生效 */
+#root {
+  background: transparent !important;
+}
+
+body::before {
+  display: block !important;
+}
+
+/* 玻璃底图收敛：更暖、更淡，避免绿灰脏色 */
+body::before {
+  opacity: 0.62 !important;
+  filter: blur(24px) saturate(0.95) sepia(0.18) brightness(1.03) !important;
+  background-image:
+    linear-gradient(180deg, rgba(253, 243, 230, 0.66), rgba(250, 232, 214, 0.8)),
+    url('/photos/hero-park.jpg') !important;
+}
+
+.nl-home-day-cards .nl-moment-card.is-featured,
+.nl-home-day-cards .nl-moment-card:not(.is-featured),
+.nl-home-today,
+.msg-card,
+.ac-card,
+.set-card,
+.info-card,
+.member-row-card,
+.fam-hero,
+.app-panel {
+  background: rgba(255, 251, 245, 0.62) !important;
+}
