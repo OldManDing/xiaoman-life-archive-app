@@ -1116,15 +1116,17 @@ export const FamilyInvitePage = () => {
   return (
     <PageShell title="邀请家人" backTo="/family" className="invite-shell">
       <Panel style={{ padding: 0, overflow: 'hidden' }}>
-        <img
-          src="/photos/hero-park.jpg"
-          alt="家人在公园里一起看着孩子"
-          style={{ display: 'block', width: '100%', height: 196, objectFit: 'cover' }}
-        />
+        <div style={{ padding: '12px 12px 0' }}>
+          <img
+            src="/photos/hero-park.jpg"
+            alt="家人在公园里一起看着孩子"
+            style={{ display: 'block', width: '100%', height: 180, objectFit: 'cover', borderRadius: 18 }}
+          />
+        </div>
         <div style={{ display: 'grid', gap: 12, padding: '18px 18px 20px' }}>
           <div style={{ display: 'grid', gap: 4 }}>
             <h2 style={{ margin: 0, fontFamily: 'var(--nl-font-display)', fontSize: 24, fontWeight: 600, lineHeight: 1.3, color: 'var(--nl-ink)' }}>
-              邀请家人一起记录{activeChild?.name ? ` ${activeChild.name}` : ''}
+              邀请家人一起记录{activeChild?.name ? ` · ${activeChild.name}` : ''}
             </h2>
             <p style={{ margin: 0, color: 'var(--nl-muted)', fontSize: 13, lineHeight: 1.6 }}>对方接受后可以查看和补充</p>
           </div>

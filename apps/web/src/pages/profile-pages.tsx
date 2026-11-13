@@ -1,7 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { AlertTriangle, Bell, BookHeart, AlertCircle, Unlink, Camera, CheckCircle2, ChevronRight, Copy, DownloadCloud, FileBox, FileText, HelpCircle, Home, Info, KeyRound, Lock, LogOut, Mail, Moon, Pencil, RefreshCw, Settings, Shield, ShieldCheck, Smartphone, Trash2, Type, UserPlus, UserRound, Users } from 'lucide-react';
+import { AlertTriangle, Bell, BookHeart, AlertCircle, Unlink, Camera, Clock, CheckCircle2, ChevronRight, Copy, DownloadCloud, FileBox, FileText, HelpCircle, Home, Info, KeyRound, Lock, LogOut, Mail, Moon, Pencil, RefreshCw, Settings, Shield, ShieldCheck, Smartphone, Trash2, Type, UserPlus, UserRound, Users } from 'lucide-react';
 
 import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
@@ -2611,7 +2611,7 @@ export const ContactPage = () => {
   const contacts = [
     { icon: Mail, title: '服务邮箱', value: 'support@xmlga.top', detail: '账号、档案与服务协助。' },
     { icon: Shield, title: '隐私与数据保护', value: 'privacy@xmlga.top', detail: '儿童信息保护、权限与注销事务。' },
-    { icon: Smartphone, title: '服务时间', value: '工作日 10:00-18:00', detail: '非工作时间会在下一服务时段处理。' },
+    { icon: Clock, title: '服务时间', value: '工作日 10:00-18:00', detail: '非工作时间会在下一服务时段处理。' },
   ];
 
   const copyEmail = async (value: string) => {
@@ -2627,7 +2627,7 @@ export const ContactPage = () => {
     <PageShell className="info-shell" title="联系我们" backTo="/profile/about">
       <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.7 }}>账号、档案、隐私和数据交付相关事项，都可以在这里找到我们。</p>
 
-      <Panel className="info-card" style={{ padding: 0, overflow: 'hidden', background: 'transparent', border: 'none', boxShadow: 'none' }}>
+      <div style={{ display: 'grid', gap: 12 }}>
         {contacts.map((item, index) => {
           const Icon = item.icon;
           const copyable = item.value.includes('@');
@@ -2636,8 +2636,10 @@ export const ContactPage = () => {
               key={item.title}
               style={{
                 minHeight: copyable ? '72px' : '64px',
-                padding: '14px 0',
-                borderBottom: index === contacts.length - 1 ? 'none' : '1px solid var(--nl-border-muted)',
+                padding: '14px 16px',
+                borderRadius: 18,
+                background: 'rgba(255, 250, 244, 0.82)',
+                border: '1px solid rgba(120, 80, 40, 0.10)',
                 display: 'grid',
                 gridTemplateColumns: copyable ? '34px minmax(0, 1fr) 44px' : '34px minmax(0, 1fr)',
                 gap: '12px',
@@ -2658,26 +2660,31 @@ export const ContactPage = () => {
                   aria-label={`复制${item.title}`}
                   onClick={() => void copyEmail(item.value)}
                   style={{
-                    width: 44,
-                    height: 44,
-                    border: '1px solid var(--nl-border-muted)',
+                    minWidth: 64,
+                    minHeight: 36,
+                    padding: '0 14px',
+                    border: '1px solid var(--nl-primary-border)',
                     borderRadius: 999,
-                    background: 'var(--nl-surface-soft)',
+                    background: 'transparent',
                     color: 'var(--nl-accent)',
-                    display: 'grid',
-                    placeItems: 'center',
+                    fontSize: 13,
+                    fontWeight: 600,
                     cursor: 'pointer',
                   }}
                 >
-                  <Copy size={16} strokeWidth={2.1} />
+                  复制
                 </button>
               ) : null}
             </div>
           );
         })}
-      </Panel>
+      </div>
 
       {message ? <p style={{ ...helperTextStyle, margin: 0, color: 'var(--nl-success)' }}>{message}</p> : null}
+
+      <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.7 }}>
+        为保护孩子隐私，请勿通过邮件发送照片或视频原件；需要核对素材时我们会引导你在 App 内授权。
+      </p>
 
       <button type="button" onClick={() => navigate('/profile/help')} style={{ ...secondaryButtonStyle, minHeight: 44, width: '100%' }}>
         去帮助与反馈提交问题
