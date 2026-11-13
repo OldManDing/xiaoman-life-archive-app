@@ -4491,3 +4491,5 @@ button[aria-disabled='true'] {
 }
 
 .is-edit-inline { order: 99 !important; }
+
+.media-overlay-btn { min-width:44px !important; min-height:44px !important; box-sizing:border-box !important; }

@@ -692,6 +692,7 @@ const MediaPreviewTile = ({
       {canOpenFullscreen && hasNestedActions ? (
         <button
           type="button"
+          className="media-overlay-btn"
           aria-label={media.media_type === 'video' ? undefined : label}
           onClick={(event) => {
             event.stopPropagation();
@@ -701,7 +702,7 @@ const MediaPreviewTile = ({
             position: 'absolute',
             left: '10px',
             top: '10px',
-            minHeight: '38px',
+            minHeight: '44px',
             borderRadius: '8px',
             border: '1px solid var(--nl-border-strong)',
             background: 'var(--nl-surface-soft)',
@@ -718,6 +719,7 @@ const MediaPreviewTile = ({
       {onRemove ? (
           <button
             type="button"
+            className="media-overlay-btn"
             aria-label="移除媒体"
             onClick={(event) => {
               event.stopPropagation();
@@ -727,8 +729,8 @@ const MediaPreviewTile = ({
               position: 'absolute',
               top: '10px',
               right: '10px',
-              width: '38px',
-              height: '38px',
+              width: '44px',
+              height: '44px',
               borderRadius: '8px',
               border: '1px solid var(--nl-border-strong)',
               background: 'var(--nl-surface-soft)',
