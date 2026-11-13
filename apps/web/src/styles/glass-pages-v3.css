@@ -4592,3 +4592,32 @@ button[aria-disabled='true'] {
   color: #4a3826 !important;
   opacity: 1 !important;
 }
+
+/* 36：协议行覆盖层不再拦截链接点击 */
+.lg-agreement::after,
+.wl-agreement::after {
+  pointer-events: none !important;
+}
+
+/* 04/48：详情菜单恢复可点 */
+.rd-menu {
+  pointer-events: auto !important;
+}
+
+/* 47：欢迎页在小屏不再顶出主按钮 */
+.wl-hero {
+  height: clamp(200px, 38vh, 46vh) !important;
+  min-height: 200px !important;
+}
+
+@media (max-height: 660px) {
+  .wl-hero {
+    height: 30vh !important;
+    min-height: 160px !important;
+  }
+
+  .wl-body {
+    gap: 8px !important;
+    padding-top: 4px !important;
+  }
+}

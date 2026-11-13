@@ -623,6 +623,7 @@ export const MessagesPage = () => {
   const {
     data: notifications,
     loading,
+    error: notificationsError,
     setData: setNotifications,
   } = useAsyncData<UserNotificationsResponse>(async () => {
     const pageSize = 50;
@@ -726,7 +727,8 @@ export const MessagesPage = () => {
       </div>
       {message ? <p style={{ ...helperTextStyle, color: isPositiveStatusMessage(message) ? 'var(--nl-success)' : 'var(--nl-danger)', margin: 0 }}>{message}</p> : null}
       {loading ? <p style={{ ...helperTextStyle, margin: 0 }}>同步中…</p> : null}
-      {!loading && visibleList.length === 0 ? <EmptyState message={filter === 'unread' ? '没有未读消息' : '暂无消息'} /> : null}
+      {notificationsError ? <EmptyState message={`消息加载失败：${notificationsError}`} /> : null}
+      {!loading && !notificationsError && visibleList.length === 0 ? <EmptyState message={filter === 'unread' ? '没有未读消息' : '暂无消息'} /> : null}
       <div className="msg-list">
         {visibleList.map((item) => (
           <MessageCard key={item.notification_no} item={item} onClick={() => openNotification(item)} />
@@ -2798,7 +2800,7 @@ export const ErrorPage = () => {
   return (
     <PageShell title="页面加载失败" onBack={() => navigate('/home')} className="error-shell">
       <div style={{ display: 'grid', justifyItems: 'center', gap: 16, padding: '56px 8px 24px', textAlign: 'center' }}>
-        <span aria-hidden="true" style={{ width: 96, height: 96, borderRadius: '50%', background: 'rgba(255, 250, 244, 0.72)', border: '1px solid rgba(255, 255, 255, 0.72)', display: 'grid', placeItems: 'center', color: 'var(--nl-accent)', boxShadow: '0 12px 30px rgba(146, 96, 52, 0.14)' }}>
+        <span aria-hidden="true" style={{ width: 96, height: 96, borderRadius: '50%', background: 'var(--nl-glass-surface)', border: '1px solid var(--nl-glass-border)', display: 'grid', placeItems: 'center', color: 'var(--nl-accent)', boxShadow: 'var(--nl-shadow-soft)' }}>
           <AlertCircle size={36} strokeWidth={1.7} />
         </span>
         <h2 style={{ margin: 0, fontFamily: 'var(--nl-font-display)', fontSize: 24, fontWeight: 600, lineHeight: 1.3, color: 'var(--nl-ink)' }}>暂时打不开这一页</h2>

@@ -2155,17 +2155,17 @@ const RecordForm = ({
       }
       if (!title) {
         setError('发布前请填写标题');
-        titleInputRef.current?.focus();
+        titleInputRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
         return;
       }
       if (!contentText) {
         setError('发布前请填写正文');
-        contentInputRef.current?.focus();
+        contentInputRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
         return;
       }
       if (!form.event_time) {
         setError('发布前请选择发生时间');
-        window.setTimeout(() => timeInputRef.current?.focus(), 0);
+        timeInputRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' });
         return;
       }
       if (form.record_type === 'video' && mediaNos.length === 0) {
@@ -3553,10 +3553,16 @@ export const ViewRecordPage = () => {
               boxShadow: '0 14px 34px rgba(146, 96, 52, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.7)',
             }}
           >
-            <button type="button" style={{ ...secondaryButtonStyle, minHeight: 48, width: '100%', borderRadius: 999 }} onClick={() => navigate(`/record/${data.record_no}/edit`)}>
-              编辑
-            </button>
-            <button type="button" style={{ ...primaryButtonStyle, minHeight: 48, width: '100%', borderRadius: 999 }} onClick={() => navigate(`/record/${data.record_no}/edit?focus=content`)}>
+            {canManageRecord ? (
+              <button type="button" style={{ ...secondaryButtonStyle, minHeight: 48, width: '100%', borderRadius: 999 }} onClick={() => navigate(`/record/${data.record_no}/edit`)}>
+                编辑
+              </button>
+            ) : null}
+            <button
+              type="button"
+              style={{ ...primaryButtonStyle, minHeight: 48, width: '100%', borderRadius: 999, gridColumn: canManageRecord ? undefined : '1 / -1' }}
+              onClick={() => navigate(`/record/create?focus=content&reply_to=${data.record_no}`)}
+            >
               回应一句
             </button>
           </div>,

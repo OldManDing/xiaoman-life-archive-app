@@ -44,7 +44,7 @@ const onboardingSkipKey = (userNo?: string | null) => `nianlun.onboarding.skippe
 const hasSkippedOnboarding = (userNo?: string | null) => {
   if (typeof window === 'undefined') return false;
   try {
-    return window.sessionStorage.getItem(onboardingSkipKey(userNo)) === '1';
+    return window.localStorage.getItem(onboardingSkipKey(userNo)) === '1' || window.sessionStorage.getItem(onboardingSkipKey(userNo)) === '1';
   } catch {
     return false;
   }
@@ -52,8 +52,13 @@ const hasSkippedOnboarding = (userNo?: string | null) => {
 const rememberOnboardingSkip = (userNo?: string | null, skipped = true) => {
   if (typeof window === 'undefined') return;
   try {
-    if (skipped) window.sessionStorage.setItem(onboardingSkipKey(userNo), '1');
-    else window.sessionStorage.removeItem(onboardingSkipKey(userNo));
+    if (skipped) {
+      window.localStorage.setItem(onboardingSkipKey(userNo), '1');
+      window.sessionStorage.setItem(onboardingSkipKey(userNo), '1');
+    } else {
+      window.localStorage.removeItem(onboardingSkipKey(userNo));
+      window.sessionStorage.removeItem(onboardingSkipKey(userNo));
+    }
   } catch {
     // 部分内嵌 WebView 会禁用 storage，跳过仍应在当前内存状态内生效
   }

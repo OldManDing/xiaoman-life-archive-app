@@ -375,14 +375,15 @@ export const LoginPage = () => {
   const [acceptedAgreement, setAcceptedAgreement] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [sending, setSending] = useState(false);
-  const [countdown, setCountdown] = useState(0);
+  const [countdownEnd, setCountdownEnd] = useState(0);
+  const [clock, setClock] = useState(() => Date.now());
   const [error, setError] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
   const inviteCode = (searchParams.get('invite') ?? '').trim();
 
   const normalizedPhone = phone.trim();
   const canSubmit = acceptedAgreement && /^1\d{10}$/.test(normalizedPhone) && code.trim().length >= 4;
-  const canSendCode = /^1\d{10}$/.test(normalizedPhone) && countdown <= 0 && !sending;
+  const countdown = countdownEnd ? Math.max(0, Math.ceil((countdownEnd - clock) / 1000)) : 0;
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -391,18 +392,27 @@ export const LoginPage = () => {
   }, [isAuthenticated, navigate, needsOnboarding]);
 
   useEffect(() => {
-    if (countdown <= 0) return undefined;
-    const timer = window.setTimeout(() => setCountdown((current) => Math.max(0, current - 1)), 1000);
-    return () => window.clearTimeout(timer);
-  }, [countdown]);
+    if (!countdownEnd) return undefined;
+    if (countdownEnd <= Date.now()) {
+      setCountdownEnd(0);
+      return undefined;
+    }
+    const timer = window.setInterval(() => setClock(Date.now()), 500);
+    return () => window.clearInterval(timer);
+  }, [countdownEnd]);
 
   const sendCode = async () => {
-    if (!canSendCode) return;
+    if (countdown > 0 || sending) return;
+    if (!/^1\d{10}$/.test(normalizedPhone)) {
+      setError('请输入 11 位手机号');
+      return;
+    }
     setSending(true);
     setError(null);
     try {
       await webApi.sendCode(normalizedPhone);
-      setCountdown(60);
+      setClock(Date.now());
+      setCountdownEnd(Date.now() + 60_000);
     } catch (err) {
       setError(err instanceof Error ? err.message : '验证码发送失败，请稍后重试');
     } finally {
@@ -471,7 +481,7 @@ export const LoginPage = () => {
               onChange={(event) => setCode(event.target.value.replace(/[^\d]/g, '').slice(0, 6))}
               placeholder="验证码"
             />
-            <button type="button" className="lg-code-button" onClick={() => void sendCode()} disabled={!canSendCode}>
+            <button type="button" className="lg-code-button" onClick={() => void sendCode()} disabled={countdown > 0 || sending}>
               {countdown > 0 ? `${countdown}s` : sending ? '发送中' : '获取验证码'}
             </button>
           </div>
@@ -553,6 +563,7 @@ export const OnboardingChildPage = () => {
 
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
+    if (submitting) return;
     setSubmitting(true);
     setError(null);
     try {

@@ -152,11 +152,11 @@ export const AppTopBar = ({
       >
         <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
           {onBack ? (
-            <button type="button" aria-label={backLabel} onClick={onBack} style={resolvedBackStyle}>
+            <button type="button" aria-label={backLabel === '×' ? '返回' : backLabel} onClick={onBack} style={resolvedBackStyle}>
               {backContent}
             </button>
           ) : backTo ? (
-            <Link to={backTo} aria-label={backLabel} style={resolvedBackStyle}>
+            <Link to={backTo} aria-label={backLabel === '×' ? '返回' : backLabel} style={resolvedBackStyle}>
               {backContent}
             </Link>
           ) : (
