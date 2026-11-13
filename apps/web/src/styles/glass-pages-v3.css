@@ -4886,3 +4886,51 @@ body::before {
   margin-bottom: 6px !important;
   padding-top: 2px;
 }
+
+/* 06：退出二次确认、消息数字角标、统计数字放大 */
+.pf-logout small {
+  display: block !important;
+  margin-top: 2px !important;
+  color: var(--nl-muted) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+
+.pf-menu-badge {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: #e9a05a !important;
+  color: #fff !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+.pf-stat-num {
+  font-size: 30px !important;
+}
+
+/* 03：标题与正文按设计稿放大 */
+.rd-title {
+  font-size: 28px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+}
+
+.rd-copy,
+.rd-body {
+  font-size: 16px !important;
+  line-height: 1.8 !important;
+}
+
+/* 03：里程碑标签实心 */
+.rd-tag.is-milestone,
+.rd-tag--milestone {
+  background: #f5ab52 !important;
+  border-color: transparent !important;
+  color: #4a2f12 !important;
+}

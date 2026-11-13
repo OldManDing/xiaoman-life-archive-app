@@ -434,7 +434,7 @@ export const ProfilePage = () => {
     { key: 'settings', icon: Settings, label: '设置', onClick: () => navigate('/profile/settings') },
     { key: 'security', icon: ShieldCheck, label: '账号与安全', onClick: () => navigate('/profile/security') },
     { key: 'font', icon: Type, label: '字体大小', value: '标准', onClick: () => navigate('/profile/settings') },
-    { key: 'notifications', icon: Bell, label: '通知管理', onClick: () => navigate('/profile/notifications') },
+    { key: 'export', icon: DownloadCloud, label: '导出与备份', onClick: () => navigate('/profile/export') },
     { key: 'help', icon: HelpCircle, label: '帮助与反馈', onClick: () => navigate('/profile/help') },
   ];
 
@@ -481,7 +481,7 @@ export const ProfilePage = () => {
               </span>
               <span className="pf-menu-label">{label}</span>
               {key === 'messages' ? (
-                unreadCount ? <span className="pf-menu-muted">未读</span> : null
+                unreadCount ? <span className="pf-menu-badge">{unreadCount > 99 ? '99+' : unreadCount}</span> : null
               ) : value ? (
                 <span className="pf-menu-value">{value}</span>
               ) : null}

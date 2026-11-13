@@ -792,7 +792,6 @@ export const SearchPage = () => {
       </header>
 
       <main className="search-main">
-        {!normalizedKeyword ? (
         <section>
           <h2 className="search-recent-title">最近搜索</h2>
           <div className="search-chips">
@@ -801,7 +800,6 @@ export const SearchPage = () => {
             ))}
           </div>
         </section>
-        ) : null}
 
         {!normalizedKeyword ? (
           <section>
