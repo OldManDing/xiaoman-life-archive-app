@@ -325,6 +325,12 @@ export const WelcomePage = () => {
         <img src="/photos/welcome-hero.jpg" alt="孩子在水边张开手臂" />
         <div className="wl-hero-scrim" aria-hidden="true" />
       </div>
+      <div className="wl-dots" aria-hidden="true">
+        <span className="is-active" />
+        <span />
+        <span />
+        <span />
+      </div>
 
       <div className="wl-body">
         <h1 className="wl-title">把每一个第一次，<br />都留下来</h1>

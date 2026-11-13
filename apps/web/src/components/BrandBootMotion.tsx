@@ -162,20 +162,13 @@ export const BrandBootMotion = ({ showRecovery = false, onRetry, onExit }: Brand
     </style>
 
     <section style={motionBlockStyle}>
-      <div aria-hidden="true" style={logoStageStyle}>
-        <span className="nl-boot-ring" />
-        <span className="nl-boot-ring" />
-        <span className="nl-boot-ring" />
-        <img className="nl-boot-logo" src="/brand/nianlun-logo-192.png" alt="" width={96} height={96} style={logoStyle} />
-      </div>
+      <strong style={{ color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '64px', lineHeight: 1.02, fontWeight: 600, letterSpacing: '0.04em' }}>年轮</strong>
+      <span aria-hidden="true" style={{ width: 8, height: 8, borderRadius: '999px', background: 'var(--nl-accent)' }} />
+      <span aria-hidden="true" style={{ width: 96, height: 1, background: 'rgba(120, 80, 40, 0.22)' }} />
+      <p style={{ margin: 0, color: 'var(--nl-muted-strong)', fontSize: '13px', fontWeight: 500, letterSpacing: '0.06em' }}>正在准备你的档案</p>
 
-      <div style={{ display: 'grid', gap: '7px', justifyItems: 'center', minWidth: 0 }}>
-        <strong style={{ color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '26px', lineHeight: 1.1, fontWeight: 780 }}>年轮</strong>
-        <span style={{ color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 520 }}>家庭影像档案</span>
-      </div>
-
-      <div role="progressbar" aria-label="正在加载" style={timelineTrackStyle}>
-        <span className="nl-boot-progress" />
+      <div role="progressbar" aria-label="正在准备你的档案" style={{ ...timelineTrackStyle, width: 'min(100%, 220px)', height: '6px', background: 'rgba(120, 80, 40, 0.14)' }}>
+        <span style={{ display: 'block', width: '40%', height: '100%', borderRadius: '999px', background: 'var(--nl-accent)' }} />
       </div>
     </section>
 

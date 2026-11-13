@@ -965,6 +965,7 @@ export const FamilyMemberDetailPage = () => {
                   })}
                   <button
                     type="button"
+                    className="fam-detail-save"
                     onClick={() => pendingRole && void changeRole(pendingRole)}
                     disabled={!canEditRole || updating || !pendingRole || pendingRole === member.role}
                     style={{ ...primaryButtonStyle, width: '100%', marginTop: 4, opacity: !canEditRole || !pendingRole || pendingRole === member.role ? 0.6 : 1 }}
