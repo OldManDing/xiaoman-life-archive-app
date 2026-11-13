@@ -88,7 +88,8 @@ export const resolveApiBaseUrl = (snapshot: ApiRuntimeSnapshot = getRuntimeSnaps
   const isNativeRuntime = Boolean(snapshot.isNativePlatform) || isNativeOrigin(snapshot.origin);
 
   if (isNativeRuntime) {
-    if (configuredBaseUrl && isAbsoluteHttpUrl(configuredBaseUrl) && !/https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/i.test(configuredBaseUrl)) {
+    const isDebugHost = /https?:\/\/(localhost|127\.0\.0\.1|10\.0\.2\.2|192\.168\.\d+\.\d+)(:\d+)?/i;
+    if (configuredBaseUrl && isAbsoluteHttpUrl(configuredBaseUrl) && (configuredBaseUrl.startsWith('https://') || isDebugHost.test(configuredBaseUrl))) {
       return configuredBaseUrl;
     }
 
@@ -124,6 +125,32 @@ const http = axios.create({
 });
 
 let refreshPromise: Promise<string | null> | null = null;
+let sessionEpoch = 0;
+const sessionExpiredListeners = new Set<() => void>();
+
+export const onSessionExpired = (listener: () => void) => {
+  sessionExpiredListeners.add(listener);
+  return () => {
+    sessionExpiredListeners.delete(listener);
+  };
+};
+
+export const bumpSessionEpoch = () => {
+  sessionEpoch += 1;
+};
+
+const expireSession = () => {
+  bumpSessionEpoch();
+  clearAccessToken();
+  refreshPromise = null;
+  sessionExpiredListeners.forEach((listener) => {
+    try {
+      listener();
+    } catch {
+      /* ignore listener errors */
+    }
+  });
+};
 const shouldSkipRefresh = (url?: string) =>
   Boolean(url && ['/auth/login', '/auth/register', '/auth/send-code', '/auth/refresh'].some((path) => url.includes(path)));
 
@@ -145,18 +172,20 @@ http.interceptors.response.use(
     }
 
     if (shouldSkipRefresh(originalRequest.url)) {
-      clearAccessToken();
+      expireSession();
       return Promise.reject(toUserFacingError(error));
     }
 
     originalRequest._retry = true;
 
     try {
+      const epochAtStart = sessionEpoch;
       if (!refreshPromise) {
         refreshPromise = http
           .post('/auth/refresh')
           .then((response) => {
             const nextToken = response.data?.data?.access_token ?? null;
+            if (epochAtStart !== sessionEpoch) return null;
             setAccessToken(nextToken);
             return nextToken;
           })
@@ -166,15 +195,18 @@ http.interceptors.response.use(
       }
 
       const nextToken = await refreshPromise;
+      if (epochAtStart !== sessionEpoch) {
+        return Promise.reject(new Error('登录状态已切换，请重试'));
+      }
       if (!nextToken) {
-        clearAccessToken();
+        expireSession();
         return Promise.reject(new Error('登录状态已失效，请重新登录'));
       }
 
       originalRequest.headers.Authorization = `Bearer ${nextToken}`;
       return http(originalRequest);
     } catch (refreshError) {
-      clearAccessToken();
+      expireSession();
       if (axios.isAxiosError(refreshError)) {
         return Promise.reject(toUserFacingError(refreshError));
       }

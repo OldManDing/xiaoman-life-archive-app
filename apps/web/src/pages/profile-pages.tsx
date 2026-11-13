@@ -849,9 +849,9 @@ export const NotificationSettingsPage = () => {
     {
       title: '提醒',
       items: [
-        { key: 'daily', label: '每天提醒我记录', desc: '晚上 8:00' },
-        { key: 'birthday', label: '孩子生日提醒', desc: '提前 3 天' },
-        { key: 'milestone', label: '里程碑提醒' },
+        { key: 'daily', label: '每天提醒我记录', desc: '暂未开放 · 需系统推送支持' },
+        { key: 'birthday', label: '孩子生日提醒', desc: '暂未开放 · 需系统推送支持' },
+        { key: 'milestone', label: '里程碑提醒', desc: '暂未开放 · 需系统推送支持' },
       ],
     },
     {
@@ -888,10 +888,11 @@ export const NotificationSettingsPage = () => {
             <div className="set-card">
               {group.items.map((item, index) => {
                 const enabled = Boolean(notifyPrefs[item.key]);
+                const unsupported = ['daily', 'birthday', 'milestone'].includes(item.key);
                 return (
-                  <div className={index === group.items.length - 1 ? 'set-row is-static is-last' : 'set-row is-static'} key={item.key}>
+                  <div className={index === group.items.length - 1 ? 'set-row is-static is-last' : 'set-row is-static'} key={item.key} style={unsupported ? { opacity: 0.45 } : undefined}>
                     <span className="set-body"><strong>{item.label}</strong>{item.desc ? <small>{item.desc}</small> : null}</span>
-                    <button type="button" aria-label={item.label} aria-pressed={enabled} style={toggleButtonStyle(enabled)} onClick={() => toggleNotifyPref(item.key)}>
+                    <button type="button" aria-label={item.label} aria-pressed={enabled} disabled={unsupported} style={toggleButtonStyle(enabled)} onClick={() => { if (!unsupported) toggleNotifyPref(item.key); }}>
                       <span style={toggleTrackStyle(enabled)}><span style={toggleKnobStyle(enabled)} /></span>
                     </button>
                   </div>
@@ -1117,6 +1118,7 @@ export const SettingsPage = () => {
   const [message, setMessage] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [display, setDisplay] = useState<DisplayPreferences>(readDisplayPreferences);
+  const preferenceSyncSeqRef = useRef(0);
 
   useEffect(() => {
     applyDisplayPreferences(display);
@@ -1128,7 +1130,7 @@ export const SettingsPage = () => {
     void webApi
       .preferences()
       .then((preferences) => {
-        if (!active) return;
+        if (!active || preferenceSyncSeqRef.current > 0) return;
         const next = preferencesToLocalSettings(preferences);
         setSettings(next);
         saveLocalSettings(next);
@@ -1144,6 +1146,8 @@ export const SettingsPage = () => {
 
   const updateSetting = async (key: keyof LocalSettings) => {
     const next = { ...settings, [key]: !settings[key] };
+    const seq = preferenceSyncSeqRef.current + 1;
+    preferenceSyncSeqRef.current = seq;
     setSettings(next);
     saveLocalSettings(next);
     setSyncing(true);
@@ -1151,14 +1155,17 @@ export const SettingsPage = () => {
 
     try {
       const synced = await webApi.updatePreferences(localSettingsToPreferences(next));
+      if (seq !== preferenceSyncSeqRef.current) return;
       const syncedSettings = preferencesToLocalSettings(synced);
       setSettings(syncedSettings);
       saveLocalSettings(syncedSettings);
       setMessage('设置已同步到账号。');
     } catch {
-      setMessage('设置已保存在本机，服务器同步稍后可重试。');
+      if (seq === preferenceSyncSeqRef.current) {
+        setMessage('设置已保存在本机，服务器同步稍后可重试。');
+      }
     } finally {
-      setSyncing(false);
+      if (seq === preferenceSyncSeqRef.current) setSyncing(false);
     }
   };
 

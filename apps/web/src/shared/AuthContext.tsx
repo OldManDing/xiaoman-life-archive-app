@@ -6,6 +6,7 @@ import { webApi, type LoginPayload, type RegisterPayload } from './api/webApi';
 import { unregisterHmsDeviceToken } from './hmsPush';
 import { cancelScheduledNativeNotifications } from './nativeNotifications';
 import { setLocalSettingsScope } from './localSettings';
+import { bumpSessionEpoch, onSessionExpired } from './api/http';
 
 interface AuthContextValue {
   accessToken: string | null;
@@ -167,6 +168,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     void bootstrap();
   }, [bootstrap]);
 
+
   const login = useCallback(
     async (payload: LoginPayload) => {
       const session = await webApi.login(payload);
@@ -185,6 +187,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const clearSession = useCallback(() => {
     bootstrapRunRef.current += 1;
+    bumpSessionEpoch();
     clearAccessToken();
     setLocalSettingsScope(null);
     setAccessTokenState(null);
@@ -206,6 +209,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       clearSession();
     }
   }, [clearSession]);
+
+  useEffect(() => onSessionExpired(() => clearSession()), [clearSession]);
 
   const setActiveChild = useCallback((child: ChildRecord | null) => {
     setActiveChildState(child);

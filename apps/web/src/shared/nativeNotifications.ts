@@ -77,7 +77,32 @@ const canScheduleNotificationItem = (item: UserNotificationItem) => {
   return true;
 };
 
+export const readNotificationPrefs = (): Record<string, boolean> => {
+  const defaults = { familyRecord: true, familyReply: true, familyJoin: true, quiet: false };
+  try {
+    const raw = window.localStorage.getItem('nianlun:notification-prefs');
+    return raw ? { ...defaults, ...(JSON.parse(raw) as Record<string, boolean>) } : defaults;
+  } catch {
+    return defaults;
+  }
+};
+
+const isQuietHours = (now: Date) => {
+  const hour = now.getHours();
+  return hour >= 22 || hour < 7;
+};
+
+const notificationPrefKeyForItem = (item: UserNotificationItem) => {
+  const target = `${item.target_type ?? ''} ${item.title ?? ''}`.toLowerCase();
+  if (/join|成员|加入/.test(target)) return 'familyJoin';
+  if (/reply|comment|回应|评论/.test(target)) return 'familyReply';
+  return 'familyRecord';
+};
+
 export const scheduleNativeNotificationsForNewItems = async (items: UserNotificationItem[]) => {
+  const prefs = readNotificationPrefs();
+  if (prefs.quiet && isQuietHours(new Date())) return;
+  items = items.filter((item) => prefs[notificationPrefKeyForItem(item)] !== false);
   if (!items.length || !isNativeNotificationAvailable()) return;
   if (getHmsPushConnectionStatus() === 'registered') return;
   const permissionStatus = await getNativeNotificationPermissionStatus();
