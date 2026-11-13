@@ -819,7 +819,7 @@ export const FamilyMemberDetailPage = () => {
       {member ? (
         <>
           <Panel style={{ display: 'grid', gap: '18px', padding: '8px 0 22px', borderRadius: 0, background: 'transparent', border: 'none', boxShadow: 'none' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '72px minmax(0, 1fr)', gap: '16px', alignItems: 'center' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '96px minmax(0, 1fr)', gap: '16px', alignItems: 'center' }}>
               <FamilyAvatar src={resolveFamilyMemberAvatarSrc(member, user)} mediaNo={resolveFamilyMemberAvatarMediaNo(member, user)} label={memberName} size={96} />
               <div style={{ minWidth: 0, display: 'grid', gap: '7px', justifyItems: 'start' }}>
                 <h2 title={memberName} style={{ margin: 0, width: '100%', color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '22px', lineHeight: 1.12, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{memberName}</h2>

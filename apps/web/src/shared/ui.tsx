@@ -1093,7 +1093,7 @@ export const compactSecondaryButtonStyle: CSSProperties = {
 
 export const helperTextStyle: CSSProperties = {
   margin: 0,
-  fontSize: '12px',
+  fontSize: '13px',
   lineHeight: 1.55,
   color: 'var(--nl-muted)',
 };

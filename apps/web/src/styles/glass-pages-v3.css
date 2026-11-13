@@ -4274,3 +4274,134 @@ body::before {
 .is-create .app-topbar > div > div:last-child {
   gap: 6px;
 }
+
+/* ===== 第三轮 QA：对比度与最小字号 ===== */
+:root {
+  --nl-muted: #6b5644;
+  --nl-muted-strong: #57422f;
+}
+
+.ac-label {
+  color: #6b5644 !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #7a6754 !important;
+  opacity: 1 !important;
+}
+
+/* 帮助/反馈等页面的辅助文字提到 13 */
+.info-shell p,
+.info-shell small {
+  font-size: 13px;
+}
+
+.info-shell .app-segmented,
+.info-shell .app-segmented * {
+  font-size: 13px;
+}
+
+/* 行内“修改”等文字按钮：44 热区 + 13 字 */
+.info-card button,
+.info-row button,
+.ac-card button {
+  font-size: 13px !important;
+}
+
+/* 页脚版权 13 */
+.set-footer,
+.info-shell > p:last-child {
+  font-size: 13px !important;
+}
+
+/* 分段控件统一 13 */
+.app-segmented,
+.app-segmented * {
+  font-size: 13px;
+}
+
+/* ===== 第三轮 P0 收口 ===== */
+.record-media-section > button,
+.fam-hero-cta,
+.search-chip {
+  min-height: 44px !important;
+}
+
+.fam-hero-cta {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  padding: 0 14px !important;
+}
+
+.search-chip {
+  padding: 0 16px !important;
+  display: inline-flex;
+  align-items: center;
+}
+
+.search-clear {
+  background: #7d6c5c !important;
+  color: #fff !important;
+}
+
+/* 媒体预览操作 44 */
+.record-media-grid button,
+.record-media-grid a,
+.record-media-preview button,
+.media-preview button {
+  min-height: 44px;
+}
+
+/* 12–13px 的小字统一抬到 13 */
+.record-media-grid small,
+.record-media-grid span,
+.perm-card p,
+.perm-card span,
+.member-row-card p,
+.member-row-card span,
+.archive-shell span,
+.record-media-item span {
+  font-size: 13px !important;
+}
+
+/* 禁用态文字对比 */
+button:disabled,
+button[aria-disabled='true'] {
+  color: #6b5644 !important;
+}
+
+/* 27 底部按钮不被裁 */
+.info-shell > .app-panel:last-of-type {
+  margin-bottom: 12px;
+}
+
+/* 15：编辑态正文 label 不被卡片压住 */
+.is-edit .record-field-label {
+  margin-bottom: 8px !important;
+  padding-left: 2px;
+  position: relative;
+  z-index: 2;
+}
+
+.is-edit #record-form .record-body-input {
+  margin-top: 2px !important;
+}
+
+/* 18：权限/成员文字对比 + 底部保存不被裁 */
+.perm-card,
+.member-row-card,
+.account-shell p,
+.account-shell span {
+  color: #5a4636;
+}
+
+.account-shell {
+  padding-bottom: calc(120px + env(safe-area-inset-bottom)) !important;
+}
+
+/* 18 头像列已改 96，名字不再被压 */
+.account-shell h2 {
+  line-height: 1.2;
+}
