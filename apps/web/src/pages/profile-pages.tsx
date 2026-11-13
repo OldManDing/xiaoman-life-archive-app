@@ -336,15 +336,22 @@ const toMonthKey = (value: string | Date) => {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 };
 
-const reportRecordsTimeoutMs = 4500;
-
-const listRecordsForReport = (childNo: string) =>
-  Promise.race<RecordSummary[]>([
-    webApi.listRecords({ child_no: childNo, page: 1, page_size: 100 }).then((result) => result.list),
-    new Promise<RecordSummary[]>((resolve) => {
-      window.setTimeout(() => resolve([]), reportRecordsTimeoutMs);
-    }),
-  ]);
+const listRecordsForReport = async (childNo: string) => {
+  const pageSize = 100;
+  const maxRecords = 1000;
+  const first = await webApi.listRecords({ child_no: childNo, page: 1, page_size: pageSize });
+  const items = [...first.list];
+  const target = Math.min(first.total ?? items.length, maxRecords);
+  let page = 1;
+  while (items.length < target && first.has_more !== false) {
+    page += 1;
+    const next = await webApi.listRecords({ child_no: childNo, page, page_size: pageSize });
+    if (!next.list.length) break;
+    items.push(...next.list);
+    if (!next.has_more) break;
+  }
+  return items.slice(0, maxRecords);
+};
 
 const archiveExportPurposeText = (value: ArchiveExportRequestItem['purpose']) =>
   value === 'adult_handoff' ? '成年移交' : '档案打包';
@@ -393,11 +400,11 @@ export const ProfilePage = () => {
     async () => webApi.notificationUnreadCount(),
     [],
   );
-  const { data: publishedRecords } = useAsyncData<RecordSummary[]>(
+  const { data: publishedRecords } = useAsyncData<{ list: RecordSummary[]; total: number }>(
     async () => {
-      if (!activeChild) return [];
+      if (!activeChild) return { list: [], total: 0 };
       const result = await webApi.listRecords({ child_no: activeChild.child_no, page: 1, page_size: 200, status: 'published' });
-      return result.list;
+      return { list: result.list, total: result.total };
     },
     [activeChild?.child_no],
   );
@@ -409,8 +416,8 @@ export const ProfilePage = () => {
   const rawProfileName = normalizeDisplayName(user?.nickname, '未登录用户');
   const technicalProfileName = isTechnicalProfileName(rawProfileName);
   const profileName = technicalProfileName ? '我的年轮' : rawProfileName;
-  const recordsList = publishedRecords ?? [];
-  const recordCount = recordsList.length;
+  const recordsList = publishedRecords?.list ?? [];
+  const recordCount = publishedRecords?.total ?? recordsList.length;
   const milestoneCount = recordsList.filter((item) => item.is_milestone || item.record_type === 'milestone').length;
   const memberCount = familyMembers?.list.filter((member) => member.status === 1).length ?? 0;
   const daysTogether = (() => {
@@ -617,7 +624,21 @@ export const MessagesPage = () => {
     data: notifications,
     loading,
     setData: setNotifications,
-  } = useAsyncData<UserNotificationsResponse>(async () => webApi.listNotifications({ page: 1, page_size: 20 }), []);
+  } = useAsyncData<UserNotificationsResponse>(async () => {
+    const pageSize = 50;
+    const first = await webApi.listNotifications({ page: 1, page_size: pageSize });
+    const items = [...first.list];
+    const target = Math.min(first.total ?? items.length, 200);
+    let page = 1;
+    while (items.length < target && first.has_more !== false) {
+      page += 1;
+      const next = await webApi.listNotifications({ page, page_size: pageSize });
+      if (!next.list.length) break;
+      items.push(...next.list);
+      if (!next.has_more) break;
+    }
+    return { ...first, list: items };
+  }, []);
   const { data: unreadCount, setData: setUnreadCount } = useAsyncData<NotificationUnreadCountResponse>(
     async () => webApi.notificationUnreadCount(),
     [],

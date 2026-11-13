@@ -735,9 +735,9 @@ export const SearchPage = () => {
     const timer = window.setTimeout(() => setSearchKeyword(normalizedKeyword), normalizedKeyword ? 260 : 0);
     return () => window.clearTimeout(timer);
   }, [normalizedKeyword]);
-  const { data, loading, error } = useAsyncData<RecordSummary[]>(
+  const { data, loading, error } = useAsyncData<{ list: RecordSummary[]; total: number }>(
     async () => {
-      if (!activeChild) return [];
+      if (!activeChild) return { list: [], total: 0 };
       const result = await webApi.listRecords({
         child_no: activeChild.child_no,
         page: 1,
@@ -745,11 +745,14 @@ export const SearchPage = () => {
         status: 'published',
         keyword: searchKeyword || undefined,
       });
-      return result.list;
+      return { list: result.list, total: result.total };
     },
     [activeChild?.child_no, searchKeyword],
   );
-  const records = data ?? [];
+  const records = data?.list ?? [];
+  const resultTotal = data?.total ?? records.length;
+  const debouncing = normalizedKeyword !== searchKeyword;
+  const searchBusy = loading || debouncing;
   const commitSearch = (value: string) => {
     const next = value.trim();
     if (!next) return;
@@ -827,7 +830,7 @@ export const SearchPage = () => {
         ) : (
           <section>
             <div className="search-count-row">
-              <h2 className="search-count">{loading ? '正在搜索…' : `找到 ${records.length} 条`}</h2>
+              <h2 className="search-count">{searchBusy ? '正在搜索…' : `找到 ${resultTotal} 条${records.length < resultTotal ? ` · 显示前 ${records.length} 条` : ''}`}</h2>
               <span className="search-filter">
                 <Filter size={18} strokeWidth={1.8} />
                 <span>筛选</span>
@@ -966,6 +969,9 @@ export const TimelinePage = () => {
   const { activeChild } = useAuth();
   const [selectedYear, setSelectedYear] = useState('');
   const [selectedMonth, setSelectedMonth] = useState('');
+  const [extraRecords, setExtraRecords] = useState<RecordSummary[]>([]);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [loadedPage, setLoadedPage] = useState(1);
   const { data, loading, error } = useAsyncData(
     async () => {
       if (!activeChild) return null;
@@ -979,11 +985,35 @@ export const TimelinePage = () => {
     [activeChild?.child_no],
   );
 
-  const records = data?.list ?? [];
+  const firstPageRecords = data?.list ?? [];
+  const records = [...firstPageRecords, ...extraRecords];
+  const totalRecords = data?.total ?? records.length;
+  const hasMoreRecords = records.length < totalRecords;
+
+  const loadMoreRecords = async () => {
+    if (!activeChild || loadingMore) return;
+    setLoadingMore(true);
+    try {
+      const next = await webApi.listRecords({
+        child_no: activeChild.child_no,
+        page: loadedPage + 1,
+        page_size: 100,
+        status: 'published',
+      });
+      setExtraRecords((current) => [...current, ...next.list]);
+      setLoadedPage((current) => current + 1);
+    } finally {
+      setLoadingMore(false);
+    }
+  };
   const yearOptions = Array.from(new Set(records.map((record) => getRecordYear(record.event_time))))
     .filter((year) => year && year !== '0')
     .sort((left, right) => Number(right) - Number(left));
   const didDefaultYearRef = useRef(false);
+  useEffect(() => {
+    setExtraRecords([]);
+    setLoadedPage(1);
+  }, [activeChild?.child_no]);
   useEffect(() => {
     if (didDefaultYearRef.current || !records.length) return;
     didDefaultYearRef.current = true;
@@ -1074,6 +1104,16 @@ export const TimelinePage = () => {
             <EmptyState message={records.length ? `${bigTitle}还没有记录。` : '还没有记录，去记下第一刻吧。'} />
             <button type="button" className="tl-empty-cta" onClick={() => navigate('/record/create')}>去记录</button>
           </div>
+        ) : null}
+        {hasMoreRecords ? (
+          <button
+            type="button"
+            onClick={() => void loadMoreRecords()}
+            disabled={loadingMore}
+            style={{ display: 'block', margin: '18px auto 6px', minHeight: 44, padding: '0 22px', borderRadius: 999, border: '1px solid rgba(var(--nl-shadow-rgb),0.14)', background: 'rgba(255,251,245,0.7)', color: 'var(--nl-ink)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
+          >
+            {loadingMore ? '加载中…' : `加载更多（已显示 ${records.length}/${totalRecords}）`}
+          </button>
         ) : null}
       </main>
     </div>
