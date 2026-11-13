@@ -607,20 +607,21 @@ export const HomePage = () => {
             </section>
           ) : null}
 
-          {activeChild && !loading && !error && dayGroups.map((group, groupIndex) => (
+          {activeChild && !loading && !error && !hasTodayRecord ? (
+            <div className="nl-home-today">
+              <span className="nl-home-today-text">今天还没记录</span>
+              <button type="button" className="nl-home-today-cta" onClick={() => navigate(childRequiredTarget('/record/create'))}>
+                记一笔 <span aria-hidden="true">＋</span>
+              </button>
+            </div>
+          ) : null}
+
+          {activeChild && !loading && !error && dayGroups.map((group) => (
             <section key={group.key} className={`nl-home-day-group${group.records.length === 1 ? ' is-single' : ''}`} aria-label={`${group.label}的记录`}>
               <div className="nl-home-day-head">
                 <h2 className="nl-home-day-title">{group.label}</h2>
                 <span className="nl-home-day-count">{group.records.length} 条</span>
               </div>
-              {groupIndex === 0 && !hasTodayRecord && group.records.length === 0 ? (
-                <div className="nl-home-today">
-                  <span className="nl-home-today-text">今天还没记录</span>
-                  <button type="button" className="nl-home-today-cta" onClick={() => navigate(childRequiredTarget('/record/create'))}>
-                    记一笔 <span aria-hidden="true">＋</span>
-                  </button>
-                </div>
-              ) : null}
               <div className="nl-home-day-cards">
                 {group.records.map((record) => (
                   <MomentCard key={record.record_no} record={record} featured={record.record_no === records[0]?.record_no} onClick={() => navigate(`/record/${record.record_no}`)} />
@@ -995,6 +996,7 @@ export const TimelinePage = () => {
   const monthKeyList = monthOptions.join(',');
   useEffect(() => {
     if (!monthOptions.length) return;
+    if (selectedMonth === 'all') return;
     if (!monthOptions.some((month) => String(month) === selectedMonth)) {
       setSelectedMonth(String(monthOptions[0]));
     }

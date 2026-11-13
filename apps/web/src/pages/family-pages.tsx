@@ -757,9 +757,12 @@ export const FamilyMemberDetailPage = () => {
   useEffect(() => {
     if (member && (member.role === 'viewer' || member.role === 'editor')) setPendingRole(member.role);
   }, [member?.user_no, member?.role]);
-  const memberJoinedDays = member?.joined_at
-    ? Math.max(1, Math.ceil((Date.now() - new Date(member.joined_at).getTime()) / (24 * 60 * 60 * 1000)))
-    : null;
+  const memberJoinedDays = (() => {
+    if (!member?.joined_at) return null;
+    const joined = new Date(member.joined_at).getTime();
+    if (!Number.isFinite(joined)) return null;
+    return Math.max(1, Math.ceil((Date.now() - joined) / (24 * 60 * 60 * 1000)));
+  })();
 
   const changeRole = async (nextRole: 'viewer' | 'editor') => {
     const familyNo = activeChild?.family_no;

@@ -370,6 +370,8 @@ export const LoginPage = () => {
   const [sending, setSending] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [searchParams] = useSearchParams();
+  const inviteCode = (searchParams.get('invite') ?? '').trim();
 
   const normalizedPhone = phone.trim();
   const canSubmit = acceptedAgreement && /^1\d{10}$/.test(normalizedPhone) && code.trim().length >= 4;
@@ -418,7 +420,7 @@ export const LoginPage = () => {
     setSubmitting(true);
     setError(null);
     try {
-      await login({ login_type: 'sms', credential: normalizedPhone, code: code.trim() });
+      await login({ login_type: 'sms', credential: normalizedPhone, code: code.trim(), invite_code: inviteCode || undefined });
     } catch (err) {
       setError(err instanceof Error ? err.message : '登录失败，请稍后重试');
     } finally {

@@ -2129,6 +2129,7 @@ const RecordForm = ({
   };
 
   const submitRecord = async (nextStatus = form.status) => {
+    if (submitting) return;
     if (uploading) {
       setError('媒体还在上传，请完成后再发布。');
       return;
@@ -3351,15 +3352,18 @@ export const ViewRecordPage = () => {
     { label: '状态', value: recordStatusLabel(data.status) },
   ] : [];
   const rdMetaText = data ? (() => {
-    const stamp = new Intl.DateTimeFormat('zh-CN', {
-      timeZone: 'Asia/Shanghai',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    }).format(new Date(data.event_time));
+    const eventTime = new Date(data.event_time);
+    const stamp = Number.isNaN(eventTime.getTime())
+      ? '时间待确认'
+      : new Intl.DateTimeFormat('zh-CN', {
+          timeZone: 'Asia/Shanghai',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: false,
+        }).format(eventTime);
     const place = normalizeLocationText(data.location_text);
     return place ? `${stamp} · ${place}` : stamp;
   })() : '';

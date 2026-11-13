@@ -4547,3 +4547,34 @@ button[aria-disabled='true'] {
 /* 28 内容与按钮留白 */
 .error-shell > div { padding-left: 0 !important; padding-right: 0 !important; }
 .error-shell button { width: 100% !important; }
+
+/* ===== 长文本边界：不撑破布局 ===== */
+.rd-title,
+.rd-copy,
+.rd-body,
+.rd-lead,
+.pf-hero-name,
+.msg-text,
+.nl-moment-featured-title,
+.nl-moment-title,
+.info-card p,
+.info-card span,
+.perm-card p,
+.member-row-card p {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.pf-hero-name {
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 消息/反馈长文本限高，避免整页被顶开 */
+.msg-text,
+.info-card p {
+  max-height: 6.5em;
+  overflow: hidden;
+}

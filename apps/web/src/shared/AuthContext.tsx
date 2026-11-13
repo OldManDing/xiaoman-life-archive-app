@@ -102,7 +102,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setNeedsOnboarding(payload.need_create_child && !hasSkippedOnboarding(payload.user.user_no));
 
       if (!payload.need_create_child) {
-        await refreshChildren();
+        try {
+          await refreshChildren();
+        } catch (err) {
+          console.warn('[auth] 孩子列表加载失败，不阻断登录', err);
+        }
       } else {
         setChildrenList([]);
         setActiveChildState(null);

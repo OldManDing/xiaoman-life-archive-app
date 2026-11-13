@@ -36,8 +36,8 @@ import type {
 } from './types';
 
 export type LoginPayload =
-  | { login_type: 'password'; credential: string; password: string }
-  | { login_type: 'sms'; credential: string; code: string };
+  | { login_type: 'password'; credential: string; password: string; invite_code?: string }
+  | { login_type: 'sms'; credential: string; code: string; invite_code?: string };
 
 export interface RegisterPayload {
   credential: string;

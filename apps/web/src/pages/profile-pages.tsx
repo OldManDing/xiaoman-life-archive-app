@@ -501,7 +501,7 @@ export const ProfilePage = () => {
         </button>
 
         <div className="pf-footer">
-          <span>年轮 v{appVersion} · 已陪伴 785 天</span>
+          <span>年轮 v{appVersion} · 已陪伴 {daysTogether} 天</span>
         </div>
       </main>
     </div>
