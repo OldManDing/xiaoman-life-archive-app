@@ -1049,7 +1049,7 @@ export const AccountPage = () => {
   })();
 
   return (
-    <PageShell title="账号" backTo="/profile" className="account-shell">
+    <PageShell title="账号资料" backTo="/profile" className="account-shell">
       <div className="ac-card ac-hero">
         <label aria-label="更换头像" className="ac-avatar">
           <ProfileAvatar src={avatarPreviewUrl ?? user?.avatar_url} mediaNo={user?.avatar_media_no} label={user?.nickname ?? '我的头像'} />
@@ -1079,11 +1079,12 @@ export const AccountPage = () => {
             inputMode="tel"
             aria-label="手机号"
           />
-          <Pencil size={16} className="ac-chevron" aria-hidden="true" />
+          <span className="ac-action">换绑</span>
         </div>
         <div className="ac-row is-static">
           <span className="ac-label">微信</span>
           <span className="ac-value">未绑定</span>
+          <ChevronRight size={16} className="ac-chevron" aria-hidden="true" />
         </div>
         <div className="ac-row is-static">
           <span className="ac-label">注册时间</span>

@@ -4934,3 +4934,20 @@ body::before {
   border-color: transparent !important;
   color: #4a2f12 !important;
 }
+
+/* 20：头像区收紧、换绑文字动作 */
+.account-shell .ac-hero {
+  padding: 18px 16px 14px !important;
+}
+
+.account-shell .ac-avatar {
+  width: 96px !important;
+  height: 96px !important;
+}
+
+.ac-action {
+  color: var(--nl-accent);
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
