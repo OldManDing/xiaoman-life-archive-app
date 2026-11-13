@@ -2156,7 +2156,7 @@ const RecordForm = ({
 
     const childNo = form.child_no || currentChild?.child_no || (await waitForSelectedChildNo());
     const heightRecordPayload = isHeightRecord ? buildHeightRecordPayload() : null;
-    if (nextStatus === 'published') {
+    if (nextStatus !== 'draft') {
       const title = heightRecordPayload?.title ?? form.title.trim();
       const contentText = heightRecordPayload?.contentText ?? form.content_text.trim();
       if (!childNo) {
@@ -2382,7 +2382,7 @@ const RecordForm = ({
                 </button>
                 <button
                   type="button"
-                  onClick={() => void submitRecord('publish')}
+                  onClick={() => void submitRecord('published')}
                   disabled={submitting}
                   style={{ minHeight: 44, border: 'none', borderRadius: 999, background: '#a9581b', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', padding: '0 16px' }}
                 >
