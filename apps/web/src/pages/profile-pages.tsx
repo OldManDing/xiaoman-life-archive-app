@@ -2725,8 +2725,8 @@ export const LegalPage = () => {
   const docAliases: Record<string, string> = {
     terms: '用户协议',
     privacy: '隐私政策',
-    child: '儿童信息保护摘要',
-    children: '儿童信息保护摘要',
+    child: '儿童信息保护',
+    children: '儿童信息保护',
   };
   const resolveLegalTitle = () => {
     const doc = new URLSearchParams(location.search).get('doc');
@@ -2797,7 +2797,7 @@ export const LegalPage = () => {
         <div style={{ display: 'grid', gap: 14 }}>
           {section.items.map((item, index) => (
             <p key={item} style={{ margin: 0, color: 'var(--nl-ink)', fontSize: 15, lineHeight: 1.75, fontWeight: 400, letterSpacing: '0.01em' }}>
-              <span aria-hidden="true" style={{ color: 'var(--nl-accent)', fontWeight: 600, marginRight: 8 }}>{index + 1}</span>
+              <span aria-hidden="true" style={{ width: 22, height: 22, borderRadius: 999, background: 'rgba(245, 171, 82, 0.9)', color: '#4a2f12', fontSize: 12, fontWeight: 700, display: 'inline-grid', placeItems: 'center', marginRight: 8, flexShrink: 0 }}>{index + 1}</span>
               {item}
             </p>
           ))}

@@ -5084,3 +5084,32 @@ body::before {
 .nl-moment-featured-rule {
   width: 64px !important;
 }
+
+/* 07：返回与清除控件收敛到设计稿尺寸 */
+.search-back {
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  border-radius: 999px !important;
+  background: rgba(120, 80, 40, 0.10) !important;
+  border: none !important;
+  color: var(--nl-muted-strong) !important;
+  box-shadow: none !important;
+}
+
+.search-clear {
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 999px !important;
+  background: rgba(120, 80, 40, 0.14) !important;
+  color: var(--nl-muted-strong) !important;
+  box-shadow: none !important;
+}
+
+/* 26：表单字段标签按设计稿放大 */
+.info-shell form label,
+.info-shell .field-label {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: var(--nl-ink) !important;
+}
