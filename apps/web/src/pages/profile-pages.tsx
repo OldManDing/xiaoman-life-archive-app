@@ -915,7 +915,7 @@ export const NotificationSettingsPage = () => {
                 return (
                   <div className={index === group.items.length - 1 ? 'set-row is-static is-last' : 'set-row is-static'} key={item.key} style={unsupported ? { opacity: 0.45 } : undefined}>
                     <span className="set-body"><strong>{item.label}</strong>{item.desc ? <small>{item.desc}</small> : null}</span>
-                    <button type="button" aria-label={item.label} aria-pressed={enabled} disabled={unsupported} style={toggleButtonStyle(enabled)} onClick={() => { if (!unsupported) toggleNotifyPref(item.key); }}>
+                    <button type="button" aria-label={item.label} aria-pressed={enabled} disabled={unsupported} style={toggleButtonStyle(unsupported ? false : enabled)} onClick={() => { if (!unsupported) toggleNotifyPref(item.key); }}>
                       <span style={toggleTrackStyle(enabled)}><span style={toggleKnobStyle(enabled)} /></span>
                     </button>
                   </div>

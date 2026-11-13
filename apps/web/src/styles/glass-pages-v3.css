@@ -4871,3 +4871,18 @@ body::before {
   color: #fff !important;
   opacity: 1 !important;
 }
+
+/* 04 遮挡修复：内容区给常驻保存条留足空间 */
+.record-form-page.is-create {
+  padding-bottom: calc(196px + env(safe-area-inset-bottom)) !important;
+}
+
+/* 10 未读点：卡片不再裁切，点保持完整 */
+.msg-card {
+  overflow: visible !important;
+}
+
+.fam-members-summary {
+  margin-bottom: 6px !important;
+  padding-top: 2px;
+}

@@ -671,21 +671,11 @@ export const FamilyMembersPage = () => {
         {message ? <p style={{ ...helperTextStyle, color: message === '成员角色已更新' ? 'var(--nl-success)' : 'var(--nl-danger)' }}>{message}</p> : null}
         {members.length ? (
           <div style={{ display: 'grid', gap: '16px' }}>
-            <p style={{ margin: 0, color: 'var(--nl-muted-strong)', fontSize: 13, lineHeight: 1.6 }}>
+            <p className="fam-members-summary" style={{ margin: 0, color: 'var(--nl-muted-strong)', fontSize: 13, lineHeight: 1.6 }}>
               {members.filter((member) => member.status !== 0).length} 位家人
               {members.filter((member) => member.status === 0).length ? ` · ${members.filter((member) => member.status === 0).length} 位待接受` : ''}
             </p>
-            <section className="perm-card">
-              <strong style={{ color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 700 }}>权限说明</strong>
-              <div style={{ display: 'grid', gap: '10px' }}>
-                {rolePermissionItems.map((item) => (
-                  <div key={item.role} style={{ display: 'grid', gridTemplateColumns: '70px minmax(0, 1fr)', gap: '10px', alignItems: 'start' }}>
-                    <span style={{ borderLeft: '2px solid rgba(var(--nl-primary-rgb),0.28)', color: 'var(--nl-muted-strong)', padding: '2px 0 2px 9px', fontSize: '11px', fontWeight: 620, textAlign: 'left' }}>{item.role}</span>
-                    <span style={{ color: 'var(--nl-muted-strong)', fontSize: '12px', lineHeight: 1.58, fontWeight: 500 }}>{item.detail}</span>
-                  </div>
-                ))}
-              </div>
-            </section>
+
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', alignItems: 'center' }}>
               {hiddenMemberCount ? (
                 <button type="button" style={{ ...compactSecondaryButtonStyle, minHeight: '36px', padding: '7px 12px', fontSize: '12px', flexShrink: 0 }} onClick={() => setShowAllMembers(true)}>
@@ -726,6 +716,17 @@ export const FamilyMembersPage = () => {
                 ) : null}
               </section>
             ))}
+            <section className="perm-card">
+              <strong style={{ color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 700 }}>权限说明</strong>
+              <div style={{ display: 'grid', gap: '10px' }}>
+                {rolePermissionItems.map((item) => (
+                  <div key={item.role} style={{ display: 'grid', gridTemplateColumns: '70px minmax(0, 1fr)', gap: '10px', alignItems: 'start' }}>
+                    <span style={{ borderLeft: '2px solid rgba(var(--nl-primary-rgb),0.28)', color: 'var(--nl-muted-strong)', padding: '2px 0 2px 9px', fontSize: '11px', fontWeight: 620, textAlign: 'left' }}>{item.role}</span>
+                    <span style={{ color: 'var(--nl-muted-strong)', fontSize: '12px', lineHeight: 1.58, fontWeight: 500 }}>{item.detail}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
             <FamilyMemberOperations operations={operations} />
           </div>
         ) : null}
