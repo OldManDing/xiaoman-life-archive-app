@@ -1007,7 +1007,7 @@ export const TimelinePage = () => {
     }
   };
   const yearOptions = Array.from(new Set(records.map((record) => getRecordYear(record.event_time))))
-    .filter((year) => year && year !== '0')
+    .filter((year) => Boolean(year) && /^\d{4}$/.test(year))
     .sort((left, right) => Number(right) - Number(left));
   const didDefaultYearRef = useRef(false);
   useEffect(() => {
@@ -1042,7 +1042,8 @@ export const TimelinePage = () => {
     (parseSafeDate(right.event_time)?.getTime() ?? 0) - (parseSafeDate(left.event_time)?.getTime() ?? 0)
   ));
   const milestoneCount = yearRecords.filter((record) => record.is_milestone || record.record_type === 'milestone').length;
-  const yearLabel = activeYear === yearOptions[0] ? '今年' : `${activeYear}年`;
+  const currentYearKey = String(new Date().getFullYear());
+  const yearLabel = activeYear === currentYearKey ? '今年' : `${activeYear}年`;
   const bigTitle = activeMonth && activeMonth !== 'all' ? `${Number(activeMonth)}月` : `${activeYear}年`;
 
   return (

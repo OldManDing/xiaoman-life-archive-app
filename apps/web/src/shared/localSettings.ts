@@ -71,9 +71,8 @@ export const loadLocalSettings = (scope?: string | null): LocalSettings => {
 
   try {
     const raw = window.localStorage.getItem(scopedStorageKey(scope)) ?? migrateLegacySettings((scope ?? activeScope)?.trim() || null);
-    const fallbackRaw = scope || activeScope ? window.localStorage.getItem(STORAGE_KEY) : null;
-    if (!raw && !fallbackRaw) return defaultLocalSettings;
-    return { ...defaultLocalSettings, ...(JSON.parse(raw ?? fallbackRaw ?? '{}') as Partial<LocalSettings>) };
+    if (!raw) return defaultLocalSettings;
+    return { ...defaultLocalSettings, ...(JSON.parse(raw) as Partial<LocalSettings>) };
   } catch {
     return defaultLocalSettings;
   }
@@ -84,7 +83,6 @@ export const saveLocalSettings = (settings: LocalSettings, scope?: string | null
   try {
     const serialized = JSON.stringify(settings);
     window.localStorage.setItem(scopedStorageKey(scope), serialized);
-    if ((scope ?? activeScope)?.trim()) window.localStorage.setItem(STORAGE_KEY, serialized);
   } catch {
     // Local settings are an optional device preference and should never block UI actions.
   }

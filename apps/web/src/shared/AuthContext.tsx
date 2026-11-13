@@ -7,6 +7,7 @@ import { unregisterHmsDeviceToken } from './hmsPush';
 import { cancelScheduledNativeNotifications } from './nativeNotifications';
 import { setLocalSettingsScope } from './localSettings';
 import { bumpSessionEpoch, onSessionExpired } from './api/http';
+import { clearMediaAccessUrlCache } from './hooks';
 
 interface AuthContextValue {
   accessToken: string | null;
@@ -193,6 +194,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const clearSession = useCallback(() => {
     bootstrapRunRef.current += 1;
     bumpSessionEpoch();
+    clearMediaAccessUrlCache();
     clearAccessToken();
     setLocalSettingsScope(null);
     setAccessTokenState(null);

@@ -2178,6 +2178,10 @@ const RecordForm = ({
       }
     }
 
+    if (form.record_type === 'text' && mediaNos.length > 0) {
+      const confirmed = window.confirm(`记录方式已选「文字」，保存会移除已添加的 ${mediaNos.length} 项媒体，继续吗？`);
+      if (!confirmed) return;
+    }
     setSubmitting(true);
     setPendingAction(nextStatus === 'draft' ? 'draft' : 'publish');
     setError(null);

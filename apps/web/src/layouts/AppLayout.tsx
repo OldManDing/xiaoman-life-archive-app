@@ -47,7 +47,7 @@ const AppUpdateNotice = ({ bottomOffset }: { bottomOffset: string }) => {
         if (mounted) setCheckError('更新检查失败，可稍后重试。');
       });
 
-    return () => {
+  return () => {
       mounted = false;
     };
   }, [retryToken]);
@@ -168,6 +168,11 @@ const AppUpdateNotice = ({ bottomOffset }: { bottomOffset: string }) => {
 
 export const AppLayout = () => {
   const location = useLocation();
+  useEffect(() => {
+    const scroller = document.querySelector('.app-main-scroll');
+    if (scroller instanceof HTMLElement) scroller.scrollTo({ top: 0, behavior: 'auto' });
+  }, [location.pathname]);
+
   const bottomNavClearance = 'calc(96px + env(safe-area-inset-bottom))';
   const tabScrollPadding = '32px';
   const navItems = [

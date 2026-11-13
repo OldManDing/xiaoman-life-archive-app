@@ -1198,9 +1198,10 @@ export const SettingsPage = () => {
       const keys: string[] = [];
       for (let index = 0; index < window.localStorage.length; index += 1) {
         const key = window.localStorage.key(index);
-        if (key && (key.startsWith('nianlun.search.history') || key.startsWith('nianlun.media') || key.startsWith('nianlun.runtime-media'))) keys.push(key);
+        if (key && (key.startsWith('nianlun.search.history') || key.startsWith('nianlun.media') || key.startsWith('nianlun-local-media-preview') || key.startsWith('nianlun.runtime-media'))) keys.push(key);
       }
       keys.forEach((key) => window.localStorage.removeItem(key));
+      if (typeof indexedDB !== 'undefined') indexedDB.deleteDatabase('nianlun-media-cache');
       setMessage('本机缓存已清理。');
     } catch {
       setMessage('当前环境无法清理缓存。');
@@ -1289,7 +1290,7 @@ export const SettingsPage = () => {
         </div>
       </section>
 
-      {message ? <p style={{ ...helperTextStyle, color: 'var(--nl-success)' }}>{message}</p> : null}
+      {message ? <p style={{ ...helperTextStyle, color: isPositiveStatusMessage(message) ? 'var(--nl-success)' : 'var(--nl-danger)' }}>{message}</p> : null}
       <p className="set-footer">年轮 · 留住每一天</p>
     </PageShell>
   );
