@@ -2320,7 +2320,7 @@ export const HelpFeedbackPage = () => {
 
   return (
     <PageShell className="info-shell" title="帮助与反馈" backTo="/profile">
-      <Panel style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }}>
+      <Panel className="info-card" style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: '14px 16px 16px' }}>
         <div style={rowStyle}>
           <strong style={{ color: 'var(--nl-ink)', fontSize: '16px', fontWeight: 720 }}>提交反馈</strong>
           <Field label="问题类型">
@@ -2345,7 +2345,7 @@ export const HelpFeedbackPage = () => {
           </div>
         </div>
       </Panel>
-      <Panel style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: 0 }}>
+      <Panel className="info-card" style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: '14px 16px 16px' }}>
         <div style={rowStyle}>
           <strong style={{ color: 'var(--nl-ink)', fontSize: '16px', fontWeight: 720 }}>最近反馈</strong>
           {feedbackLoading ? <p style={helperTextStyle}>正在同步反馈状态…</p> : null}

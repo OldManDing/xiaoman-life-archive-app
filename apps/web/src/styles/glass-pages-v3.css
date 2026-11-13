@@ -4160,3 +4160,92 @@ body::before {
   border-radius: 0 !important;
   box-shadow: none !important;
 }
+
+/* 26 帮助与反馈：卡内表单收口 */
+.app-panel.info-card {
+  box-sizing: border-box;
+}
+
+.app-panel.info-card > div {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.app-panel.info-card input,
+.app-panel.info-card select,
+.app-panel.info-card textarea,
+.app-panel.info-card button {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* ===== 第二轮 QA 修复 ===== */
+/* 10：回应按钮视觉 44、摘要不截断 */
+.msg-reply {
+  min-height: 44px !important;
+  min-width: 64px !important;
+  padding: 6px 14px !important;
+  font-size: 14px !important;
+}
+
+.msg-text {
+  white-space: normal !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 13px !important;
+}
+
+/* 16：相机角标与头像编辑钮 44 */
+.ac-avatar-badge {
+  width: 44px !important;
+  height: 44px !important;
+  right: -6px !important;
+  bottom: -6px !important;
+}
+
+/* 12/24：复制/次级圆钮 44 */
+.invite-shell button,
+.info-shell button {
+  min-height: 44px;
+}
+
+/* 27：按钮不被屏底裁切 + 警示按钮 44 */
+.info-shell {
+  padding-bottom: calc(48px + env(safe-area-inset-bottom)) !important;
+}
+
+/* 14：跳过与协议热区 */
+.wl-skip {
+  min-width: 44px !important;
+  min-height: 44px !important;
+}
+
+.wl-agreement input {
+  width: 24px !important;
+  height: 24px !important;
+}
+
+/* 15：编辑态底部浮层留白 */
+.is-edit.record-form-page {
+  padding-bottom: calc(150px + env(safe-area-inset-bottom)) !important;
+}
+
+/* 10 列表下方空场：给列表一个轻空态底 */
+.msg-list {
+  min-height: 120px;
+}
+
+/* 17 头行被首卡压住：加间距 */
+.fam-members-summary,
+.members-summary {
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+/* 18 头像与名字：留呼吸 */
+.fam-detail-hero {
+  gap: 20px;
+}
