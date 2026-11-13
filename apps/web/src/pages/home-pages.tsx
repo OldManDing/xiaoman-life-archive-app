@@ -823,8 +823,9 @@ export const SearchPage = () => {
           <section>
             <div className="search-count-row">
               <h2 className="search-count">{loading ? '正在搜索…' : `找到 ${records.length} 条`}</h2>
-              <span className="search-filter" aria-hidden="true">
-                <Filter size={22} strokeWidth={1.8} />
+              <span className="search-filter">
+                <Filter size={18} strokeWidth={1.8} />
+                <span>筛选</span>
               </span>
             </div>
             {error ? <EmptyState message={`搜索失败：${error}`} /> : null}

@@ -4520,3 +4520,5 @@ button[aria-disabled='true'] {
 .app-page-shell .error-actions {
   width: 100%;
 }
+
+.search-filter { display:inline-flex !important; align-items:center; gap:4px; min-height:44px; color:var(--nl-muted); font-size:13px; font-weight:500; }

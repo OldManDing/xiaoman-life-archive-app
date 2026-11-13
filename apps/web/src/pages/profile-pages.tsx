@@ -2644,6 +2644,23 @@ export const ContactPage = () => {
       <button type="button" onClick={() => navigate('/profile/help')} style={{ ...secondaryButtonStyle, minHeight: 44, width: '100%' }}>
         去「帮助与反馈」提交问题
       </button>
+
+      <section className="info-card" aria-label="常见问题" style={{ padding: '6px 0' }}>
+        {[
+          { title: '如何邀请家人一起记录？', topic: 'family-remove' },
+          { title: '如何导出孩子的成长记录？', topic: 'membership' },
+        ].map((item) => (
+          <button
+            key={item.topic}
+            type="button"
+            className="info-row"
+            onClick={() => navigate(`/profile/help?topic=${item.topic}`)}
+          >
+            <span className="set-body"><strong style={{ fontSize: 14 }}>{item.title}</strong></span>
+            <ChevronRight size={18} className="set-chevron" />
+          </button>
+        ))}
+      </section>
     </PageShell>
   );
 };
