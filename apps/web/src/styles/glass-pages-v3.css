@@ -3989,3 +3989,174 @@ body::before {
 .app-panel {
   background: rgba(255, 251, 245, 0.62) !important;
 }
+
+/* ===== 第一轮 QA 修复：热区 / 对比 / 安全区 ===== */
+/* 所有圆形小按钮统一 44 热区 */
+.app-topbar button,
+.app-topbar a,
+.rd-topbar button,
+.rd-topbar a,
+.app-detail-float-bar button,
+.search-back,
+.search-clear,
+.close-button,
+.dialog-close {
+  min-width: 44px !important;
+  min-height: 44px !important;
+}
+
+/* 顶部返回/更多：图标内缩，视觉仍小巧 */
+.app-topbar button svg,
+.rd-topbar button svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* 照片上的白字：加深蒙层 + 文字阴影 */
+.nl-moment-featured-overlay {
+  background: linear-gradient(180deg, rgba(30, 22, 16, 0) 34%, rgba(30, 22, 16, 0.78) 100%) !important;
+}
+
+.nl-moment-featured-title,
+.tl-tile-date,
+.tl-thumb-date {
+  text-shadow: 0 1px 3px rgba(20, 14, 10, 0.55) !important;
+}
+
+.tl-tile-scrim {
+  background: linear-gradient(180deg, rgba(30, 22, 16, 0) 38%, rgba(30, 22, 16, 0.72) 100%) !important;
+}
+
+/* 禁用态按钮可读性 */
+.lg-submit:disabled,
+.wl-start:disabled,
+.record-inline-submit-button:disabled,
+.ac-save:disabled {
+  background: #e7d8c6 !important;
+  color: #5a4636 !important;
+  box-shadow: none !important;
+}
+
+/* 协议勾选行：44 热区 + 22 勾选框 */
+.lg-agreement,
+.wl-agreement {
+  min-height: 44px;
+  align-items: center;
+  position: relative;
+}
+
+.lg-agreement input,
+.wl-agreement input {
+  width: 22px !important;
+  height: 22px !important;
+  flex-shrink: 0;
+}
+
+.lg-agreement::after,
+.wl-agreement::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+}
+
+/* 09 跳过：44 热区 */
+.onb-skip {
+  min-width: 44px !important;
+  min-height: 44px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 06 退出登录语义 */
+.pf-logout strong {
+  color: #8a3b1e !important;
+}
+
+.pf-logout svg {
+  color: #a05a2c;
+}
+
+/* 底部安全区：内容不被 TabBar 压住 */
+.app-main-scroll,
+.app-page-shell {
+  padding-bottom: calc(96px + env(safe-area-inset-bottom)) !important;
+}
+
+/* 12 邀请：有效期说明 13px */
+.invite-shell p {
+  font-size: 13px;
+}
+
+/* 18/17 分节标题统一无衬线 15/600 */
+.fam-detail-title {
+  font-family: var(--nl-font-body, inherit) !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0;
+}
+
+/* 16 性别分段：三选一不折行 */
+.ac-row .app-segmented {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 4px;
+}
+
+.ac-row .app-segmented > * {
+  min-width: 0 !important;
+  padding: 0 4px !important;
+  white-space: nowrap;
+  font-size: 13px !important;
+}
+
+/* 表单/信息页：防止输入控件溢出卡片 */
+.app-page-shell input,
+.app-page-shell select,
+.app-page-shell textarea {
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.info-shell textarea,
+.app-page-shell textarea {
+  resize: none !important;
+}
+
+.info-card > form,
+.info-card form {
+  padding: 14px 18px !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* 行内文字按钮也保证 44 热区 */
+.info-row button,
+.ac-row button,
+.ac-card button,
+.member-row-card button,
+.set-row button,
+.help-row button {
+  min-height: 44px !important;
+  min-width: 44px !important;
+}
+
+/* 15 编辑记录：底部浮层不压内容 */
+.is-edit.record-form-page {
+  padding-bottom: calc(104px + env(safe-area-inset-bottom)) !important;
+}
+
+/* 21 搜索输入：与胶囊一致 */
+.search-field,
+.search-input-wrap,
+.search-box {
+  border-radius: 999px !important;
+  overflow: hidden;
+}
+
+.search-field input,
+.search-input-wrap input {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
