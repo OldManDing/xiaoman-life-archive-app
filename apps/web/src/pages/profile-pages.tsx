@@ -2753,7 +2753,7 @@ export const ErrorPage = () => {
   const navigate = useNavigate();
 
   return (
-    <PageShell title="页面加载失败" onBack={() => navigate('/home')}>
+    <PageShell title="页面加载失败" onBack={() => navigate('/home')} className="error-shell">
       <div style={{ display: 'grid', justifyItems: 'center', gap: 16, padding: '56px 8px 24px', textAlign: 'center' }}>
         <span aria-hidden="true" style={{ width: 96, height: 96, borderRadius: '50%', background: 'rgba(255, 250, 244, 0.72)', border: '1px solid rgba(255, 255, 255, 0.72)', display: 'grid', placeItems: 'center', color: 'var(--nl-accent)', boxShadow: '0 12px 30px rgba(146, 96, 52, 0.14)' }}>
           <Unlink size={36} strokeWidth={1.6} />

@@ -4528,3 +4528,5 @@ button[aria-disabled='true'] {
   font-size: 13px;
   font-weight: 500;
 }
+
+.error-shell > div { min-height: calc(100dvh - 260px); align-content: center; }
