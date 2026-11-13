@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type CSSProperties, type FormEvent } from 'react';
-import { AlertCircle, BookOpen, CheckCircle2, ChevronLeft, ChevronRight, Clock, Eye, FileAudio, FileText, Image, ImagePlus, MapPin, Mic, MoreHorizontal, PlayCircle, RotateCcw, Ruler, Sparkles, Square, Star, Tag, Video, X } from 'lucide-react';
+import { AlertCircle, BookOpen, CheckCircle2, ChevronLeft, ChevronRight, Clock, Eye, FileAudio, FileText, Image, ImagePlus, MapPin, Mic, MoreHorizontal, PlayCircle, RotateCcw, Ruler, Sparkles, Square, Star, Tag, Trash2, Video, X } from 'lucide-react';
 import { Camera, CameraResultType, CameraSource, type GalleryPhoto, type Photo } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 import type { PointerEvent as ReactPointerEvent, ReactNode, RefObject } from 'react';
@@ -2410,7 +2410,7 @@ const RecordForm = ({
                   placeItems: 'center',
                 }}
               >
-                删除
+                <Trash2 size={18} strokeWidth={2} />
               </button>
             ) : undefined
           }

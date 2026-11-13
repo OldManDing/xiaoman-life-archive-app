@@ -964,6 +964,8 @@ const TimelineWallTile = ({ record, onClick }: { record: RecordSummary; onClick:
   );
 };
 
+const TIMELINE_PAGE_SIZE = 100;
+
 export const TimelinePage = () => {
   const navigate = useNavigate();
   const { activeChild } = useAuth();
@@ -978,7 +980,7 @@ export const TimelinePage = () => {
       return webApi.listRecords({
         child_no: activeChild.child_no,
         page: 1,
-        page_size: 100,
+        page_size: TIMELINE_PAGE_SIZE,
         status: 'published',
       });
     },
@@ -997,7 +999,7 @@ export const TimelinePage = () => {
       const next = await webApi.listRecords({
         child_no: activeChild.child_no,
         page: loadedPage + 1,
-        page_size: 100,
+        page_size: TIMELINE_PAGE_SIZE,
         status: 'published',
       });
       setExtraRecords((current) => [...current, ...next.list]);
