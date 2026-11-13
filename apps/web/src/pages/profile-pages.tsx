@@ -502,9 +502,6 @@ export const ProfilePage = () => {
 
         <div className="pf-footer">
           <span>年轮 v{appVersion} · 已陪伴 785 天</span>
-          <button type="button" onClick={() => navigate('/profile/help')} style={{ border: 'none', background: 'transparent', color: 'var(--nl-accent)', fontSize: 13, fontWeight: 500, minHeight: 44, cursor: 'pointer' }}>
-            帮助与反馈
-          </button>
         </div>
       </main>
     </div>

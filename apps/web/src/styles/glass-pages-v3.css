@@ -4530,3 +4530,7 @@ button[aria-disabled='true'] {
 }
 
 .error-shell > div { min-height: calc(100dvh - 260px); align-content: center; }
+
+.search-filter { white-space: nowrap; }
+.info-card .info-row { width: 100% !important; display: flex !important; align-items: center !important; justify-content: space-between !important; gap: 12px !important; }
+.info-card .info-row .set-body { flex: 1 1 auto; min-width: 0; }
