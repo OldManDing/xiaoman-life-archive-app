@@ -5046,3 +5046,36 @@ body::before {
   font-size: 15px !important;
   line-height: 1 !important;
 }
+
+/* ===== 最终收口：压过文件内后置规则 ===== */
+.tl-tile-date,
+.tl-thumb-date {
+  background: transparent !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.tl-month-select select,
+.tl-month-select {
+  font-size: 26px !important;
+}
+
+.rd-title,
+.rd-hero-title,
+.nl-moment-featured-title,
+.fam-detail-title {
+  font-size: 26px !important;
+}
+
+.app-panel,
+.ac-card,
+.set-card,
+.info-card,
+.msg-card,
+.member-row-card,
+.record-editor-card,
+.fam-hero,
+.rc-card {
+  border-radius: 24px !important;
+}
