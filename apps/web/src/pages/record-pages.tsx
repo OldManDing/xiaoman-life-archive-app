@@ -3234,6 +3234,9 @@ export const CreateRecordPage = () => {
       initialValue={initialValue}
       onSubmit={async (value) => {
         const record = await webApi.createRecord(value);
+        if (!record?.record_no) {
+          throw new Error('记录已提交，但服务端未返回记录编号，请稍后刷新查看');
+        }
         navigate(`/record/${record.record_no}`, { replace: true });
       }}
     />

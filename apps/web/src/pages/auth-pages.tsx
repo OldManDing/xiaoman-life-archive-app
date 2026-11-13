@@ -375,7 +375,15 @@ export const LoginPage = () => {
   const [acceptedAgreement, setAcceptedAgreement] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [sending, setSending] = useState(false);
-  const [countdownEnd, setCountdownEnd] = useState(0);
+  const [countdownEnd, setCountdownEnd] = useState<number>(() => {
+    try {
+      const raw = window.sessionStorage.getItem('nianlun.sms-countdown-end');
+      const parsed = raw ? Number(raw) : 0;
+      return Number.isFinite(parsed) && parsed > Date.now() ? parsed : 0;
+    } catch {
+      return 0;
+    }
+  });
   const [clock, setClock] = useState(() => Date.now());
   const [error, setError] = useState<string | null>(null);
   const [searchParams] = useSearchParams();
@@ -395,6 +403,11 @@ export const LoginPage = () => {
     if (!countdownEnd) return undefined;
     if (countdownEnd <= Date.now()) {
       setCountdownEnd(0);
+      try {
+        window.sessionStorage.removeItem('nianlun.sms-countdown-end');
+      } catch {
+        /* ignore */
+      }
       return undefined;
     }
     const timer = window.setInterval(() => setClock(Date.now()), 500);
@@ -412,7 +425,13 @@ export const LoginPage = () => {
     try {
       await webApi.sendCode(normalizedPhone);
       setClock(Date.now());
-      setCountdownEnd(Date.now() + 60_000);
+      const deadline = Date.now() + 60_000;
+      setCountdownEnd(deadline);
+      try {
+        window.sessionStorage.setItem('nianlun.sms-countdown-end', String(deadline));
+      } catch {
+        /* storage may be unavailable */
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : '验证码发送失败，请稍后重试');
     } finally {
