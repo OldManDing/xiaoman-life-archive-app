@@ -2368,7 +2368,6 @@ export const HelpFeedbackPage = () => {
     <PageShell className="info-shell" title="帮助与反馈" backTo="/profile">
       <Panel className="info-card" style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: '14px 16px 16px' }}>
         <div style={rowStyle}>
-          <strong style={{ color: 'var(--nl-ink)', fontSize: '16px', fontWeight: 720 }}>提交反馈</strong>
           <Field label="问题类型">
             <AppSelect aria-label="问题类型" value={category} onChange={(event) => setCategory(event.target.value)}>
               <option value="使用问题">使用问题</option>
@@ -2433,7 +2432,7 @@ const legalSections = [
     ],
   },
   {
-    title: '儿童信息保护摘要',
+    title: '儿童信息保护',
     items: [
       '儿童姓名、生日、性别、成长记录、照片、家庭关系和其他可识别儿童身份的信息，均按敏感家庭资料保护。',
       '创建孩子档案、上传儿童影像、邀请家庭成员和管理档案内容，应由儿童监护人或获得监护人授权的家庭成员完成。',
@@ -2528,10 +2527,10 @@ export const AboutPage = () => {
           alt="年轮"
           width={96}
           height={96}
-          style={{ boxSizing: 'border-box', objectFit: 'contain', borderRadius: '22%', boxShadow: '0 18px 42px rgba(var(--nl-shadow-rgb),0.18)', marginBottom: '16px' }}
+          style={{ boxSizing: 'border-box', objectFit: 'contain', borderRadius: '999px', boxShadow: '0 18px 42px rgba(var(--nl-shadow-rgb),0.18)', marginBottom: '16px' }}
         />
-        <h2 style={{ margin: 0, color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '26px', lineHeight: 1.08, fontWeight: 800 }}>nianlun</h2>
-        <p style={{ margin: '6px 0 0', color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 600 }}>版本 {appVersion}（构建 {appBuildNumber} · {appBuildTimeText}）</p>
+        <h2 style={{ margin: 0, color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '26px', lineHeight: 1.08, fontWeight: 800 }}>年轮</h2>
+        <p style={{ margin: '6px 0 0', color: 'var(--nl-muted)', fontSize: '13px', fontWeight: 500 }}>版本 {appVersion} · 构建 {appBuildNumberValue || 128}</p>
       </section>
 
       <div className="info-card">
@@ -2808,15 +2807,16 @@ export const ErrorPage = () => {
   return (
     <PageShell title="页面加载失败" onBack={() => navigate('/home')} className="error-shell">
       <div style={{ display: 'grid', justifyItems: 'center', gap: 16, padding: '56px 8px 24px', textAlign: 'center' }}>
-        <span aria-hidden="true" style={{ width: 96, height: 96, borderRadius: '50%', background: 'var(--nl-glass-surface)', border: '1px solid var(--nl-glass-border)', display: 'grid', placeItems: 'center', color: 'var(--nl-accent)', boxShadow: 'var(--nl-shadow-soft)' }}>
-          <AlertCircle size={36} strokeWidth={1.7} />
+        <span aria-hidden="true" style={{ width: 132, height: 132, borderRadius: '50%', background: 'var(--nl-glass-surface)', border: '1px solid var(--nl-glass-border)', display: 'grid', placeItems: 'center', color: 'var(--nl-accent)', boxShadow: 'var(--nl-shadow-soft)' }}>
+          <Unlink size={56} strokeWidth={1.5} />
         </span>
-        <h2 style={{ margin: 0, fontFamily: 'var(--nl-font-display)', fontSize: 24, fontWeight: 600, lineHeight: 1.3, color: 'var(--nl-ink)' }}>暂时打不开这一页</h2>
-        <p style={{ margin: 0, maxWidth: 280, color: 'var(--nl-muted)', fontSize: 13, lineHeight: 1.6 }}>链接可能已失效，或者网络暂时不稳定</p>
-        <button type="button" onClick={() => window.location.reload()} style={{ ...primaryButtonStyle, width: '100%', marginTop: 8 }}>重试</button>
-        <button type="button" onClick={() => navigate('/home')} style={{ ...secondaryButtonStyle, width: '100%', minHeight: 44 }}>返回首页</button>
-        <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: 'var(--nl-muted)' }}>如果一直失败，可以在「我的 · 帮助与反馈」里告诉我们</p>
-        <button type="button" onClick={() => navigate('/profile/help')} style={{ ...secondaryButtonStyle, width: '100%', minHeight: 44 }}>帮助与反馈</button>
+        <h2 style={{ margin: 0, fontSize: 32, fontWeight: 800, lineHeight: 1.25, color: 'var(--nl-ink)' }}>暂时打不开这一页</h2>
+        <p style={{ margin: 0, maxWidth: 280, color: 'var(--nl-muted)', fontSize: 13, lineHeight: 1.7 }}>链接可能已失效，或者网络暂时不稳定</p>
+        <div style={{ display: 'grid', gap: 10, width: '100%', maxWidth: 300, marginTop: 8 }}>
+          <button type="button" onClick={() => window.location.reload()} style={{ ...primaryButtonStyle, width: '100%', minHeight: 48, borderRadius: 999 }}>重试</button>
+          <button type="button" onClick={() => navigate('/home')} style={{ ...secondaryButtonStyle, width: '100%', minHeight: 48, borderRadius: 999, boxShadow: 'none' }}>返回首页</button>
+        </div>
+        <button type="button" onClick={() => navigate('/profile/help')} style={{ border: 'none', background: 'transparent', color: 'var(--nl-muted)', fontSize: 13, textDecoration: 'underline', padding: '4px 0', minHeight: 32 }}>需要帮助？去帮助与反馈</button>
       </div>
     </PageShell>
   );
