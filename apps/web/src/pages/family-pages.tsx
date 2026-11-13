@@ -334,7 +334,9 @@ export const FamilyPage = () => {
             <h2 className="fam-section-title">家庭成员</h2>
             <Link to="/family/members" className="fam-section-link">管理 <ChevronRight size={15} /></Link>
           </div>
-          {recentMembers.length ? (
+          {membersLoading && !recentMembers.length ? (
+            <p style={{ ...helperTextStyle, margin: 0, padding: '10px 0' }}>正在加载家庭成员…</p>
+          ) : recentMembers.length ? (
             <div className="fam-member-list">
               {recentMembers.map((member) => {
                 const normalizedNickname = normalizeDisplayName(member.nickname, '家人');
@@ -1128,7 +1130,7 @@ export const FamilyInvitePage = () => {
                   wordBreak: 'break-all',
                 }}
               >
-                {inviteCode || '生成中…'}
+                {inviteCode || (activeChild?.family_no ? '生成中…' : '暂无邀请码')}
               </strong>
             </div>
             <button

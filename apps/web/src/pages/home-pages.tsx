@@ -806,14 +806,16 @@ export const SearchPage = () => {
               <h2 className="search-count">最近记录</h2>
             </div>
             {loading ? <EmptyState message="正在加载最近记录…" /> : null}
-            {!loading && records.length ? (
+            {error ? <EmptyState message={`加载失败：${error}`} /> : null}
+            {!activeChild ? <EmptyState message="还没有孩子档案，先创建一个孩子档案再开始记录。" /> : null}
+            {!loading && !error && activeChild && records.length ? (
               <div className="search-list">
                 {records.slice(0, 4).map((record) => (
                   <SearchResultRow key={record.record_no} record={record} keyword="" onClick={() => navigate(`/record/${record.record_no}`)} />
                 ))}
               </div>
             ) : null}
-            {!loading && !records.length ? (
+            {!loading && !error && activeChild && !records.length ? (
               <div style={{ display: 'grid', justifyItems: 'center', gap: 14, padding: '32px 0 12px', textAlign: 'center' }}>
                 <EmptyState message="还没有记录，先去记一笔吧。" />
                 <button type="button" onClick={() => navigate('/record/create')} style={{ ...refPrimaryButtonStyle, minHeight: 44, padding: '10px 22px', fontSize: 15 }}>

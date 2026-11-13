@@ -2561,7 +2561,7 @@ export const AboutPage = () => {
 
       <div className="info-card">
         <AboutMenuLink icon={FileText} label="用户服务协议" onClick={() => navigate('/profile/legal')} />
-        <AboutMenuLink icon={Shield} label="隐私政策" isLast onClick={() => navigate('/profile/legal')} />
+        <AboutMenuLink icon={Shield} label="隐私政策" isLast onClick={() => navigate('/profile/legal?doc=privacy')} />
       </div>
 
       <div className="info-card">
@@ -2650,7 +2650,7 @@ export const ContactPage = () => {
       {message ? <p style={{ ...helperTextStyle, margin: 0, color: 'var(--nl-success)' }}>{message}</p> : null}
 
       <button type="button" onClick={() => navigate('/profile/help')} style={{ ...secondaryButtonStyle, minHeight: 44, width: '100%' }}>
-        去「帮助与反馈」提交问题
+        去帮助与反馈提交问题
       </button>
 
       <section className="info-card" aria-label="常见问题" style={{ padding: '6px 0' }}>
@@ -2675,7 +2675,15 @@ export const ContactPage = () => {
 
 export const LegalPage = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const backTo = location.pathname.startsWith('/profile') ? '/profile' : '/auth/login';
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate(backTo);
+  };
   const isAboutPage = location.pathname.endsWith('/about');
   const docAliases: Record<string, string> = {
     terms: '用户协议',
@@ -2696,6 +2704,12 @@ export const LegalPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.search]);
 
+  const selectLegalDoc = (title: string) => {
+    const nextAlias = Object.entries(docAliases).find(([, label]) => label === title)?.[0] ?? 'terms';
+    setActiveTitle(title);
+    navigate(`${location.pathname}?doc=${nextAlias}`, { replace: true });
+  };
+
   useEffect(() => {
     if (!largeText) return undefined;
     const root = document.documentElement;
@@ -2710,7 +2724,7 @@ export const LegalPage = () => {
   return (
     <PageShell
       title={isAboutPage ? '关于我们' : '关于与协议'}
-      backTo={backTo}
+      onBack={handleBack}
       className="info-shell"
       action={
         <button
@@ -2737,7 +2751,7 @@ export const LegalPage = () => {
       <AppSegmentedControl
         ariaLabel="协议分类"
         value={activeTitle}
-        onChange={setActiveTitle}
+        onChange={selectLegalDoc}
         options={legalSections.map((item) => ({ value: item.title, label: item.title }))}
       />
       <Panel style={{ padding: '22px 20px', display: 'grid', gap: 16 }}>
@@ -2770,7 +2784,8 @@ export const ErrorPage = () => {
         <p style={{ margin: 0, maxWidth: 280, color: 'var(--nl-muted)', fontSize: 13, lineHeight: 1.6 }}>链接可能已失效，或者网络暂时不稳定</p>
         <button type="button" onClick={() => window.location.reload()} style={{ ...primaryButtonStyle, width: '100%', marginTop: 8 }}>重试</button>
         <button type="button" onClick={() => navigate('/home')} style={{ ...secondaryButtonStyle, width: '100%', minHeight: 44 }}>返回首页</button>
-        <p style={{ margin: 0, fontSize: 11, lineHeight: 1.6, color: 'var(--nl-muted)' }}>如果一直失败，可以在「我的 · 帮助与反馈」里告诉我们</p>
+        <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: 'var(--nl-muted)' }}>如果一直失败，可以在「我的 · 帮助与反馈」里告诉我们</p>
+        <button type="button" onClick={() => navigate('/profile/help')} style={{ ...secondaryButtonStyle, width: '100%', minHeight: 44 }}>帮助与反馈</button>
       </div>
     </PageShell>
   );

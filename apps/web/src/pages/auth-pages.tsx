@@ -275,7 +275,14 @@ const disabledSubmitButtonStyle: CSSProperties = {
   opacity: 1,
 };
 
-export const SplashPage = () => <BrandBootMotion />;
+export const SplashPage = () => {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const timer = window.setTimeout(() => navigate('/home', { replace: true }), 900);
+    return () => window.clearTimeout(timer);
+  }, [navigate]);
+  return <BrandBootMotion />;
+};
 
 const welcomePosters = [
   {

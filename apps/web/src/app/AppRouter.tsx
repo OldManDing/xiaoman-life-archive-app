@@ -35,9 +35,13 @@ const RouteSurfaceReady = ({ onReady }: { onReady: () => void }) => {
         if (!cancelled) onReady();
       });
     });
+    const fallbackTimer = window.setTimeout(() => {
+      if (!cancelled) onReady();
+    }, 400);
 
     return () => {
       cancelled = true;
+      window.clearTimeout(fallbackTimer);
       window.cancelAnimationFrame(firstFrame);
       window.cancelAnimationFrame(secondFrame);
     };
@@ -228,8 +232,8 @@ export const AppRouter = () => {
             <Route path="profile/messages" element={<MessagesPage />} />
             <Route path="profile/notifications" element={<NotificationSettingsPage />} />
             <Route path="profile/account" element={<AccountPage />} />
-            <Route path="profile/reports" element={<Navigate to="/profile" replace />} />
-            <Route path="profile/export" element={<Navigate to="/profile" replace />} />
+            <Route path="profile/reports" element={<ReportsPage />} />
+            <Route path="profile/export" element={<ExportBackupPage />} />
             <Route path="profile/membership" element={<Navigate to="/profile" replace />} />
             <Route path="profile/security" element={<SecurityPage />} />
             <Route path="profile/account-delete" element={<AccountDeletionPage />} />
