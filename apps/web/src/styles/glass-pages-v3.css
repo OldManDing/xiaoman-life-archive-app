@@ -5113,3 +5113,32 @@ body::before {
   font-weight: 700 !important;
   color: var(--nl-ink) !important;
 }
+
+/* 02/03/05/06：底部空场改为铺满（放大主体，挤掉死区） */
+.tl-tile {
+  aspect-ratio: 1 / 1.34 !important;
+}
+
+.fam-hero {
+  padding: 22px 20px !important;
+}
+
+.fam-member-row {
+  min-height: 96px !important;
+}
+
+.pf-stats {
+  padding: 18px 0 !important;
+}
+
+.pf-menu-row {
+  min-height: 64px !important;
+}
+
+.rd-hero {
+  height: 300px !important;
+}
+
+.rd-title {
+  font-size: 30px !important;
+}
