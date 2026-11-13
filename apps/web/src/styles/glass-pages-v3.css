@@ -5079,3 +5079,8 @@ body::before {
 .rc-card {
   border-radius: 24px !important;
 }
+
+/* 01：精选标题下划线缩短 */
+.nl-moment-featured-rule {
+  width: 64px !important;
+}

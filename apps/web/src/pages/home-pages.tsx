@@ -73,6 +73,15 @@ const toLocalDateKey = (value: string | Date) => {
   return year && month && day ? `${year}-${month}-${day}` : '';
 };
 
+const formatStreamDate = (value: string) => {
+  const date = parseSafeDate(value);
+  if (!date) return '';
+  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: appTimeZone, month: 'numeric', day: 'numeric' }).formatToParts(date);
+  const month = Number(parts.find((part) => part.type === 'month')?.value ?? 0);
+  const day = Number(parts.find((part) => part.type === 'day')?.value ?? 0);
+  return month && day ? `${cnNumber(month)}月${cnNumber(day)}日` : '';
+};
+
 const formatStreamTime = (value: string) => {
   const date = new Date(value);
   return Number.isNaN(date.getTime())
@@ -509,6 +518,8 @@ const MomentCard = ({ record, featured = false, onClick }: { record: RecordSumma
       ) : null}
       <span className="nl-moment-body">
         <span className="nl-moment-meta">
+          <span>{formatStreamDate(record.event_time) || formatStreamTime(record.event_time)}</span>
+          <span aria-hidden="true">·</span>
           <span>{formatStreamTime(record.event_time)}</span>
           {record.location_text ? <><span aria-hidden="true">·</span><span>{record.location_text}</span></> : null}
           {isTextCard && (record.is_milestone || record.record_type === 'milestone') ? <span className="nl-moment-milestone-inline"><Star size={12} strokeWidth={2.2} fill="currentColor" />里程碑</span> : null}
