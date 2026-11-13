@@ -73,6 +73,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [childrenList, setChildrenList] = useState<ChildRecord[]>([]);
   const [activeChild, setActiveChildState] = useState<ChildRecord | null>(null);
   const bootstrapRunRef = useRef(0);
+  const userNoRef = useRef<string | null>(null);
+  useEffect(() => {
+    userNoRef.current = user?.user_no ?? null;
+  }, [user?.user_no]);
+
+  const activeChildStorageKey = () => `nianlun.active-child:${userNoRef.current ?? 'anon'}`;
+  const readStoredChildNo = () => {
+    try {
+      return window.sessionStorage.getItem(activeChildStorageKey());
+    } catch {
+      return null;
+    }
+  };
+  const rememberActiveChildNo = (childNo?: string | null) => {
+    try {
+      if (childNo) window.sessionStorage.setItem(activeChildStorageKey(), childNo);
+      else window.sessionStorage.removeItem(activeChildStorageKey());
+    } catch {
+      /* storage may be unavailable */
+    }
+  };
 
   const setAccessToken = useCallback((token: string | null) => {
     persistAccessToken(token);
@@ -80,23 +101,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const refreshChildren = useCallback(async () => {
-    const nextChildren = await webApi.listChildren();
-    const enrichedChildren = await Promise.all(
-      nextChildren.map(async (child) => {
-        try {
-          return await webApi.detailChild(child.child_no);
-        } catch {
-          return child;
-        }
-      }),
-    );
+    const enrichedChildren = await webApi.listChildren();
     setChildrenList(enrichedChildren);
     setActiveChildState((current) => {
       if (current?.name?.trim()) {
         return enrichedChildren.find((item) => item.child_no === current.child_no) ?? current;
       }
       const refreshedCurrent = current ? enrichedChildren.find((item) => item.child_no === current.child_no) : null;
-      return refreshedCurrent?.name?.trim() ? refreshedCurrent : pickDefaultChild(enrichedChildren);
+      if (refreshedCurrent?.name?.trim()) return refreshedCurrent;
+      const storedChildNo = readStoredChildNo();
+      const storedChild = storedChildNo ? enrichedChildren.find((item) => item.child_no === storedChildNo) : null;
+      return storedChild ?? pickDefaultChild(enrichedChildren);
     });
     return enrichedChildren;
   }, []);
@@ -221,6 +236,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const setActiveChild = useCallback((child: ChildRecord | null) => {
     setActiveChildState(child);
+    rememberActiveChildNo(child?.child_no ?? null);
   }, []);
 
   const setUserProfile = useCallback((profile: UserProfile) => {

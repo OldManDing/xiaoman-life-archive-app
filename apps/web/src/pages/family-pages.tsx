@@ -1018,6 +1018,46 @@ export const FamilyMemberDetailPage = () => {
   );
 };
 
+const inviteCacheKey = (familyNo: string) => `nianlun.invite:${familyNo}`;
+const inviteInFlight = new Map<string, Promise<FamilyInviteResponse>>();
+
+const readCachedInvite = (familyNo: string): FamilyInviteResponse | null => {
+  try {
+    const raw = window.sessionStorage.getItem(inviteCacheKey(familyNo));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { invite: FamilyInviteResponse; expiresAt: number };
+    if (!parsed?.invite || !parsed.expiresAt || parsed.expiresAt < Date.now()) return null;
+    return parsed.invite;
+  } catch {
+    return null;
+  }
+};
+
+const writeCachedInvite = (familyNo: string, invite: FamilyInviteResponse) => {
+  try {
+    const expiresAt = invite.expires_at ? new Date(invite.expires_at).getTime() : Date.now() + 6 * 60 * 60 * 1000;
+    window.sessionStorage.setItem(inviteCacheKey(familyNo), JSON.stringify({ invite, expiresAt }));
+  } catch {
+    /* storage may be unavailable */
+  }
+};
+
+const getOrCreateInvite = (familyNo: string) => {
+  const cached = readCachedInvite(familyNo);
+  if (cached) return Promise.resolve(cached);
+  const inFlight = inviteInFlight.get(familyNo);
+  if (inFlight) return inFlight;
+  const request = webApi
+    .createFamilyInvite(familyNo, { role: 'viewer' })
+    .then((invite) => {
+      writeCachedInvite(familyNo, invite);
+      return invite;
+    })
+    .finally(() => inviteInFlight.delete(familyNo));
+  inviteInFlight.set(familyNo, request);
+  return request;
+};
+
 export const FamilyInvitePage = () => {
   const { activeChild } = useAuth();
   const [inviteResult, setInviteResult] = useState<FamilyInviteResponse | null>(null);
@@ -1042,7 +1082,7 @@ export const FamilyInvitePage = () => {
       try {
         const [memberResult, invite] = await Promise.all([
           webApi.listFamilyMembers(familyNo),
-          webApi.createFamilyInvite(familyNo, { role: 'viewer' }),
+          getOrCreateInvite(familyNo),
         ]);
         if (cancelled) return;
         setMembers(memberResult.list);

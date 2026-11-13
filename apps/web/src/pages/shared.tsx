@@ -23,8 +23,18 @@ export const formSubmitSpacingStyle = {
 export const formatDateTimeLocal = (value: string) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '';
-  const timezoneOffset = date.getTimezoneOffset() * 60_000;
-  return new Date(date.getTime() - timezoneOffset).toISOString().slice(0, 16);
+  // 记录时间固定按 Asia/Shanghai 呈现，避免非东八区设备保存后偏移 8 小时
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Shanghai',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(date);
+  const read = (type: string) => parts.find((part) => part.type === type)?.value ?? '';
+  return `${read('year')}-${read('month')}-${read('day')}T${read('hour')}:${read('minute')}`;
 };
 
 const appTimeZone = 'Asia/Shanghai';

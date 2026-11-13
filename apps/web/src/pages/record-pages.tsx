@@ -1680,6 +1680,20 @@ const RecordForm = ({
   }, [hasUnsavedChanges]);
 
   useEffect(() => {
+    if (!hasUnsavedChanges || allowNavigationWithoutPromptRef.current) return undefined;
+    const onPopState = () => {
+      if (allowNavigationWithoutPromptRef.current) return;
+      if (window.confirm('离开后当前编辑内容不会保存，确定返回吗？')) {
+        allowNavigationWithoutPromptRef.current = true;
+        return;
+      }
+      window.history.pushState({ guard: Date.now() }, '', window.location.href);
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [hasUnsavedChanges]);
+
+  useEffect(() => {
     if (!audioRecording) return undefined;
     const timer = window.setInterval(() => {
       const startedAt = audioRecordingStartedAtRef.current;
@@ -2378,7 +2392,7 @@ const RecordForm = ({
             ) : mode === 'edit' ? (
               <button
                 type="button"
-                aria-label="更多操作"
+                aria-label="删除记录"
                 aria-haspopup="dialog"
                 onClick={() => setDeleteConfirmOpen(true)}
                 style={{
@@ -2396,7 +2410,7 @@ const RecordForm = ({
                   placeItems: 'center',
                 }}
               >
-                ···
+                删除
               </button>
             ) : undefined
           }
