@@ -692,7 +692,7 @@ const MediaPreviewTile = ({
       {canOpenFullscreen && hasNestedActions ? (
         <button
           type="button"
-          className="media-overlay-btn"
+          className="media-overlay-btn media-view-btn"
           aria-label={media.media_type === 'video' ? undefined : label}
           onClick={(event) => {
             event.stopPropagation();
@@ -719,7 +719,7 @@ const MediaPreviewTile = ({
       {onRemove ? (
           <button
             type="button"
-            className="media-overlay-btn"
+            className="media-overlay-btn media-remove-btn"
             aria-label="移除媒体"
             onClick={(event) => {
               event.stopPropagation();
@@ -2305,7 +2305,7 @@ const RecordForm = ({
       : 'image/*,video/*,image/jpeg,image/png,image/webp,image/heic,image/heif,video/mp4,video/webm,video/quicktime,video/3gpp';
   const noticeMessage = error ?? selectorMessage;
   const isDraftRecord = form.status === 'draft';
-  const primarySubmitLabel = mode === 'create' || isDraftRecord ? '发布' : '保存';
+  const primarySubmitLabel = mode === 'create' ? '保存这条记录' : isDraftRecord ? '发布' : '保存修改';
 
   const confirmDeleteRecord = async () => {
     if (!recordParams.record_no) return;
