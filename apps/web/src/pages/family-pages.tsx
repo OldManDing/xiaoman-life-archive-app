@@ -64,10 +64,10 @@ const ChildAvatarPreview = ({ src, mediaNo, label }: { src?: string | null; medi
   }, [resolvedSrc]);
 
   if (resolvedSrc && failedSrc !== resolvedSrc) {
-    return <img src={resolvedSrc} alt={label} decoding="async" onError={() => setFailedSrc(resolvedSrc)} style={{ width: '72px', height: '72px', borderRadius: '8px', objectFit: 'cover', border: '1px solid var(--nl-border-image)', background: 'var(--nl-surface-soft)', boxShadow: '0 12px 26px rgba(var(--nl-shadow-rgb),0.18)' }} />;
+    return <img src={resolvedSrc} alt={label} decoding="async" onError={() => setFailedSrc(resolvedSrc)} style={{ width: '132px', height: '132px', borderRadius: '999px', objectFit: 'cover', border: '4px solid rgba(255, 255, 255, 0.9)', background: 'var(--nl-surface-soft)', boxShadow: '0 14px 30px rgba(var(--nl-shadow-rgb),0.18)' }} />;
   }
 
-  return <img src={referenceAssets.childAvatar} alt={label} decoding="async" style={{ width: '72px', height: '72px', borderRadius: '8px', objectFit: 'cover', border: '1px solid var(--nl-border-image)', background: 'var(--nl-surface-soft)', boxShadow: '0 12px 26px rgba(var(--nl-shadow-rgb),0.18)' }} />;
+  return <img src={referenceAssets.childAvatar} alt={label} decoding="async" style={{ width: '132px', height: '132px', borderRadius: '999px', objectFit: 'cover', border: '4px solid rgba(255, 255, 255, 0.9)', background: 'var(--nl-surface-soft)', boxShadow: '0 14px 30px rgba(var(--nl-shadow-rgb),0.18)' }} />;
 };
 
 const FamilyAvatar = ({ src, mediaNo, label, size = 42, radius = '999px', fallbackSrc = null }: { src?: string | null; mediaNo?: string | null; label: string; size?: number; radius?: string; fallbackSrc?: string | null }) => {
@@ -583,6 +583,7 @@ export const FamilyChildPage = () => {
                 <textarea className="ac-input" style={{ textAlign: 'left', minHeight: 44 }} value={form.remark} onChange={(event) => { formDirtyRef.current = true; setForm((current) => ({ ...current, remark: event.target.value })); }} aria-label="备注" />
               </div>
             </div>
+            <p className="archive-hint">月龄按出生日期自动计算</p>
       {message ? <p style={{ ...helperTextStyle, color: isPositiveStatusMessage(message) ? 'var(--nl-success)' : 'var(--nl-danger)' }}>{message}</p> : null}
             <div style={{ ...buttonRowStyle, ...formSubmitSpacingStyle }}>
               <button type="submit" style={primaryButtonStyle} disabled={saving}>

@@ -4951,3 +4951,35 @@ body::before {
   font-weight: 600;
   white-space: nowrap;
 }
+
+/* 16 孩子档案：文本化日期、收敛控件、行分隔 */
+.archive-shell .ac-card .ac-row {
+  border-bottom: 1px solid var(--nl-border-soft);
+}
+
+.archive-shell .ac-card .ac-row:last-child {
+  border-bottom: none;
+}
+
+.archive-shell .ac-input,
+.archive-shell .ac-row input {
+  text-align: right;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.archive-shell [role="radiogroup"],
+.archive-shell .segmented-control {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.archive-shell .archive-hint {
+  margin: 0;
+  padding: 0 6px;
+  color: var(--nl-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
