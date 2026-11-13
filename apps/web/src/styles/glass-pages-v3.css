@@ -5142,3 +5142,37 @@ body::before {
 .rd-title {
   font-size: 30px !important;
 }
+
+/* 03：头图裁切铺满，去掉底部灰带 */
+.rd-hero img,
+.rd-hero video {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  display: block !important;
+}
+
+/* 04：再给保存条留空间，标签墙不被裁 */
+.record-form-page.is-create {
+  padding-bottom: calc(236px + env(safe-area-inset-bottom)) !important;
+}
+
+/* 02：宫格比例回调，避免过度竖长 */
+.tl-tile {
+  aspect-ratio: 1 / 1.2 !important;
+}
+
+/* 05/06：回归设计稿的平铺质感与列表密度 */
+.fam-hero,
+.fam-member-row,
+.pf-stats {
+  box-shadow: none !important;
+}
+
+.fam-member-row {
+  min-height: 84px !important;
+}
+
+.pf-menu-row {
+  min-height: 58px !important;
+}
