@@ -8,6 +8,11 @@ import './styles/design-system-v3.css';
 import './styles/home-glass-v3.css';
 // 05–09 页级结构层：家庭 / 我的 / 搜索 / 孩子建档 的设计稿版式；删除此 import 即回滚
 import './styles/glass-pages-v3.css';
+// 全站按钮水泡点击反馈（pointerdown 冒泡 + 圆角裁切）
+import './styles/bubble.css';
+import { installBubbleEffect } from './shared/bubble';
+
+installBubbleEffect();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
