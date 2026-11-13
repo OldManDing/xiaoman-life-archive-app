@@ -4462,3 +4462,32 @@ button[aria-disabled='true'] {
   box-sizing: border-box !important;
   line-height: 1.2 !important;
 }
+
+/* 15：编辑态内联保存 */
+.is-edit-inline {
+  position: static !important;
+  margin: 16px 0 8px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  backdrop-filter: none !important;
+}
+
+/* 18：底部保存不贴屏底 + 禁用态对比 */
+.account-shell button:disabled {
+  background: #d9c3ab !important;
+  color: #4a3826 !important;
+  opacity: 1 !important;
+}
+
+.account-shell section button:last-child,
+.account-shell > button:last-child {
+  margin-bottom: 28px !important;
+}
+
+.account-shell {
+  padding-bottom: calc(200px + env(safe-area-inset-bottom)) !important;
+}
+
+.is-edit-inline { order: 99 !important; }

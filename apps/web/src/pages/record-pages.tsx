@@ -3068,6 +3068,18 @@ const RecordForm = ({
             </span>
           </button>
 
+          {mode === 'edit' ? (
+            <div className="record-inline-submit is-edit-inline">
+              <button
+                type="submit"
+                form="record-form"
+                className="record-inline-submit-button"
+                disabled={submitting || uploading || audioRecording}
+              >
+                {pendingAction === 'publish' ? '保存中…' : primarySubmitLabel}
+              </button>
+            </div>
+          ) : null}
           {mode === 'create' ? (
             <div className="record-inline-submit">
               <button
@@ -3084,7 +3096,7 @@ const RecordForm = ({
 
         </form>
 
-        {mode !== 'create' && typeof document !== 'undefined' ? createPortal(
+        {mode !== 'create' && isDraftRecord && typeof document !== 'undefined' ? createPortal(
         <div
           className="record-submit-bar"
           style={{

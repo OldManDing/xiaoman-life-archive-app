@@ -859,7 +859,7 @@ export const FamilyMemberDetailPage = () => {
             <h2 className="fam-detail-title">权限</h2>
             <Panel style={{ padding: 0, overflow: 'hidden', borderRadius: 0, background: 'transparent', border: 'none', borderTop: '1px solid var(--nl-border-muted)', boxShadow: 'none' }}>
               <div style={{ borderBottom: '1px solid var(--nl-border-muted)', background: 'transparent', padding: '13px 0', display: 'grid', gap: '10px' }}>
-                <span style={{ color: 'var(--nl-muted)', fontSize: '12px', lineHeight: 1.55 }}>只读成员可查看家庭档案；可编辑成员可发布和修改记录。</span>
+                <span style={{ color: '#5a4636', fontSize: '13px', lineHeight: 1.55 }}>只读成员可查看家庭档案；可编辑成员可发布和修改记录。</span>
                 <div role="radiogroup" aria-label="成员权限" style={{ display: 'grid', gap: 8, borderTop: '1px solid var(--nl-border-soft)', paddingTop: '10px' }}>
                   {([
                     { value: 'viewer' as const, title: '只读成员', detail: '可以查看家庭档案，不能修改内容' },
@@ -897,7 +897,7 @@ export const FamilyMemberDetailPage = () => {
                             width: 22,
                             height: 22,
                             borderRadius: 999,
-                            border: selected ? 'none' : '1.5px solid var(--nl-border-strong)',
+                            border: selected ? 'none' : '2px solid #8a6a52',
                             background: selected ? 'var(--nl-primary)' : 'transparent',
                             color: 'var(--nl-on-primary)',
                             display: 'grid',
@@ -909,7 +909,7 @@ export const FamilyMemberDetailPage = () => {
                         </span>
                         <span style={{ minWidth: 0 }}>
                           <strong style={{ display: 'block', color: 'var(--nl-ink)', fontSize: 15, fontWeight: 600 }}>{option.title}</strong>
-                          <span style={{ color: 'var(--nl-muted)', fontSize: 12, lineHeight: 1.5 }}>{option.detail}</span>
+                          <span style={{ color: '#5a4636', fontSize: 13, lineHeight: 1.5 }}>{option.detail}</span>
                         </span>
                       </button>
                     );
