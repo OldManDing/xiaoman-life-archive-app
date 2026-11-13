@@ -4536,3 +4536,14 @@ button[aria-disabled='true'] {
 .info-card .info-row .set-body { flex: 1 1 auto; min-width: 0; }
 
 .tl-big-title { display: none !important; }
+
+/* 02 日期可读 */
+.tl-tile-date, .tl-thumb-date { background: rgba(30,22,16,.42) !important; padding: 3px 7px !important; border-radius: 8px !important; }
+/* 07 命中词呼吸 */
+.search-title mark { padding: 1px 5px !important; border-radius: 5px !important; -webkit-box-decoration-break: clone; box-decoration-break: clone; line-height: 1.7; }
+/* 24 FAQ 无灰框、间距 */
+.info-card[aria-label="常见问题"] { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; }
+.info-card[aria-label="常见问题"] .info-row { background: rgba(255,251,245,.7) !important; border: 1px solid rgba(255,255,255,.5) !important; border-radius: 14px !important; margin: 8px 0 !important; }
+/* 28 内容与按钮留白 */
+.error-shell > div { padding-left: 0 !important; padding-right: 0 !important; }
+.error-shell button { width: 100% !important; }

@@ -1,7 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Bell, BookHeart, Unlink, Camera, CheckCircle2, ChevronRight, Copy, DownloadCloud, FileBox, FileText, HelpCircle, Home, Info, KeyRound, Lock, LogOut, Mail, Moon, Pencil, RefreshCw, Settings, Shield, ShieldCheck, Smartphone, Trash2, Type, UserPlus, UserRound, Users } from 'lucide-react';
+import { Bell, BookHeart, AlertCircle, Unlink, Camera, CheckCircle2, ChevronRight, Copy, DownloadCloud, FileBox, FileText, HelpCircle, Home, Info, KeyRound, Lock, LogOut, Mail, Moon, Pencil, RefreshCw, Settings, Shield, ShieldCheck, Smartphone, Trash2, Type, UserPlus, UserRound, Users } from 'lucide-react';
 
 import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
@@ -2753,7 +2753,7 @@ export const ErrorPage = () => {
     <PageShell title="页面加载失败" onBack={() => navigate('/home')} className="error-shell">
       <div style={{ display: 'grid', justifyItems: 'center', gap: 16, padding: '56px 8px 24px', textAlign: 'center' }}>
         <span aria-hidden="true" style={{ width: 96, height: 96, borderRadius: '50%', background: 'rgba(255, 250, 244, 0.72)', border: '1px solid rgba(255, 255, 255, 0.72)', display: 'grid', placeItems: 'center', color: 'var(--nl-accent)', boxShadow: '0 12px 30px rgba(146, 96, 52, 0.14)' }}>
-          <Unlink size={36} strokeWidth={1.6} />
+          <AlertCircle size={36} strokeWidth={1.7} />
         </span>
         <h2 style={{ margin: 0, fontFamily: 'var(--nl-font-display)', fontSize: 24, fontWeight: 600, lineHeight: 1.3, color: 'var(--nl-ink)' }}>暂时打不开这一页</h2>
         <p style={{ margin: 0, maxWidth: 280, color: 'var(--nl-muted)', fontSize: 13, lineHeight: 1.6 }}>链接可能已失效，或者网络暂时不稳定</p>
