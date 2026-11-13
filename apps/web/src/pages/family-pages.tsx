@@ -430,10 +430,28 @@ export const FamilyChildPage = () => {
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (!activeChild?.child_no) return;
+    if (avatarUploading) {
+      setMessage('头像还在上传，请稍候再保存');
+      return;
+    }
+    const trimmedName = form.name.trim();
+    if (!trimmedName) {
+      setMessage('请填写孩子姓名');
+      return;
+    }
+    const birthdayDate = new Date(`${form.birthday}T00:00:00`);
+    if (!form.birthday || Number.isNaN(birthdayDate.getTime())) {
+      setMessage('请选择有效的出生日期');
+      return;
+    }
+    if (birthdayDate.getTime() > Date.now()) {
+      setMessage('出生日期不能晚于今天');
+      return;
+    }
     setSaving(true);
     setMessage(null);
     try {
-      const updated = await webApi.updateChild(activeChild.child_no, form);
+      const updated = await webApi.updateChild(activeChild.child_no, { ...form, name: trimmedName });
       await refreshChildren();
       setActiveChild(updated);
       formDirtyRef.current = false;
@@ -444,6 +462,16 @@ export const FamilyChildPage = () => {
       setSaving(false);
     }
   };
+
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (!formDirtyRef.current) return;
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
 
   const onAvatarChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -568,7 +596,7 @@ export const FamilyChildPage = () => {
 
 export const FamilyMembersPage = () => {
   const navigate = useNavigate();
-  const { activeChild } = useAuth();
+  const { activeChild, user } = useAuth();
   const [members, setMembers] = useState<FamilyMemberItem[]>([]);
   const [operations, setOperations] = useState<FamilyMemberOperationItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -579,27 +607,35 @@ export const FamilyMembersPage = () => {
   const settings = loadLocalSettings();
 
   useEffect(() => {
+    let cancelled = false;
     const loadMembers = async () => {
       const familyNo = activeChild?.family_no;
       if (!familyNo) return;
       setLoading(true);
       setError(null);
       setMessage(null);
+      setMembers([]);
+      setOperations([]);
       try {
         const [membersResponse, operationsResponse] = await Promise.all([
           webApi.listFamilyMembers(familyNo),
           webApi.listFamilyMemberOperations(familyNo).catch(() => emptyFamilyOperations(familyNo)),
         ]);
+        if (cancelled) return;
         setMembers(membersResponse.list.filter((member) => (member.status === 0 || member.status === 1) && !/^native_delete_/i.test(member.nickname.trim())));
         setOperations(operationsResponse.list);
       } catch (err) {
+        if (cancelled) return;
         setError(err instanceof Error ? err.message : '加载成员失败');
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
 
     void loadMembers();
+    return () => {
+      cancelled = true;
+    };
   }, [activeChild?.family_no]);
 
   const onChangeRole = async (userNo: string, role: 'viewer' | 'editor') => {
@@ -619,6 +655,8 @@ export const FamilyMembersPage = () => {
       setUpdatingUserNo(null);
     }
   };
+  const selfMember = members.find((item) => item.user_no === user?.user_no) ?? null;
+  const canManageMembers = selfMember?.role === 'owner';
   const visibleMembers = showAllMembers ? members : members.slice(0, 6);
   const hiddenMemberCount = Math.max(members.length - visibleMembers.length, 0);
 
@@ -674,7 +712,7 @@ export const FamilyMembersPage = () => {
                   <p style={{ ...helperTextStyle, margin: 0, fontSize: '12px', fontWeight: 560 }}>手机号：{settings.hideMobileMask ? '已隐藏' : member.mobile_masked ?? '未提供'}</p>
                   <p style={{ ...helperTextStyle, margin: 0, fontSize: '12px', fontWeight: 560 }}>状态：{familyMemberStatusLabel(member.status)}</p>
                 </div>
-                {member.role !== 'owner' ? (
+                {canManageMembers && member.role !== 'owner' ? (
                   <button
                     type="button"
                     onClick={() => navigate(`/family/members/${member.user_no}`)}
@@ -701,6 +739,7 @@ export const FamilyMemberDetailPage = () => {
   const { activeChild, user } = useAuth();
   const [members, setMembers] = useState<FamilyMemberItem[]>([]);
   const [records, setRecords] = useState<RecordSummary[]>([]);
+  const [recordTotal, setRecordTotal] = useState(0);
   const [operations, setOperations] = useState<FamilyMemberOperationItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -729,6 +768,7 @@ export const FamilyMemberDetailPage = () => {
         if (!cancelled) {
           setMembers(membersResponse.list.filter(isVisibleFamilyMember));
           setRecords(recordsResponse.list);
+          setRecordTotal(recordsResponse.total ?? recordsResponse.list.length);
           setOperations(operationsResponse.list);
         }
       } catch (err) {
@@ -753,7 +793,9 @@ export const FamilyMemberDetailPage = () => {
         .sort((a, b) => new Date(b.event_time).getTime() - new Date(a.event_time).getTime())
         .slice(0, 3)
     : [];
-  const canEditRole = Boolean(member && member.role !== 'owner' && activeChild?.family_no);
+  const selfMember = user?.user_no ? members.find((item) => item.user_no === user.user_no) ?? null : null;
+  const isFamilyOwner = selfMember?.role === 'owner';
+  const canEditRole = Boolean(member && member.role !== 'owner' && activeChild?.family_no && isFamilyOwner);
   useEffect(() => {
     if (member && (member.role === 'viewer' || member.role === 'editor')) setPendingRole(member.role);
   }, [member?.user_no, member?.role]);
@@ -833,7 +875,7 @@ export const FamilyMemberDetailPage = () => {
             </div>
             <div style={{ width: '100%', minHeight: '56px', display: 'flex', alignItems: 'center', gap: '28px', borderTop: '1px solid var(--nl-border-muted)', borderBottom: '1px solid var(--nl-border-muted)', padding: '12px 2px' }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: '7px' }}>
-                <strong style={{ color: 'var(--nl-ink)', fontSize: '20px', lineHeight: 1, fontWeight: 760 }}>{memberRecords.length}</strong>
+                <strong style={{ color: 'var(--nl-ink)', fontSize: '20px', lineHeight: 1, fontWeight: 760 }}>{recordTotal}</strong>
                 <span style={{ color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 620 }}>发布记录</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: '7px' }}>
@@ -939,7 +981,7 @@ export const FamilyMemberDetailPage = () => {
             </Panel>
           </section>
 
-          {member.role !== 'owner' ? (
+          {member.role !== 'owner' && isFamilyOwner ? (
             <section aria-label="危险操作" style={{ display: 'grid', gap: 10 }}>
               <h2 style={{ margin: '0 0 0 2px', color: 'var(--nl-muted-strong)', fontSize: 13, fontWeight: 600, letterSpacing: '0.08em' }}>危险操作</h2>
               <Panel style={{ padding: 0, overflow: 'hidden', borderRadius: 'var(--nl-radius-row, 18px)' }}>

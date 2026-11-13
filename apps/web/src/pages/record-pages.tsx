@@ -1431,6 +1431,7 @@ const buildRecordDraftSignature = (
   metricState: { heightValue: string; weightValue: string; metricNote: string },
 ) =>
   JSON.stringify({
+    child_no: value.child_no,
     record_type: value.record_type,
     title: value.title,
     content_text: value.content_text,
@@ -3243,6 +3244,7 @@ export const ViewRecordPage = () => {
   const [fullscreenMedia, setFullscreenMedia] = useState<FullscreenMediaPreview | null>(null);
   const [primaryMediaLoadFailed, setPrimaryMediaLoadFailed] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const canManageRecord = Boolean(data && user?.user_no && data.creator_user_no === user.user_no);
 
   useEffect(() => {
     if (!aiJob || !['pending', 'processing'].includes(aiJob.status)) return;
@@ -3392,9 +3394,11 @@ export const ViewRecordPage = () => {
           <ChevronLeft size={22} strokeWidth={1.9} />
         </button>
         <div className="rd-topbar-right">
+          {canManageRecord ? (
           <button type="button" aria-label="更多操作" aria-haspopup="menu" aria-expanded={moreOpen} onClick={() => setMoreOpen((current) => !current)}>
             <MoreHorizontal size={22} strokeWidth={2} />
           </button>
+          ) : null}
           {moreOpen && data ? (
             <div className="rd-menu" role="menu">
               <button type="button" role="menuitem" onClick={() => { setMoreOpen(false); navigate(`/record/${data.record_no}/edit`); }}>编辑记录</button>

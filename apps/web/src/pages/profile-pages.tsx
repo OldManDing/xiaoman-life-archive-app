@@ -1005,7 +1005,7 @@ export const AccountPage = () => {
       }
       const avatarUrl = await uploadAvatarImage(uploadChildNo, uploadFile, previewUrl);
       const nextProfile = await webApi.updateMe({ avatar_url: avatarUrl });
-      setUserProfile({ ...nextProfile, avatar_url: avatarUrl });
+      setUserProfile({ ...(user ?? nextProfile), ...nextProfile, avatar_url: avatarUrl });
       setAvatarPreviewUrl(null);
       setMessage('头像已更新');
     } catch (err) {
@@ -1018,9 +1018,9 @@ export const AccountPage = () => {
 
   const registeredAt = (() => {
     const raw = (user as { created_at?: string } | null)?.created_at;
-    if (!raw) return '2025年1月1日';
+    if (!raw) return '未记录';
     const date = new Date(raw);
-    if (Number.isNaN(date.getTime())) return '2025年1月1日';
+    if (Number.isNaN(date.getTime())) return '未记录';
     return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
   })();
 
@@ -1046,7 +1046,11 @@ export const AccountPage = () => {
           <input
             className="ac-input"
             value={mobile}
-            onChange={(event) => setMobile(event.target.value.replace(/[^\d]/g, '').slice(0, 11))}
+            onChange={(event) => {
+              const digits = event.target.value.replace(/[^\d]/g, '');
+              const withoutCountryCode = digits.length > 11 && digits.startsWith('86') ? digits.slice(2) : digits;
+              setMobile(withoutCountryCode.slice(0, 11));
+            }}
             placeholder={displayMobile}
             inputMode="tel"
             aria-label="手机号"
@@ -1055,7 +1059,7 @@ export const AccountPage = () => {
         </div>
         <div className="ac-row is-static">
           <span className="ac-label">微信</span>
-          <span className="ac-value">已绑定</span>
+          <span className="ac-value">未绑定</span>
         </div>
         <div className="ac-row is-static">
           <span className="ac-label">注册时间</span>

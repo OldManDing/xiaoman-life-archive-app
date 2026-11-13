@@ -4578,3 +4578,17 @@ button[aria-disabled='true'] {
   max-height: 6.5em;
   overflow: hidden;
 }
+
+/* 52：编辑态只保留内联保存，去掉固定浮层双条 */
+.is-edit .record-submit-bar,
+.is-edit .record-submit-portal {
+  display: none !important;
+}
+
+/* 63：禁用态只作用于保存类按钮，不覆盖单选/分段控件 */
+.account-shell .ac-save:disabled,
+.account-shell button[type='submit']:disabled {
+  background: #d9c3ab !important;
+  color: #4a3826 !important;
+  opacity: 1 !important;
+}
