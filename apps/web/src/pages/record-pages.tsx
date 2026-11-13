@@ -2349,23 +2349,24 @@ const RecordForm = ({
           style={{ position: 'relative', top: 'auto', margin: '0 -18px 8px', padding: 'calc(var(--nl-statusbar-top) + 12px) 18px 10px' }}
           action={
             mode === 'create' ? (
-              <button
-                type="button"
-                onClick={() => void submitRecord('draft')}
-                disabled={submitting}
-                style={{
-                  minHeight: 44,
-                  border: 'none',
-                  background: 'transparent',
-                  color: 'var(--nl-ink)',
-                  fontSize: 15,
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  padding: '0 4px',
-                }}
-              >
-                草稿
-              </button>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+                <button
+                  type="button"
+                  onClick={() => void submitRecord('draft')}
+                  disabled={submitting}
+                  style={{ minHeight: 44, border: 'none', background: 'transparent', color: 'var(--nl-muted-strong)', fontSize: 14, fontWeight: 500, cursor: 'pointer', padding: '0 2px' }}
+                >
+                  草稿
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void submitRecord('publish')}
+                  disabled={submitting}
+                  style={{ minHeight: 44, border: 'none', borderRadius: 999, background: '#a9581b', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', padding: '0 16px' }}
+                >
+                  {submitting ? '保存中' : '保存'}
+                </button>
+              </span>
             ) : mode === 'edit' ? (
               <button
                 type="button"

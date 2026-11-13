@@ -4249,3 +4249,28 @@ body::before {
 .fam-detail-hero {
   gap: 20px;
 }
+
+/* 01：首图蒙层改为通栏渐变，去掉硬边与白线 */
+.nl-moment-featured-overlay {
+  position: absolute !important;
+  inset: 0 !important;
+  display: flex !important;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 18px 20px 20px !important;
+  background: linear-gradient(180deg, rgba(30, 22, 16, 0) 42%, rgba(30, 22, 16, 0.74) 100%) !important;
+  border: none !important;
+}
+
+.nl-moment-featured-rule {
+  border: none !important;
+  background: rgba(255, 255, 255, 0.75) !important;
+  width: 96px !important;
+  height: 1.5px !important;
+}
+
+/* 04：顶栏保存按钮组，不再依赖底部浮层 */
+.is-create .app-topbar > div > div:last-child {
+  gap: 6px;
+}
