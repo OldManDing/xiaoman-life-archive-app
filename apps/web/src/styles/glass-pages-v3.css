@@ -4522,3 +4522,9 @@ button[aria-disabled='true'] {
 }
 
 .search-filter { display:inline-flex !important; align-items:center; gap:4px; min-height:44px; color:var(--nl-muted); font-size:13px; font-weight:500; }
+
+.pf-menu-muted {
+  color: var(--nl-muted);
+  font-size: 13px;
+  font-weight: 500;
+}

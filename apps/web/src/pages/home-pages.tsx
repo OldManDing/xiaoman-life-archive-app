@@ -122,7 +122,7 @@ const groupRecordsByDay = (records: RecordSummary[]): HomeDayGroup[] => {
       const dayNumber = Number(datePart(record.event_time, 'day'));
       const fallbackLabel = !date || !monthNumber || !dayNumber
         ? '更早'
-        : `${cnNumber(monthNumber)}月${cnNumber(dayNumber)}日 ${formatWeekdayShort(record.event_time)}`;
+        : `${monthNumber}月${dayNumber}日 ${formatWeekdayShort(record.event_time)}`;
       group = {
         key,
         label: key === todayKey ? '今天' : key === yesterdayKey ? '昨天' : fallbackLabel,
@@ -1007,7 +1007,7 @@ export const TimelinePage = () => {
   ));
   const milestoneCount = yearRecords.filter((record) => record.is_milestone || record.record_type === 'milestone').length;
   const yearLabel = activeYear === yearOptions[0] ? '今年' : `${activeYear}年`;
-  const bigTitle = activeMonth && activeMonth !== 'all' ? `${cnNumber(Number(activeMonth))}月` : `${activeYear}年`;
+  const bigTitle = activeMonth && activeMonth !== 'all' ? `${Number(activeMonth)}月` : `${activeYear}年`;
 
   return (
     <div className="tl-page">

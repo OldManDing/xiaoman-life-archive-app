@@ -473,8 +473,8 @@ export const ProfilePage = () => {
                 {key === 'font' ? <span className="pf-menu-glyph" aria-hidden="true">Aa</span> : <Icon size={22} strokeWidth={1.8} />}
               </span>
               <span className="pf-menu-label">{label}</span>
-              {key === 'messages' && unreadCount ? (
-                <span className="pf-menu-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>
+              {key === 'messages' ? (
+                unreadCount ? <span className="pf-menu-muted">未读</span> : null
               ) : value ? (
                 <span className="pf-menu-value">{value}</span>
               ) : null}
