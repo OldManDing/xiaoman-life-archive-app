@@ -749,6 +749,8 @@ export const FamilyMemberDetailPage = () => {
   const memberRecords = member
     ? records
         .filter((record) => (record.creator_user_no ? record.creator_user_no === member.user_no : record.creator_name === member.nickname))
+        .slice()
+        .sort((a, b) => new Date(b.event_time).getTime() - new Date(a.event_time).getTime())
         .slice(0, 3)
     : [];
   const canEditRole = Boolean(member && member.role !== 'owner' && activeChild?.family_no);

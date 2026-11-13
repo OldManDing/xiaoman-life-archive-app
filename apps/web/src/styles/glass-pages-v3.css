@@ -4493,3 +4493,30 @@ button[aria-disabled='true'] {
 .is-edit-inline { order: 99 !important; }
 
 .media-overlay-btn { min-width:44px !important; min-height:44px !important; box-sizing:border-box !important; }
+
+/* 15：媒体操作移到缩略图底部，不再挡脸 */
+.media-overlay-btn {
+  top: auto !important;
+  bottom: 8px !important;
+}
+
+/* 06：补版本/帮助页脚，填空场 */
+.pf-footer {
+  display: grid;
+  gap: 4px;
+  padding: 14px 4px 6px;
+  text-align: center;
+  color: var(--nl-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* 24：底部补常见问题入口间距 */
+.info-shell > p + button {
+  margin-top: 4px;
+}
+
+/* 28：底部说明与按钮组居中留白 */
+.app-page-shell .error-actions {
+  width: 100%;
+}

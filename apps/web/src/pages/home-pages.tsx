@@ -613,7 +613,7 @@ export const HomePage = () => {
                 <h2 className="nl-home-day-title">{group.label}</h2>
                 <span className="nl-home-day-count">{group.records.length} 条</span>
               </div>
-              {groupIndex === 0 && !hasTodayRecord ? (
+              {groupIndex === 0 && !hasTodayRecord && group.records.length === 0 ? (
                 <div className="nl-home-today">
                   <span className="nl-home-today-text">今天还没记录</span>
                   <button type="button" className="nl-home-today-cta" onClick={() => navigate(childRequiredTarget('/record/create'))}>
