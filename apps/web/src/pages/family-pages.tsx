@@ -1,7 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useRef } from 'react';
-import { Camera, Check, ChevronRight, Clock, Copy, FileText, Image as ImageIcon, Mic, PlayCircle, Plus, QrCode, UserMinus, UserPlus } from 'lucide-react';
+import { Camera, Check, ChevronDown, ChevronRight, Clock, Copy, FileText, Image as ImageIcon, Link2, MessageCircle, MessageSquare, Mic, PlayCircle, Plus, QrCode, UserMinus, UserPlus } from 'lucide-react';
 
 import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
@@ -1129,7 +1129,8 @@ export const FamilyInvitePage = () => {
             <p style={{ margin: 0, color: 'var(--nl-muted)', fontSize: 13, lineHeight: 1.6 }}>对方接受后可以查看和补充</p>
           </div>
 
-          <button type="button" onClick={inviteByWechat} disabled={!inviteCode} style={{ ...primaryButtonStyle, width: '100%' }}>
+          <button type="button" onClick={inviteByWechat} disabled={!inviteCode} style={{ ...primaryButtonStyle, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <MessageCircle size={18} strokeWidth={2} aria-hidden="true" />
             微信邀请家人
           </button>
 
@@ -1138,11 +1139,13 @@ export const FamilyInvitePage = () => {
               type="button"
               onClick={() => void copyText(inviteLink, '邀请链接已复制')}
               disabled={!inviteCode}
-              style={{ ...secondaryButtonStyle, minHeight: 48, fontSize: 15 }}
+              style={{ ...secondaryButtonStyle, minHeight: 48, fontSize: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
             >
+              <Link2 size={17} strokeWidth={2} aria-hidden="true" />
               复制链接
             </button>
-            <button type="button" onClick={inviteBySms} disabled={!inviteCode} style={{ ...secondaryButtonStyle, minHeight: 48, fontSize: 15 }}>
+            <button type="button" onClick={inviteBySms} disabled={!inviteCode} style={{ ...secondaryButtonStyle, minHeight: 48, fontSize: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+              <MessageSquare size={17} strokeWidth={2} aria-hidden="true" />
               短信邀请
             </button>
           </div>
@@ -1202,7 +1205,7 @@ export const FamilyInvitePage = () => {
           <details style={{ borderRadius: 'var(--nl-radius-row, 18px)', border: '1px solid var(--nl-border-soft)', background: 'rgba(255,250,244,0.5)' }}>
             <summary style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 44, padding: '0 14px', color: 'var(--nl-muted-strong)', fontSize: 13, fontWeight: 600, cursor: 'pointer', listStyle: 'none' }}>
               其他邀请方式（二维码）
-              <ChevronRight size={16} strokeWidth={2} />
+              <ChevronDown size={16} strokeWidth={2} />
             </summary>
             <div style={{ display: 'grid', justifyItems: 'center', gap: 8, padding: '4px 14px 16px' }}>
               <span style={{ width: 132, height: 132, borderRadius: 16, border: '1px dashed var(--nl-border-muted)', display: 'grid', placeItems: 'center', color: 'var(--nl-muted)' }}>
@@ -1267,6 +1270,15 @@ export const FamilyInvitePage = () => {
                 </strong>
                 <span style={{ color: 'var(--nl-muted)', fontSize: 12 }}>{pending ? '邀请已发送' : '已加入'}</span>
               </div>
+              {pending ? (
+                <button
+                  type="button"
+                  onClick={() => void copyText(inviteLink, `邀请链接已复制，可再次发送给${normalizeDisplayName(member.nickname, '家人')}`)}
+                  style={{ flexShrink: 0, minHeight: 32, padding: '0 10px', borderRadius: 999, border: '1px solid var(--nl-primary-border)', background: 'transparent', color: 'var(--nl-accent)', fontSize: 12, fontWeight: 600 }}
+                >
+                  重新发送
+                </button>
+              ) : null}
               <span style={{
                 flexShrink: 0,
                 padding: '5px 12px',
