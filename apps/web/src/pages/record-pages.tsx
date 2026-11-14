@@ -2801,6 +2801,7 @@ const RecordForm = ({
                 setForm((current) => ({ ...current, content_text: event.target.value }));
               }}
             />
+              <span className="record-char-count">{(form.content_text ?? '').length}/500</span>
               </div>
               {canUseAi ? (
                 <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.58, fontSize: '11.5px' }}>
@@ -2996,8 +2997,7 @@ const RecordForm = ({
                   ))}
                 </div>
               ) : null}
-              {mode === 'create' ? (
-                <div className="record-quick-tags">
+              <div className="record-quick-tags">
                   {tagOptions.slice(0, 4).map((tag) => (
                     <button
                       key={`quick-${tag}`}
@@ -3009,11 +3009,10 @@ const RecordForm = ({
                     </button>
                   ))}
                 </div>
-              ) : null}
               {mode === 'create' ? (
                 <div className="record-recorder">
                   <img src="/photos/people/grandma-real.jpg" alt="" />
-                  <span>记录人 {user?.nickname ?? ''}</span>
+                  <span className="record-recorder-row"><span>记录人 {user?.nickname ?? ''}</span></span>
                   <ChevronRight size={18} strokeWidth={1.9} aria-hidden="true" />
                 </div>
               ) : null}
@@ -3085,9 +3084,6 @@ const RecordForm = ({
           </button>
 
           {mode === 'edit' ? (
-            <p className="record-edit-sync-note">修改会同步给家人</p>
-          ) : null}
-          {mode === 'edit' ? (
             <div className="record-inline-submit is-edit-inline">
               <button
                 type="submit"
@@ -3098,6 +3094,9 @@ const RecordForm = ({
                 {pendingAction === 'publish' ? '保存中…' : primarySubmitLabel}
               </button>
             </div>
+          ) : null}
+          {mode === 'edit' ? (
+            <p className="record-edit-sync-note">修改会同步给家人</p>
           ) : null}
           {mode === 'create' ? (
             <div className="record-inline-submit">

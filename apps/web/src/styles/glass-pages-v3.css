@@ -5468,3 +5468,107 @@ body::before {
   font-size: 12px;
   text-align: center;
 }
+
+/* 15：补充详情前置到标题之前；隐藏记录人行 */
+.is-edit .record-details {
+  order: 0 !important;
+}
+
+.is-edit .record-recorder-row {
+  display: none !important;
+}
+
+/* 15：正文输入透明、去内框 */
+#record-form .record-body-input {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.record-char-count {
+  display: block;
+  margin-top: 6px;
+  text-align: right;
+  color: var(--nl-muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* 15：照片关闭钮改白色圆形 × */
+.is-edit .media-remove-btn {
+  width: 28px !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  color: #4a2f12 !important;
+  border: none !important;
+  box-shadow: 0 2px 6px rgba(30, 22, 16, 0.18) !important;
+}
+
+/* 04：快捷标签收进容器卡，选中态实心 */
+.record-form-page .record-quick-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 18px;
+  background: rgba(255, 250, 244, 0.82);
+  border: 1px solid rgba(120, 80, 40, 0.10);
+}
+
+.record-form-page .record-quick-tags button {
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(120, 80, 40, 0.14);
+  background: transparent;
+  color: var(--nl-muted-strong);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.record-form-page .record-quick-tags button.is-on {
+  background: #f5ab52;
+  border-color: transparent;
+  color: #4a2f12;
+}
+
+/* 15：标签用 pill 选择器，隐藏下拉；记录人行隐藏；保存回到流内 */
+.is-edit .record-tag-select {
+  display: none !important;
+}
+
+.is-edit .record-recorder-row {
+  display: none !important;
+}
+
+.is-edit .record-details {
+  order: 2 !important;
+}
+
+.is-edit .record-inline-submit {
+  position: static !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  margin: 14px 0 8px !important;
+}
+
+.record-edit-sync-note {
+  text-align: center;
+  margin: -2px 0 10px;
+}
+
+/* 15：日期行做成带卡片的行 */
+.is-edit .record-details input[aria-label="发生时间 *"] {
+  background: rgba(255, 250, 244, 0.9) !important;
+  border: 1px solid rgba(120, 80, 40, 0.10) !important;
+  border-radius: 18px !important;
+  min-height: 56px !important;
+  padding: 0 16px !important;
+  font-size: 16px !important;
+}
+
+.is-edit .record-tag-chips { display: none !important; }
