@@ -5401,3 +5401,70 @@ body::before {
 #record-form .record-title-card {
   border-bottom: 1px solid rgba(120, 80, 40, 0.12) !important;
 }
+
+/* 04：媒体入口恢复虚线样式 */
+.record-form-page .record-media-grid > button {
+  border: 1.5px dashed rgba(169, 88, 27, 0.32) !important;
+  background: rgba(255, 250, 244, 0.42) !important;
+  border-radius: 20px !important;
+  box-shadow: none !important;
+}
+
+.record-form-page .record-media-grid > button span:last-child {
+  font-weight: 500 !important;
+  font-size: 13px !important;
+}
+
+/* 04：标题/正文为两张独立卡，取消外层合并卡 */
+.is-create .record-editor-card,
+.is-edit .record-editor-card {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  gap: 12px !important;
+}
+
+#record-form .record-title-card,
+#record-form .record-body-card {
+  background: rgba(255, 250, 244, 0.92) !important;
+  border: 1px solid rgba(120, 80, 40, 0.12) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 8px 22px rgba(146, 96, 52, 0.08) !important;
+  padding: 14px 16px !important;
+}
+
+#record-form .record-title-card {
+  border-bottom: 1px solid rgba(120, 80, 40, 0.12) !important;
+}
+
+/* 15：媒体区改为缩略图条 + 虚线添加格 */
+.is-edit .record-media-section > div:first-child,
+.is-edit .record-media-section > p {
+  display: none !important;
+}
+
+.is-edit .record-media-grid {
+  display: flex !important;
+  flex-wrap: nowrap;
+  gap: 10px !important;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.is-edit .record-media-grid > * {
+  flex: 0 0 96px !important;
+  width: 96px !important;
+  height: 96px !important;
+  min-height: 96px !important;
+  max-height: 96px !important;
+  border-radius: 14px !important;
+}
+
+.record-edit-sync-note {
+  margin: 4px 0 0;
+  color: var(--nl-muted);
+  font-size: 12px;
+  text-align: center;
+}

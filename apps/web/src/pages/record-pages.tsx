@@ -1366,6 +1366,12 @@ const splitTags = (value: string) =>
     .map((item) => item.trim())
     .filter(Boolean);
 
+const formatEventDateLabel = (value: string) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '选择时间';
+  return date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+};
+
 const formatDateTimeDisplay = (value: string) => {
   if (!value) return '请选择发生时间';
   const date = new Date(value);
@@ -2470,7 +2476,7 @@ const RecordForm = ({
               type="datetime-local"
               aria-label="发生时间 *"
               value={form.event_time}
-              displayValue={form.event_time ? formatDateTimeDisplay(form.event_time) : undefined}
+              displayValue={form.event_time ? formatEventDateLabel(form.event_time) : undefined}
               placeholder="选择时间"
               variant="line"
               onChange={(event) => {
@@ -3078,6 +3084,9 @@ const RecordForm = ({
             </span>
           </button>
 
+          {mode === 'edit' ? (
+            <p className="record-edit-sync-note">修改会同步给家人</p>
+          ) : null}
           {mode === 'edit' ? (
             <div className="record-inline-submit is-edit-inline">
               <button
