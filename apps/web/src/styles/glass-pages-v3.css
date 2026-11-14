@@ -5802,3 +5802,31 @@ body::before {
   min-height: 22px !important;
   font-size: 12px !important;
 }
+
+/* 15：保留日期行，只隐藏孩子头像按钮 */
+.is-edit #record-form > section:first-child {
+  display: grid !important;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.is-edit #record-form > section:first-child > button {
+  display: none !important;
+}
+
+.is-edit #record-form > section:first-child input[aria-label="发生时间 *"] {
+  background: rgba(255, 250, 244, 0.9) !important;
+  border: 1px solid rgba(120, 80, 40, 0.10) !important;
+  border-radius: 18px !important;
+  min-height: 56px !important;
+  padding: 0 16px !important;
+  font-size: 16px !important;
+}
+
+.is-edit #record-form > section:first-child {
+  justify-items: stretch !important;
+}
+.is-edit #record-form > section:first-child input {
+  width: 100% !important;
+  text-align: left !important;
+}
