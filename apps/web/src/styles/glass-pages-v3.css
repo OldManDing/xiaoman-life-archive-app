@@ -5268,3 +5268,48 @@ body::before {
   background: rgba(245, 171, 82, 0.20) !important;
   border-left-color: var(--nl-primary) !important;
 }
+
+/* 04/15：媒体区说明行隐藏，消除空洞 */
+.is-create .record-media-section > p {
+  display: none !important;
+}
+
+.is-create .record-media-section {
+  padding-bottom: 14px !important;
+}
+
+/* 04/15：保存按钮回到文档流，不再遮挡字段 */
+.is-create .record-inline-submit,
+.is-edit .record-inline-submit {
+  position: static !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  margin: 8px 0 10px !important;
+  border-radius: 999px !important;
+}
+
+.is-create .record-inline-submit-button,
+.is-edit .record-inline-submit-button {
+  width: 100% !important;
+  min-height: 48px !important;
+  border-radius: 999px !important;
+  background: #a9581b !important;
+  color: #fff !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+}
+
+.record-form-page.is-create,
+.record-form-page.is-edit {
+  padding-bottom: calc(28px + env(safe-area-inset-bottom)) !important;
+}
+
+.is-create .record-media-section {
+  min-height: 0 !important;
+  height: auto !important;
+  align-content: start !important;
+}
+.is-create .record-media-grid {
+  min-height: 0 !important;
+}
