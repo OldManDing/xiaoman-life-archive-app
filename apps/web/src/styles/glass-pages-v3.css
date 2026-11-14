@@ -5213,3 +5213,58 @@ body::before {
 .record-form-page.is-create {
   padding-bottom: calc(268px + env(safe-area-inset-bottom)) !important;
 }
+
+/* ===== 记录页统一样式（04/15） ===== */
+#record-form {
+  row-gap: 12px !important;
+}
+
+.record-form-page .app-topbar button {
+  border-radius: 999px !important;
+}
+
+.record-form-page .record-media-section {
+  display: grid;
+  align-content: start;
+}
+
+.record-form-page .record-media-grid {
+  align-items: start !important;
+  grid-auto-rows: min-content !important;
+}
+
+.record-form-page .record-media-grid > button {
+  height: 132px !important;
+  min-height: 132px !important;
+  max-height: 132px !important;
+  border-radius: 18px !important;
+}
+
+.record-form-page .record-section-title,
+.record-form-page .record-details-title {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: var(--nl-ink) !important;
+  letter-spacing: 0.01em;
+}
+
+.record-form-page .record-inline-submit {
+  border-radius: 999px !important;
+}
+
+/* ===== 家人资料（18）统一 ===== */
+.account-shell .fam-detail-title {
+  font-size: 20px !important;
+  font-weight: 700 !important;
+}
+
+/* 18：权限单选底只跟随选中态 */
+.account-shell button[role="radio"] {
+  background: transparent !important;
+  border-left-color: transparent !important;
+}
+
+.account-shell button[role="radio"].is-selected {
+  background: rgba(245, 171, 82, 0.20) !important;
+  border-left-color: var(--nl-primary) !important;
+}

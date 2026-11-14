@@ -869,29 +869,21 @@ export const FamilyMemberDetailPage = () => {
   const roleColor = member?.role === 'owner' ? 'var(--nl-primary-2)' : member?.role === 'editor' ? 'var(--nl-muted-strong)' : 'var(--nl-muted-strong)';
   const roleBg = 'transparent';
   return (
-    <PageShell title="家人资料" backTo="/family" className="account-shell">
+    <PageShell title="成员信息" backTo="/family" className="account-shell">
       {loading ? <Panel><EmptyState message="正在加载家人资料…" /></Panel> : null}
       {!loading && !member ? <Panel><EmptyState message="未找到该家庭成员。" /></Panel> : null}
       {member ? (
         <>
-          <Panel style={{ display: 'grid', gap: '18px', padding: '8px 0 22px', borderRadius: 0, background: 'transparent', border: 'none', boxShadow: 'none' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '96px minmax(0, 1fr)', gap: '16px', alignItems: 'center' }}>
-              <FamilyAvatar src={resolveFamilyMemberAvatarSrc(member, user)} mediaNo={resolveFamilyMemberAvatarMediaNo(member, user)} label={memberName} size={96} />
-              <div style={{ minWidth: 0, display: 'grid', gap: '7px', justifyItems: 'start' }}>
-                <h2 title={memberName} style={{ margin: 0, width: '100%', color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '22px', lineHeight: 1.12, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{memberName}</h2>
-                <span style={{ borderRadius: '6px', background: roleBg, color: roleColor, border: '1px solid var(--nl-border-muted)', padding: '4px 8px', fontSize: '11px', fontWeight: 650, whiteSpace: 'nowrap' }}>{familyRoleLabel(member.role)}</span>
-              </div>
-            </div>
-            <div style={{ width: '100%', minHeight: '56px', display: 'flex', alignItems: 'center', gap: '28px', borderTop: '1px solid var(--nl-border-muted)', borderBottom: '1px solid var(--nl-border-muted)', padding: '12px 2px' }}>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '7px' }}>
-                <strong style={{ color: 'var(--nl-ink)', fontSize: '20px', lineHeight: 1, fontWeight: 760 }}>{recordTotal}</strong>
-                <span style={{ color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 620 }}>发布记录</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '7px' }}>
-                <strong style={{ color: 'var(--nl-ink)', fontSize: '20px', lineHeight: 1, fontWeight: 760 }}>{memberJoinedDays ?? '-'}</strong>
-                <span style={{ color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 620 }}>加入天数</span>
-              </div>
-            </div>
+          <Panel style={{ display: 'grid', gap: 10, justifyItems: 'center', padding: '18px 0 16px', borderRadius: 0, background: 'transparent', border: 'none', boxShadow: 'none' }}>
+            <FamilyAvatar src={resolveFamilyMemberAvatarSrc(member, user)} mediaNo={resolveFamilyMemberAvatarMediaNo(member, user)} label={memberName} size={96} />
+            <h2 title={memberName} style={{ margin: 0, maxWidth: '100%', color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '24px', lineHeight: 1.15, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{memberName}</h2>
+            <span style={{ borderRadius: 999, background: '#F5AB52', color: '#4a2f12', padding: '4px 12px', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap' }}>{familyRoleLabel(member.role)}</span>
+            <span style={{ color: 'var(--nl-muted)', fontSize: 12, fontWeight: 500 }}>
+              {member.joined_at ? `加入于 ${formatAppDate(member.joined_at)}` : `已加入 ${memberJoinedDays ?? '-'} 天`}
+            </span>
+            <span style={{ color: 'var(--nl-muted-strong)', fontSize: 13, fontWeight: 600 }}>
+              发布 {recordTotal} 条记录
+            </span>
           </Panel>
 
           <section>

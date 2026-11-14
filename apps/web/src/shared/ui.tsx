@@ -1046,13 +1046,13 @@ export const textareaStyle: CSSProperties = {
 };
 
 export const primaryButtonStyle: CSSProperties = {
-  minHeight: '52px',
+  minHeight: '48px',
   border: '1px solid transparent',
-  borderRadius: 'var(--nl-radius-control, 16px)',
-  padding: '14px 20px',
-  background: 'var(--nl-primary-gradient)',
-  color: 'var(--nl-on-primary)',
-  fontSize: '16px',
+  borderRadius: '999px',
+  padding: '0 22px',
+  background: '#a9581b',
+  color: '#ffffff',
+  fontSize: '15px',
   fontWeight: 600,
   letterSpacing: '0.01em',
   cursor: 'pointer',
@@ -1062,33 +1062,33 @@ export const primaryButtonStyle: CSSProperties = {
   gap: '8px',
   lineHeight: 1.2,
   textDecoration: 'none',
-  boxShadow: '0 12px 26px rgba(169, 88, 27, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.18)',
+  boxShadow: '0 10px 22px rgba(169, 88, 27, 0.20)',
   transition: 'transform 0.14s ease, box-shadow 0.16s ease, background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, opacity 0.16s ease',
 };
 
 export const secondaryButtonStyle: CSSProperties = {
   ...primaryButtonStyle,
-  border: '1px solid var(--nl-glass-border)',
-  background: 'rgba(255, 250, 244, 0.66)',
+  border: '1px solid rgba(120, 80, 40, 0.16)',
+  background: 'rgba(255, 250, 244, 0.82)',
   color: 'var(--nl-ink)',
-  boxShadow: '0 6px 16px rgba(146, 96, 52, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.66)',
+  boxShadow: 'none',
 };
 
 export const compactPrimaryButtonStyle: CSSProperties = {
   ...primaryButtonStyle,
   minHeight: '40px',
-  padding: '8px 14px',
+  padding: '0 16px',
   fontSize: '13px',
-  fontWeight: 700,
-  boxShadow: '0 9px 18px rgba(var(--nl-primary-rgb),0.085), inset 0 1px 0 var(--nl-inset-highlight-faint)',
+  fontWeight: 600,
+  boxShadow: '0 8px 16px rgba(169, 88, 27, 0.16)',
 };
 
 export const compactSecondaryButtonStyle: CSSProperties = {
   ...secondaryButtonStyle,
   minHeight: '40px',
-  padding: '8px 13px',
+  padding: '0 14px',
   fontSize: '13px',
-  fontWeight: 650,
+  fontWeight: 600,
 };
 
 export const helperTextStyle: CSSProperties = {
