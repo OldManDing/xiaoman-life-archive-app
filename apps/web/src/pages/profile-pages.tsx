@@ -1955,6 +1955,7 @@ export const SecurityPage = () => {
 
   return (
     <PageShell className="info-shell" title="账号与安全" backTo="/profile">
+      <h3 className="set-group-title">登录方式</h3>
       <Panel className="info-card" style={{ padding: 0, overflow: 'hidden', background: 'transparent', border: 'none', boxShadow: 'none' }}>
         {rows.map((item, index) => {
           const Icon = item.icon;
@@ -2043,8 +2044,20 @@ export const SecurityPage = () => {
         </form>
       </Panel>
       ) : null}
-      <button type="button" className="info-danger-row" onClick={() => navigate('/profile/account-delete')} style={{ ...secondaryButtonStyle, width: '100%', color: 'var(--nl-danger)', justifyContent: 'center', minHeight: '48px', marginTop: '10px', borderRadius: '8px', background: 'transparent', border: '1px solid var(--nl-danger-soft)' }}>
-        注销账号
+      <h3 className="set-group-title">账号注销</h3>
+      <button
+        type="button"
+        onClick={() => navigate('/profile/account-delete')}
+        style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', minHeight: 64, padding: '10px 16px', borderRadius: 18, border: '1px solid rgba(168, 72, 44, 0.18)', background: 'rgba(255, 250, 244, 0.82)', cursor: 'pointer', textAlign: 'left' }}
+      >
+        <span style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(168, 72, 44, 0.10)', display: 'grid', placeItems: 'center', color: 'var(--nl-danger)', flexShrink: 0 }}>
+          <Trash2 size={18} strokeWidth={2} />
+        </span>
+        <span style={{ flex: 1, display: 'grid', gap: 2 }}>
+          <strong style={{ color: 'var(--nl-danger)', fontSize: 15, fontWeight: 700 }}>注销账号</strong>
+          <span style={{ color: 'var(--nl-muted)', fontSize: 12, lineHeight: 1.5 }}>注销后账号与家庭成员关系会失效</span>
+        </span>
+        <ChevronRight size={18} strokeWidth={1.9} style={{ color: 'var(--nl-muted)' }} />
       </button>
     </PageShell>
   );
@@ -2141,8 +2154,10 @@ export const AccountDeletionPage = () => {
     <PageShell className="info-shell" title="注销账号" backTo="/profile/security">
       <Panel className="info-card" style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: '16px 18px' }}>
         <div style={rowStyle}>
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', borderRadius: '14px', background: 'rgba(var(--nl-danger-rgb, 168, 72, 44), 0.10)', border: '1px solid rgba(var(--nl-danger-rgb, 168, 72, 44), 0.22)', padding: '12px 14px' }}>
-            <AlertTriangle size={18} strokeWidth={2} style={{ color: 'var(--nl-danger)', flexShrink: 0, marginTop: 2 }} aria-hidden="true" />
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'stretch', borderRadius: '18px', background: 'rgba(255, 250, 244, 0.92)', border: '1px solid rgba(168, 72, 44, 0.16)', padding: '14px 16px' }}>
+            <span style={{ display: 'grid', placeItems: 'center', color: 'var(--nl-danger)', borderRight: '1px solid rgba(168, 72, 44, 0.16)', paddingRight: 12 }}>
+              <AlertTriangle size={20} strokeWidth={2} aria-hidden="true" />
+            </span>
             <div style={{ display: 'grid', gap: 2 }}>
               <strong style={{ color: 'var(--nl-danger)', fontSize: 14, fontWeight: 700 }}>注销后不可恢复</strong>
               <p style={{ margin: 0, color: 'var(--nl-muted-strong)', fontSize: 13, lineHeight: 1.55 }}>账号、密码与家庭成员关系会立即失效。</p>
@@ -2525,8 +2540,8 @@ export const AboutPage = () => {
         <img
           src="/brand/nianlun-logo-192.png"
           alt="年轮"
-          width={96}
-          height={96}
+          width={112}
+          height={112}
           style={{ boxSizing: 'border-box', objectFit: 'contain', borderRadius: '999px', boxShadow: '0 18px 42px rgba(var(--nl-shadow-rgb),0.18)', marginBottom: '16px' }}
         />
         <h2 style={{ margin: 0, color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '26px', lineHeight: 1.08, fontWeight: 800 }}>年轮</h2>
@@ -2599,7 +2614,7 @@ export const AboutPage = () => {
       </div>
 
       <div style={{ textAlign: 'center', color: 'var(--nl-muted)', fontSize: '10px', lineHeight: 1.7, paddingTop: '8px' }}>
-        <p style={{ margin: 0 }}>年轮 © 2026</p>
+        <p style={{ margin: 0 }}>年轮 © 2026 · 把每一天都留给以后</p>
       </div>
     </PageShell>
   );
@@ -2646,7 +2661,7 @@ export const ContactPage = () => {
                 alignItems: 'center',
               }}
             >
-              <span style={{ width: '34px', height: '34px', borderRadius: '8px', border: '1px solid var(--nl-border-muted)', display: 'grid', placeItems: 'center', color: 'var(--nl-primary-2)' }}>
+              <span style={{ width: '40px', height: '40px', borderRadius: '12px', border: 'none', background: '#e9a05a', display: 'grid', placeItems: 'center', color: '#fff' }}>
                 <Icon size={17} strokeWidth={2.1} />
               </span>
               <span style={{ minWidth: 0, display: 'grid', gap: '4px' }}>
@@ -2686,26 +2701,18 @@ export const ContactPage = () => {
         为保护孩子隐私，请勿通过邮件发送照片或视频原件；需要核对素材时我们会引导你在 App 内授权。
       </p>
 
-      <button type="button" onClick={() => navigate('/profile/help')} style={{ ...secondaryButtonStyle, minHeight: 44, width: '100%' }}>
-        去帮助与反馈提交问题
+      <button
+        type="button"
+        onClick={() => navigate('/profile/help')}
+        style={{ display: 'flex', alignItems: 'center', gap: 12, minHeight: 56, padding: '0 16px', borderRadius: 18, border: '1px solid rgba(120, 80, 40, 0.10)', background: 'rgba(255, 250, 244, 0.82)', cursor: 'pointer', textAlign: 'left' }}
+      >
+        <span style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(233, 160, 90, 0.18)', display: 'grid', placeItems: 'center', color: 'var(--nl-accent)', flexShrink: 0 }}>
+          <HelpCircle size={18} strokeWidth={2} />
+        </span>
+        <strong style={{ flex: 1, color: 'var(--nl-ink)', fontSize: 14, fontWeight: 640 }}>去帮助与反馈提交问题</strong>
+        <ChevronRight size={18} strokeWidth={1.9} style={{ color: 'var(--nl-muted)' }} />
       </button>
 
-      <section className="info-card" aria-label="常见问题" style={{ padding: '6px 0' }}>
-        {[
-          { title: '如何邀请家人一起记录？', topic: 'family-remove' },
-          { title: '如何导出孩子的成长记录？', topic: 'membership' },
-        ].map((item) => (
-          <button
-            key={item.topic}
-            type="button"
-            className="info-row"
-            onClick={() => navigate(`/profile/help?topic=${item.topic}`)}
-          >
-            <span className="set-body"><strong style={{ fontSize: 14 }}>{item.title}</strong></span>
-            <ChevronRight size={18} className="set-chevron" />
-          </button>
-        ))}
-      </section>
     </PageShell>
   );
 };

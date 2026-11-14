@@ -2364,7 +2364,7 @@ const RecordForm = ({
       }}
     >
         <AppTopBar
-          title={mode === 'create' ? '记一笔' : ''}
+          title={mode === 'create' ? '记一笔' : '编辑记录'}
           backLabel={mode === 'create' ? '×' : '返回'}
           backVariant={mode === 'create' ? 'text' : 'icon'}
           onBack={leaveRecordForm}
@@ -2390,28 +2390,23 @@ const RecordForm = ({
                 </button>
               </span>
             ) : mode === 'edit' ? (
-              <button
-                type="button"
-                aria-label="删除记录"
-                aria-haspopup="dialog"
-                onClick={() => setDeleteConfirmOpen(true)}
-                style={{
-                  width: 44,
-                  height: 44,
-                  border: 'none',
-                  borderRadius: 999,
-                  background: 'transparent',
-                  color: 'var(--nl-ink)',
-                  fontSize: 20,
-                  fontWeight: 700,
-                  letterSpacing: '0.12em',
-                  cursor: 'pointer',
-                  display: 'grid',
-                  placeItems: 'center',
-                }}
-              >
-                <Trash2 size={18} strokeWidth={2} />
-              </button>
+              <details style={{ position: 'relative' }}>
+                <summary
+                  aria-label="更多操作"
+                  style={{ listStyle: 'none', width: 44, height: 44, display: 'grid', placeItems: 'center', cursor: 'pointer', color: 'var(--nl-ink)' }}
+                >
+                  <MoreHorizontal size={20} strokeWidth={2.2} />
+                </summary>
+                <div style={{ position: 'absolute', right: 0, top: 46, zIndex: 60, minWidth: 132, padding: 6, borderRadius: 14, background: '#fffaf4', border: '1px solid rgba(120, 80, 40, 0.14)', boxShadow: '0 14px 34px rgba(120, 80, 40, 0.18)' }}>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteConfirmOpen(true)}
+                    style={{ width: '100%', minHeight: 40, border: 'none', borderRadius: 10, background: 'transparent', color: 'var(--nl-danger)', fontSize: 14, fontWeight: 600, textAlign: 'left', padding: '0 12px', cursor: 'pointer' }}
+                  >
+                    删除记录
+                  </button>
+                </div>
+              </details>
             ) : undefined
           }
         />

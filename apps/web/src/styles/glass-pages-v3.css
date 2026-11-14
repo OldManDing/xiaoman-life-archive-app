@@ -5203,3 +5203,13 @@ body::before {
   padding-bottom: 4px !important;
   margin-bottom: 2px !important;
 }
+
+/* 15：编辑页顶栏居中标题，正文大标题隐藏 */
+.is-edit .record-workspace-masthead {
+  display: none !important;
+}
+
+/* 04：保存条与内容再拉开距离 */
+.record-form-page.is-create {
+  padding-bottom: calc(268px + env(safe-area-inset-bottom)) !important;
+}
