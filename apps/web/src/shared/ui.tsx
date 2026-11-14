@@ -75,13 +75,13 @@ const topBarBackStyle = (variant: 'icon' | 'pill' | 'text'): CSSProperties => {
 
   if (variant === 'icon') {
     return {
-      minHeight: '44px',
-      width: '44px',
-      height: '44px',
+      minHeight: '32px',
+      width: '32px',
+      height: '32px',
       padding: 0,
       gap: 0,
-      border: '1px solid rgba(255, 255, 255, 0.72)',
-      background: 'rgba(255, 255, 255, 0.58)',
+      border: '1px solid rgba(255, 255, 255, 0.64)',
+      background: 'rgba(255, 255, 255, 0.52)',
       borderRadius: 'var(--nl-radius-pill, 999px)',
       color: 'var(--nl-ink)',
       display: 'inline-flex',
@@ -89,7 +89,7 @@ const topBarBackStyle = (variant: 'icon' | 'pill' | 'text'): CSSProperties => {
       justifyContent: 'center',
       textDecoration: 'none',
       cursor: 'pointer',
-      boxShadow: '0 6px 16px rgba(146, 96, 52, 0.12)',
+      boxShadow: '0 4px 10px rgba(146, 96, 52, 0.10)',
     };
   }
 
@@ -118,7 +118,7 @@ export const AppTopBar = ({
 }) => {
   const backContent = (
     <>
-      {backVariant === 'text' ? null : <ChevronLeft size={18} strokeWidth={2.5} />}
+      {backVariant === 'text' ? null : <ChevronLeft size={16} strokeWidth={2.4} />}
       {backVariant === 'icon' ? null : <span>{backLabel}</span>}
     </>
   );
