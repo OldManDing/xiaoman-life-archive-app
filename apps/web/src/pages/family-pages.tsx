@@ -695,7 +695,7 @@ export const FamilyMembersPage = () => {
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                       <strong style={{ minWidth: 0, maxWidth: '100%', fontSize: '16px', color: 'var(--nl-ink)', fontWeight: 720, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflowWrap: 'anywhere' }}>{getFamilyMemberDisplayName(member)}</strong>
-                      <span style={{ fontSize: '11px', fontWeight: 660, color: member.role === 'owner' ? 'var(--nl-primary-2)' : 'var(--nl-muted-strong)', background: 'transparent', border: '1px solid var(--nl-border-soft)', padding: '3px 8px', borderRadius: '7px', whiteSpace: 'nowrap' }}>
+                      <span style={{ fontSize: '11px', fontWeight: 660, color: '#4a2f12', background: member.role === 'owner' ? '#F5AB52' : 'rgba(245, 171, 82, 0.32)', border: 'none', padding: '3px 8px', borderRadius: '7px', whiteSpace: 'nowrap' }}>
                         {familyRoleLabel(member.role)}
                       </span>
                     </div>
@@ -704,6 +704,11 @@ export const FamilyMembersPage = () => {
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px', padding: '1px 0 0' }}>
                   <p style={{ ...helperTextStyle, margin: 0, fontSize: '12px', fontWeight: 560 }}>手机号：{settings.hideMobileMask ? '已隐藏' : member.mobile_masked ?? '未提供'}</p>
                   <p style={{ ...helperTextStyle, margin: 0, fontSize: '12px', fontWeight: 560 }}>状态：{familyMemberStatusLabel(member.status)}</p>
+                  {member.status === 0 ? (
+                    <button type="button" onClick={() => navigate('/family/invite')} style={{ minHeight: 32, padding: '0 10px', borderRadius: 999, border: '1px solid var(--nl-primary-border)', background: 'transparent', color: 'var(--nl-accent)', fontSize: 12, fontWeight: 600 }}>
+                      重新发送
+                    </button>
+                  ) : null}
                 </div>
                 {canManageMembers && member.role !== 'owner' ? (
                   <button
@@ -922,6 +927,7 @@ export const FamilyMemberDetailPage = () => {
                       <button
                         key={option.value}
                         type="button"
+                        className={`perm-option${selected ? ' is-selected' : ''}`}
                         role="radio"
                         aria-checked={selected}
                         disabled={disabled}

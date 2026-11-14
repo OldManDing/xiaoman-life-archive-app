@@ -5176,3 +5176,30 @@ body::before {
 .pf-menu-row {
   min-height: 58px !important;
 }
+
+/* 18：权限选项只高亮选中项 */
+.perm-option {
+  background: transparent !important;
+}
+
+.perm-option.is-selected {
+  background: rgba(245, 171, 82, 0.20) !important;
+  border-left-color: var(--nl-primary) !important;
+}
+
+/* 04：媒体入口压到设计稿高度，去掉与标题之间的死区 */
+.is-create .record-media-grid {
+  gap: 10px !important;
+}
+
+.is-create .record-media-grid > button,
+.is-create .record-media-grid > div {
+  height: 132px !important;
+  min-height: 132px !important;
+  max-height: 132px !important;
+}
+
+.is-create .record-media-section {
+  padding-bottom: 4px !important;
+  margin-bottom: 2px !important;
+}
