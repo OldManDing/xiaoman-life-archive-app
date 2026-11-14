@@ -6004,3 +6004,181 @@ body::before {
   color: var(--nl-ink) !important;
   letter-spacing: 0.01em;
 }
+
+.is-edit .record-location-chips {
+  display: none !important;
+}
+
+.record-location-row::after {
+  content: "›";
+  display: grid;
+  place-items: center;
+  padding: 0 14px;
+  color: var(--nl-muted);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.is-edit #record-form textarea.record-body-input {
+  min-height: 96px !important;
+}
+
+.is-edit .record-inline-submit-button {
+  min-height: 52px !important;
+}
+
+/* 15：说明在 CTA 下方、隐藏多余里程碑行 */
+.is-edit #record-form > .record-inline-submit { order: 20 !important; }
+.is-edit #record-form > .record-edit-sync-note { order: 21 !important; }
+
+.record-form-page button[aria-label="切换里程碑记录"] {
+  display: none !important;
+}
+
+/* 一屏内容量：再压缩 */
+.is-create .record-media-grid > button,
+.is-edit .record-media-grid > button {
+  height: 128px !important;
+  min-height: 128px !important;
+  max-height: 128px !important;
+}
+
+.is-edit #record-form textarea.record-body-input {
+  min-height: 84px !important;
+}
+
+#record-form .record-title-card {
+  padding: 10px 14px !important;
+}
+
+#record-form .record-title-input {
+  padding: 6px 0 !important;
+}
+
+#record-form .record-body-card {
+  padding: 10px 14px !important;
+}
+
+.record-form-page .record-inline-submit {
+  margin: 4px 0 2px !important;
+}
+
+/* 记录页密度与字体对齐设计稿 */
+.is-create #record-form > section:first-child input[aria-label="发生时间 *"],
+.is-edit #record-form > section:first-child input[aria-label="发生时间 *"] {
+  min-height: 48px !important;
+  border-radius: 14px !important;
+}
+
+.record-form-page .record-location-row {
+  min-height: 48px !important;
+  border-radius: 14px !important;
+}
+
+.record-form-page .record-location-row input {
+  min-height: 48px !important;
+  font-size: 15px !important;
+}
+
+#record-form {
+  row-gap: 6px !important;
+}
+
+.record-media-section,
+#record-form .record-title-card,
+#record-form .record-body-card {
+  margin: 0 !important;
+}
+
+.record-media-section {
+  padding: 10px !important;
+}
+
+/* 正文与标签用衬线体（设计稿） */
+#record-form textarea.record-body-input,
+#record-form .record-field-label,
+.record-form-page .record-quick-tags button {
+  font-family: var(--nl-font-display) !important;
+}
+
+/* 顶栏「保存」橙色（只作用于右侧动作） */
+.is-create .app-topbar > div > div:last-child button,
+.is-create .app-topbar > div > div:last-child button span {
+  color: #c96a1e !important;
+}
+
+/* 添加格方形 */
+.media-add-tile {
+  border-radius: 16px !important;
+  aspect-ratio: 1 / 1;
+}
+
+/* 标签首个默认实心（视觉对齐设计稿） */
+.record-form-page .record-quick-tags button:first-child:not(.is-on) {
+  background: #f5a64a !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+}
+
+/* 15：深棕保存键 */
+.is-edit .record-inline-submit-button {
+  background: linear-gradient(180deg, #8f4c16 0%, #733a10 100%) !important;
+  box-shadow: 0 10px 22px rgba(115, 58, 16, 0.28) !important;
+}
+
+/* 15：标题铅笔 */
+.record-title-pencil {
+  flex-shrink: 0;
+  color: var(--nl-muted-strong);
+  align-self: center;
+}
+
+/* 删除角标固定右上 */
+.is-edit .media-remove-btn {
+  inset-inline-start: auto !important;
+  left: auto !important;
+  right: 6px !important;
+  top: 6px !important;
+}
+
+/* 04：CTA 抬高，避免被浮层压住 */
+.is-create .record-inline-submit {
+  bottom: calc(26px + env(safe-area-inset-bottom)) !important;
+}
+
+/* 15：同步说明放到 CTA 上方可见处 */
+.is-edit #record-form > .record-edit-sync-note {
+  order: 19 !important;
+  margin: 2px 0 4px !important;
+  text-align: center;
+}
+
+/* 15：标题下划线、无描边 */
+#record-form .record-title-card {
+  border-radius: 16px !important;
+}
+
+#record-form .record-title-input {
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+/* 15：删除钮 22px 白圆 */
+.is-edit .media-remove-btn {
+  width: 22px !important;
+  height: 22px !important;
+  min-height: 22px !important;
+  font-size: 12px !important;
+  padding: 0 !important;
+}
+
+/* 行高收紧 */
+.is-create #record-form > section:first-child input[aria-label="发生时间 *"],
+.is-edit #record-form > section:first-child input[aria-label="发生时间 *"] {
+  min-height: 46px !important;
+}
+
+.record-form-page .record-location-row,
+.record-form-page .record-location-row input {
+  min-height: 46px !important;
+}

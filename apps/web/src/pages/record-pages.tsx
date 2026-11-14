@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type CSSProperties, type FormEvent } from 'react';
-import { AlertCircle, BookOpen, CheckCircle2, ChevronLeft, ChevronRight, Clock, Eye, FileAudio, FileText, Image, ImagePlus, MapPin, Mic, MoreHorizontal, PlayCircle, RotateCcw, Ruler, Sparkles, Square, Star, Tag, Trash2, Video, X } from 'lucide-react';
+import { AlertCircle, BookOpen, Camera as CameraIcon, Pencil as PencilIcon, CheckCircle2, ChevronLeft, ChevronRight, Clock, Eye, FileAudio, FileText, Image, ImagePlus, MapPin, Mic, MoreHorizontal, PlayCircle, RotateCcw, Ruler, Sparkles, Square, Star, Tag, Trash2, Video, X } from 'lucide-react';
 import { Camera, CameraResultType, CameraSource, type GalleryPhoto, type Photo } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 import type { PointerEvent as ReactPointerEvent, ReactNode, RefObject } from 'react';
@@ -2652,7 +2652,7 @@ const RecordForm = ({
                   </>
                 ) : (
                   <>
-                    <MediaActionButton icon={<ImagePlus size={17} strokeWidth={2.2} />} label="拍照记录" displayLabel="拍照" onClick={() => void openNativePhotoCapture()} disabled={uploading || audioRecording} />
+                    <MediaActionButton icon={<CameraIcon size={18} strokeWidth={2.2} />} label="拍照记录" displayLabel="拍照" onClick={() => void openNativePhotoCapture()} disabled={uploading || audioRecording} />
                     <MediaActionButton icon={<Image size={17} strokeWidth={2.2} />} label="从相册添加" displayLabel="相册" onClick={() => void openNativeGalleryImages()} disabled={uploading || audioRecording} />
                     <MediaActionButton icon={<MoreHorizontal size={18} strokeWidth={2.2} />} label="更多媒体" displayLabel={moreMediaOpen ? '收起' : '更多'} ariaExpanded={moreMediaOpen} onClick={() => setMoreMediaOpen((current) => !current)} disabled={uploading || audioRecording} />
                   </>
@@ -2758,6 +2758,7 @@ const RecordForm = ({
                   setForm((current) => ({ ...current, title: event.target.value }));
                 }}
               />
+              {mode === 'edit' ? <PencilIcon className="record-title-pencil" size={16} strokeWidth={2} aria-hidden="true" /> : null}
               {canUseAi ? (
                 <button
                   type="button"
@@ -2806,7 +2807,7 @@ const RecordForm = ({
                 setForm((current) => ({ ...current, content_text: event.target.value }));
               }}
             />
-              <span className="record-char-count">{(form.content_text ?? '').length}/500</span>
+              <span className="record-char-count">{(form.content_text ?? '').length} / 500</span>
               </div>
               {canUseAi ? (
                 <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.58, fontSize: '11.5px' }}>
@@ -2925,7 +2926,7 @@ const RecordForm = ({
               </div>
 
               {form.location_text.trim() || poiLoading ? (
-                <div style={{ display: 'flex', gap: '7px', flexWrap: 'wrap', paddingTop: '1px' }}>
+                <div className="record-location-chips" style={{ display: 'flex', gap: '7px', flexWrap: 'wrap', paddingTop: '1px' }}>
                   {hasManualLocationSuggestion ? (
                     <button
                       type="button"

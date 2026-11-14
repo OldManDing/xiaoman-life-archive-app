@@ -445,17 +445,17 @@ export const AppDateInput = forwardRef<HTMLInputElement, AppDateInputProps>(({
   const lineVariantStyle: CSSProperties = variant === 'line'
     ? {
         minHeight: '44px',
-        width: 'auto',
+        width: '100%',
         minWidth: 0,
-        padding: '0 0 0 2px',
+        padding: '0 2px',
         border: 'none',
         borderRadius: 0,
         background: 'transparent',
         boxShadow: 'none',
-        justifyContent: 'flex-end',
+        justifyContent: 'flex-start',
       }
     : {};
-  const Icon = isDateTime ? Clock : CalendarDays;
+  const Icon = CalendarDays;
 
   useEffect(() => {
     if (!isPickerOpen) return;
@@ -573,18 +573,20 @@ export const AppDateInput = forwardRef<HTMLInputElement, AppDateInputProps>(({
         <span
           style={{
             pointerEvents: 'none',
-            flex: variant === 'line' ? '0 1 auto' : 1,
+            flex: 1,
             minWidth: 0,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
-            fontSize: variant === 'line' ? '14px' : '14px',
-            fontWeight: variant === 'line' ? 600 : 560,
+            textAlign: 'left',
+            fontSize: '14px',
+            fontWeight: variant === 'line' ? 500 : 560,
             ...textStyle,
           }}
         >
           {displayValue || placeholder || (isDateTime ? '选择时间' : '年/月/日')}
         </span>
+        {variant === 'line' ? <ChevronRight size={16} strokeWidth={2} color="var(--nl-muted)" style={{ flexShrink: 0 }} /> : null}
       </span>
       {isPickerOpen && typeof document !== 'undefined' ? createPortal(
         <span className="app-date-sheet-backdrop" onMouseDown={(event) => {

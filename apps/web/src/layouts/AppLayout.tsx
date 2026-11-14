@@ -54,14 +54,7 @@ const AppUpdateNotice = ({ bottomOffset }: { bottomOffset: string }) => {
 
   if ((!update?.update_available && !checkError) || dismissed) return null;
 
-  if (checkError && !update) {
-    return (
-      <section role="status" aria-label="更新检查失败" style={{ position: 'fixed', left: '50%', bottom: bottomOffset, transform: 'translateX(-50%)', width: 'calc(100% - 24px)', maxWidth: '406px', zIndex: 30, borderRadius: '8px', border: '1px solid var(--nl-border-strong)', background: 'var(--nl-dialog-bg)', padding: '12px 14px', boxShadow: 'var(--nl-dialog-shadow)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-        <span style={{ color: 'var(--nl-muted-strong)', fontSize: '12px' }}>{checkError}</span>
-        <button type="button" onClick={() => { setCheckError(null); setRetryToken((value) => value + 1); }} style={{ ...updateActionStyle, minHeight: '32px', padding: '0 10px', background: 'transparent', color: 'var(--nl-primary-2)' }}>重试</button>
-      </section>
-    );
-  }
+  if (checkError && !update) return null;
 
   if (!update) return null;
 
