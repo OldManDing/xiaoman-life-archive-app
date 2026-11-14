@@ -5931,3 +5931,76 @@ body::before {
 .is-edit .record-details > div[style*="flex-wrap: wrap"] {
   display: none !important;
 }
+
+/* ===== 组件风格统一（对齐 screens 版设计语言） ===== */
+:root {
+  --ui-card-radius: 20px;
+  --ui-card-bg: rgba(255, 250, 244, 0.90);
+  --ui-card-border: 1px solid rgba(120, 80, 40, 0.10);
+  --ui-card-shadow: 0 8px 22px rgba(146, 96, 52, 0.08);
+  --ui-row-min: 56px;
+  --ui-divider: 1px solid rgba(120, 80, 40, 0.10);
+}
+
+/* 卡片统一 */
+.ac-card,
+.info-card,
+.set-card,
+.msg-card,
+.member-row-card,
+.rc-card,
+.fam-hero,
+.perm-card,
+.record-media-section,
+#record-form .record-title-card,
+#record-form .record-body-card {
+  border-radius: var(--ui-card-radius) !important;
+  background: var(--ui-card-bg) !important;
+  border: var(--ui-card-border) !important;
+  box-shadow: var(--ui-card-shadow) !important;
+}
+
+/* 行统一 */
+.ac-row,
+.info-row,
+.set-row,
+.msg-row,
+.pf-menu-row {
+  min-height: var(--ui-row-min) !important;
+  border-bottom: var(--ui-divider) !important;
+}
+
+.ac-row:last-child,
+.info-row:last-child,
+.set-row:last-child {
+  border-bottom: none !important;
+}
+
+/* 输入框统一 */
+.app-shell input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.info-shell input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+#record-form input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+#record-form textarea {
+  border-radius: 14px !important;
+}
+
+/* 圆形/胶囊标签统一 */
+.fam-role,
+.chip,
+.tag-chip,
+.set-chip,
+.record-quick-tags button,
+.media-add-tile {
+  border-radius: 999px !important;
+}
+
+/* 分组标题统一 */
+.set-group-title,
+.info-section-title,
+.fam-detail-title {
+  font-family: var(--nl-font-display) !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  color: var(--nl-ink) !important;
+  letter-spacing: 0.01em;
+}
