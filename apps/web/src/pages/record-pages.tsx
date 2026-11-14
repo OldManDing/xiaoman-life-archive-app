@@ -2998,7 +2998,7 @@ const RecordForm = ({
                 </div>
               ) : null}
               <div className="record-quick-tags">
-                  {tagOptions.slice(0, 4).map((tag) => (
+                  {tagOptions.slice(0, 3).map((tag) => (
                     <button
                       key={`quick-${tag}`}
                       type="button"
