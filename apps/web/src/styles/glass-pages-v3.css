@@ -5572,3 +5572,50 @@ body::before {
 }
 
 .is-edit .record-tag-chips { display: none !important; }
+
+/* 04（screens 版）：单块添加照片、无记录人、无隐私说明 */
+.is-create .record-media-section > div:first-child {
+  display: none !important;
+}
+
+.is-create .record-media-grid {
+  grid-template-columns: 1fr !important;
+}
+
+.is-create .record-media-grid > *:nth-child(n+2) {
+  display: none !important;
+}
+
+.is-create .record-media-grid > button {
+  height: 150px !important;
+  min-height: 150px !important;
+  max-height: 150px !important;
+  border-radius: 20px !important;
+}
+
+.is-create .record-recorder {
+  display: none !important;
+}
+
+.is-create .record-submit-bar p {
+  display: none !important;
+}
+
+/* 日期/地点行做成设计稿的卡片行 */
+.is-create .record-details input[aria-label="发生时间 *"] {
+  background: rgba(255, 250, 244, 0.9) !important;
+  border: 1px solid rgba(120, 80, 40, 0.10) !important;
+  border-radius: 18px !important;
+  min-height: 56px !important;
+  padding: 0 16px !important;
+  font-size: 16px !important;
+}
+
+.is-create .record-location-row {
+  background: rgba(255, 250, 244, 0.9) !important;
+  border: 1px solid rgba(120, 80, 40, 0.10) !important;
+  border-radius: 18px !important;
+  border-bottom: 1px solid rgba(120, 80, 40, 0.10) !important;
+  min-height: 56px !important;
+  margin-top: 10px;
+}

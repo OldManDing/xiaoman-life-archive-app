@@ -2380,11 +2380,11 @@ const RecordForm = ({
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
                 <button
                   type="button"
-                  onClick={() => void submitRecord('draft')}
+                  onClick={() => void submitRecord('published')}
                   disabled={submitting}
-                  style={{ minHeight: 44, border: 'none', background: 'transparent', color: 'var(--nl-muted-strong)', fontSize: 14, fontWeight: 500, cursor: 'pointer', padding: '0 2px' }}
+                  style={{ minHeight: 44, border: 'none', background: 'transparent', color: 'var(--nl-accent)', fontSize: 15, fontWeight: 600, cursor: 'pointer', padding: '0 2px' }}
                 >
-                  草稿
+                  {submitting ? '保存中' : '保存'}
                 </button>
               </span>
             ) : mode === 'edit' ? (
@@ -3108,7 +3108,6 @@ const RecordForm = ({
               >
                 {pendingAction === 'publish' ? '保存中…' : '保存这条记录'}
               </button>
-              <p>仅家人可见</p>
             </div>
           ) : null}
 
