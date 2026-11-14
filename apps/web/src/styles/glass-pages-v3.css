@@ -6251,3 +6251,62 @@ body::before {
 #record-form .record-title-card {
   border-bottom: 1px solid rgba(120, 80, 40, 0.14) !important;
 }
+
+/* ===== 最终配色与密度（对齐 screens 设计稿） ===== */
+:root {
+  --nl-page-bg: #fde7d6;
+  --ui-card-bg: rgba(255, 248, 239, 0.94);
+}
+
+body,
+#root,
+.app-layout,
+.app-main-scroll,
+.app-page-shell {
+  background-image: linear-gradient(180deg, #ffeedd 0%, #fde0c6 100%) !important;
+}
+
+/* 记录页卡片更接近奶油色 */
+#record-form .record-title-card,
+#record-form .record-body-card,
+.record-form-page .record-inline-submit,
+.record-form-page .record-location-row,
+.record-form-page .record-media-section {
+  background: rgba(255, 248, 239, 0.94) !important;
+}
+
+/* 密度：行高与卡片内边距 */
+#record-form {
+  row-gap: 8px !important;
+}
+
+#record-form .record-title-card,
+#record-form .record-body-card {
+  padding: 10px 14px !important;
+}
+
+.is-create #record-form > section:first-child input[aria-label="发生时间 *"],
+.is-edit #record-form > section:first-child input[aria-label="发生时间 *"],
+.record-form-page .record-location-row,
+.record-form-page .record-location-row input {
+  min-height: 44px !important;
+}
+
+/* 照片删除角标固定到右上角 */
+.is-edit .record-media-previews > * {
+  position: relative;
+}
+
+.is-edit .media-remove-btn {
+  position: absolute !important;
+  top: 6px !important;
+  right: 6px !important;
+  left: auto !important;
+  width: 22px !important;
+  height: 22px !important;
+  min-height: 22px !important;
+  font-size: 12px !important;
+  display: grid !important;
+  place-items: center !important;
+  margin: 0 !important;
+}
