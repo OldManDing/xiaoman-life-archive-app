@@ -6310,3 +6310,23 @@ body,
   place-items: center !important;
   margin: 0 !important;
 }
+
+/* 15：标题下划线通栏、去掉 CTA 上方多余分割线 */
+#record-form .record-title-card {
+  border-bottom: none !important;
+}
+
+#record-form .record-title-input {
+  border-bottom: 1px solid rgba(120, 80, 40, 0.18) !important;
+  width: 100% !important;
+}
+
+.is-edit .record-details {
+  border-top: none !important;
+}
+
+/* 顶栏标题略小 */
+.is-create .app-topbar h1,
+.is-edit .app-topbar h1 {
+  font-size: 17px !important;
+}
