@@ -17,16 +17,16 @@
   --nl-page-bg: #fdf6ec;
   --nl-bg: #fdf6ec;
   --nl-bg-warm: #f6dccb;
-  --nl-surface: rgba(255, 250, 244, 0.55);
-  --nl-surface-strong: rgba(255, 250, 244, 0.72);
+  --nl-surface: rgba(255, 244, 234, 0.55);
+  --nl-surface-strong: rgba(255, 244, 234, 0.72);
   --nl-surface-soft: #fffaf4;
-  --nl-surface-rgb: 255, 250, 244;
+  --nl-surface-rgb: 255, 244, 234;
   --nl-surface-strong-rgb: 250, 238, 226;
 
   /* ---- 玻璃 ---- */
-  --nl-glass-surface: rgba(255, 250, 244, 0.72);
-  --nl-glass-strong: rgba(255, 250, 244, 0.82);
-  --nl-glass-soft: rgba(255, 250, 244, 0.56);
+  --nl-glass-surface: rgba(255, 244, 234, 0.72);
+  --nl-glass-strong: rgba(255, 244, 234, 0.82);
+  --nl-glass-soft: rgba(255, 244, 234, 0.56);
   --nl-glass-border: rgba(255, 255, 255, 0.66);
   --nl-glass-highlight: rgba(255, 255, 255, 0.78);
   --nl-glass-shadow: 0 12px 30px rgba(146, 96, 52, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.7);
@@ -34,12 +34,12 @@
   --nl-popover-bg: #fffaf4;
 
   /* ---- 卡片 / 控件 ---- */
-  --nl-card-bg: rgba(255, 250, 244, 0.62);
+  --nl-card-bg: rgba(255, 244, 234, 0.62);
   --nl-card-bg-strong: #fffaf4;
   --nl-control-bg: rgba(255, 255, 255, 0.52);
   --nl-control-bg-active: #fffaf4;
-  --nl-topbar-bg: rgba(255, 250, 244, 0.72);
-  --nl-nav-bg: rgba(255, 250, 244, 0.78);
+  --nl-topbar-bg: rgba(255, 244, 234, 0.72);
+  --nl-nav-bg: rgba(255, 244, 234, 0.78);
   --nl-nav-muted: #6f5745;
   --nl-nav-active: #8a4e14;
 
@@ -199,7 +199,7 @@ textarea::placeholder {
   .app-panel,
   .app-bottom-nav,
   .app-page-shell > header:first-child {
-    background: rgba(255, 250, 244, 0.96) !important;
+    background: rgba(255, 244, 234, 0.96) !important;
   }
 }
 

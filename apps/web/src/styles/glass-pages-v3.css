@@ -38,7 +38,7 @@
   flex-shrink: 0;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.8);
-  background: rgba(255, 250, 244, 0.7);
+  background: rgba(255, 244, 234, 0.7);
   box-shadow: 0 10px 24px rgba(146, 96, 52, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.8);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
@@ -70,7 +70,7 @@
   padding: 14px 16px;
   border-radius: 26px;
   border: 1px solid rgba(255, 255, 255, 0.76);
-  background: rgba(255, 250, 244, 0.64);
+  background: rgba(255, 244, 234, 0.64);
   box-shadow: 0 16px 36px rgba(146, 96, 52, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.7);
   -webkit-backdrop-filter: blur(14px) saturate(1.03);
   backdrop-filter: blur(14px) saturate(1.03);
@@ -173,7 +173,7 @@
   padding: 10px 16px;
   border-radius: 20px;
   border: 1px solid rgba(255, 255, 255, 0.62);
-  background: rgba(255, 250, 244, 0.52);
+  background: rgba(255, 244, 234, 0.52);
   box-shadow: 0 8px 20px rgba(146, 96, 52, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.6);
   text-align: left;
   cursor: pointer;
@@ -202,7 +202,7 @@
 }
 
 .fam-role.is-owner {
-  background: #e9a05a;
+  background: #f69f4d;
   color: #3a2a1e;
 }
 
@@ -224,7 +224,7 @@
   min-height: 72px;
   border-radius: 20px;
   border: 1.5px dashed rgba(169, 88, 27, 0.32);
-  background: rgba(255, 250, 244, 0.26);
+  background: rgba(255, 244, 234, 0.26);
   color: var(--nl-ink);
   font-size: 15px;
   font-weight: 500;
@@ -357,7 +357,7 @@
 .pf-menu {
   border-radius: 24px;
   border: 1px solid rgba(255, 255, 255, 0.72);
-  background: rgba(255, 250, 244, 0.62);
+  background: rgba(255, 244, 234, 0.62);
   box-shadow: 0 12px 28px rgba(146, 96, 52, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.66);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
@@ -447,7 +447,7 @@
   padding: 12px 18px;
   border-radius: 22px;
   border: 1px solid rgba(255, 255, 255, 0.7);
-  background: rgba(255, 250, 244, 0.62);
+  background: rgba(255, 244, 234, 0.62);
   box-shadow: 0 12px 28px rgba(146, 96, 52, 0.09), inset 0 1px 0 rgba(255, 255, 255, 0.66);
   display: flex;
   align-items: center;
@@ -503,7 +503,7 @@
   height: 52px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.8);
-  background: rgba(255, 250, 244, 0.72);
+  background: rgba(255, 244, 234, 0.72);
   box-shadow: 0 10px 24px rgba(146, 96, 52, 0.12);
   color: var(--nl-ink);
   display: grid;
@@ -514,7 +514,7 @@
 .search-field {
   height: 52px;
   border-radius: 999px;
-  background: rgba(255, 250, 244, 0.78);
+  background: rgba(255, 244, 234, 0.78);
   border: 1px solid rgba(255, 255, 255, 0.8);
   box-shadow: 0 10px 24px rgba(146, 96, 52, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.7);
   -webkit-backdrop-filter: blur(18px);
@@ -587,7 +587,7 @@
   padding: 9px 20px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.8);
-  background: rgba(255, 250, 244, 0.66);
+  background: rgba(255, 244, 234, 0.66);
   box-shadow: 0 8px 18px rgba(146, 96, 52, 0.07);
   color: var(--nl-ink);
   font-size: 15px;
@@ -780,7 +780,7 @@
   height: 140px;
   border-radius: 999px;
   border: 1.5px dashed rgba(169, 88, 27, 0.32);
-  background: rgba(255, 250, 244, 0.55);
+  background: rgba(255, 244, 234, 0.55);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
   display: grid;
   place-items: center;
@@ -819,7 +819,7 @@
   margin-top: 32px;
   border-radius: 24px;
   border: 1px solid rgba(255, 255, 255, 0.76);
-  background: rgba(255, 250, 244, 0.62);
+  background: rgba(255, 244, 234, 0.62);
   box-shadow: 0 16px 36px rgba(146, 96, 52, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.72);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
@@ -875,7 +875,7 @@
   padding: 0 8px;
   border-radius: 999px;
   border: 1px solid rgba(58, 42, 28, 0.16);
-  background: rgba(255, 250, 244, 0.5);
+  background: rgba(255, 244, 234, 0.5);
   color: var(--nl-ink);
   font-size: 16px;
   font-weight: 500;
@@ -995,7 +995,7 @@
   padding: 4px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.72);
-  background: rgba(255, 250, 244, 0.5);
+  background: rgba(255, 244, 234, 0.5);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
@@ -1012,7 +1012,7 @@
 }
 
 .tl-year.is-active {
-  background: #e9a05a;
+  background: #f69f4d;
   color: #3a2a1e;
   font-weight: 600;
   box-shadow: 0 6px 14px rgba(146, 96, 52, 0.18);
@@ -1026,7 +1026,7 @@
   padding: 0 16px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.8);
-  background: rgba(255, 250, 244, 0.72);
+  background: rgba(255, 244, 234, 0.72);
   box-shadow: 0 8px 18px rgba(146, 96, 52, 0.08);
   color: var(--nl-ink);
   font-size: 16px;
@@ -1078,7 +1078,7 @@
   border: none;
   border-radius: 16px;
   padding: 0;
-  background: rgba(255, 250, 244, 0.6);
+  background: rgba(255, 244, 234, 0.6);
   box-shadow: 0 8px 18px rgba(146, 96, 52, 0.08);
   cursor: pointer;
 }
@@ -1113,12 +1113,12 @@
   height: 7px;
   margin-right: 6px;
   border-radius: 999px;
-  background: #e9a05a;
+  background: #f69f4d;
   vertical-align: middle;
 }
 
 .tl-tile.is-text {
-  background: rgba(255, 250, 244, 0.82);
+  background: rgba(255, 244, 234, 0.82);
 }
 
 .tl-tile.is-text .tl-tile-scrim {
@@ -1185,7 +1185,7 @@
   height: 48px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.82);
-  background: rgba(255, 250, 244, 0.86);
+  background: rgba(255, 244, 234, 0.86);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
   box-shadow: 0 10px 24px rgba(146, 96, 52, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.8);
@@ -1207,7 +1207,7 @@
   padding: 6px;
   border-radius: 18px;
   border: 1px solid rgba(255, 255, 255, 0.9);
-  background: rgba(255, 250, 244, 0.97);
+  background: rgba(255, 244, 234, 0.97);
   box-shadow: 0 18px 40px rgba(146, 96, 52, 0.2);
   display: grid;
   gap: 2px;
@@ -1360,7 +1360,7 @@
   min-height: 112px !important;
   border: 1.5px dashed rgba(169, 88, 27, 0.32) !important;
   border-radius: 22px !important;
-  background: rgba(255, 250, 244, 0.42) !important;
+  background: rgba(255, 244, 234, 0.42) !important;
   box-shadow: none !important;
 }
 
@@ -1380,7 +1380,7 @@
   min-width: 48px !important;
   border-radius: 999px !important;
   border: 1px solid rgba(255, 255, 255, 0.85) !important;
-  background: rgba(255, 250, 244, 0.92) !important;
+  background: rgba(255, 244, 234, 0.92) !important;
   box-shadow: 0 6px 16px rgba(146, 96, 52, 0.12) !important;
   color: var(--nl-ink) !important;
   font-size: 26px !important;
@@ -1393,7 +1393,7 @@
   padding: 10px 16px !important;
   border: 1px solid rgba(255, 255, 255, 0.82) !important;
   border-radius: 22px !important;
-  background: rgba(255, 250, 244, 0.72) !important;
+  background: rgba(255, 244, 234, 0.72) !important;
   grid-template-columns: minmax(0, 1fr) !important;
 }
 
@@ -1413,7 +1413,7 @@
   min-width: 48px !important;
   border-radius: 999px !important;
   border: 1px solid rgba(255, 255, 255, 0.85) !important;
-  background: rgba(255, 250, 244, 0.92) !important;
+  background: rgba(255, 244, 234, 0.92) !important;
   box-shadow: 0 6px 16px rgba(146, 96, 52, 0.12) !important;
   color: var(--nl-ink) !important;
   font-size: 26px !important;
@@ -1525,7 +1525,7 @@
   padding: 4px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.8);
-  background: rgba(255, 250, 244, 0.6);
+  background: rgba(255, 244, 234, 0.6);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
@@ -1577,7 +1577,7 @@
   width: 9px;
   height: 9px;
   border-radius: 999px;
-  background: #e9a05a;
+  background: #f69f4d;
 }
 
 .msg-avatar {
@@ -2242,7 +2242,7 @@ button.set-row {
   width: 12px;
   height: 12px;
   border-radius: 999px;
-  background: #e9a05a;
+  background: #f69f4d;
 }
 
 .lg-brand-name {
@@ -2799,7 +2799,7 @@ button.set-row {
   min-height: 44px;
   padding: 0 12px;
   border: none;
-  background: rgba(255, 250, 244, 0.72);
+  background: rgba(255, 244, 234, 0.72);
   border-radius: 999px;
   color: var(--nl-muted-strong);
   font-size: 14px;
@@ -3365,7 +3365,7 @@ button.set-row {
   min-width: 12px;
   border: 2px solid #fff !important;
   border-radius: 999px;
-  background: #e9a05a !important;
+  background: #f69f4d !important;
   box-sizing: content-box !important;
   left: -5px !important;
   box-shadow: 0 2px 6px rgba(150, 95, 50, 0.18) !important;
@@ -3527,7 +3527,7 @@ button.set-row {
 
 /* ===== 视觉质感重置（评审：执行层，非风格层） ===== */
 :root {
-  --nl-glass-surface: rgba(255, 250, 244, 0.82);
+  --nl-glass-surface: rgba(255, 244, 234, 0.82);
   --nl-glass-border: rgba(58, 42, 28, 0.06);
   --nl-shadow-sm: 0 1px 2px rgba(146, 96, 52, 0.05), 0 6px 16px rgba(146, 96, 52, 0.06);
   --nl-shadow-md: 0 1px 2px rgba(146, 96, 52, 0.05), 0 10px 24px rgba(146, 96, 52, 0.07);
@@ -3568,7 +3568,7 @@ body,
 /* 只有顶部胶囊与底部导航保留玻璃 */
 .app-topbar,
 .app-bottom-nav {
-  background: rgba(255, 250, 244, 0.82) !important;
+  background: rgba(255, 244, 234, 0.82) !important;
   border: 1px solid rgba(58, 42, 28, 0.06) !important;
   box-shadow: 0 1px 2px rgba(146, 96, 52, 0.05), 0 8px 24px rgba(146, 96, 52, 0.10) !important;
   backdrop-filter: blur(18px) saturate(1.1) !important;
@@ -3642,7 +3642,7 @@ body,
 /* 导航与顶栏 */
 .app-bottom-nav,
 .app-topbar {
-  background: rgba(255, 250, 244, 0.82) !important;
+  background: rgba(255, 244, 234, 0.82) !important;
   border: 1px solid rgba(58, 42, 28, 0.06) !important;
   box-shadow: 0 1px 2px rgba(146, 96, 52, 0.05), 0 8px 24px rgba(146, 96, 52, 0.1) !important;
   backdrop-filter: blur(18px) saturate(1.1) !important;
@@ -3787,7 +3787,7 @@ body,
 /* 顶部胶囊与底部导航：真正的玻璃 */
 .app-topbar,
 .app-bottom-nav {
-  background: rgba(255, 250, 244, 0.56) !important;
+  background: rgba(255, 244, 234, 0.56) !important;
   border: 1px solid rgba(255, 255, 255, 0.55) !important;
   box-shadow:
     0 1px 1px rgba(146, 96, 52, 0.04),
@@ -3827,7 +3827,7 @@ body,
 /* 浮层：详情操作栏 / 新建提交条 */
 .app-detail-float-bar,
 .is-create .record-inline-submit {
-  background: rgba(255, 250, 244, 0.55) !important;
+  background: rgba(255, 244, 234, 0.55) !important;
   border: 1px solid rgba(255, 255, 255, 0.5) !important;
   box-shadow:
     0 2px 6px rgba(146, 96, 52, 0.05),
@@ -3873,7 +3873,7 @@ body::before {
 /* 玻璃再透一档 */
 .app-topbar,
 .app-bottom-nav {
-  background: rgba(255, 250, 244, 0.5) !important;
+  background: rgba(255, 244, 234, 0.5) !important;
   backdrop-filter: blur(24px) saturate(1.4) !important;
   -webkit-backdrop-filter: blur(24px) saturate(1.4) !important;
 }
@@ -3933,7 +3933,7 @@ body {
 
 .app-topbar,
 .app-bottom-nav {
-  background: rgba(255, 250, 244, 0.5) !important;
+  background: rgba(255, 244, 234, 0.5) !important;
   backdrop-filter: blur(24px) saturate(1.4) !important;
   -webkit-backdrop-filter: blur(24px) saturate(1.4) !important;
 }
@@ -4638,7 +4638,7 @@ button[aria-disabled='true'] {
   margin: 14px 0 6px !important;
   padding: 8px !important;
   border-radius: 999px !important;
-  background: rgba(255, 250, 244, 0.92) !important;
+  background: rgba(255, 244, 234, 0.92) !important;
   border: 1px solid rgba(255, 255, 255, 0.5) !important;
   box-shadow: 0 10px 26px rgba(146, 96, 52, 0.16) !important;
   backdrop-filter: blur(16px) !important;
@@ -4678,7 +4678,7 @@ button[aria-disabled='true'] {
   --nl-primary: #b4702a;
   --nl-primary-2: #9c5a28;
   --nl-accent: #b4702a;
-  --nl-page-bg: #fddab4;
+  --nl-page-bg: #fadcd1;
 }
 
 body,
@@ -4686,8 +4686,8 @@ body,
 .app-layout,
 .app-main-scroll,
 .app-page-shell {
-  background-color: #fddab4 !important;
-  background-image: linear-gradient(180deg, #ffe6d0 0%, #fddab4 100%) !important;
+  background-color: #fadcd1 !important;
+  background-image: linear-gradient(180deg, #fff3e8 0%, #fadcd1 100%) !important;
   background-attachment: fixed !important;
 }
 
@@ -4704,7 +4704,7 @@ body::before {
 
 /* 底部导航：选中实心橙块 + 白图标 */
 .app-bottom-nav-link.is-active {
-  background: #f5ab52 !important;
+  background: #f69f4d !important;
   border-radius: 18px !important;
   color: #fff !important;
   box-shadow: 0 8px 18px rgba(180, 112, 42, 0.26) !important;
@@ -4727,7 +4727,7 @@ body::before {
 .record-editor-card,
 .rc-card,
 .fam-member-row {
-  background: rgba(255, 250, 244, 0.92) !important;
+  background: rgba(255, 244, 234, 0.92) !important;
   border: 1px solid rgba(120, 80, 40, 0.12) !important;
   border-radius: 24px !important;
   box-shadow: 0 10px 28px rgba(146, 96, 52, 0.10) !important;
@@ -4765,7 +4765,7 @@ body::before {
 
 /* 家庭权限 chip：实心琥珀 / 浅杏 */
 .fam-role {
-  background: #f5ab52 !important;
+  background: #f69f4d !important;
   border: none !important;
   color: #4a2f12 !important;
 }
@@ -4785,7 +4785,7 @@ body::before {
 /* 导航选中：压过高特异性的浅底规则 */
 .app-bottom-nav:not(.is-quiet) .app-bottom-nav-link.is-active,
 .app-bottom-nav.is-quiet .app-bottom-nav-link.is-active {
-  background: #f5ab52 !important;
+  background: #f69f4d !important;
   color: #fff !important;
   box-shadow: 0 8px 18px rgba(180, 112, 42, 0.26) !important;
   border-radius: 18px !important;
@@ -4813,7 +4813,7 @@ body::before {
   min-height: 44px !important;
   padding: 0 16px !important;
   border-radius: 999px !important;
-  background: rgba(255, 250, 244, 0.72) !important;
+  background: rgba(255, 244, 234, 0.72) !important;
   border: 1px solid rgba(120, 80, 40, 0.14) !important;
   color: var(--nl-muted-strong) !important;
   font-size: 13px !important;
@@ -4904,7 +4904,7 @@ body::before {
   height: 20px;
   padding: 0 6px;
   border-radius: 999px;
-  background: #e9a05a !important;
+  background: #f69f4d !important;
   color: #fff !important;
   font-size: 12px !important;
   font-weight: 700 !important;
@@ -4930,7 +4930,7 @@ body::before {
 /* 03：里程碑标签实心 */
 .rd-tag.is-milestone,
 .rd-tag--milestone {
-  background: #f5ab52 !important;
+  background: #f69f4d !important;
   border-color: transparent !important;
   color: #4a2f12 !important;
 }
@@ -4994,7 +4994,7 @@ body::before {
   margin: 0 !important;
   padding: 8px !important;
   border-radius: 999px !important;
-  background: rgba(255, 250, 244, 0.92) !important;
+  background: rgba(255, 244, 234, 0.92) !important;
   border: 1px solid rgba(255, 255, 255, 0.5) !important;
   box-shadow: 0 10px 26px rgba(146, 96, 52, 0.16) !important;
   backdrop-filter: blur(16px) !important;
@@ -5317,7 +5317,7 @@ body::before {
 /* 04/15：标题+正文合并为一张卡 */
 .is-create .record-editor-card,
 .is-edit .record-editor-card {
-  background: rgba(255, 250, 244, 0.92) !important;
+  background: rgba(255, 244, 234, 0.92) !important;
   border: 1px solid rgba(120, 80, 40, 0.12) !important;
   border-radius: 24px !important;
   box-shadow: 0 10px 28px rgba(146, 96, 52, 0.10) !important;
@@ -5353,7 +5353,7 @@ body::before {
   margin: 10px 0 6px !important;
   padding: 8px !important;
   border-radius: 999px !important;
-  background: rgba(255, 250, 244, 0.92) !important;
+  background: rgba(255, 244, 234, 0.92) !important;
   border: 1px solid rgba(255, 255, 255, 0.55) !important;
   box-shadow: 0 10px 26px rgba(146, 96, 52, 0.16) !important;
   backdrop-filter: blur(16px) !important;
@@ -5405,7 +5405,7 @@ body::before {
 /* 04：媒体入口恢复虚线样式 */
 .record-form-page .record-media-grid > button {
   border: 1.5px dashed rgba(169, 88, 27, 0.32) !important;
-  background: rgba(255, 250, 244, 0.42) !important;
+  background: rgba(255, 244, 234, 0.42) !important;
   border-radius: 20px !important;
   box-shadow: none !important;
 }
@@ -5428,7 +5428,7 @@ body::before {
 
 #record-form .record-title-card,
 #record-form .record-body-card {
-  background: rgba(255, 250, 244, 0.92) !important;
+  background: rgba(255, 244, 234, 0.92) !important;
   border: 1px solid rgba(120, 80, 40, 0.12) !important;
   border-radius: 20px !important;
   box-shadow: 0 8px 22px rgba(146, 96, 52, 0.08) !important;
@@ -5514,7 +5514,7 @@ body::before {
   gap: 8px;
   padding: 10px 12px;
   border-radius: 18px;
-  background: rgba(255, 250, 244, 0.82);
+  background: rgba(255, 244, 234, 0.82);
   border: 1px solid rgba(120, 80, 40, 0.10);
 }
 
@@ -5530,7 +5530,7 @@ body::before {
 }
 
 .record-form-page .record-quick-tags button.is-on {
-  background: #f5ab52;
+  background: #f69f4d;
   border-color: transparent;
   color: #4a2f12;
 }
@@ -5563,7 +5563,7 @@ body::before {
 
 /* 15：日期行做成带卡片的行 */
 .is-edit .record-details input[aria-label="发生时间 *"] {
-  background: rgba(255, 250, 244, 0.9) !important;
+  background: rgba(255, 244, 234, 0.9) !important;
   border: 1px solid rgba(120, 80, 40, 0.10) !important;
   border-radius: 18px !important;
   min-height: 56px !important;
@@ -5603,7 +5603,7 @@ body::before {
 
 /* 日期/地点行做成设计稿的卡片行 */
 .is-create .record-details input[aria-label="发生时间 *"] {
-  background: rgba(255, 250, 244, 0.9) !important;
+  background: rgba(255, 244, 234, 0.9) !important;
   border: 1px solid rgba(120, 80, 40, 0.10) !important;
   border-radius: 18px !important;
   min-height: 56px !important;
@@ -5612,7 +5612,7 @@ body::before {
 }
 
 .is-create .record-location-row {
-  background: rgba(255, 250, 244, 0.9) !important;
+  background: rgba(255, 244, 234, 0.9) !important;
   border: 1px solid rgba(120, 80, 40, 0.10) !important;
   border-radius: 18px !important;
   border-bottom: 1px solid rgba(120, 80, 40, 0.10) !important;
@@ -5634,7 +5634,7 @@ body::before {
 }
 
 .record-form-page .record-quick-tags button.is-on {
-  background: #f5a64a !important;
+  background: #f69f4d !important;
   border-color: transparent !important;
   color: #ffffff !important;
 }
@@ -5815,7 +5815,7 @@ body::before {
 }
 
 .is-edit #record-form > section:first-child input[aria-label="发生时间 *"] {
-  background: rgba(255, 250, 244, 0.9) !important;
+  background: rgba(255, 244, 234, 0.9) !important;
   border: 1px solid rgba(120, 80, 40, 0.10) !important;
   border-radius: 18px !important;
   min-height: 56px !important;
@@ -5935,7 +5935,7 @@ body::before {
 /* ===== 组件风格统一（对齐 screens 版设计语言） ===== */
 :root {
   --ui-card-radius: 20px;
-  --ui-card-bg: rgba(255, 250, 244, 0.90);
+  --ui-card-bg: rgba(255, 244, 234, 0.90);
   --ui-card-border: 1px solid rgba(120, 80, 40, 0.10);
   --ui-card-shadow: 0 8px 22px rgba(146, 96, 52, 0.08);
   --ui-row-min: 56px;
@@ -6115,7 +6115,7 @@ body::before {
 
 /* 标签首个默认实心（视觉对齐设计稿） */
 .record-form-page .record-quick-tags button:first-child:not(.is-on) {
-  background: #f5a64a !important;
+  background: #f69f4d !important;
   border-color: transparent !important;
   color: #ffffff !important;
 }

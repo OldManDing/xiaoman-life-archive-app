@@ -11,8 +11,8 @@
 .app-layout.is-home,
 .nl-home-page {
   --nl-home-paper: transparent;
-  --nl-home-paper-deep: rgba(255, 250, 244, 0.72);
-  --nl-home-surface: rgba(255, 250, 244, 0.62);
+  --nl-home-paper-deep: rgba(255, 244, 234, 0.72);
+  --nl-home-surface: rgba(255, 244, 234, 0.62);
   --nl-home-ink: #3a2a1e;
   --nl-home-strong: #4a3729;
   --nl-home-muted: #6f5745;
@@ -127,7 +127,7 @@
   bottom: 6px;
   width: 3px;
   border-radius: 999px;
-  background: var(--nl-amber, #e9a05a);
+  background: var(--nl-amber, #f69f4d);
 }
 
 .nl-home-day-title {
@@ -198,7 +198,7 @@
   width: 40px;
   height: 1.5px;
   border-radius: 999px;
-  background: rgba(255, 250, 244, 0.9);
+  background: rgba(255, 244, 234, 0.9);
 }
 
 /* 首图卡不显示卡片下方正文，标题已经压在图里 */
@@ -216,7 +216,7 @@
   padding: 10px 14px 10px 10px !important;
   border: 1px solid rgba(255, 255, 255, 0.62) !important;
   border-radius: 18px !important;
-  background: rgba(255, 250, 244, 0.58) !important;
+  background: rgba(255, 244, 234, 0.58) !important;
   box-shadow: 0 8px 22px rgba(146, 96, 52, 0.09) !important;
 }
 
@@ -283,7 +283,7 @@
   min-height: 56px;
   padding: 8px 10px 8px 16px;
   border-radius: 999px;
-  background: rgba(255, 250, 244, 0.62);
+  background: rgba(255, 244, 234, 0.62);
   border: 1px solid rgba(255, 255, 255, 0.66);
   box-shadow: 0 8px 22px rgba(146, 96, 52, 0.09);
 }
@@ -380,7 +380,7 @@
 
 .tl-textcard {
   grid-column: span 3 !important;
-  background: rgba(255, 250, 244, 0.62) !important;
+  background: rgba(255, 244, 234, 0.62) !important;
   border: 1px solid rgba(255, 255, 255, 0.6) !important;
 }
 
