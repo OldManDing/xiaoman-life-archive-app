@@ -2380,14 +2380,6 @@ const RecordForm = ({
                 >
                   草稿
                 </button>
-                <button
-                  type="button"
-                  onClick={() => void submitRecord('published')}
-                  disabled={submitting}
-                  style={{ minHeight: 44, border: 'none', borderRadius: 999, background: '#a9581b', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer', padding: '0 16px' }}
-                >
-                  {submitting ? '保存中' : '保存'}
-                </button>
               </span>
             ) : mode === 'edit' ? (
               <details style={{ position: 'relative' }}>

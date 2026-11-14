@@ -5313,3 +5313,91 @@ body::before {
 .is-create .record-media-grid {
   min-height: 0 !important;
 }
+
+/* 04/15：标题+正文合并为一张卡 */
+.is-create .record-editor-card,
+.is-edit .record-editor-card {
+  background: rgba(255, 250, 244, 0.92) !important;
+  border: 1px solid rgba(120, 80, 40, 0.12) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 10px 28px rgba(146, 96, 52, 0.10) !important;
+  padding: 6px 16px 12px !important;
+  gap: 0 !important;
+  align-items: stretch;
+}
+
+.record-form-page .record-title-input {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(120, 80, 40, 0.12) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 14px 0 !important;
+  min-height: 0 !important;
+}
+
+.record-form-page .record-body-input {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 14px 0 !important;
+}
+
+/* 保存条吸底但不遮挡：sticky 保留流内占位 */
+.record-form-page .record-inline-submit {
+  position: -webkit-sticky !important;
+  position: sticky !important;
+  bottom: calc(8px + env(safe-area-inset-bottom)) !important;
+  z-index: 20 !important;
+  margin: 10px 0 6px !important;
+  padding: 8px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 250, 244, 0.92) !important;
+  border: 1px solid rgba(255, 255, 255, 0.55) !important;
+  box-shadow: 0 10px 26px rgba(146, 96, 52, 0.16) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+}
+
+/* 04/15：强制标题/正文输入透明，形成一张卡 */
+#record-form .record-title-input,
+#record-form .record-body-input,
+#record-form .record-title-input:focus,
+#record-form .record-body-input:focus {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+#record-form .record-title-input {
+  border-bottom: 1px solid rgba(120, 80, 40, 0.12) !important;
+}
+
+/* 保存条：固定底部 + 足够内边距，保证内容能滚到条上方 */
+.record-form-page.is-create .record-inline-submit,
+.record-form-page.is-edit .record-inline-submit {
+  position: fixed !important;
+  left: 16px !important;
+  right: 16px !important;
+  bottom: calc(10px + env(safe-area-inset-bottom)) !important;
+  margin: 0 !important;
+}
+
+.record-form-page.is-create,
+.record-form-page.is-edit {
+  padding-bottom: calc(124px + env(safe-area-inset-bottom)) !important;
+}
+
+#record-form .record-title-card,
+#record-form .record-body-card {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 8px 0 !important;
+}
+#record-form .record-title-card {
+  border-bottom: 1px solid rgba(120, 80, 40, 0.12) !important;
+}
