@@ -5830,3 +5830,104 @@ body::before {
   width: 100% !important;
   text-align: left !important;
 }
+
+/* 15：结构顺序 媒体 → 标题/正文 → 日期 → 地点标签；整体压缩到一屏 */
+.is-edit .record-media-section { order: 0 !important; }
+.is-edit .record-editor-card { order: 1 !important; }
+.is-edit #record-form > section:first-child { order: 2 !important; }
+.is-edit .record-details { order: 3 !important; }
+
+.is-edit #record-form {
+  row-gap: 8px !important;
+}
+
+.is-edit .record-editor-card {
+  gap: 8px !important;
+}
+
+.is-edit #record-form textarea.record-body-input {
+  min-height: 150px !important;
+}
+
+.is-edit .record-details {
+  gap: 8px !important;
+}
+
+/* 删除钮固定右上 */
+.is-edit .media-remove-btn {
+  left: auto !important;
+  right: 6px !important;
+  top: 6px !important;
+}
+
+/* 15：隐藏地点重复胶囊 */
+.is-edit .record-location-chips,
+.is-edit .record-location-suggestions {
+  display: none !important;
+}
+
+/* 15：隐藏记录方式选择（设计无） */
+.is-edit section[aria-label="记录类型"] {
+  display: none !important;
+}
+
+/* 15：日期行左对齐铺满 */
+.is-edit #record-form > section:first-child {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+}
+
+.is-edit #record-form > section:first-child > * {
+  width: 100% !important;
+}
+
+/* 04：保存按钮去外层浅色胶囊 */
+.is-create .record-inline-submit {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* 15：整体压到一屏，保存可见 */
+.is-edit #record-form textarea.record-body-input {
+  min-height: 118px !important;
+}
+
+.is-edit .record-media-section {
+  padding: 10px 12px !important;
+}
+
+.is-edit #record-form {
+  row-gap: 6px !important;
+}
+
+.is-edit .record-editor-card {
+  gap: 6px !important;
+}
+
+.is-edit .record-title-card,
+.is-edit .record-body-card {
+  padding: 12px 14px !important;
+}
+
+.is-edit .record-inline-submit {
+  margin: 6px 0 4px !important;
+}
+
+/* 日期行左对齐 */
+.is-edit #record-form > section:first-child,
+.is-edit #record-form > section:first-child > * {
+  justify-content: flex-start !important;
+  align-items: stretch !important;
+  text-align: left !important;
+}
+
+/* 隐藏地点候选胶囊（与地点行重复） */
+.is-edit .record-details > div[style*="flex-wrap: wrap"] {
+  display: none !important;
+}
