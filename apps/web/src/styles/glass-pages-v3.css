@@ -5723,3 +5723,32 @@ body::before {
   font-weight: 600 !important;
   color: var(--nl-ink) !important;
 }
+
+/* 15：隐藏顶部成员条（设计无） */
+.is-edit #record-form > section:first-child {
+  display: none !important;
+}
+
+/* 15：正文 textarea 彻底透明、无内框 */
+.is-edit #record-form textarea.record-body-input {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* 15：保存按钮回到文档流（压过 is-edit-inline 的 fixed） */
+.is-edit .record-inline-submit,
+.is-edit .record-inline-submit.is-edit-inline {
+  position: static !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  top: auto !important;
+  margin: 12px 0 8px !important;
+}
+
+/* 15：添加格排到照片之后 */
+.is-edit .record-media-grid::after {
+  order: 99;
+}
