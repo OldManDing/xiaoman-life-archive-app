@@ -2708,10 +2708,15 @@ const RecordForm = ({
                       <MediaPreviewTile key={mediaPreviews[0].media_no} media={mediaPreviews[0]} featured style={mediaPreviews[0].media_type === 'audio' ? undefined : { height: 'auto', minHeight: 0, aspectRatio: '4 / 3', borderRadius: '14px' }} onRemove={removeMedia} onRetry={retryFailedMedia} onOpen={setFullscreenMedia} />
                     </div>
                   ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px', maxWidth: '100%' }}>
+                    <div className="record-media-previews" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px', maxWidth: '100%' }}>
                       {mediaPreviews.map((media) => (
                         <MediaPreviewTile key={media.media_no} media={media} compact style={media.media_type === 'audio' ? undefined : { height: 'auto', minHeight: 0, aspectRatio: '1 / 1', borderRadius: '12px' }} onRemove={removeMedia} onRetry={retryFailedMedia} onOpen={setFullscreenMedia} />
                       ))}
+                      {mode === 'edit' ? (
+                        <button type="button" className="media-add-tile" aria-label="添加照片" onClick={() => triggerMediaInput(galleryInputRef.current)} disabled={uploading || audioRecording}>
+                          ＋<span>添加</span>
+                        </button>
+                      ) : null}
                     </div>
                   )}
                 </section>
@@ -2794,7 +2799,7 @@ const RecordForm = ({
                   color: 'var(--nl-muted-strong)',
                   boxSizing: 'border-box',
                 }}
-                placeholder="正文"
+                placeholder={mode === "create" ? "写几句话，或者按住上面的麦克风说" : "正文"}
               value={form.content_text}
               onChange={(event) => {
                 setError(null);

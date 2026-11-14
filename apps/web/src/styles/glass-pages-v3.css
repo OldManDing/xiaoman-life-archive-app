@@ -5752,3 +5752,53 @@ body::before {
 .is-edit .record-media-grid::after {
   order: 99;
 }
+
+/* 15：真实添加格 */
+.media-add-tile {
+  aspect-ratio: 1 / 1;
+  border-radius: 14px;
+  border: 1.5px dashed rgba(169, 88, 27, 0.35);
+  background: transparent;
+  color: var(--nl-accent);
+  font-size: 20px;
+  font-weight: 400;
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  cursor: pointer;
+}
+
+.media-add-tile span {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* 15：去掉伪元素添加格 */
+.is-edit .record-media-grid::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* 04：创建页隐藏字数，正文占位两行 */
+.is-create .record-char-count {
+  display: none !important;
+}
+
+/* 15：隐藏「补充详情」分组标题；地点行隐藏定位按钮 */
+.is-edit .record-details-title {
+  display: none !important;
+}
+
+.record-form-page .record-location-row button {
+  display: none !important;
+}
+
+.is-edit .record-media-previews {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+}
+.is-edit .media-remove-btn {
+  width: 22px !important;
+  height: 22px !important;
+  min-height: 22px !important;
+  font-size: 12px !important;
+}
