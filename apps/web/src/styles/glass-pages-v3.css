@@ -7551,3 +7551,31 @@ body,
 .lg-body {
   padding-bottom: 12px !important;
 }
+
+/* 08：主图通栏、加高，收紧底部留白 */
+.lg-hero {
+  height: 96vw !important;
+  min-height: 380px !important;
+  border-radius: 0 !important;
+}
+
+.lg-hero img {
+  object-position: center 18% !important;
+}
+
+.lg-body {
+  padding-top: 26px !important;
+  padding-bottom: 26px !important;
+}
+
+.lg-field-card {
+  padding: 6px 18px 18px !important;
+}
+
+.lg-submit {
+  margin-top: 18px !important;
+}
+
+.lg-register-link {
+  margin-top: 24px !important;
+}
