@@ -1203,121 +1203,47 @@ const invitedMembers = members.filter((member) => member.role !== 'owner');
 
   return (
     <PageShell title="邀请家人" backTo="/family" className="invite-shell">
-      <Panel style={{ padding: 0, overflow: 'hidden' }}>
-        <div style={{ padding: '12px 12px 0' }}>
-          <img
-            src="/photos/hero-park.jpg"
-            alt="家人在公园里一起看着孩子"
-            style={{ display: 'block', width: '100%', height: 76, objectFit: 'cover', borderRadius: 18, aspectRatio: '4.3 / 1' }}
-          />
+      <Panel style={{ padding: '20px 20px 22px' }} className="invite-card">
+        <div className="invite-qr" aria-hidden="true">
+          <QrCode size={150} strokeWidth={1.2} />
+          <span className="invite-qr-dot" />
         </div>
-        <div style={{ display: 'grid', gap: 12, padding: '18px 18px 20px' }}>
-          <div style={{ display: 'grid', gap: 4 }}>
-            <h2 style={{ margin: 0, fontFamily: 'var(--nl-font-display)', fontSize: 24, fontWeight: 600, lineHeight: 1.3, color: 'var(--nl-ink)' }}>
-              邀请家人一起记录{activeChild?.name ?? ''}
-            </h2>
-            <p style={{ margin: 0, color: 'var(--nl-muted)', fontSize: 13, lineHeight: 1.6 }}>对方接受后可以查看和补充</p>
-          </div>
+        <h2 className="invite-title">扫码加入{activeChild?.name ?? ''}的档案</h2>
+        <p className="invite-sub">有效期 7 天</p>
 
-          <button type="button" onClick={inviteByWechat} disabled={!inviteCode} style={{ ...primaryButtonStyle, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 12 }}>
-            <MessageCircle size={20} strokeWidth={1.8} fill="rgba(255,255,255,0.9)" aria-hidden="true" />
-            微信邀请家人
-          </button>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <button
-              type="button"
-              onClick={() => void copyText(inviteLink, '邀请链接已复制')}
-              disabled={!inviteCode}
-              style={{ ...secondaryButtonStyle, minHeight: 48, fontSize: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
-            >
-              <Clipboard size={18} strokeWidth={1.8} aria-hidden="true" />
-              复制链接
-            </button>
-            <button type="button" onClick={inviteBySms} disabled={!inviteCode} style={{ ...secondaryButtonStyle, minHeight: 48, fontSize: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-              <MessageCircleMore size={18} strokeWidth={1.8} aria-hidden="true" />
-              短信邀请
-            </button>
-          </div>
-
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 12,
-              padding: '14px 18px',
-              borderRadius: 'var(--nl-radius-row, 18px)',
-              background: 'var(--nl-primary-soft)',
-              border: '1px solid var(--nl-primary-line)',
-            }}
+        <div className="invite-code-pill">
+          <strong className="invite-code-value">{inviteCode || (activeChild?.family_no ? '生成中…' : '暂无邀请码')}</strong>
+          <button
+            type="button"
+            aria-label="复制邀请码"
+            className="invite-code-copy"
+            onClick={() => void copyText(inviteCode, '邀请码已复制')}
+            disabled={!inviteCode}
           >
-            <div style={{ minWidth: 0, flex: '1 1 auto' }}>
-              <span style={{ display: 'block', color: '#6f5745', fontSize: 13, lineHeight: 1.5 }}>或让对方输入邀请码</span>
-              <strong
-                style={{
-                  display: 'block',
-                  marginTop: 2,
-                  color: 'var(--nl-ink)',
-                  fontSize: 30,
-                  fontWeight: 600,
-                  lineHeight: 1.2,
-                  letterSpacing: '0.12em',
-                  fontVariantNumeric: 'tabular-nums',
-                  wordBreak: 'break-all',
-                }}
-              >
-                {inviteCode || (activeChild?.family_no ? '生成中…' : '暂无邀请码')}
-              </strong>
-            </div>
-            <button
-              type="button"
-              aria-label="复制邀请码"
-              onClick={() => void copyText(inviteCode, '邀请码已复制')}
-              disabled={!inviteCode}
-              style={{
-                minHeight: 44,
-                minWidth: 88,
-                padding: '0 16px',
-                borderRadius: 999,
-                border: '1px solid var(--nl-primary-border)',
-                background: 'var(--nl-surface-soft)',
-                color: 'var(--nl-accent)',
-                fontSize: 15,
-                fontWeight: 600,
-                cursor: inviteCode ? 'pointer' : 'not-allowed',
-                flexShrink: 0,
-              }}
-            >
-              复制
-            </button>
-          </div>
-
-          <details style={{ borderRadius: 'var(--nl-radius-row, 18px)', border: '1px solid var(--nl-border-soft)', background: 'rgba(255,250,244,0.5)' }}>
-            <summary style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 52, padding: '0 14px', color: 'var(--nl-muted-strong)', fontSize: 15, fontWeight: 600, cursor: 'pointer', listStyle: 'none' }}>
-              其他邀请方式（二维码）
-              <ChevronDown size={16} strokeWidth={2} />
-            </summary>
-            <div style={{ display: 'grid', justifyItems: 'center', gap: 8, padding: '4px 14px 16px' }}>
-              <span style={{ width: 132, height: 132, borderRadius: 16, border: '1px dashed var(--nl-border-muted)', display: 'grid', placeItems: 'center', color: 'var(--nl-muted)' }}>
-                <QrCode size={54} strokeWidth={1.3} />
-              </span>
-              <p style={{ margin: 0, color: 'var(--nl-muted)', fontSize: 12, lineHeight: 1.6, textAlign: 'center' }}>
-                家人用手机扫一扫，或在登录页输入上方 6 位邀请码
-              </p>
-            </div>
-          </details>
-
-          {inviteResult ? (
-            <p style={{ margin: 0, fontSize: 11, lineHeight: 1.6, color: 'var(--nl-muted)' }}>
-              有效期至 {formatAppDateTime(inviteResult.expires_at)}，仅可使用一次
-            </p>
-          ) : null}
-          {error ? <p style={{ ...helperTextStyle, margin: 0, color: 'var(--nl-danger)' }}>{error}</p> : null}
-          {message ? <p style={{ ...helperTextStyle, margin: 0, color: isPositiveStatusMessage(message) ? 'var(--nl-success)' : 'var(--nl-danger)' }}>{message}</p> : null}
+            复制
+          </button>
         </div>
+
+        <button
+          type="button"
+          className="invite-share"
+          onClick={() => void copyText(inviteLink, '邀请链接已复制')}
+          disabled={!inviteCode}
+        >
+          分享邀请链接
+        </button>
+
+        {inviteResult ? (
+          <p style={{ margin: 0, fontSize: 12, lineHeight: 1.6, color: 'var(--nl-muted)', textAlign: 'center' }}>
+            有效期至 {formatAppDateTime(inviteResult.expires_at)}
+          </p>
+        ) : null}
+        {error ? <p style={{ ...helperTextStyle, margin: 0, color: 'var(--nl-danger)' }}>{error}</p> : null}
+        {message ? <p style={{ ...helperTextStyle, margin: 0, color: isPositiveStatusMessage(message) ? 'var(--nl-success)' : 'var(--nl-danger)' }}>{message}</p> : null}
       </Panel>
 
-      <section aria-label="已邀请" style={{ display: 'grid', gap: 10 }}>
+      <section aria-label="已邀请" 
+style={{ display: 'grid', gap: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <strong className="invite-section-title">已邀请</strong>
           <span aria-hidden="true" style={{ flex: 1, height: 1, background: 'var(--nl-border-soft)' }} />
@@ -1388,6 +1314,8 @@ const invitedMembers = members.filter((member) => member.role !== 'owner');
           </button>
         ) : null}
       </section>
+
+      <p className="invite-footer">家人可以看见并一起记录{activeChild?.name ?? ''}的成长</p>
     </PageShell>
   );
 };

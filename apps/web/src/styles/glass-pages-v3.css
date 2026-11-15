@@ -8274,3 +8274,135 @@ header.app-topbar > div span {
 /* 11：行高再收、正文字重常规 */
 .settings-shell .set-row { min-height: 64px !important; }
 .settings-shell .set-body strong { font-weight: 500 !important; }
+
+/* ===== 12 邀请家人：按 screens/12 还原 ===== */
+.invite-shell .app-panel.invite-card,
+.invite-card {
+  background: rgba(255, 246, 237, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.62) !important;
+  border-radius: 28px !important;
+  box-shadow: 0 12px 30px rgba(176, 118, 78, 0.08) !important;
+  display: grid !important;
+  gap: 12px !important;
+  justify-items: center !important;
+  padding: 22px 20px !important;
+}
+
+.invite-qr {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  border-radius: 22px;
+  background: #ffffff;
+  display: grid;
+  place-items: center;
+  color: #2b2119;
+  box-shadow: 0 8px 22px rgba(146, 96, 52, 0.10);
+}
+
+.invite-qr-dot {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: #f0a050;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.invite-title {
+  margin: 6px 0 0 !important;
+  font-family: var(--nl-font-display) !important;
+  font-size: 30px !important;
+  font-weight: 700 !important;
+  color: #4a2f1f !important;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.invite-sub {
+  margin: 0 !important;
+  color: #8a6c56 !important;
+  font-size: 17px !important;
+}
+
+.invite-code-pill {
+  width: 100%;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  min-height: 64px;
+  padding: 6px 8px 6px 22px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 252, 247, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+}
+
+.invite-code-value {
+  flex: 1;
+  font-family: var(--nl-font-display) !important;
+  font-size: 26px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.10em;
+  color: #3f2a1d !important;
+  word-break: break-all;
+}
+
+.invite-code-copy {
+  flex-shrink: 0;
+  min-width: 92px;
+  min-height: 52px;
+  border-radius: 999px !important;
+  border: none !important;
+  background: #f2a55f !important;
+  color: #ffffff !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+}
+
+.invite-share {
+  width: 100%;
+  min-height: 58px;
+  border-radius: 999px !important;
+  border: none !important;
+  background: linear-gradient(180deg, #f5a75c 0%, #ee9743 100%) !important;
+  color: #ffffff !important;
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 10px 24px rgba(238, 151, 67, 0.26) !important;
+  cursor: pointer;
+}
+
+.invite-section-title {
+  font-family: var(--nl-font-display) !important;
+  font-size: 26px !important;
+  font-weight: 700 !important;
+  color: #4a2f1f !important;
+}
+
+.invite-shell section[aria-label="已邀请"] > div:not(:first-child) {
+  border-radius: 20px !important;
+  background: rgba(255, 249, 243, 0.85) !important;
+  min-height: 72px !important;
+  padding: 10px 14px !important;
+}
+
+.invite-shell section[aria-label="已邀请"] {
+  display: grid !important;
+  gap: 10px !important;
+}
+
+.invite-shell section[aria-label="已邀请"] > div:first-child {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+.invite-footer {
+  margin: 18px 0 8px;
+  text-align: center;
+  color: #9a7d66;
+  font-size: 15px;
+}
