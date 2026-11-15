@@ -8256,3 +8256,17 @@ header.app-topbar > div span {
 .settings-shell .set-footer {
   margin: 18px 0 8px !important;
 }
+
+/* 11：页脚紧跟关于、组标题间距与行高再收 */
+.settings-shell .set-footer { order: 4 !important; }
+.settings-shell .set-group[aria-label="隐私"] { order: 5 !important; }
+.settings-shell .set-group[aria-label="长辈与阅读"] { order: 6 !important; }
+
+.settings-shell .set-group-title {
+  margin: 12px 0 6px !important;
+  font-size: 22px !important;
+}
+
+.settings-shell .set-row {
+  min-height: 68px !important;
+}
