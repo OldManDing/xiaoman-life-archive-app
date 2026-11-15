@@ -8113,3 +8113,19 @@ header.app-topbar > div span {
   object-fit: cover;
   flex-shrink: 0;
 }
+
+/* 10：标题单行省略，避免折行撑高卡片 */
+.msg-title {
+  white-space: nowrap !important;
+  display: block !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  -webkit-line-clamp: unset !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+}
+
+.msg-card {
+  min-height: 92px !important;
+  max-height: 96px !important;
+}
