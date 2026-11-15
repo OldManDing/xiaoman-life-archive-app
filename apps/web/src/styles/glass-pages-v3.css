@@ -7095,3 +7095,15 @@ body,
   background-color: transparent !important;
   box-shadow: none !important;
 }
+
+/* 06：我的页底栏激活为浅橙胶囊 + 橙图标；统计数字细体 */
+.app-bottom-nav.is-quiet .app-bottom-nav-link.is-active {
+  background: rgba(246, 159, 77, 0.18) !important;
+  border-radius: 20px !important;
+  color: #e98a3c !important;
+}
+
+.pf-stat-num {
+  font-weight: 500 !important;
+  font-size: 30px !important;
+}
