@@ -8093,3 +8093,14 @@ body,
 .msg-text {
   font-weight: 400 !important;
 }
+
+/* 10：顶栏动作橙色、标题加粗（按 DOM 实测） */
+header.app-topbar button:not([aria-label]) {
+  color: #e98a3c !important;
+  font-weight: 600 !important;
+}
+
+header.app-topbar > div,
+header.app-topbar > div span {
+  font-weight: 700 !important;
+}
