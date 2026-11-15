@@ -9654,3 +9654,11 @@ main[aria-label="正在进入年轮"] {
   font-weight: 600 !important;
   color: #4a2f1f !important;
 }
+
+/* 27：外层卡（占位符实际为「请输入 确认注销」） */
+.info-shell:has(input[placeholder="请输入 确认注销"]) .info-card,
+.info-shell:has(input[placeholder="请输入 确认注销"]) .app-panel {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
