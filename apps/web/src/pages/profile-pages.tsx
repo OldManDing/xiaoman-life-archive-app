@@ -2794,7 +2794,7 @@ export const ContactPage = () => {
               <span style={{ minWidth: 0, display: 'grid', gap: '4px' }}>
                 <strong style={{ color: '#3f2a1d', fontSize: '20px', fontWeight: 600 }}>{item.title}</strong>
                 <a href={`mailto:${item.value}`} style={{ color: '#4a2f1f', fontSize: '17px', fontWeight: 600, lineHeight: 1.6, overflowWrap: 'anywhere', textDecoration: 'none' }}>{item.value}</a>
-                <span style={{ color: '#8a6c56', fontSize: '14px', lineHeight: 1.45, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.detail}</span>
+                <span style={{ color: '#8a6c56', fontSize: '13px', lineHeight: 1.45, whiteSpace: 'normal', overflow: 'visible', textOverflow: 'clip', display: 'block' }}>{item.detail}</span>
               </span>
               {copyable ? (
                 <button
