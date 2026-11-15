@@ -26,7 +26,7 @@ const motionBlockStyle: CSSProperties = {
   width: 'min(100%, 360px)',
   display: 'grid',
   justifyItems: 'center',
-  gap: '20px',
+  gap: '10px',
   textAlign: 'center',
 };
 
@@ -167,7 +167,7 @@ export const BrandBootMotion = ({ showRecovery = false, onRetry, onExit }: Brand
     <section style={{ ...motionBlockStyle, alignContent: 'start', marginTop: '28vh' }}>
       <span aria-hidden="true" style={{ width: 11, height: 11, borderRadius: '999px', background: '#e9a05a', marginBottom: 14 }} />
       <strong style={{ color: '#5a3a22', fontFamily: 'var(--nl-font-display)', fontSize: '78px', lineHeight: 1.02, fontWeight: 600, letterSpacing: '0.01em' }}>年轮</strong>
-      <span aria-hidden="true" style={{ width: 120, height: 1, background: 'rgba(120, 80, 40, 0.28)', margin: '16px 0 14px' }} />
+      <span aria-hidden="true" style={{ width: 120, height: 1, background: 'rgba(120, 80, 40, 0.28)', margin: '10px 0 8px' }} />
       <p style={{ margin: 0, color: '#6f5745', fontSize: '21px', fontWeight: 500, letterSpacing: '0.02em' }}>把每一天，都留给以后</p>
     </section>
 
