@@ -833,6 +833,7 @@ export const SearchPage = () => {
       </header>
 
       <main className="search-main">
+        {!normalizedKeyword ? (
         <section>
           <h2 className="search-recent-title">最近搜索</h2>
           <div className="search-chips">
@@ -841,6 +842,7 @@ export const SearchPage = () => {
             ))}
           </div>
         </section>
+        ) : null}
 
         {!normalizedKeyword ? (
           <section>
@@ -868,7 +870,7 @@ export const SearchPage = () => {
           </section>
         ) : (
           <section>
-            {searchBusy || resultTotal > 0 ? (
+            {!error && records.length > 0 ? (
               <div className="search-count-row">
                 <h2 className="search-count">{searchBusy ? '正在搜索…' : `找到 ${resultTotal} 条${records.length < resultTotal ? ` · 显示前 ${records.length} 条` : ''}`}</h2>
                 <button type="button" className="search-filter" disabled aria-label="筛选（即将上线）">
@@ -896,14 +898,14 @@ export const SearchPage = () => {
                   <Search size={54} strokeWidth={1.8} />
                   <Sparkles size={20} strokeWidth={1.8} style={{ position: 'absolute', top: 22, right: 24, color: '#e9a05a' }} />
                 </span>
-                <strong style={{ fontFamily: 'var(--nl-font-display)', fontSize: 32, fontWeight: 500, color: 'var(--nl-ink)', lineHeight: 1.3, marginTop: 10 }}>没有找到「{normalizedKeyword}」</strong>
+                <strong style={{ fontFamily: 'var(--nl-font-display)', fontSize: 33, fontWeight: 600, color: 'var(--nl-ink)', lineHeight: 1.3, marginTop: 10 }}>没有找到「{normalizedKeyword}」</strong>
                 <p style={{ ...helperTextStyle, margin: 0, fontSize: 15, lineHeight: 1.75, maxWidth: 268 }}>换个词试试，或者去时间轴看看这一年</p>
                 <button
                   type="button"
                   onClick={() => navigate(`/timeline?year=${new Date().getFullYear()}`)}
-                  style={{ marginTop: 16, minHeight: 44, padding: '0 24px', borderRadius: 999, border: '1px solid rgba(255, 255, 255, 0.9)', background: 'rgba(255, 255, 255, 0.58)', color: '#a9581b', fontSize: 16, fontWeight: 600 }}
+                  style={{ marginTop: 18, minHeight: 56, padding: '0 30px', borderRadius: 999, border: '1px solid rgba(255, 255, 255, 0.9)', background: 'rgba(255, 255, 255, 0.6)', color: '#b05f22', fontSize: 18, fontWeight: 600, boxShadow: '0 8px 22px rgba(146, 96, 52, 0.08)' }}
                 >
-                  看看这一年
+                  去时间轴看看
                 </button>
               </div>
             ) : null}
