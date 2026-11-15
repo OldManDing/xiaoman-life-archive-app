@@ -6996,3 +6996,102 @@ body,
   right: 0 !important;
   bottom: 0 !important;
 }
+
+/* ===== Round3：01/06 细节收口 ===== */
+/* 底栏：去掉图标/激活态底块，激活只换橙字 */
+.app-bottom-nav {
+  --nl-nav-active: #e98a3c !important;
+}
+
+.app-bottom-nav .app-bottom-nav-icon,
+.app-bottom-nav .app-bottom-nav-link.is-active .app-bottom-nav-icon,
+.app-bottom-nav .app-bottom-nav-link.is-active {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.app-bottom-nav .app-bottom-nav-link.is-active,
+.app-bottom-nav .app-bottom-nav-link.is-active .app-bottom-nav-label,
+.app-bottom-nav .app-bottom-nav-link.is-active svg {
+  color: #e98a3c !important;
+}
+
+/* 01：缩略图接近正方形；头部字号收敛 */
+.nl-home-thumb {
+  aspect-ratio: 1 / 1 !important;
+}
+
+.nl-home-row-thumb {
+  width: 68px !important;
+  height: 68px !important;
+  aspect-ratio: 1 / 1 !important;
+}
+
+.nl-home-title {
+  font-size: 19px !important;
+}
+
+.nl-home-title-age {
+  font-size: 13px !important;
+}
+
+.nl-home-avatar {
+  width: 46px !important;
+  height: 46px !important;
+}
+
+/* 06：分隔线从文字处内缩（图标 24 + 间距 16） */
+.pf-menu-row {
+  border-bottom: none !important;
+  position: relative;
+}
+
+.pf-menu-row + .pf-menu-row::before,
+.pf-menu-row.is-danger::before {
+  content: "";
+  position: absolute;
+  left: 56px;
+  right: 0;
+  top: 0;
+  height: 1px;
+  background: rgba(120, 80, 40, 0.10);
+}
+
+.pf-menu-dot {
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 999px !important;
+  background: #f69f4d !important;
+  display: inline-block !important;
+  margin-left: auto !important;
+  margin-right: 6px !important;
+}
+
+.pf-stat-num {
+  font-weight: 600 !important;
+}
+
+/* Round3b：激活图标无底块；首页底部安全区加大 */
+.app-bottom-nav .app-bottom-nav-link.is-active > *,
+.app-bottom-nav .app-bottom-nav-link.is-active > * > * {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.nl-home-main,
+.nl-home-stream {
+  padding-bottom: calc(150px + env(safe-area-inset-bottom)) !important;
+}
+
+.nl-home-thumb {
+  aspect-ratio: 1 / 0.95 !important;
+}
+
+/* 底栏激活图标：最高优先级去底块 */
+.app-bottom-nav .app-bottom-nav-link.is-active .app-bottom-nav-icon,
+.app-bottom-nav .app-bottom-nav-link.is-active .app-bottom-nav-icon svg,
+.app-bottom-nav.is-quiet .app-bottom-nav-link.is-active .app-bottom-nav-icon {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}

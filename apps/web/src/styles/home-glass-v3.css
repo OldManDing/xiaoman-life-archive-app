@@ -314,7 +314,7 @@
 }
 
 .app-layout.is-home .app-bottom-nav .app-bottom-nav-link.is-active .app-bottom-nav-icon {
-  background: rgba(233, 160, 90, 0.24) !important;
+  background: transparent !important;
   color: var(--nl-accent) !important;
   border-radius: 14px;
 }

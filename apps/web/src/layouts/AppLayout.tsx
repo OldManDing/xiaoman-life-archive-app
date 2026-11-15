@@ -276,7 +276,7 @@ export const AppLayout = () => {
                     borderRadius: '14px',
                     display: 'grid',
                     placeItems: 'center',
-                    background: isActive ? 'rgba(233, 160, 90, 0.24)' : 'transparent',
+                    background: 'transparent',
                     color: isActive ? 'var(--nl-nav-active)' : 'var(--nl-nav-muted)',
                     boxShadow: 'none',
                     border: 'none',
