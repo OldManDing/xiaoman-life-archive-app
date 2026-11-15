@@ -7799,3 +7799,34 @@ body,
     radial-gradient(70% 40% at 50% 0%, rgba(255, 214, 178, 0.55) 0%, rgba(255, 214, 178, 0) 70%),
     linear-gradient(180deg, #ffe9d7 0%, #fcdcc7 55%, #f9d3c1 100%) !important;
 }
+
+/* 09：标题改黑体、纵向再收 */
+.onb-title {
+  font-family: var(--nl-font-sans, -apple-system, "Noto Sans SC", "PingFang SC", sans-serif) !important;
+  font-size: 32px !important;
+  font-weight: 700 !important;
+  margin: 2px 0 2px !important;
+}
+
+.onb-avatar {
+  width: 168px !important;
+  height: 168px !important;
+  max-width: 168px !important;
+  max-height: 168px !important;
+}
+
+.onb-avatar-wrap {
+  margin: 0 0 8px !important;
+}
+
+.onb-card {
+  padding: 0 18px !important;
+}
+
+.onb-row {
+  min-height: 56px !important;
+}
+
+.onb-sub {
+  margin-bottom: 6px !important;
+}
