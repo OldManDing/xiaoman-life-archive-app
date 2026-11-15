@@ -1379,6 +1379,7 @@ export const SettingsPage = () => {
             <span className="set-icon"><Trash2 size={24} strokeWidth={1.8} /></span>
             <span className="set-body"><strong>清理本机缓存</strong></span>
             <span className="set-value">{cacheSize}</span>
+            <ChevronRight size={20} className="set-chevron" />
           </button>
         </div>
       </section>

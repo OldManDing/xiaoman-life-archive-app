@@ -8192,3 +8192,36 @@ header.app-topbar > div span {
 .settings-shell .set-group[aria-label="关于"] { order: 3; }
 .settings-shell .set-group[aria-label="隐私"] { order: 4; }
 .settings-shell .set-group[aria-label="长辈与阅读"] { order: 5; }
+
+/* 11：行收敛为通栏 + 发丝线，去掉逐行卡片感 */
+.settings-shell .set-card {
+  padding: 0 18px !important;
+}
+
+.settings-shell .set-row {
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(120, 80, 40, 0.10) !important;
+  margin: 0 !important;
+}
+
+.settings-shell .set-row:last-child {
+  border-bottom: none !important;
+}
+
+.settings-shell .set-group-title {
+  font-family: var(--nl-font-display) !important;
+  font-size: 24px !important;
+  font-weight: 700 !important;
+}
+
+.settings-shell h1,
+.settings-shell .app-topbar-title {
+  font-family: var(--nl-font-display) !important;
+}
+
+.settings-shell {
+  row-gap: 0 !important;
+}
