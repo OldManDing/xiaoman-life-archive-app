@@ -8046,3 +8046,29 @@ body,
   font-size: 19px !important;
   line-height: 1.4 !important;
 }
+
+/* 10：行高与内边距收紧、标题更醒目 */
+.msg-card {
+  min-height: 92px !important;
+  padding: 13px 15px !important;
+  gap: 13px !important;
+}
+
+.msg-title {
+  font-weight: 700 !important;
+  font-size: 18px !important;
+}
+
+.msg-title-rest {
+  font-weight: 500 !important;
+}
+
+.msg-avatar,
+.msg-system-icon {
+  width: 60px !important;
+  height: 60px !important;
+}
+
+.msg-list {
+  gap: 12px !important;
+}
