@@ -9662,3 +9662,19 @@ main[aria-label="正在进入年轮"] {
   border: none !important;
   box-shadow: none !important;
 }
+
+/* 27：警示卡竖分隔线、背景减饱和、数值字重 */
+.info-shell:has(input[placeholder="请输入 确认注销"]) div[style*="rgba(255, 250, 244, 0.86)"] > div {
+  border-left: 1px solid rgba(120, 80, 40, 0.18) !important;
+  padding-left: 14px !important;
+}
+
+.info-shell:has(input[placeholder="请输入 确认注销"]) {
+  background-image:
+    radial-gradient(90% 32% at 50% 0%, rgba(255, 232, 208, 0.75) 0%, rgba(255, 232, 208, 0) 62%),
+    linear-gradient(180deg, #fff3e6 0%, #fde9d8 55%, #fbe1cf 100%) !important;
+}
+
+.info-shell:has(input[placeholder="请输入 确认注销"]) div[style*="34px"] strong {
+  font-weight: 600 !important;
+}

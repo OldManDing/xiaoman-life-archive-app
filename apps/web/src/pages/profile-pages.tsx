@@ -1,7 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { AlertTriangle, Bell, BellRing, Layers, MapPin, Wifi, BookHeart, AlertCircle, Unlink, Cake, CalendarDays, Star, Camera, ChevronUp, Clock, CheckCircle2, ChevronRight, Copy, DownloadCloud, FileBox, FileText, HelpCircle, Home, Info, KeyRound, Lock, LogOut, Mail, MessageCircle, MessageCircleMore, Moon, Pencil, RefreshCw, Settings, Shield, ShieldCheck, Smartphone, Sparkles, Trash2, Type, UploadCloud, UserPlus, UserRound, Users } from 'lucide-react';
+import { Baby, AlertTriangle, Bell, BellRing, Layers, MapPin, Wifi, BookHeart, AlertCircle, Unlink, Cake, CalendarDays, Star, Camera, ChevronUp, Clock, CheckCircle2, ChevronRight, Copy, DownloadCloud, FileBox, FileText, HelpCircle, Home, Info, KeyRound, Lock, LogOut, Mail, MessageCircle, MessageCircleMore, Moon, Pencil, RefreshCw, Settings, Shield, ShieldCheck, Smartphone, Sparkles, Trash2, Type, UploadCloud, UserPlus, UserRound, Users } from 'lucide-react';
 
 import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
@@ -2290,7 +2290,7 @@ export const AccountDeletionPage = () => {
                 {[
                   { icon: Home, label: '拥有家庭', value: check.summary.owned_family_count },
                   { icon: Users, label: '加入家庭', value: check.summary.joined_family_count },
-                  { icon: UserRound, label: '孩子档案', value: check.summary.active_child_count },
+                  { icon: Baby, label: '孩子档案', value: check.summary.active_child_count },
                   { icon: FileText, label: '有效记录', value: check.summary.active_record_count },
                 ].map((item) => {
                   const Icon = item.icon;
@@ -2311,9 +2311,7 @@ export const AccountDeletionPage = () => {
                     提交协助
                   </button>
                 </p>
-              ) : (
-                <p style={{ margin: 0, color: 'var(--nl-success)', fontSize: 13, lineHeight: 1.6 }}>当前账号可以注销，提交后将立即退出登录。</p>
-              )}
+              ) : null}
             </div>
           ) : null}
         </div>
