@@ -8486,3 +8486,46 @@ header.app-topbar > div span {
 .wl-hero { padding: 0 !important; display: block !important; }
 .wl-hero img { width: 100% !important; height: 100% !important; object-fit: cover !important; margin: 0 !important; }
 .wl-title, .wl-heading { font-size: 42px !important; }
+
+/* 13：右上暖金光晕 + 节奏 */
+.nl-boot-shell,
+main[aria-label="正在进入年轮"] {
+  background-image:
+    radial-gradient(70% 38% at 88% 0%, rgba(255, 186, 112, 0.75) 0%, rgba(255, 186, 112, 0) 66%),
+    radial-gradient(60% 36% at 20% 10%, rgba(255, 224, 190, 0.75) 0%, rgba(255, 224, 190, 0) 68%),
+    linear-gradient(180deg, #ffe6cd 0%, #fbdbc6 55%, #f8d2bf 100%) !important;
+}
+
+/* 14：单层图片卡 + 跳过胶囊描边 */
+.wl-hero {
+  background: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+}
+
+.wl-hero > * {
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  border-radius: 29px !important;
+}
+
+.wl-skip {
+  border: 1px solid rgba(180, 130, 90, 0.35) !important;
+  background: rgba(255, 250, 244, 0.55) !important;
+  color: #4a2f1f !important;
+}
+
+.wl-title,
+.wl-heading {
+  font-size: 40px !important;
+  margin: 18px 0 6px !important;
+}
+
+.wl-sub {
+  margin: 4px 0 0 !important;
+  font-size: 18px !important;
+}
+
+.wl-dots {
+  margin: 16px 0 8px !important;
+}
