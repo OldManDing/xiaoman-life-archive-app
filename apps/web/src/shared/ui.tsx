@@ -17,13 +17,16 @@ const pageShellStyle: CSSProperties = {
 };
 
 const cardStyle: CSSProperties = {
-  background: 'var(--nl-card-bg)',
+  background:
+    'linear-gradient(154deg, rgba(255, 255, 255, 0.80) 0%, rgba(255, 252, 247, 0.46) 38%, rgba(255, 246, 236, 0.60) 100%)',
+  backgroundColor: 'rgba(255, 250, 244, 0.42)',
   borderRadius: 'var(--nl-radius-card, 24px)',
   padding: '18px',
-  border: '1px solid var(--nl-glass-border)',
-  boxShadow: '0 10px 24px rgba(146, 96, 52, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.66)',
-  WebkitBackdropFilter: 'blur(12px) saturate(1.02)',
-  backdropFilter: 'blur(12px) saturate(1.02)',
+  border: '1px solid rgba(255, 255, 255, 0.86)',
+  boxShadow:
+    '0 18px 44px rgba(146, 96, 52, 0.13), 0 2px 6px rgba(146, 96, 52, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.94), inset 0 -14px 26px rgba(255, 255, 255, 0.16)',
+  WebkitBackdropFilter: 'blur(26px) saturate(1.5)',
+  backdropFilter: 'blur(26px) saturate(1.5)',
 };
 
 const headingStyle: CSSProperties = {

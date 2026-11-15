@@ -13,6 +13,8 @@ import './styles/home-glass-v3.css';
 import './styles/glass-pages-v3.css';
 // 全站按钮水泡点击反馈（pointerdown 冒泡 + 圆角裁切）
 import './styles/bubble.css';
+// 玻璃质感收口层：背景折射 + 26px 模糊玻璃面 + 统一高光；删除此 import 即回滚
+import './styles/glass-finish.css';
 import { installBubbleEffect } from './shared/bubble';
 
 installBubbleEffect();

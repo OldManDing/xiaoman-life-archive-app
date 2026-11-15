@@ -1,0 +1,205 @@
+/* ============================================================
+   年轮 · 玻璃质感收口层（glass-finish）
+   -------------------------------------
+   目的：把「纸片卡」升级为真正的暖光玻璃：
+   1) 背景折射层：页面底部三处暖色光斑，让上层玻璃有东西可折射
+   2) 玻璃配方：白色斜向渐变 + 26px 模糊 + 饱和度提升 + 双层内高光 + 柔和落影
+   3) 导航 / 顶栏 / 分段控件 / 输入框 / 胶囊统一同一套玻璃语言
+   只在视觉层生效，不改任何业务逻辑与布局尺寸。
+   ============================================================ */
+
+:root {
+  --gx-blur: 26px;
+  --gx-saturate: 1.5;
+  --gx-sheen:
+    linear-gradient(154deg, rgba(255, 255, 255, 0.58) 0%, rgba(255, 252, 247, 0.26) 38%, rgba(255, 246, 236, 0.40) 100%);
+  --gx-tint: rgba(255, 250, 244, 0.16);
+  --gx-border: rgba(255, 255, 255, 0.86);
+  --gx-shadow:
+    0 18px 44px rgba(146, 96, 52, 0.13),
+    0 2px 6px rgba(146, 96, 52, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.94),
+    inset 0 -14px 26px rgba(255, 255, 255, 0.16);
+  --gx-shadow-nav:
+    0 14px 36px rgba(146, 96, 52, 0.16),
+    0 2px 6px rgba(146, 96, 52, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.96);
+}
+
+/* ---------- 1. 背景折射层 ---------- */
+.app-layout {
+  position: relative;
+  isolation: isolate;
+}
+
+.app-layout::before {
+  content: "";
+  position: fixed;
+  inset: -8vh -8vw;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(34% 26% at 12% 6%, rgba(255, 150, 60, 0.72) 0%, rgba(255, 150, 60, 0) 70%),
+    radial-gradient(38% 26% at 92% 2%, rgba(255, 182, 104, 0.68) 0%, rgba(255, 182, 104, 0) 72%),
+    radial-gradient(46% 30% at 50% 20%, rgba(255, 176, 118, 0.55) 0%, rgba(255, 176, 118, 0) 74%),
+    radial-gradient(42% 28% at 30% 46%, rgba(255, 152, 112, 0.44) 0%, rgba(255, 152, 112, 0) 74%),
+    radial-gradient(46% 30% at 74% 62%, rgba(255, 166, 96, 0.46) 0%, rgba(255, 166, 96, 0) 74%),
+    radial-gradient(54% 34% at 48% 92%, rgba(255, 132, 104, 0.40) 0%, rgba(255, 132, 104, 0) 76%);
+}
+
+.app-main-scroll,
+.app-bottom-nav,
+.app-topbar,
+.app-layout > header,
+.app-layout > main,
+.app-layout > nav {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- 2. 主玻璃面 ---------- */
+#root .app-panel,
+#root .info-card,
+#root .ac-card,
+#root .member-row-card,
+#root .pf-hero,
+#root .pf-stats,
+#root .pf-menu,
+#root .set-group,
+#root .msg-row,
+#root .stat-card,
+#root .record-card,
+#root .timeline-card,
+#root .fam-member-card,
+#root .fam-card,
+#root .export-card,
+#root .upload-card {
+  background-image:
+    linear-gradient(118deg, rgba(255, 255, 255, 0) 26%, rgba(255, 255, 255, 0.30) 42%, rgba(255, 255, 255, 0) 58%),
+    var(--gx-sheen),
+    repeating-linear-gradient(58deg, rgba(255, 255, 255, 0.05) 0 1px, rgba(255, 255, 255, 0) 1px 3px) !important;
+  background-color: var(--gx-tint) !important;
+  border: 1px solid var(--gx-border) !important;
+  box-shadow: var(--gx-shadow) !important;
+  -webkit-backdrop-filter: blur(var(--gx-blur)) saturate(var(--gx-saturate)) brightness(1.03) !important;
+  backdrop-filter: blur(var(--gx-blur)) saturate(var(--gx-saturate)) brightness(1.03) !important;
+}
+
+/* 卡片内部再嵌一层胶囊/区块时不要叠成两层雾面 */
+#root .app-panel .app-panel,
+#root .info-card .info-card,
+#root .ac-card .ac-card {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  background-image: none !important;
+  background-color: rgba(255, 255, 255, 0.34) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85) !important;
+}
+
+/* ---------- 3. 底部导航 / 顶栏 / 返回胶囊 ---------- */
+#root .app-bottom-nav {
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.46) 0%, rgba(255, 246, 236, 0.24) 100%) !important;
+  background-color: rgba(255, 250, 244, 0.14) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  box-shadow: var(--gx-shadow-nav) !important;
+  -webkit-backdrop-filter: blur(34px) saturate(1.7) !important;
+  backdrop-filter: blur(34px) saturate(1.7) !important;
+}
+
+#root .app-topbar,
+#root .app-page-titlebar,
+#root .app-page-header,
+#root .app-back-button,
+#root .app-header-pill {
+  background-color: rgba(255, 250, 244, 0.34) !important;
+  background-image:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.66) 0%, rgba(255, 249, 242, 0.34) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  box-shadow:
+    0 12px 30px rgba(146, 96, 52, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(1.5) !important;
+  backdrop-filter: blur(22px) saturate(1.5) !important;
+}
+
+/* ---------- 4. 输入框 / 分段控件 / 搜索框 ---------- */
+#root .app-segmented,
+#root .segmented-control,
+#root .msg-segmented,
+#root .search-field,
+#root input.nl-input,
+#root textarea.nl-input,
+#root select,
+#root .app-select {
+  background-image:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.62) 0%, rgba(255, 248, 240, 0.34) 100%) !important;
+  background-color: rgba(255, 250, 244, 0.30) !important;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+  box-shadow:
+    0 6px 18px rgba(146, 96, 52, 0.07),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.4) !important;
+  backdrop-filter: blur(18px) saturate(1.4) !important;
+}
+
+/* ---------- 5. 次级胶囊按钮 / 标签 ---------- */
+.pf-menu-dot,
+.fam-role,
+.perm-option.is-selected,
+.record-tag,
+.tag,
+.chip {
+  -webkit-backdrop-filter: blur(14px) saturate(1.35);
+  backdrop-filter: blur(14px) saturate(1.35);
+}
+
+/* ---------- 6. 老设备降级：不支持模糊时提高不透明度 ---------- */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .app-panel,
+  .info-card,
+  .ac-card,
+  .member-row-card,
+  .pf-hero,
+  .pf-stats,
+  .pf-menu {
+    background-color: rgba(255, 250, 244, 0.94) !important;
+  }
+}
+
+/* ---------- 7. 降低动效偏好 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .app-panel,
+  .info-card,
+  .app-bottom-nav {
+    transition: none !important;
+  }
+}
+
+/* ---------- 8. 让页级背景透出，玻璃才有东西可折射 ---------- */
+#root .pf-main,
+#root .info-shell,
+#root .account-shell,
+#root .archive-shell,
+#root .settings-shell,
+#root .legal-shell,
+#root .error-shell,
+#root .app-page-shell,
+#root .ref-page,
+#root .nl-home-page,
+#root .search-page,
+#root .timeline-page {
+  background: transparent !important;
+  background-image: none !important;
+}
+
+/* 极小的页面级暖雾，保留一点层次但不挡住光斑 */
+#root .app-main-scroll::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    radial-gradient(60% 26% at 50% 0%, rgba(255, 236, 214, 0.55) 0%, rgba(255, 236, 214, 0) 70%);
+}
