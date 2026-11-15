@@ -9924,3 +9924,73 @@ main[aria-label="正在进入年轮"] {
     radial-gradient(90% 30% at 50% 0%, rgba(255, 231, 205, 0.7) 0%, rgba(255, 231, 205, 0) 60%),
     linear-gradient(180deg, #fff4e8 0%, #fdeada 55%, #fbe2d0 100%) !important;
 }
+
+/* 06 我的：头部比例、菜单密度、右上暖光 */
+#root .pf-hero {
+  min-height: 128px !important;
+  padding: 16px 18px !important;
+}
+
+#root .pf-hero-name {
+  font-size: 34px !important;
+}
+
+#root .pf-hero-meta {
+  font-size: 17px !important;
+}
+
+#root .pf-menu-row {
+  min-height: 84px !important;
+}
+
+#root .pf-main {
+  background-image:
+    radial-gradient(80% 30% at 88% 0%, rgba(255, 198, 142, 0.7) 0%, rgba(255, 198, 142, 0) 62%),
+    linear-gradient(180deg, #fff3e6 0%, #fde9d8 60%, #fbe1cf 100%) !important;
+}
+
+/* 14 欢迎页：节奏与字号 */
+#root .wl-body {
+  gap: 8px !important;
+}
+
+#root .wl-title,
+#root .wl-heading {
+  font-size: 42px !important;
+  font-weight: 700 !important;
+  margin: 14px 0 2px !important;
+}
+
+#root .wl-sub,
+#root .wl-subtitle {
+  font-size: 21px !important;
+  margin: 2px 0 0 !important;
+}
+
+#root .wl-dots {
+  margin: 12px 0 6px !important;
+  gap: 8px !important;
+}
+
+#root .wl-hero {
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+}
+
+#root .wl-page .wl-check,
+#root .wl-page label[class*="agree"] span[class*="box"] {
+  border-radius: 10px !important;
+  border: 1.5px solid rgba(180, 130, 90, 0.5) !important;
+}
+
+#root .pf-menu-row {
+  min-height: 64px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+#root .pf-menu-row strong,
+#root .pf-menu-row span {
+  font-size: 20px !important;
+}
+#root .pf-stats {
+  padding: 14px 18px !important;
+}

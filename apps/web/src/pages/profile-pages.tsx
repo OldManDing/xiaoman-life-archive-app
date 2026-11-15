@@ -451,7 +451,7 @@ export const ProfilePage = () => {
             src={user?.avatar_url && !isTechnicalProfileName(rawProfileName) ? user.avatar_url : null}
             mediaNo={user?.avatar_media_no}
             label={user?.nickname ?? '我的头像'}
-            size={56}
+            size={96}
           />
           <div style={{ minWidth: 0, flex: 1 }}>
             <h1 className="pf-hero-name">{profileName}</h1>
