@@ -8072,3 +8072,24 @@ body,
 .msg-list {
   gap: 12px !important;
 }
+
+/* 10：标题加粗、操作橙色、头像 64 */
+.app-topbar h1,
+.app-topbar .app-topbar-title {
+  font-weight: 700 !important;
+}
+
+[aria-label="全部已读"] {
+  color: #e98a3c !important;
+  font-weight: 600 !important;
+}
+
+.msg-avatar,
+.msg-system-icon {
+  width: 64px !important;
+  height: 64px !important;
+}
+
+.msg-text {
+  font-weight: 400 !important;
+}
