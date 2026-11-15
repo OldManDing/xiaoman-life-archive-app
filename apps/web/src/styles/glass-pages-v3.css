@@ -8805,3 +8805,34 @@ main[aria-label="正在进入年轮"] {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
+
+/* 17：权限 chip 与行密度 */
+.account-shell .fam-role,
+.fam-members-page .fam-role {
+  background: rgba(246, 166, 79, 0.42) !important;
+  color: #7a4416 !important;
+  border: none !important;
+  font-weight: 600 !important;
+  padding: 8px 16px !important;
+  border-radius: 999px !important;
+  font-size: 15px !important;
+}
+
+.account-shell .fam-role.is-owner {
+  background: #f2a556 !important;
+  color: #4a2a0c !important;
+}
+
+.fam-members-page .fam-member-row {
+  min-height: 96px !important;
+  border-radius: 22px !important;
+  background: rgba(255, 247, 238, 0.86) !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+  margin-bottom: 10px !important;
+}
+
+.fam-members-page .fam-role-sub,
+.fam-members-page .fam-member-role-sub {
+  font-size: 14px !important;
+  color: #8a6c56 !important;
+}
