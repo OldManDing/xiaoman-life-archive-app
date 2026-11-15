@@ -9501,3 +9501,11 @@ main[aria-label="正在进入年轮"] {
   font-size: 13px !important;
   white-space: nowrap !important;
 }
+
+/* 24：说明完整换行、不截断 */
+.info-shell:has(a[href^="mailto:"]) > div > div span[style*="8a6c56"] {
+  white-space: normal !important;
+  overflow: visible !important;
+  text-overflow: clip !important;
+  line-height: 1.45 !important;
+}
