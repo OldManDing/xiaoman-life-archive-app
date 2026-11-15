@@ -893,7 +893,7 @@ export const SearchPage = () => {
               </div>
             ) : null}
             {!loading && !error && !records.length ? (
-              <div style={{ display: 'grid', justifyItems: 'center', gap: 12, padding: '48px 0 28px', textAlign: 'center' }}>
+              <div className="search-empty" style={{ display: 'grid', justifyItems: 'center', gap: 12, padding: '48px 0 28px', textAlign: 'center' }}>
                 <span aria-hidden="true" style={{ position: 'relative', width: 115, height: 115, borderRadius: '50%', background: 'rgba(255, 255, 255, 0.78)', display: 'grid', placeItems: 'center', color: 'var(--nl-accent)', boxShadow: '0 14px 34px rgba(146, 96, 52, 0.1)', WebkitBackdropFilter: 'blur(20px)', backdropFilter: 'blur(20px)' }}>
                   <Search size={54} strokeWidth={1.8} />
                   <Sparkles size={20} strokeWidth={1.8} style={{ position: 'absolute', top: 22, right: 24, color: '#e9a05a' }} />
