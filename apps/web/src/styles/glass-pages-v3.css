@@ -9001,3 +9001,23 @@ main[aria-label="正在进入年轮"] {
   box-shadow: 0 10px 24px rgba(180, 101, 42, 0.22) !important;
   margin: 14px 0 10px !important;
 }
+
+/* 18：提示与节奏 */
+.account-shell .perm-hint {
+  margin: 12px 0 0 !important;
+  text-align: center !important;
+  color: #9a7d66 !important;
+  font-size: 15px !important;
+}
+
+.account-shell .fam-detail-title {
+  margin: 14px 0 8px !important;
+}
+
+.account-shell .perm-option {
+  min-height: 84px !important;
+}
+
+.account-shell section[aria-label="记录贡献"] > div {
+  min-height: 68px !important;
+}

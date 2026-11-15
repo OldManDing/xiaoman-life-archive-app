@@ -1049,6 +1049,7 @@ export const FamilyMemberDetailPage = () => {
                 );
               })}
             </div>
+            <p className="perm-hint">修改权限后点下方保存生效</p>
           </section>
 
           {canEditRole ? (
