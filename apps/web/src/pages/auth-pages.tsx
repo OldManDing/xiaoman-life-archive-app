@@ -667,19 +667,22 @@ export const OnboardingChildPage = () => {
       </div>
 
       <form onSubmit={onSubmit} style={{ display: 'contents' }}>
+        <h1 className="onb-title">先认识一下{form.name.trim() || '宝宝'}</h1>
+        <p className="onb-sub">这些信息只会给家人看到</p>
+
         <div className="onb-avatar-wrap">
           <label className="onb-avatar">
             {childAvatarPreviewSrc && !avatarPreviewFailed ? (
               <img src={childAvatarPreviewSrc} alt="宝宝头像预览" decoding="async" onError={() => setAvatarPreviewFailed(true)} />
             ) : (
-              <Camera size={44} strokeWidth={1.8} />
+              <>
+                <Camera size={34} strokeWidth={1.8} />
+                <span className="onb-avatar-label">添加照片</span>
+              </>
             )}
             <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" onChange={onAvatarChange} style={{ display: 'none' }} />
           </label>
         </div>
-
-        <h1 className="onb-title">先认识一下{form.name.trim() || '宝宝'}</h1>
-        <p className="onb-sub">这些信息只会给家人看到</p>
 
         <div className="onb-card">
           <div className="onb-row">
@@ -695,7 +698,7 @@ export const OnboardingChildPage = () => {
           </div>
 
           <div className="onb-row">
-            <CalendarDays size={22} strokeWidth={1.7} color="var(--nl-ink)" />
+            <span className="onb-label">出生日期</span>
             <label className="onb-date">
               <span className="onb-date-value">
                 {form.birthday
@@ -705,7 +708,6 @@ export const OnboardingChildPage = () => {
                   })()
                   : '年/月/日'}
               </span>
-              <span className="onb-date-hint">出生时间可选</span>
               <input
                 type="date"
                 className="onb-date-input"

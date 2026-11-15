@@ -7579,3 +7579,167 @@ body,
 .lg-register-link {
   margin-top: 24px !important;
 }
+
+/* ===== 09 孩子建档：按 screens/09 还原 ===== */
+.onb-title {
+  font-family: var(--nl-font-display) !important;
+  font-size: 38px !important;
+  font-weight: 700 !important;
+  line-height: 1.2 !important;
+  color: #4a2f1f !important;
+  text-align: center !important;
+  margin: 18px 0 8px !important;
+}
+
+.onb-sub {
+  text-align: center !important;
+  font-size: 17px !important;
+  color: #7a5a44 !important;
+  margin: 0 0 20px !important;
+}
+
+.onb-avatar-wrap {
+  display: flex !important;
+  justify-content: center !important;
+  margin: 6px 0 22px !important;
+}
+
+.onb-avatar {
+  width: 300px !important;
+  height: 300px !important;
+  max-width: 72vw !important;
+  max-height: 72vw !important;
+  border-radius: 999px !important;
+  border: 1.5px dashed rgba(198, 138, 92, 0.55) !important;
+  background: rgba(255, 250, 244, 0.5) !important;
+  color: #e08b3e !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+}
+
+.onb-avatar-label {
+  font-size: 16px !important;
+  color: #7a5a44 !important;
+  font-weight: 500;
+}
+
+.onb-card {
+  background: rgba(255, 244, 234, 0.82) !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  border-radius: 26px !important;
+  padding: 4px 20px !important;
+  box-shadow: 0 10px 26px rgba(176, 118, 78, 0.07) !important;
+}
+
+.onb-row {
+  min-height: 68px !important;
+  border-bottom: 1px solid rgba(120, 80, 40, 0.10) !important;
+  gap: 10px !important;
+}
+
+.onb-row:last-child {
+  border-bottom: none !important;
+}
+
+.onb-label {
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  color: #4a2f1f !important;
+  min-width: 96px;
+}
+
+.onb-input {
+  font-size: 18px !important;
+  color: #3f2a1d !important;
+  text-align: left !important;
+}
+
+.onb-date {
+  flex: 1;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+}
+
+.onb-date-value {
+  font-size: 18px !important;
+  color: #3f2a1d !important;
+}
+
+.onb-gender {
+  flex: 1;
+  display: flex !important;
+  gap: 10px !important;
+  justify-content: flex-end !important;
+}
+
+.onb-gender-opt {
+  min-width: 108px !important;
+  min-height: 52px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+  background: rgba(255, 250, 244, 0.8) !important;
+  color: #4a2f1f !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+}
+
+.onb-gender-opt.is-selected {
+  background: #f0a050 !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+  box-shadow: 0 8px 18px rgba(240, 160, 80, 0.26) !important;
+}
+
+.onb-submit,
+.onb-page button[type="submit"] {
+  min-height: 58px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(180deg, #f5a75c 0%, #ee9743 100%) !important;
+  color: #ffffff !important;
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 12px 26px rgba(238, 151, 67, 0.26) !important;
+}
+
+.onb-footnote {
+  text-align: center !important;
+  color: #7a5a44 !important;
+  font-size: 15px !important;
+  margin-top: 14px !important;
+}
+
+/* 09：头像圈与纵向节奏收敛 */
+.onb-avatar {
+  width: 190px !important;
+  height: 190px !important;
+  max-width: 190px !important;
+  max-height: 190px !important;
+}
+
+.onb-title {
+  font-size: 34px !important;
+  margin: 10px 0 6px !important;
+}
+
+.onb-sub {
+  font-size: 16px !important;
+  margin-bottom: 14px !important;
+}
+
+.onb-avatar-wrap {
+  margin: 2px 0 16px !important;
+}
+
+.onb-row {
+  min-height: 60px !important;
+}
+
+.onb-gender-opt {
+  min-height: 46px !important;
+  min-width: 100px !important;
+  font-size: 17px !important;
+}
