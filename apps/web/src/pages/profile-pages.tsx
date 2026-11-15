@@ -2963,8 +2963,8 @@ export const ErrorPage = () => {
         >
           <svg width="92" height="92" viewBox="0 0 92 92" fill="none" stroke="#b4652a" strokeWidth="3.6" strokeLinecap="round" strokeLinejoin="round" role="img" aria-label="断开的链接">
             <g transform="rotate(-45 46 46)">
-              <rect x="14" y="37" width="26" height="18" rx="9" />
-              <rect x="52" y="37" width="26" height="18" rx="9" />
+              <rect x="6" y="38" width="36" height="16" rx="8" />
+              <rect x="50" y="38" width="36" height="16" rx="8" />
             </g>
             <path d="M30 20 L24 13" />
             <path d="M46 16 L46 8" />
