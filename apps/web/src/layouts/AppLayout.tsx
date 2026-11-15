@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
-import { CirclePlus, Clock, Home, User, Users } from 'lucide-react';
+import { CalendarDays, CirclePlus, Clock, Home, User, Users } from 'lucide-react';
 import { useEffect, useState, type CSSProperties } from 'react';
 
 import { webApi } from '../shared/api/webApi';
@@ -170,7 +170,7 @@ export const AppLayout = () => {
   const tabScrollPadding = '32px';
   const navItems = [
     { to: '/home', label: '首页', icon: Home },
-    { to: '/timeline', label: '时间轴', icon: Clock },
+    { to: '/timeline', label: '时间轴', icon: CalendarDays },
     { to: '/record/create', label: '记录', icon: CirclePlus },
     { to: '/family', label: '家庭', icon: Users },
     { to: '/profile', label: '我的', icon: User },

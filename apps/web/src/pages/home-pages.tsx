@@ -586,7 +586,7 @@ export const HomePage = () => {
                   <h1 className="nl-home-title-row">
                     <span className="nl-home-title">{childName}</span>
                     <span className="nl-home-title-age">· {activeChild?.current_age_display ?? '等待第一份档案'}</span>
-                    {children.length > 1 ? <ChevronDown size={17} color="var(--nl-home-muted)" aria-hidden="true" /> : null}
+                    <ChevronDown size={17} color="var(--nl-home-muted)" aria-hidden="true" />
                   </h1>
                 </span>
               </div>
@@ -597,9 +597,6 @@ export const HomePage = () => {
                 aria-label={children.length > 1 ? `切换孩子，当前为${childName}` : activeChild ? `查看${childName}档案` : '选择孩子档案'}
               />
             </div>
-            <span className="nl-home-header-chevron" aria-hidden="true">
-              <ChevronRight size={22} strokeWidth={1.8} />
-            </span>
           </div>
         </header>
 

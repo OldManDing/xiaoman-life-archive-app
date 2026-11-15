@@ -536,3 +536,30 @@
 .nl-home-hero-wrap .nl-moment-featured-overlay {
   padding: 20px !important;
 }
+
+/* 01：底部导航激活态仅换色，不加底块 */
+.app-bottom-nav-link.is-active {
+  background: transparent !important;
+  color: #e98a3c !important;
+}
+
+.app-bottom-nav-link.is-active svg {
+  color: #e98a3c !important;
+}
+
+.nl-home-header-row {
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+}
+
+/* 01：激活态只换色（覆盖更高优先级规则） */
+.app-bottom-nav:not(.is-quiet) .app-bottom-nav-link.is-active,
+.app-bottom-nav.is-quiet .app-bottom-nav-link.is-active {
+  background: transparent !important;
+  color: #e98a3c !important;
+  box-shadow: none !important;
+}
+
+.app-bottom-nav:not(.is-quiet) .app-bottom-nav-link.is-active svg {
+  color: #e98a3c !important;
+}

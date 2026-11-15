@@ -6907,3 +6907,34 @@ body,
 .rd-body {
   margin-top: 8px !important;
 }
+
+/* 01：底部导航激活态仅换色（最终覆盖层） */
+.app-bottom-nav .app-bottom-nav-link.is-active {
+  background: transparent !important;
+  color: #e98a3c !important;
+  box-shadow: none !important;
+}
+
+.app-bottom-nav .app-bottom-nav-link.is-active svg {
+  color: #e98a3c !important;
+}
+
+/* FINAL：导航激活仅换色（追加在文件末尾，确保最后生效） */
+.app-bottom-nav .app-bottom-nav-link.is-active,
+.app-bottom-nav.is-quiet .app-bottom-nav-link.is-active,
+.app-bottom-nav:not(.is-quiet) .app-bottom-nav-link.is-active {
+  background: transparent !important;
+  color: #e98a3c !important;
+  box-shadow: none !important;
+}
+
+.app-bottom-nav .app-bottom-nav-link.is-active .app-bottom-nav-icon,
+.app-bottom-nav .app-bottom-nav-link.is-active .app-bottom-nav-label,
+.app-bottom-nav .app-bottom-nav-link.is-active svg {
+  background: transparent !important;
+  color: #e98a3c !important;
+}
+
+:root {
+  --nl-nav-active: #e98a3c;
+}
