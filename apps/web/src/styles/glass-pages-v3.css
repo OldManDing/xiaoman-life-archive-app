@@ -8653,3 +8653,26 @@ main[aria-label="正在进入年轮"] {
 .archive-shell details {
   display: none !important;
 }
+
+/* 16：日期行去输入框、值右对齐 */
+.archive-shell .ac-row label {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  flex: 1;
+}
+
+.archive-shell .ac-row input[type="date"] {
+  background: transparent !important;
+  border: none !important;
+  text-align: right !important;
+  padding-right: 4px !important;
+  font-family: var(--nl-font-display) !important;
+  font-size: 22px !important;
+  color: #3f2a1d !important;
+}
+
+.archive-shell .ac-row input[type="date"]::-webkit-calendar-picker-indicator {
+  display: none !important;
+}
