@@ -9678,3 +9678,105 @@ main[aria-label="正在进入年轮"] {
 .info-shell:has(input[placeholder="请输入 确认注销"]) div[style*="34px"] strong {
   font-weight: 600 !important;
 }
+
+/* ===== 28 错误页 ===== */
+.error-shell span[aria-hidden="true"] {
+  width: 190px !important;
+  height: 190px !important;
+  background: rgba(255, 250, 244, 0.62) !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  box-shadow: 0 20px 46px rgba(146, 96, 52, 0.10) !important;
+  color: #b4652a !important;
+}
+
+.error-shell h2 {
+  font-size: 34px !important;
+  font-weight: 600 !important;
+  color: #3f2a1d !important;
+}
+
+.error-shell p {
+  font-size: 18px !important;
+  color: #6f5745 !important;
+}
+
+.error-shell button {
+  min-height: 74px !important;
+  border-radius: 999px !important;
+  font-size: 24px !important;
+  font-weight: 600 !important;
+}
+
+.error-shell div[style*="maxWidth: 314"] button:first-child,
+.error-shell button[type="button"]:not(:last-child) {
+  background: #b4652a !important;
+  color: #fff !important;
+}
+
+/* 28：修正误伤头部按钮 */
+.error-shell button {
+  min-height: revert !important;
+  border-radius: revert !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+  background: revert !important;
+  color: inherit !important;
+}
+
+.error-shell .error-actions button {
+  min-height: 74px !important;
+  border-radius: 999px !important;
+  font-size: 24px !important;
+  font-weight: 600 !important;
+}
+
+.error-shell .error-actions button:first-child {
+  background: #b4652a !important;
+  color: #fff !important;
+}
+
+.error-shell .error-actions button:last-child {
+  background: rgba(255, 250, 244, 0.72) !important;
+  color: #4a2f1f !important;
+}
+
+.error-shell p {
+  font-size: 17px !important;
+  max-width: 420px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* 28：只作用于内容区图标，避免误伤头部 */
+.error-shell span[aria-hidden="true"] {
+  width: auto !important;
+  height: auto !important;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: inherit !important;
+}
+
+.error-shell .error-badge {
+  width: 190px !important;
+  height: 190px !important;
+  border-radius: 50% !important;
+  background: rgba(255, 250, 244, 0.62) !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  box-shadow: 0 20px 46px rgba(146, 96, 52, 0.10) !important;
+  color: #b4652a !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+.error-shell span.error-badge {
+  width: 190px !important;
+  height: 190px !important;
+  border-radius: 50% !important;
+  background: rgba(255, 250, 244, 0.62) !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  box-shadow: 0 20px 46px rgba(146, 96, 52, 0.10) !important;
+  color: #b4652a !important;
+  display: grid !important;
+  place-items: center !important;
+}

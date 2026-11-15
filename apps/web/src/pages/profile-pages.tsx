@@ -2946,6 +2946,7 @@ export const ErrorPage = () => {
       <div style={{ display: 'grid', justifyItems: 'center', gap: 12, padding: '40px 8px 24px', textAlign: 'center' }}>
         <span
           aria-hidden="true"
+          className="error-badge"
           style={{
             width: 98,
             height: 98,
@@ -2960,21 +2961,11 @@ export const ErrorPage = () => {
             backdropFilter: 'blur(20px)',
           }}
         >
-          <svg width="44" height="44" viewBox="0 0 44 44" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" role="img" aria-label="断开的链接">
-            <g transform="rotate(45 22 22)">
-              <path d="M13 21 l-3.5 3.5 a6 6 0 0 0 8.5 8.5 L21.5 29.5" />
-              <path d="M22.5 14.5 L26 11 a6 6 0 0 1 8.5 8.5 L31 23" />
-              <path d="M18.5 25.5 l7 -7" strokeDasharray="3 4" />
-            </g>
-            <path d="M6 14 l2.4 1.6" />
-            <path d="M38 30 l-2.4 -1.6" />
-            <path d="M10 34 l1.8 -2.2" />
-            <path d="M34 10 l-1.8 2.2" />
-          </svg>
+          <Unlink size={48} strokeWidth={1.8} aria-hidden="true" />
         </span>
         <h2 style={{ margin: 0, fontFamily: 'var(--nl-font-display)', fontSize: 22, fontWeight: 500, lineHeight: 1.4, color: 'var(--nl-ink)' }}>暂时打不开这一页</h2>
         <p style={{ margin: 0, maxWidth: 280, color: 'var(--nl-muted)', fontSize: 15, lineHeight: 1.75 }}>链接可能已失效，或者网络暂时不稳定</p>
-        <div style={{ display: 'grid', gap: 14, width: '100%', maxWidth: 314, marginTop: 12 }}>
+        <div className="error-actions" style={{ display: 'grid', gap: 14, width: '100%', maxWidth: 340, marginTop: 12 }}>
           <button type="button" onClick={() => window.location.reload()} style={{ ...primaryButtonStyle, width: '100%', minHeight: 52, borderRadius: 999, background: '#b0662a', boxShadow: '0 10px 22px rgba(146, 96, 52, 0.18)' }}>重试</button>
           <button type="button" onClick={() => navigate('/home')} style={{ ...secondaryButtonStyle, width: '100%', minHeight: 52, borderRadius: 999, boxShadow: 'none' }}>返回首页</button>
         </div>
