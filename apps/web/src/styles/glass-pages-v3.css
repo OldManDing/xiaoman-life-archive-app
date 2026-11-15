@@ -9509,3 +9509,51 @@ main[aria-label="正在进入年轮"] {
   text-overflow: clip !important;
   line-height: 1.45 !important;
 }
+
+/* ===== 25 账号与安全：密度对齐 ===== */
+.info-shell:has(.security-form) .set-group-title {
+  font-family: var(--nl-font-display) !important;
+  font-size: 26px !important;
+  font-weight: 700 !important;
+  color: #4a2f1f !important;
+  margin: 6px 0 10px !important;
+}
+
+.info-shell:has(.security-form) .info-card {
+  background: rgba(255, 247, 238, 0.86) !important;
+  border: 1px solid rgba(255, 255, 255, 0.62) !important;
+  border-radius: 22px !important;
+  padding: 0 16px !important;
+  box-shadow: 0 8px 20px rgba(146, 96, 52, 0.06) !important;
+  margin-bottom: 12px !important;
+}
+
+.info-shell:has(.security-form) .info-card > div {
+  min-height: 64px !important;
+}
+
+.info-shell:has(.security-form) .security-form {
+  padding: 14px 16px !important;
+  display: grid !important;
+  gap: 10px !important;
+}
+
+.info-shell:has(.security-form) .security-form label,
+.info-shell:has(.security-form) .security-form > form > div > span {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  color: #4a2f1f !important;
+}
+
+.info-shell:has(.security-form) .security-form input {
+  min-height: 52px !important;
+  border-radius: 14px !important;
+  font-size: 16px !important;
+}
+
+.info-shell:has(.security-form) .security-form button[type="submit"] {
+  min-height: 60px !important;
+  border-radius: 16px !important;
+  background: #b4652a !important;
+  font-size: 19px !important;
+}
