@@ -2961,7 +2961,18 @@ export const ErrorPage = () => {
             backdropFilter: 'blur(20px)',
           }}
         >
-          <Unlink size={48} strokeWidth={1.8} aria-hidden="true" />
+          <svg width="92" height="92" viewBox="0 0 92 92" fill="none" stroke="#b4652a" strokeWidth="3.6" strokeLinecap="round" strokeLinejoin="round" role="img" aria-label="断开的链接">
+            <g transform="rotate(-45 46 46)">
+              <rect x="14" y="37" width="26" height="18" rx="9" />
+              <rect x="52" y="37" width="26" height="18" rx="9" />
+            </g>
+            <path d="M30 20 L24 13" />
+            <path d="M46 16 L46 8" />
+            <path d="M62 20 L68 13" />
+            <path d="M30 72 L24 79" />
+            <path d="M62 72 L68 79" />
+            <path d="M46 76 L46 84" />
+          </svg>
         </span>
         <h2 style={{ margin: 0, fontFamily: 'var(--nl-font-display)', fontSize: 22, fontWeight: 500, lineHeight: 1.4, color: 'var(--nl-ink)' }}>暂时打不开这一页</h2>
         <p style={{ margin: 0, maxWidth: 280, color: 'var(--nl-muted)', fontSize: 15, lineHeight: 1.75 }}>链接可能已失效，或者网络暂时不稳定</p>

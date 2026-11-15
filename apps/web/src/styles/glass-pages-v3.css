@@ -9844,3 +9844,19 @@ main[aria-label="正在进入年轮"] {
   background: rgba(255, 250, 244, 0.75) !important;
   color: #4a2f1f !important;
 }
+
+/* 28：字号回调 */
+#root .error-shell h2 {
+  font-size: 30px !important;
+}
+#root .error-shell p {
+  font-size: 16px !important;
+}
+#root .error-shell > div:last-child button {
+  font-size: 14px !important;
+}
+#root .error-shell span.error-badge {
+  width: 180px !important;
+  height: 180px !important;
+  background: rgba(255, 250, 244, 0.55) !important;
+}
