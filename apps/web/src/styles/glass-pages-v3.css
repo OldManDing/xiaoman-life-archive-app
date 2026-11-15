@@ -8434,3 +8434,8 @@ header.app-topbar > div span {
 .invite-shell section[aria-label="已邀请"] > div:not(:first-child) {
   background: rgba(255, 251, 246, 0.9) !important;
 }
+
+/* 12：已邀请标题去分隔线 */
+.invite-shell section[aria-label="已邀请"] > div:first-child span[aria-hidden="true"] {
+  display: none !important;
+}

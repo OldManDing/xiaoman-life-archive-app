@@ -1233,11 +1233,6 @@ const invitedMembers = members.filter((member) => member.role !== 'owner');
           分享邀请链接
         </button>
 
-        {inviteResult ? (
-          <p style={{ margin: 0, fontSize: 12, lineHeight: 1.6, color: 'var(--nl-muted)', textAlign: 'center' }}>
-            有效期至 {formatAppDateTime(inviteResult.expires_at)}
-          </p>
-        ) : null}
         {error ? <p style={{ ...helperTextStyle, margin: 0, color: 'var(--nl-danger)' }}>{error}</p> : null}
         {message ? <p style={{ ...helperTextStyle, margin: 0, color: isPositiveStatusMessage(message) ? 'var(--nl-success)' : 'var(--nl-danger)' }}>{message}</p> : null}
       </Panel>
