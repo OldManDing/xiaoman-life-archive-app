@@ -1810,6 +1810,7 @@ export const ExportBackupPage = () => {
               <button
                 key={item.value}
                 type="button"
+                className={`export-option${selected ? ' is-selected' : ''}`}
                 aria-pressed={selected}
                 onClick={() => setExportMode(item.value)}
                 style={{
