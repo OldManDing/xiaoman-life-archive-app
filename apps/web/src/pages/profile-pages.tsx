@@ -1,7 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { AlertTriangle, Bell, BookHeart, AlertCircle, Unlink, Cake, CalendarDays, Star, Camera, ChevronUp, Clock, CheckCircle2, ChevronRight, Copy, DownloadCloud, FileBox, FileText, HelpCircle, Home, Info, KeyRound, Lock, LogOut, Mail, MessageCircle, MessageCircleMore, Moon, Pencil, RefreshCw, Settings, Shield, ShieldCheck, Smartphone, Sparkles, Trash2, Type, UploadCloud, UserPlus, UserRound, Users } from 'lucide-react';
+import { AlertTriangle, Bell, BellRing, BookHeart, AlertCircle, Unlink, Cake, CalendarDays, Star, Camera, ChevronUp, Clock, CheckCircle2, ChevronRight, Copy, DownloadCloud, FileBox, FileText, HelpCircle, Home, Info, KeyRound, Lock, LogOut, Mail, MessageCircle, MessageCircleMore, Moon, Pencil, RefreshCw, Settings, Shield, ShieldCheck, Smartphone, Sparkles, Trash2, Type, UploadCloud, UserPlus, UserRound, Users } from 'lucide-react';
 
 import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
@@ -434,12 +434,11 @@ export const ProfilePage = () => {
     return Math.max(1, Math.floor((Date.now() - earliest) / 86400000));
   })();
   const companionText = activeChild ? `陪伴${activeChild.name} ${daysTogether} 天` : '还没有建立孩子档案';
-  const menuItems = [
+  const menuItems: Array<{ key: string; icon: typeof Mail; label: string; value?: string; onClick: () => void }> = [
     { key: 'messages', icon: Mail, label: '消息中心', onClick: () => navigate('/profile/messages') },
-    { key: 'settings', icon: Settings, label: '设置', onClick: () => navigate('/profile/settings') },
+    { key: 'notifications', icon: BellRing, label: '通知设置', onClick: () => navigate('/profile/notifications') },
     { key: 'security', icon: ShieldCheck, label: '账号与安全', onClick: () => navigate('/profile/security') },
-    { key: 'font', icon: Type, label: '字体大小', value: '标准', onClick: () => navigate('/profile/settings') },
-    { key: 'export', icon: DownloadCloud, label: '导出与备份', onClick: () => navigate('/profile/export') },
+    { key: 'export', icon: UploadCloud, label: '导出与备份', onClick: () => navigate('/profile/export') },
     { key: 'help', icon: HelpCircle, label: '帮助与反馈', onClick: () => navigate('/profile/help') },
     { key: 'about', icon: Info, label: '关于年轮', onClick: () => navigate('/profile/about') },
   ];
@@ -458,9 +457,8 @@ export const ProfilePage = () => {
             <h1 className="pf-hero-name">{profileName}</h1>
             <p className="pf-hero-meta">{companionText}</p>
           </div>
-          <button type="button" className="pf-bell" aria-label={`消息中心${unreadCount ? `，${unreadCount} 条未读` : ''}`} onClick={() => navigate('/profile/messages')}>
-            <Bell size={24} strokeWidth={1.9} />
-            {unreadCount ? <span className="pf-bell-badge">{unreadCount > 99 ? '99+' : unreadCount}</span> : null}
+          <button type="button" className="pf-bell is-chevron" aria-label={`消息中心${unreadCount ? `，${unreadCount} 条未读` : ''}`} onClick={() => navigate('/profile/messages')}>
+            <ChevronRight size={22} strokeWidth={2} />
           </button>
         </section>
 
@@ -487,31 +485,27 @@ export const ProfilePage = () => {
               </span>
               <span className="pf-menu-label">{label}</span>
               {key === 'messages' ? (
-                unreadCount ? <span className="pf-menu-badge">{unreadCount > 99 ? '99+' : unreadCount}</span> : null
+                unreadCount ? <span className="pf-menu-dot" aria-label={`${unreadCount} 条未读`} /> : null
               ) : value ? (
                 <span className="pf-menu-value">{value}</span>
               ) : null}
               <ChevronRight size={18} strokeWidth={1.9} className="pf-chevron" />
             </button>
           ))}
+          <button
+            type="button"
+            className="pf-menu-row is-danger"
+            onClick={async () => {
+              if (typeof window !== 'undefined' && !window.confirm('确定退出当前账号吗？')) return;
+              await logout();
+              navigate('/auth/login', { replace: true });
+            }}
+          >
+            <span className="pf-menu-icon"><LogOut size={24} strokeWidth={1.8} /></span>
+            <span className="pf-menu-label">退出登录</span>
+            <ChevronRight size={18} strokeWidth={1.9} className="pf-chevron" />
+          </button>
         </nav>
-
-        <button
-          type="button"
-          className="pf-logout"
-          onClick={async () => {
-            if (typeof window !== 'undefined' && !window.confirm('确定退出当前账号吗？')) return;
-            await logout();
-            navigate('/auth/login', { replace: true });
-          }}
-        >
-          <span className="pf-logout-icon"><LogOut size={22} strokeWidth={2.1} /></span>
-          <span style={{ flex: 1 }}>
-            <strong>退出登录</strong>
-            <small>需要再次确认</small>
-          </span>
-          <ChevronRight size={18} strokeWidth={1.9} className="pf-chevron" />
-        </button>
 
       </main>
     </div>

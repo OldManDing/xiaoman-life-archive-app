@@ -6342,3 +6342,75 @@ body,
 .pf-stat-num {
   color: #f69f4d !important;
 }
+
+/* 06：退出登录并入窗口下沿，避免被导航裁切 */
+.pf-main {
+  padding-bottom: calc(112px + env(safe-area-inset-bottom)) !important;
+}
+
+.pf-logout {
+  margin-bottom: 0 !important;
+}
+
+.pf-bell.is-chevron {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: var(--nl-muted-strong) !important;
+  width: 32px !important;
+  height: 32px !important;
+}
+
+.pf-main {
+  padding-bottom: calc(168px + env(safe-area-inset-bottom)) !important;
+}
+
+.pf-menu-row {
+  min-height: 52px !important;
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+}
+.pf-stats {
+  padding: 10px 0 !important;
+}
+
+/* 06：退出登录作为菜单最后一行 */
+.pf-menu-row.is-danger .pf-menu-label,
+.pf-menu-row.is-danger .pf-chevron,
+.pf-menu-row.is-danger .pf-menu-icon {
+  color: var(--nl-danger) !important;
+}
+
+/* 背景加柔和暖光，避免偏平 */
+body,
+#root,
+.app-layout {
+  background-image:
+    radial-gradient(120% 60% at 50% 0%, rgba(255, 238, 220, 0.85) 0%, rgba(255, 238, 220, 0) 60%),
+    linear-gradient(180deg, #fff3e8 0%, #fdeee2 55%, #fadcd1 100%) !important;
+}
+
+/* 06：卡片暖粉半透明 */
+.ac-card,
+.info-card,
+.set-card,
+.msg-card,
+.member-row-card,
+.rc-card,
+.fam-hero,
+.perm-card,
+.pf-menu,
+.pf-stats,
+.pf-hero {
+  background: rgba(255, 240, 229, 0.66) !important;
+}
+
+.pf-menu-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: #f69f4d;
+  display: inline-block;
+  margin-left: auto;
+  margin-right: 4px;
+}

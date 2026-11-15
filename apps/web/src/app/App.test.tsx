@@ -2630,7 +2630,7 @@ describe('App Shell', () => {
 
     expect(await screen.findByRole('heading', { name: '关于我们' })).toBeDefined();
     expect(screen.getByRole('img', { name: '年轮' })).toBeDefined();
-    expect(screen.getByText(/版本 2\.0\.4 · 构建/)).toBeDefined();
+    expect(screen.getByText(/版本 2\.1\.0 · 构建/)).toBeDefined();
     expect(screen.getByRole('button', { name: /用户服务协议/ })).toBeDefined();
     expect(screen.getByRole('button', { name: /隐私政策/ })).toBeDefined();
     expect(screen.queryByRole('button', { name: /应用反馈/ })).toBeNull();
