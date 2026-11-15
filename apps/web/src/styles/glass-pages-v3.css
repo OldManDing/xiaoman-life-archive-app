@@ -9780,3 +9780,15 @@ main[aria-label="正在进入年轮"] {
   display: grid !important;
   place-items: center !important;
 }
+
+/* 28：页脚说明单行小字 */
+.error-shell > div:last-child p,
+.error-shell p:last-of-type {
+  font-size: 15px !important;
+  color: #8a6c56 !important;
+  white-space: nowrap !important;
+  max-width: none !important;
+  text-align: center !important;
+  background: transparent !important;
+  user-select: none !important;
+}
