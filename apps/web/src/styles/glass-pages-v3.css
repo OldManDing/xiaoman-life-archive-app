@@ -6505,3 +6505,229 @@ body,
   border-color: rgba(255, 255, 255, 0.45) !important;
   box-shadow: 0 4px 16px rgba(180, 120, 80, 0.05) !important;
 }
+
+/* ===== 03 记录详情：按 screens/03 还原 ===== */
+.rd-topbar {
+  position: sticky;
+  top: 8px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 8px 0 14px;
+  padding: 10px 14px;
+  border-radius: 24px;
+  background: rgba(255, 243, 232, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  box-shadow: 0 8px 24px rgba(170, 110, 70, 0.08);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.rd-topbar > button,
+.rd-topbar-right > button {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: none;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--nl-ink);
+  display: grid;
+  place-items: center;
+}
+
+.rd-hero {
+  border-radius: 26px !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+}
+
+.rd-body {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.rd-title {
+  font-family: var(--nl-font-display) !important;
+  font-size: 34px !important;
+  line-height: 1.24 !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.01em;
+  color: var(--nl-ink) !important;
+  margin: 0 !important;
+}
+
+.rd-meta {
+  font-size: 16px !important;
+  color: var(--nl-muted-strong) !important;
+  margin: 0 !important;
+}
+
+.rd-chips {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.rd-chip {
+  border-radius: 999px !important;
+  padding: 8px 16px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  background: rgba(255, 250, 244, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  color: var(--nl-muted-strong) !important;
+}
+
+.rd-chip.is-amber {
+  background: #f69f4d !important;
+  border-color: transparent !important;
+  color: #ffffff !important;
+}
+
+.rd-copy {
+  font-size: 17px !important;
+  line-height: 1.8 !important;
+  color: var(--nl-ink) !important;
+  margin-top: 6px !important;
+}
+
+.rd-mark {
+  background: transparent !important;
+  color: inherit !important;
+  font-weight: inherit !important;
+}
+
+.rd-gallery {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+}
+
+.rd-gallery > * {
+  border-radius: 20px !important;
+  overflow: hidden !important;
+  aspect-ratio: 1 / 1 !important;
+}
+
+/* 底部单一胶囊容器 */
+.rd-actions {
+  display: grid !important;
+  grid-template-columns: 1fr 1.15fr !important;
+  gap: 12px !important;
+  padding: 12px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 240, 228, 0.86) !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+  box-shadow: 0 12px 30px rgba(170, 110, 70, 0.10) !important;
+}
+
+.rd-action-edit,
+.rd-action-share {
+  min-height: 56px;
+  border-radius: 999px;
+  font-size: 18px;
+  font-weight: 700;
+  font-family: var(--nl-font-display);
+  cursor: pointer;
+}
+
+.rd-action-edit {
+  background: rgba(255, 252, 247, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  color: var(--nl-ink);
+}
+
+.rd-action-share {
+  background: linear-gradient(180deg, #f7a758 0%, #ee9440 100%);
+  border: none;
+  color: #ffffff;
+}
+
+/* 03：主图 4:3、去掉正文高亮、压缩纵向 */
+.rd-hero img,
+.rd-hero video {
+  aspect-ratio: 4 / 3 !important;
+  object-fit: cover !important;
+}
+
+.rd-hero > div {
+  aspect-ratio: 4 / 3 !important;
+}
+
+.rd-copy mark,
+.rd-mark {
+  background: transparent !important;
+  color: inherit !important;
+  padding: 0 !important;
+}
+
+.rd-body {
+  gap: 8px !important;
+  margin-top: 14px !important;
+}
+
+.rd-chips {
+  margin-top: 0 !important;
+}
+
+.rd-copy {
+  margin-top: 4px !important;
+  font-size: 16px !important;
+  line-height: 1.7 !important;
+}
+
+.rd-gallery > * {
+  aspect-ratio: 4 / 3 !important;
+}
+
+.rd-actions {
+  margin-top: 4px !important;
+  padding: 10px !important;
+}
+
+.rd-action-edit,
+.rd-action-share {
+  min-height: 52px !important;
+}
+
+/* 03：字重与间距微调 */
+.rd-title {
+  font-weight: 600 !important;
+  letter-spacing: 0.005em !important;
+}
+
+.rd-body {
+  gap: 12px !important;
+}
+
+.rd-meta {
+  font-weight: 500 !important;
+  color: var(--nl-muted-strong) !important;
+}
+
+.rd-copy {
+  font-weight: 500 !important;
+  line-height: 1.85 !important;
+  margin-top: 8px !important;
+}
+
+.rd-hero {
+  border-radius: 28px !important;
+}
+
+.rd-gallery > * {
+  border-radius: 18px !important;
+}
+
+.rd-chip.is-amber {
+  background: #f0a05a !important;
+}
+
+.rd-action-share {
+  background: linear-gradient(180deg, #f2a55f 0%, #e9964a 100%) !important;
+}

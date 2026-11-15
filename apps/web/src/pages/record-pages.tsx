@@ -3492,8 +3492,8 @@ export const ViewRecordPage = () => {
               )
             ) : null}
             <div className="rd-body">
-              <p className="rd-meta">{rdMetaText}</p>
               <h1 className="rd-title">{displayTitle}</h1>
+              <p className="rd-meta">{rdMetaText}</p>
               <div className="rd-chips">
                 {rdMilestone ? <span className="rd-chip is-amber">里程碑</span> : null}
                 {rdPhotoCount ? <span className="rd-chip">照片 {rdPhotoCount}</span> : null}
@@ -3559,16 +3559,30 @@ export const ViewRecordPage = () => {
 
           <section className="rd-actions" aria-label="记录操作">
             {canManageRecord ? (
-              <button type="button" style={{ ...secondaryButtonStyle, minHeight: 52, width: '100%', borderRadius: 999 }} onClick={() => navigate(`/record/${data.record_no}/edit`)}>
+              <button type="button" className="rd-action-edit" onClick={() => navigate(`/record/${data.record_no}/edit`)}>
                 编辑
               </button>
             ) : null}
             <button
               type="button"
-              style={{ ...primaryButtonStyle, minHeight: 52, width: '100%', borderRadius: 999, gridColumn: canManageRecord ? undefined : '1 / -1' }}
-              onClick={() => navigate(`/record/create?focus=content&reply_to=${data.record_no}`)}
+              className="rd-action-share"
+              onClick={async () => {
+                const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+                const shareData = { title: displayTitle || '年轮记录', text: rdContentText || displayTitle || '', url: shareUrl };
+                try {
+                  if (typeof navigator !== 'undefined' && navigator.share) {
+                    await navigator.share(shareData);
+                    return;
+                  }
+                  if (typeof navigator !== 'undefined' && navigator.clipboard) {
+                    await navigator.clipboard.writeText(`${shareData.title} ${shareUrl}`);
+                  }
+                } catch {
+                  /* 用户取消分享 */
+                }
+              }}
             >
-              回应一句
+              分享
             </button>
           </section>
         </article>
