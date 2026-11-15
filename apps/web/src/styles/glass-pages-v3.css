@@ -9021,3 +9021,72 @@ main[aria-label="正在进入年轮"] {
 .account-shell section[aria-label="记录贡献"] > div {
   min-height: 68px !important;
 }
+
+/* 18：权限组白卡、密度收紧、日期暖棕 */
+.account-shell section[aria-label="成员权限"] {
+  background: rgba(255, 250, 244, 0.86) !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  border-radius: 22px !important;
+  padding: 6px !important;
+  gap: 2px !important;
+}
+
+.account-shell .perm-option {
+  min-height: 78px !important;
+  padding: 10px 14px !important;
+}
+
+.account-shell .perm-option strong {
+  font-size: 18px !important;
+}
+
+.account-shell .perm-option > span:last-child > span {
+  font-size: 14px !important;
+}
+
+.account-shell header > span:last-child {
+  color: #7a5a44 !important;
+}
+
+.account-shell header h2 {
+  font-size: 28px !important;
+}
+
+.account-shell .fam-detail-title {
+  font-size: 23px !important;
+  margin: 12px 0 6px !important;
+}
+
+.account-shell .perm-hint {
+  margin: 8px 0 0 !important;
+  font-size: 14px !important;
+}
+
+.account-shell .fam-detail-save {
+  min-height: 54px !important;
+  font-size: 19px !important;
+  margin: 10px 0 8px !important;
+}
+
+.account-shell section[aria-label="记录贡献"] > div {
+  min-height: 62px !important;
+}
+
+/* 18：权限单选组白卡（实际节点为 div[role=radiogroup]） */
+.account-shell div[role="radiogroup"][aria-label="成员权限"] {
+  background: rgba(255, 250, 244, 0.86) !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  border-radius: 22px !important;
+  padding: 6px !important;
+  gap: 2px !important;
+}
+
+.account-shell .perm-option {
+  min-height: 74px !important;
+  border-radius: 16px !important;
+}
+
+.account-shell .fam-detail-save {
+  position: static !important;
+  margin: 8px 0 6px !important;
+}

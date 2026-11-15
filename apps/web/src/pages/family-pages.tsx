@@ -977,20 +977,6 @@ export const FamilyMemberDetailPage = () => {
             </span>
           </header>
 
-          <section aria-label="记录贡献" style={{ display: 'grid' }}>
-            <div style={{ minHeight: 64, display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid rgba(58, 42, 28, 0.08)' }}>
-              <span style={{ width: 24, height: 24, display: 'grid', placeItems: 'center', color: '#8a4e14', flexShrink: 0 }}>
-                <FileText size={24} strokeWidth={1.8} />
-              </span>
-              <span style={{ flex: 1, minWidth: 0, color: 'var(--nl-ink)', fontSize: 15, fontWeight: 500 }}>
-                {recordTotal} 条记录
-              </span>
-              {memberLatestRecordLabel ? (
-                <span style={{ color: '#6f5745', fontSize: 13 }}>{memberLatestRecordLabel}</span>
-              ) : null}
-            </div>
-          </section>
-
           <section>
             <h2 className="fam-detail-title">TA 的权限</h2>
             <div role="radiogroup" aria-label="成员权限" style={{ display: 'grid', gap: 8 }}>
@@ -1050,6 +1036,21 @@ export const FamilyMemberDetailPage = () => {
               })}
             </div>
             <p className="perm-hint">修改权限后点下方保存生效</p>
+          </section>
+
+          <section aria-label="记录贡献" style={{ display: 'grid', gap: 10 }}>
+            <h2 className="fam-detail-title">记录贡献</h2>
+            <div style={{ minHeight: 64, display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid rgba(58, 42, 28, 0.08)' }}>
+              <span style={{ width: 24, height: 24, display: 'grid', placeItems: 'center', color: '#8a4e14', flexShrink: 0 }}>
+                <FileText size={24} strokeWidth={1.8} />
+              </span>
+              <span style={{ flex: 1, minWidth: 0, color: 'var(--nl-ink)', fontSize: 15, fontWeight: 500 }}>
+                {recordTotal} 条记录
+              </span>
+              {memberLatestRecordLabel ? (
+                <span style={{ color: '#6f5745', fontSize: 13 }}>{memberLatestRecordLabel}</span>
+              ) : null}
+            </div>
           </section>
 
           {canEditRole ? (
