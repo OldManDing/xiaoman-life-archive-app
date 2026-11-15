@@ -8439,3 +8439,11 @@ header.app-topbar > div span {
 .invite-shell section[aria-label="已邀请"] > div:first-child span[aria-hidden="true"] {
   display: none !important;
 }
+
+/* 13 启动页：暖光背景 */
+.nl-boot-shell,
+[class*="boot"] {
+  background-image:
+    radial-gradient(90% 46% at 62% 0%, rgba(255, 214, 168, 0.55) 0%, rgba(255, 214, 168, 0) 70%),
+    linear-gradient(180deg, #ffe9cf 0%, #fde3cd 55%, #fbdccb 100%) !important;
+}

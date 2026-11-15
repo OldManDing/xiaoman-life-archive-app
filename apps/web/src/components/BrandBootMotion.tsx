@@ -164,18 +164,18 @@ export const BrandBootMotion = ({ showRecovery = false, onRetry, onExit }: Brand
       `}
     </style>
 
-    <section style={{ ...motionBlockStyle, alignContent: 'start', marginTop: '18vh' }}>
-      <span aria-hidden="true" style={{ width: 9, height: 9, borderRadius: '999px', background: '#e9a05a', marginBottom: 12 }} />
-      <strong style={{ color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '78px', lineHeight: 1.02, fontWeight: 600, letterSpacing: '0.01em' }}>年轮</strong>
-      <p style={{ margin: 0, color: '#6f5745', fontSize: '19px', fontWeight: 500, letterSpacing: '0.02em' }}>把每一天，都留给以后</p>
-      <span aria-hidden="true" style={{ width: 85, height: 1, background: 'rgba(120, 80, 40, 0.22)', marginTop: 18 }} />
+    <section style={{ ...motionBlockStyle, alignContent: 'start', marginTop: '22vh' }}>
+      <span aria-hidden="true" style={{ width: 11, height: 11, borderRadius: '999px', background: '#e9a05a', marginBottom: 14 }} />
+      <strong style={{ color: '#5a3a22', fontFamily: 'var(--nl-font-display)', fontSize: '78px', lineHeight: 1.02, fontWeight: 600, letterSpacing: '0.01em' }}>年轮</strong>
+      <span aria-hidden="true" style={{ width: 120, height: 1, background: 'rgba(120, 80, 40, 0.28)', margin: '16px 0 14px' }} />
+      <p style={{ margin: 0, color: '#6f5745', fontSize: '21px', fontWeight: 500, letterSpacing: '0.02em' }}>把每一天，都留给以后</p>
     </section>
 
     <section style={{ ...motionBlockStyle, alignContent: 'end', justifyItems: 'center', paddingBottom: 24 }}>
-      <div role="progressbar" aria-label="正在准备你的档案" style={{ ...timelineTrackStyle, width: '92px', height: '3px', background: 'rgba(120, 80, 40, 0.14)' }}>
+      <div role="progressbar" aria-label="正在准备你的档案" style={{ ...timelineTrackStyle, width: '48%', maxWidth: '320px', height: '4px', background: 'rgba(120, 80, 40, 0.14)' }}>
         <span className="nl-boot-progress" style={{ display: 'block', width: '79%', height: '100%', borderRadius: '999px', background: 'var(--nl-accent)' }} />
       </div>
-      <p style={{ margin: '10px 0 0', color: '#6f5745', fontSize: '11px', fontWeight: 500, letterSpacing: '0.06em' }}>正在准备你的档案</p>
+      <p style={{ margin: '14px 0 0', color: '#6f5745', fontSize: '15px', fontWeight: 500, letterSpacing: '0.04em' }}>正在准备你的档案</p>
     </section>
 
     {showRecovery ? (
