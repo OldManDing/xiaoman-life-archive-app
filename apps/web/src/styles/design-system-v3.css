@@ -23,23 +23,23 @@
   --nl-surface-rgb: 255, 244, 234;
   --nl-surface-strong-rgb: 250, 238, 226;
 
-  /* ---- 玻璃 ---- */
-  --nl-glass-surface: rgba(255, 244, 234, 0.72);
-  --nl-glass-strong: rgba(255, 244, 234, 0.82);
-  --nl-glass-soft: rgba(255, 244, 234, 0.56);
-  --nl-glass-border: rgba(255, 255, 255, 0.66);
+  /* ---- 玻璃（G7：L1 白78 / L2 白62 / L3 白46，极轻阴影） ---- */
+  --nl-glass-surface: rgba(255, 255, 255, 0.78);
+  --nl-glass-strong: rgba(255, 255, 255, 0.85);
+  --nl-glass-soft: rgba(255, 255, 255, 0.56);
+  --nl-glass-border: rgba(255, 255, 255, 0.62);
   --nl-glass-highlight: rgba(255, 255, 255, 0.78);
-  --nl-glass-shadow: 0 12px 30px rgba(146, 96, 52, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  --nl-glass-shadow: 0 8px 20px rgba(146, 96, 52, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.7);
   --nl-dialog-bg: #fffaf4;
   --nl-popover-bg: #fffaf4;
 
-  /* ---- 卡片 / 控件 ---- */
-  --nl-card-bg: rgba(255, 244, 234, 0.62);
+  /* ---- 卡片 / 控件（G7：L2 白62、L1 白78） ---- */
+  --nl-card-bg: rgba(255, 255, 255, 0.62);
   --nl-card-bg-strong: #fffaf4;
-  --nl-control-bg: rgba(255, 255, 255, 0.52);
+  --nl-control-bg: rgba(255, 255, 255, 0.62);
   --nl-control-bg-active: #fffaf4;
-  --nl-topbar-bg: rgba(255, 244, 234, 0.72);
-  --nl-nav-bg: rgba(255, 244, 234, 0.78);
+  --nl-topbar-bg: rgba(255, 255, 255, 0.78);
+  --nl-nav-bg: rgba(255, 255, 255, 0.78);
   --nl-nav-muted: #6f5745;
   --nl-nav-active: #8a4e14;
 
@@ -117,13 +117,13 @@ html {
 body,
 #root {
   background:
-    radial-gradient(400px 400px at 100% 0%, rgba(231, 148, 74, 0.42), rgba(231, 148, 74, 0) 72%),
+    radial-gradient(400px 400px at 100% 0%, rgba(231, 148, 74, 0.32), rgba(231, 148, 74, 0) 72%),
     radial-gradient(440px 340px at 6% 42%, rgba(245, 214, 178, 0.5), rgba(245, 214, 178, 0) 72%),
     radial-gradient(400px 320px at 100% 72%, rgba(245, 214, 178, 0.4), rgba(245, 214, 178, 0) 72%),
     radial-gradient(520px 420px at 0% 100%, rgba(233, 160, 90, 0.16), rgba(233, 160, 90, 0) 70%),
-    linear-gradient(160deg, #fbeee0 0%, #f8e4d2 54%, #f3d3bd 100%);
+    linear-gradient(160deg, #fbe6d2 0%, #f8ddc6 54%, #f3cfb4 100%);
   background-attachment: fixed;
-  background-color: #fbeee0;
+  background-color: #fbe6d2;
 }
 
 body::after {
@@ -132,11 +132,11 @@ body::after {
 
 .app-layout {
   background:
-    radial-gradient(400px 400px at 100% 0%, rgba(231, 148, 74, 0.38), rgba(231, 148, 74, 0) 72%),
+    radial-gradient(400px 400px at 100% 0%, rgba(231, 148, 74, 0.32), rgba(231, 148, 74, 0) 72%),
     radial-gradient(440px 340px at 6% 42%, rgba(245, 214, 178, 0.46), rgba(245, 214, 178, 0) 72%),
     radial-gradient(400px 320px at 100% 72%, rgba(245, 214, 178, 0.36), rgba(245, 214, 178, 0) 72%),
     radial-gradient(520px 420px at 0% 100%, rgba(233, 160, 90, 0.14), rgba(233, 160, 90, 0) 70%),
-    linear-gradient(160deg, #fbeee0 0%, #f8e4d2 54%, #f3d3bd 100%) !important;
+    linear-gradient(160deg, #fbe6d2 0%, #f8ddc6 54%, #f3cfb4 100%) !important;
   background-attachment: fixed !important;
 }
 
@@ -250,14 +250,14 @@ html[data-theme="night"] .app-layout {
   box-shadow: none !important;
 }
 
-/* 底部导航激活态：按设计稿 02/05/06 的琥珀圆角块（不是图标小圆点） */
+/* 底部导航激活态（G9：唯一来源，#F2B45C 平涂 + 墨字 + r20 + 图标 24） */
 .app-bottom-nav-link.is-active {
   margin: 0 4px;
   min-height: 52px !important;
   border-radius: 20px;
-  background: linear-gradient(180deg, #f7b556 0%, #f2a33c 100%);
+  background: #f2b45c;
   color: #3a2a1e !important;
-  box-shadow: 0 8px 18px rgba(200, 120, 40, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.34);
+  box-shadow: 0 2px 6px rgba(180, 112, 42, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.34);
 }
 
 .app-bottom-nav-link.is-active .app-bottom-nav-icon {

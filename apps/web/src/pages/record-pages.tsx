@@ -2640,7 +2640,7 @@ const RecordForm = ({
                   </>
                 ) : mode === 'create' ? (
                   <>
-                    <MediaActionButton icon={<ImagePlus size={20} strokeWidth={2} />} label="添加照片" displayLabel="添加照片" onClick={() => void openNativeGalleryImages()} disabled={uploading || audioRecording} />
+                    <MediaActionButton icon={<CameraIcon size={20} strokeWidth={2} />} label="添加照片" displayLabel="添加照片" onClick={() => void openNativeGalleryImages()} disabled={uploading || audioRecording} />
                     <MediaActionButton
                       icon={audioRecording ? <Square size={18} strokeWidth={2.4} fill="currentColor" /> : <Mic size={20} strokeWidth={2} />}
                       label={audioRecording ? '停止录音' : '按住说话'}
