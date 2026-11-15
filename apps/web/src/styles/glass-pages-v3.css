@@ -6830,3 +6830,80 @@ body,
   font-size: 16px !important;
   color: var(--nl-muted-strong) !important;
 }
+
+/* 03：横构图主图 + 暖棕文字 */
+.rd-hero img,
+.rd-hero video {
+  aspect-ratio: 16 / 10 !important;
+}
+
+.rd-hero > div {
+  aspect-ratio: 16 / 10 !important;
+}
+
+.rd-title,
+.rd-copy,
+.rd-body .rd-title,
+.rd-body .rd-copy {
+  color: #4a2f1f !important;
+}
+
+.rd-meta {
+  color: #7a5a44 !important;
+}
+
+/* 02：轴线更明显、内容左侧缩进 */
+.tl-page .tl-main {
+  padding-left: 20px !important;
+}
+
+.tl-page .tl-main::before {
+  left: 6px !important;
+  top: 12px !important;
+  bottom: 120px !important;
+  width: 2px !important;
+  background: rgba(206, 140, 88, 0.45) !important;
+}
+
+.tl-page .tl-main::after {
+  left: 1px !important;
+  top: 6px !important;
+  width: 12px !important;
+  height: 12px !important;
+}
+
+.tl-year.is-active {
+  background: #f9ddc0 !important;
+  color: #8a5630 !important;
+}
+
+.rd-hero img,
+.rd-hero video,
+.rd-hero > div {
+  height: 62.5vw !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  aspect-ratio: auto !important;
+}
+
+.rd-hero {
+  height: auto !important;
+  aspect-ratio: auto !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+}
+
+.rd-hero img,
+.rd-hero video {
+  border-radius: 26px !important;
+  height: 62.5vw !important;
+}
+
+.rd-hero > div {
+  height: auto !important;
+}
+
+.rd-body {
+  margin-top: 8px !important;
+}
