@@ -1399,7 +1399,8 @@ export const SettingsPage = () => {
           </button>
           <div className="set-row is-static">
             <span className="set-icon"><Info size={24} strokeWidth={1.8} /></span>
-            <span className="set-body"><strong>版本 {appVersion}</strong></span>
+            <span className="set-body"><strong>版本</strong></span>
+            <span className="set-value">{appVersion}</span>
           </div>
         </div>
       </section>
