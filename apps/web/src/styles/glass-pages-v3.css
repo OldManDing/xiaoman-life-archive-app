@@ -6938,3 +6938,41 @@ body,
 :root {
   --nl-nav-active: #e98a3c;
 }
+
+/* 01：主图与「最近」区块加半透明卡片外壳；标题回黑体；底色降饱和 */
+.nl-home-hero-wrap,
+.nl-home-recent {
+  background: rgba(255, 247, 239, 0.55) !important;
+  border: 1px solid rgba(255, 255, 255, 0.62) !important;
+  border-radius: 28px !important;
+  padding: 12px !important;
+  box-shadow: 0 10px 26px rgba(176, 118, 78, 0.07) !important;
+}
+
+.nl-home-hero-wrap {
+  margin: 6px 0 16px !important;
+}
+
+.nl-home-recent {
+  margin: 4px 0 20px !important;
+}
+
+.nl-home-row {
+  background: rgba(255, 250, 244, 0.72) !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  box-shadow: 0 4px 12px rgba(176, 118, 78, 0.05) !important;
+}
+
+.nl-home-row-body strong {
+  font-family: var(--nl-font-sans, -apple-system, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif) !important;
+  font-weight: 600 !important;
+  font-size: 18px !important;
+}
+
+body,
+#root,
+.app-layout {
+  background-image:
+    radial-gradient(70% 34% at 80% 0%, rgba(255, 226, 198, 0.45) 0%, rgba(255, 226, 198, 0) 70%),
+    linear-gradient(180deg, #fff6ec 0%, #fdeee2 55%, #fbe3d5 100%) !important;
+}
