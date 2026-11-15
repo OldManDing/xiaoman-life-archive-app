@@ -8529,3 +8529,20 @@ main[aria-label="正在进入年轮"] {
 .wl-dots {
   margin: 16px 0 8px !important;
 }
+
+/* 14：去掉图片卡内层框 */
+.wl-hero::before,
+.wl-hero::after {
+  content: none !important;
+  display: none !important;
+}
+.wl-hero {
+  background: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  padding: 0 !important;
+}
+.wl-hero img {
+  border-radius: 30px !important;
+  width: 100% !important;
+  height: 100% !important;
+}
