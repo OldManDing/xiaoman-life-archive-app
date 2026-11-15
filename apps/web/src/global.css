@@ -301,13 +301,13 @@ textarea {
 .app-date-sheet-header strong {
   color: var(--nl-ink);
   font-family: var(--nl-font-sans);
-  font-size: 19px;
+  font-size: 18px;
   line-height: 1.1;
 }
 
 .app-date-sheet-kicker {
   color: var(--nl-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
 }
 
@@ -325,7 +325,7 @@ textarea {
   color: var(--nl-muted-strong);
   background: var(--nl-control-bg);
   font: inherit;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 740;
   cursor: pointer;
 }
@@ -354,7 +354,7 @@ textarea {
 
 .app-date-sheet-nav > span {
   color: var(--nl-ink);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 780;
   text-align: center;
   font-variant-numeric: tabular-nums;
@@ -384,7 +384,7 @@ textarea {
 
 .app-date-weekdays span {
   color: var(--nl-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 720;
   text-align: center;
 }
@@ -435,7 +435,7 @@ textarea {
 
 .app-date-time-panel > span {
   color: var(--nl-muted);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 760;
 }
 
@@ -459,7 +459,7 @@ textarea {
   color: var(--nl-ink);
   background: transparent;
   font: inherit;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 780;
   text-align: center;
   font-variant-numeric: tabular-nums;
@@ -467,7 +467,7 @@ textarea {
 
 .app-date-time-panel small {
   color: var(--nl-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
 }
 
@@ -998,7 +998,7 @@ select:focus {
   background: var(--nl-home-brand-soft);
   color: var(--nl-home-brand);
   font-family: var(--nl-font-display);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   box-shadow: none;
 }
@@ -1030,7 +1030,7 @@ select:focus {
   overflow: hidden;
   color: var(--nl-home-ink);
   font-family: var(--nl-font-display);
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   line-height: 1.08;
   letter-spacing: -0.025em;
@@ -1042,7 +1042,7 @@ select:focus {
   min-width: 0;
   overflow: hidden;
   color: var(--nl-home-muted);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 520;
   line-height: 1.25;
   letter-spacing: -0.01em;
@@ -1066,7 +1066,7 @@ select:focus {
   padding: 0 11px;
   background: transparent;
   color: var(--nl-home-brand);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 680;
   cursor: pointer;
   box-shadow: none;
@@ -1093,7 +1093,7 @@ select:focus {
 
 .nl-home-status p {
   margin: 0;
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.6;
 }
 
@@ -1104,7 +1104,7 @@ select:focus {
   padding: 0 14px;
   background: transparent;
   color: var(--nl-home-brand);
-  font-size: 12.5px;
+  font-size: 11.5px;
   font-weight: 700;
   cursor: pointer;
 }
@@ -1131,7 +1131,7 @@ select:focus {
   margin: 0;
   color: var(--nl-home-ink);
   font-family: var(--nl-font-sans);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 680;
   line-height: 1.2;
   letter-spacing: 0;
@@ -1266,7 +1266,7 @@ select:focus {
   min-width: 0;
   overflow: hidden;
   color: var(--nl-home-ink);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   line-height: 1.3;
   text-overflow: ellipsis;
@@ -1278,7 +1278,7 @@ select:focus {
   display: -webkit-box;
   overflow: hidden;
   overflow-wrap: anywhere;
-  font-size: 20px;
+  font-size: 19px;
   font-weight: 700;
   line-height: 1.32;
   white-space: normal;
@@ -1288,7 +1288,7 @@ select:focus {
 
 .nl-moment-card.is-featured.is-text-card .nl-moment-title {
   font-family: var(--nl-font-sans);
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1.35;
 }
 
@@ -1306,7 +1306,7 @@ select:focus {
   overflow: hidden;
   color: var(--nl-home-strong);
   font-family: var(--nl-font-display);
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.75;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
@@ -1315,7 +1315,7 @@ select:focus {
 .nl-moment-card.is-featured.is-text-card .nl-moment-excerpt {
   color: var(--nl-home-muted);
   font-family: var(--nl-font-sans);
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.6;
 }
 
@@ -1323,7 +1323,7 @@ select:focus {
   display: -webkit-box;
   overflow: hidden;
   color: var(--nl-home-muted);
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.65;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -1350,7 +1350,7 @@ select:focus {
   background: linear-gradient(140deg, #f6e7db, var(--nl-home-brand-soft));
   color: var(--nl-home-brand);
   font-family: var(--nl-font-display);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 760;
 }
 
@@ -1364,7 +1364,7 @@ select:focus {
 .nl-moment-id strong {
   overflow: hidden;
   color: var(--nl-home-ink);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 730;
   line-height: 1.2;
   text-overflow: ellipsis;
@@ -1424,7 +1424,7 @@ select:focus {
   padding: 0;
   background: transparent;
   color: var(--nl-home-brand);
-  font-size: 12.5px;
+  font-size: 11.5px;
   font-weight: 720;
   cursor: pointer;
 }
@@ -1465,7 +1465,7 @@ select:focus {
   margin-top: 4px;
   color: var(--nl-home-ink);
   font-family: var(--nl-font-display);
-  font-size: 19px;
+  font-size: 18px;
   font-weight: 730;
   line-height: 1.35;
 }
@@ -1478,7 +1478,7 @@ select:focus {
   margin: 0;
   max-width: 17em;
   color: var(--nl-home-muted);
-  font-size: 12.5px;
+  font-size: 11.5px;
   line-height: 1.7;
 }
 
@@ -1490,7 +1490,7 @@ select:focus {
   padding: 0 30px;
   background: var(--nl-home-brand);
   color: #fffdf8;
-  font-size: 14.5px;
+  font-size: 13.5px;
   font-weight: 750;
   letter-spacing: 0.02em;
   cursor: pointer;
@@ -1518,7 +1518,7 @@ select:focus {
   padding: 0 10px;
   background: transparent;
   color: var(--nl-home-muted);
-  font-size: 12.5px;
+  font-size: 11.5px;
   font-weight: 640;
   text-decoration: underline;
   text-underline-offset: 4px;
@@ -1543,7 +1543,7 @@ select:focus {
   }
 
   .nl-home-title {
-    font-size: 21px;
+    font-size: 20px;
   }
 
     .nl-home-timeline-thumb {
@@ -1959,7 +1959,7 @@ select:focus {
   padding: 0 18px;
   background: transparent;
   color: var(--nl-ink);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 650;
   cursor: pointer;
 }
@@ -1972,7 +1972,7 @@ select:focus {
   background: linear-gradient(135deg, #b06a4a 0%, #8f4f36 70%);
   color: #ffffff;
   font-family: var(--nl-font-sans);
-  font-size: 15.5px;
+  font-size: 14.5px;
   font-weight: 760;
   letter-spacing: 0.06em;
   cursor: pointer;
@@ -2003,7 +2003,7 @@ select:focus {
   margin: 0;
   color: var(--nl-ink);
   font-family: var(--nl-font-display);
-  font-size: 22px;
+  font-size: 21px;
   font-weight: 780;
   line-height: 1.1;
   letter-spacing: -0.01em;
@@ -2033,7 +2033,7 @@ select:focus {
 
 .tl-day-head strong {
   color: var(--nl-ink);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 740;
   font-variant-numeric: tabular-nums;
 }
@@ -2102,7 +2102,7 @@ select:focus {
 
 .tl-textcard strong {
   color: var(--nl-ink);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 730;
   line-height: 1.3;
 }
@@ -2112,7 +2112,7 @@ select:focus {
   overflow: hidden;
   color: var(--nl-muted-strong);
   font-family: var(--nl-font-display);
-  font-size: 13.5px;
+  font-size: 12.5px;
   line-height: 1.7;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;

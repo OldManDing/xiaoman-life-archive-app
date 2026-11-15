@@ -69,21 +69,21 @@
 }
 
 .nl-home-title {
-  font-size: 18px !important;
+  font-size: 17px !important;
   font-weight: 600 !important;
   color: var(--nl-ink) !important;
   letter-spacing: 0.01em;
 }
 
 .nl-home-subtitle {
-  font-size: 13px !important;
+  font-size: 12px !important;
   color: var(--nl-muted) !important;
 }
 
 .nl-home-title-age {
   color: #6f5745;
   font-family: var(--nl-font-body, inherit);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -102,7 +102,7 @@
   border-radius: 999px !important;
   background: var(--nl-primary-soft) !important;
   color: var(--nl-accent) !important;
-  font-size: 13px !important;
+  font-size: 12px !important;
   font-weight: 600 !important;
   box-shadow: none !important;
 }
@@ -132,14 +132,14 @@
 .nl-home-day-title {
   margin: 0;
   font-family: var(--nl-font-display) !important;
-  font-size: 18px !important;
+  font-size: 17px !important;
   font-weight: 600 !important;
   color: var(--nl-ink) !important;
   letter-spacing: 0.01em;
 }
 
 .nl-home-day-count {
-  font-size: 13px !important;
+  font-size: 12px !important;
   color: var(--nl-muted) !important;
   font-weight: 500 !important;
 }
@@ -186,7 +186,7 @@
   margin: 0;
   color: #fffaf4;
   font-family: var(--nl-font-display);
-  font-size: 26px;
+  font-size: 25px;
   font-weight: 500;
   line-height: 1.2;
   letter-spacing: 0.01em;
@@ -237,14 +237,14 @@
 }
 
 .nl-home-day-cards .nl-moment-card:not(.is-featured) .nl-moment-title {
-  font-size: 17px !important;
+  font-size: 16px !important;
   line-height: 1.5;
   font-weight: 600 !important;
   color: var(--nl-ink) !important;
 }
 
 .nl-home-day-cards .nl-moment-card:not(.is-featured) .nl-moment-meta {
-  font-size: 13px !important;
+  font-size: 12px !important;
   color: var(--nl-muted) !important;
   order: 2;
 }
@@ -281,7 +281,7 @@
 
 .nl-home-today-text {
   color: var(--nl-muted);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
 }
 
@@ -295,7 +295,7 @@
   border-radius: 999px;
   background: rgba(233, 160, 90, 0.34);
   color: #3a2a1e;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
 }
@@ -322,7 +322,7 @@
 /* ---------- 8. 时间轴：三列相册格 + 日期白字压图 ---------- */
 .tl-month-head h2 {
   font-family: var(--nl-font-display) !important;
-  font-size: 24px !important;
+  font-size: 23px !important;
   font-weight: 600 !important;
   color: var(--nl-ink) !important;
 }
@@ -334,7 +334,7 @@
 
 .tl-day-head strong {
   color: var(--nl-ink) !important;
-  font-size: 14px !important;
+  font-size: 13px !important;
 }
 
 .tl-day-grid {
@@ -362,7 +362,7 @@
   bottom: 9px;
   z-index: 2;
   color: #fffaf4;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   line-height: 1;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.42);
@@ -377,7 +377,7 @@
 
 .nl-home-day-title {
   font-family: var(--nl-font-display);
-  font-size: 21px;
+  font-size: 20px;
   font-weight: 600;
   letter-spacing: 0.02em;
 }
@@ -402,7 +402,7 @@
 .nl-home-recent-head h2 {
   margin: 0;
   font-family: var(--nl-font-display);
-  font-size: 22px;
+  font-size: 21px;
   font-weight: 700;
   color: var(--nl-ink);
 }
@@ -414,7 +414,7 @@
   border: none;
   background: transparent;
   color: var(--nl-muted-strong);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   padding: 6px 0;
@@ -489,7 +489,7 @@
 
 .nl-home-row-body strong {
   font-family: var(--nl-font-display);
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
   color: var(--nl-ink);
   overflow: hidden;
@@ -498,7 +498,7 @@
 }
 
 .nl-home-row-body span {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--nl-muted-strong);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -529,7 +529,7 @@
 }
 
 .nl-home-hero-wrap .nl-moment-featured-title {
-  font-size: 30px !important;
+  font-size: 29px !important;
   font-weight: 700 !important;
 }
 

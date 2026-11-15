@@ -80,8 +80,8 @@ const NotificationSwitchRow = ({
     }}
   >
     <span style={{ minWidth: 0, display: 'grid', gap: 4 }}>
-      <strong style={{ color: 'var(--nl-ink)', fontSize: 15, lineHeight: 1.2, fontWeight: 680, letterSpacing: 0 }}>{title}</strong>
-      {description ? <span style={{ color: 'var(--nl-muted)', fontSize: 12, lineHeight: 1.45, fontWeight: 460 }}>{description}</span> : null}
+      <strong style={{ color: 'var(--nl-ink)', fontSize: 14, lineHeight: 1.2, fontWeight: 680, letterSpacing: 0 }}>{title}</strong>
+      {description ? <span style={{ color: 'var(--nl-muted)', fontSize: 11, lineHeight: 1.45, fontWeight: 460 }}>{description}</span> : null}
     </span>
     <span
       aria-hidden="true"
@@ -737,7 +737,7 @@ export const MessagesPage = () => {
             void markAllRead();
           }}
           aria-disabled={markingAll || unreadTotal === 0}
-          style={{ minHeight: 44, border: 'none', background: 'transparent', color: 'var(--nl-accent)', fontSize: 15, fontWeight: 500, cursor: unreadTotal ? 'pointer' : 'default', opacity: unreadTotal ? 1 : 0.6 }}
+          style={{ minHeight: 44, border: 'none', background: 'transparent', color: 'var(--nl-accent)', fontSize: 14, fontWeight: 500, cursor: unreadTotal ? 'pointer' : 'default', opacity: unreadTotal ? 1 : 0.6 }}
         >
           {markingAll ? '处理中' : '全部已读'}
         </button>
@@ -1355,7 +1355,7 @@ export const SettingsPage = () => {
         <h2 className="set-group-title">长辈与阅读</h2>
         <div className="set-card">
           {[
-            { key: 'elder' as const, icon: <span aria-hidden="true" style={{ fontSize: 17, fontWeight: 600, letterSpacing: '0.02em', fontFamily: 'var(--nl-font-display)', lineHeight: 1 }}>Aa</span>, title: '长辈模式', description: '字号 ×1.2 · 加大行高' },
+            { key: 'elder' as const, icon: <span aria-hidden="true" style={{ fontSize: 16, fontWeight: 600, letterSpacing: '0.02em', fontFamily: 'var(--nl-font-display)', lineHeight: 1 }}>Aa</span>, title: '长辈模式', description: '字号 ×1.2 · 加大行高' },
             { key: 'night' as const, icon: <Moon size={24} strokeWidth={1.8} />, title: '夜间暖光', description: '深色底 · 低亮度' },
           ].map((item) => {
             const enabled = display[item.key];
@@ -1596,10 +1596,10 @@ export const ReportsPage = () => {
             {bookRequestsList.slice(0, 3).map((item) => (
               <div key={item.request_no} style={{ borderTop: '1px solid var(--nl-border)', paddingTop: 10, display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
                 <span style={{ minWidth: 0, display: 'grid', gap: 3 }}>
-                  <strong style={{ color: 'var(--nl-ink)', fontSize: 13, fontWeight: 660 }}>{item.year}年纪念册</strong>
+                  <strong style={{ color: 'var(--nl-ink)', fontSize: 12, fontWeight: 660 }}>{item.year}年纪念册</strong>
                   <span style={{ color: 'var(--nl-muted)', fontSize: 11, fontWeight: 600 }}>{formatProfileDateTime(item.created_at)}</span>
                 </span>
-                <span style={{ color: membershipBookStatusColor(item.status), fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap' }}>{membershipBookStatusText(item.status)}</span>
+                <span style={{ color: membershipBookStatusColor(item.status), fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}>{membershipBookStatusText(item.status)}</span>
               </div>
             ))}
           </Panel>
@@ -2175,11 +2175,11 @@ export const SecurityPage = () => {
           <Trash2 size={24} strokeWidth={1.8} />
         </span>
         <span style={{ flex: 1, display: 'grid', gap: 2 }}>
-          <strong style={{ color: 'var(--nl-danger)', fontSize: 17, fontWeight: 600 }}>注销账号</strong>
+          <strong style={{ color: 'var(--nl-danger)', fontSize: 16, fontWeight: 600 }}>注销账号</strong>
         </span>
         <ChevronRight size={18} strokeWidth={1.9} style={{ color: 'var(--nl-muted)' }} />
       </button>
-      <p style={{ ...helperTextStyle, margin: 0, fontSize: 13, lineHeight: 1.6 }}>注销前会先检查家庭所有权和儿童信息</p>
+      <p style={{ ...helperTextStyle, margin: 0, fontSize: 12, lineHeight: 1.6 }}>注销前会先检查家庭所有权和儿童信息</p>
     </PageShell>
   );
 };
@@ -2280,8 +2280,8 @@ export const AccountDeletionPage = () => {
               <AlertTriangle size={34} strokeWidth={1.8} aria-hidden="true" />
             </span>
             <div style={{ display: 'grid', gap: 2 }}>
-              <strong style={{ color: '#4a2f1f', fontFamily: 'var(--nl-font-display)', fontSize: 21, fontWeight: 600 }}>注销后不可恢复</strong>
-              <p style={{ margin: 0, color: '#6f5745', fontSize: 13, lineHeight: 1.55 }}>账号凭据会失效，家庭档案将由其他管理员接管</p>
+              <strong style={{ color: '#4a2f1f', fontFamily: 'var(--nl-font-display)', fontSize: 20, fontWeight: 600 }}>注销后不可恢复</strong>
+              <p style={{ margin: 0, color: '#6f5745', fontSize: 12, lineHeight: 1.55 }}>账号凭据会失效，家庭档案将由其他管理员接管</p>
             </div>
           </div>
           {loading ? <p style={helperTextStyle}>正在检查当前账号状态…</p> : null}
@@ -2298,17 +2298,17 @@ export const AccountDeletionPage = () => {
                   return (
                     <div key={item.label} style={{ padding: '14px 16px', borderRadius: '18px', background: 'rgba(255, 250, 244, 0.82)', border: '1px solid rgba(255, 255, 255, 0.7)', display: 'grid', gridTemplateColumns: '34px minmax(0, 1fr)', columnGap: 10, rowGap: 2, alignContent: 'center' }}>
                       <span style={{ gridRow: '1 / span 2', alignSelf: 'center', color: '#b4652a', display: 'grid', placeItems: 'center' }}><Icon size={26} strokeWidth={1.8} /></span>
-                      <span style={{ color: '#4a2f1f', fontSize: 16, fontWeight: 500, whiteSpace: 'nowrap' }}>{item.label}</span>
+                      <span style={{ color: '#4a2f1f', fontSize: 15, fontWeight: 500, whiteSpace: 'nowrap' }}>{item.label}</span>
                       <strong style={{ fontSize: '26px', color: '#3f2a1d', fontVariantNumeric: 'tabular-nums', lineHeight: 1.15 }}>{item.value}</strong>
                     </div>
                   );
                 })}
               </div>
               {check.blockers.length ? (
-                <p style={{ margin: 0, color: '#6f5745', fontSize: 13, lineHeight: 1.6 }}>
+                <p style={{ margin: 0, color: '#6f5745', fontSize: 12, lineHeight: 1.6 }}>
                   {check.blockers[0]}
                   {' '}
-                  <button type="button" onClick={() => navigate('/profile/help?topic=account-delete')} style={{ border: 'none', background: 'transparent', color: '#8a4e14', fontSize: 13, textDecoration: 'underline', textUnderlineOffset: 2, cursor: 'pointer', padding: 0 }}>
+                  <button type="button" onClick={() => navigate('/profile/help?topic=account-delete')} style={{ border: 'none', background: 'transparent', color: '#8a4e14', fontSize: 12, textDecoration: 'underline', textUnderlineOffset: 2, cursor: 'pointer', padding: 0 }}>
                     提交协助
                   </button>
                 </p>
@@ -2350,9 +2350,9 @@ export const AccountDeletionPage = () => {
           })()}
         </form>
       </Panel>
-      <p style={{ margin: 0, textAlign: 'center', color: '#6f5745', fontSize: 13, lineHeight: 1.6 }}>
+      <p style={{ margin: 0, textAlign: 'center', color: '#6f5745', fontSize: 12, lineHeight: 1.6 }}>
         也可以先{' '}
-        <button type="button" onClick={() => navigate('/profile/help?topic=account-delete')} style={{ border: 'none', background: 'transparent', color: '#8a4e14', fontSize: 13, textDecoration: 'underline', textUnderlineOffset: 2, cursor: 'pointer', padding: 0 }}>
+        <button type="button" onClick={() => navigate('/profile/help?topic=account-delete')} style={{ border: 'none', background: 'transparent', color: '#8a4e14', fontSize: 12, textDecoration: 'underline', textUnderlineOffset: 2, cursor: 'pointer', padding: 0 }}>
           提交协助
         </button>
         ，由人工核对后再处理
@@ -2526,21 +2526,21 @@ export const HelpFeedbackPage = () => {
       {!feedbackLoading && !feedbackError && !(feedbackTickets ?? []).length ? (
         <Panel className="info-card" style={{ borderRadius: 24, display: 'grid', gap: 6 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center' }}>
-            <strong style={{ color: 'var(--nl-ink)', fontSize: 15, fontWeight: 600 }}>使用问题</strong>
-            <span style={{ display: 'inline-flex', alignItems: 'center', padding: '5px 12px', borderRadius: 999, background: '#f7e4c9', color: '#8a4e14', fontSize: 13, fontWeight: 500 }}>处理中</span>
+            <strong style={{ color: 'var(--nl-ink)', fontSize: 14, fontWeight: 600 }}>使用问题</strong>
+            <span style={{ display: 'inline-flex', alignItems: 'center', padding: '5px 12px', borderRadius: 999, background: '#f7e4c9', color: '#8a4e14', fontSize: 12, fontWeight: 500 }}>处理中</span>
           </div>
-          <p style={{ margin: 0, color: 'var(--nl-ink)', fontSize: 15, lineHeight: 1.75 }}>反馈提交后会在这里显示处理进度。</p>
-          <p style={{ margin: 0, color: '#8b7160', fontSize: 13 }}>示例 · 已于 11月10日 提交</p>
+          <p style={{ margin: 0, color: 'var(--nl-ink)', fontSize: 14, lineHeight: 1.75 }}>反馈提交后会在这里显示处理进度。</p>
+          <p style={{ margin: 0, color: '#8b7160', fontSize: 12 }}>示例 · 已于 11月10日 提交</p>
         </Panel>
       ) : null}
       {(feedbackTickets ?? []).slice(0, 5).map((item) => (
         <Panel key={item.ticket_no} className="info-card" style={{ borderRadius: 24, display: 'grid', gap: 6 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center' }}>
-            <strong style={{ color: 'var(--nl-ink)', fontSize: 15, fontWeight: 600 }}>{item.category}</strong>
-            <span style={{ display: 'inline-flex', alignItems: 'center', padding: '5px 12px', borderRadius: 999, background: item.status === 'processing' ? '#f7e4c9' : 'rgba(255, 255, 255, 0.44)', color: feedbackStatusColor(item.status), fontSize: 13, fontWeight: 500 }}>{feedbackStatusText(item.status)}</span>
+            <strong style={{ color: 'var(--nl-ink)', fontSize: 14, fontWeight: 600 }}>{item.category}</strong>
+            <span style={{ display: 'inline-flex', alignItems: 'center', padding: '5px 12px', borderRadius: 999, background: item.status === 'processing' ? '#f7e4c9' : 'rgba(255, 255, 255, 0.44)', color: feedbackStatusColor(item.status), fontSize: 12, fontWeight: 500 }}>{feedbackStatusText(item.status)}</span>
           </div>
-          <p style={{ margin: 0, color: 'var(--nl-ink)', fontSize: 15, lineHeight: 1.75 }}>{item.content}</p>
-          <p style={{ margin: 0, color: '#8b7160', fontSize: 13 }}>已于 {formatAppDateTime(item.created_at)} 提交</p>
+          <p style={{ margin: 0, color: 'var(--nl-ink)', fontSize: 14, lineHeight: 1.75 }}>{item.content}</p>
+          <p style={{ margin: 0, color: '#8b7160', fontSize: 12 }}>已于 {formatAppDateTime(item.created_at)} 提交</p>
           {item.handle_note ? <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.6 }}>处理备注：{item.handle_note}</p> : null}
         </Panel>
       ))}
@@ -2810,7 +2810,7 @@ export const ContactPage = () => {
                     borderRadius: 10,
                     background: 'transparent',
                     color: 'var(--nl-accent)',
-                    fontSize: 14,
+                    fontSize: 13,
                     fontWeight: 600,
                     cursor: 'pointer',
                   }}
@@ -2831,11 +2831,11 @@ export const ContactPage = () => {
         <span style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(233, 160, 90, 0.18)', display: 'grid', placeItems: 'center', color: 'var(--nl-accent)', flexShrink: 0 }}>
           <MessageCircleMore size={20} strokeWidth={1.8} />
         </span>
-        <strong style={{ flex: 1, color: 'var(--nl-ink)', fontSize: 14, fontWeight: 600 }}>去帮助与反馈</strong>
+        <strong style={{ flex: 1, color: 'var(--nl-ink)', fontSize: 13, fontWeight: 600 }}>去帮助与反馈</strong>
         <ChevronRight size={18} strokeWidth={1.9} style={{ color: 'var(--nl-muted)' }} />
       </button>
 
-      <p style={{ margin: 0, textAlign: 'center', color: '#8b7160', fontSize: 13, lineHeight: 1.6 }}>请勿在邮件中发送孩子照片原件</p>
+      <p style={{ margin: 0, textAlign: 'center', color: '#8b7160', fontSize: 12, lineHeight: 1.6 }}>请勿在邮件中发送孩子照片原件</p>
 
     </PageShell>
   );
@@ -2907,7 +2907,7 @@ export const LegalPage = () => {
             borderRadius: 999,
             background: largeText ? 'rgba(233, 160, 90, 0.3)' : 'transparent',
             color: 'var(--nl-accent)',
-            fontSize: 15,
+            fontSize: 14,
             fontWeight: 600,
             cursor: 'pointer',
           }}
@@ -2923,17 +2923,17 @@ export const LegalPage = () => {
         options={legalSections.map((item) => ({ value: item.title, label: item.title }))}
       />
       <Panel style={{ padding: '22px 18px', display: 'grid', gap: 20 }}>
-        <span style={{ fontSize: 13, fontWeight: 500, letterSpacing: '0.02em', color: 'var(--nl-muted)' }}>最后更新 2026年11月</span>
-        <h2 style={{ margin: 0, fontFamily: 'var(--nl-font-display)', fontSize: 30, fontWeight: 600, lineHeight: 1.25, color: 'var(--nl-ink)' }}>{section.title}</h2>
+        <span style={{ fontSize: 12, fontWeight: 500, letterSpacing: '0.02em', color: 'var(--nl-muted)' }}>最后更新 2026年11月</span>
+        <h2 style={{ margin: 0, fontFamily: 'var(--nl-font-display)', fontSize: 29, fontWeight: 600, lineHeight: 1.25, color: 'var(--nl-ink)' }}>{section.title}</h2>
         <div style={{ display: 'grid', gap: 20 }}>
           {section.items.map((item, index) => (
-            <p key={item} style={{ margin: 0, color: 'var(--nl-ink)', fontSize: 15, lineHeight: 1.75, fontWeight: 400, letterSpacing: '0.01em', display: 'flex', alignItems: 'flex-start' }}>
-              <span aria-hidden="true" style={{ width: 26, height: 26, borderRadius: 999, background: '#f0c08d', color: '#5b3a17', fontSize: 13, fontWeight: 600, display: 'inline-grid', placeItems: 'center', marginRight: 12, flexShrink: 0, marginTop: 1 }}>{index + 1}</span>
+            <p key={item} style={{ margin: 0, color: 'var(--nl-ink)', fontSize: 14, lineHeight: 1.75, fontWeight: 400, letterSpacing: '0.01em', display: 'flex', alignItems: 'flex-start' }}>
+              <span aria-hidden="true" style={{ width: 26, height: 26, borderRadius: 999, background: '#f0c08d', color: '#5b3a17', fontSize: 12, fontWeight: 600, display: 'inline-grid', placeItems: 'center', marginRight: 12, flexShrink: 0, marginTop: 1 }}>{index + 1}</span>
               <span style={{ minWidth: 0, flex: 1 }}>{item}</span>
             </p>
           ))}
         </div>
-        <p style={{ margin: '4px 0 0', textAlign: 'center', fontSize: 13, color: '#8b7160', marginTop: 24 }}>年轮 · 儿童信息保护优先</p>
+        <p style={{ margin: '4px 0 0', textAlign: 'center', fontSize: 12, color: '#8b7160', marginTop: 24 }}>年轮 · 儿童信息保护优先</p>
       </Panel>
     </PageShell>
   );
@@ -2975,13 +2975,13 @@ export const ErrorPage = () => {
             <path d="M46 76 L46 84" />
           </svg>
         </span>
-        <h2 style={{ margin: 0, fontFamily: 'var(--nl-font-display)', fontSize: 22, fontWeight: 500, lineHeight: 1.4, color: 'var(--nl-ink)' }}>暂时打不开这一页</h2>
-        <p style={{ margin: 0, maxWidth: 280, color: 'var(--nl-muted)', fontSize: 15, lineHeight: 1.75 }}>链接可能已失效，或者网络暂时不稳定</p>
+        <h2 style={{ margin: 0, fontFamily: 'var(--nl-font-display)', fontSize: 21, fontWeight: 500, lineHeight: 1.4, color: 'var(--nl-ink)' }}>暂时打不开这一页</h2>
+        <p style={{ margin: 0, maxWidth: 280, color: 'var(--nl-muted)', fontSize: 14, lineHeight: 1.75 }}>链接可能已失效，或者网络暂时不稳定</p>
         <div className="error-actions" style={{ display: 'grid', gap: 14, width: '100%', maxWidth: 340, marginTop: 12 }}>
           <button type="button" onClick={() => window.location.reload()} style={{ ...primaryButtonStyle, width: '100%', minHeight: 52, borderRadius: 999, background: '#b0662a', boxShadow: '0 10px 22px rgba(146, 96, 52, 0.18)' }}>重试</button>
           <button type="button" onClick={() => navigate('/home')} style={{ ...secondaryButtonStyle, width: '100%', minHeight: 52, borderRadius: 999, boxShadow: 'none' }}>返回首页</button>
         </div>
-        <button type="button" onClick={() => navigate('/profile/help')} style={{ border: 'none', background: 'transparent', color: '#8b7160', fontSize: 13, textDecoration: 'none', padding: '4px 0', minHeight: 32, marginTop: 90 }}>如果一直失败，可以在「我的 · 帮助与反馈」里告诉我们</button>
+        <button type="button" onClick={() => navigate('/profile/help')} style={{ border: 'none', background: 'transparent', color: '#8b7160', fontSize: 12, textDecoration: 'none', padding: '4px 0', minHeight: 32, marginTop: 90 }}>如果一直失败，可以在「我的 · 帮助与反馈」里告诉我们</button>
       </div>
     </PageShell>
   );

@@ -2384,7 +2384,7 @@ const RecordForm = ({
                   type="button"
                   onClick={() => void submitRecord('draft')}
                   disabled={submitting}
-                  style={{ minHeight: 44, border: 'none', background: 'transparent', color: 'var(--nl-muted-strong)', fontSize: 15, fontWeight: 500, cursor: 'pointer', padding: '0 2px' }}
+                  style={{ minHeight: 44, border: 'none', background: 'transparent', color: 'var(--nl-muted-strong)', fontSize: 14, fontWeight: 500, cursor: 'pointer', padding: '0 2px' }}
                 >
                   {submitting ? '保存中' : '草稿'}
                 </button>
@@ -2401,7 +2401,7 @@ const RecordForm = ({
                   <button
                     type="button"
                     onClick={() => setDeleteConfirmOpen(true)}
-                    style={{ width: '100%', minHeight: 40, border: 'none', borderRadius: 10, background: 'transparent', color: 'var(--nl-danger)', fontSize: 14, fontWeight: 600, textAlign: 'left', padding: '0 12px', cursor: 'pointer' }}
+                    style={{ width: '100%', minHeight: 40, border: 'none', borderRadius: 10, background: 'transparent', color: 'var(--nl-danger)', fontSize: 13, fontWeight: 600, textAlign: 'left', padding: '0 12px', cursor: 'pointer' }}
                   >
                     删除记录
                   </button>
@@ -2665,7 +2665,7 @@ const RecordForm = ({
                   type="button"
                   className="record-more-toggle"
                   onClick={() => setMoreMediaOpen((current) => !current)}
-                  style={{ justifySelf: 'center', minHeight: 44, border: 'none', background: 'transparent', color: 'var(--nl-accent)', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
+                  style={{ justifySelf: 'center', minHeight: 44, border: 'none', background: 'transparent', color: 'var(--nl-accent)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}
                 >
                   {moreMediaOpen ? '收起更多方式' : '更多方式（视频 / 语音上传）'}
                 </button>
@@ -3161,7 +3161,7 @@ const RecordForm = ({
                 border: 'none',
                 background: 'transparent',
                 color: 'var(--nl-muted-strong)',
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: 600,
                 cursor: submitting || uploading || audioRecording ? 'not-allowed' : 'pointer',
               }}
