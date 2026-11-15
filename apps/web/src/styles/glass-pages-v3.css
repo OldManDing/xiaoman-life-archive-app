@@ -9557,3 +9557,44 @@ main[aria-label="正在进入年轮"] {
   background: #b4652a !important;
   font-size: 19px !important;
 }
+
+/* ===== 26 帮助与反馈 ===== */
+.info-shell:has(textarea) label > span:first-child {
+  font-family: var(--nl-font-display) !important;
+  font-size: 22px !important;
+  font-weight: 600 !important;
+  color: #4a2f1f !important;
+}
+
+.info-shell:has(textarea) label {
+  gap: 10px !important;
+  font-weight: 600 !important;
+}
+
+.info-shell:has(textarea) select,
+.info-shell:has(textarea) input,
+.info-shell:has(textarea) textarea {
+  border-radius: 16px !important;
+  font-size: 17px !important;
+  background: rgba(255, 252, 248, 0.9) !important;
+}
+
+.info-shell:has(textarea) textarea {
+  min-height: 170px !important;
+}
+
+.info-shell:has(textarea) button[type="submit"] {
+  min-height: 64px !important;
+  border-radius: 16px !important;
+  background: #b4652a !important;
+  font-size: 22px !important;
+  font-weight: 600 !important;
+}
+
+.info-shell:has(textarea) h3,
+.info-shell:has(textarea) .set-group-title {
+  font-family: var(--nl-font-display) !important;
+  font-size: 24px !important;
+  font-weight: 700 !important;
+  color: #4a2f1f !important;
+}
