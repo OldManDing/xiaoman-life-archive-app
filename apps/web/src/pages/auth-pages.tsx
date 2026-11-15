@@ -527,12 +527,15 @@ export const LoginPage = () => {
               {countdown > 0 ? `${countdown}s` : sending ? '发送中' : '获取验证码'}
             </button>
           </div>
+          {error ? <p className="lg-error" role="alert">{error}</p> : null}
+
+          <button type="button" className="lg-submit" onClick={() => void submit()} disabled={!canSubmit || submitting}>
+            {submitting ? '登录中…' : '登录'}
+          </button>
         </div>
 
-        {error ? <p className="lg-error" role="alert">{error}</p> : null}
-
-        <button type="button" className="lg-submit" onClick={() => void submit()} disabled={!canSubmit || submitting}>
-          {submitting ? '登录中…' : '登录 / 注册'}
+        <button type="button" className="lg-register-link" onClick={() => void submit()}>
+          还没有账号？<strong>注册</strong>
         </button>
 
         <label className="lg-agreement">
