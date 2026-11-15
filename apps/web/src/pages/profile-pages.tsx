@@ -1,7 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { AlertTriangle, Bell, BellRing, MapPin, Wifi, BookHeart, AlertCircle, Unlink, Cake, CalendarDays, Star, Camera, ChevronUp, Clock, CheckCircle2, ChevronRight, Copy, DownloadCloud, FileBox, FileText, HelpCircle, Home, Info, KeyRound, Lock, LogOut, Mail, MessageCircle, MessageCircleMore, Moon, Pencil, RefreshCw, Settings, Shield, ShieldCheck, Smartphone, Sparkles, Trash2, Type, UploadCloud, UserPlus, UserRound, Users } from 'lucide-react';
+import { AlertTriangle, Bell, BellRing, Layers, MapPin, Wifi, BookHeart, AlertCircle, Unlink, Cake, CalendarDays, Star, Camera, ChevronUp, Clock, CheckCircle2, ChevronRight, Copy, DownloadCloud, FileBox, FileText, HelpCircle, Home, Info, KeyRound, Lock, LogOut, Mail, MessageCircle, MessageCircleMore, Moon, Pencil, RefreshCw, Settings, Shield, ShieldCheck, Smartphone, Sparkles, Trash2, Type, UploadCloud, UserPlus, UserRound, Users } from 'lucide-react';
 
 import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
@@ -1393,12 +1393,12 @@ export const SettingsPage = () => {
             <ChevronRight size={20} className="set-chevron" />
           </button>
           <button type="button" className="set-row" onClick={() => navigate('/profile/legal?doc=terms')}>
-            <span className="set-icon"><FileText size={24} strokeWidth={1.8} /></span>
+            <span className="set-icon"><Info size={24} strokeWidth={1.8} /></span>
             <span className="set-body"><strong>用户协议</strong></span>
             <ChevronRight size={20} className="set-chevron" />
           </button>
           <div className="set-row is-static">
-            <span className="set-icon"><Info size={24} strokeWidth={1.8} /></span>
+            <span className="set-icon"><Layers size={24} strokeWidth={1.8} /></span>
             <span className="set-body"><strong>版本</strong></span>
             <span className="set-value">{appVersion}</span>
           </div>

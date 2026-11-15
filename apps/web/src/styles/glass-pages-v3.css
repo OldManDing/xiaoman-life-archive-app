@@ -8270,3 +8270,7 @@ header.app-topbar > div span {
 .settings-shell .set-row {
   min-height: 68px !important;
 }
+
+/* 11：行高再收、正文字重常规 */
+.settings-shell .set-row { min-height: 64px !important; }
+.settings-shell .set-body strong { font-weight: 500 !important; }
