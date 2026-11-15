@@ -9477,3 +9477,27 @@ main[aria-label="正在进入年轮"] {
 .info-shell:has(a[href^="mailto:"]) > div {
   gap: 8px !important;
 }
+
+/* 24：图标块与复制按钮收窄，说明单行不省略 */
+.info-shell:has(a[href^="mailto:"]) > div > div > span:first-child {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 14px !important;
+}
+
+.info-shell:has(a[href^="mailto:"]) button[aria-label^="复制"] {
+  min-width: 66px !important;
+  min-height: 44px !important;
+  font-size: 16px !important;
+  padding: 0 12px !important;
+}
+
+.info-shell:has(a[href^="mailto:"]) > div > div {
+  grid-template-columns: 44px minmax(0, 1fr) 70px !important;
+  gap: 10px !important;
+}
+
+.info-shell:has(a[href^="mailto:"]) > div > div span[style*="8a6c56"] {
+  font-size: 13px !important;
+  white-space: nowrap !important;
+}
