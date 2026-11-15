@@ -314,7 +314,7 @@ const toggleTrackStyle = (enabled: boolean) =>
     height: '30px',
     borderRadius: '999px',
     border: 'none',
-    background: enabled ? '#f0a050' : '#e6d5c3',
+    background: enabled ? '#b4652a' : '#e6d5c3',
     padding: '3px',
     display: 'flex',
     alignItems: 'center',
@@ -902,17 +902,17 @@ export const NotificationSettingsPage = () => {
     {
       title: '提醒',
       items: [
-        { key: 'daily', label: '每天提醒我记录', desc: '每天晚上 8:00 提醒', icon: CalendarDays },
-        { key: 'birthday', label: '孩子生日提醒', desc: '生日前 3 天提醒', icon: Cake },
-        { key: 'milestone', label: '里程碑提醒', desc: '自动识别成长里程碑', icon: Star },
+        { key: 'daily', label: '每天提醒我记录', desc: '晚上 8:00', icon: CalendarDays },
+        { key: 'birthday', label: '孩子生日提醒', desc: '提前 3 天', icon: Cake },
+        { key: 'milestone', label: '里程碑提醒', desc: '自动', icon: Star },
       ],
     },
     {
       title: '家人的动态',
       items: [
-        { key: 'familyRecord', label: '有人新增记录', desc: '家人发布新记录时通知我', icon: Users },
-        { key: 'familyReply', label: '有人评论或回应', desc: '收到回应时通知我', icon: MessageCircle },
-        { key: 'familyJoin', label: '有人加入家庭', desc: '新家人加入时通知我', icon: UserPlus },
+        { key: 'familyRecord', label: '有人新增记录', desc: '', icon: Users },
+        { key: 'familyReply', label: '有人评论或回应', desc: '', icon: MessageCircle },
+        { key: 'familyJoin', label: '有人加入家庭', desc: '', icon: UserPlus },
       ],
     },
     {

@@ -9122,3 +9122,19 @@ main[aria-label="正在进入年轮"] {
 .account-shell section[aria-label="记录贡献"] > div {
   min-height: 54px !important;
 }
+
+/* 19 通知设置：行高与标题 */
+.settings-shell .set-row,
+.set-group[aria-label="通知设置"] .set-row {
+  min-height: 76px !important;
+}
+
+.set-group[aria-label="提醒"] .set-body small,
+.set-group[aria-label="家人的动态"] .set-body small {
+  font-size: 15px !important;
+  color: #8a6c56 !important;
+}
+
+.set-group[aria-label="家人的动态"] .set-body small:empty {
+  display: none !important;
+}
