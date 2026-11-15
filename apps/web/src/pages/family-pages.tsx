@@ -1204,9 +1204,9 @@ const invitedMembers = members.filter((member) => member.role !== 'owner');
   return (
     <PageShell title="邀请家人" backTo="/family" className="invite-shell">
       <Panel style={{ padding: '20px 20px 22px' }} className="invite-card">
-        <div className="invite-qr" aria-hidden="true">
-          <QrCode size={150} strokeWidth={1.2} />
-          <span className="invite-qr-dot" />
+        <div className="invite-qr">
+          <img src="/photos/invite-qr.png" alt="邀请二维码" />
+          <span className="invite-qr-dot" aria-hidden="true" />
         </div>
         <h2 className="invite-title">扫码加入{activeChild?.name ?? ''}的档案</h2>
         <p className="invite-sub">有效期 7 天</p>

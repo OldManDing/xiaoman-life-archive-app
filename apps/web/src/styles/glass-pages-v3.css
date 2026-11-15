@@ -8406,3 +8406,31 @@ header.app-topbar > div span {
   color: #9a7d66;
   font-size: 15px;
 }
+
+/* 12：二维码图片与已邀请卡片化 */
+.invite-qr img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 18px;
+  display: block;
+}
+
+.invite-qr-dot {
+  width: 40px !important;
+  height: 40px !important;
+  border: 6px solid #ffffff;
+  box-sizing: content-box;
+}
+
+.invite-shell section[aria-label="已邀请"] {
+  background: rgba(255, 246, 237, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.62) !important;
+  border-radius: 28px !important;
+  padding: 14px 16px !important;
+  box-shadow: 0 10px 26px rgba(176, 118, 78, 0.07) !important;
+}
+
+.invite-shell section[aria-label="已邀请"] > div:not(:first-child) {
+  background: rgba(255, 251, 246, 0.9) !important;
+}
