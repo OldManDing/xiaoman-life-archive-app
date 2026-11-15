@@ -9090,3 +9090,35 @@ main[aria-label="正在进入年轮"] {
   position: static !important;
   margin: 8px 0 6px !important;
 }
+
+/* 18：纵向留白与权限行高再收紧 */
+.account-shell header {
+  padding: 8px 0 2px !important;
+  gap: 4px !important;
+}
+
+.account-shell header h2 {
+  font-size: 26px !important;
+}
+
+.account-shell .fam-detail-title {
+  font-size: 22px !important;
+  margin: 8px 0 4px !important;
+}
+
+.account-shell .perm-option {
+  min-height: 68px !important;
+  padding: 8px 12px !important;
+}
+
+.account-shell .perm-option strong {
+  font-size: 17px !important;
+}
+
+.account-shell .perm-hint {
+  margin: 6px 0 0 !important;
+}
+
+.account-shell section[aria-label="记录贡献"] > div {
+  min-height: 54px !important;
+}
