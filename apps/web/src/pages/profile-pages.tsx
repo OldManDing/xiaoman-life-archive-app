@@ -591,17 +591,18 @@ const MessageCard = ({ item, onClick, onReply }: { item: UserNotificationItem; o
   return (
     <button type="button" className="msg-card" onClick={onClick}>
       {!item.read_at ? <span className="msg-dot" aria-label="未读" /> : null}
-      {isSystem ? (
+      {isSystem || !avatar ? (
         <span className="msg-system-icon" aria-hidden="true">
           <ShieldCheck size={26} strokeWidth={1.9} />
         </span>
-      ) : avatar ? (
-        <img className="msg-avatar" src={avatar} alt="" />
       ) : (
-        <span className="msg-avatar" aria-hidden="true">{title.slice(0, 1)}</span>
+        <img className="msg-avatar" src={avatar} alt="" />
       )}
       <span className="msg-body">
-        <strong className="msg-title">{title}</strong>
+        <strong className="msg-title">{(() => {
+          const actor = ['妈妈', '爸爸', '外婆', '外公', '奶奶', '爷爷', '小满', '系统'].find((name) => title.startsWith(name));
+          return actor ? (<>{actor} <span className="msg-title-rest">{title.slice(actor.length).trim()}</span></>) : title;
+        })()}</strong>
         {body ? <span className="msg-text">{body}</span> : null}
       </span>
       <span className="msg-side">

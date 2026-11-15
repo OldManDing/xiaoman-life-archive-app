@@ -7973,3 +7973,35 @@ body,
   color: #e98a3c !important;
   box-shadow: 0 4px 14px rgba(176, 118, 78, 0.08) !important;
 }
+
+/* 10：标题单行、姓名粗+动作常规、卡片等高 */
+.msg-card {
+  min-height: 104px !important;
+  max-height: 112px !important;
+  align-items: center !important;
+}
+
+.msg-title {
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  line-height: 1.35 !important;
+}
+
+.msg-title-rest {
+  font-weight: 500 !important;
+}
+
+.msg-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.msg-body {
+  min-width: 0;
+  flex: 1;
+}
