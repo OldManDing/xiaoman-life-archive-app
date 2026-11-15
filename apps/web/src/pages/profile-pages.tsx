@@ -2894,7 +2894,7 @@ export const LegalPage = () => {
     <PageShell
       title={isAboutPage ? '关于我们' : '关于与协议'}
       onBack={handleBack}
-      className="info-shell"
+      className={isAboutPage ? 'info-shell about-shell' : 'info-shell legal-shell'}
       action={
         <button
           type="button"
