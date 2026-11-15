@@ -593,7 +593,7 @@ const MessageCard = ({ item, onClick, onReply }: { item: UserNotificationItem; o
       {!item.read_at ? <span className="msg-dot" aria-label="未读" /> : null}
       {isSystem ? (
         <span className="msg-system-icon" aria-hidden="true">
-          <UploadCloud size={24} strokeWidth={1.8} />
+          <ShieldCheck size={26} strokeWidth={1.9} />
         </span>
       ) : avatar ? (
         <img className="msg-avatar" src={avatar} alt="" />
@@ -636,7 +636,7 @@ export const MessagesPage = () => {
   const navigate = useNavigate();
   const [message, setMessage] = useState<string | null>(null);
   const [markingAll, setMarkingAll] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'unread'>('unread');
+  const [filter, setFilter] = useState<'all' | 'unread'>('all');
   const {
     data: notifications,
     loading,
