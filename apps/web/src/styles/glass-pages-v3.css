@@ -6976,3 +6976,13 @@ body,
     radial-gradient(70% 34% at 80% 0%, rgba(255, 226, 198, 0.45) 0%, rgba(255, 226, 198, 0) 70%),
     linear-gradient(180deg, #fff6ec 0%, #fdeee2 55%, #fbe3d5 100%) !important;
 }
+
+/* 01：底部安全区 + 主图横幅比例 */
+.nl-home-main,
+.nl-home-stream {
+  padding-bottom: calc(116px + env(safe-area-inset-bottom)) !important;
+}
+
+.nl-home-hero-wrap .nl-moment-media {
+  aspect-ratio: 16 / 11.4 !important;
+}
