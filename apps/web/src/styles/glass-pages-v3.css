@@ -9994,3 +9994,10 @@ main[aria-label="正在进入年轮"] {
 #root .pf-stats {
   padding: 14px 18px !important;
 }
+
+#root .wl-sub,
+#root .wl-subtitle {
+  font-size: 19px !important;
+  white-space: nowrap !important;
+  max-width: none !important;
+}
