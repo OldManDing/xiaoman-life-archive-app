@@ -8676,3 +8676,52 @@ main[aria-label="正在进入年轮"] {
 .archive-shell .ac-row input[type="date"]::-webkit-calendar-picker-indicator {
   display: none !important;
 }
+
+/* 16：合并为单卡 + 行内发丝线 + 右侧箭头可见 */
+.archive-shell .ac-card {
+  background: rgba(255, 246, 237, 0.82) !important;
+  border: 1px solid rgba(255, 255, 255, 0.62) !important;
+  border-radius: 26px !important;
+  padding: 0 20px !important;
+  box-shadow: 0 10px 26px rgba(146, 96, 52, 0.07) !important;
+}
+
+.archive-shell .ac-card + .ac-card {
+  margin-top: 12px !important;
+}
+
+.archive-shell .ac-row {
+  background: transparent !important;
+  border: none !important;
+  border-bottom: 1px solid rgba(120, 80, 40, 0.10) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.archive-shell .ac-row:last-child {
+  border-bottom: none !important;
+}
+
+.archive-shell .ac-chevron,
+.archive-shell .ac-row svg.ac-chevron,
+.archive-shell .ac-row > svg:last-child {
+  color: #b08c6f !important;
+  opacity: 1 !important;
+  display: block !important;
+}
+
+.archive-shell .ac-pencil,
+.archive-shell .ac-row .ac-action {
+  color: #b08c6f !important;
+  opacity: 1 !important;
+}
+
+/* 头像区不单独成卡 */
+.archive-shell .ac-hero,
+.archive-shell > section:first-of-type {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
