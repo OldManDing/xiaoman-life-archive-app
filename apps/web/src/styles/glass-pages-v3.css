@@ -7743,3 +7743,59 @@ body,
   min-width: 100px !important;
   font-size: 17px !important;
 }
+
+/* 09：跳过胶囊、头像双层虚线+柔光、暖粉底、卡片暖色 */
+.onb-skip {
+  min-height: 48px !important;
+  padding: 0 22px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  background: rgba(255, 250, 244, 0.82) !important;
+  color: #4a2f1f !important;
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 6px 16px rgba(176, 118, 78, 0.08) !important;
+}
+
+.onb-avatar {
+  position: relative !important;
+  box-shadow:
+    0 0 0 14px rgba(255, 240, 228, 0.55),
+    0 18px 44px rgba(233, 160, 90, 0.28) !important;
+  background: rgba(255, 250, 244, 0.62) !important;
+}
+
+.onb-avatar::after {
+  content: "";
+  position: absolute;
+  inset: -12px;
+  border-radius: 999px;
+  border: 1px dashed rgba(198, 138, 92, 0.35);
+  pointer-events: none;
+}
+
+.onb-card {
+  background: rgba(255, 241, 229, 0.86) !important;
+  border: 1px solid rgba(255, 255, 255, 0.66) !important;
+}
+
+.onb-avatar-wrap {
+  margin: 0 0 12px !important;
+}
+
+.onb-title {
+  margin: 6px 0 4px !important;
+}
+
+.onb-sub {
+  margin-bottom: 10px !important;
+}
+
+/* 09：背景更暖 */
+body,
+#root,
+.app-layout {
+  background-image:
+    radial-gradient(70% 40% at 50% 0%, rgba(255, 214, 178, 0.55) 0%, rgba(255, 214, 178, 0) 70%),
+    linear-gradient(180deg, #ffe9d7 0%, #fcdcc7 55%, #f9d3c1 100%) !important;
+}
