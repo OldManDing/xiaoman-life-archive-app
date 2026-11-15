@@ -9830,3 +9830,17 @@ main[aria-label="正在进入年轮"] {
   background: rgba(255, 250, 244, 0.75) !important;
   color: #4a2f1f !important;
 }
+
+#root .error-shell .error-actions > button {
+  min-height: 74px !important;
+  font-size: 24px !important;
+  border-radius: 999px !important;
+}
+#root .error-shell .error-actions > button:first-child {
+  background: #b4652a !important;
+  color: #fff !important;
+}
+#root .error-shell .error-actions > button:last-child {
+  background: rgba(255, 250, 244, 0.75) !important;
+  color: #4a2f1f !important;
+}
