@@ -835,7 +835,7 @@ export const FamilyMemberDetailPage = () => {
   const [updating, setUpdating] = useState(false);
   const [removing, setRemoving] = useState(false);
   const [confirmingRemove, setConfirmingRemove] = useState(false);
-  const [pendingRole, setPendingRole] = useState<'viewer' | 'editor' | null>(null);
+  const [pendingRole, setPendingRole] = useState<'viewer' | 'editor' | 'owner' | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -886,7 +886,7 @@ export const FamilyMemberDetailPage = () => {
   const isFamilyOwner = selfMember?.role === 'owner';
   const canEditRole = Boolean(member && member.role !== 'owner' && activeChild?.family_no && isFamilyOwner);
   useEffect(() => {
-    if (member && (member.role === 'viewer' || member.role === 'editor')) setPendingRole(member.role);
+    if (member && (member.role === 'viewer' || member.role === 'editor' || member.role === 'owner')) setPendingRole(member.role);
   }, [member?.user_no, member?.role]);
   const memberJoinedDays = (() => {
     if (!member?.joined_at) return null;
@@ -970,9 +970,9 @@ export const FamilyMemberDetailPage = () => {
       {member ? (
         <>
           <header style={{ display: 'grid', gap: 8, justifyItems: 'center', padding: '18px 0 6px', background: 'transparent', border: 'none', boxShadow: 'none' }}>
-            <FamilyAvatar src={resolveFamilyMemberAvatarSrc(member, user)} mediaNo={resolveFamilyMemberAvatarMediaNo(member, user)} label={memberName} size={64} />
-            <h2 title={memberName} style={{ margin: 0, maxWidth: '100%', color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '22px', lineHeight: 1.15, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{memberName}</h2>
-            <span style={{ color: '#6f5745', fontSize: 15, fontWeight: 500 }}>
+            <FamilyAvatar src={resolveFamilyMemberAvatarSrc(member, user)} mediaNo={resolveFamilyMemberAvatarMediaNo(member, user)} label={memberName} size={150} />
+            <h2 title={memberName} style={{ margin: 0, maxWidth: '100%', color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '30px', lineHeight: 1.15, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{memberName}</h2>
+            <span style={{ color: '#6f5745', fontSize: 17, fontWeight: 500 }}>
               {memberJoinedLabel ?? `已加入 ${memberJoinedDays ?? '-'} 天`}
             </span>
           </header>
@@ -992,11 +992,12 @@ export const FamilyMemberDetailPage = () => {
           </section>
 
           <section>
-            <h2 className="fam-detail-title">权限</h2>
+            <h2 className="fam-detail-title">TA 的权限</h2>
             <div role="radiogroup" aria-label="成员权限" style={{ display: 'grid', gap: 8 }}>
               {([
-                { value: 'viewer' as const, title: '可查看', detail: '可以查看家庭档案，不能修改内容' },
-                { value: 'editor' as const, title: '可查看·可补充', detail: '可以发布和修改记录，也能整理档案' },
+                { value: 'viewer' as const, title: '可查看 · 只能浏览记录', detail: '可以查看记录，但不能新增' },
+                { value: 'editor' as const, title: '可查看 · 可补充', detail: '可以查看并新增记录' },
+                { value: 'owner' as const, title: '可管理', detail: '可以添加成员、修改档案' },
               ]).map((option) => {
                 const selected = (pendingRole ?? member.role) === option.value;
                 const disabled = !canEditRole || updating;
@@ -1054,7 +1055,7 @@ export const FamilyMemberDetailPage = () => {
             <button
               type="button"
               className="fam-detail-save"
-              onClick={() => pendingRole && void changeRole(pendingRole)}
+              onClick={() => pendingRole && void changeRole(pendingRole as 'viewer' | 'editor')}
               disabled={updating || !pendingRole || pendingRole === member.role}
               style={{ ...primaryButtonStyle, width: '100%', opacity: updating || !pendingRole || pendingRole === member.role ? 0.6 : 1 }}
             >

@@ -8943,3 +8943,61 @@ main[aria-label="正在进入年轮"] {
   display: grid !important;
   gap: 12px !important;
 }
+
+/* ===== 18 成员详情：按 screens-v5/18 还原 ===== */
+.account-shell .fam-detail-title {
+  font-family: var(--nl-font-display) !important;
+  font-size: 26px !important;
+  font-weight: 700 !important;
+  color: #4a2f1f !important;
+  margin: 20px 0 10px !important;
+}
+
+.account-shell .perm-option {
+  min-height: 88px !important;
+  border-radius: 18px !important;
+  padding: 14px 16px !important;
+  gap: 16px !important;
+}
+
+.account-shell .perm-option.is-selected {
+  background: linear-gradient(180deg, #fbe3c4 0%, #f8dcc0 100%) !important;
+}
+
+.account-shell .perm-option > span:first-child {
+  width: 26px !important;
+  height: 26px !important;
+}
+
+.account-shell .perm-option strong {
+  font-family: var(--nl-font-display) !important;
+  font-size: 20px !important;
+  font-weight: 600 !important;
+}
+
+.account-shell .perm-option > span:last-child > span {
+  font-size: 15px !important;
+  color: #7a5a44 !important;
+}
+
+/* 记录贡献卡 */
+.account-shell section[aria-label="记录贡献"] > div {
+  min-height: 76px !important;
+  padding: 0 16px !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+  border-radius: 20px !important;
+  background: rgba(255, 247, 238, 0.86) !important;
+  border-bottom: none !important;
+}
+
+/* 保存权限按钮 */
+.account-shell .fam-detail-save {
+  min-height: 58px !important;
+  border-radius: 18px !important;
+  background: #b4652a !important;
+  color: #fff !important;
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 10px 24px rgba(180, 101, 42, 0.22) !important;
+  margin: 14px 0 10px !important;
+}
