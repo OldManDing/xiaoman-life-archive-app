@@ -8225,3 +8225,34 @@ header.app-topbar > div span {
 .settings-shell {
   row-gap: 0 !important;
 }
+
+/* 11：行高与分组间距收紧，尽量一屏显示三组 */
+.settings-shell .set-group-title {
+  margin: 16px 0 8px !important;
+  font-size: 23px !important;
+}
+
+.settings-shell .set-row {
+  min-height: 72px !important;
+}
+
+.settings-shell .set-body strong {
+  font-size: 18px !important;
+}
+
+.settings-shell .set-body small {
+  font-size: 13px !important;
+}
+
+.settings-shell .set-icon svg {
+  width: 22px !important;
+  height: 22px !important;
+}
+
+.settings-shell .set-card {
+  padding: 0 16px !important;
+}
+
+.settings-shell .set-footer {
+  margin: 18px 0 8px !important;
+}
