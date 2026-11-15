@@ -9388,3 +9388,33 @@ main[aria-label="正在进入年轮"] {
   font-size: 17px !important;
   line-height: 1.85 !important;
 }
+
+/* 22：字号/行距/页签高度回调 */
+.legal-shell .app-panel p {
+  font-size: 15px !important;
+  line-height: 1.75 !important;
+}
+
+.legal-shell h2 {
+  font-size: 28px !important;
+}
+
+.legal-shell .app-segmented button {
+  min-height: 50px !important;
+  font-size: 18px !important;
+}
+
+.legal-shell .app-segmented button[aria-checked="true"] {
+  border: 1.5px solid #d9964f !important;
+}
+
+.legal-shell .app-panel > p > span[aria-hidden="true"] {
+  width: 22px !important;
+  height: 22px !important;
+  font-size: 12px !important;
+}
+
+.legal-shell .app-panel {
+  gap: 16px !important;
+  padding: 18px 16px !important;
+}
