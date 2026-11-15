@@ -2274,12 +2274,12 @@ export const AccountDeletionPage = () => {
     <PageShell className="info-shell" title="注销账号" backTo="/profile/security">
       <Panel className="info-card" style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: '18px' }}>
         <div style={rowStyle}>
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'stretch', borderRadius: '18px', background: 'rgba(255, 255, 255, 0.46)', border: '1px solid rgba(120, 80, 40, 0.10)', padding: '14px 16px' }}>
-            <span style={{ display: 'grid', placeItems: 'center', color: 'var(--nl-danger)' }}>
-              <AlertTriangle size={24} strokeWidth={1.8} aria-hidden="true" />
+          <div style={{ display: 'flex', gap: '14px', alignItems: 'center', borderRadius: '18px', background: 'rgba(255, 250, 244, 0.86)', border: '1px solid rgba(255, 255, 255, 0.7)', padding: '16px 18px' }}>
+            <span style={{ display: 'grid', placeItems: 'center', color: '#b4652a' }}>
+              <AlertTriangle size={34} strokeWidth={1.8} aria-hidden="true" />
             </span>
             <div style={{ display: 'grid', gap: 2 }}>
-              <strong style={{ color: 'var(--nl-danger)', fontSize: 17, fontWeight: 600 }}>注销后不可恢复</strong>
+              <strong style={{ color: '#4a2f1f', fontFamily: 'var(--nl-font-display)', fontSize: 21, fontWeight: 600 }}>注销后不可恢复</strong>
               <p style={{ margin: 0, color: '#6f5745', fontSize: 13, lineHeight: 1.55 }}>账号凭据会失效，家庭档案将由其他管理员接管</p>
             </div>
           </div>
@@ -2295,10 +2295,10 @@ export const AccountDeletionPage = () => {
                 ].map((item) => {
                   const Icon = item.icon;
                   return (
-                    <div key={item.label} style={{ padding: '12px 14px', borderRadius: '16px', background: 'rgba(255, 255, 255, 0.62)', border: '1px solid rgba(255, 255, 255, 0.62)', display: 'grid', gap: 4 }}>
-                      <span style={{ color: '#8a4e14', display: 'grid', placeItems: 'center' }}><Icon size={24} strokeWidth={1.8} /></span>
-                      <span style={{ color: '#6f5745', fontSize: 13 }}>{item.label}</span>
-                      <strong style={{ fontSize: '20px', color: 'var(--nl-ink)', fontVariantNumeric: 'tabular-nums' }}>{item.value}</strong>
+                    <div key={item.label} style={{ padding: '14px 16px', borderRadius: '18px', background: 'rgba(255, 250, 244, 0.82)', border: '1px solid rgba(255, 255, 255, 0.7)', display: 'grid', gridTemplateColumns: '34px minmax(0, 1fr)', columnGap: 10, rowGap: 2, alignContent: 'center' }}>
+                      <span style={{ gridRow: '1 / span 2', alignSelf: 'center', color: '#b4652a', display: 'grid', placeItems: 'center' }}><Icon size={26} strokeWidth={1.8} /></span>
+                      <span style={{ color: '#4a2f1f', fontSize: 16, fontWeight: 500, whiteSpace: 'nowrap' }}>{item.label}</span>
+                      <strong style={{ fontSize: '26px', color: '#3f2a1d', fontVariantNumeric: 'tabular-nums', lineHeight: 1.15 }}>{item.value}</strong>
                     </div>
                   );
                 })}

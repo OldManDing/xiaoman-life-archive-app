@@ -9598,3 +9598,59 @@ main[aria-label="正在进入年轮"] {
   font-weight: 700 !important;
   color: #4a2f1f !important;
 }
+
+/* ===== 27 注销账号 ===== */
+.info-shell:has(input[aria-label="注销确认文本"]) .app-panel,
+.info-shell:has(input[placeholder="请输入 注销账号"]) .app-panel {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.info-shell:has(input[placeholder="请输入 注销账号"]) label > span:first-child {
+  font-family: var(--nl-font-display) !important;
+  font-size: 22px !important;
+  font-weight: 600 !important;
+  color: #4a2f1f !important;
+}
+
+.info-shell:has(input[placeholder="请输入 注销账号"]) input {
+  min-height: 64px !important;
+  border-radius: 999px !important;
+  font-size: 18px !important;
+  background: rgba(255, 252, 248, 0.9) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+}
+
+.info-shell:has(input[placeholder="请输入 注销账号"]) button[type="submit"] {
+  min-height: 68px !important;
+  border-radius: 999px !important;
+  font-size: 22px !important;
+  font-weight: 600 !important;
+}
+
+.info-shell:has(input[placeholder="请输入 注销账号"]) button[type="submit"]:disabled {
+  background: #efe3d6 !important;
+  color: #b09a86 !important;
+}
+
+.info-shell:has(input[placeholder="请输入 注销账号"]) button[type="submit"]:not(:disabled) {
+  background: #b4652a !important;
+  color: #fff !important;
+}
+
+/* 27：外层卡去底色、区块间距 */
+.info-shell:has(input[placeholder="请输入 注销账号"]) .info-card,
+.info-shell:has(input[placeholder="请输入 注销账号"]) .app-panel {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.info-shell:has(input[placeholder="请输入 注销账号"]) label > span:first-child {
+  font-family: var(--nl-font-display) !important;
+  font-size: 21px !important;
+  font-weight: 600 !important;
+  color: #4a2f1f !important;
+}
