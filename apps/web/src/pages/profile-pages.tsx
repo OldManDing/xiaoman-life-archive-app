@@ -2667,13 +2667,12 @@ export const AboutPage = () => {
         <svg width="150" height="150" viewBox="0 0 150 150" role="img" aria-label="年轮" style={{ marginBottom: '18px', display: 'block' }}>
           <circle cx="75" cy="75" r="75" fill="#E9A050" />
           <g fill="none" stroke="rgba(255, 240, 218, 0.92)" strokeWidth="2.4">
-            <circle cx="75" cy="75" r="57" />
-            <circle cx="75" cy="75" r="47" />
-            <circle cx="75" cy="75" r="37" />
-            <circle cx="75" cy="75" r="27" />
-            <circle cx="75" cy="75" r="16" />
+            <path d="M75 17c31 0 58 25 58 58s-27 58-58 58S17 106 17 75 44 17 75 17z" />
+            <path d="M77 27c26 1 47 21 46 48-1 26-21 47-48 46-26-1-46-21-45-47 1-26 21-47 47-47z" />
+            <path d="M74 38c20 0 37 16 37 37 0 20-16 37-37 37-20 0-36-17-36-37 0-21 16-37 36-37z" />
+            <path d="M76 49c14 0 25 11 24 26-1 14-12 25-26 24-14-1-24-12-23-26 1-14 11-24 25-24z" />
+            <path d="M74 60c8 0 15 7 14 15-1 8-8 14-16 13-8-1-13-8-12-15 1-8 7-13 14-13z" />
           </g>
-          <circle cx="75" cy="75" r="7" fill="rgba(255, 240, 218, 0.95)" />
         </svg>
         <h2 style={{ margin: 0, color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '40px', lineHeight: 1.08, fontWeight: 600 }}>年轮</h2>
         <p style={{ margin: '8px 0 0', color: '#7a5a44', fontSize: '17px', fontWeight: 500 }}>版本 {appVersion} · 构建 {appBuildNumberValue || 128}</p>
