@@ -6731,3 +6731,102 @@ body,
 .rd-action-share {
   background: linear-gradient(180deg, #f2a55f 0%, #e9964a 100%) !important;
 }
+
+/* ===== 02 时间轴：拼贴网格 + 左侧轴线 + 统计胶囊 ===== */
+.tl-grid {
+  column-count: 3 !important;
+  column-gap: 10px !important;
+  display: block !important;
+  position: relative;
+}
+
+.tl-tile {
+  break-inside: avoid;
+  margin: 0 0 10px !important;
+  width: 100% !important;
+  aspect-ratio: 1 / 1.18 !important;
+  border-radius: 16px !important;
+}
+
+.tl-tile:nth-child(1) { aspect-ratio: 1 / 1.12 !important; }
+.tl-tile:nth-child(4) { aspect-ratio: 1 / 1.55 !important; }
+.tl-tile:nth-child(6) { aspect-ratio: 1 / 0.92 !important; }
+
+.tl-tile-date {
+  display: none !important;
+}
+
+.tl-main {
+  position: relative;
+  padding-left: 12px;
+}
+
+.tl-main::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 18px;
+  bottom: 96px;
+  width: 1.5px;
+  background: rgba(214, 150, 96, 0.35);
+}
+
+.tl-main::after {
+  content: "";
+  position: absolute;
+  left: -2px;
+  top: 10px;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #f2b073;
+  box-shadow: 0 0 0 4px rgba(242, 176, 115, 0.22);
+}
+
+.tl-stats-capsule {
+  margin: 14px 0 8px;
+  min-height: 56px;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 17px;
+  font-family: var(--nl-font-display);
+  color: var(--nl-muted-strong);
+  background: rgba(255, 240, 228, 0.66);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.tl-stats-capsule strong {
+  color: #d9752f;
+  font-weight: 700;
+}
+
+/* 年份分段更柔和 */
+.tl-year.is-active {
+  background: #f7cf9f !important;
+  color: #7a4a24 !important;
+}
+
+/* 月份纯文字 */
+.tl-month-select {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+.tl-month-select select {
+  background: transparent !important;
+  border: none !important;
+  font-family: var(--nl-font-display) !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  color: var(--nl-ink) !important;
+}
+
+.tl-summary {
+  font-size: 16px !important;
+  color: var(--nl-muted-strong) !important;
+}
