@@ -2664,18 +2664,19 @@ export const AboutPage = () => {
   return (
     <PageShell title="关于我们" backTo="/profile" className="info-shell">
       <section style={{ display: 'grid', justifyItems: 'center', padding: '24px 0 12px' }}>
-        <svg width="96" height="96" viewBox="0 0 96 96" role="img" aria-label="年轮" style={{ marginBottom: '16px', display: 'block' }}>
-          <circle cx="48" cy="48" r="48" fill="#E99E4F" />
-          <g fill="none" stroke="#FFFFFF" strokeWidth="2.6" strokeLinecap="round">
-            <circle cx="48" cy="48" r="33" />
-            <path d="M48 21c9 8 12 17 8 27s-13 16-9 27" />
-            <path d="M26 36c8 3 14 3 22 0" />
-            <path d="M30 62c9-4 17-4 27 1" />
-            <circle cx="48" cy="48" r="6" fill="#FFFFFF" stroke="none" opacity="0.9" />
+        <svg width="150" height="150" viewBox="0 0 150 150" role="img" aria-label="年轮" style={{ marginBottom: '18px', display: 'block' }}>
+          <circle cx="75" cy="75" r="75" fill="#E9A050" />
+          <g fill="none" stroke="rgba(255, 240, 218, 0.92)" strokeWidth="2.4">
+            <circle cx="75" cy="75" r="57" />
+            <circle cx="75" cy="75" r="47" />
+            <circle cx="75" cy="75" r="37" />
+            <circle cx="75" cy="75" r="27" />
+            <circle cx="75" cy="75" r="16" />
           </g>
+          <circle cx="75" cy="75" r="7" fill="rgba(255, 240, 218, 0.95)" />
         </svg>
-        <h2 style={{ margin: 0, color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '34px', lineHeight: 1.08, fontWeight: 600 }}>年轮</h2>
-        <p style={{ margin: '8px 0 0', color: 'var(--nl-muted)', fontSize: '14px', fontWeight: 500 }}>版本 {appVersion} · 构建 {appBuildNumberValue || 128}</p>
+        <h2 style={{ margin: 0, color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '40px', lineHeight: 1.08, fontWeight: 600 }}>年轮</h2>
+        <p style={{ margin: '8px 0 0', color: '#7a5a44', fontSize: '17px', fontWeight: 500 }}>版本 {appVersion} · 构建 {appBuildNumberValue || 128}</p>
       </section>
 
       <div className="info-card">
