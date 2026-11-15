@@ -116,7 +116,6 @@ const createFamilyInviteMock = vi.mocked(webApi.createFamilyInvite);
 const getCurrentDeviceLocationMock = vi.mocked(getCurrentDeviceLocation);
 const getNativeNotificationPermissionStatusMock = vi.mocked(getNativeNotificationPermissionStatus);
 const requestNativeNotificationPermissionMock = vi.mocked(requestNativeNotificationPermission);
-const optionalInvitePlaceholder = '邀请码';
 
 const installMediaMetadataMocks = ({
   imageWidth = 1200,
@@ -306,7 +305,8 @@ describe('App Shell', () => {
     refreshMock.mockReturnValue(new Promise(() => undefined));
     render(<App />);
     expect(screen.getByLabelText('正在进入年轮')).toBeDefined();
-    expect(screen.getByText('家庭影像档案')).toBeDefined();
+    expect(screen.getByText('把每一天，都留给以后')).toBeDefined();
+    expect(screen.getByText('正在准备你的档案')).toBeDefined();
   });
 
   it('offers a login exit when bootstrap takes too long', async () => {
@@ -325,13 +325,14 @@ describe('App Shell', () => {
     vi.useRealTimers();
     fireEvent.click(screen.getByRole('button', { name: '回到登录' }));
 
-    expect(await screen.findByRole('heading', { name: '登录注册' })).toBeDefined();
+    expect(await screen.findByText('验证码登录')).toBeDefined();
+    expect(await screen.findByLabelText('手机号')).toBeDefined();
   });
 
   it('redirects to login if unauthenticated after bootstrap', async () => {
     refreshMock.mockRejectedValue(new Error('unauthorized'));
     render(<App />);
-    expect(await screen.findByText('登录注册')).toBeDefined();
+    expect(await screen.findByText('验证码登录')).toBeDefined();
     expect(screen.queryByText('使用账号密码进入年轮。')).toBeNull();
     expect(screen.queryByText('一家人的成长年轮，慢慢沉淀成档案。')).toBeNull();
   });
@@ -342,43 +343,58 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    expect(await screen.findByRole('button', { name: '开始使用' })).toBeDefined();
-    expect(screen.getByAltText('年轮成长时间线介绍海报').getAttribute('src')).toBe('/posters/welcome-growth-timeline.png');
-    expect(screen.getByAltText('年轮影像归档介绍海报').getAttribute('src')).toBe('/posters/welcome-media-archive.png');
-    expect(screen.getByAltText('年轮家庭协作介绍海报').getAttribute('src')).toBe('/posters/welcome-family-notice.png');
+    expect(await screen.findByRole('button', { name: '开始记录' })).toBeDefined();
+    expect((screen.getByRole('img', { name: '夕阳草地上的 welcome 海报' }) as HTMLImageElement).getAttribute('src')).toBe('/photos/welcome-hero.jpg');
+    expect(screen.getByRole('tablist', { name: '欢迎页海报' })).toBeDefined();
+    expect(screen.getByRole('tab', { name: '年轮成长时间线介绍海报' })).toBeDefined();
+    expect(screen.getByRole('tab', { name: '年轮影像归档介绍海报' })).toBeDefined();
+    expect(screen.getByRole('tab', { name: '年轮家庭协作介绍海报' })).toBeDefined();
     expect(window.location.pathname).toBe('/welcome');
 
-    fireEvent.click(screen.getByRole('button', { name: '开始使用' }));
+    const startButton = screen.getByRole('button', { name: '开始记录' }) as HTMLButtonElement;
+    expect(startButton.disabled).toBe(true);
+
+    fireEvent.click(screen.getByLabelText('同意用户协议、隐私政策和儿童个人信息保护规则'));
+    expect(startButton.disabled).toBe(false);
+    fireEvent.click(startButton);
 
     await waitFor(() => expect(window.location.pathname).toBe('/auth/login'));
-    expect(await screen.findByLabelText('账号')).toBeDefined();
+    expect(await screen.findByLabelText('手机号')).toBeDefined();
   });
 
   it('renders auth submit button with a clear disabled style', async () => {
     refreshMock.mockRejectedValue(new Error('unauthorized'));
     render(<App />);
 
-    const submitButton = (await screen.findByRole('button', { name: '进入年轮' })) as HTMLButtonElement;
+    const submitButton = (await screen.findByRole('button', { name: '登录 / 注册' })) as HTMLButtonElement;
 
     expect(submitButton.disabled).toBe(true);
-    expect(submitButton.style.cursor).toBe('not-allowed');
-    expect(submitButton.style.boxShadow).toBe('none');
-    expect(submitButton.style.opacity).toBe('1');
+
+    fireEvent.change(screen.getByLabelText('手机号'), { target: { value: '13812345678' } });
+    fireEvent.change(screen.getByLabelText('验证码'), { target: { value: '1234' } });
+    fireEvent.click(screen.getByRole('checkbox'));
+
+    await waitFor(() => expect(submitButton.disabled).toBe(false));
   });
 
-  it('sets mobile-friendly login keyboard hints and exposes a back action', async () => {
+  it('sets mobile-friendly login keyboard hints for sms login', async () => {
     refreshMock.mockRejectedValue(new Error('unauthorized'));
     render(<App />);
 
-    const accountInput = await screen.findByLabelText('账号');
-    expect(accountInput.getAttribute('inputmode')).toBe('email');
-    expect(accountInput.getAttribute('enterkeyhint')).toBe('next');
-    expect(accountInput.getAttribute('autocomplete')).toBe('username');
-    expect(screen.getByLabelText('密码').getAttribute('enterkeyhint')).toBe('done');
-    expect(screen.getByRole('button', { name: '返回' })).toBeDefined();
+    const phoneInput = await screen.findByLabelText('手机号');
+    expect(phoneInput.getAttribute('inputmode')).toBe('tel');
+    expect(phoneInput.getAttribute('autocomplete')).toBe('tel');
+    const codeInput = screen.getByLabelText('验证码');
+    expect(codeInput.getAttribute('inputmode')).toBe('numeric');
+    expect(codeInput.getAttribute('autocomplete')).toBe('one-time-code');
+    expect(screen.getByText('验证码登录')).toBeDefined();
+    expect(screen.getByText('密码登录').getAttribute('title')).toBe('敬请期待');
+    expect(screen.getByRole('button', { name: '登录 / 注册' })).toBeDefined();
+    expect(screen.queryByRole('button', { name: '返回' })).toBeNull();
+    expect(screen.queryByText('未注册的手机号将自动创建账号')).toBeNull();
   });
 
-  it('logs in with password after agreement is accepted', async () => {
+  it('logs in with a sms code after agreement is accepted', async () => {
     refreshMock.mockRejectedValue(new Error('unauthorized'));
     loginMock.mockResolvedValue({
       access_token: 'token-login',
@@ -394,85 +410,48 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    fireEvent.change(await screen.findByPlaceholderText('账号'), { target: { value: 'parent_account' } });
-    fireEvent.change(screen.getByPlaceholderText('密码'), { target: { value: 'Parent123!' } });
+    fireEvent.change(await screen.findByLabelText('手机号'), { target: { value: '13812345678' } });
+    fireEvent.change(screen.getByLabelText('验证码'), { target: { value: '1234' } });
     fireEvent.click(screen.getByRole('checkbox'));
-    fireEvent.click(screen.getByRole('button', { name: '进入年轮' }));
+    fireEvent.click(screen.getByRole('button', { name: '登录 / 注册' }));
 
     await waitFor(() => {
       expect(loginMock).toHaveBeenCalledWith({
-        login_type: 'password',
-        credential: 'parent_account',
-        password: 'Parent123!',
+        login_type: 'sms',
+        credential: '13812345678',
+        code: '1234',
+        invite_code: undefined,
       });
     });
   });
 
-  it('preserves login form input after viewing legal content', async () => {
+  it('blocks sms code requests for invalid phone numbers before touching the api', async () => {
     refreshMock.mockRejectedValue(new Error('unauthorized'));
 
     render(<App />);
 
-    fireEvent.change(await screen.findByPlaceholderText('账号'), { target: { value: 'parent_account' } });
-    fireEvent.change(screen.getByPlaceholderText('密码'), { target: { value: 'Parent123!' } });
-    fireEvent.click(screen.getByRole('checkbox'));
-    fireEvent.click(screen.getByRole('button', { name: '协议与隐私' }));
+    fireEvent.change(await screen.findByLabelText('手机号'), { target: { value: '13812' } });
+    fireEvent.click(screen.getByRole('button', { name: '获取验证码' }));
 
-    expect(await screen.findByText('关于与协议')).toBeDefined();
-    fireEvent.click(screen.getByLabelText('返回'));
-
-    expect(await screen.findByText('登录注册')).toBeDefined();
-    expect((screen.getByPlaceholderText('账号') as HTMLInputElement).value).toBe('parent_account');
-    expect((screen.getByPlaceholderText('密码') as HTMLInputElement).value).toBe('Parent123!');
-    expect((screen.getByRole('checkbox') as HTMLInputElement).checked).toBe(true);
+    expect(await screen.findByText('请输入 11 位手机号')).toBeDefined();
+    expect(webApi.sendCode).not.toHaveBeenCalled();
+    expect(loginMock).not.toHaveBeenCalled();
   });
 
-  it('preserves registration form input after viewing legal content', async () => {
+  it('opens the legal agreement from the login page and returns to sms login', async () => {
     refreshMock.mockRejectedValue(new Error('unauthorized'));
 
     render(<App />);
 
-    fireEvent.click(await screen.findByRole('button', { name: '注册' }));
-    fireEvent.change(screen.getByPlaceholderText('账号'), { target: { value: 'new_parent' } });
-    fireEvent.change(screen.getByPlaceholderText('密码'), { target: { value: 'Parent123!' } });
-    fireEvent.change(screen.getByPlaceholderText('确认密码'), { target: { value: 'Parent123!' } });
-    fireEvent.change(screen.getByPlaceholderText(optionalInvitePlaceholder), { target: { value: 'NL-REG001-REG002' } });
-    fireEvent.click(screen.getByRole('checkbox'));
-    fireEvent.click(screen.getByRole('button', { name: '协议与隐私' }));
+    fireEvent.click(await screen.findByText('《用户协议》'));
 
     expect(await screen.findByText('关于与协议')).toBeDefined();
+    expect(screen.getByText(/成长珍藏：年轮为每个家庭提供孩子的成长档案/)).toBeDefined();
+    expect(screen.getByText('年轮 · 儿童信息保护优先')).toBeDefined();
     fireEvent.click(screen.getByLabelText('返回'));
 
-    expect(await screen.findByText('登录注册')).toBeDefined();
-    expect((screen.getByPlaceholderText('账号') as HTMLInputElement).value).toBe('new_parent');
-    expect((screen.getByPlaceholderText('密码') as HTMLInputElement).value).toBe('Parent123!');
-    expect((screen.getByPlaceholderText('确认密码') as HTMLInputElement).value).toBe('Parent123!');
-    expect((screen.getByPlaceholderText(optionalInvitePlaceholder) as HTMLInputElement).value).toBe('NL-REG001-REG002');
-    expect((screen.getByRole('checkbox') as HTMLInputElement).checked).toBe(true);
-  });
-
-  it('restores non-sensitive auth draft fields but removes passwords persisted by older versions', async () => {
-    refreshMock.mockRejectedValue(new Error('unauthorized'));
-    window.sessionStorage.setItem(
-      'nianlun.auth.loginFormDraft.v1',
-      JSON.stringify({
-        mode: 'login',
-        form: {
-          credential: 'cached_parent',
-          password: 'Parent123!',
-          password_confirm: '',
-          invite_code: '',
-        },
-        acceptedAgreement: true,
-      }),
-    );
-
-    render(<App />);
-
-    expect((await screen.findByPlaceholderText('账号') as HTMLInputElement).value).toBe('cached_parent');
-    expect((screen.getByPlaceholderText('密码') as HTMLInputElement).value).toBe('');
-    expect((screen.getByRole('checkbox') as HTMLInputElement).checked).toBe(true);
-    expect(window.sessionStorage.getItem('nianlun.auth.loginFormDraft.v1')).not.toContain('Parent123!');
+    expect(await screen.findByText('验证码登录')).toBeDefined();
+    expect(screen.getByLabelText('手机号')).toBeDefined();
   });
 
   it('uses the app session hint to refresh on the login route after restart', async () => {
@@ -521,106 +500,6 @@ describe('App Shell', () => {
     expect(await screen.findByLabelText('成长时刻流')).toBeDefined();
   });
 
-  it('registers with password without invite code after agreement is accepted', async () => {
-    refreshMock.mockRejectedValue(new Error('unauthorized'));
-    registerMock.mockResolvedValue({
-      access_token: 'token-register',
-      expires_in: 7200,
-      user: {
-        user_no: 'u_register',
-        nickname: '注册用户',
-        avatar_url: null,
-        membership_type: 'free',
-      },
-      need_create_child: true,
-    });
-
-    render(<App />);
-
-    fireEvent.click(await screen.findByRole('button', { name: '注册' }));
-    fireEvent.change(screen.getByPlaceholderText('账号'), { target: { value: 'standalone_parent' } });
-    fireEvent.change(screen.getByPlaceholderText('密码'), { target: { value: 'Parent123!' } });
-    fireEvent.change(screen.getByPlaceholderText('确认密码'), { target: { value: 'Parent123!' } });
-    fireEvent.click(screen.getByRole('checkbox'));
-    fireEvent.click(screen.getByRole('button', { name: '注册并进入' }));
-
-    await waitFor(() => {
-      expect(registerMock).toHaveBeenCalledWith({
-        credential: 'standalone_parent',
-        password: 'Parent123!',
-        password_confirm: 'Parent123!',
-      });
-    });
-  });
-
-  it('registers with password and optional invite code after agreement is accepted', async () => {
-    refreshMock.mockRejectedValue(new Error('unauthorized'));
-    registerMock.mockResolvedValue({
-      access_token: 'token-register',
-      expires_in: 7200,
-      user: {
-        user_no: 'u_register',
-        nickname: '注册用户',
-        avatar_url: null,
-        membership_type: 'free',
-      },
-      need_create_child: true,
-    });
-
-    render(<App />);
-
-    fireEvent.click(await screen.findByRole('button', { name: '注册' }));
-    fireEvent.change(screen.getByPlaceholderText('账号'), { target: { value: 'new_parent' } });
-    fireEvent.change(screen.getByPlaceholderText('密码'), { target: { value: 'Parent123!' } });
-    fireEvent.change(screen.getByPlaceholderText('确认密码'), { target: { value: 'Parent123!' } });
-    fireEvent.change(screen.getByPlaceholderText(optionalInvitePlaceholder), { target: { value: 'join-family-001' } });
-    fireEvent.click(screen.getByRole('checkbox'));
-    fireEvent.click(screen.getByRole('button', { name: '注册并进入' }));
-
-    await waitFor(() => {
-      expect(registerMock).toHaveBeenCalledWith({
-        credential: 'new_parent',
-        password: 'Parent123!',
-        password_confirm: 'Parent123!',
-        invite_code: 'join-family-001',
-      });
-    });
-  });
-
-  it('shows local Chinese validation before sending invalid registration payload', async () => {
-    refreshMock.mockRejectedValue(new Error('unauthorized'));
-
-    render(<App />);
-
-    fireEvent.click(await screen.findByRole('button', { name: '注册' }));
-    fireEvent.change(screen.getByPlaceholderText('账号'), { target: { value: 'new_parent' } });
-    fireEvent.change(screen.getByPlaceholderText('密码'), { target: { value: '123456' } });
-    fireEvent.change(screen.getByPlaceholderText('确认密码'), { target: { value: '123456' } });
-    fireEvent.change(screen.getByPlaceholderText(optionalInvitePlaceholder), { target: { value: 'NL-ABC123-DEF456' } });
-    fireEvent.click(screen.getByRole('checkbox'));
-    fireEvent.click(screen.getByRole('button', { name: '注册并进入' }));
-
-    expect(await screen.findByText('密码需为 8 到 12 位')).toBeDefined();
-    expect(registerMock).not.toHaveBeenCalled();
-  });
-
-  it('shows a usable registration message when the backend returns generic validation text', async () => {
-    refreshMock.mockRejectedValue(new Error('unauthorized'));
-    registerMock.mockRejectedValue(new Error('参数校验失败'));
-
-    render(<App />);
-
-    fireEvent.click(await screen.findByRole('button', { name: '注册' }));
-    fireEvent.change(screen.getByPlaceholderText('账号'), { target: { value: 'new_parent' } });
-    fireEvent.change(screen.getByPlaceholderText('密码'), { target: { value: 'Parent123!' } });
-    fireEvent.change(screen.getByPlaceholderText('确认密码'), { target: { value: 'Parent123!' } });
-    fireEvent.change(screen.getByPlaceholderText(optionalInvitePlaceholder), { target: { value: 'NL-REG001-REG002' } });
-    fireEvent.click(screen.getByRole('checkbox'));
-    fireEvent.click(screen.getByRole('button', { name: '注册并进入' }));
-
-    expect(await screen.findByText('请检查账号、密码和确认密码是否完整')).toBeDefined();
-  });
-
   it('creates a child during onboarding', async () => {
     window.history.pushState({}, '', '/onboarding/child');
     refreshMock.mockResolvedValue({
@@ -652,16 +531,16 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    fireEvent.change(await screen.findByLabelText('宝宝小名'), { target: { value: '小满' } });
+    fireEvent.change(await screen.findByLabelText('宝贝的名字'), { target: { value: '小满' } });
     fireEvent.change(screen.getByLabelText('出生日期'), { target: { value: '2025-01-01' } });
-    fireEvent.click(screen.getByRole('button', { name: '完成创建' }));
+    fireEvent.click(screen.getByRole('button', { name: '继续' }));
 
     await waitFor(() => {
       expect(createChildMock).toHaveBeenCalledWith({
         name: '小满',
         avatar_url: '',
         birthday: '2025-01-01',
-        gender: 'male',
+        gender: 'female',
         birth_place: '',
         remark: '',
       });
@@ -888,8 +767,8 @@ describe('App Shell', () => {
       expect(srcs).toContain('https://cdn.example.test/recent.jpg');
       expect(srcs).toContain('https://cdn.example.test/older.jpg');
     });
-    expect(await screen.findByText('最近照片')).toBeDefined();
-    expect(screen.getByText(/已收录 2 条记录/)).toBeDefined();
+    expect(screen.getAllByText('最近照片').length).toBeGreaterThan(0);
+    expect(screen.queryByText(/已收录/)).toBeNull();
     expect(stream.querySelector('[data-photo-drawer="true"]')).toBeNull();
   });
 
@@ -920,8 +799,9 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    expect(await screen.findByText('唯一照片')).toBeDefined();
-    expect(screen.getByRole('region', { name: /5月28日 .*的记录/ })).toBeDefined();
+    expect((await screen.findAllByText('唯一照片')).length).toBeGreaterThan(0);
+    expect(screen.getByRole('region', { name: '五月二十八日 周四的记录' })).toBeDefined();
+    expect(screen.getByText('1 条')).toBeDefined();
     expect(screen.queryByText('01 / 01')).toBeNull();
   });
 
@@ -1034,8 +914,10 @@ describe('App Shell', () => {
     render(<App />);
 
     expect(await screen.findByLabelText('成长时刻流')).toBeDefined();
-    expect(screen.getByText(/18 条记录/)).toBeDefined();
-    expect(screen.queryByText(/2 条记录/)).toBeNull();
+    // 底部「已收录 N 条记录」统计条已移除，仅保留每日分组计数
+    expect(screen.queryByText(/已收录/)).toBeNull();
+    expect(screen.queryByText(/18 条记录/)).toBeNull();
+    expect(screen.getAllByText('1 条')).toHaveLength(2);
   });
 
   it('opens a record detail from the moment stream', async () => {
@@ -1112,21 +994,16 @@ describe('App Shell', () => {
     render(<App />);
 
     expect(await screen.findByText('普通文字记录')).toBeDefined();
-    fireEvent.click(screen.getByRole('button', { name: '筛选记录' }));
-    fireEvent.click(screen.getByRole('button', { name: '里程碑' }));
-
-    expect(await screen.findByText('没有符合「里程碑」的记录。')).toBeDefined();
+    expect(screen.getByRole('tab', { name: '2026' }).getAttribute('aria-selected')).toBe('true');
+    expect(screen.getByLabelText('月份')).toBeDefined();
+    expect(screen.getByText('今年 1 条 · 里程碑 0 个')).toBeDefined();
     expect(screen.queryByText('暂无记录。')).toBeNull();
-
-    fireEvent.click(screen.getByRole('button', { name: '清除筛选' }));
-    expect(await screen.findByText('普通文字记录')).toBeDefined();
   });
 
-  it('keeps an empty timeline year selected instead of snapping back', async () => {
+  it('defaults the timeline to the latest year with records', async () => {
     window.history.pushState({}, '', '/timeline');
     mockAuthenticatedSession();
     const currentYear = new Date().getFullYear();
-    const emptyYear = String(currentYear - 1);
     listRecordsMock.mockResolvedValue({
       list: [
         {
@@ -1153,9 +1030,10 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    fireEvent.click(await screen.findByRole('button', { name: new RegExp(`${emptyYear}年`) }));
-
-    expect(await screen.findByText(`${emptyYear}年还没有记录。`)).toBeDefined();
+    const currentYearTab = await screen.findByRole('tab', { name: String(currentYear) });
+    expect(currentYearTab.getAttribute('aria-selected')).toBe('true');
+    expect(await screen.findByText('今年记录')).toBeDefined();
+    expect(screen.getByText('今年 1 条 · 里程碑 0 个')).toBeDefined();
   });
 
   it('opens height recording route without duplicating the timeline label', async () => {
@@ -1198,7 +1076,7 @@ describe('App Shell', () => {
     fireEvent.change(screen.getByLabelText('身高 cm'), { target: { value: '92.5' } });
     fireEvent.change(screen.getByLabelText('体重 kg'), { target: { value: '12.8' } });
     fireEvent.change(screen.getByLabelText('身高记录备注'), { target: { value: '早晨测量' } });
-    fireEvent.click(screen.getByRole('button', { name: '发布' }));
+    fireEvent.click(screen.getByRole('button', { name: '保存这条记录' }));
 
     await waitFor(() => {
       expect(createRecordMock).toHaveBeenCalledWith(expect.objectContaining({
@@ -1242,13 +1120,13 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    fireEvent.change(await screen.findByPlaceholderText('标题'), {
+    fireEvent.change(await screen.findByPlaceholderText('给这一刻起个名字'), {
       target: { value: '今天会自己收玩具' },
     });
-    fireEvent.change(screen.getByPlaceholderText('正文'), {
+    fireEvent.change(screen.getByPlaceholderText('写几句话，或者按住上面的麦克风说'), {
       target: { value: '小满睡前把积木都放回盒子里，还认真说了晚安。' },
     });
-    fireEvent.click(screen.getByRole('button', { name: '发布' }));
+    fireEvent.click(screen.getByRole('button', { name: '保存这条记录' }));
 
     await waitFor(() => {
       expect(createRecordMock).toHaveBeenCalledWith(expect.objectContaining({
@@ -1268,7 +1146,7 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    expect(await screen.findByPlaceholderText('标题')).toBeDefined();
+    expect(await screen.findByPlaceholderText('给这一刻起个名字')).toBeDefined();
     expect(screen.queryByRole('button', { name: '拍照记录' })).toBeNull();
     expect(screen.queryByRole('button', { name: '从相册添加' })).toBeNull();
     expect(screen.queryByRole('button', { name: '拍摄视频' })).toBeNull();
@@ -1359,7 +1237,7 @@ describe('App Shell', () => {
         width: 1024,
         height: 768,
       }));
-      fireEvent.click(screen.getByRole('button', { name: '保存' }));
+      fireEvent.click(screen.getByRole('button', { name: '保存修改' }));
 
       await waitFor(() => {
         expect(webApi.updateRecord).toHaveBeenCalledWith('r_text_edit', expect.objectContaining({
@@ -1578,7 +1456,7 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    fireEvent.click(await screen.findByRole('button', { name: '保存草稿' }));
+    fireEvent.click(await screen.findByRole('button', { name: '草稿' }));
 
     await waitFor(() => {
       expect(createRecordMock).toHaveBeenCalledWith(expect.objectContaining({
@@ -1596,10 +1474,10 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    fireEvent.change(await screen.findByPlaceholderText('标题'), {
+    fireEvent.change(await screen.findByPlaceholderText('给这一刻起个名字'), {
       target: { value: '还没保存的标题' },
     });
-    fireEvent.click(screen.getByRole('button', { name: '取消' }));
+    fireEvent.click(screen.getByRole('button', { name: '返回' }));
 
     expect(confirmSpy).not.toHaveBeenCalled();
     expect(await screen.findByRole('dialog', { name: '离开记录编辑确认' })).toBeDefined();
@@ -1682,10 +1560,10 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    fireEvent.change(await screen.findByPlaceholderText('标题'), {
+    fireEvent.change(await screen.findByPlaceholderText('给这一刻起个名字'), {
       target: { value: '今天去新的营地' },
     });
-    fireEvent.change(screen.getByPlaceholderText('正文'), {
+    fireEvent.change(screen.getByPlaceholderText('写几句话，或者按住上面的麦克风说'), {
       target: { value: '我们在营地玩了很久。' },
     });
     fireEvent.change(screen.getByLabelText('搜索地点'), {
@@ -1696,7 +1574,7 @@ describe('App Shell', () => {
     fireEvent.click(await screen.findByRole('button', { name: '使用手动地点：迪士尼营地' }));
     expect(screen.getByText('已使用手动填写的地点「迪士尼营地」，地图恢复后可再搜索更精确地址。')).toBeDefined();
 
-    fireEvent.click(screen.getByRole('button', { name: '发布' }));
+    fireEvent.click(screen.getByRole('button', { name: '保存这条记录' }));
 
     await waitFor(() => {
       expect(createRecordMock).toHaveBeenCalledWith(expect.objectContaining({
@@ -1744,9 +1622,10 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    expect(await screen.findByRole('button', { name: '拍照记录' })).toBeDefined();
+    expect(await screen.findByRole('button', { name: '添加照片' })).toBeDefined();
+    expect(screen.getByRole('button', { name: '按住说话' })).toBeDefined();
     expect(screen.queryByRole('button', { name: '拍摄视频' })).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: '更多媒体' }));
+    fireEvent.click(screen.getByRole('button', { name: '更多方式（视频 / 语音上传）' }));
     expect(screen.getByRole('button', { name: '拍摄视频' })).toBeDefined();
     expect(screen.queryByLabelText('媒体预览')).toBeNull();
     expect(screen.queryByTestId('record-media-preview-empty')).toBeNull();
@@ -1758,7 +1637,7 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    expect(await screen.findByPlaceholderText('标题')).toBeDefined();
+    expect(await screen.findByPlaceholderText('给这一刻起个名字')).toBeDefined();
     expect(screen.queryByRole('button', { name: '整理建议' })).toBeNull();
     expect(screen.queryByText('整理建议仅作参考，失败不影响记录。')).toBeNull();
     expect(screen.queryByRole('button', { name: /可见范围/ })).toBeNull();
@@ -1772,10 +1651,10 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    fireEvent.change(await screen.findByPlaceholderText('标题'), {
+    fireEvent.change(await screen.findByPlaceholderText('给这一刻起个名字'), {
       target: { value: '今天会自己收玩具' },
     });
-    fireEvent.change(screen.getByPlaceholderText('正文'), {
+    fireEvent.change(screen.getByPlaceholderText('写几句话，或者按住上面的麦克风说'), {
       target: { value: '今天第一次主动把玩具放回盒子里。' },
     });
     fireEvent.click(screen.getByRole('button', { name: '整理建议' }));
@@ -2215,15 +2094,17 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    expect(await screen.findByRole('heading', { name: '个人资料' })).toBeDefined();
-    fireEvent.change(screen.getByLabelText('手机号'), { target: { value: '13912345678' } });
-    fireEvent.click(screen.getByRole('button', { name: '保存资料' }));
+    expect(await screen.findByRole('heading', { name: '账号' })).toBeDefined();
+    expect(screen.getByText('138 **** 0000')).toBeDefined();
+
+    fireEvent.click(screen.getByRole('button', { name: '换绑手机号' }));
+    fireEvent.change(screen.getByLabelText('新手机号'), { target: { value: '13912345678' } });
+    fireEvent.click(screen.getByRole('button', { name: '保存修改' }));
 
     await waitFor(() => {
       expect(updateMeMock).toHaveBeenCalledWith({ nickname: '测试用户', mobile: '13912345678' });
     });
     expect(await screen.findByText('资料保存成功')).toBeDefined();
-    expect(screen.getByText('当前手机号：139****5678')).toBeDefined();
   });
 
   it('keeps uploaded media preview available after publishing before the server has an access URL', async () => {
@@ -2308,9 +2189,9 @@ describe('App Shell', () => {
         height: 1200,
       }));
 
-      fireEvent.change(screen.getByPlaceholderText('标题'), { target: { value: '发布后预览' } });
-      fireEvent.change(screen.getByPlaceholderText('正文'), { target: { value: '发布后马上应该看到刚上传的照片。' } });
-      fireEvent.click(screen.getByRole('button', { name: '发布' }));
+      fireEvent.change(screen.getByPlaceholderText('给这一刻起个名字'), { target: { value: '发布后预览' } });
+      fireEvent.change(screen.getByPlaceholderText('写几句话，或者按住上面的麦克风说'), { target: { value: '发布后马上应该看到刚上传的照片。' } });
+      fireEvent.click(screen.getByRole('button', { name: '保存这条记录' }));
 
       const primaryPreview = await screen.findByTestId('record-primary-media-preview');
       expect(primaryPreview.querySelector('img')?.getAttribute('src')).toMatch(/^(data:image\/png;base64,|blob:record-photo-preview$)/);
@@ -2447,10 +2328,9 @@ describe('App Shell', () => {
         duration_seconds: 14,
       }));
 
-      fireEvent.change(screen.getByPlaceholderText('标题'), { target: { value: '发布后视频预览' } });
-      fireEvent.change(screen.getByPlaceholderText('正文'), { target: { value: '发布后马上应该看到刚上传的视频。' } });
-      const publishButtons = screen.getAllByRole('button', { name: /发布|完成发布/ });
-      fireEvent.click(publishButtons[publishButtons.length - 1]);
+      fireEvent.change(screen.getByPlaceholderText('给这一刻起个名字'), { target: { value: '发布后视频预览' } });
+      fireEvent.change(screen.getByPlaceholderText('写几句话，或者按住上面的麦克风说'), { target: { value: '发布后马上应该看到刚上传的视频。' } });
+      fireEvent.click(screen.getByRole('button', { name: '保存这条记录' }));
 
       const primaryPreview = await screen.findByTestId('record-primary-media-preview');
       expect(primaryPreview.querySelector('video')?.getAttribute('src')).toBe('blob:record-video-preview');
@@ -2623,14 +2503,18 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    fireEvent.click(await screen.findByRole('button', { name: '删除记录' }));
+    expect(await screen.findByText('准备删除的记录')).toBeDefined();
+
+    fireEvent.click(screen.getByRole('button', { name: '更多操作' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: '删除记录' }));
     expect(deleteRecordMock).not.toHaveBeenCalled();
     expect(screen.getByRole('dialog', { name: '删除记录确认' })).toBeDefined();
 
     fireEvent.click(screen.getByRole('button', { name: '取消' }));
     expect(screen.queryByRole('dialog', { name: '删除记录确认' })).toBeNull();
 
-    fireEvent.click(screen.getByRole('button', { name: '删除记录' }));
+    fireEvent.click(screen.getByRole('button', { name: '更多操作' }));
+    fireEvent.click(screen.getByRole('menuitem', { name: '删除记录' }));
     fireEvent.click(screen.getByRole('button', { name: '确认删除' }));
 
     await waitFor(() => expect(deleteRecordMock).toHaveBeenCalledWith('r_delete'));
@@ -2734,34 +2618,37 @@ describe('App Shell', () => {
       has_more: false,
     });
 
-    render(<App />);
+    const { unmount } = render(<App />);
 
     expect(await screen.findByText('测试用户')).toBeDefined();
     expect(screen.queryByText('当前档案：小满')).toBeNull();
     expect(screen.queryByText('ID: 00000001')).toBeNull();
 
-    fireEvent.click(screen.getByRole('button', { name: /关于我们/ }));
+    unmount();
+    window.history.pushState({}, '', '/profile/about');
+    render(<App />);
 
-    expect(await screen.findByRole('heading', { name: 'nianlun' })).toBeDefined();
-    expect(screen.getByText(/版本 2\.0\.4（构建/)).toBeDefined();
+    expect(await screen.findByRole('heading', { name: '关于我们' })).toBeDefined();
+    expect(screen.getByRole('img', { name: '年轮' })).toBeDefined();
+    expect(screen.getByText(/版本 2\.0\.4 · 构建/)).toBeDefined();
+    expect(screen.getByRole('button', { name: /用户服务协议/ })).toBeDefined();
+    expect(screen.getByRole('button', { name: /隐私政策/ })).toBeDefined();
     expect(screen.queryByRole('button', { name: /应用反馈/ })).toBeNull();
     expect(screen.queryByRole('heading', { name: '孩子的人生档案馆' })).toBeNull();
     expect(screen.queryByText(/familyarchive\.com/)).toBeNull();
-
-    expect(screen.queryByRole('button', { name: /服务说明/ })).toBeNull();
-    expect(screen.queryByText(/官网信息将随服务发布节奏同步更新/)).toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: /联系我们/ }));
 
     expect(await screen.findByRole('heading', { name: '联系我们' })).toBeDefined();
     expect(screen.getByText('support@xmlga.top')).toBeDefined();
     expect(screen.getByText('privacy@xmlga.top')).toBeDefined();
+    expect(screen.getByText('请勿在邮件中发送孩子照片原件')).toBeDefined();
     expect(screen.queryByRole('heading', { name: '帮助与反馈' })).toBeNull();
     expect(screen.queryByText(/familyarchive\.com/)).toBeNull();
   });
 
-  it('opens family member management from the profile family management row', async () => {
-    window.history.pushState({}, '', '/profile');
+  it('opens family member management from the family page manage row', async () => {
+    window.history.pushState({}, '', '/family');
     mockAuthenticatedSession();
     listRecordsMock.mockResolvedValue({
       list: [],
@@ -2788,7 +2675,9 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    fireEvent.click(await screen.findByRole('button', { name: /家庭管理/ }));
+    expect(await screen.findByText('2025年1月出生')).toBeDefined();
+
+    fireEvent.click(screen.getByRole('link', { name: '管理' }));
 
     await waitFor(() => expect(window.location.pathname).toBe('/family/members'));
     expect(listFamilyMembersMock).toHaveBeenCalledWith('f_001');
@@ -2862,7 +2751,7 @@ describe('App Shell', () => {
     expect(await screen.findByText('测试用户 发布了「第一次独立骑车」')).toBeDefined();
   });
 
-  it('does not render default photos for text-only records in family activity', async () => {
+  it('does not render record photos on the family page', async () => {
     window.history.pushState({}, '', '/family');
     mockAuthenticatedSession();
     listFamilyMembersMock.mockResolvedValue({
@@ -2907,14 +2796,35 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    expect(await screen.findByText('家庭里的文字记录')).toBeDefined();
+    expect(await screen.findByText('测试用户')).toBeDefined();
+    expect(screen.getByText('2025年1月出生')).toBeDefined();
+    expect(screen.queryByText('家庭里的文字记录')).toBeNull();
     expect(screen.queryByAltText('家庭里的文字记录')).toBeNull();
     expect(screen.queryByAltText('家庭动态图片')).toBeNull();
   });
 
-  it('loads the creator avatar in family activity from media references', async () => {
-    window.history.pushState({}, '', '/family');
+  it('creates a viewer invite and explains role permissions on the members page', async () => {
+    window.history.pushState({}, '', '/family/invite');
     mockAuthenticatedSession();
+    createFamilyInviteMock.mockResolvedValue({
+      invite_no: 'inv_001',
+      family_no: 'f_001',
+      invite_token: 'AB12CD',
+      role: 'viewer',
+      invitee_mobile: null,
+      expires_at: '2026-12-31T00:00:00.000Z',
+    });
+
+    const { unmount } = render(<App />);
+
+    expect(await screen.findByRole('heading', { name: '邀请家人' })).toBeDefined();
+    expect(screen.getByText(/邀请家人一起记录/)).toBeDefined();
+    expect(screen.getByRole('button', { name: '微信邀请家人' })).toBeDefined();
+    expect(screen.getByRole('button', { name: '复制邀请码' })).toBeDefined();
+    await waitFor(() => expect(createFamilyInviteMock).toHaveBeenCalledWith('f_001', { role: 'viewer' }));
+
+    unmount();
+    window.history.pushState({}, '', '/family/members');
     listFamilyMembersMock.mockResolvedValue({
       family_no: 'f_001',
       list: [
@@ -2922,7 +2832,6 @@ describe('App Shell', () => {
           user_no: 'u_001',
           nickname: '测试用户',
           avatar_url: null,
-          avatar_media_no: null,
           mobile_masked: '138****0000',
           role: 'owner',
           status: 1,
@@ -2931,58 +2840,12 @@ describe('App Shell', () => {
         },
       ],
     });
-    listRecordsMock.mockResolvedValue({
-      list: [
-        {
-          record_no: 'r_avatar_family',
-          cover_media_no: null,
-          cover_media_type: null,
-          cover_url: null,
-          title: '带头像的记录',
-          summary: '家庭动态应该显示发布者头像。',
-          event_time: '2026-06-21T10:00:00.000Z',
-          location_text: null,
-          tags: [],
-          creator_user_no: 'u_001',
-          creator_name: '测试用户',
-          creator_avatar_url: null,
-          creator_avatar_media_no: 'm_creator_avatar',
-          is_milestone: false,
-          record_type: 'text',
-          status: 'published',
-        },
-      ],
-      page: 1,
-      page_size: 3,
-      total: 1,
-      has_more: false,
-    });
-    mediaAccessUrlMock.mockResolvedValue({
-      media_no: 'm_creator_avatar',
-      access_url: 'https://cdn.example.test/avatar.jpg',
-      thumbnail_url: 'https://cdn.example.test/avatar-thumb.jpg',
-      expires_in: 3600,
-    });
-
     render(<App />);
 
-    const activity = await screen.findByRole('button', { name: /查看家庭动态：带头像的记录/ });
-    const avatar = activity.querySelector('img[alt="我"]') as HTMLImageElement | null;
-    expect(avatar).not.toBeNull();
-    await waitFor(() => expect(avatar?.getAttribute('src')).toBe('https://cdn.example.test/avatar-thumb.jpg'));
-    expect(mediaAccessUrlMock).toHaveBeenCalledWith('m_creator_avatar');
-  });
-
-  it('explains invite role permissions before creating a family invite', async () => {
-    window.history.pushState({}, '', '/family/invite');
-    mockAuthenticatedSession();
-
-    render(<App />);
-
-    expect(await screen.findByRole('heading', { name: '邀请家庭成员' })).toBeDefined();
-    expect(screen.getByLabelText('邀请权限说明')).toBeDefined();
-    expect(screen.getByText('查看记录、补充记录、参与整理')).toBeDefined();
-    expect(screen.getByText('查看家庭可见内容，不修改档案')).toBeDefined();
+    expect(await screen.findByText('权限说明')).toBeDefined();
+    expect(screen.getByText(/查看记录、补充记录、参与整理/)).toBeDefined();
+    expect(screen.getByText(/查看家庭可见内容，不修改档案/)).toBeDefined();
+    expect(screen.getByRole('link', { name: /邀请家人加入/ })).toBeDefined();
   });
 
   it('does not fall back to another member when a family member URL is invalid', async () => {
@@ -3042,6 +2905,16 @@ describe('App Shell', () => {
       family_no: 'f_001',
       list: [
         {
+          user_no: 'u_001',
+          nickname: '测试用户',
+          avatar_url: null,
+          mobile_masked: '138****0000',
+          role: 'owner',
+          status: 1,
+          joined_at: '2026-04-21T00:00:00.000Z',
+          invited_by_user_no: null,
+        },
+        {
           user_no: 'u_member',
           nickname: '家庭成员',
           avatar_url: null,
@@ -3087,11 +2960,13 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    expect(await screen.findByRole('heading', { name: '家人资料' })).toBeDefined();
-    fireEvent.click(screen.getByRole('button', { name: '设为只读' }));
+    expect(await screen.findByRole('heading', { name: '成员信息' })).toBeDefined();
+    expect(screen.getByRole('radio', { name: /不能修改内容/ }).getAttribute('aria-checked')).toBe('false');
+    fireEvent.click(screen.getByRole('radio', { name: /不能修改内容/ }));
+    fireEvent.click(screen.getByRole('button', { name: '保存权限' }));
 
     await waitFor(() => expect(updateFamilyMemberRoleMock).toHaveBeenCalledWith('f_001', 'u_member', { role: 'viewer' }));
-    expect(await screen.findByText('家庭成员 权限从 可编辑成员 调整为 只读成员')).toBeDefined();
+    expect(await screen.findByText('家庭成员 权限从 可查看·可补充 调整为 可查看')).toBeDefined();
   });
 
   it('removes a family member after confirmation', async () => {
@@ -3100,6 +2975,16 @@ describe('App Shell', () => {
     listFamilyMembersMock.mockResolvedValue({
       family_no: 'f_001',
       list: [
+        {
+          user_no: 'u_001',
+          nickname: '测试用户',
+          avatar_url: null,
+          mobile_masked: '138****0000',
+          role: 'owner',
+          status: 1,
+          joined_at: '2026-04-21T00:00:00.000Z',
+          invited_by_user_no: null,
+        },
         {
           user_no: 'u_member',
           nickname: '家庭成员',
@@ -3144,17 +3029,18 @@ describe('App Shell', () => {
 
     render(<App />);
 
-    expect(await screen.findByRole('heading', { name: '家人资料' })).toBeDefined();
-    fireEvent.click(screen.getByRole('button', { name: /移出家庭/ }));
+    expect(await screen.findByRole('heading', { name: '成员信息' })).toBeDefined();
+    fireEvent.click(screen.getByRole('button', { name: /移除这位家人/ }));
 
-    expect(await screen.findByText('确认移出 家庭成员')).toBeDefined();
+    expect(await screen.findByText('确认把 家庭成员 移除出家庭？')).toBeDefined();
+    expect(screen.getByText(/移出后 TA 将看不到小满的记录/)).toBeDefined();
     fireEvent.click(screen.getByRole('button', { name: '确认移出' }));
 
     await waitFor(() => expect(deleteFamilyMemberMock).toHaveBeenCalledWith('f_001', 'u_member'));
     await waitFor(() => expect(window.location.pathname).toBe('/family/members'));
   });
 
-  it('clears search history without clearing the active keyword or results', async () => {
+  it('clears the active keyword with the cancel control and stays on the search page', async () => {
     window.history.pushState({}, '', '/search');
     window.localStorage.setItem('nianlun.search.history.v1', JSON.stringify(['公园', '星星']));
     mockAuthenticatedSession();
@@ -3188,31 +3074,36 @@ describe('App Shell', () => {
       render(<App />);
 
       const keywordInput = (await screen.findByLabelText('搜索关键词')) as HTMLInputElement;
+      expect(screen.getByText('最近搜索')).toBeDefined();
+      expect(screen.getByText(/最近 1 条/)).toBeDefined();
+
       fireEvent.change(keywordInput, { target: { value: '公园' } });
-      fireEvent.click(screen.getByRole('button', { name: '搜索' }));
+      expect(await screen.findByText(/找到 1 条/)).toBeDefined();
+      expect(screen.getByText((_, element) => element?.classList.contains('search-title') === true && element?.textContent === '公园里追光的小跑步')).toBeDefined();
 
-      expect(await screen.findByText('公园里追光的小跑步')).toBeDefined();
-      fireEvent.click(screen.getByRole('button', { name: '清空' }));
+      fireEvent.click(screen.getByRole('button', { name: '清空搜索词' }));
 
-      expect(keywordInput.value).toBe('公园');
-      expect(screen.getByText('公园里追光的小跑步')).toBeDefined();
-      expect(screen.queryByRole('button', { name: '星星' })).toBeNull();
+      await waitFor(() => expect(screen.queryByText(/找到 1 条/)).toBeNull());
+      expect(keywordInput.value).toBe('');
+      expect(screen.getByText('最近搜索')).toBeDefined();
+      expect(screen.getByText(/最近 1 条/)).toBeDefined();
+      expect(screen.getByRole('button', { name: '取消' })).toBeDefined();
     } finally {
       window.localStorage.removeItem('nianlun.search.history.v1');
     }
   });
 
-  it('hides paused management entries and exposes password change controls', async () => {
+  it('redirects the paused membership route home and exposes password change controls', async () => {
     window.history.pushState({}, '', '/profile/membership');
     mockAuthenticatedSession();
 
     const { unmount } = render(<App />);
 
     await waitFor(() => expect(window.location.pathname).toBe('/profile'));
-    expect(await screen.findByText('隐私设置')).toBeDefined();
+    expect(await screen.findByText('测试用户')).toBeDefined();
+    expect(screen.getByRole('button', { name: '账号与安全' })).toBeDefined();
+    expect(screen.getByRole('button', { name: '导出与备份' })).toBeDefined();
     expect(screen.queryByText('月报与纪念册')).toBeNull();
-    expect(screen.queryByText('导出与备份')).toBeNull();
-    expect(screen.queryByText('服务状态')).toBeNull();
     expect(screen.queryByRole('heading', { name: '服务状态' })).toBeNull();
     expect(screen.queryByRole('button', { name: '咨询会员权益' })).toBeNull();
     expect(screen.queryByRole('button', { name: '免费申领本年度纪念册' })).toBeNull();
@@ -3224,28 +3115,34 @@ describe('App Shell', () => {
     expect(screen.queryByText('第三方账号绑定')).toBeNull();
     expect(screen.queryByText('暂未接入')).toBeNull();
     expect(screen.queryByText('已绑定微信')).toBeNull();
-    expect(screen.getAllByRole('button', { name: '修改' }).length).toBeGreaterThanOrEqual(2);
-    expect(screen.queryByLabelText('当前密码')).toBeNull();
-    fireEvent.click(screen.getAllByRole('button', { name: '修改' })[1]);
     expect(screen.getByLabelText('当前密码')).toBeDefined();
     expect(screen.getByLabelText('新密码')).toBeDefined();
     expect(screen.getByLabelText('确认新密码')).toBeDefined();
+    expect(screen.getByText('新密码需为 8 到 12 位')).toBeDefined();
+    expect(screen.getByRole('button', { name: '保存新密码' })).toBeDefined();
   });
 
-  it('redirects paused management routes back to the profile page', async () => {
+  it('renders the re-enabled report and export pages at their routes', async () => {
     window.history.pushState({}, '', '/profile/reports');
     mockAuthenticatedSession();
+    listRecordsMock.mockResolvedValue({
+      list: [],
+      page: 1,
+      page_size: 100,
+      total: 0,
+      has_more: false,
+    });
     const { unmount } = render(<App />);
 
-    await waitFor(() => expect(window.location.pathname).toBe('/profile'));
-    expect(screen.queryByRole('heading', { name: '月报与纪念册' })).toBeNull();
+    expect(await screen.findByRole('heading', { name: '月报与纪念册' })).toBeDefined();
+    expect(window.location.pathname).toBe('/profile/reports');
 
     unmount();
     window.history.pushState({}, '', '/profile/export');
     render(<App />);
 
-    await waitFor(() => expect(window.location.pathname).toBe('/profile'));
-    expect(screen.queryByRole('heading', { name: '导出与备份' })).toBeNull();
+    expect(await screen.findByRole('heading', { name: '导出与备份' })).toBeDefined();
+    expect(window.location.pathname).toBe('/profile/export');
   });
 
   it('submits account password changes from the security page', async () => {
@@ -3255,11 +3152,10 @@ describe('App Shell', () => {
     render(<App />);
 
     expect(await screen.findByRole('heading', { name: '账号与安全' })).toBeDefined();
-    fireEvent.click(screen.getAllByRole('button', { name: '修改' })[1]);
     fireEvent.change(screen.getByLabelText('当前密码'), { target: { value: 'OldPass123' } });
     fireEvent.change(screen.getByLabelText('新密码'), { target: { value: 'NewPass123' } });
     fireEvent.change(screen.getByLabelText('确认新密码'), { target: { value: 'NewPass123' } });
-    fireEvent.click(screen.getByRole('button', { name: '修改密码' }));
+    fireEvent.click(screen.getByRole('button', { name: '保存新密码' }));
 
     await waitFor(() => {
       expect(changePasswordMock).toHaveBeenCalledWith({
@@ -3338,7 +3234,7 @@ describe('App Shell', () => {
     }
   });
 
-  it('validates account deletion password length before submitting', async () => {
+  it('gates account deletion behind valid confirmation inputs', async () => {
     window.history.pushState({}, '', '/profile/account-delete');
     mockAuthenticatedSession();
     deletionCheckMock.mockResolvedValue({
@@ -3357,42 +3253,62 @@ describe('App Shell', () => {
     render(<App />);
 
     expect(await screen.findByRole('heading', { name: '注销账号' })).toBeDefined();
-    fireEvent.change(screen.getByLabelText('登录密码'), { target: { value: '123' } });
-    fireEvent.change(screen.getByLabelText(/确认文案/), { target: { value: '确认注销' } });
-    fireEvent.click(screen.getByRole('button', { name: '确认注销账号' }));
+    expect(screen.getByText('拥有家庭')).toBeDefined();
+    expect(screen.getByText('加入家庭')).toBeDefined();
+    expect(screen.getByText('孩子档案')).toBeDefined();
+    expect(screen.getByText('有效记录')).toBeDefined();
+    expect(screen.getByText('两个输入都正确后，下方按钮才可点击')).toBeDefined();
 
-    expect(await screen.findByText('登录密码至少 8 位')).toBeDefined();
+    const confirmInput = screen.getByLabelText('输入「注销账号」确认');
+    const passwordInput = screen.getByLabelText('当前登录密码');
+    const submitButton = screen.getByRole('button', { name: '确认注销' }) as HTMLButtonElement;
+    expect(submitButton.disabled).toBe(true);
+
+    fireEvent.change(confirmInput, { target: { value: '确认注销' } });
+    fireEvent.change(passwordInput, { target: { value: 'short' } });
+    expect(submitButton.disabled).toBe(true);
+    expect(deleteMeMock).not.toHaveBeenCalled();
+
+    fireEvent.change(passwordInput, { target: { value: 'LongPass123' } });
+    await waitFor(() => expect(submitButton.disabled).toBe(false));
     expect(deleteMeMock).not.toHaveBeenCalled();
   });
 
   it('uses real home entry points instead of unavailable shortcuts', async () => {
     window.history.pushState({}, '', '/home');
     mockAuthenticatedSession();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
     listRecordsMock.mockResolvedValue({
-      list: [],
+      list: [
+        {
+          record_no: 'r_home_entry',
+          cover_media_no: null,
+          cover_media_type: null,
+          cover_url: null,
+          title: '昨天的记录',
+          summary: '昨天的一份记录。',
+          event_time: yesterday.toISOString(),
+          location_text: null,
+          tags: [],
+          creator_name: '测试用户',
+          is_milestone: false,
+          record_type: 'text',
+          status: 'published' as const,
+        },
+      ],
       page: 1,
       page_size: 5,
-      total: 0,
+      total: 1,
       has_more: false,
     });
 
     render(<App />);
 
-    expect(await screen.findByLabelText('成长时刻流')).toBeDefined();
-    expect(screen.getByRole('button', { name: '记录' })).toBeDefined();
+    expect(await screen.findByText('昨天的记录')).toBeDefined();
+    expect(screen.getByRole('button', { name: /记一笔/ })).toBeDefined();
     expect(screen.queryByRole('button', { name: /月报/ })).toBeNull();
     expect(screen.queryByRole('button', { name: /未来信箱/ })).toBeNull();
-  });
-
-  it('does not open the paused monthly report page', async () => {
-    window.history.pushState({}, '', '/profile/reports');
-    mockAuthenticatedSession();
-
-    render(<App />);
-
-    await waitFor(() => expect(window.location.pathname).toBe('/profile'));
-    expect(screen.queryByRole('heading', { name: '月报与纪念册' })).toBeNull();
-    expect(screen.queryByText('纪念册同步')).toBeNull();
   });
 
   it('opens family notifications and jumps to the target record detail', async () => {
@@ -3494,30 +3410,29 @@ describe('App Shell', () => {
 
     expect(await screen.findByRole('heading', { name: '消息' })).toBeDefined();
     await waitFor(() => expect(listNotificationsMock).toHaveBeenCalled());
-    expect(await screen.findByText('暂无消息')).toBeDefined();
-    expect(screen.queryByText(/同步失败/)).toBeNull();
+    expect(await screen.findByText('消息加载失败：Network error')).toBeDefined();
   });
 
-  it('opens app notification management and saves local notification preferences', async () => {
+  it('saves local notification preferences from the notification settings page', async () => {
     window.history.pushState({}, '', '/profile/notifications');
     mockAuthenticatedSession();
-    notificationUnreadCountMock.mockResolvedValue({ unread_count: 2 });
-    getNativeNotificationPermissionStatusMock.mockResolvedValue('denied');
-    requestNativeNotificationPermissionMock.mockResolvedValue('granted');
 
     render(<App />);
 
-    expect(await screen.findByRole('heading', { name: '通知管理' })).toBeDefined();
-    expect(await screen.findByText('系统通知未开启')).toBeDefined();
-    expect(screen.getByText(/2 条未读/)).toBeDefined();
+    expect(await screen.findByRole('heading', { name: '通知设置' })).toBeDefined();
+    expect(screen.queryByText('系统通知未开启')).toBeNull();
+    expect(screen.getByText('每天提醒我记录')).toBeDefined();
+    expect(screen.getByText('生日前 3 天提醒')).toBeDefined();
+    expect(screen.getByText('自动识别成长里程碑')).toBeDefined();
+    expect(screen.getByText('22:00–07:00')).toBeDefined();
+    expect(screen.getByText('关闭通知后仍会收到系统中的重要安全提醒')).toBeDefined();
 
-    fireEvent.click(screen.getByRole('button', { name: '开启通知' }));
-    await waitFor(() => expect(requestNativeNotificationPermissionMock).toHaveBeenCalledTimes(1));
-    expect(await screen.findByText('系统通知已开启，消息仍可在 App 内查看。')).toBeDefined();
-
-    fireEvent.click(screen.getByRole('switch', { name: '家庭动态通知' }));
-    const stored = JSON.parse(window.localStorage.getItem('xiaoman-web-local-settings') ?? '{}');
-    expect(stored.notificationFamilyEnabled).toBe(false);
+    const familyJoinToggle = screen.getByRole('button', { name: '有人加入家庭' });
+    expect(familyJoinToggle.getAttribute('aria-pressed')).toBe('false');
+    fireEvent.click(familyJoinToggle);
+    expect(familyJoinToggle.getAttribute('aria-pressed')).toBe('true');
+    const stored = JSON.parse(window.localStorage.getItem('nianlun:notification-prefs') ?? '{}');
+    expect(stored.familyJoin).toBe(true);
   });
 
   it('checks app updates from the about page and shows the in-app update action', async () => {
@@ -3527,7 +3442,8 @@ describe('App Shell', () => {
     render(<App />);
 
     expect(await screen.findByRole('heading', { name: '关于我们' })).toBeDefined();
-    await waitFor(() => expect(checkAppUpdateMock).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(checkAppUpdateMock).toHaveBeenCalled());
+    const callsBeforeManualCheck = checkAppUpdateMock.mock.calls.length;
     checkAppUpdateMock.mockResolvedValueOnce({
       platform: 'android',
       current_version: '2.0.2',
@@ -3546,6 +3462,7 @@ describe('App Shell', () => {
     fireEvent.click(screen.getByRole('button', { name: /检查更新/ }));
 
     expect(await screen.findByText('发现新版本')).toBeDefined();
+    expect(checkAppUpdateMock.mock.calls.length).toBeGreaterThan(callsBeforeManualCheck);
     expect(screen.getByText('最新版本 2.0.3（构建 5）')).toBeDefined();
     expect(screen.getByRole('button', { name: '下载并安装' })).toBeDefined();
   });

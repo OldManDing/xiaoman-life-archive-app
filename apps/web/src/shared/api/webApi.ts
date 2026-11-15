@@ -52,6 +52,7 @@ export interface CreateChildPayload {
   birthday: string;
   gender?: string;
   birth_place?: string;
+  birth_time?: string | null;
   remark?: string;
 }
 
@@ -61,6 +62,7 @@ export interface UpdateChildPayload {
   birthday?: string;
   gender?: string;
   birth_place?: string;
+  birth_time?: string | null;
   remark?: string;
 }
 

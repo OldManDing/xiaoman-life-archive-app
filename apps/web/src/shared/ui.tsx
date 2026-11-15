@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { createPortal } from 'react-dom';
 import { Children, forwardRef, isValidElement, useEffect, useId, useMemo, useRef, useState, type ChangeEvent, type CSSProperties, type ForwardedRef, type InputHTMLAttributes, type ReactElement, type ReactNode, type RefObject, type SelectHTMLAttributes } from 'react';
-import { CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Check, ChevronDown, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
 
 const pageShellStyle: CSSProperties = {
   display: 'grid',
@@ -118,7 +118,7 @@ export const AppTopBar = ({
 }) => {
   const backContent = (
     <>
-      {backVariant === 'text' ? null : <ChevronLeft size={16} strokeWidth={2.4} />}
+      {backVariant === 'text' ? null : <ArrowLeft size={24} strokeWidth={1.8} />}
       {backVariant === 'icon' ? null : <span>{backLabel}</span>}
     </>
   );
@@ -132,13 +132,13 @@ export const AppTopBar = ({
         top: 'calc(8px + env(safe-area-inset-top))',
         zIndex: 3,
         margin: '0 16px',
-        padding: '6px 10px',
+        padding: '4px 10px',
         borderRadius: 'var(--nl-radius-float, 26px)',
         background: background === 'var(--nl-glass-strong)' ? 'var(--nl-glass-surface)' : background,
         border: '1px solid var(--nl-glass-border)',
-        WebkitBackdropFilter: 'blur(18px) saturate(1.05)',
-        backdropFilter: 'blur(18px) saturate(1.05)',
-        boxShadow: '0 12px 30px rgba(146, 96, 52, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.7)',
+        WebkitBackdropFilter: 'blur(20px) saturate(1.05)',
+        backdropFilter: 'blur(20px) saturate(1.05)',
+        boxShadow: '0 8px 20px rgba(146, 96, 52, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.7)',
         ...style,
       }}
     >
@@ -170,7 +170,7 @@ export const AppTopBar = ({
               minWidth: 0,
               textAlign: 'center',
               fontFamily: 'var(--nl-font-display)',
-              fontSize: '20px',
+              fontSize: '19px',
               fontWeight: 600,
               letterSpacing: '0.02em',
               overflow: 'hidden',
@@ -214,7 +214,7 @@ export const PageShell = ({
     {!hideHeader ? (
       backTo || onBack ? (
         <>
-          <AppTopBar title={title} backTo={backTo} onBack={onBack} backLabel={backLabel} action={action} style={{ margin: '10px -6px 0' }} />
+          <AppTopBar title={title} backTo={backTo} onBack={onBack} backLabel={backLabel} action={action} style={{ margin: '10px 0 0' }} />
           {description ? <p style={{ margin: '-6px 4px 0', color: 'var(--nl-muted)', lineHeight: 1.6, fontSize: '13px' }}>{description}</p> : null}
         </>
       ) : (
@@ -232,8 +232,8 @@ export const Panel = ({ children, style, className }: { children: ReactNode; sty
   <div className={`app-panel${className ? ` ${className}` : ''}`} style={{ ...cardStyle, ...style }}>{children}</div>
 );
 
-export const Field = ({ label, children }: { label: string; children: ReactNode }) => (
-  <label style={{ display: 'grid', gap: '8px', fontSize: '13px', color: 'var(--nl-muted)', fontWeight: 500 }}>
+export const Field = ({ label, children, labelSize }: { label: string; children: ReactNode; labelSize?: number }) => (
+  <label style={{ display: 'grid', gap: '8px', fontSize: `${labelSize ?? 13}px`, color: labelSize ? 'var(--nl-ink)' : 'var(--nl-muted)', fontWeight: 500 }}>
     <span>{label}</span>
     {children}
   </label>
@@ -248,7 +248,7 @@ export const inputStyle: CSSProperties = {
   padding: '14px 16px',
   fontSize: '15px',
   color: 'var(--nl-ink)',
-  background: 'rgba(255, 255, 255, 0.52)',
+  background: 'rgba(255, 255, 255, 0.62)',
   outline: 'none',
   boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.66)',
   transition: 'border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease',
@@ -981,11 +981,12 @@ export const AppSegmentedControl = ({
   <div
     role="radiogroup"
     aria-label={ariaLabel}
+    className="app-segmented"
     style={{
       display: 'flex',
       gap: '6px',
       padding: '4px',
-      borderRadius: '8px',
+      borderRadius: '999px',
       background: 'var(--nl-control-bg)',
       border: '1px solid var(--nl-border-soft)',
       boxShadow: 'inset 0 1px 0 var(--nl-inset-highlight)',
@@ -1020,15 +1021,17 @@ export const AppSegmentedControl = ({
             flex: '1 1 0',
             minWidth: 0,
             minHeight: '44px',
-            border: 'none',
-             borderRadius: '11px',
-            background: selected ? 'var(--nl-primary-soft)' : 'transparent',
-            color: selected ? 'var(--nl-primary-2)' : 'var(--nl-muted)',
-            fontSize: options.length > 2 ? '12px' : '13px',
+            border: selected ? '1px solid rgba(221, 175, 120, 0.9)' : '1px solid transparent',
+            borderRadius: '20px',
+            background: selected
+              ? 'linear-gradient(180deg, rgba(246, 198, 140, 0.9) 0%, rgba(233, 160, 90, 0.78) 100%)'
+              : 'transparent',
+            color: selected ? '#8a4e14' : 'var(--nl-muted)',
+            fontSize: '15px',
             lineHeight: 1.25,
-            fontWeight: selected ? 660 : 540,
+            fontWeight: selected ? 600 : 500,
             cursor: 'pointer',
-            whiteSpace: options.length > 2 ? 'normal' : 'nowrap',
+            whiteSpace: 'nowrap',
             overflowWrap: 'anywhere',
             padding: '6px 4px',
             transition: 'background-color 0.16s ease, color 0.16s ease',
@@ -1045,16 +1048,17 @@ export const textareaStyle: CSSProperties = {
   ...inputStyle,
   minHeight: '120px',
   resize: 'vertical',
+  lineHeight: 1.75,
 };
 
 export const primaryButtonStyle: CSSProperties = {
-  minHeight: '48px',
+  minHeight: '52px',
   border: '1px solid transparent',
   borderRadius: '999px',
   padding: '0 22px',
   background: '#a9581b',
   color: '#ffffff',
-  fontSize: '15px',
+  fontSize: '17px',
   fontWeight: 600,
   letterSpacing: '0.01em',
   cursor: 'pointer',
@@ -1064,14 +1068,14 @@ export const primaryButtonStyle: CSSProperties = {
   gap: '8px',
   lineHeight: 1.2,
   textDecoration: 'none',
-  boxShadow: '0 10px 22px rgba(169, 88, 27, 0.20)',
+  boxShadow: '0 10px 22px rgba(146, 96, 52, 0.18)',
   transition: 'transform 0.14s ease, box-shadow 0.16s ease, background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, opacity 0.16s ease',
 };
 
 export const secondaryButtonStyle: CSSProperties = {
   ...primaryButtonStyle,
-  border: '1px solid rgba(120, 80, 40, 0.16)',
-  background: 'rgba(255, 250, 244, 0.82)',
+  border: '1px solid rgba(255, 255, 255, 0.4)',
+  background: 'rgba(255, 255, 255, 0.62)',
   color: 'var(--nl-ink)',
   boxShadow: 'none',
 };

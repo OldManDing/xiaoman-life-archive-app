@@ -221,6 +221,7 @@ export interface ChildRecord {
   birthday: string;
   gender: string;
   birth_place?: string | null;
+  birth_time?: string | null;
   remark?: string | null;
   current_age_display: string;
   status: string;

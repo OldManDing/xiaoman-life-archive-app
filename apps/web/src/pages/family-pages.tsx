@@ -1,7 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useRef } from 'react';
-import { Camera, Check, ChevronDown, ChevronRight, Clock, Copy, FileText, Image as ImageIcon, Link2, MessageCircle, MessageSquare, Mic, PlayCircle, Plus, QrCode, UserMinus, UserPlus } from 'lucide-react';
+import { Camera, Check, ChevronDown, ChevronRight, Clipboard, Clock, Copy, FileText, Image as ImageIcon, MessageCircle, MessageCircleMore, Mic, Pencil, PlayCircle, Plus, QrCode, UserMinus, UserPlus } from 'lucide-react';
 
 import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
@@ -9,7 +9,6 @@ import type { ChildRecord, FamilyInviteResponse, FamilyMemberItem, FamilyMemberO
 import { useAsyncData, useStoredMediaUrl } from '../shared/hooks';
 import { childStatusLabel, familyMemberStatusLabel, familyRoleLabel, genderLabel, recordTypeLabel } from '../shared/labels';
 import { createPersistableAvatarPreview, saveLocalMediaPreview, saveRuntimeMediaPreview, toStoredMediaReference } from '../shared/localMediaPreview';
-import { loadLocalSettings } from '../shared/localSettings';
 import { isSupportedImageFile, resolveFileMimeType, withResolvedFileMimeType } from '../shared/mediaFiles';
 import { normalizeUploadErrorMessage, readUploadMetadata } from '../shared/mediaMetadata';
 import { useCachedMediaUrl } from '../shared/useCachedMediaUrl';
@@ -193,10 +192,13 @@ const getFamilyMemberOperationText = (operation: FamilyMemberOperationItem) => {
 };
 
 const rolePermissionItems = [
-  { role: '管理员', detail: '管理成员、维护档案、调整权限' },
-  { role: '可编辑', detail: '查看记录、补充记录、参与整理' },
-  { role: '只读', detail: '查看家庭可见内容，不修改档案' },
+  { role: '可管理', detail: '添加成员、修改档案、调整权限' },
+  { role: '可查看·可补充', detail: '查看记录、补充记录、参与整理' },
+  { role: '可查看', detail: '查看家庭可见内容，不修改档案' },
 ];
+
+const memberRoleDescriptor = (role: string) =>
+  role === 'owner' ? '家庭的守护者' : role === 'editor' ? '家庭的记录伙伴' : '家庭的关注者';
 
 const RecentFamilyRecord = ({ record, creatorAvatarSrc, creatorAvatarMediaNo, currentUserNo, onClick }: { record: RecordSummary; creatorAvatarSrc?: string | null; creatorAvatarMediaNo?: string | null; currentUserNo?: string | null; onClick: () => void }) => {
   const mediaKind = getFamilyRecordMediaKind(record);
@@ -299,9 +301,8 @@ export const FamilyPage = () => {
     <div className="fam-page">
       <header className="fam-head">
         <h1 className="fam-title">家庭</h1>
-        <Link to="/family/invite" className="fam-invite-btn" aria-label="邀请家人" title="邀请家人">
-          <UserPlus size={22} strokeWidth={1.9} />
-          <span>邀请</span>
+        <Link to="/family/invite" className="fam-invite-btn is-round" aria-label="邀请家人" title="邀请家人">
+          <Plus size={24} strokeWidth={2} />
         </Link>
       </header>
 
@@ -356,7 +357,10 @@ export const FamilyPage = () => {
                       label={memberName || normalizedNickname}
                       size={56}
                     />
-                    <span className="fam-member-name">{memberName}</span>
+                    <span className="fam-member-body">
+                      <span className="fam-member-name">{memberName}</span>
+                      <span className="fam-member-role-sub">{member.role === 'owner' ? '家庭的守护者' : member.role === 'editor' ? '可以一起记录' : '只能查看'}</span>
+                    </span>
                     <span className={`fam-role ${roleChipClass(member.role)}`}>{roleChipLabel(member.role)}</span>
                   </button>
                 );
@@ -396,8 +400,10 @@ export const FamilyChildPage = () => {
     birthday: '',
     gender: 'unknown',
     birth_place: '',
+    birth_time: null as string | null,
     remark: '',
   });
+  const [genderPickerOpen, setGenderPickerOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
@@ -418,6 +424,7 @@ export const FamilyChildPage = () => {
         birthday: data.birthday,
         gender: data.gender,
         birth_place: data.birth_place ?? '',
+        birth_time: data.birth_time ?? null,
         remark: data.remark ?? '',
       });
     }
@@ -512,7 +519,7 @@ export const FamilyChildPage = () => {
         {error ? <EmptyState message={`加载失败：${error}`} /> : null}
         {!loading && !error && data ? (
           <form onSubmit={onSubmit} style={rowStyle}>
-            <div className="ac-card ac-hero" style={{ display: 'grid', justifyItems: 'center', gap: 10 }}>
+            <div className="ac-hero" style={{ display: 'grid', justifyItems: 'center', gap: 10, background: 'transparent', border: 'none', boxShadow: 'none' }}>
               <label
                 aria-label="更换孩子头像"
                 style={{ position: 'relative', display: 'block', flexShrink: 0, cursor: avatarUploading ? 'not-allowed' : 'pointer', opacity: avatarUploading ? 0.7 : 1 }}
@@ -522,34 +529,32 @@ export const FamilyChildPage = () => {
                   aria-hidden="true"
                   style={{
                     position: 'absolute',
-                    right: -6,
-                    bottom: -6,
-                    width: 32,
-                    height: 32,
+                    right: -2,
+                    bottom: -2,
+                    width: 26,
+                    height: 26,
                     borderRadius: 999,
-                    background: '#FFF7EC',
-                    border: '1px solid var(--nl-primary-border)',
+                    background: '#fff',
+                    border: 'none',
                     color: 'var(--nl-accent)',
                     display: 'grid',
                     placeItems: 'center',
                     boxShadow: '0 6px 14px rgba(var(--nl-shadow-rgb),0.2)',
                   }}
                 >
-                  <Camera size={15} strokeWidth={2.2} />
+                  <Camera size={18} strokeWidth={1.8} />
                 </span>
                 <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" disabled={avatarUploading} onChange={(event) => void onAvatarChange(event)} style={{ display: 'none' }} />
               </label>
-              <div style={{ minWidth: 0, display: 'grid', gap: 4 }}>
-                <strong style={{ color: 'var(--nl-ink)', fontSize: 18, fontWeight: 700 }}>{form.name || data.name}</strong>
-                <span style={{ color: 'var(--nl-muted)', fontSize: 12, lineHeight: 1.6 }}>
-                  {avatarUploading ? '头像上传中…' : '点相机角标可以换一张头像'}
-                </span>
-              </div>
+              <span style={{ color: 'var(--nl-accent)', fontSize: 13, fontWeight: 500 }}>
+                {avatarUploading ? '头像上传中…' : '更换头像'}
+              </span>
             </div>
             <div className="ac-card" style={{ display: 'grid' }}>
               <div className="ac-row">
                 <span className="ac-label">名字</span>
                 <input className="ac-input" value={form.name} onChange={(event) => { formDirtyRef.current = true; setForm((current) => ({ ...current, name: event.target.value })); }} aria-label="孩子姓名" />
+                <Pencil size={18} strokeWidth={1.8} aria-hidden="true" color="#8b7160" />
               </div>
               <div className="ac-row">
                 <span className="ac-label">出生日期</span>
@@ -562,26 +567,58 @@ export const FamilyChildPage = () => {
                 />
               </div>
               <div className="ac-row">
-                <span className="ac-label">性别</span>
-                <AppSegmentedControl
-                  ariaLabel="性别"
-                  value={form.gender}
-                  onChange={(value) => { formDirtyRef.current = true; setForm((current) => ({ ...current, gender: value })); }}
-                  options={[
-                    { value: 'female', label: '女' },
-                    { value: 'male', label: '男' },
-                    { value: 'unknown', label: '未知' },
-                  ]}
+                <span className="ac-label">出生时间</span>
+                <input
+                  className="ac-input"
+                  type="time"
+                  value={form.birth_time ?? ''}
+                  onChange={(event) => { formDirtyRef.current = true; setForm((current) => ({ ...current, birth_time: event.target.value || null })); }}
+                  aria-label="出生时间"
                 />
+                <ChevronRight size={18} strokeWidth={1.8} aria-hidden="true" color="#8b7160" />
               </div>
-              <div className="ac-row">
-                <span className="ac-label">出生地</span>
-                <input className="ac-input" value={form.birth_place} onChange={(event) => { formDirtyRef.current = true; setForm((current) => ({ ...current, birth_place: event.target.value })); }} aria-label="出生地" />
+              <div className="ac-row" style={{ position: 'relative' }}>
+                <span className="ac-label">性别</span>
+                <span className="ac-value">{form.gender === 'female' ? '女' : form.gender === 'male' ? '男' : '未知'}</span>
+                <button
+                  type="button"
+                  aria-label="选择性别"
+                  aria-expanded={genderPickerOpen}
+                  onClick={() => setGenderPickerOpen((current) => !current)}
+                  style={{ display: 'inline-flex', alignItems: 'center', border: 'none', background: 'transparent', cursor: 'pointer', padding: 0, color: '#8b7160' }}
+                >
+                  <ChevronRight size={18} strokeWidth={1.8} aria-hidden="true" />
+                </button>
+                {genderPickerOpen ? (
+                  <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 18, left: 62, zIndex: 20, borderRadius: 18, background: '#fffaf4', border: '1px solid rgba(255, 255, 255, 0.9)', boxShadow: '0 14px 34px rgba(120, 80, 40, 0.16)', padding: 10 }}>
+                    <AppSegmentedControl
+                      ariaLabel="性别"
+                      value={form.gender}
+                      onChange={(value) => { formDirtyRef.current = true; setForm((current) => ({ ...current, gender: value })); }}
+                      options={[
+                        { value: 'female', label: '女' },
+                        { value: 'male', label: '男' },
+                        { value: 'unknown', label: '未知' },
+                      ]}
+                    />
+                  </div>
+                ) : null}
               </div>
-              <div className="ac-row is-textarea">
-                <span className="ac-label">备注</span>
-                <textarea className="ac-input" style={{ textAlign: 'left', minHeight: 44 }} value={form.remark} onChange={(event) => { formDirtyRef.current = true; setForm((current) => ({ ...current, remark: event.target.value })); }} aria-label="备注" />
-              </div>
+              <details className="ac-more" style={{ padding: '0 18px 12px' }}>
+                <summary style={{ listStyle: 'none', cursor: 'pointer', color: 'var(--nl-muted)', fontSize: 13, fontWeight: 500, minHeight: 44, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  更多信息 <ChevronDown size={15} strokeWidth={1.8} aria-hidden="true" />
+                </summary>
+                <div style={{ display: 'grid', marginTop: 4 }}>
+                  <div className="ac-row" style={{ paddingLeft: 0, paddingRight: 0 }}>
+                    <span className="ac-label">出生地</span>
+                    <input className="ac-input" value={form.birth_place} onChange={(event) => { formDirtyRef.current = true; setForm((current) => ({ ...current, birth_place: event.target.value })); }} aria-label="出生地" />
+                  </div>
+                  <div className="ac-row" style={{ paddingLeft: 0, paddingRight: 0 }}>
+                    <span className="ac-label">备注</span>
+                    <input className="ac-input" value={form.remark} onChange={(event) => { formDirtyRef.current = true; setForm((current) => ({ ...current, remark: event.target.value })); }} aria-label="备注" />
+                  </div>
+                </div>
+              </details>
             </div>
             <p className="archive-hint">月龄按出生日期自动计算</p>
       {message ? <p style={{ ...helperTextStyle, color: isPositiveStatusMessage(message) ? 'var(--nl-success)' : 'var(--nl-danger)' }}>{message}</p> : null}
@@ -607,7 +644,6 @@ export const FamilyMembersPage = () => {
   const [message, setMessage] = useState<string | null>(null);
   const [updatingUserNo, setUpdatingUserNo] = useState<string | null>(null);
   const [showAllMembers, setShowAllMembers] = useState(false);
-  const settings = loadLocalSettings();
 
   useEffect(() => {
     let cancelled = false;
@@ -671,68 +707,108 @@ export const FamilyMembersPage = () => {
         {error ? <EmptyState message={`加载失败：${error}`} /> : null}
         {message ? <p style={{ ...helperTextStyle, color: message === '成员角色已更新' ? 'var(--nl-success)' : 'var(--nl-danger)' }}>{message}</p> : null}
         {members.length ? (
-          <div style={{ display: 'grid', gap: '16px' }}>
-            <p className="fam-members-summary" style={{ margin: 0, color: 'var(--nl-muted-strong)', fontSize: 13, lineHeight: 1.6 }}>
+          <div style={{ display: 'grid', gap: '12px' }}>
+            <p className="fam-members-summary" style={{ margin: 0, color: 'var(--nl-muted-strong)', fontSize: 15, lineHeight: 1.5, display: 'flex', alignItems: 'center', gap: 6 }}>
               {members.filter((member) => member.status !== 0).length} 位家人
-              {members.filter((member) => member.status === 0).length ? ` · ${members.filter((member) => member.status === 0).length} 位待接受` : ''}
+              {members.filter((member) => member.status === 0).length ? (
+                <>
+                  ·
+                  <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: 999, background: '#e9a05a', display: 'inline-block' }} />
+                  {members.filter((member) => member.status === 0).length}位待接受
+                </>
+              ) : null}
             </p>
 
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', alignItems: 'center' }}>
-              {hiddenMemberCount ? (
-                <button type="button" style={{ ...compactSecondaryButtonStyle, minHeight: '36px', padding: '7px 12px', fontSize: '12px', flexShrink: 0 }} onClick={() => setShowAllMembers(true)}>
-                  展开全部
-                </button>
-              ) : showAllMembers && members.length > 6 ? (
-                <button type="button" style={{ ...compactSecondaryButtonStyle, minHeight: '36px', padding: '7px 12px', fontSize: '12px', flexShrink: 0 }} onClick={() => setShowAllMembers(false)}>
-                  收起
-                </button>
-              ) : null}
-            </div>
-            {visibleMembers.map((member) => (
-              <section key={member.user_no} className="member-row-card">
-                <div style={{ display: 'flex', gap: '13px', alignItems: 'center', minWidth: 0 }}>
-                  <FamilyAvatar src={member.avatar_url} mediaNo={member.avatar_media_no} label={getFamilyMemberDisplayName(member)} size={56} radius="999px" />
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                      <strong style={{ minWidth: 0, maxWidth: '100%', fontSize: '16px', color: 'var(--nl-ink)', fontWeight: 720, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflowWrap: 'anywhere' }}>{getFamilyMemberDisplayName(member)}</strong>
-                      <span style={{ fontSize: '11px', fontWeight: 660, color: '#4a2f12', background: member.role === 'owner' ? '#F5AB52' : 'rgba(245, 171, 82, 0.32)', border: 'none', padding: '3px 8px', borderRadius: '7px', whiteSpace: 'nowrap' }}>
-                        {familyRoleLabel(member.role)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px 16px', padding: '1px 0 0' }}>
-                  <p style={{ ...helperTextStyle, margin: 0, fontSize: '12px', fontWeight: 560 }}>手机号：{settings.hideMobileMask ? '已隐藏' : member.mobile_masked ?? '未提供'}</p>
-                  <p style={{ ...helperTextStyle, margin: 0, fontSize: '12px', fontWeight: 560 }}>状态：{familyMemberStatusLabel(member.status)}</p>
-                  {member.status === 0 ? (
-                    <button type="button" onClick={() => navigate('/family/invite')} style={{ minHeight: 32, padding: '0 10px', borderRadius: 999, border: '1px solid var(--nl-primary-border)', background: 'transparent', color: 'var(--nl-accent)', fontSize: 12, fontWeight: 600 }}>
-                      重新发送
-                    </button>
-                  ) : null}
-                </div>
-                {canManageMembers && member.role !== 'owner' ? (
+            {hiddenMemberCount || (showAllMembers && members.length > 6) ? (
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', alignItems: 'center' }}>
+                {hiddenMemberCount ? (
+                  <button type="button" style={{ ...compactSecondaryButtonStyle, minHeight: '36px', padding: '7px 12px', fontSize: '12px', flexShrink: 0 }} onClick={() => setShowAllMembers(true)}>
+                    展开全部
+                  </button>
+                ) : (
+                  <button type="button" style={{ ...compactSecondaryButtonStyle, minHeight: '36px', padding: '7px 12px', fontSize: '12px', flexShrink: 0 }} onClick={() => setShowAllMembers(false)}>
+                    收起
+                  </button>
+                )}
+              </div>
+            ) : null}
+            {visibleMembers.map((member) => {
+              const pending = member.status === 0;
+              return (
+                <section
+                  key={member.user_no}
+                  className="member-row-card"
+                  style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', alignItems: 'center', gap: 10 }}
+                >
                   <button
                     type="button"
                     onClick={() => navigate(`/family/members/${member.user_no}`)}
-                    style={{ minHeight: 44, width: '100%', border: 'none', borderTop: '1px solid var(--nl-border-soft)', background: 'transparent', padding: '10px 0 0', marginTop: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, color: 'var(--nl-muted-strong)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                    style={{ display: 'flex', gap: 12, alignItems: 'center', minWidth: 0, border: 'none', background: 'transparent', padding: 0, textAlign: 'left', cursor: 'pointer' }}
+                    aria-label={`查看${getFamilyMemberDisplayName(member)}的资料与权限`}
                   >
-                    查看资料与权限
-                    <ChevronRight size={16} />
+                    <FamilyAvatar src={member.avatar_url} mediaNo={member.avatar_media_no} label={getFamilyMemberDisplayName(member)} size={48} radius="999px" />
+                    <span style={{ minWidth: 0, display: 'grid', gap: 2 }}>
+                      <strong style={{ minWidth: 0, maxWidth: '100%', fontSize: '17px', lineHeight: 1.5, color: 'var(--nl-ink)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflowWrap: 'anywhere' }}>{getFamilyMemberDisplayName(member)}</strong>
+                      <span style={{ fontSize: '13px', color: '#6f5745', lineHeight: 1.4 }}>{memberRoleDescriptor(member.role)}</span>
+                    </span>
                   </button>
-                ) : null}
-              </section>
-            ))}
-            <section className="perm-card">
-              <strong style={{ color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 700 }}>权限说明</strong>
-              <div style={{ display: 'grid', gap: '10px' }}>
-                {rolePermissionItems.map((item) => (
-                  <div key={item.role} style={{ display: 'grid', gridTemplateColumns: '70px minmax(0, 1fr)', gap: '10px', alignItems: 'start' }}>
-                    <span style={{ borderLeft: '2px solid rgba(var(--nl-primary-rgb),0.28)', color: 'var(--nl-muted-strong)', padding: '2px 0 2px 9px', fontSize: '11px', fontWeight: 620, textAlign: 'left' }}>{item.role}</span>
-                    <span style={{ color: 'var(--nl-muted-strong)', fontSize: '12px', lineHeight: 1.58, fontWeight: 500 }}>{item.detail}</span>
-                  </div>
-                ))}
-              </div>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, justifySelf: 'end' }}>
+                    <span
+                      style={{
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        color: pending || member.role === 'owner' ? '#8a4e14' : '#8a4e14',
+                        background: pending || member.role === 'owner' ? '#E9A05A' : '#F3E4D0',
+                        border: 'none',
+                        padding: '5px 10px',
+                        borderRadius: '10px',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {pending ? '待接受' : familyRoleLabel(member.role)}
+                    </span>
+                    {pending ? (
+                      <>
+                        <span aria-hidden="true" style={{ width: 1, height: 14, background: 'rgba(58, 42, 28, 0.16)' }} />
+                        <button type="button" onClick={() => navigate('/family/invite')} style={{ border: 'none', background: 'transparent', color: 'var(--nl-accent)', fontSize: 13, fontWeight: 500, textDecoration: 'underline', textUnderlineOffset: 2, cursor: 'pointer', padding: 0 }}>
+                          重发
+                        </button>
+                      </>
+                    ) : null}
+                  </span>
+                </section>
+              );
+            })}
+            <section style={{ display: 'grid', gap: 8, padding: '6px 2px 0' }}>
+              <strong style={{ color: 'var(--nl-ink)', fontSize: '15px', fontWeight: 600 }}>权限说明</strong>
+              {rolePermissionItems.map((item) => (
+                <p key={item.role} style={{ margin: 0, color: '#6f5745', fontSize: '15px', lineHeight: 1.75 }}>
+                  <strong style={{ color: 'var(--nl-ink)', fontWeight: 600 }}>{item.role}</strong>
+                  ：{item.detail}
+                </p>
+              ))}
             </section>
+            <Link
+              to="/family/invite"
+              className="members-invite-cta"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 10,
+                minHeight: 64,
+                borderRadius: 26,
+                border: '1px dashed rgba(169, 88, 27, 0.32)',
+                background: 'rgba(255, 255, 255, 0.26)',
+                color: 'var(--nl-ink)',
+                fontSize: 15,
+                fontWeight: 500,
+                textDecoration: 'none',
+              }}
+            >
+              <UserPlus size={28} strokeWidth={1.8} aria-hidden="true" />
+              邀请家人加入
+            </Link>
             <FamilyMemberOperations operations={operations} />
           </div>
         ) : null}
@@ -866,132 +942,129 @@ export const FamilyMemberDetailPage = () => {
     }
   };
 
-  const roleColor = member?.role === 'owner' ? 'var(--nl-primary-2)' : member?.role === 'editor' ? 'var(--nl-muted-strong)' : 'var(--nl-muted-strong)';
-  const roleBg = 'transparent';
+  const memberLatestRecordTime = memberRecords[0]?.event_time ?? null;
+  const memberLatestRecordLabel = (() => {
+    if (!memberLatestRecordTime) return null;
+    const time = new Date(memberLatestRecordTime).getTime();
+    if (!Number.isFinite(time)) return null;
+    const days = Math.floor((Date.now() - time) / (24 * 60 * 60 * 1000));
+    if (days <= 0) return '最近 1 天内';
+    if (days < 30) return `最近 ${days} 天前`;
+    const months = Math.floor(days / 30);
+    return `最近 ${months} 个月前`;
+  })();
+  const memberJoinedLabel = (() => {
+    if (!member?.joined_at) return null;
+    const joined = new Date(member.joined_at);
+    if (Number.isNaN(joined.getTime())) return null;
+    return `加入于 ${joined.getFullYear()}年${joined.getMonth() + 1}月${joined.getDate()}日`;
+  })();
   return (
     <PageShell title="成员信息" backTo="/family" className="account-shell">
       {loading ? <Panel><EmptyState message="正在加载家人资料…" /></Panel> : null}
       {!loading && !member ? <Panel><EmptyState message="未找到该家庭成员。" /></Panel> : null}
       {member ? (
         <>
-          <Panel style={{ display: 'grid', gap: 10, justifyItems: 'center', padding: '18px 0 16px', borderRadius: 0, background: 'transparent', border: 'none', boxShadow: 'none' }}>
-            <FamilyAvatar src={resolveFamilyMemberAvatarSrc(member, user)} mediaNo={resolveFamilyMemberAvatarMediaNo(member, user)} label={memberName} size={96} />
-            <h2 title={memberName} style={{ margin: 0, maxWidth: '100%', color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '24px', lineHeight: 1.15, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{memberName}</h2>
-            <span style={{ borderRadius: 999, background: '#F5AB52', color: '#4a2f12', padding: '4px 12px', fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap' }}>{familyRoleLabel(member.role)}</span>
-            <span style={{ color: 'var(--nl-muted)', fontSize: 12, fontWeight: 500 }}>
-              {member.joined_at ? `加入于 ${formatAppDate(member.joined_at)}` : `已加入 ${memberJoinedDays ?? '-'} 天`}
+          <header style={{ display: 'grid', gap: 8, justifyItems: 'center', padding: '18px 0 6px', background: 'transparent', border: 'none', boxShadow: 'none' }}>
+            <FamilyAvatar src={resolveFamilyMemberAvatarSrc(member, user)} mediaNo={resolveFamilyMemberAvatarMediaNo(member, user)} label={memberName} size={64} />
+            <h2 title={memberName} style={{ margin: 0, maxWidth: '100%', color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '22px', lineHeight: 1.15, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{memberName}</h2>
+            <span style={{ color: '#6f5745', fontSize: 15, fontWeight: 500 }}>
+              {memberJoinedLabel ?? `已加入 ${memberJoinedDays ?? '-'} 天`}
             </span>
-            <span style={{ color: 'var(--nl-muted-strong)', fontSize: 13, fontWeight: 600 }}>
-              发布 {recordTotal} 条记录
-            </span>
-          </Panel>
+          </header>
 
-          <section>
-            <h2 className="fam-detail-title">记录</h2>
-            <div style={{ display: 'grid', gap: '10px' }}>
-              {memberRecords.length ? memberRecords.map((record) => (
-                <button key={record.record_no} type="button" onClick={() => navigate(`/record/${record.record_no}`)} style={{ width: '100%', minHeight: '62px', border: 'none', borderBottom: '1px solid var(--nl-border-muted)', borderRadius: 0, background: 'transparent', padding: '11px 0', display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left', cursor: 'pointer', boxShadow: 'none' }}>
-                  <span style={{ width: '38px', height: '38px', borderRadius: '8px', background: 'transparent', color: 'var(--nl-primary-2)', display: 'grid', placeItems: 'center', flexShrink: 0 }}>
-                    {record.cover_url ? <ImageIcon size={16} /> : <FileText size={16} />}
-                  </span>
-                  <span style={{ minWidth: 0, flex: 1 }}>
-                    <strong style={{ display: 'block', color: 'var(--nl-ink)', fontSize: '14px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{record.title ?? '未命名记录'}</strong>
-                    <span style={{ display: 'block', marginTop: '4px', color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 600 }}>{formatAppDate(record.event_time)}</span>
-                  </span>
-                </button>
-              )) : <Panel><EmptyState message="TA还没有发布过记录。" /></Panel>}
+          <section aria-label="记录贡献" style={{ display: 'grid' }}>
+            <div style={{ minHeight: 64, display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid rgba(58, 42, 28, 0.08)' }}>
+              <span style={{ width: 24, height: 24, display: 'grid', placeItems: 'center', color: '#8a4e14', flexShrink: 0 }}>
+                <FileText size={24} strokeWidth={1.8} />
+              </span>
+              <span style={{ flex: 1, minWidth: 0, color: 'var(--nl-ink)', fontSize: 15, fontWeight: 500 }}>
+                {recordTotal} 条记录
+              </span>
+              {memberLatestRecordLabel ? (
+                <span style={{ color: '#6f5745', fontSize: 13 }}>{memberLatestRecordLabel}</span>
+              ) : null}
             </div>
           </section>
 
           <section>
             <h2 className="fam-detail-title">权限</h2>
-            <Panel style={{ padding: 0, overflow: 'hidden', borderRadius: 0, background: 'transparent', border: 'none', borderTop: '1px solid var(--nl-border-muted)', boxShadow: 'none' }}>
-              <div style={{ borderBottom: '1px solid var(--nl-border-muted)', background: 'transparent', padding: '13px 0', display: 'grid', gap: '10px' }}>
-                <span style={{ color: '#5a4636', fontSize: '13px', lineHeight: 1.55 }}>只读成员可查看家庭档案；可编辑成员可发布和修改记录。</span>
-                <div role="radiogroup" aria-label="成员权限" style={{ display: 'grid', gap: 8, borderTop: '1px solid var(--nl-border-soft)', paddingTop: '10px' }}>
-                  {([
-                    { value: 'viewer' as const, title: '只读成员', detail: '可以查看家庭档案，不能修改内容' },
-                    { value: 'editor' as const, title: '可编辑成员', detail: '可以发布和修改记录，也能整理档案' },
-                  ]).map((option) => {
-                    const selected = (pendingRole ?? member.role) === option.value;
-                    const disabled = !canEditRole || updating;
-                    return (
-                      <button
-                        key={option.value}
-                        type="button"
-                        className={`perm-option${selected ? ' is-selected' : ''}`}
-                        role="radio"
-                        aria-checked={selected}
-                        disabled={disabled}
-                        onClick={() => setPendingRole(option.value)}
-                        style={{
-                          width: '100%',
-                          minHeight: 60,
-                          border: 'none',
-                          borderLeft: selected ? '3px solid var(--nl-primary)' : '3px solid transparent',
-                          borderRadius: 14,
-                          background: selected ? 'var(--nl-primary-soft)' : 'transparent',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 12,
-                          padding: '10px 12px',
-                          textAlign: 'left',
-                          cursor: disabled ? 'not-allowed' : 'pointer',
-                          opacity: !canEditRole ? 0.6 : 1,
-                        }}
-                      >
-                        <span
-                          aria-hidden="true"
-                          style={{
-                            width: 22,
-                            height: 22,
-                            borderRadius: 999,
-                            border: selected ? 'none' : '2px solid #8a6a52',
-                            background: selected ? 'var(--nl-primary)' : 'transparent',
-                            color: 'var(--nl-on-primary)',
-                            display: 'grid',
-                            placeItems: 'center',
-                            flexShrink: 0,
-                          }}
-                        >
-                          {selected ? <Check size={14} strokeWidth={3} /> : null}
-                        </span>
-                        <span style={{ minWidth: 0 }}>
-                          <strong style={{ display: 'block', color: 'var(--nl-ink)', fontSize: 15, fontWeight: 600 }}>{option.title}</strong>
-                          <span style={{ color: '#5a4636', fontSize: 13, lineHeight: 1.5 }}>{option.detail}</span>
-                        </span>
-                      </button>
-                    );
-                  })}
+            <div role="radiogroup" aria-label="成员权限" style={{ display: 'grid', gap: 8 }}>
+              {([
+                { value: 'viewer' as const, title: '可查看', detail: '可以查看家庭档案，不能修改内容' },
+                { value: 'editor' as const, title: '可查看·可补充', detail: '可以发布和修改记录，也能整理档案' },
+              ]).map((option) => {
+                const selected = (pendingRole ?? member.role) === option.value;
+                const disabled = !canEditRole || updating;
+                return (
                   <button
+                    key={option.value}
                     type="button"
-                    className="fam-detail-save"
-                    onClick={() => pendingRole && void changeRole(pendingRole)}
-                    disabled={!canEditRole || updating || !pendingRole || pendingRole === member.role}
-                    style={{ ...primaryButtonStyle, width: '100%', marginTop: 4, opacity: !canEditRole || !pendingRole || pendingRole === member.role ? 0.6 : 1 }}
+                    className={`perm-option${selected ? ' is-selected' : ''}`}
+                    role="radio"
+                    aria-checked={selected}
+                    disabled={disabled}
+                    onClick={() => setPendingRole(option.value)}
+                    style={{
+                      width: '100%',
+                      minHeight: 68,
+                      border: 'none',
+                      borderRadius: 14,
+                      background: selected ? 'rgba(233, 160, 90, 0.22)' : 'transparent',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      padding: '10px 12px',
+                      textAlign: 'left',
+                      cursor: disabled ? 'not-allowed' : 'pointer',
+                      opacity: !canEditRole ? 0.6 : 1,
+                    }}
                   >
-                    {updating ? '保存中…' : '保存权限'}
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        width: 18,
+                        height: 18,
+                        borderRadius: 999,
+                        border: selected ? 'none' : '1.5px solid #8b7160',
+                        background: selected ? 'var(--nl-primary)' : 'transparent',
+                        color: 'var(--nl-on-primary)',
+                        display: 'grid',
+                        placeItems: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      {selected ? <Check size={12} strokeWidth={3} /> : null}
+                    </span>
+                    <span style={{ minWidth: 0 }}>
+                      <strong style={{ display: 'block', color: 'var(--nl-ink)', fontSize: 15, fontWeight: 600 }}>{option.title}</strong>
+                      <span style={{ color: '#6f5745', fontSize: 13, lineHeight: 1.5 }}>{option.detail}</span>
+                    </span>
                   </button>
-                </div>
-              </div>
-              <div style={{ minHeight: '56px', borderBottom: '1px solid var(--nl-border-muted)', padding: '13px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', background: 'transparent' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 700 }}>
-                  <span style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'transparent', color: 'var(--nl-primary-2)', display: 'grid', placeItems: 'center' }}><Clock size={15} /></span>
-                  加入时间
-                </span>
-                <span style={{ color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 700 }}>{formatAppDate(member.joined_at, '未记录')}</span>
-              </div>
-            </Panel>
+                );
+              })}
+            </div>
           </section>
 
+          {canEditRole ? (
+            <button
+              type="button"
+              className="fam-detail-save"
+              onClick={() => pendingRole && void changeRole(pendingRole)}
+              disabled={updating || !pendingRole || pendingRole === member.role}
+              style={{ ...primaryButtonStyle, width: '100%', opacity: updating || !pendingRole || pendingRole === member.role ? 0.6 : 1 }}
+            >
+              {updating ? '保存中…' : '保存权限'}
+            </button>
+          ) : null}
+
           {member.role !== 'owner' && isFamilyOwner ? (
-            <section aria-label="危险操作" style={{ display: 'grid', gap: 10 }}>
-              <h2 style={{ margin: '0 0 0 2px', color: 'var(--nl-muted-strong)', fontSize: 13, fontWeight: 600, letterSpacing: '0.08em' }}>危险操作</h2>
-              <Panel style={{ padding: 0, overflow: 'hidden', borderRadius: 'var(--nl-radius-row, 18px)' }}>
-                {confirmingRemove ? (
-                  <div style={{ padding: '14px', display: 'grid', gap: 10 }}>
-                    <span style={{ color: 'var(--nl-danger)', fontSize: 13, fontWeight: 700 }}>确认把 {memberName} 移出家庭？</span>
-                    <span style={{ color: 'var(--nl-muted)', fontSize: 12, lineHeight: 1.6 }}>移出后对方将看不到这个家庭的档案，之后需要重新邀请。</span>
+            <section aria-label="危险操作" style={{ display: 'grid', gap: 8 }}>
+              {confirmingRemove ? (
+                <Panel style={{ padding: 14, borderRadius: 'var(--nl-radius-row, 18px)' }}>
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    <span style={{ color: 'var(--nl-danger)', fontSize: 14, fontWeight: 600 }}>确认把 {memberName} 移除出家庭？</span>
+                    <span style={{ color: '#6f5745', fontSize: 13, lineHeight: 1.6 }}>移出后 TA 将看不到小满的记录，之后需要重新邀请。</span>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8 }}>
                       <button type="button" onClick={() => setConfirmingRemove(false)} disabled={removing} style={{ ...secondaryButtonStyle, minHeight: 44 }}>取消</button>
                       <button type="button" onClick={() => void removeMember()} disabled={removing} style={{ ...secondaryButtonStyle, minHeight: 44, borderColor: 'var(--nl-danger-border)', color: 'var(--nl-danger)' }}>
@@ -999,16 +1072,18 @@ export const FamilyMemberDetailPage = () => {
                       </button>
                     </div>
                   </div>
-                ) : (
-                  <button type="button" onClick={() => setConfirmingRemove(true)} disabled={removing} style={{ width: '100%', minHeight: 64, border: 'none', background: 'transparent', padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', textAlign: 'left', cursor: 'pointer' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--nl-danger)', fontSize: '15px', fontWeight: 600 }}>
-                      <span style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'var(--nl-danger-soft)', color: 'var(--nl-danger)', display: 'grid', placeItems: 'center' }}><UserMinus size={15} /></span>
-                      移出家庭
+                </Panel>
+              ) : (
+                <Panel style={{ padding: 0, borderRadius: 'var(--nl-radius-row, 18px)' }}>
+                  <button type="button" onClick={() => setConfirmingRemove(true)} disabled={removing} style={{ width: '100%', minHeight: 64, border: 'none', background: 'transparent', padding: '14px', display: 'grid', gap: 4, textAlign: 'left', cursor: 'pointer' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 12, color: 'var(--nl-danger)', fontSize: 15, fontWeight: 500 }}>
+                      <UserMinus size={24} strokeWidth={1.8} aria-hidden="true" />
+                      移除这位家人
                     </span>
-                    <ChevronRight size={16} color="var(--nl-danger)" />
+                    <span style={{ color: '#6f5745', fontSize: 13, lineHeight: 1.5, paddingLeft: 36 }}>移出后 TA 将看不到小满的记录</span>
                   </button>
-                )}
-              </Panel>
+                </Panel>
+              )}
             </section>
           ) : null}
           <FamilyMemberOperations operations={operations} />
@@ -1109,7 +1184,22 @@ export const FamilyInvitePage = () => {
     window.location.href = `sms:?&body=${encodeURIComponent(inviteText)}`;
   };
 
-  const invitedMembers = members.filter((member) => member.role !== 'owner');
+  
+const formatRelativeJoinedAt = (value?: string | null) => {
+  if (!value) return '';
+  const time = new Date(value).getTime();
+  if (!Number.isFinite(time)) return '';
+  const minutes = Math.floor((Date.now() - time) / 60000);
+  if (minutes < 1) return '刚刚';
+  if (minutes < 60) return `${minutes} 分钟前`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours} 小时前`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days} 天前`;
+  return `${Math.floor(days / 30)} 个月前`;
+};
+
+const invitedMembers = members.filter((member) => member.role !== 'owner');
 
   return (
     <PageShell title="邀请家人" backTo="/family" className="invite-shell">
@@ -1118,19 +1208,19 @@ export const FamilyInvitePage = () => {
           <img
             src="/photos/hero-park.jpg"
             alt="家人在公园里一起看着孩子"
-            style={{ display: 'block', width: '100%', height: 180, objectFit: 'cover', borderRadius: 18 }}
+            style={{ display: 'block', width: '100%', height: 76, objectFit: 'cover', borderRadius: 18, aspectRatio: '4.3 / 1' }}
           />
         </div>
         <div style={{ display: 'grid', gap: 12, padding: '18px 18px 20px' }}>
           <div style={{ display: 'grid', gap: 4 }}>
             <h2 style={{ margin: 0, fontFamily: 'var(--nl-font-display)', fontSize: 24, fontWeight: 600, lineHeight: 1.3, color: 'var(--nl-ink)' }}>
-              邀请家人一起记录{activeChild?.name ? ` · ${activeChild.name}` : ''}
+              邀请家人一起记录{activeChild?.name ?? ''}
             </h2>
             <p style={{ margin: 0, color: 'var(--nl-muted)', fontSize: 13, lineHeight: 1.6 }}>对方接受后可以查看和补充</p>
           </div>
 
-          <button type="button" onClick={inviteByWechat} disabled={!inviteCode} style={{ ...primaryButtonStyle, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-            <MessageCircle size={18} strokeWidth={2} aria-hidden="true" />
+          <button type="button" onClick={inviteByWechat} disabled={!inviteCode} style={{ ...primaryButtonStyle, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, borderRadius: 12 }}>
+            <MessageCircle size={20} strokeWidth={1.8} fill="rgba(255,255,255,0.9)" aria-hidden="true" />
             微信邀请家人
           </button>
 
@@ -1141,11 +1231,11 @@ export const FamilyInvitePage = () => {
               disabled={!inviteCode}
               style={{ ...secondaryButtonStyle, minHeight: 48, fontSize: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
             >
-              <Link2 size={17} strokeWidth={2} aria-hidden="true" />
+              <Clipboard size={18} strokeWidth={1.8} aria-hidden="true" />
               复制链接
             </button>
             <button type="button" onClick={inviteBySms} disabled={!inviteCode} style={{ ...secondaryButtonStyle, minHeight: 48, fontSize: 15, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-              <MessageSquare size={17} strokeWidth={2} aria-hidden="true" />
+              <MessageCircleMore size={18} strokeWidth={1.8} aria-hidden="true" />
               短信邀请
             </button>
           </div>
@@ -1155,14 +1245,14 @@ export const FamilyInvitePage = () => {
               display: 'flex',
               alignItems: 'center',
               gap: 12,
-              padding: '12px 14px',
+              padding: '14px 18px',
               borderRadius: 'var(--nl-radius-row, 18px)',
               background: 'var(--nl-primary-soft)',
               border: '1px solid var(--nl-primary-line)',
             }}
           >
             <div style={{ minWidth: 0, flex: '1 1 auto' }}>
-              <span style={{ display: 'block', color: 'var(--nl-muted)', fontSize: 12, lineHeight: 1.5 }}>或让对方输入邀请码</span>
+              <span style={{ display: 'block', color: '#6f5745', fontSize: 13, lineHeight: 1.5 }}>或让对方输入邀请码</span>
               <strong
                 style={{
                   display: 'block',
@@ -1203,7 +1293,7 @@ export const FamilyInvitePage = () => {
           </div>
 
           <details style={{ borderRadius: 'var(--nl-radius-row, 18px)', border: '1px solid var(--nl-border-soft)', background: 'rgba(255,250,244,0.5)' }}>
-            <summary style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 44, padding: '0 14px', color: 'var(--nl-muted-strong)', fontSize: 13, fontWeight: 600, cursor: 'pointer', listStyle: 'none' }}>
+            <summary style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 52, padding: '0 14px', color: 'var(--nl-muted-strong)', fontSize: 15, fontWeight: 600, cursor: 'pointer', listStyle: 'none' }}>
               其他邀请方式（二维码）
               <ChevronDown size={16} strokeWidth={2} />
             </summary>
@@ -1218,7 +1308,7 @@ export const FamilyInvitePage = () => {
           </details>
 
           {inviteResult ? (
-            <p style={{ margin: 0, fontSize: 12, lineHeight: 1.6, color: 'var(--nl-muted)' }}>
+            <p style={{ margin: 0, fontSize: 11, lineHeight: 1.6, color: 'var(--nl-muted)' }}>
               有效期至 {formatAppDateTime(inviteResult.expires_at)}，仅可使用一次
             </p>
           ) : null}
@@ -1241,11 +1331,11 @@ export const FamilyInvitePage = () => {
                 display: 'flex',
                 alignItems: 'center',
                 gap: 12,
-                minHeight: 64,
-                padding: '10px 14px',
+                minHeight: 52,
+                padding: '8px 14px',
                 borderRadius: 'var(--nl-radius-row, 18px)',
-                background: 'rgba(255, 250, 244, 0.62)',
-                border: '1px solid var(--nl-border-soft)',
+                background: 'rgba(255, 255, 255, 0.78)',
+                border: 'none',
               }}
             >
               <span style={{
@@ -1264,35 +1354,39 @@ export const FamilyInvitePage = () => {
                   <img src={member.avatar_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : member.nickname.slice(0, 1)}
               </span>
-              <div style={{ minWidth: 0, flex: '1 1 auto' }}>
-                <strong style={{ display: 'block', color: 'var(--nl-ink)', fontSize: 15, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <div style={{ minWidth: 0, flex: '1 1 auto', display: 'flex', alignItems: 'baseline', gap: 6, whiteSpace: 'nowrap' }}>
+                <strong style={{ color: 'var(--nl-ink)', fontSize: 15, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {normalizeDisplayName(member.nickname, '家人')}
                 </strong>
-                <span style={{ color: 'var(--nl-muted)', fontSize: 12 }}>{pending ? '邀请已发送' : '已加入'}</span>
+                <span aria-hidden="true" style={{ color: 'var(--nl-muted)', fontSize: 13 }}>·</span>
+                <span style={{ color: 'var(--nl-muted)', fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {pending ? `已发送${formatRelativeJoinedAt(member.joined_at) ? ` ${formatRelativeJoinedAt(member.joined_at)}` : ''}` : '已加入'}
+                </span>
               </div>
-              {pending ? (
-                <button
-                  type="button"
-                  onClick={() => void copyText(inviteLink, `邀请链接已复制，可再次发送给${normalizeDisplayName(member.nickname, '家人')}`)}
-                  style={{ flexShrink: 0, minHeight: 32, padding: '0 10px', borderRadius: 999, border: '1px solid var(--nl-primary-border)', background: 'transparent', color: 'var(--nl-accent)', fontSize: 12, fontWeight: 600 }}
-                >
-                  重新发送
-                </button>
-              ) : null}
               <span style={{
                 flexShrink: 0,
-                padding: '5px 12px',
+                padding: '7px 14px',
                 borderRadius: 999,
-                background: pending ? 'rgba(111, 87, 69, 0.12)' : 'var(--nl-primary-soft)',
-                color: pending ? 'var(--nl-muted-strong)' : 'var(--nl-accent)',
-                fontSize: 12,
+                background: pending ? 'rgba(111, 87, 69, 0.12)' : '#E9A05A',
+                color: pending ? 'var(--nl-muted-strong)' : '#8a4e14',
+                fontSize: 13,
                 fontWeight: 600,
+                lineHeight: 1,
               }}>
                 {pending ? '待接受' : '已加入'}
               </span>
             </div>
           );
         }) : <EmptyState message="还没有邀请其他家人。" />}
+        {invitedMembers.some((member) => member.status === 0) ? (
+          <button
+            type="button"
+            onClick={() => void copyText(inviteLink, '邀请链接已复制，可再次发送给家人')}
+            style={{ border: 'none', background: 'transparent', color: 'var(--nl-accent)', fontSize: 13, fontWeight: 500, textDecoration: 'underline', textUnderlineOffset: 2, cursor: 'pointer', justifySelf: 'center', padding: '6px 0' }}
+          >
+            对方没收到？重新发送
+          </button>
+        ) : null}
       </section>
     </PageShell>
   );

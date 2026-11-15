@@ -13,14 +13,14 @@ describe('resolveApiBaseUrl', () => {
     ).toBe('https://staging.example.com/api/v1');
   });
 
-  it('falls back to the production native API url on native when config is relative', () => {
+  it('falls back to the native dev API url on native when config is relative', () => {
     expect(
       resolveApiBaseUrl({
         configuredBaseUrl: '/api/v1',
         isNativePlatform: true,
         origin: 'https://localhost',
       }),
-    ).toBe('https://webapi.xmlga.top/api/v1');
+    ).toBe('http://10.0.2.2:5199/api/v1');
   });
 
   it('falls back to the production native API url for capacitor localhost pages', () => {
@@ -28,7 +28,7 @@ describe('resolveApiBaseUrl', () => {
       resolveApiBaseUrl({
         origin: 'https://localhost',
       }),
-    ).toBe('https://webapi.xmlga.top/api/v1');
+    ).toBe('http://10.0.2.2:5199/api/v1');
   });
 
   it('keeps relative api paths for plain web when no config exists', () => {

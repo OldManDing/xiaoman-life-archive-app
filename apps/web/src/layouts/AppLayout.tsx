@@ -228,9 +228,9 @@ export const AppLayout = () => {
           maxWidth: '398px',
           minHeight: '64px',
           height: '64px',
-          border: '1px solid rgba(255, 255, 255, 0.72)',
+          border: '1px solid rgba(255, 255, 255, 0.62)',
           borderRadius: '26px',
-          background: 'rgba(255, 250, 244, 0.78)',
+          background: 'rgba(255, 255, 255, 0.78)',
           WebkitBackdropFilter: 'blur(20px) saturate(1.06)',
           backdropFilter: 'blur(20px) saturate(1.06)',
           display: 'flex',
@@ -258,7 +258,7 @@ export const AppLayout = () => {
                 gap: '2px',
                 textDecoration: 'none',
                 color: isActive ? 'var(--nl-nav-active)' : 'var(--nl-nav-muted)',
-                fontSize: '10.5px',
+                fontSize: '12px',
                 fontWeight: isActive ? 600 : 500,
                 position: 'relative',
                 minHeight: '48px',
@@ -270,8 +270,8 @@ export const AppLayout = () => {
                   <span
                     className="app-bottom-nav-icon"
                     style={{
-                    width: '36px',
-                    height: '28px',
+                    width: '44px',
+                    height: '40px',
                     marginTop: 0,
                     borderRadius: '14px',
                     display: 'grid',
@@ -284,7 +284,7 @@ export const AppLayout = () => {
                     transition: 'background-color 0.18s ease, color 0.18s ease',
                   }}
                   >
-                    <Icon size={20} strokeWidth={isActive ? 2 : 1.8} />
+                    <Icon size={24} strokeWidth={1.8} />
                   </span>
                   <span className="app-bottom-nav-label" style={{ lineHeight: 1, marginTop: 0, fontWeight: isActive ? 600 : undefined }}>{item.label}</span>
                 </>

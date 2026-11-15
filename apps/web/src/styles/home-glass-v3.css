@@ -81,10 +81,9 @@
 }
 
 .nl-home-title-age {
-  margin-left: 8px;
-  color: var(--nl-ink);
+  color: #6f5745;
   font-family: var(--nl-font-body, inherit);
-  font-size: 17px;
+  font-size: 13px;
   font-weight: 500;
 }
 
@@ -150,15 +149,15 @@
   position: relative;
   display: block;
   padding: 0 !important;
-  border-radius: 24px !important;
+  border-radius: 26px !important;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.5) !important;
-  box-shadow: 0 16px 36px rgba(146, 96, 52, 0.18) !important;
+  box-shadow: 0 8px 20px rgba(146, 96, 52, 0.1) !important;
   background: var(--nl-surface-soft);
 }
 
 .nl-home-day-cards .nl-moment-card.is-featured .nl-moment-media {
-  aspect-ratio: 21 / 10 !important;
+  aspect-ratio: 16 / 10 !important;
   border-radius: 0 !important;
   display: block;
 }
@@ -209,21 +208,23 @@
 /* ---------- 5. 普通行：玻璃卡 + 缩略图 + chevron ---------- */
 .nl-home-day-cards .nl-moment-card:not(.is-featured) {
   display: grid;
-  grid-template-columns: 56px minmax(0, 1fr) 16px;
+  grid-template-columns: 72px minmax(0, 1fr) 16px;
   align-items: center;
   gap: 12px;
   margin-top: 10px;
-  padding: 10px 14px 10px 10px !important;
-  border: 1px solid rgba(255, 255, 255, 0.62) !important;
-  border-radius: 18px !important;
-  background: rgba(255, 244, 234, 0.58) !important;
-  box-shadow: 0 8px 22px rgba(146, 96, 52, 0.09) !important;
+  padding: 12px 14px 12px 12px !important;
+  border: none !important;
+  border-radius: 24px !important;
+  background: rgba(255, 255, 255, 0.62) !important;
+  box-shadow: 0 8px 20px rgba(146, 96, 52, 0.1) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(1.02);
+  backdrop-filter: blur(12px) saturate(1.02);
 }
 
 .nl-home-day-cards .nl-moment-card:not(.is-featured) .nl-moment-media {
-  width: 56px;
-  height: 56px;
-  aspect-ratio: 1;
+  width: 72px;
+  height: 54px;
+  aspect-ratio: 4 / 3;
   border-radius: 14px !important;
   overflow: hidden;
 }
@@ -236,13 +237,14 @@
 }
 
 .nl-home-day-cards .nl-moment-card:not(.is-featured) .nl-moment-title {
-  font-size: 16px !important;
+  font-size: 17px !important;
+  line-height: 1.5;
   font-weight: 600 !important;
   color: var(--nl-ink) !important;
 }
 
 .nl-home-day-cards .nl-moment-card:not(.is-featured) .nl-moment-meta {
-  font-size: 12px !important;
+  font-size: 13px !important;
   color: var(--nl-muted) !important;
   order: 2;
 }
@@ -261,18 +263,7 @@
   gap: 6px;
 }
 
-/* 行尾 chevron（用伪元素，避免改 DOM） */
-.nl-home-day-cards .nl-moment-card:not(.is-featured)::after {
-  content: '';
-  width: 9px;
-  height: 9px;
-  border-right: 1.8px solid var(--nl-muted);
-  border-bottom: 1.8px solid var(--nl-muted);
-  transform: rotate(-45deg);
-  justify-self: center;
-  align-self: center;
-  opacity: 0.7;
-}
+/* 行尾 chevron：由 JSX 渲染 ChevronRight 20/1.8（G8），不再用伪元素折角 */
 
 /* ---------- 6. 「今天还没记录 / 记一笔」行 ---------- */
 .nl-home-today {
@@ -289,7 +280,7 @@
 }
 
 .nl-home-today-text {
-  color: var(--nl-ink);
+  color: var(--nl-muted);
   font-size: 15px;
   font-weight: 500;
 }
@@ -325,7 +316,7 @@
 .app-layout.is-home .app-bottom-nav .app-bottom-nav-link.is-active .app-bottom-nav-icon {
   background: rgba(233, 160, 90, 0.24) !important;
   color: var(--nl-accent) !important;
-  border-radius: 999px;
+  border-radius: 14px;
 }
 
 /* ---------- 8. 时间轴：三列相册格 + 日期白字压图 ---------- */

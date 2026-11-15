@@ -58,7 +58,7 @@ const refreshAiRecordDetail = async (
 type MediaType = MediaPreview['media_type'];
 type NativeImageAsset = Pick<Photo | GalleryPhoto, 'webPath' | 'format'>;
 
-const tagOptions = ['生日纪念', '户外日常', '语言发育', '大动作发展', '睡前时光', '亲子陪伴', '第一次', '家庭日常', '身高记录', '体重记录'];
+const tagOptions = ['里程碑', '生日', '第一次', '大动作发展', '睡前时光', '亲子陪伴', '家庭日常', '身高记录', '体重记录', '户外日常'];
 
 const recordTypeOptions = [
   { value: 'text' as const, label: '文字', icon: FileText },
@@ -1369,7 +1369,9 @@ const splitTags = (value: string) =>
 const formatEventDateLabel = (value: string) => {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '选择时间';
-  return date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+  const day = date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+  const weekday = date.toLocaleDateString('zh-CN', { weekday: 'short' });
+  return `${day} ${weekday}`;
 };
 
 const formatDateTimeDisplay = (value: string) => {
@@ -2364,7 +2366,7 @@ const RecordForm = ({
         minHeight: '100dvh',
         background: 'var(--nl-page-bg)',
         color: 'var(--nl-ink)',
-        padding: '0 18px calc(132px + env(safe-area-inset-bottom))',
+        padding: '0 20px calc(132px + env(safe-area-inset-bottom))',
         boxSizing: 'border-box',
         overflowX: 'hidden',
       }}
@@ -2374,17 +2376,17 @@ const RecordForm = ({
           backLabel={mode === 'create' ? '×' : '返回'}
           backVariant={mode === 'create' ? 'text' : 'icon'}
           onBack={leaveRecordForm}
-          style={{ position: 'relative', top: 'auto', margin: '0 -18px 8px', padding: 'calc(var(--nl-statusbar-top) + 12px) 18px 10px' }}
+          style={{ position: 'relative', top: 'auto', margin: '0 0 12px', padding: 'calc(var(--nl-statusbar-top) + 12px) 18px 10px' }}
           action={
             mode === 'create' ? (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
                 <button
                   type="button"
-                  onClick={() => void submitRecord('published')}
+                  onClick={() => void submitRecord('draft')}
                   disabled={submitting}
-                  style={{ minHeight: 44, border: 'none', background: 'transparent', color: 'var(--nl-accent)', fontSize: 15, fontWeight: 600, cursor: 'pointer', padding: '0 2px' }}
+                  style={{ minHeight: 44, border: 'none', background: 'transparent', color: 'var(--nl-muted-strong)', fontSize: 15, fontWeight: 500, cursor: 'pointer', padding: '0 2px' }}
                 >
-                  {submitting ? '保存中' : '保存'}
+                  {submitting ? '保存中' : '草稿'}
                 </button>
               </span>
             ) : mode === 'edit' ? (
@@ -2393,7 +2395,7 @@ const RecordForm = ({
                   aria-label="更多操作"
                   style={{ listStyle: 'none', width: 44, height: 44, display: 'grid', placeItems: 'center', cursor: 'pointer', color: 'var(--nl-ink)' }}
                 >
-                  <MoreHorizontal size={20} strokeWidth={2.2} />
+                  <MoreHorizontal size={24} strokeWidth={1.8} />
                 </summary>
                 <div style={{ position: 'absolute', right: 0, top: 46, zIndex: 60, minWidth: 132, padding: 6, borderRadius: 14, background: '#fffaf4', border: '1px solid rgba(120, 80, 40, 0.14)', boxShadow: '0 14px 34px rgba(120, 80, 40, 0.18)' }}>
                   <button
@@ -2640,7 +2642,7 @@ const RecordForm = ({
                   </>
                 ) : mode === 'create' ? (
                   <>
-                    <MediaActionButton icon={<CameraIcon size={20} strokeWidth={2} />} label="添加照片" displayLabel="添加照片" onClick={() => void openNativeGalleryImages()} disabled={uploading || audioRecording} />
+                    <MediaActionButton icon={<CameraIcon size={22} strokeWidth={1.9} />} label="添加照片" displayLabel="添加照片" onClick={() => void openNativeGalleryImages()} disabled={uploading || audioRecording} />
                     <MediaActionButton
                       icon={audioRecording ? <Square size={18} strokeWidth={2.4} fill="currentColor" /> : <Mic size={20} strokeWidth={2} />}
                       label={audioRecording ? '停止录音' : '按住说话'}
@@ -3114,6 +3116,7 @@ const RecordForm = ({
               >
                 {pendingAction === 'publish' ? '保存中…' : '保存这条记录'}
               </button>
+              <p>仅家人可见</p>
             </div>
           ) : null}
 
@@ -3413,12 +3416,12 @@ export const ViewRecordPage = () => {
             navigate('/timeline');
           }}
         >
-          <ChevronLeft size={22} strokeWidth={1.9} />
+          <ChevronLeft size={24} strokeWidth={1.8} />
         </button>
         <div className="rd-topbar-right">
           {canManageRecord ? (
           <button type="button" aria-label="更多操作" aria-haspopup="menu" aria-expanded={moreOpen} onClick={() => setMoreOpen((current) => !current)}>
-            <MoreHorizontal size={22} strokeWidth={2} />
+            <MoreHorizontal size={24} strokeWidth={1.8} />
           </button>
           ) : null}
           {moreOpen && data ? (
@@ -3485,7 +3488,6 @@ export const ViewRecordPage = () => {
                       <button type="button" onClick={(event) => { event.stopPropagation(); retryPrimaryMedia(); }} style={{ minHeight: '38px', border: '1px solid var(--nl-border-muted)', borderRadius: '8px', background: 'var(--nl-dialog-bg)', color: 'var(--nl-primary-2)', padding: '0 13px', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}>重试</button>
                     </div>
                   )}
-                  <span aria-hidden="true" style={{ position: 'absolute', inset: '45% 0 0', background: 'linear-gradient(180deg, rgba(20,16,12,0), rgba(20,16,12,0.5))', pointerEvents: 'none' }} />
                 </div>
               )
             ) : null}
@@ -3495,7 +3497,7 @@ export const ViewRecordPage = () => {
               <div className="rd-chips">
                 {rdMilestone ? <span className="rd-chip is-amber">里程碑</span> : null}
                 {rdPhotoCount ? <span className="rd-chip">照片 {rdPhotoCount}</span> : null}
-                {data.tags.filter((tag) => tag !== rdLeadTag).slice(0, 2).map((tag, index) => <span key={`${data.record_no}-chip-${tag}-${index}`} className="rd-chip is-plain">#{tag}</span>)}
+                {!rdMilestone ? data.tags.filter((tag) => tag !== rdLeadTag).slice(0, 1).map((tag, index) => <span key={`${data.record_no}-chip-${tag}-${index}`} className="rd-chip is-plain">#{tag}</span>) : null}
               </div>
               <p className="rd-copy">
                 {rdLeadTag && rdContentText.includes(rdLeadTag) ? (
@@ -3508,6 +3510,15 @@ export const ViewRecordPage = () => {
               </p>
             </div>
           </section>
+
+          {secondaryMediaList.length > 0 ? (
+            <div className="rd-gallery">
+              {secondaryMediaList.map((media) => (
+                <MediaPreviewTile key={media.media_no} media={media} compact onOpen={setFullscreenMedia} />
+              ))}
+            </div>
+          ) : null}
+
 
               {canUseAi ? (
               <section style={{ borderRadius: 0, background: 'transparent', border: 'none', borderTop: '1px solid rgba(var(--nl-shadow-rgb),0.08)', padding: '18px 0 0', display: 'grid', gap: '11px', boxShadow: 'none' }}>
@@ -3546,51 +3557,20 @@ export const ViewRecordPage = () => {
               </section>
               ) : null}
 
-          {secondaryMediaList.length > 0 ? (
-            <div className="rd-gallery">
-              {secondaryMediaList.map((media) => (
-                <MediaPreviewTile key={media.media_no} media={media} compact onOpen={setFullscreenMedia} />
-              ))}
-            </div>
-          ) : null}
-
-          {typeof document !== 'undefined' ? createPortal(
-          <div
-            className="app-detail-float-bar"
-            style={{
-              position: 'fixed',
-              left: 20,
-              right: 20,
-              bottom: 'calc(16px + env(safe-area-inset-bottom))',
-              zIndex: 30,
-              display: 'grid',
-              gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
-              gap: 10,
-              padding: 10,
-              borderRadius: 'var(--nl-radius-float, 26px)',
-              background: 'var(--nl-glass-surface)',
-              border: '1px solid var(--nl-glass-border)',
-              WebkitBackdropFilter: 'blur(20px) saturate(1.05)',
-              backdropFilter: 'blur(20px) saturate(1.05)',
-              boxShadow: '0 14px 34px rgba(146, 96, 52, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.7)',
-            }}
-          >
+          <section className="rd-actions" aria-label="记录操作">
             {canManageRecord ? (
-              <button type="button" style={{ ...secondaryButtonStyle, minHeight: 48, width: '100%', borderRadius: 999 }} onClick={() => navigate(`/record/${data.record_no}/edit`)}>
+              <button type="button" style={{ ...secondaryButtonStyle, minHeight: 52, width: '100%', borderRadius: 999 }} onClick={() => navigate(`/record/${data.record_no}/edit`)}>
                 编辑
               </button>
             ) : null}
             <button
               type="button"
-              style={{ ...primaryButtonStyle, minHeight: 48, width: '100%', borderRadius: 999, gridColumn: canManageRecord ? undefined : '1 / -1' }}
+              style={{ ...primaryButtonStyle, minHeight: 52, width: '100%', borderRadius: 999, gridColumn: canManageRecord ? undefined : '1 / -1' }}
               onClick={() => navigate(`/record/create?focus=content&reply_to=${data.record_no}`)}
             >
               回应一句
             </button>
-          </div>,
-          document.body,
-          ) : null}
-          <div aria-hidden="true" style={{ height: 'calc(96px + env(safe-area-inset-bottom))' }} />
+          </section>
         </article>
       ) : null}
       {data && deleteConfirmOpen ? (

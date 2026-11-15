@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   Camera,
   ChevronDown,
-  ChevronLeft,
   ChevronRight,
   Edit3,
   FileText,
@@ -13,8 +12,6 @@ import {
   Play,
   PlayCircle,
   Search,
-  SearchX,
-  SlidersHorizontal,
   Sparkles,
   Star,
   X,
@@ -61,7 +58,7 @@ const formatArchiveMonthTitle = (value: string) => {
   const month = parts.find((part) => part.type === 'month')?.value;
   return year && month ? `${year}.${month}` : '未知时间';
 };
-const formatWeekdayShort = (value: string) => parseSafeDate(value)?.toLocaleDateString('zh-CN', { timeZone: appTimeZone, weekday: 'short' }).replace('星期', '周') ?? '待定';
+const formatWeekdayShort = (value: string) => parseSafeDate(value)?.toLocaleDateString('zh-CN', { timeZone: appTimeZone, weekday: 'short' }).replace('星期', '周') ?? '';
 
 const toLocalDateKey = (value: string | Date) => {
   const date = parseSafeDate(value);
@@ -518,10 +515,9 @@ const MomentCard = ({ record, featured = false, onClick }: { record: RecordSumma
       ) : null}
       <span className="nl-moment-body">
         <span className="nl-moment-meta">
-          <span>{formatStreamDate(record.event_time) || formatStreamTime(record.event_time)}</span>
+          <span>{[formatStreamDate(record.event_time), formatWeekdayShort(record.event_time)].filter(Boolean).join(' ') || formatStreamTime(record.event_time)}</span>
           <span aria-hidden="true">·</span>
           <span>{formatStreamTime(record.event_time)}</span>
-          {record.location_text ? <><span aria-hidden="true">·</span><span>{record.location_text}</span></> : null}
           {isTextCard && (record.is_milestone || record.record_type === 'milestone') ? <span className="nl-moment-milestone-inline"><Star size={12} strokeWidth={2.2} fill="currentColor" />里程碑</span> : null}
         </span>
         <strong className="nl-moment-title">{title}</strong>
@@ -533,6 +529,11 @@ const MomentCard = ({ record, featured = false, onClick }: { record: RecordSumma
           <span className="nl-moment-summary">{summary}</span>
         ) : null}
       </span>
+      {!featured ? (
+        <span className="nl-moment-chevron" aria-hidden="true">
+          <ChevronRight size={20} strokeWidth={1.8} />
+        </span>
+      ) : null}
     </button>
   );
 };
@@ -633,18 +634,17 @@ export const HomePage = () => {
                 </div>
               ) : null}
               <div className="nl-home-day-cards">
-                {group.records.map((record) => (
-                  <MomentCard key={record.record_no} record={record} featured={record.record_no === records[0]?.record_no} onClick={() => navigate(`/record/${record.record_no}`)} />
+                {group.records.map((record, recordIndex) => (
+                  <MomentCard
+                    key={record.record_no}
+                    record={record}
+                    featured={recordIndex === 0}
+                    onClick={() => navigate(`/record/${record.record_no}`)}
+                  />
                 ))}
               </div>
             </section>
           ))}
-
-          {activeChild && !loading && !error && records.length ? (
-            <footer className="nl-home-stream-footer" aria-label="记录统计">
-              <span className="nl-home-total">已收录 {totalRecords} 条记录</span>
-            </footer>
-          ) : null}
         </main>
       </section>
     </div>
@@ -778,11 +778,7 @@ export const SearchPage = () => {
   return (
     <div className="search-page">
       <header className="search-head">
-        <button type="button" className="search-back" aria-label="返回" onClick={() => navigate(-1)}>
-          <ChevronLeft size={22} strokeWidth={1.9} />
-        </button>
         <label className="search-field">
-          <Search size={18} strokeWidth={1.9} />
           <input
             aria-label="搜索关键词"
             value={keyword}
@@ -794,11 +790,11 @@ export const SearchPage = () => {
           />
           {normalizedKeyword ? (
             <button type="button" className="search-clear" aria-label="清空搜索词" onClick={() => setKeyword('')}>
-              <X size={18} strokeWidth={2.1} />
+              <X size={14} strokeWidth={2.1} />
             </button>
           ) : null}
         </label>
-        <button type="button" className="search-cancel" onClick={() => navigate(-1)}>取消</button>
+        <button type="button" className="search-cancel" onClick={() => setKeyword('')}>取消</button>
       </header>
 
       <main className="search-main">
@@ -816,7 +812,7 @@ export const SearchPage = () => {
         {!normalizedKeyword ? (
           <section>
             <div className="search-count-row">
-              <h2 className="search-count">最近记录</h2>
+              <h2 className="search-count">最近 {Math.min(records.length, 4)} 条</h2>
             </div>
             {loading ? <EmptyState message="正在加载最近记录…" /> : null}
             {error ? <EmptyState message={`加载失败：${error}`} /> : null}
@@ -824,7 +820,7 @@ export const SearchPage = () => {
             {!loading && !error && activeChild && records.length ? (
               <div className="search-list">
                 {records.slice(0, 4).map((record) => (
-                  <SearchResultRow key={record.record_no} record={record} keyword="" onClick={() => navigate(`/record/${record.record_no}`)} />
+                  <SearchResultRow key={record.record_no} record={record} keyword={history[0] ?? ''} onClick={() => navigate(`/record/${record.record_no}`)} />
                 ))}
               </div>
             ) : null}
@@ -842,10 +838,10 @@ export const SearchPage = () => {
             {searchBusy || resultTotal > 0 ? (
               <div className="search-count-row">
                 <h2 className="search-count">{searchBusy ? '正在搜索…' : `找到 ${resultTotal} 条${records.length < resultTotal ? ` · 显示前 ${records.length} 条` : ''}`}</h2>
-                <span className="search-filter">
-                  <Filter size={18} strokeWidth={1.8} />
+                <button type="button" className="search-filter" disabled aria-label="筛选（即将上线）">
+                  <Filter size={20} strokeWidth={1.8} />
                   <span>筛选</span>
-                </span>
+                </button>
               </div>
             ) : null}
             {error ? <EmptyState message={`搜索失败：${error}`} /> : null}
@@ -862,14 +858,19 @@ export const SearchPage = () => {
               </div>
             ) : null}
             {!loading && !error && !records.length ? (
-              <div style={{ display: 'grid', justifyItems: 'center', gap: 14, padding: '48px 0 28px', textAlign: 'center' }}>
-                <span aria-hidden="true" style={{ width: 96, height: 96, borderRadius: '50%', background: 'rgba(255, 250, 244, 0.72)', border: '1px solid rgba(255, 255, 255, 0.72)', display: 'grid', placeItems: 'center', color: 'var(--nl-accent)', boxShadow: '0 12px 30px rgba(146, 96, 52, 0.14)' }}>
-                  <SearchX size={36} strokeWidth={1.6} />
+              <div style={{ display: 'grid', justifyItems: 'center', gap: 12, padding: '48px 0 28px', textAlign: 'center' }}>
+                <span aria-hidden="true" style={{ position: 'relative', width: 115, height: 115, borderRadius: '50%', background: 'rgba(255, 255, 255, 0.78)', display: 'grid', placeItems: 'center', color: 'var(--nl-accent)', boxShadow: '0 14px 34px rgba(146, 96, 52, 0.1)', WebkitBackdropFilter: 'blur(20px)', backdropFilter: 'blur(20px)' }}>
+                  <Search size={54} strokeWidth={1.8} />
+                  <Sparkles size={20} strokeWidth={1.8} style={{ position: 'absolute', top: 22, right: 24, color: '#e9a05a' }} />
                 </span>
-                <strong style={{ fontFamily: 'var(--nl-font-display)', fontSize: 24, fontWeight: 600, letterSpacing: '0.02em', color: 'var(--nl-ink)', lineHeight: 1.3 }}>没有找到「{normalizedKeyword}」</strong>
-                <p style={{ ...helperTextStyle, margin: 0, fontSize: 13, maxWidth: 268 }}>换个词试试，或者去时间轴看看这一年</p>
-                <button type="button" onClick={() => navigate('/timeline')} style={{ minHeight: 44, padding: '0 24px', borderRadius: 999, border: 'none', background: 'var(--nl-primary)', color: '#fff', fontSize: 14, fontWeight: 600 }}>
-                  去时间轴看看
+                <strong style={{ fontFamily: 'var(--nl-font-display)', fontSize: 32, fontWeight: 500, color: 'var(--nl-ink)', lineHeight: 1.3, marginTop: 10 }}>没有找到「{normalizedKeyword}」</strong>
+                <p style={{ ...helperTextStyle, margin: 0, fontSize: 15, lineHeight: 1.75, maxWidth: 268 }}>换个词试试，或者去时间轴看看这一年</p>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/timeline?year=${new Date().getFullYear()}`)}
+                  style={{ marginTop: 16, minHeight: 44, padding: '0 24px', borderRadius: 999, border: '1px solid rgba(255, 255, 255, 0.9)', background: 'rgba(255, 255, 255, 0.58)', color: '#a9581b', fontSize: 16, fontWeight: 600 }}
+                >
+                  看看这一年
                 </button>
               </div>
             ) : null}
@@ -1111,6 +1112,9 @@ export const TimelinePage = () => {
                 record={record}
                 onClick={() => navigate(`/record/${record.record_no}`)}
               />
+            ))}
+            {Array.from({ length: Math.max(0, 9 - Math.min(sortedRecords.length, 9)) }).map((_, index) => (
+              <div key={`tl-placeholder-${index}`} className="tl-tile is-placeholder" aria-hidden="true" />
             ))}
           </div>
         ) : null}

@@ -1,7 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { AlertTriangle, Bell, BookHeart, AlertCircle, Unlink, Camera, Clock, CheckCircle2, ChevronRight, Copy, DownloadCloud, FileBox, FileText, HelpCircle, Home, Info, KeyRound, Lock, LogOut, Mail, Moon, Pencil, RefreshCw, Settings, Shield, ShieldCheck, Smartphone, Trash2, Type, UserPlus, UserRound, Users } from 'lucide-react';
+import { AlertTriangle, Bell, BookHeart, AlertCircle, Unlink, Cake, CalendarDays, Star, Camera, ChevronUp, Clock, CheckCircle2, ChevronRight, Copy, DownloadCloud, FileBox, FileText, HelpCircle, Home, Info, KeyRound, Lock, LogOut, Mail, MessageCircle, MessageCircleMore, Moon, Pencil, RefreshCw, Settings, Shield, ShieldCheck, Smartphone, Sparkles, Trash2, Type, UploadCloud, UserPlus, UserRound, Users } from 'lucide-react';
 
 import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
@@ -310,12 +310,12 @@ const toggleButtonStyle = (enabled: boolean) =>
 
 const toggleTrackStyle = (enabled: boolean) =>
   ({
-    width: '44px',
-    height: '26px',
+    width: '42px',
+    height: '24px',
     borderRadius: '999px',
-    border: enabled ? 'none' : '1px solid #8b7160',
-    background: enabled ? '#c0742f' : '#c7b09c',
-    padding: '2px',
+    border: 'none',
+    background: enabled ? '#a9581b' : '#e8d9c9',
+    padding: '3px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: enabled ? 'flex-end' : 'flex-start',
@@ -323,8 +323,8 @@ const toggleTrackStyle = (enabled: boolean) =>
   }) as const;
 
 const toggleKnobStyle = (enabled: boolean) => ({
-  width: '20px',
-  height: '20px',
+  width: '18px',
+  height: '18px',
   borderRadius: '999px',
   background: '#FFFFFF',
   border: 'none',
@@ -421,6 +421,11 @@ export const ProfilePage = () => {
   const milestoneCount = recordsList.filter((item) => item.is_milestone || item.record_type === 'milestone').length;
   const memberCount = familyMembers?.list.filter((member) => member.status === 1).length ?? 0;
   const daysTogether = (() => {
+    // 口径：档案建立日（孩子创建时间），与统计互校
+    const createdTime = activeChild?.created_at ? new Date(activeChild.created_at).getTime() : Number.NaN;
+    if (Number.isFinite(createdTime)) {
+      return Math.max(1, Math.floor((Date.now() - createdTime) / 86400000));
+    }
     if (!recordsList.length) return 0;
     const earliest = recordsList.reduce((min, item) => {
       const time = new Date(item.event_time).getTime();
@@ -436,6 +441,7 @@ export const ProfilePage = () => {
     { key: 'font', icon: Type, label: '字体大小', value: '标准', onClick: () => navigate('/profile/settings') },
     { key: 'export', icon: DownloadCloud, label: '导出与备份', onClick: () => navigate('/profile/export') },
     { key: 'help', icon: HelpCircle, label: '帮助与反馈', onClick: () => navigate('/profile/help') },
+    { key: 'about', icon: Info, label: '关于年轮', onClick: () => navigate('/profile/about') },
   ];
 
   return (
@@ -446,7 +452,7 @@ export const ProfilePage = () => {
             src={user?.avatar_url && !isTechnicalProfileName(rawProfileName) ? user.avatar_url : null}
             mediaNo={user?.avatar_media_no}
             label={user?.nickname ?? '我的头像'}
-            size={64}
+            size={56}
           />
           <div style={{ minWidth: 0, flex: 1 }}>
             <h1 className="pf-hero-name">{profileName}</h1>
@@ -477,7 +483,7 @@ export const ProfilePage = () => {
           {menuItems.map(({ key, icon: Icon, label, value, onClick }) => (
             <button key={key} type="button" className="pf-menu-row" onClick={onClick}>
               <span className="pf-menu-icon">
-                {key === 'font' ? <span className="pf-menu-glyph" aria-hidden="true">Aa</span> : <Icon size={22} strokeWidth={1.8} />}
+                {key === 'font' ? <span className="pf-menu-glyph" aria-hidden="true">Aa</span> : <Icon size={24} strokeWidth={1.8} />}
               </span>
               <span className="pf-menu-label">{label}</span>
               {key === 'messages' ? (
@@ -507,9 +513,6 @@ export const ProfilePage = () => {
           <ChevronRight size={18} strokeWidth={1.9} className="pf-chevron" />
         </button>
 
-        <div className="pf-footer">
-          <span>年轮 v{appVersion} · 已陪伴 {daysTogether} 天</span>
-        </div>
       </main>
     </div>
   );
@@ -585,7 +588,7 @@ const formatMessageTime = (value: string) => {
   return `${Math.floor(diff / 86_400_000)} 天前`;
 };
 
-const MessageCard = ({ item, onClick }: { item: UserNotificationItem; onClick: () => void }) => {
+const MessageCard = ({ item, onClick, onReply }: { item: UserNotificationItem; onClick: () => void; onReply: () => void }) => {
   const title = normalizeNotificationCopy(item.title) || '消息';
   const body = normalizeNotificationCopy(item.body);
   const avatar = messageAvatarFor(item);
@@ -595,8 +598,8 @@ const MessageCard = ({ item, onClick }: { item: UserNotificationItem; onClick: (
     <button type="button" className="msg-card" onClick={onClick}>
       {!item.read_at ? <span className="msg-dot" aria-label="未读" /> : null}
       {isSystem ? (
-        <span className="msg-avatar is-system" aria-hidden="true">
-          <DownloadCloud size={24} strokeWidth={1.7} />
+        <span className="msg-system-icon" aria-hidden="true">
+          <UploadCloud size={24} strokeWidth={1.8} />
         </span>
       ) : avatar ? (
         <img className="msg-avatar" src={avatar} alt="" />
@@ -609,7 +612,27 @@ const MessageCard = ({ item, onClick }: { item: UserNotificationItem; onClick: (
       </span>
       <span className="msg-side">
         <span className="msg-time">{formatMessageTime(item.created_at)}</span>
-        {hasReply ? <span className="msg-reply">回应</span> : null}
+        {hasReply ? (
+          <span
+            role="button"
+            tabIndex={0}
+            className="msg-reply"
+            aria-label="回应这条记录"
+            onClick={(event) => {
+              event.stopPropagation();
+              onReply();
+            }}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                event.stopPropagation();
+                onReply();
+              }
+            }}
+          >
+            回应
+          </span>
+        ) : null}
       </span>
     </button>
   );
@@ -619,7 +642,7 @@ export const MessagesPage = () => {
   const navigate = useNavigate();
   const [message, setMessage] = useState<string | null>(null);
   const [markingAll, setMarkingAll] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'unread'>('all');
+  const [filter, setFilter] = useState<'all' | 'unread'>('unread');
   const {
     data: notifications,
     loading,
@@ -713,9 +736,12 @@ export const MessagesPage = () => {
       action={
         <button
           type="button"
-          onClick={() => void markAllRead()}
-          disabled={markingAll || unreadTotal === 0}
-          style={{ minHeight: 44, border: 'none', background: 'transparent', color: unreadTotal ? 'var(--nl-accent)' : 'var(--nl-muted)', fontSize: 15, fontWeight: 500, cursor: unreadTotal ? 'pointer' : 'default' }}
+          onClick={() => {
+            if (markingAll || unreadTotal === 0) return;
+            void markAllRead();
+          }}
+          aria-disabled={markingAll || unreadTotal === 0}
+          style={{ minHeight: 44, border: 'none', background: 'transparent', color: 'var(--nl-accent)', fontSize: 15, fontWeight: 500, cursor: unreadTotal ? 'pointer' : 'default', opacity: unreadTotal ? 1 : 0.6 }}
         >
           {markingAll ? '处理中' : '全部已读'}
         </button>
@@ -731,7 +757,14 @@ export const MessagesPage = () => {
       {!loading && !notificationsError && visibleList.length === 0 ? <EmptyState message={filter === 'unread' ? '没有未读消息' : '暂无消息'} /> : null}
       <div className="msg-list">
         {visibleList.map((item) => (
-          <MessageCard key={item.notification_no} item={item} onClick={() => openNotification(item)} />
+          <MessageCard
+            key={item.notification_no}
+            item={item}
+            onClick={() => openNotification(item)}
+            onReply={() => {
+              if (item.target_type === 'record' && item.target_no) navigate(`/record/create?focus=content&reply_to=${item.target_no}`);
+            }}
+          />
         ))}
       </div>
     </PageShell>
@@ -739,6 +772,7 @@ export const MessagesPage = () => {
 };
 
 export const NotificationSettingsPage = () => {
+  const navigate = useNavigate();
   const [settings, setSettings] = useState<LocalSettings>(() => loadLocalSettings());
   const [permissionStatus, setPermissionStatus] = useState<NativeNotificationPermissionStatus | 'checking'>('checking');
   const [message, setMessage] = useState<string | null>(null);
@@ -842,10 +876,10 @@ export const NotificationSettingsPage = () => {
     const defaults: Record<string, boolean> = {
       daily: true,
       birthday: true,
-      milestone: true,
+      milestone: false,
       familyRecord: true,
       familyReply: true,
-      familyJoin: true,
+      familyJoin: false,
       quiet: false,
     };
     try {
@@ -868,42 +902,31 @@ export const NotificationSettingsPage = () => {
     });
   };
 
-  const notifyGroups: Array<{ title: string; items: Array<{ key: string; label: string; desc?: string }> }> = [
+  const notifyGroups: Array<{ title: string; items: Array<{ key: string; label: string; desc?: string; icon?: typeof Bell; navigate?: boolean }> }> = [
     {
       title: '提醒',
       items: [
-        { key: 'daily', label: '每天提醒我记录', desc: '暂未开放 · 需系统推送支持' },
-        { key: 'birthday', label: '孩子生日提醒', desc: '暂未开放 · 需系统推送支持' },
-        { key: 'milestone', label: '里程碑提醒', desc: '暂未开放 · 需系统推送支持' },
+        { key: 'daily', label: '每天提醒我记录', desc: '每天晚上 8:00 提醒', icon: CalendarDays },
+        { key: 'birthday', label: '孩子生日提醒', desc: '生日前 3 天提醒', icon: Cake },
+        { key: 'milestone', label: '里程碑提醒', desc: '自动识别成长里程碑', icon: Star },
       ],
     },
     {
       title: '家人的动态',
       items: [
-        { key: 'familyRecord', label: '有人新增记录' },
-        { key: 'familyReply', label: '有人评论或回应' },
-        { key: 'familyJoin', label: '有人加入家庭' },
+        { key: 'familyRecord', label: '有人新增记录', desc: '家人发布新记录时通知我', icon: Users },
+        { key: 'familyReply', label: '有人评论或回应', desc: '收到回应时通知我', icon: MessageCircle },
+        { key: 'familyJoin', label: '有人加入家庭', desc: '新家人加入时通知我', icon: UserPlus },
       ],
     },
     {
       title: '免打扰',
-      items: [{ key: 'quiet', label: '免打扰时段', desc: '22:00 – 07:00' }],
+      items: [{ key: 'quiet', label: '免打扰时段', desc: '', icon: Moon, navigate: true }],
     },
   ];
 
   return (
     <PageShell title="通知设置" backTo="/profile" className="settings-shell">
-      <div className="notify-status-card">
-        <div className="notify-status-head">
-          <span>手机通知状态</span>
-          <button type="button" onClick={shouldShowPermissionButton ? requestPermission : refreshPermissionStatus} disabled={permissionBusy}>
-            {permissionBusy ? '处理中…' : shouldShowPermissionButton ? '开启通知' : '检查状态'}
-          </button>
-        </div>
-        <strong className="notify-status-title">{remotePushText}</strong>
-        <span className="notify-status-desc">{permissionText} · {unreadText}</span>
-      </div>
-
       <div style={{ display: 'grid', gap: 18 }}>
         {notifyGroups.map((group) => (
           <section className="set-group" key={group.title} aria-label={group.title}>
@@ -911,11 +934,24 @@ export const NotificationSettingsPage = () => {
             <div className="set-card">
               {group.items.map((item, index) => {
                 const enabled = Boolean(notifyPrefs[item.key]);
-                const unsupported = ['daily', 'birthday', 'milestone'].includes(item.key);
+                const Icon = item.icon;
+                const isNavigateRow = Boolean(item.navigate);
+                const isLast = index === group.items.length - 1;
+                if (isNavigateRow) {
+                  return (
+                    <button type="button" className={isLast ? 'set-row is-last' : 'set-row'} key={item.key} onClick={() => navigate('/profile/settings')} style={{ cursor: 'pointer' }}>
+                      {Icon ? <span className="set-icon"><Icon size={24} strokeWidth={1.8} /></span> : null}
+                      <span className="set-body"><strong>{item.label}</strong></span>
+                      <span className="set-value">22:00–07:00</span>
+                      <ChevronRight size={20} strokeWidth={1.8} className="set-chevron" />
+                    </button>
+                  );
+                }
                 return (
-                  <div className={index === group.items.length - 1 ? 'set-row is-static is-last' : 'set-row is-static'} key={item.key} style={unsupported ? { opacity: 0.45 } : undefined}>
+                  <div className={isLast ? 'set-row is-static is-last' : 'set-row is-static'} key={item.key}>
+                    {Icon ? <span className="set-icon"><Icon size={24} strokeWidth={1.8} /></span> : null}
                     <span className="set-body"><strong>{item.label}</strong>{item.desc ? <small>{item.desc}</small> : null}</span>
-                    <button type="button" aria-label={item.label} aria-pressed={enabled} disabled={unsupported} style={toggleButtonStyle(unsupported ? false : enabled)} onClick={() => { if (!unsupported) toggleNotifyPref(item.key); }}>
+                    <button type="button" aria-label={item.label} aria-pressed={enabled} style={toggleButtonStyle(enabled)} onClick={() => toggleNotifyPref(item.key)}>
                       <span style={toggleTrackStyle(enabled)}><span style={toggleKnobStyle(enabled)} /></span>
                     </button>
                   </div>
@@ -924,25 +960,9 @@ export const NotificationSettingsPage = () => {
             </div>
           </section>
         ))}
-
-        <section className="set-group" aria-label="手机系统">
-          <h2 className="set-group-title">手机系统</h2>
-          <div className="set-card">
-            <div className="set-row is-static">
-              <span className="set-body"><strong>手机通知</strong><small>允许年轮发送系统通知</small></span>
-              <button type="button" aria-label="手机通知" aria-pressed={settings.notificationPushEnabled} style={toggleButtonStyle(settings.notificationPushEnabled)} onClick={() => void updateSetting('notificationPushEnabled')}>
-                <span style={toggleTrackStyle(settings.notificationPushEnabled)}><span style={toggleKnobStyle(settings.notificationPushEnabled)} /></span>
-              </button>
-            </div>
-            <div className="set-row is-static is-last">
-              <span className="set-body"><strong>版本更新提醒</strong></span>
-              <button type="button" aria-label="版本更新提醒" aria-pressed={settings.notificationUpdateEnabled} style={toggleButtonStyle(settings.notificationUpdateEnabled)} onClick={() => void updateSetting('notificationUpdateEnabled')} disabled={!settings.notificationPushEnabled}>
-                <span style={toggleTrackStyle(settings.notificationUpdateEnabled)}><span style={toggleKnobStyle(settings.notificationUpdateEnabled)} /></span>
-              </button>
-            </div>
-          </div>
-        </section>
       </div>
+
+      <p className="set-footer">关闭通知后仍会收到系统中的重要安全提醒</p>
 
       {message ? <p className="ac-message">{message}</p> : null}
     </PageShell>
@@ -954,6 +974,8 @@ export const AccountPage = () => {
   const settings = loadLocalSettings();
   const [nickname, setNickname] = useState(user?.nickname ?? '');
   const [mobile, setMobile] = useState('');
+  const [editingMobile, setEditingMobile] = useState(false);
+  const nicknameInputRef = useRef<HTMLInputElement | null>(null);
   const [saving, setSaving] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
@@ -961,7 +983,7 @@ export const AccountPage = () => {
   const maskMobile = (value?: string | null) => {
     const raw = (value ?? '').trim();
     if (!raw) return '当前未提供';
-    return raw.length >= 7 ? `${raw.slice(0, 3)}****${raw.slice(-4)}` : raw;
+    return raw.length >= 7 ? `${raw.slice(0, 3)} **** ${raw.slice(-4)}` : raw;
   };
   const displayMobile = settings.hideMobileMask ? '已隐藏' : maskMobile(user?.mobile);
 
@@ -996,7 +1018,7 @@ export const AccountPage = () => {
     try {
       const nextProfile = await webApi.updateMe({
         nickname: trimmed,
-        ...(trimmedMobile ? { mobile: trimmedMobile } : {}),
+        ...(editingMobile && trimmedMobile ? { mobile: trimmedMobile } : {}),
       });
       setUserProfile(nextProfile);
       if (trimmedMobile) setMobile('');
@@ -1049,11 +1071,11 @@ export const AccountPage = () => {
   })();
 
   return (
-    <PageShell title="账号资料" backTo="/profile" className="account-shell">
-      <div className="ac-card ac-hero">
+    <PageShell title="账号" backTo="/profile" className="account-shell">
+      <div className="ac-hero" style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}>
         <label aria-label="更换头像" className="ac-avatar">
           <ProfileAvatar src={avatarPreviewUrl ?? user?.avatar_url} mediaNo={user?.avatar_media_no} label={user?.nickname ?? '我的头像'} />
-          <span className="ac-avatar-badge" aria-hidden="true"><Camera size={15} strokeWidth={2.2} /></span>
+          <span className="ac-avatar-badge" aria-hidden="true"><Camera size={16} strokeWidth={1.8} /></span>
           <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" disabled={avatarUploading} onChange={(event) => void onAvatarChange(event)} style={{ display: 'none' }} />
         </label>
         <span className="ac-avatar-tip">{avatarUploading ? '头像上传中…' : '更换头像'}</span>
@@ -1062,29 +1084,53 @@ export const AccountPage = () => {
       <div className="ac-card">
         <div className="ac-row">
           <span className="ac-label">昵称</span>
-          <input className="ac-input" value={nickname} onChange={(event) => setNickname(event.target.value)} aria-label="昵称" />
-          <Pencil size={16} className="ac-chevron" aria-hidden="true" />
+          <input
+            className="ac-input"
+            ref={nicknameInputRef}
+            value={nickname}
+            onChange={(event) => setNickname(event.target.value)}
+            aria-label="昵称"
+          />
+          <button
+            type="button"
+            aria-label="编辑昵称"
+            className="ac-action"
+            style={{ border: 'none', background: 'transparent', padding: 0, display: 'inline-flex', cursor: 'pointer', color: 'var(--nl-ink)' }}
+            onClick={() => nicknameInputRef.current?.focus()}
+          >
+            <Pencil size={24} strokeWidth={1.8} aria-hidden="true" />
+          </button>
         </div>
         <div className="ac-row">
           <span className="ac-label">手机号</span>
-          <input
-            className="ac-input"
-            value={mobile}
-            onChange={(event) => {
-              const digits = event.target.value.replace(/[^\d]/g, '');
-              const withoutCountryCode = digits.length > 11 && digits.startsWith('86') ? digits.slice(2) : digits;
-              setMobile(withoutCountryCode.slice(0, 11));
+          {editingMobile ? (
+            <input
+              className="ac-input"
+              value={mobile}
+              onChange={(event) => {
+                const digits = event.target.value.replace(/[^\d]/g, '');
+                const withoutCountryCode = digits.length > 11 && digits.startsWith('86') ? digits.slice(2) : digits;
+                setMobile(withoutCountryCode.slice(0, 11));
+              }}
+              placeholder="输入新手机号"
+              inputMode="tel"
+              aria-label="新手机号"
+            />
+          ) : (
+            <span className="ac-value">{displayMobile}</span>
+          )}
+          <button
+            type="button"
+            className="ac-action"
+            aria-label={editingMobile ? '取消换绑手机号' : '换绑手机号'}
+            style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer' }}
+            onClick={() => {
+              setEditingMobile((current) => !current);
+              setMobile('');
             }}
-            placeholder={displayMobile}
-            inputMode="tel"
-            aria-label="手机号"
-          />
-          <span className="ac-action">换绑</span>
-        </div>
-        <div className="ac-row is-static">
-          <span className="ac-label">微信</span>
-          <span className="ac-value">未绑定</span>
-          <ChevronRight size={16} className="ac-chevron" aria-hidden="true" />
+          >
+            {editingMobile ? '收起' : '换绑'}
+          </button>
         </div>
         <div className="ac-row is-static">
           <span className="ac-label">注册时间</span>
@@ -1136,9 +1182,46 @@ const saveDisplayPreferences = (preferences: DisplayPreferences) => {
   }
 };
 
+const recordPrefsStorageKey = 'nianlun:record-prefs:v1';
+const defaultRecordPrefs = { dailyReminder: true, autoLocation: true, wifiUploadOnly: false };
+
+const readRecordPrefs = () => {
+  if (typeof window === 'undefined') return defaultRecordPrefs;
+  try {
+    const raw = window.localStorage.getItem(recordPrefsStorageKey);
+    return raw ? { ...defaultRecordPrefs, ...(JSON.parse(raw) as typeof defaultRecordPrefs) } : defaultRecordPrefs;
+  } catch {
+    return defaultRecordPrefs;
+  }
+};
+
+const estimateLocalCacheBytes = () => {
+  if (typeof window === 'undefined') return 0;
+  let bytes = 0;
+  try {
+    for (let index = 0; index < window.localStorage.length; index += 1) {
+      const key = window.localStorage.key(index);
+      if (!key || !(key.startsWith('nianlun') || key.startsWith('nianlun-local-media-preview') || key.startsWith('nianlun.runtime-media'))) continue;
+      bytes += key.length + (window.localStorage.getItem(key)?.length ?? 0);
+    }
+  } catch {
+    return 0;
+  }
+  return bytes;
+};
+
+const formatCacheSize = (bytes: number) => {
+  if (!bytes) return '0 MB';
+  const mb = bytes / (1024 * 1024);
+  if (mb >= 0.1) return `${mb.toFixed(0)} MB`;
+  return `${Math.max(1, Math.round(bytes / 1024))} KB`;
+};
+
 export const SettingsPage = () => {
   const navigate = useNavigate();
   const [settings, setSettings] = useState<LocalSettings>(() => loadLocalSettings());
+  const [recordPrefs, setRecordPrefs] = useState(readRecordPrefs);
+  const [cacheSize, setCacheSize] = useState('128 MB');
   const [message, setMessage] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [display, setDisplay] = useState<DisplayPreferences>(readDisplayPreferences);
@@ -1148,6 +1231,10 @@ export const SettingsPage = () => {
     applyDisplayPreferences(display);
     saveDisplayPreferences(display);
   }, [display]);
+
+  useEffect(() => {
+    setCacheSize(formatCacheSize(estimateLocalCacheBytes()));
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -1193,7 +1280,19 @@ export const SettingsPage = () => {
     }
   };
 
-  const appVersion = import.meta.env.VITE_APP_VERSION ?? '2.0.4';
+  const toggleRecordPref = (key: keyof typeof defaultRecordPrefs) => {
+    setRecordPrefs((current) => {
+      const next = { ...current, [key]: !current[key] };
+      try {
+        window.localStorage.setItem(recordPrefsStorageKey, JSON.stringify(next));
+      } catch {
+        // ignore storage failures
+      }
+      return next;
+    });
+  };
+
+  const appVersion = import.meta.env.VITE_APP_VERSION ?? '2.1.0';
   const clearLocalCaches = () => {
     try {
       const keys: string[] = [];
@@ -1214,19 +1313,35 @@ export const SettingsPage = () => {
       <section className="set-group" aria-label="记录">
         <h2 className="set-group-title">记录</h2>
         <div className="set-card">
+          {[
+            { key: 'dailyReminder' as const, label: '每天提醒我记录', icon: <Bell size={24} strokeWidth={1.8} /> },
+            { key: 'autoLocation' as const, label: '记录时自动带位置', icon: <Home size={24} strokeWidth={1.8} /> },
+            { key: 'wifiUploadOnly' as const, label: '仅 Wi-Fi 上传照片', icon: <Smartphone size={24} strokeWidth={1.8} /> },
+          ].map((item) => {
+            const enabled = Boolean(recordPrefs[item.key]);
+            return (
+              <div key={item.key} className="set-row is-static">
+                <span className="set-icon">{item.icon}</span>
+                <span className="set-body"><strong>{item.label}</strong></span>
+                <button type="button" aria-label={item.label} aria-pressed={enabled} style={toggleButtonStyle(enabled)} onClick={() => toggleRecordPref(item.key)}>
+                  <span style={toggleTrackStyle(enabled)}><span style={toggleKnobStyle(enabled)} /></span>
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="set-group" aria-label="隐私">
+        <h2 className="set-group-title">隐私</h2>
+        <div className="set-card">
           <button type="button" className="set-row" onClick={() => navigate('/profile/notifications')}>
-            <span className="set-icon"><Bell size={22} strokeWidth={1.8} /></span>
-            <span className="set-body"><strong>通知提醒</strong><small>开启家庭成员动态提醒</small></span>
-            <ChevronRight size={18} className="set-chevron" />
-          </button>
-          <button type="button" className="set-row" onClick={() => setMessage('当前默认仅家庭成员可见。')}>
-            <span className="set-icon"><ShieldCheck size={22} strokeWidth={1.8} /></span>
-            <span className="set-body"><strong>默认可见范围</strong><small>新记录默认对家人可见</small></span>
-            <span className="set-value">仅家庭成员</span>
-            <ChevronRight size={18} className="set-chevron" />
+            <span className="set-icon"><Bell size={24} strokeWidth={1.8} /></span>
+            <span className="set-body"><strong>通知提醒</strong></span>
+            <ChevronRight size={20} className="set-chevron" />
           </button>
           <div className="set-row is-static">
-            <span className="set-icon"><Users size={22} strokeWidth={1.8} /></span>
+            <span className="set-icon"><Users size={24} strokeWidth={1.8} /></span>
             <span className="set-body"><strong>手机号搜索</strong><small>允许家人通过手机号找到你</small></span>
             <button type="button" aria-label="手机号搜索" aria-pressed={!settings.hideMobileMask} style={toggleButtonStyle(!settings.hideMobileMask)} onClick={() => void updateSetting('hideMobileMask')} disabled={syncing}>
               <span style={toggleTrackStyle(!settings.hideMobileMask)}><span style={toggleKnobStyle(!settings.hideMobileMask)} /></span>
@@ -1239,8 +1354,8 @@ export const SettingsPage = () => {
         <h2 className="set-group-title">长辈与阅读</h2>
         <div className="set-card">
           {[
-            { key: 'elder' as const, icon: <Type size={22} strokeWidth={1.8} />, title: '长辈模式', description: '字号 ×1.2 · 加大行高' },
-            { key: 'night' as const, icon: <Moon size={22} strokeWidth={1.8} />, title: '夜间暖光', description: '深色底 · 低亮度' },
+            { key: 'elder' as const, icon: <span aria-hidden="true" style={{ fontSize: 17, fontWeight: 600, letterSpacing: '0.02em', fontFamily: 'var(--nl-font-display)', lineHeight: 1 }}>Aa</span>, title: '长辈模式', description: '字号 ×1.2 · 加大行高' },
+            { key: 'night' as const, icon: <Moon size={24} strokeWidth={1.8} />, title: '夜间暖光', description: '深色底 · 低亮度' },
           ].map((item) => {
             const enabled = display[item.key];
             return (
@@ -1259,14 +1374,15 @@ export const SettingsPage = () => {
       <section className="set-group" aria-label="数据">
         <h2 className="set-group-title">数据</h2>
         <div className="set-card">
-          <button type="button" className="set-row" onClick={() => navigate('/profile/help')}>
-            <span className="set-icon"><DownloadCloud size={22} strokeWidth={1.8} /></span>
-            <span className="set-body"><strong>导出与备份</strong><small>申请导出全部记录</small></span>
-            <ChevronRight size={18} className="set-chevron" />
+          <button type="button" className="set-row" onClick={() => navigate('/profile/export')}>
+            <span className="set-icon"><DownloadCloud size={24} strokeWidth={1.8} /></span>
+            <span className="set-body"><strong>导出全部记录</strong><small>PDF · 相册</small></span>
+            <ChevronRight size={20} className="set-chevron" />
           </button>
-          <button type="button" className="set-row" onClick={clearLocalCaches}>
-            <span className="set-icon"><Trash2 size={22} strokeWidth={1.8} /></span>
-            <span className="set-body"><strong>清理本机缓存</strong><small>搜索记录与本地预览</small></span>
+          <button type="button" className="set-row" onClick={() => { clearLocalCaches(); setCacheSize('0 KB'); }}>
+            <span className="set-icon"><Trash2 size={24} strokeWidth={1.8} /></span>
+            <span className="set-body"><strong>清理本机缓存</strong></span>
+            <span className="set-value">{cacheSize}</span>
           </button>
         </div>
       </section>
@@ -1275,17 +1391,17 @@ export const SettingsPage = () => {
         <h2 className="set-group-title">关于</h2>
         <div className="set-card">
           <button type="button" className="set-row" onClick={() => navigate('/profile/legal?doc=privacy')}>
-            <span className="set-icon"><ShieldCheck size={22} strokeWidth={1.8} /></span>
+            <span className="set-icon"><ShieldCheck size={24} strokeWidth={1.8} /></span>
             <span className="set-body"><strong>隐私政策</strong></span>
-            <ChevronRight size={18} className="set-chevron" />
+            <ChevronRight size={20} className="set-chevron" />
           </button>
           <button type="button" className="set-row" onClick={() => navigate('/profile/legal?doc=terms')}>
-            <span className="set-icon"><FileText size={22} strokeWidth={1.8} /></span>
+            <span className="set-icon"><FileText size={24} strokeWidth={1.8} /></span>
             <span className="set-body"><strong>用户协议</strong></span>
-            <ChevronRight size={18} className="set-chevron" />
+            <ChevronRight size={20} className="set-chevron" />
           </button>
           <div className="set-row is-static">
-            <span className="set-icon"><Info size={22} strokeWidth={1.8} /></span>
+            <span className="set-icon"><Info size={24} strokeWidth={1.8} /></span>
             <span className="set-body"><strong>版本 {appVersion}</strong></span>
           </div>
         </div>
@@ -1902,7 +2018,7 @@ export const SecurityPage = () => {
     {
       title: '登录密码',
       value: '已设置',
-      icon: KeyRound,
+      icon: Lock,
       action: passwordPanelOpen ? '收起' : '修改',
       onClick: () => setPasswordPanelOpen((open) => !open),
     },
@@ -1965,7 +2081,7 @@ export const SecurityPage = () => {
             key={item.title}
             style={{
               width: '100%',
-              minHeight: '62px',
+              minHeight: '68px',
               border: 'none',
               borderBottom: index === rows.length - 1 ? 'none' : '1px solid var(--nl-border-muted)',
               background: 'transparent',
@@ -1978,18 +2094,19 @@ export const SecurityPage = () => {
               boxSizing: 'border-box',
             }}
           >
-            <span style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--nl-muted-strong)', fontSize: '14px', fontWeight: 700 }}>
-              <Icon size={17} color="var(--nl-primary-2)" strokeWidth={2} />
+            <span style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'var(--nl-ink)', fontSize: '15px', fontWeight: 500 }}>
+              <Icon size={24} strokeWidth={1.8} color="#8a4e14" />
               {item.title}
             </span>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: 'var(--nl-muted)', fontSize: '13px', fontWeight: 700, minWidth: 0 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 500, minWidth: 0 }}>
               <span style={{ whiteSpace: 'nowrap' }}>{item.value}</span>
               {clickable ? (
-                <button type="button" onClick={item.onClick} aria-expanded={item.title === '登录密码' ? passwordPanelOpen : undefined} style={{ border: 'none', background: 'transparent', color: 'var(--nl-primary-2)', fontSize: '12px', fontWeight: 700, padding: '6px 0', cursor: 'pointer' }}>
+                <button type="button" onClick={item.onClick} aria-expanded={item.title === '登录密码' ? passwordPanelOpen : undefined} style={{ border: 'none', background: 'transparent', color: '#8a4e14', fontSize: '14px', fontWeight: 600, padding: '6px 0', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 2 }}>
                   {item.action}
+                  {item.title === '登录密码' && passwordPanelOpen ? <ChevronUp size={14} strokeWidth={1.8} aria-hidden="true" /> : null}
                 </button>
               ) : (
-                <span style={{ color: 'var(--nl-muted)', fontSize: '12px', whiteSpace: 'nowrap' }}>{item.action}</span>
+                <span style={{ color: '#8b7160', fontSize: '14px', whiteSpace: 'nowrap' }}>{item.action}</span>
               )}
             </span>
           </div>
@@ -1999,7 +2116,6 @@ export const SecurityPage = () => {
       {passwordPanelOpen ? (
       <Panel className="info-card security-form" style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: '16px 18px' }}>
         <form onSubmit={(event) => void submitPasswordChange(event)} style={rowStyle}>
-          <strong>修改登录密码</strong>
           <Field label="当前密码">
             <input
               style={inputStyle}
@@ -2033,13 +2149,14 @@ export const SecurityPage = () => {
               maxLength={12}
             />
           </Field>
+          <p style={{ ...helperTextStyle, margin: 0 }}>新密码需为 8 到 12 位</p>
           {passwordMessage ? (
             <p style={{ ...helperTextStyle, color: isPositiveStatusMessage(passwordMessage) ? 'var(--nl-success)' : 'var(--nl-danger)' }}>
               {passwordMessage}
             </p>
           ) : null}
-          <button type="submit" disabled={passwordSubmitting} style={{ ...primaryButtonStyle, width: '100%', justifyContent: 'center', minHeight: '48px', borderRadius: '8px', opacity: passwordSubmitting ? 0.72 : 1 }}>
-            {passwordSubmitting ? '修改中…' : '修改密码'}
+          <button type="submit" disabled={passwordSubmitting} style={{ ...primaryButtonStyle, width: '100%', justifyContent: 'center', minHeight: '52px', borderRadius: '18px', opacity: passwordSubmitting ? 0.72 : 1 }}>
+            {passwordSubmitting ? '保存中…' : '保存新密码'}
           </button>
         </form>
       </Panel>
@@ -2048,17 +2165,17 @@ export const SecurityPage = () => {
       <button
         type="button"
         onClick={() => navigate('/profile/account-delete')}
-        style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', minHeight: 64, padding: '10px 16px', borderRadius: 18, border: '1px solid rgba(168, 72, 44, 0.18)', background: 'rgba(255, 250, 244, 0.82)', cursor: 'pointer', textAlign: 'left' }}
+        style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', minHeight: 64, padding: '10px 16px', borderRadius: 18, border: '1px solid rgba(120, 80, 40, 0.10)', background: 'rgba(255, 255, 255, 0.46)', cursor: 'pointer', textAlign: 'left' }}
       >
-        <span style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(168, 72, 44, 0.10)', display: 'grid', placeItems: 'center', color: 'var(--nl-danger)', flexShrink: 0 }}>
-          <Trash2 size={18} strokeWidth={2} />
+        <span style={{ width: 24, height: 24, display: 'grid', placeItems: 'center', color: 'var(--nl-danger)', flexShrink: 0 }}>
+          <Trash2 size={24} strokeWidth={1.8} />
         </span>
         <span style={{ flex: 1, display: 'grid', gap: 2 }}>
-          <strong style={{ color: 'var(--nl-danger)', fontSize: 15, fontWeight: 700 }}>注销账号</strong>
-          <span style={{ color: 'var(--nl-muted)', fontSize: 12, lineHeight: 1.5 }}>注销后账号与家庭成员关系会失效</span>
+          <strong style={{ color: 'var(--nl-danger)', fontSize: 17, fontWeight: 600 }}>注销账号</strong>
         </span>
         <ChevronRight size={18} strokeWidth={1.9} style={{ color: 'var(--nl-muted)' }} />
       </button>
+      <p style={{ ...helperTextStyle, margin: 0, fontSize: 13, lineHeight: 1.6 }}>注销前会先检查家庭所有权和儿童信息</p>
     </PageShell>
   );
 };
@@ -2152,73 +2269,59 @@ export const AccountDeletionPage = () => {
 
   return (
     <PageShell className="info-shell" title="注销账号" backTo="/profile/security">
-      <Panel className="info-card" style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: '16px 18px' }}>
+      <Panel className="info-card" style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: '18px' }}>
         <div style={rowStyle}>
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'stretch', borderRadius: '18px', background: 'rgba(255, 250, 244, 0.92)', border: '1px solid rgba(168, 72, 44, 0.16)', padding: '14px 16px' }}>
-            <span style={{ display: 'grid', placeItems: 'center', color: 'var(--nl-danger)', borderRight: '1px solid rgba(168, 72, 44, 0.16)', paddingRight: 12 }}>
-              <AlertTriangle size={20} strokeWidth={2} aria-hidden="true" />
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'stretch', borderRadius: '18px', background: 'rgba(255, 255, 255, 0.46)', border: '1px solid rgba(120, 80, 40, 0.10)', padding: '14px 16px' }}>
+            <span style={{ display: 'grid', placeItems: 'center', color: 'var(--nl-danger)' }}>
+              <AlertTriangle size={24} strokeWidth={1.8} aria-hidden="true" />
             </span>
             <div style={{ display: 'grid', gap: 2 }}>
-              <strong style={{ color: 'var(--nl-danger)', fontSize: 14, fontWeight: 700 }}>注销后不可恢复</strong>
-              <p style={{ margin: 0, color: 'var(--nl-muted-strong)', fontSize: 13, lineHeight: 1.55 }}>账号、密码与家庭成员关系会立即失效。</p>
+              <strong style={{ color: 'var(--nl-danger)', fontSize: 17, fontWeight: 600 }}>注销后不可恢复</strong>
+              <p style={{ margin: 0, color: '#6f5745', fontSize: 13, lineHeight: 1.55 }}>账号凭据会失效，家庭档案将由其他管理员接管</p>
             </div>
           </div>
-          <strong style={{ color: 'var(--nl-ink)', fontSize: '16px', fontWeight: 720 }}>注销前检查</strong>
           {loading ? <p style={helperTextStyle}>正在检查当前账号状态…</p> : null}
           {!loading && check ? (
             <div style={{ display: 'grid', gap: '10px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
-                <div style={{ padding: '12px 14px', borderRadius: '12px', background: 'rgba(var(--nl-surface-rgb),0.30)', display: 'grid', gap: 2 }}>
-                  <strong style={{ fontSize: '22px', color: 'var(--nl-ink)' }}>{check.summary.owned_family_count}</strong>
-                  <p style={{ ...helperTextStyle, margin: 0 }}>拥有家庭</p>
-                </div>
-                <div style={{ padding: '12px 14px', borderRadius: '12px', background: 'rgba(var(--nl-surface-rgb),0.30)', display: 'grid', gap: 2 }}>
-                  <strong style={{ fontSize: '22px', color: 'var(--nl-ink)' }}>{check.summary.joined_family_count}</strong>
-                  <p style={{ ...helperTextStyle, margin: 0 }}>加入家庭</p>
-                </div>
-                <div style={{ padding: '12px 14px', borderRadius: '12px', background: 'rgba(var(--nl-surface-rgb),0.30)', display: 'grid', gap: 2 }}>
-                  <strong style={{ fontSize: '22px', color: 'var(--nl-ink)' }}>{check.summary.active_child_count}</strong>
-                  <p style={{ ...helperTextStyle, margin: 0 }}>孩子档案</p>
-                </div>
-                <div style={{ padding: '12px 14px', borderRadius: '12px', background: 'rgba(var(--nl-surface-rgb),0.30)', display: 'grid', gap: 2 }}>
-                  <strong style={{ fontSize: '22px', color: 'var(--nl-ink)' }}>{check.summary.active_record_count}</strong>
-                  <p style={{ ...helperTextStyle, margin: 0 }}>有效记录</p>
-                </div>
+                {[
+                  { icon: Home, label: '拥有家庭', value: check.summary.owned_family_count },
+                  { icon: Users, label: '加入家庭', value: check.summary.joined_family_count },
+                  { icon: UserRound, label: '孩子档案', value: check.summary.active_child_count },
+                  { icon: FileText, label: '有效记录', value: check.summary.active_record_count },
+                ].map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <div key={item.label} style={{ padding: '12px 14px', borderRadius: '16px', background: 'rgba(255, 255, 255, 0.62)', border: '1px solid rgba(255, 255, 255, 0.62)', display: 'grid', gap: 4 }}>
+                      <span style={{ color: '#8a4e14', display: 'grid', placeItems: 'center' }}><Icon size={24} strokeWidth={1.8} /></span>
+                      <span style={{ color: '#6f5745', fontSize: 13 }}>{item.label}</span>
+                      <strong style={{ fontSize: '20px', color: 'var(--nl-ink)', fontVariantNumeric: 'tabular-nums' }}>{item.value}</strong>
+                    </div>
+                  );
+                })}
               </div>
               {check.blockers.length ? (
-                <div style={{ borderRadius: '8px', background: 'rgba(var(--nl-primary-rgb),0.12)', border: '1px solid rgba(var(--nl-primary-rgb),0.24)', padding: '14px 16px', color: 'var(--nl-primary-2)', display: 'grid', gap: '8px' }}>
-                  <strong>当前还不能直接注销</strong>
-                  {check.blockers.map((item) => (
-                    <p key={item} style={{ margin: 0, fontSize: '13px', lineHeight: 1.6 }}>{item}</p>
-                  ))}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '8px', marginTop: '4px' }}>
-                    <button type="button" style={{ ...secondaryButtonStyle, minHeight: '48px', borderRadius: '8px', boxShadow: 'none', color: 'var(--nl-primary-2)', whiteSpace: 'nowrap', fontSize: 13 }} onClick={() => navigate('/family/members')}>
-                      去处理成员
-                    </button>
-                    <button type="button" style={{ ...secondaryButtonStyle, minHeight: '48px', borderRadius: '8px', boxShadow: 'none', color: 'var(--nl-primary-2)', whiteSpace: 'nowrap', fontSize: 13 }} onClick={() => navigate('/profile/help?topic=account-delete')}>
-                      提交协助
-                    </button>
-                  </div>
-                </div>
+                <p style={{ margin: 0, color: '#6f5745', fontSize: 13, lineHeight: 1.6 }}>
+                  {check.blockers[0]}
+                  {' '}
+                  <button type="button" onClick={() => navigate('/profile/help?topic=account-delete')} style={{ border: 'none', background: 'transparent', color: '#8a4e14', fontSize: 13, textDecoration: 'underline', textUnderlineOffset: 2, cursor: 'pointer', padding: 0 }}>
+                    提交协助
+                  </button>
+                </p>
               ) : (
-                <div style={{ borderRadius: '8px', background: 'rgba(var(--nl-success-rgb),0.12)', border: '1px solid rgba(var(--nl-success-rgb),0.24)', padding: '14px 16px', color: 'var(--nl-success)', display: 'grid', gap: '6px' }}>
-                  <strong>当前账号可以注销</strong>
-                  <p style={{ margin: 0, fontSize: '13px', lineHeight: 1.6 }}>注销后将立即退出登录，密码和账号凭据会失效，不能恢复。</p>
-                </div>
+                <p style={{ margin: 0, color: 'var(--nl-success)', fontSize: 13, lineHeight: 1.6 }}>当前账号可以注销，提交后将立即退出登录。</p>
               )}
             </div>
           ) : null}
         </div>
-      </Panel>
-      <Panel className="info-card" style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: '16px 18px' }}>
         <form style={rowStyle} onSubmit={(event) => void submit(event)}>
-          <strong style={{ color: 'var(--nl-ink)', fontSize: '16px', fontWeight: 720 }}>确认信息</strong>
-          <Field label={`确认文案（输入“${check?.confirm_text ?? '注销账号'}”）`}>
-            <input style={inputStyle} value={confirmText} onChange={(event) => setConfirmText(event.target.value)} placeholder={check?.confirm_text ?? '注销账号'} />
+          <Field label="输入「注销账号」确认">
+            <input style={inputStyle} value={confirmText} onChange={(event) => setConfirmText(event.target.value)} placeholder={`请输入 ${check?.confirm_text ?? '注销账号'}`} />
           </Field>
-          <Field label="登录密码">
+          <Field label="当前登录密码">
             <input style={inputStyle} type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="请输入当前登录密码" />
           </Field>
+          <p style={{ ...helperTextStyle, margin: 0 }}>两个输入都正确后，下方按钮才可点击</p>
           {message ? <p style={{ ...helperTextStyle, color: message.includes('已') ? 'var(--nl-success)' : 'var(--nl-danger)' }}>{message}</p> : null}
           {(() => {
             const inputReady = Boolean(confirmText.trim()) && (!check?.requires_password || password.trim().length >= 8);
@@ -2230,10 +2333,10 @@ export const AccountDeletionPage = () => {
                   aria-disabled={!enabled}
                   style={{
                     ...primaryButtonStyle,
-                    background: enabled ? 'transparent' : 'var(--btn-disabled-bg, rgba(111,87,69,.14))',
-                    border: enabled ? '1px solid var(--nl-danger)' : '1px solid transparent',
-                    color: enabled ? 'var(--nl-danger)' : 'var(--nl-muted)',
-                    boxShadow: 'none',
+                    background: enabled ? '#c0392b' : '#eadccb',
+                    border: 'none',
+                    color: enabled ? '#ffffff' : '#9c8371',
+                    boxShadow: enabled ? '0 10px 22px rgba(192, 57, 43, 0.18)' : 'none',
                     cursor: enabled ? 'pointer' : 'not-allowed',
                   }}
                   disabled={!enabled}
@@ -2245,6 +2348,13 @@ export const AccountDeletionPage = () => {
           })()}
         </form>
       </Panel>
+      <p style={{ margin: 0, textAlign: 'center', color: '#6f5745', fontSize: 13, lineHeight: 1.6 }}>
+        也可以先{' '}
+        <button type="button" onClick={() => navigate('/profile/help?topic=account-delete')} style={{ border: 'none', background: 'transparent', color: '#8a4e14', fontSize: 13, textDecoration: 'underline', textUnderlineOffset: 2, cursor: 'pointer', padding: 0 }}>
+          提交协助
+        </button>
+        ，由人工核对后再处理
+      </p>
     </PageShell>
   );
 };
@@ -2383,7 +2493,7 @@ export const HelpFeedbackPage = () => {
     <PageShell className="info-shell" title="帮助与反馈" backTo="/profile">
       <Panel className="info-card" style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: '14px 16px 16px' }}>
         <div style={rowStyle}>
-          <Field label="问题类型">
+          <Field label="问题类型" labelSize={17}>
             <AppSelect aria-label="问题类型" value={category} onChange={(event) => setCategory(event.target.value)}>
               <option value="使用问题">使用问题</option>
               <option value="页面显示">页面显示</option>
@@ -2391,38 +2501,47 @@ export const HelpFeedbackPage = () => {
               <option value="功能建议">功能建议</option>
             </AppSelect>
           </Field>
-          <Field label="反馈内容">
+          <Field label="反馈内容" labelSize={17}>
             <textarea style={textareaStyle} value={content} onChange={(event) => setContent(event.target.value)} placeholder="问题、页面、操作" />
           </Field>
-          <Field label="联系方式">
-            <input style={inputStyle} value={contact} onChange={(event) => setContact(event.target.value)} />
+          <Field label="联系方式" labelSize={17}>
+            <input style={inputStyle} value={contact} onChange={(event) => setContact(event.target.value)} placeholder="选填，方便我们回复你" />
           </Field>
           {message ? <p style={{ ...helperTextStyle, color: isPositiveStatusMessage(message) ? 'var(--nl-success)' : 'var(--nl-danger)' }}>{message}</p> : null}
           <div style={buttonRowStyle}>
-            <button type="button" style={primaryButtonStyle} onClick={() => void submitFeedback()} disabled={submitting}>
+            <button type="button" style={{ ...primaryButtonStyle, borderRadius: 12 }} onClick={() => void submitFeedback()} disabled={submitting}>
               {submitting ? '提交中…' : '提交反馈'}
             </button>
           </div>
         </div>
       </Panel>
-      <Panel className="info-card" style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: '14px 16px 16px' }}>
-        <div style={rowStyle}>
-          <strong style={{ color: 'var(--nl-ink)', fontSize: '16px', fontWeight: 720 }}>最近反馈</strong>
-          {feedbackLoading ? <p style={helperTextStyle}>正在同步反馈状态…</p> : null}
-          {feedbackError ? <p style={{ ...helperTextStyle, color: 'var(--nl-danger)' }}>反馈状态同步失败：{feedbackError}</p> : null}
-          {!feedbackLoading && !feedbackError && !(feedbackTickets ?? []).length ? <p style={helperTextStyle}>暂无反馈记录。</p> : null}
-          {(feedbackTickets ?? []).slice(0, 5).map((item) => (
-            <div key={item.ticket_no} style={{ borderTop: '1px solid var(--nl-border-muted)', paddingTop: '11px', display: 'grid', gap: '6px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', alignItems: 'center' }}>
-                <strong style={{ color: 'var(--nl-ink)', fontSize: '13px', fontWeight: 600 }}>{item.category}</strong>
-                <span style={{ display: 'inline-flex', alignItems: 'center', minHeight: 26, padding: '4px 10px', borderRadius: 999, background: item.status === 'processing' ? 'rgba(200, 140, 70, 0.14)' : 'rgba(255, 255, 255, 0.44)', border: '1px solid rgba(58, 42, 28, 0.08)', color: feedbackStatusColor(item.status), fontSize: '11px', fontWeight: 600 }}>{feedbackStatusText(item.status)}</span>
-              </div>
-              <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.6 }}>{item.content}</p>
-              {item.handle_note ? <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.6 }}>处理备注：{item.handle_note}</p> : null}
-            </div>
-          ))}
-        </div>
-      </Panel>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '6px 2px 0' }}>
+        <strong style={{ color: 'var(--nl-ink)', fontSize: '17px', fontWeight: 600, flexShrink: 0 }}>最近反馈</strong>
+        <span aria-hidden="true" style={{ flex: 1, height: 1, background: 'rgba(58, 42, 28, 0.12)' }} />
+      </div>
+      {feedbackLoading ? <p style={helperTextStyle}>正在同步反馈状态…</p> : null}
+      {feedbackError ? <p style={{ ...helperTextStyle, color: 'var(--nl-danger)' }}>反馈状态同步失败：{feedbackError}</p> : null}
+      {!feedbackLoading && !feedbackError && !(feedbackTickets ?? []).length ? (
+        <Panel className="info-card" style={{ borderRadius: 24, display: 'grid', gap: 6 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center' }}>
+            <strong style={{ color: 'var(--nl-ink)', fontSize: 15, fontWeight: 600 }}>使用问题</strong>
+            <span style={{ display: 'inline-flex', alignItems: 'center', padding: '5px 12px', borderRadius: 999, background: '#f7e4c9', color: '#8a4e14', fontSize: 13, fontWeight: 500 }}>处理中</span>
+          </div>
+          <p style={{ margin: 0, color: 'var(--nl-ink)', fontSize: 15, lineHeight: 1.75 }}>反馈提交后会在这里显示处理进度。</p>
+          <p style={{ margin: 0, color: '#8b7160', fontSize: 13 }}>示例 · 已于 11月10日 提交</p>
+        </Panel>
+      ) : null}
+      {(feedbackTickets ?? []).slice(0, 5).map((item) => (
+        <Panel key={item.ticket_no} className="info-card" style={{ borderRadius: 24, display: 'grid', gap: 6 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center' }}>
+            <strong style={{ color: 'var(--nl-ink)', fontSize: 15, fontWeight: 600 }}>{item.category}</strong>
+            <span style={{ display: 'inline-flex', alignItems: 'center', padding: '5px 12px', borderRadius: 999, background: item.status === 'processing' ? '#f7e4c9' : 'rgba(255, 255, 255, 0.44)', color: feedbackStatusColor(item.status), fontSize: 13, fontWeight: 500 }}>{feedbackStatusText(item.status)}</span>
+          </div>
+          <p style={{ margin: 0, color: 'var(--nl-ink)', fontSize: 15, lineHeight: 1.75 }}>{item.content}</p>
+          <p style={{ margin: 0, color: '#8b7160', fontSize: 13 }}>已于 {formatAppDateTime(item.created_at)} 提交</p>
+          {item.handle_note ? <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.6 }}>处理备注：{item.handle_note}</p> : null}
+        </Panel>
+      ))}
     </PageShell>
   );
 };
@@ -2431,10 +2550,9 @@ const legalSections = [
   {
     title: '用户协议',
     items: [
-      '本服务用于记录孩子成长过程中的文字、图片、家庭协作和成长时间轴。用户应使用真实、合法的信息创建家庭档案。',
-      '用户应妥善保管账号、密码、邀请码和设备，不得将账号借给他人使用，也不得上传侵权、违法、骚扰、广告或损害未成年人权益的内容。',
-      '家庭创建者可以邀请成员共同维护孩子档案；家庭成员不得擅自公开、转发或商业化使用孩子资料和影像内容。',
-      '平台可依据法律要求、用户投诉或运营审核结果限制、下架或删除违规内容，并会尽合理努力保障服务稳定。',
+      '成长珍藏：年轮为每个家庭提供孩子的成长档案，文字、照片与声音都会按时间妥善收藏，成为可以随时回看的成长纪念。请使用真实、合法的信息创建档案，让每一页都值得珍藏。',
+      '账号共享：一个账号属于一个家庭，邀请码是家人之间的钥匙。请妥善保管账号、密码与邀请码，不要借给家庭以外的人使用；家庭成员共同拥有查看与补充记录的权利，也共同承担保护孩子信息的责任。',
+      '家庭共同参与：孩子的成长由家人一起记录。家庭创建者可以邀请成员共同维护档案，成员在权限范围内查看、补充和整理内容；请勿擅自公开、转发或商业化使用孩子的资料与影像。',
     ],
   },
   {
@@ -2476,7 +2594,7 @@ const AboutMenuLink = ({
     onClick={onClick}
     style={{
       width: '100%',
-      minHeight: '54px',
+      minHeight: '68px',
       border: 'none',
       borderBottom: isLast ? 'none' : '1px solid var(--nl-border-muted)',
       background: 'transparent',
@@ -2489,19 +2607,18 @@ const AboutMenuLink = ({
       cursor: 'pointer',
     }}
   >
-    <span style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: 0, color: 'var(--nl-muted-strong)', fontSize: '15px', fontWeight: 700 }}>
-      <Icon size={18} color="var(--nl-primary-2)" strokeWidth={2} />
+    <span style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: 0, color: 'var(--nl-ink)', fontSize: '17px', fontWeight: 500 }}>
+      <Icon size={24} strokeWidth={1.8} color="#6f5745" />
       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
     </span>
-    {value ? (
-      <span style={{ color: 'var(--nl-muted)', fontSize: '13px', whiteSpace: 'nowrap' }}>{value}</span>
-    ) : (
+    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+      {value ? <span style={{ color: 'var(--nl-muted)', fontSize: '13px', whiteSpace: 'nowrap' }}>{value}</span> : null}
       <ChevronRight size={16} color="var(--nl-muted)" strokeWidth={2.2} />
-    )}
+    </span>
   </button>
 );
 
-const appVersion = import.meta.env.VITE_APP_VERSION ?? '2.0.4';
+const appVersion = import.meta.env.VITE_APP_VERSION ?? '2.1.0';
 const appBuildNumber = import.meta.env.VITE_APP_BUILD_NUMBER ?? 'dev';
 const appBuildNumberValue = Number.isFinite(Number(appBuildNumber)) ? Number(appBuildNumber) : 0;
 const appBuildTime = import.meta.env.VITE_APP_BUILD_TIME ?? null;
@@ -2515,6 +2632,13 @@ export const AboutPage = () => {
   const [updateResult, setUpdateResult] = useState<AppUpdateCheckResponse | null>(null);
   const [updateError, setUpdateError] = useState<string | null>(null);
   const download = useAppUpdateDownload(updateResult);
+
+  useEffect(() => {
+    void webApi
+      .checkAppUpdate({ platform: 'android', version: appVersion, build_number: appBuildNumberValue })
+      .then((result) => setUpdateResult(result))
+      .catch(() => undefined);
+  }, []);
 
   const checkUpdate = async () => {
     setCheckingUpdate(true);
@@ -2536,16 +2660,19 @@ export const AboutPage = () => {
 
   return (
     <PageShell title="关于我们" backTo="/profile" className="info-shell">
-      <section style={{ display: 'grid', justifyItems: 'center', padding: '18px 0 12px' }}>
-        <img
-          src="/brand/nianlun-logo-192.png"
-          alt="年轮"
-          width={112}
-          height={112}
-          style={{ boxSizing: 'border-box', objectFit: 'contain', borderRadius: '999px', boxShadow: '0 18px 42px rgba(var(--nl-shadow-rgb),0.18)', marginBottom: '16px' }}
-        />
-        <h2 style={{ margin: 0, color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '26px', lineHeight: 1.08, fontWeight: 800 }}>年轮</h2>
-        <p style={{ margin: '6px 0 0', color: 'var(--nl-muted)', fontSize: '13px', fontWeight: 500 }}>版本 {appVersion} · 构建 {appBuildNumberValue || 128}</p>
+      <section style={{ display: 'grid', justifyItems: 'center', padding: '24px 0 12px' }}>
+        <svg width="96" height="96" viewBox="0 0 96 96" role="img" aria-label="年轮" style={{ marginBottom: '16px', display: 'block' }}>
+          <circle cx="48" cy="48" r="48" fill="#E99E4F" />
+          <g fill="none" stroke="#FFFFFF" strokeWidth="2.6" strokeLinecap="round">
+            <circle cx="48" cy="48" r="33" />
+            <path d="M48 21c9 8 12 17 8 27s-13 16-9 27" />
+            <path d="M26 36c8 3 14 3 22 0" />
+            <path d="M30 62c9-4 17-4 27 1" />
+            <circle cx="48" cy="48" r="6" fill="#FFFFFF" stroke="none" opacity="0.9" />
+          </g>
+        </svg>
+        <h2 style={{ margin: 0, color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '34px', lineHeight: 1.08, fontWeight: 600 }}>年轮</h2>
+        <p style={{ margin: '8px 0 0', color: 'var(--nl-muted)', fontSize: '14px', fontWeight: 500 }}>版本 {appVersion} · 构建 {appBuildNumberValue || 128}</p>
       </section>
 
       <div className="info-card">
@@ -2606,14 +2733,11 @@ export const AboutPage = () => {
 
       <div className="info-card">
         <AboutMenuLink icon={FileText} label="用户服务协议" onClick={() => navigate('/profile/legal')} />
-        <AboutMenuLink icon={Shield} label="隐私政策" isLast onClick={() => navigate('/profile/legal?doc=privacy')} />
+        <AboutMenuLink icon={Shield} label="隐私政策" onClick={() => navigate('/profile/legal?doc=privacy')} />
+        <AboutMenuLink icon={Mail} label="联系我们" isLast onClick={() => navigate('/profile/contact')} />
       </div>
 
-      <div className="info-card">
-        <AboutMenuLink icon={Mail} label="联系我们" value="联系方式" isLast onClick={() => navigate('/profile/contact')} />
-      </div>
-
-      <div style={{ textAlign: 'center', color: 'var(--nl-muted)', fontSize: '10px', lineHeight: 1.7, paddingTop: '8px' }}>
+      <div style={{ textAlign: 'center', color: 'var(--nl-ink)', fontSize: '13px', lineHeight: 1.7, paddingTop: '8px' }}>
         <p style={{ margin: 0 }}>年轮 © 2026 · 把每一天都留给以后</p>
       </div>
     </PageShell>
@@ -2622,7 +2746,7 @@ export const AboutPage = () => {
 
 export const ContactPage = () => {
   const navigate = useNavigate();
-  const [message, setMessage] = useState<string | null>(null);
+  const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
   const contacts = [
     { icon: Mail, title: '服务邮箱', value: 'support@xmlga.top', detail: '账号、档案与服务协助。' },
     { icon: Shield, title: '隐私与数据保护', value: 'privacy@xmlga.top', detail: '儿童信息保护、权限与注销事务。' },
@@ -2632,17 +2756,18 @@ export const ContactPage = () => {
   const copyEmail = async (value: string) => {
     try {
       await navigator.clipboard.writeText(value);
-      setMessage(`已复制 ${value}`);
+      setCopiedEmail(value);
+      window.setTimeout(() => setCopiedEmail((current) => (current === value ? null : current)), 2000);
     } catch {
-      setMessage('复制失败，请长按邮箱手动复制');
+      setCopiedEmail(null);
     }
   };
 
   return (
     <PageShell className="info-shell" title="联系我们" backTo="/profile/about">
-      <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.7 }}>账号、档案、隐私和数据交付相关事项，都可以在这里找到我们。</p>
+      <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.7, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>账号、档案、隐私和数据交付相关事项</p>
 
-      <div style={{ display: 'grid', gap: 12 }}>
+      <div style={{ display: 'grid', gap: 10 }}>
         {contacts.map((item, index) => {
           const Icon = item.icon;
           const copyable = item.value.includes('@');
@@ -2650,24 +2775,25 @@ export const ContactPage = () => {
             <div
               key={item.title}
               style={{
-                minHeight: copyable ? '72px' : '64px',
+                minHeight: copyable ? '72px' : '72px',
                 padding: '14px 16px',
                 borderRadius: 18,
-                background: 'rgba(255, 250, 244, 0.82)',
-                border: '1px solid rgba(120, 80, 40, 0.10)',
+                background: 'rgba(255, 255, 255, 0.62)',
+                border: '1px solid rgba(255, 255, 255, 0.62)',
+                boxShadow: '0 8px 20px rgba(146, 96, 52, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6)',
                 display: 'grid',
-                gridTemplateColumns: copyable ? '34px minmax(0, 1fr) 44px' : '34px minmax(0, 1fr)',
+                gridTemplateColumns: copyable ? '40px minmax(0, 1fr) 44px' : '40px minmax(0, 1fr)',
                 gap: '12px',
                 alignItems: 'center',
               }}
             >
-              <span style={{ width: '40px', height: '40px', borderRadius: '12px', border: 'none', background: '#e9a05a', display: 'grid', placeItems: 'center', color: '#fff' }}>
-                <Icon size={17} strokeWidth={2.1} />
+              <span style={{ width: '40px', height: '40px', borderRadius: '12px', border: '1px solid rgba(233, 160, 90, 0.5)', background: 'rgba(233, 160, 90, 0.14)', display: 'grid', placeItems: 'center', color: '#e9a05a' }}>
+                <Icon size={22} strokeWidth={1.8} />
               </span>
               <span style={{ minWidth: 0, display: 'grid', gap: '4px' }}>
-                <strong style={{ color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 660 }}>{item.title}</strong>
-                <a href={`mailto:${item.value}`} style={{ color: 'var(--nl-ink)', fontSize: '14px', fontWeight: 600, overflowWrap: 'anywhere', textDecoration: 'none' }}>{item.value}</a>
-                <span style={{ color: 'var(--nl-muted)', fontSize: '12px', lineHeight: 1.55 }}>{item.detail}</span>
+                <strong style={{ color: 'var(--nl-ink)', fontSize: '17px', fontWeight: 600 }}>{item.title}</strong>
+                <a href={`mailto:${item.value}`} style={{ color: 'var(--nl-ink)', fontSize: '15px', fontWeight: 600, lineHeight: 1.75, overflowWrap: 'anywhere', textDecoration: 'none' }}>{item.value}</a>
+                <span style={{ color: '#8b7160', fontSize: '13px', lineHeight: 1.55 }}>{item.detail}</span>
               </span>
               {copyable ? (
                 <button
@@ -2676,18 +2802,18 @@ export const ContactPage = () => {
                   onClick={() => void copyEmail(item.value)}
                   style={{
                     minWidth: 64,
-                    minHeight: 36,
+                    minHeight: 40,
                     padding: '0 14px',
                     border: '1px solid var(--nl-primary-border)',
-                    borderRadius: 999,
+                    borderRadius: 10,
                     background: 'transparent',
                     color: 'var(--nl-accent)',
-                    fontSize: 13,
+                    fontSize: 14,
                     fontWeight: 600,
                     cursor: 'pointer',
                   }}
                 >
-                  复制
+                  {copiedEmail === item.value ? '已复制' : '复制'}
                 </button>
               ) : null}
             </div>
@@ -2695,23 +2821,19 @@ export const ContactPage = () => {
         })}
       </div>
 
-      {message ? <p style={{ ...helperTextStyle, margin: 0, color: 'var(--nl-success)' }}>{message}</p> : null}
-
-      <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.7 }}>
-        为保护孩子隐私，请勿通过邮件发送照片或视频原件；需要核对素材时我们会引导你在 App 内授权。
-      </p>
-
       <button
         type="button"
         onClick={() => navigate('/profile/help')}
         style={{ display: 'flex', alignItems: 'center', gap: 12, minHeight: 56, padding: '0 16px', borderRadius: 18, border: '1px solid rgba(120, 80, 40, 0.10)', background: 'rgba(255, 250, 244, 0.82)', cursor: 'pointer', textAlign: 'left' }}
       >
         <span style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(233, 160, 90, 0.18)', display: 'grid', placeItems: 'center', color: 'var(--nl-accent)', flexShrink: 0 }}>
-          <HelpCircle size={18} strokeWidth={2} />
+          <MessageCircleMore size={20} strokeWidth={1.8} />
         </span>
-        <strong style={{ flex: 1, color: 'var(--nl-ink)', fontSize: 14, fontWeight: 640 }}>去帮助与反馈提交问题</strong>
+        <strong style={{ flex: 1, color: 'var(--nl-ink)', fontSize: 14, fontWeight: 600 }}>去帮助与反馈</strong>
         <ChevronRight size={18} strokeWidth={1.9} style={{ color: 'var(--nl-muted)' }} />
       </button>
+
+      <p style={{ margin: 0, textAlign: 'center', color: '#8b7160', fontSize: 13, lineHeight: 1.6 }}>请勿在邮件中发送孩子照片原件</p>
 
     </PageShell>
   );
@@ -2798,19 +2920,19 @@ export const LegalPage = () => {
         onChange={selectLegalDoc}
         options={legalSections.map((item) => ({ value: item.title, label: item.title }))}
       />
-      <Panel style={{ padding: '22px 20px', display: 'grid', gap: 16 }}>
-        <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.12em', color: 'var(--nl-muted)' }}>最后更新 2026年11月</span>
-        <h2 style={{ margin: 0, fontFamily: 'var(--nl-font-display)', fontSize: 24, fontWeight: 600, lineHeight: 1.3, color: 'var(--nl-ink)' }}>{section.title}</h2>
-        <div style={{ display: 'grid', gap: 14 }}>
+      <Panel style={{ padding: '22px 18px', display: 'grid', gap: 20 }}>
+        <span style={{ fontSize: 13, fontWeight: 500, letterSpacing: '0.02em', color: 'var(--nl-muted)' }}>最后更新 2026年11月</span>
+        <h2 style={{ margin: 0, fontFamily: 'var(--nl-font-display)', fontSize: 30, fontWeight: 600, lineHeight: 1.25, color: 'var(--nl-ink)' }}>{section.title}</h2>
+        <div style={{ display: 'grid', gap: 20 }}>
           {section.items.map((item, index) => (
-            <p key={item} style={{ margin: 0, color: 'var(--nl-ink)', fontSize: 15, lineHeight: 1.75, fontWeight: 400, letterSpacing: '0.01em' }}>
-              <span aria-hidden="true" style={{ width: 22, height: 22, borderRadius: 999, background: 'rgba(245, 171, 82, 0.9)', color: '#4a2f12', fontSize: 12, fontWeight: 700, display: 'inline-grid', placeItems: 'center', marginRight: 8, flexShrink: 0 }}>{index + 1}</span>
-              {item}
+            <p key={item} style={{ margin: 0, color: 'var(--nl-ink)', fontSize: 15, lineHeight: 1.75, fontWeight: 400, letterSpacing: '0.01em', display: 'flex', alignItems: 'flex-start' }}>
+              <span aria-hidden="true" style={{ width: 26, height: 26, borderRadius: 999, background: '#f0c08d', color: '#5b3a17', fontSize: 13, fontWeight: 600, display: 'inline-grid', placeItems: 'center', marginRight: 12, flexShrink: 0, marginTop: 1 }}>{index + 1}</span>
+              <span style={{ minWidth: 0, flex: 1 }}>{item}</span>
             </p>
           ))}
         </div>
+        <p style={{ margin: '4px 0 0', textAlign: 'center', fontSize: 13, color: '#8b7160', marginTop: 24 }}>年轮 · 儿童信息保护优先</p>
       </Panel>
-      <p style={{ margin: 0, textAlign: 'center', fontSize: 11, color: 'var(--nl-muted)' }}>年轮 · 儿童信息保护优先</p>
     </PageShell>
   );
 };
@@ -2820,17 +2942,42 @@ export const ErrorPage = () => {
 
   return (
     <PageShell title="页面加载失败" onBack={() => navigate('/home')} className="error-shell">
-      <div style={{ display: 'grid', justifyItems: 'center', gap: 16, padding: '56px 8px 24px', textAlign: 'center' }}>
-        <span aria-hidden="true" style={{ width: 132, height: 132, borderRadius: '50%', background: 'var(--nl-glass-surface)', border: '1px solid var(--nl-glass-border)', display: 'grid', placeItems: 'center', color: 'var(--nl-accent)', boxShadow: 'var(--nl-shadow-soft)' }}>
-          <Unlink size={56} strokeWidth={1.5} />
+      <div style={{ display: 'grid', justifyItems: 'center', gap: 12, padding: '40px 8px 24px', textAlign: 'center' }}>
+        <span
+          aria-hidden="true"
+          style={{
+            width: 98,
+            height: 98,
+            borderRadius: '50%',
+            background: 'rgba(255, 255, 255, 0.78)',
+            border: 'none',
+            display: 'grid',
+            placeItems: 'center',
+            color: 'var(--nl-accent)',
+            boxShadow: '0 14px 34px rgba(146, 96, 52, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
+            WebkitBackdropFilter: 'blur(20px)',
+            backdropFilter: 'blur(20px)',
+          }}
+        >
+          <svg width="44" height="44" viewBox="0 0 44 44" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" role="img" aria-label="断开的链接">
+            <g transform="rotate(45 22 22)">
+              <path d="M13 21 l-3.5 3.5 a6 6 0 0 0 8.5 8.5 L21.5 29.5" />
+              <path d="M22.5 14.5 L26 11 a6 6 0 0 1 8.5 8.5 L31 23" />
+              <path d="M18.5 25.5 l7 -7" strokeDasharray="3 4" />
+            </g>
+            <path d="M6 14 l2.4 1.6" />
+            <path d="M38 30 l-2.4 -1.6" />
+            <path d="M10 34 l1.8 -2.2" />
+            <path d="M34 10 l-1.8 2.2" />
+          </svg>
         </span>
-        <h2 style={{ margin: 0, fontSize: 32, fontWeight: 800, lineHeight: 1.25, color: 'var(--nl-ink)' }}>暂时打不开这一页</h2>
-        <p style={{ margin: 0, maxWidth: 280, color: 'var(--nl-muted)', fontSize: 13, lineHeight: 1.7 }}>链接可能已失效，或者网络暂时不稳定</p>
-        <div style={{ display: 'grid', gap: 10, width: '100%', maxWidth: 300, marginTop: 8 }}>
-          <button type="button" onClick={() => window.location.reload()} style={{ ...primaryButtonStyle, width: '100%', minHeight: 48, borderRadius: 999 }}>重试</button>
-          <button type="button" onClick={() => navigate('/home')} style={{ ...secondaryButtonStyle, width: '100%', minHeight: 48, borderRadius: 999, boxShadow: 'none' }}>返回首页</button>
+        <h2 style={{ margin: 0, fontFamily: 'var(--nl-font-display)', fontSize: 22, fontWeight: 500, lineHeight: 1.4, color: 'var(--nl-ink)' }}>暂时打不开这一页</h2>
+        <p style={{ margin: 0, maxWidth: 280, color: 'var(--nl-muted)', fontSize: 15, lineHeight: 1.75 }}>链接可能已失效，或者网络暂时不稳定</p>
+        <div style={{ display: 'grid', gap: 14, width: '100%', maxWidth: 314, marginTop: 12 }}>
+          <button type="button" onClick={() => window.location.reload()} style={{ ...primaryButtonStyle, width: '100%', minHeight: 52, borderRadius: 999, background: '#b0662a', boxShadow: '0 10px 22px rgba(146, 96, 52, 0.18)' }}>重试</button>
+          <button type="button" onClick={() => navigate('/home')} style={{ ...secondaryButtonStyle, width: '100%', minHeight: 52, borderRadius: 999, boxShadow: 'none' }}>返回首页</button>
         </div>
-        <button type="button" onClick={() => navigate('/profile/help')} style={{ border: 'none', background: 'transparent', color: 'var(--nl-muted)', fontSize: 13, textDecoration: 'underline', padding: '4px 0', minHeight: 32 }}>需要帮助？去帮助与反馈</button>
+        <button type="button" onClick={() => navigate('/profile/help')} style={{ border: 'none', background: 'transparent', color: '#8b7160', fontSize: 13, textDecoration: 'none', padding: '4px 0', minHeight: 32, marginTop: 90 }}>如果一直失败，可以在「我的 · 帮助与反馈」里告诉我们</button>
       </div>
     </PageShell>
   );

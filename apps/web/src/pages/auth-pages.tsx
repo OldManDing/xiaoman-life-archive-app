@@ -286,6 +286,11 @@ export const SplashPage = () => {
 
 const welcomePosters = [
   {
+    src: '/photos/welcome-hero.jpg',
+    alt: '夕阳草地上的 welcome 海报',
+    label: 'welcome',
+  },
+  {
     src: '/posters/welcome-growth-timeline.png',
     alt: '年轮成长时间线介绍海报',
     label: '成长时间线',
@@ -305,6 +310,7 @@ const welcomePosters = [
 export const WelcomePage = () => {
   const navigate = useNavigate();
   const [acceptedAgreement, setAcceptedAgreement] = useState(false);
+  const [posterIndex, setPosterIndex] = useState(0);
 
   const continueToLogin = () => {
     markWelcomeIntroSeen();
@@ -322,19 +328,26 @@ export const WelcomePage = () => {
       <button type="button" className="wl-skip" onClick={continueToLogin}>跳过</button>
 
       <div className="wl-hero">
-        <img src="/photos/welcome-hero.jpg" alt="孩子在水边张开手臂" />
+        <img src={welcomePosters[posterIndex]?.src ?? '/photos/welcome-hero.jpg'} alt={welcomePosters[posterIndex]?.alt ?? '年轮欢迎海报'} />
         <div className="wl-hero-scrim" aria-hidden="true" />
-      </div>
-      <div className="wl-dots" aria-hidden="true">
-        <span className="is-active" />
-        <span />
-        <span />
-        <span />
       </div>
 
       <div className="wl-body">
         <h1 className="wl-title">把每一个第一次，<br />都留下来</h1>
         <p className="wl-subtitle">照片、语音、一句话，家人都能一起记录</p>
+        <div className="wl-dots" role="tablist" aria-label="欢迎页海报">
+          {welcomePosters.map((poster, index) => (
+            <button
+              key={poster.src}
+              type="button"
+              role="tab"
+              aria-selected={index === posterIndex}
+              aria-label={poster.alt}
+              className={index === posterIndex ? 'is-active' : ''}
+              onClick={() => setPosterIndex(index)}
+            />
+          ))}
+        </div>
 
         <div className="wl-features">
           <div className="wl-feature">
@@ -484,9 +497,13 @@ export const LoginPage = () => {
       </div>
 
       <div className="lg-body">
+        <div className="lg-mode" aria-label="登录方式">
+          <span className="is-on">验证码登录</span>
+          <span className="is-off" title="敬请期待">密码登录</span>
+        </div>
         <div className="lg-field-card">
           <label className="lg-row">
-            <Smartphone size={22} strokeWidth={1.7} color="var(--nl-ink)" />
+            <Smartphone size={24} strokeWidth={1.8} color="var(--nl-ink)" />
             <input
               aria-label="手机号"
               inputMode="tel"
@@ -497,7 +514,7 @@ export const LoginPage = () => {
             />
           </label>
           <div className="lg-row">
-            <ShieldCheck size={22} strokeWidth={1.7} color="var(--nl-ink)" />
+            <ShieldCheck size={24} strokeWidth={1.8} color="var(--nl-ink)" />
             <input
               aria-label="验证码"
               inputMode="numeric"
@@ -530,7 +547,6 @@ export const LoginPage = () => {
           </span>
         </label>
 
-        <p className="lg-footnote">未注册的手机号将自动创建账号</p>
       </div>
     </div>
   );
@@ -653,7 +669,7 @@ export const OnboardingChildPage = () => {
             {childAvatarPreviewSrc && !avatarPreviewFailed ? (
               <img src={childAvatarPreviewSrc} alt="宝宝头像预览" decoding="async" onError={() => setAvatarPreviewFailed(true)} />
             ) : (
-              <Camera size={54} strokeWidth={1.4} />
+              <Camera size={44} strokeWidth={1.8} />
             )}
             <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" onChange={onAvatarChange} style={{ display: 'none' }} />
           </label>
@@ -695,7 +711,7 @@ export const OnboardingChildPage = () => {
                 onChange={(event) => setForm((current) => ({ ...current, birthday: event.target.value }))}
               />
             </label>
-            <ChevronRight size={20} strokeWidth={1.8} color="rgba(58,42,28,0.45)" />
+            <ChevronRight size={24} strokeWidth={1.8} color="#8b7160" />
           </div>
 
           <div className="onb-row">

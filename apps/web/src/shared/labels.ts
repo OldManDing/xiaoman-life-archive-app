@@ -15,14 +15,14 @@ export const membershipTypeLabel = (value: string | null | undefined) =>
 
 export const familyRoleLabel = (value: string | null | undefined) =>
   fallbackLabel(value, {
-    owner: '管理员',
-    editor: '可编辑成员',
-    viewer: '只读成员',
+    owner: '可管理',
+    editor: '可查看·可补充',
+    viewer: '可查看',
   });
 
 export const familyMemberStatusLabel = (value: number | string | null | undefined) =>
   fallbackLabel(value, {
-    0: '已停用',
+    0: '待接受',
     1: '正常',
   });
 
