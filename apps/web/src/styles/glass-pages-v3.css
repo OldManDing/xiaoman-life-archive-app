@@ -6479,3 +6479,29 @@ body,
 :root {
   --nl-font-display: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "STSong", "SimSun", serif;
 }
+
+/* 06：标题保留宋体，菜单/统计/底栏回到黑体（对齐设计稿层级） */
+.pf-menu-label,
+.pf-stat-label,
+.pf-stat-num,
+.pf-menu-value,
+.app-bottom-nav-link {
+  font-family: var(--nl-font-sans, -apple-system, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif) !important;
+}
+
+.pf-menu-label {
+  font-weight: 600 !important;
+  font-size: 16px !important;
+}
+
+.pf-stat-num {
+  font-weight: 700 !important;
+}
+
+/* 卡片描边更轻 */
+.pf-menu,
+.pf-stats,
+.pf-hero {
+  border-color: rgba(255, 255, 255, 0.45) !important;
+  box-shadow: 0 4px 16px rgba(180, 120, 80, 0.05) !important;
+}
