@@ -12,14 +12,16 @@
   --gx-blur: 26px;
   --gx-saturate: 1.5;
   --gx-sheen:
-    linear-gradient(154deg, rgba(255, 255, 255, 0.58) 0%, rgba(255, 252, 247, 0.26) 38%, rgba(255, 246, 236, 0.40) 100%);
-  --gx-tint: rgba(255, 250, 244, 0.16);
+    linear-gradient(154deg, rgba(255, 255, 255, 0.50) 0%, rgba(255, 252, 247, 0.18) 40%, rgba(255, 246, 236, 0.30) 100%);
+  --gx-tint: rgba(255, 252, 248, 0.10);
   --gx-border: rgba(255, 255, 255, 0.86);
   --gx-shadow:
-    0 18px 44px rgba(146, 96, 52, 0.13),
-    0 2px 6px rgba(146, 96, 52, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.94),
-    inset 0 -14px 26px rgba(255, 255, 255, 0.16);
+    0 20px 46px rgba(146, 96, 52, 0.14),
+    0 3px 8px rgba(146, 96, 52, 0.05),
+    0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 1),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.34),
+    inset 0 -18px 30px -18px rgba(255, 255, 255, 0.55);
   --gx-shadow-nav:
     0 14px 36px rgba(146, 96, 52, 0.16),
     0 2px 6px rgba(146, 96, 52, 0.06),
@@ -39,12 +41,12 @@
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(34% 26% at 12% 6%, rgba(255, 150, 60, 0.72) 0%, rgba(255, 150, 60, 0) 70%),
-    radial-gradient(38% 26% at 92% 2%, rgba(255, 182, 104, 0.68) 0%, rgba(255, 182, 104, 0) 72%),
-    radial-gradient(46% 30% at 50% 20%, rgba(255, 176, 118, 0.55) 0%, rgba(255, 176, 118, 0) 74%),
-    radial-gradient(42% 28% at 30% 46%, rgba(255, 152, 112, 0.44) 0%, rgba(255, 152, 112, 0) 74%),
-    radial-gradient(46% 30% at 74% 62%, rgba(255, 166, 96, 0.46) 0%, rgba(255, 166, 96, 0) 74%),
-    radial-gradient(54% 34% at 48% 92%, rgba(255, 132, 104, 0.40) 0%, rgba(255, 132, 104, 0) 76%);
+    radial-gradient(34% 26% at 12% 6%, rgba(255, 178, 118, 0.55) 0%, rgba(255, 150, 60, 0) 70%),
+    radial-gradient(38% 26% at 92% 2%, rgba(255, 196, 140, 0.55) 0%, rgba(255, 182, 104, 0) 72%),
+    radial-gradient(46% 30% at 50% 20%, rgba(255, 198, 148, 0.46) 0%, rgba(255, 176, 118, 0) 74%),
+    radial-gradient(42% 28% at 30% 46%, rgba(255, 178, 136, 0.36) 0%, rgba(255, 152, 112, 0) 74%),
+    radial-gradient(46% 30% at 74% 62%, rgba(255, 190, 132, 0.38) 0%, rgba(255, 166, 96, 0) 74%),
+    radial-gradient(54% 34% at 48% 92%, rgba(255, 160, 134, 0.32) 0%, rgba(255, 132, 104, 0) 76%);
 }
 
 .app-main-scroll,
@@ -75,7 +77,7 @@
 #root .export-card,
 #root .upload-card {
   background-image:
-    linear-gradient(118deg, rgba(255, 255, 255, 0) 26%, rgba(255, 255, 255, 0.30) 42%, rgba(255, 255, 255, 0) 58%),
+    linear-gradient(116deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.40) 43%, rgba(255, 255, 255, 0) 56%),
     var(--gx-sheen),
     repeating-linear-gradient(58deg, rgba(255, 255, 255, 0.05) 0 1px, rgba(255, 255, 255, 0) 1px 3px) !important;
   background-color: var(--gx-tint) !important;
@@ -202,4 +204,82 @@
   z-index: -1;
   background:
     radial-gradient(60% 26% at 50% 0%, rgba(255, 236, 214, 0.55) 0%, rgba(255, 236, 214, 0) 70%);
+}
+
+/* ---------- 9. 贴边高光（1px 渐变环）：玻璃感的关键 ---------- */
+#root .app-panel,
+#root .info-card,
+#root .ac-card,
+#root .member-row-card,
+#root .pf-hero,
+#root .pf-stats,
+#root .pf-menu,
+#root .set-group,
+#root .msg-row,
+#root .stat-card,
+#root .record-card,
+#root .timeline-card,
+#root .fam-member-card,
+#root .fam-card,
+#root .export-card,
+#root .upload-card,
+#root .app-bottom-nav,
+#root .app-topbar {
+  position: relative;
+  overflow: hidden;
+}
+
+#root .app-panel::after,
+#root .info-card::after,
+#root .ac-card::after,
+#root .member-row-card::after,
+#root .pf-hero::after,
+#root .pf-stats::after,
+#root .pf-menu::after,
+#root .set-group::after,
+#root .app-bottom-nav::after,
+#root .app-topbar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  pointer-events: none;
+  background:
+    linear-gradient(148deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.18) 38%, rgba(255, 255, 255, 0.06) 62%, rgba(255, 255, 255, 0.72) 100%);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+}
+
+/* 大面积柔和落影，让玻璃「浮起来」 */
+#root .app-panel,
+#root .pf-menu,
+#root .pf-stats {
+  box-shadow:
+    0 26px 60px -12px rgba(146, 88, 44, 0.20),
+    0 10px 24px -8px rgba(146, 88, 44, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -20px 34px -20px rgba(255, 255, 255, 0.60) !important;
+}
+
+/* ---------- 10. 首页细节：单层封面框、列表标题无衬线 ---------- */
+#root .nl-home-hero-wrap {
+  padding: 8px !important;
+}
+
+#root .nl-home-recent {
+  padding: 10px 12px 12px !important;
+}
+
+#root .nl-home-rows strong,
+#root .nl-home-rows h3,
+#root .nl-home-row-title {
+  font-family: var(--nl-font-sans) !important;
+  font-weight: 600 !important;
 }
