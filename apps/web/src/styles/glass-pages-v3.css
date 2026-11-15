@@ -8776,3 +8776,21 @@ main[aria-label="正在进入年轮"] {
 .archive-shell .ac-row input[type="time"]::-webkit-inner-spin-button {
   display: none !important;
 }
+
+/* 16：页面壳去卡片、行高收紧 */
+.archive-shell,
+.archive-shell.app-page-shell {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.archive-shell .ac-row {
+  min-height: 72px !important;
+}
+
+.archive-shell .ac-row .ac-value,
+.archive-shell .ac-row .ac-input,
+.archive-shell .ac-row input {
+  font-weight: 500 !important;
+}
