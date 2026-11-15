@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import {
   Camera,
   ChevronDown,
+  ChevronLeft,
   ChevronRight,
+  Search as SearchIcon,
   Edit3,
   FileText,
   Filter,
@@ -756,7 +758,7 @@ const SearchResultRow = ({ record, keyword, onClick }: { record: RecordSummary; 
         <span className="search-title">{highlightKeyword(record.title ?? '未命名记录', keyword)}</span>
         <span className="search-meta">{[formatSearchDate(record.event_time), record.location_text].filter(Boolean).join(' · ')}</span>
       </span>
-      <span className="search-kind">{kindLabel}</span>
+      {kindLabel === '照片' ? null : <span className="search-kind">{kindLabel}</span>}
       <ChevronRight size={18} strokeWidth={1.9} className="search-chevron" />
     </button>
   );
@@ -808,7 +810,11 @@ export const SearchPage = () => {
   return (
     <div className="search-page">
       <header className="search-head">
+        <button type="button" className="search-back" aria-label="返回" onClick={() => navigate(-1)}>
+          <ChevronLeft size={22} strokeWidth={2} />
+        </button>
         <label className="search-field">
+          <SearchIcon size={20} strokeWidth={2} className="search-field-icon" aria-hidden="true" />
           <input
             aria-label="搜索关键词"
             value={keyword}
@@ -816,7 +822,7 @@ export const SearchPage = () => {
             onKeyDown={(event) => {
               if (event.key === 'Enter') commitSearch(keyword);
             }}
-            placeholder="搜索记录"
+            placeholder="搜索记录、地点或文字"
           />
           {normalizedKeyword ? (
             <button type="button" className="search-clear" aria-label="清空搜索词" onClick={() => setKeyword('')}>
@@ -824,7 +830,6 @@ export const SearchPage = () => {
             </button>
           ) : null}
         </label>
-        <button type="button" className="search-cancel" onClick={() => setKeyword('')}>取消</button>
       </header>
 
       <main className="search-main">
