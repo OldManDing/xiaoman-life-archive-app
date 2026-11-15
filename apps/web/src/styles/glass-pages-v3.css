@@ -9289,3 +9289,35 @@ main[aria-label="正在进入年轮"] {
   white-space: nowrap !important;
   font-size: 21px !important;
 }
+
+/* 20：行高与留白收紧 */
+.account-shell:has(.ac-avatar) .ac-row {
+  min-height: 72px !important;
+  padding: 0 !important;
+}
+
+.account-shell:has(.ac-avatar) .ac-card {
+  padding: 0 18px !important;
+}
+
+.account-shell:has(.ac-avatar) .ac-hero {
+  gap: 6px !important;
+  padding: 4px 0 0 !important;
+}
+
+.account-shell:has(.ac-avatar) .ac-save,
+.account-shell:has(.ac-avatar) button[type="submit"] {
+  min-height: 64px !important;
+  font-size: 22px !important;
+  margin-top: 14px !important;
+}
+
+.account-shell:has(.ac-avatar) .ac-chevron {
+  color: #7a5a44 !important;
+}
+
+.account-shell:has(.ac-avatar) .ac-note,
+.account-shell:has(.ac-avatar) .ac-footnote {
+  margin-top: 8px !important;
+  font-size: 16px !important;
+}
