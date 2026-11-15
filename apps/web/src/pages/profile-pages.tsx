@@ -605,6 +605,7 @@ const MessageCard = ({ item, onClick, onReply }: { item: UserNotificationItem; o
         })()}</strong>
         {body ? <span className="msg-text">{body}</span> : null}
       </span>
+      {isSystem ? <img className="msg-system-thumb" src="/photos/kids/kid-03.jpg" alt="" loading="lazy" /> : null}
       <span className="msg-side">
         <span className="msg-time">{formatMessageTime(item.created_at)}</span>
         {hasReply ? (
