@@ -9860,3 +9860,31 @@ main[aria-label="正在进入年轮"] {
   height: 180px !important;
   background: rgba(255, 250, 244, 0.55) !important;
 }
+
+/* 24：卡片间距与底部留白收口 */
+.info-shell:has(a[href^="mailto:"]) > div {
+  gap: 8px !important;
+}
+
+.info-shell:has(a[href^="mailto:"]) > div > div {
+  min-height: 82px !important;
+  padding: 12px 14px !important;
+}
+
+.info-shell:has(a[href^="mailto:"]) > div > div strong {
+  font-size: 19px !important;
+}
+
+.info-shell:has(a[href^="mailto:"]) > div > div a {
+  font-size: 16px !important;
+}
+
+.info-shell:has(a[href^="mailto:"]) > div > div span[style*="8a6c56"] {
+  font-size: 12.5px !important;
+  line-height: 1.4 !important;
+}
+
+.info-shell:has(a[href^="mailto:"]) > p:last-of-type,
+.info-shell:has(a[href^="mailto:"]) > div:last-child {
+  margin-bottom: 6px !important;
+}
