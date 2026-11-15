@@ -7258,3 +7258,53 @@ body,
   color: #b08c6f !important;
   flex-shrink: 0;
 }
+
+/* 07：清空钮在框内、卡片更紧凑 */
+.search-field {
+  position: relative;
+  overflow: hidden;
+}
+
+.search-clear {
+  position: static !important;
+  margin-right: 0 !important;
+}
+
+.search-row {
+  min-height: 76px !important;
+  padding: 10px 12px !important;
+  border-radius: 20px !important;
+}
+
+.search-thumb {
+  width: 64px !important;
+  height: 64px !important;
+  border-radius: 14px !important;
+}
+
+.search-title {
+  font-size: 18px !important;
+}
+
+.search-list {
+  gap: 10px !important;
+}
+
+.search-count-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 07：清空钮固定在输入框内右侧 */
+.search-field {
+  padding-right: 52px !important;
+}
+
+.search-clear {
+  position: absolute !important;
+  right: 14px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  margin: 0 !important;
+}
