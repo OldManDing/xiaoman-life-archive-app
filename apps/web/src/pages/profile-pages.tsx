@@ -2768,7 +2768,7 @@ export const ContactPage = () => {
 
   return (
     <PageShell className="info-shell" title="联系我们" backTo="/profile/about">
-      <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.7, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>账号、档案、隐私和数据交付相关事项</p>
+      <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.7, whiteSpace: 'normal' }}>账号、档案、隐私和数据交付相关事项</p>
 
       <div style={{ display: 'grid', gap: 10 }}>
         {contacts.map((item, index) => {
