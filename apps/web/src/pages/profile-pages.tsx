@@ -1128,6 +1128,11 @@ export const AccountPage = () => {
             {editingMobile ? '收起' : '换绑'}
           </button>
         </div>
+        <div className="ac-row">
+          <span className="ac-label">微信</span>
+          <span className="ac-value">已绑定</span>
+          <ChevronRight size={20} strokeWidth={1.8} aria-hidden="true" className="ac-chevron" />
+        </div>
         <div className="ac-row is-static">
           <span className="ac-label">注册时间</span>
           <span className="ac-value">{registeredAt}</span>
