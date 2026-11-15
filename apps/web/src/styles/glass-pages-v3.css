@@ -8725,3 +8725,54 @@ main[aria-label="正在进入年轮"] {
   border: none !important;
   box-shadow: none !important;
 }
+
+/* 16：行内图标可见、日期行无框 */
+.archive-shell .ac-row > svg,
+.archive-shell .ac-row > button svg {
+  flex-shrink: 0;
+  color: #b08c6f !important;
+  opacity: 1 !important;
+}
+
+.archive-shell .ac-row .app-date-input,
+.archive-shell .ac-row .app-date-trigger {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding-right: 0 !important;
+}
+
+/* 16：行内三列布局，避免图标被挤出 */
+.archive-shell .ac-row {
+  display: grid !important;
+  grid-template-columns: 108px minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  column-gap: 10px !important;
+}
+
+.archive-shell .ac-row .ac-input {
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+.archive-shell .ac-row .app-date-input {
+  min-width: 0 !important;
+  justify-self: start !important;
+}
+
+/* 16：时间输入去掉原生箭头，只保留行内 chevron */
+.archive-shell .ac-row input[type="time"] {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  background: transparent !important;
+  border: none !important;
+  text-align: right !important;
+  font-family: var(--nl-font-display) !important;
+  font-size: 22px !important;
+  color: #3f2a1d !important;
+}
+
+.archive-shell .ac-row input[type="time"]::-webkit-calendar-picker-indicator,
+.archive-shell .ac-row input[type="time"]::-webkit-inner-spin-button {
+  display: none !important;
+}

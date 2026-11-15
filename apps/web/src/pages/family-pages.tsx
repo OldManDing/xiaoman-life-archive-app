@@ -560,8 +560,12 @@ export const FamilyChildPage = () => {
                 <span className="ac-label">出生日期</span>
                 <AppDateInput
                   aria-label="生日"
+                  variant="line"
                   value={form.birthday}
-                  displayValue={form.birthday ? form.birthday.replace(/-/g, '/') : undefined}
+                  displayValue={form.birthday ? (() => {
+                    const [y, m, d] = form.birthday.split('-');
+                    return y && m && d ? `${Number(y)}年${Number(m)}月${Number(d)}日` : form.birthday;
+                  })() : undefined}
                   placeholder="年/月/日"
                   onChange={(event) => { formDirtyRef.current = true; setForm((current) => ({ ...current, birthday: event.target.value })); }}
                 />
