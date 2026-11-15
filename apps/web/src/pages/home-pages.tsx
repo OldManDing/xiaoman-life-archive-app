@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
+  ArrowLeft,
   Camera,
   ChevronDown,
-  ChevronLeft,
   ChevronRight,
   Search as SearchIcon,
   Edit3,
@@ -811,7 +811,7 @@ export const SearchPage = () => {
     <div className="search-page">
       <header className="search-head">
         <button type="button" className="search-back" aria-label="返回" onClick={() => navigate(-1)}>
-          <ChevronLeft size={22} strokeWidth={2} />
+          <ArrowLeft size={24} strokeWidth={2} />
         </button>
         <label className="search-field">
           <SearchIcon size={20} strokeWidth={2} className="search-field-icon" aria-hidden="true" />

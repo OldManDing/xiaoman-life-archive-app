@@ -7308,3 +7308,28 @@ body,
   transform: translateY(-50%) !important;
   margin: 0 !important;
 }
+
+/* 07：节奏微调 */
+.search-head {
+  padding: 14px 0 8px !important;
+}
+
+.search-recent-title {
+  margin: 18px 0 12px !important;
+  font-size: 23px !important;
+}
+
+.search-count {
+  margin: 20px 0 12px !important;
+  font-size: 23px !important;
+}
+
+.search-chip {
+  min-height: 46px !important;
+  padding: 0 22px !important;
+  font-size: 17px !important;
+}
+
+.search-row {
+  min-height: 80px !important;
+}
