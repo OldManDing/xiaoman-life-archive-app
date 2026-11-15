@@ -9447,3 +9447,21 @@ main[aria-label="正在进入年轮"] {
   width: 26px !important;
   height: 26px !important;
 }
+
+/* 24 联系我们：复制按钮描边胶囊、副标题 */
+.info-shell:has(a[href^="mailto:"]) > p:first-of-type {
+  font-size: 17px !important;
+  color: #7a5a44 !important;
+  margin: 4px 0 14px !important;
+}
+
+.info-shell:has(a[href^="mailto:"]) button[aria-label^="复制"] {
+  min-height: 52px !important;
+  min-width: 88px !important;
+  border-radius: 14px !important;
+  border: 1.5px solid #e0a061 !important;
+  background: transparent !important;
+  color: #c4762f !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+}

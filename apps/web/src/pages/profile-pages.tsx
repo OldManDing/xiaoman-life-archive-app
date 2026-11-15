@@ -2778,25 +2778,25 @@ export const ContactPage = () => {
             <div
               key={item.title}
               style={{
-                minHeight: copyable ? '72px' : '72px',
-                padding: '14px 16px',
-                borderRadius: 18,
-                background: 'rgba(255, 255, 255, 0.62)',
+                minHeight: copyable ? '104px' : '96px',
+                padding: '16px 18px',
+                borderRadius: 22,
+                background: 'rgba(255, 247, 238, 0.86)',
                 border: '1px solid rgba(255, 255, 255, 0.62)',
                 boxShadow: '0 8px 20px rgba(146, 96, 52, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.6)',
                 display: 'grid',
-                gridTemplateColumns: copyable ? '40px minmax(0, 1fr) 44px' : '40px minmax(0, 1fr)',
+                gridTemplateColumns: copyable ? '64px minmax(0, 1fr) 92px' : '64px minmax(0, 1fr)',
                 gap: '12px',
                 alignItems: 'center',
               }}
             >
-              <span style={{ width: '40px', height: '40px', borderRadius: '12px', border: '1px solid rgba(233, 160, 90, 0.5)', background: 'rgba(233, 160, 90, 0.14)', display: 'grid', placeItems: 'center', color: '#e9a05a' }}>
-                <Icon size={22} strokeWidth={1.8} />
+              <span style={{ width: '64px', height: '64px', borderRadius: '18px', border: 'none', background: 'rgba(246, 166, 79, 0.18)', display: 'grid', placeItems: 'center', color: '#d97a22' }}>
+                <Icon size={30} strokeWidth={1.9} />
               </span>
               <span style={{ minWidth: 0, display: 'grid', gap: '4px' }}>
-                <strong style={{ color: 'var(--nl-ink)', fontSize: '17px', fontWeight: 600 }}>{item.title}</strong>
-                <a href={`mailto:${item.value}`} style={{ color: 'var(--nl-ink)', fontSize: '15px', fontWeight: 600, lineHeight: 1.75, overflowWrap: 'anywhere', textDecoration: 'none' }}>{item.value}</a>
-                <span style={{ color: '#8b7160', fontSize: '13px', lineHeight: 1.55 }}>{item.detail}</span>
+                <strong style={{ color: '#3f2a1d', fontSize: '20px', fontWeight: 600 }}>{item.title}</strong>
+                <a href={`mailto:${item.value}`} style={{ color: '#4a2f1f', fontSize: '17px', fontWeight: 600, lineHeight: 1.6, overflowWrap: 'anywhere', textDecoration: 'none' }}>{item.value}</a>
+                <span style={{ color: '#8a6c56', fontSize: '15px', lineHeight: 1.5 }}>{item.detail}</span>
               </span>
               {copyable ? (
                 <button
