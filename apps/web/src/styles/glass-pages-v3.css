@@ -8900,3 +8900,16 @@ main[aria-label="正在进入年轮"] {
   width: 56px !important;
   height: 56px !important;
 }
+
+/* 17：成员卡更紧凑 */
+.account-shell .member-row-card {
+  min-height: 76px !important;
+  padding: 10px 14px !important;
+}
+.account-shell .member-row-card img {
+  width: 48px !important;
+  height: 48px !important;
+}
+.account-shell .fam-members-summary {
+  margin: 0 0 14px !important;
+}
