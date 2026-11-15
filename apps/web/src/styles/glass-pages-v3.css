@@ -8005,3 +8005,44 @@ body,
   min-width: 0;
   flex: 1;
 }
+
+/* 10：时间列固定、标题不与时间重叠、间距放宽 */
+.msg-card {
+  padding: 18px 18px !important;
+  gap: 16px !important;
+}
+
+.msg-side {
+  width: 76px !important;
+  flex-shrink: 0 !important;
+  text-align: right !important;
+}
+
+.msg-title {
+  font-size: 19px !important;
+  padding-right: 2px;
+}
+
+.msg-list {
+  gap: 14px !important;
+}
+
+.msg-time {
+  white-space: nowrap !important;
+}
+
+/* 10：标题允许两行，避免半截截断 */
+.msg-card {
+  max-height: none !important;
+}
+
+.msg-title {
+  white-space: normal !important;
+  overflow: hidden !important;
+  text-overflow: clip !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  font-size: 19px !important;
+  line-height: 1.4 !important;
+}
