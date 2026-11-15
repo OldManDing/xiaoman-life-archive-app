@@ -9465,3 +9465,15 @@ main[aria-label="正在进入年轮"] {
   font-size: 18px !important;
   font-weight: 600 !important;
 }
+
+/* 24：复制按钮高度与卡片间距 */
+.info-shell:has(a[href^="mailto:"]) button[aria-label^="复制"] {
+  min-height: 46px !important;
+  min-width: 82px !important;
+  border-radius: 12px !important;
+}
+
+.info-shell:has(a[href^="mailto:"]) [class],
+.info-shell:has(a[href^="mailto:"]) > div {
+  gap: 8px !important;
+}

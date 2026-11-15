@@ -2778,8 +2778,8 @@ export const ContactPage = () => {
             <div
               key={item.title}
               style={{
-                minHeight: copyable ? '104px' : '96px',
-                padding: '16px 18px',
+                minHeight: copyable ? '92px' : '84px',
+                padding: '14px 16px',
                 borderRadius: 22,
                 background: 'rgba(255, 247, 238, 0.86)',
                 border: '1px solid rgba(255, 255, 255, 0.62)',
@@ -2796,7 +2796,7 @@ export const ContactPage = () => {
               <span style={{ minWidth: 0, display: 'grid', gap: '4px' }}>
                 <strong style={{ color: '#3f2a1d', fontSize: '20px', fontWeight: 600 }}>{item.title}</strong>
                 <a href={`mailto:${item.value}`} style={{ color: '#4a2f1f', fontSize: '17px', fontWeight: 600, lineHeight: 1.6, overflowWrap: 'anywhere', textDecoration: 'none' }}>{item.value}</a>
-                <span style={{ color: '#8a6c56', fontSize: '15px', lineHeight: 1.5 }}>{item.detail}</span>
+                <span style={{ color: '#8a6c56', fontSize: '14px', lineHeight: 1.45, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.detail}</span>
               </span>
               {copyable ? (
                 <button
