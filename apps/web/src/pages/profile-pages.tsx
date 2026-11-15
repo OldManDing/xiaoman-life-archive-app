@@ -310,11 +310,11 @@ const toggleButtonStyle = (enabled: boolean) =>
 
 const toggleTrackStyle = (enabled: boolean) =>
   ({
-    width: '42px',
-    height: '24px',
+    width: '52px',
+    height: '30px',
     borderRadius: '999px',
     border: 'none',
-    background: enabled ? '#a9581b' : '#e8d9c9',
+    background: enabled ? '#f0a050' : '#e6d5c3',
     padding: '3px',
     display: 'flex',
     alignItems: 'center',
@@ -323,8 +323,8 @@ const toggleTrackStyle = (enabled: boolean) =>
   }) as const;
 
 const toggleKnobStyle = (enabled: boolean) => ({
-  width: '18px',
-  height: '18px',
+  width: '24px',
+  height: '24px',
   borderRadius: '999px',
   background: '#FFFFFF',
   border: 'none',
@@ -937,7 +937,7 @@ export const NotificationSettingsPage = () => {
                   return (
                     <button type="button" className={isLast ? 'set-row is-last' : 'set-row'} key={item.key} onClick={() => navigate('/profile/settings')} style={{ cursor: 'pointer' }}>
                       {Icon ? <span className="set-icon"><Icon size={24} strokeWidth={1.8} /></span> : null}
-                      <span className="set-body"><strong>{item.label}</strong></span>
+                      <span className="set-body"><strong>{item.label}</strong><small>{item.desc}</small></span>
                       <span className="set-value">22:00–07:00</span>
                       <ChevronRight size={20} strokeWidth={1.8} className="set-chevron" />
                     </button>
@@ -1310,15 +1310,15 @@ export const SettingsPage = () => {
         <h2 className="set-group-title">记录</h2>
         <div className="set-card">
           {[
-            { key: 'dailyReminder' as const, label: '每天提醒我记录', icon: <Bell size={24} strokeWidth={1.8} /> },
-            { key: 'autoLocation' as const, label: '记录时自动带位置', icon: <Home size={24} strokeWidth={1.8} /> },
-            { key: 'wifiUploadOnly' as const, label: '仅 Wi-Fi 上传照片', icon: <Smartphone size={24} strokeWidth={1.8} /> },
+            { key: 'dailyReminder' as const, label: '每天提醒我记录', desc: '不错过每一个重要的日子', icon: <Bell size={24} strokeWidth={1.8} /> },
+            { key: 'autoLocation' as const, label: '记录时自动带位置', desc: '记录更有意义', icon: <Home size={24} strokeWidth={1.8} /> },
+            { key: 'wifiUploadOnly' as const, label: '仅 Wi-Fi 上传照片', desc: '节省移动数据流量', icon: <Smartphone size={24} strokeWidth={1.8} /> },
           ].map((item) => {
             const enabled = Boolean(recordPrefs[item.key]);
             return (
               <div key={item.key} className="set-row is-static">
                 <span className="set-icon">{item.icon}</span>
-                <span className="set-body"><strong>{item.label}</strong></span>
+                <span className="set-body"><strong>{item.label}</strong>{item.desc ? <small>{item.desc}</small> : null}</span>
                 <button type="button" aria-label={item.label} aria-pressed={enabled} style={toggleButtonStyle(enabled)} onClick={() => toggleRecordPref(item.key)}>
                   <span style={toggleTrackStyle(enabled)}><span style={toggleKnobStyle(enabled)} /></span>
                 </button>

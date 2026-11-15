@@ -8129,3 +8129,66 @@ header.app-topbar > div span {
   min-height: 92px !important;
   max-height: 96px !important;
 }
+
+/* ===== 11 设置：分组标题衬线、行高、页脚 ===== */
+.set-group-title {
+  font-family: var(--nl-font-display) !important;
+  font-size: 26px !important;
+  font-weight: 700 !important;
+  color: #4a2f1f !important;
+  margin: 22px 0 10px !important;
+}
+
+.set-card {
+  background: rgba(255, 246, 237, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.62) !important;
+  border-radius: 26px !important;
+  box-shadow: 0 8px 20px rgba(176, 118, 78, 0.06) !important;
+  padding: 2px 18px !important;
+}
+
+.set-row {
+  min-height: 86px !important;
+  gap: 14px !important;
+  border-bottom: 1px solid rgba(120, 80, 40, 0.09) !important;
+}
+
+.set-row:last-child {
+  border-bottom: none !important;
+}
+
+.set-icon {
+  color: #6b4527 !important;
+}
+
+.set-body strong {
+  font-size: 19px !important;
+  font-weight: 600 !important;
+  color: #3f2a1d !important;
+}
+
+.set-body small {
+  font-size: 14px !important;
+  color: #8a6c56 !important;
+}
+
+.settings-shell .set-footer {
+  order: 9;
+  text-align: center;
+  margin: 26px 0 10px;
+  font-size: 15px;
+  color: #a08468;
+  letter-spacing: 0.08em;
+}
+
+/* 11：分组顺序对齐设计稿（记录 → 数据 → 关于 → 隐私 → 长辈） */
+.settings-shell {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.settings-shell .set-group[aria-label="记录"] { order: 1; }
+.settings-shell .set-group[aria-label="数据"] { order: 2; }
+.settings-shell .set-group[aria-label="关于"] { order: 3; }
+.settings-shell .set-group[aria-label="隐私"] { order: 4; }
+.settings-shell .set-group[aria-label="长辈与阅读"] { order: 5; }
