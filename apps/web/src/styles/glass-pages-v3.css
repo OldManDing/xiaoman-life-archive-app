@@ -8447,3 +8447,42 @@ header.app-topbar > div span {
     radial-gradient(90% 46% at 62% 0%, rgba(255, 214, 168, 0.55) 0%, rgba(255, 214, 168, 0) 70%),
     linear-gradient(180deg, #ffe9cf 0%, #fde3cd 55%, #fbdccb 100%) !important;
 }
+
+/* 13：进度条填充可见 */
+.nl-boot-progress {
+  background: #e28b3b !important;
+  width: 46% !important;
+  animation: none !important;
+}
+
+/* 14：照片单层圆角卡、标题字号与间距对齐设计稿 */
+.wl-hero {
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 30px !important;
+  overflow: hidden !important;
+  box-shadow: 0 16px 38px rgba(146, 96, 52, 0.16) !important;
+  aspect-ratio: 910 / 575 !important;
+}
+
+.wl-hero img {
+  border-radius: 30px !important;
+  display: block;
+}
+
+.wl-title,
+.wl-heading {
+  font-size: 46px !important;
+  line-height: 1.22 !important;
+  letter-spacing: 0.01em !important;
+}
+
+.wl-sub {
+  font-size: 19px !important;
+  color: #7a5a44 !important;
+}
+
+/* 14：照片铺满卡片、标题回调 */
+.wl-hero { padding: 0 !important; display: block !important; }
+.wl-hero img { width: 100% !important; height: 100% !important; object-fit: cover !important; margin: 0 !important; }
+.wl-title, .wl-heading { font-size: 42px !important; }

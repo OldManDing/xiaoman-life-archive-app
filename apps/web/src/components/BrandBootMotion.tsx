@@ -18,8 +18,8 @@ const shellStyle: CSSProperties = {
   overflow: 'hidden',
   // 13 #3：暖琥珀径向光晕
   backgroundImage:
-    'radial-gradient(420px 420px at 50% 38%, rgba(254, 221, 190, 0.95), rgba(254, 221, 190, 0) 72%), radial-gradient(600px 600px at 50% 0%, rgba(252, 234, 212, 0.8), rgba(252, 234, 212, 0) 70%)',
-  backgroundColor: '#f9e0c9',
+    'radial-gradient(80% 42% at 82% 0%, rgba(255, 198, 142, 0.85) 0%, rgba(255, 198, 142, 0) 68%), radial-gradient(70% 40% at 16% 12%, rgba(255, 226, 194, 0.8) 0%, rgba(255, 226, 194, 0) 70%), linear-gradient(180deg, #ffe7cf 0%, #fcdcc7 55%, #f9d3c0 100%)',
+  backgroundColor: '#fbdfc9',
 };
 
 const motionBlockStyle: CSSProperties = {
@@ -164,7 +164,7 @@ export const BrandBootMotion = ({ showRecovery = false, onRetry, onExit }: Brand
       `}
     </style>
 
-    <section style={{ ...motionBlockStyle, alignContent: 'start', marginTop: '22vh' }}>
+    <section style={{ ...motionBlockStyle, alignContent: 'start', marginTop: '28vh' }}>
       <span aria-hidden="true" style={{ width: 11, height: 11, borderRadius: '999px', background: '#e9a05a', marginBottom: 14 }} />
       <strong style={{ color: '#5a3a22', fontFamily: 'var(--nl-font-display)', fontSize: '78px', lineHeight: 1.02, fontWeight: 600, letterSpacing: '0.01em' }}>年轮</strong>
       <span aria-hidden="true" style={{ width: 120, height: 1, background: 'rgba(120, 80, 40, 0.28)', margin: '16px 0 14px' }} />
@@ -173,7 +173,7 @@ export const BrandBootMotion = ({ showRecovery = false, onRetry, onExit }: Brand
 
     <section style={{ ...motionBlockStyle, alignContent: 'end', justifyItems: 'center', paddingBottom: 24 }}>
       <div role="progressbar" aria-label="正在准备你的档案" style={{ ...timelineTrackStyle, width: '48%', maxWidth: '320px', height: '4px', background: 'rgba(120, 80, 40, 0.14)' }}>
-        <span className="nl-boot-progress" style={{ display: 'block', width: '79%', height: '100%', borderRadius: '999px', background: 'var(--nl-accent)' }} />
+        <span className="nl-boot-progress" style={{ display: 'block', width: '46%', height: '100%', borderRadius: '999px', background: '#e28b3b', animation: 'none' }} />
       </div>
       <p style={{ margin: '14px 0 0', color: '#6f5745', fontSize: '15px', fontWeight: 500, letterSpacing: '0.04em' }}>正在准备你的档案</p>
     </section>
