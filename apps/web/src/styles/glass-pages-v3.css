@@ -9888,3 +9888,39 @@ main[aria-label="正在进入年轮"] {
 .info-shell:has(a[href^="mailto:"]) > div:last-child {
   margin-bottom: 6px !important;
 }
+
+/* 17：卡片间距与权限说明收口 */
+#root .app-page-shell.account-shell:has(.member-row-card) .app-panel {
+  gap: 8px !important;
+  row-gap: 8px !important;
+}
+
+#root .account-shell .member-row-card {
+  margin: 0 !important;
+}
+
+#root .account-shell .fam-members-summary {
+  margin: 0 0 10px !important;
+  font-size: 16px !important;
+  color: #4a2f1f !important;
+}
+
+#root .account-shell .fam-perm-legend,
+#root .account-shell [class*="perm-legend"] {
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  line-height: 1.55 !important;
+  color: #4a2f1f !important;
+  margin: 6px 0 10px !important;
+}
+
+#root .account-shell .fam-perm-legend strong,
+#root .account-shell [class*="perm-legend"] strong {
+  font-weight: 500 !important;
+}
+
+#root .app-page-shell.account-shell:has(.member-row-card) {
+  background-image:
+    radial-gradient(90% 30% at 50% 0%, rgba(255, 231, 205, 0.7) 0%, rgba(255, 231, 205, 0) 60%),
+    linear-gradient(180deg, #fff4e8 0%, #fdeada 55%, #fbe2d0 100%) !important;
+}
