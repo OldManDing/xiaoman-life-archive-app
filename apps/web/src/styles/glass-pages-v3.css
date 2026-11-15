@@ -6414,3 +6414,63 @@ body,
   margin-left: auto;
   margin-right: 4px;
 }
+
+/* 06：衬线字体与更强暖光背景 */
+.pf-menu-label,
+.pf-stat-label,
+.pf-hero-name,
+.pf-stat-num {
+  font-family: var(--nl-font-display) !important;
+}
+
+.pf-menu-label {
+  font-weight: 600 !important;
+}
+
+.pf-menu-row.is-danger .pf-chevron {
+  color: var(--nl-muted) !important;
+}
+
+body,
+#root,
+.app-layout {
+  background-image:
+    radial-gradient(60% 32% at 88% 0%, rgba(255, 206, 158, 0.60) 0%, rgba(255, 206, 158, 0) 70%),
+    radial-gradient(80% 40% at 12% 6%, rgba(255, 226, 198, 0.55) 0%, rgba(255, 226, 198, 0) 70%),
+    linear-gradient(180deg, #ffeedd 0%, #fde2cd 55%, #f9d3c4 100%) !important;
+}
+
+/* 06：粗衬线字重与更明显卡片 */
+.pf-hero-name {
+  font-size: 32px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.01em !important;
+}
+
+.pf-stat-num {
+  font-size: 34px !important;
+  font-weight: 700 !important;
+}
+
+.pf-menu-label {
+  font-size: 17px !important;
+  font-weight: 700 !important;
+}
+
+.pf-hero-meta {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  color: var(--nl-muted-strong) !important;
+}
+
+.pf-menu,
+.pf-stats,
+.pf-hero {
+  background: rgba(255, 238, 226, 0.72) !important;
+  border-color: rgba(255, 255, 255, 0.66) !important;
+}
+
+.app-bottom-nav-link.is-active {
+  border-radius: 22px !important;
+  min-height: 56px !important;
+}
