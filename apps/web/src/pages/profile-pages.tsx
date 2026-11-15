@@ -1,7 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { AlertTriangle, Bell, BellRing, BookHeart, AlertCircle, Unlink, Cake, CalendarDays, Star, Camera, ChevronUp, Clock, CheckCircle2, ChevronRight, Copy, DownloadCloud, FileBox, FileText, HelpCircle, Home, Info, KeyRound, Lock, LogOut, Mail, MessageCircle, MessageCircleMore, Moon, Pencil, RefreshCw, Settings, Shield, ShieldCheck, Smartphone, Sparkles, Trash2, Type, UploadCloud, UserPlus, UserRound, Users } from 'lucide-react';
+import { AlertTriangle, Bell, BellRing, MapPin, Wifi, BookHeart, AlertCircle, Unlink, Cake, CalendarDays, Star, Camera, ChevronUp, Clock, CheckCircle2, ChevronRight, Copy, DownloadCloud, FileBox, FileText, HelpCircle, Home, Info, KeyRound, Lock, LogOut, Mail, MessageCircle, MessageCircleMore, Moon, Pencil, RefreshCw, Settings, Shield, ShieldCheck, Smartphone, Sparkles, Trash2, Type, UploadCloud, UserPlus, UserRound, Users } from 'lucide-react';
 
 import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
@@ -1311,8 +1311,8 @@ export const SettingsPage = () => {
         <div className="set-card">
           {[
             { key: 'dailyReminder' as const, label: '每天提醒我记录', desc: '不错过每一个重要的日子', icon: <Bell size={24} strokeWidth={1.8} /> },
-            { key: 'autoLocation' as const, label: '记录时自动带位置', desc: '记录更有意义', icon: <Home size={24} strokeWidth={1.8} /> },
-            { key: 'wifiUploadOnly' as const, label: '仅 Wi-Fi 上传照片', desc: '节省移动数据流量', icon: <Smartphone size={24} strokeWidth={1.8} /> },
+            { key: 'autoLocation' as const, label: '记录时自动带位置', desc: '记录更有意义', icon: <MapPin size={24} strokeWidth={1.8} /> },
+            { key: 'wifiUploadOnly' as const, label: '仅 Wi-Fi 上传照片', desc: '节省移动数据流量', icon: <Wifi size={24} strokeWidth={1.8} /> },
           ].map((item) => {
             const enabled = Boolean(recordPrefs[item.key]);
             return (
