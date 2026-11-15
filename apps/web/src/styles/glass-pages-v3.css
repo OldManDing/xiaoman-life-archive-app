@@ -9792,3 +9792,12 @@ main[aria-label="正在进入年轮"] {
   background: transparent !important;
   user-select: none !important;
 }
+
+.error-shell p {
+  font-size: 16px !important;
+  white-space: nowrap !important;
+  max-width: none !important;
+}
+.error-shell ::selection {
+  background: transparent !important;
+}
