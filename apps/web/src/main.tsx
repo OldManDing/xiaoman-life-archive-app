@@ -1,6 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { App } from './app/App';
+import '@fontsource/noto-serif-sc/400.css';
+import '@fontsource/noto-serif-sc/600.css';
+import '@fontsource/noto-serif-sc/700.css';
 import './global.css';
 // 全站视觉系统 v3（暖光玻璃）：令牌 + 全局底 + 玻璃三级；删除此 import 即可回滚
 import './styles/design-system-v3.css';

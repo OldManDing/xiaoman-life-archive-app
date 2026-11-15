@@ -6474,3 +6474,8 @@ body,
   border-radius: 22px !important;
   min-height: 56px !important;
 }
+
+/* 衬线字体落到真实宋体（Android 无 CJK 衬线，随包提供 Noto Serif SC） */
+:root {
+  --nl-font-display: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "STSong", "SimSun", serif;
+}
