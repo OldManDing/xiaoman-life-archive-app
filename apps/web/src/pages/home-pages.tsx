@@ -230,13 +230,13 @@ const RecordTextThumbnail = ({ label = '文字', compact = false }: { label?: st
 const RecordSummaryCard = ({ record, onClick }: { record: RecordSummary; onClick: () => void }) => (
   <button type="button" onClick={onClick} style={{ width: '100%', minHeight: 82, border: '1px solid var(--nl-border-muted)', borderRadius: 8, background: 'rgba(var(--nl-surface-rgb),0.14)', padding: '12px', display: 'flex', gap: 13, alignItems: 'center', textAlign: 'left', cursor: 'pointer', boxShadow: 'inset 0 1px 0 var(--nl-inset-highlight)' }}>
     <span style={{ width: 42, display: 'grid', justifyItems: 'start', flexShrink: 0 }}>
-      <strong style={{ color: 'var(--nl-ink)', fontSize: 17, lineHeight: 1, fontWeight: 600 }}>{formatDay(record.event_time)}</strong>
-      <span style={{ marginTop: 5, color: 'var(--nl-muted)', fontSize: 11, fontWeight: 500 }}>{formatMonth(record.event_time)}</span>
+      <strong style={{ color: 'var(--nl-ink)', fontSize: 16, lineHeight: 1, fontWeight: 600 }}>{formatDay(record.event_time)}</strong>
+      <span style={{ marginTop: 5, color: 'var(--nl-muted)', fontSize: 10, fontWeight: 500 }}>{formatMonth(record.event_time)}</span>
     </span>
     <span style={{ minWidth: 0, display: 'grid', gap: 6, flex: 1 }}>
-      <strong style={{ color: 'var(--nl-ink)', fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{record.title ?? '未命名记录'}</strong>
+      <strong style={{ color: 'var(--nl-ink)', fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{record.title ?? '未命名记录'}</strong>
       <span style={{ ...refMutedTextStyle, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{record.summary ?? '这条记录还没有摘要。'}</span>
-      <span style={{ color: 'var(--nl-muted)', fontSize: 11, fontWeight: 500 }}>{record.tags?.length ? `${record.tags.length} 个标签` : normalizeDisplayName(record.creator_name, '家人')}</span>
+      <span style={{ color: 'var(--nl-muted)', fontSize: 10, fontWeight: 500 }}>{record.tags?.length ? `${record.tags.length} 个标签` : normalizeDisplayName(record.creator_name, '家人')}</span>
     </span>
   </button>
 );
@@ -366,7 +366,7 @@ const HomeTileVisual = ({ tile, active, compact = false, fallbackSrc }: { tile: 
       >
         <FileText size={compact ? 20 : 28} strokeWidth={1.5} />
         {!compact ? (
-          <p style={{ margin: 0, maxWidth: '18em', color: 'var(--nl-on-dark-muted)', fontFamily: 'var(--nl-font-display)', fontSize: 17, lineHeight: 1.75, fontWeight: 520, display: '-webkit-box', WebkitLineClamp: 6, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+          <p style={{ margin: 0, maxWidth: '18em', color: 'var(--nl-on-dark-muted)', fontFamily: 'var(--nl-font-display)', fontSize: 16, lineHeight: 1.75, fontWeight: 520, display: '-webkit-box', WebkitLineClamp: 6, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
             {tile.excerpt || tile.title}
           </p>
         ) : null}
@@ -862,7 +862,7 @@ export const SearchPage = () => {
             {!loading && !error && activeChild && !records.length ? (
               <div style={{ display: 'grid', justifyItems: 'center', gap: 14, padding: '32px 0 12px', textAlign: 'center' }}>
                 <EmptyState message="还没有记录，先去记一笔吧。" />
-                <button type="button" onClick={() => navigate('/record/create')} style={{ ...refPrimaryButtonStyle, minHeight: 44, padding: '10px 22px', fontSize: 14 }}>
+                <button type="button" onClick={() => navigate('/record/create')} style={{ ...refPrimaryButtonStyle, minHeight: 44, padding: '10px 22px', fontSize: 13 }}>
                   去记录
                 </button>
               </div>
@@ -898,12 +898,12 @@ export const SearchPage = () => {
                   <Search size={54} strokeWidth={1.8} />
                   <Sparkles size={20} strokeWidth={1.8} style={{ position: 'absolute', top: 22, right: 24, color: '#e9a05a' }} />
                 </span>
-                <strong style={{ fontFamily: 'var(--nl-font-display)', fontSize: 32, fontWeight: 600, color: 'var(--nl-ink)', lineHeight: 1.3, marginTop: 10 }}>没有找到「{normalizedKeyword}」</strong>
-                <p style={{ ...helperTextStyle, margin: 0, fontSize: 14, lineHeight: 1.75, maxWidth: 268 }}>换个词试试，或者去时间轴看看这一年</p>
+                <strong style={{ fontFamily: 'var(--nl-font-display)', fontSize: 31, fontWeight: 600, color: 'var(--nl-ink)', lineHeight: 1.3, marginTop: 10 }}>没有找到「{normalizedKeyword}」</strong>
+                <p style={{ ...helperTextStyle, margin: 0, fontSize: 13, lineHeight: 1.75, maxWidth: 268 }}>换个词试试，或者去时间轴看看这一年</p>
                 <button
                   type="button"
                   onClick={() => navigate(`/timeline?year=${new Date().getFullYear()}`)}
-                  style={{ marginTop: 18, minHeight: 56, padding: '0 30px', borderRadius: 999, border: '1px solid rgba(255, 255, 255, 0.9)', background: 'rgba(255, 255, 255, 0.6)', color: '#b05f22', fontSize: 17, fontWeight: 600, boxShadow: '0 8px 22px rgba(146, 96, 52, 0.08)' }}
+                  style={{ marginTop: 18, minHeight: 56, padding: '0 30px', borderRadius: 999, border: '1px solid rgba(255, 255, 255, 0.9)', background: 'rgba(255, 255, 255, 0.6)', color: '#b05f22', fontSize: 16, fontWeight: 600, boxShadow: '0 8px 22px rgba(146, 96, 52, 0.08)' }}
                 >
                   去时间轴看看
                 </button>
@@ -1171,7 +1171,7 @@ export const TimelinePage = () => {
             type="button"
             onClick={() => void loadMoreRecords()}
             disabled={loadingMore}
-            style={{ display: 'block', margin: '18px auto 6px', minHeight: 44, padding: '0 22px', borderRadius: 999, border: '1px solid rgba(var(--nl-shadow-rgb),0.14)', background: 'rgba(255,251,245,0.7)', color: 'var(--nl-ink)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+            style={{ display: 'block', margin: '18px auto 6px', minHeight: 44, padding: '0 22px', borderRadius: 999, border: '1px solid rgba(var(--nl-shadow-rgb),0.14)', background: 'rgba(255,251,245,0.7)', color: 'var(--nl-ink)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
           >
             {loadingMore ? '加载中…' : `加载更多（已显示 ${records.length}/${totalRecords}）`}
           </button>

@@ -28,7 +28,7 @@
   margin: 0;
   color: var(--nl-ink);
   font-family: var(--nl-font-display);
-  font-size: 35px;
+  font-size: 34px;
   line-height: 1.06;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -52,7 +52,7 @@
 }
 
 .fam-invite-btn span {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.06em;
   margin-top: 2px;
@@ -88,7 +88,7 @@
   margin: 0;
   color: var(--nl-ink);
   font-family: var(--nl-font-display);
-  font-size: 31px;
+  font-size: 30px;
   line-height: 1.15;
   font-weight: 600;
   letter-spacing: 0.03em;
@@ -100,7 +100,7 @@
 .fam-hero-meta {
   margin: 7px 0 0;
   color: var(--nl-muted);
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1.45;
   font-weight: 500;
 }
@@ -117,7 +117,7 @@
   background: #f3a85c;
   border: 1px solid rgba(169, 88, 27, 0.12);
   color: #8a4e14;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
@@ -135,7 +135,7 @@
   margin: 0;
   color: var(--nl-ink);
   font-family: var(--nl-font-display);
-  font-size: 23px;
+  font-size: 22px;
   line-height: 1.2;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -148,7 +148,7 @@
   min-height: 32px;
   padding-left: 10px;
   color: var(--nl-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   text-decoration: none;
 }
@@ -183,7 +183,7 @@
 .fam-member-name {
   min-width: 0;
   color: var(--nl-ink);
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1.2;
   font-weight: 600;
   overflow: hidden;
@@ -196,7 +196,7 @@
   flex-shrink: 0;
   padding: 8px 14px;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1.2;
   font-weight: 500;
   white-space: nowrap;
@@ -228,7 +228,7 @@
   border: 1.5px dashed rgba(169, 88, 27, 0.32);
   background: rgba(255, 244, 234, 0.26);
   color: var(--nl-ink);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   text-decoration: none;
 }
@@ -266,7 +266,7 @@
   margin: 0;
   color: var(--nl-ink);
   font-family: var(--nl-font-display);
-  font-size: 27px;
+  font-size: 26px;
   line-height: 1.16;
   font-weight: 600;
   letter-spacing: 0.03em;
@@ -275,7 +275,7 @@
 .pf-hero-meta {
   margin: 7px 0 0;
   color: var(--nl-muted);
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.4;
   font-weight: 500;
 }
@@ -342,7 +342,7 @@
   display: block;
   color: #8a4a16;
   font-family: var(--nl-font-display);
-  font-size: 33px;
+  font-size: 32px;
   line-height: 1.1;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -352,7 +352,7 @@
   display: block;
   margin-top: 4px;
   color: var(--nl-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
 }
 
@@ -402,7 +402,7 @@
 
 .pf-menu-glyph {
   font-family: var(--nl-font-display);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   line-height: 1;
   letter-spacing: 0.02em;
@@ -410,7 +410,7 @@
 
 .pf-menu-label {
   margin-right: auto;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
   color: var(--nl-ink);
 }
@@ -418,7 +418,7 @@
 .pf-menu-value {
   margin-left: 0;
   color: var(--nl-muted);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -430,7 +430,7 @@
   border-radius: 999px;
   background: #e9a05a;
   color: #fff;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
   display: grid;
   place-items: center;
@@ -468,7 +468,7 @@
 .pf-logout strong {
   display: block;
   color: #c0392b;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
   line-height: 1.25;
 }
@@ -477,7 +477,7 @@
   display: block;
   margin-top: 3px;
   color: var(--nl-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
 }
 
@@ -523,7 +523,7 @@
   outline: none;
   background: transparent;
   color: var(--nl-ink);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
 }
 
@@ -548,7 +548,7 @@
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.6);
   color: #8a4e14;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
   cursor: pointer;
 }
@@ -563,7 +563,7 @@
 .search-recent-title {
   margin: 0 0 12px;
   color: var(--nl-ink);
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 600;
   line-height: 1.4;
 }
@@ -582,7 +582,7 @@
   background: rgba(255, 244, 234, 0.66);
   box-shadow: 0 8px 18px rgba(146, 96, 52, 0.07);
   color: var(--nl-ink);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
 }
@@ -598,7 +598,7 @@
 .search-count {
   margin: 0;
   color: var(--nl-ink);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
 }
 
@@ -657,7 +657,7 @@
 .search-title {
   margin: 0;
   color: var(--nl-ink);
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1.5;
   font-weight: 500;
   display: -webkit-box;
@@ -677,7 +677,7 @@
 .search-meta {
   margin: 0;
   color: var(--nl-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   line-height: 1.5;
   overflow: hidden;
@@ -691,7 +691,7 @@
   border-radius: 999px;
   background: #f3c08a;
   color: #8a4e14;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
 }
 
@@ -738,7 +738,7 @@
   border: none;
   background: transparent;
   color: var(--nl-ink);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   padding: 0 4px;
@@ -796,7 +796,7 @@
   text-align: center;
   color: var(--nl-ink);
   font-family: var(--nl-font-display);
-  font-size: 33px;
+  font-size: 32px;
   line-height: 1.24;
   font-weight: 500;
   letter-spacing: 0.02em;
@@ -806,7 +806,7 @@
   margin: 10px 0 0;
   text-align: center;
   color: var(--nl-muted);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
 }
 
@@ -837,7 +837,7 @@
 .onb-label {
   flex-shrink: 0;
   color: var(--nl-ink);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
 }
 
@@ -849,7 +849,7 @@
   outline: none;
   background: transparent;
   color: var(--nl-ink);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
 }
 
@@ -872,7 +872,7 @@
   border: 1px solid rgba(58, 42, 28, 0.16);
   background: rgba(255, 244, 234, 0.5);
   color: var(--nl-ink);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
 }
@@ -894,7 +894,7 @@
 }
 
 .onb-date-value {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
 }
 
@@ -913,14 +913,14 @@
   display: block;
   margin-top: 3px;
   color: var(--nl-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
 }
 
 .onb-error {
   margin: 12px 0 0;
   color: #c0392b;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
 }
 
@@ -932,7 +932,7 @@
   border-radius: 999px;
   background: linear-gradient(180deg, #c1742e 0%, #bd6a1e 100%);
   color: #fff;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 14px 30px rgba(169, 88, 27, 0.24);
@@ -949,7 +949,7 @@
   margin: 22px 0 0;
   text-align: center;
   color: var(--nl-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
 }
 
@@ -990,7 +990,7 @@
   border-radius: 999px;
   background: transparent;
   color: var(--nl-muted);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
 }
@@ -1013,7 +1013,7 @@
   background: rgba(255, 244, 234, 0.72);
   box-shadow: 0 8px 18px rgba(146, 96, 52, 0.08);
   color: var(--nl-ink);
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 500;
 }
 
@@ -1032,7 +1032,7 @@
   margin: 14px 0 6px;
   color: #643e1d;
   font-family: 'Songti SC', 'STSong', var(--nl-font-display, serif);
-  font-size: 29px;
+  font-size: 28px;
   line-height: 1.15;
   font-weight: 700;
   letter-spacing: 0.06em;
@@ -1041,7 +1041,7 @@
 .tl-summary {
   margin: 10px 0 0;
   color: var(--nl-muted);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
 }
 
@@ -1085,7 +1085,7 @@
   left: 9px;
   bottom: 7px;
   color: #fff;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.02em;
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.32);
@@ -1126,7 +1126,7 @@
   gap: 8px;
   color: var(--nl-ink);
   font-family: var(--nl-font-display);
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.35;
   text-align: left;
 }
@@ -1134,7 +1134,7 @@
 .tl-tile.is-text .tl-tile-date {
   color: var(--nl-muted);
   text-shadow: none;
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .tl-empty {
@@ -1151,7 +1151,7 @@
   border-radius: 999px;
   background: #a9581b;
   color: #fff;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
 }
@@ -1212,7 +1212,7 @@
   color: var(--nl-ink);
   padding: 0 14px;
   text-align: left;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
 }
@@ -1241,7 +1241,7 @@
 .rd-meta {
   margin: 0;
   color: var(--nl-muted);
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1.5;
   font-weight: 500;
 }
@@ -1250,7 +1250,7 @@
   margin: 0;
   color: var(--nl-ink);
   font-family: var(--nl-font-display);
-  font-size: 33px;
+  font-size: 32px;
   line-height: 1.22;
   font-weight: 600;
   letter-spacing: 0.01em;
@@ -1272,7 +1272,7 @@
   border: none;
   background: #f3e4d0;
   color: var(--nl-ink);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
 }
 
@@ -1288,7 +1288,7 @@
 .rd-copy {
   margin: 4px 0 0;
   color: var(--nl-ink);
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.75;
   font-weight: 400;
   white-space: pre-wrap;
@@ -1370,7 +1370,7 @@
 }
 
 .is-create .app-topbar h1 {
-  font-size: 29px !important;
+  font-size: 28px !important;
 }
 
 .is-create .app-topbar button:first-child {
@@ -1382,7 +1382,7 @@
   background: rgba(255, 244, 234, 0.92) !important;
   box-shadow: 0 6px 16px rgba(146, 96, 52, 0.12) !important;
   color: var(--nl-ink) !important;
-  font-size: 25px !important;
+  font-size: 24px !important;
   font-weight: 400 !important;
   line-height: 1 !important;
 }
@@ -1415,7 +1415,7 @@
   background: rgba(255, 244, 234, 0.92) !important;
   box-shadow: 0 6px 16px rgba(146, 96, 52, 0.12) !important;
   color: var(--nl-ink) !important;
-  font-size: 25px !important;
+  font-size: 24px !important;
   font-weight: 400 !important;
   line-height: 1 !important;
 }
@@ -1430,7 +1430,7 @@
   background: transparent !important;
   box-shadow: none !important;
   color: var(--nl-ink) !important;
-  font-size: 14px !important;
+  font-size: 13px !important;
   font-weight: 500 !important;
   white-space: nowrap !important;
 }
@@ -1446,7 +1446,7 @@
 }
 
 .is-create .record-media-grid > button > span:last-child {
-  font-size: 15px !important;
+  font-size: 14px !important;
 }
 
 /* 日期行回到内容顶部，避免被 order 推走 */
@@ -1479,7 +1479,7 @@
   left: 20px;
   top: 10px;
   color: var(--nl-muted);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.02em;
 }
@@ -1491,7 +1491,7 @@
   background: transparent !important;
   box-shadow: none !important;
   padding: 0 !important;
-  font-size: 16px !important;
+  font-size: 15px !important;
   line-height: 1.5 !important;
   font-weight: 500 !important;
 }
@@ -1503,7 +1503,7 @@
   background: rgba(255, 252, 247, 0.94) !important;
   box-shadow: 0 10px 24px rgba(150, 95, 50, 0.1) !important;
   padding: 18px 20px !important;
-  font-size: 14px !important;
+  font-size: 13px !important;
   line-height: 1.75 !important;
 }
 
@@ -1512,7 +1512,7 @@
   margin-bottom: -6px;
   padding-left: 6px;
   color: var(--nl-muted);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.02em;
 }
@@ -1535,7 +1535,7 @@
   border-radius: 999px;
   background: transparent;
   color: var(--nl-ink);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
   cursor: pointer;
 }
@@ -1590,7 +1590,7 @@
   display: grid;
   place-items: center;
   color: var(--nl-accent);
-  font-size: 21px;
+  font-size: 20px;
   font-weight: 600;
 }
 
@@ -1607,7 +1607,7 @@
 
 .msg-title {
   color: var(--nl-ink);
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1.3;
   font-weight: 600;
   overflow: hidden;
@@ -1617,7 +1617,7 @@
 
 .msg-text {
   color: var(--nl-muted);
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.45;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1633,7 +1633,7 @@
 
 .msg-time {
   color: var(--nl-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   white-space: nowrap;
 }
@@ -1649,7 +1649,7 @@
   border: 1px solid rgba(169, 88, 27, 0.22);
   background: rgba(233, 160, 90, 0.14);
   color: var(--nl-accent);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
 }
 
@@ -1663,7 +1663,7 @@
   margin: 0;
   padding-left: 2px;
   color: var(--nl-ink);
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   letter-spacing: 0.02em;
 }
@@ -1725,14 +1725,14 @@ button.set-row {
 
 .set-body strong {
   color: var(--nl-ink);
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1.5;
   font-weight: 600;
 }
 
 .set-body small {
   color: #8b7160;
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1.5;
   font-weight: 500;
 }
@@ -1740,7 +1740,7 @@ button.set-row {
 .set-value {
   flex-shrink: 0;
   color: var(--nl-muted);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -1753,17 +1753,17 @@ button.set-row {
   margin: 8px 0 0;
   text-align: center;
   color: var(--nl-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   letter-spacing: 0.06em;
 }
 
 .msg-title {
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .msg-title {
-  font-size: 14px;
+  font-size: 13px;
   white-space: normal;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -1776,14 +1776,14 @@ button.set-row {
 }
 
 .msg-time {
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .msg-reply {
   min-width: 56px;
   min-height: 36px;
   padding: 4px 10px;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 /* create：详情区做成设计稿的 pill 行 + chip 行 */
@@ -1817,7 +1817,7 @@ button.set-row {
 
 .is-create .record-location-row input {
   min-height: 64px !important;
-  font-size: 15px !important;
+  font-size: 14px !important;
   font-weight: 500 !important;
   padding-left: 44px !important;
 }
@@ -1844,7 +1844,7 @@ button.set-row {
   border: 1px solid rgba(255, 255, 255, 0.82);
   background: rgba(255, 252, 247, 0.8);
   color: var(--nl-ink);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
 }
@@ -1865,7 +1865,7 @@ button.set-row {
   background: rgba(255, 252, 247, 0.92);
   box-shadow: 0 8px 20px rgba(150, 95, 50, 0.08);
   color: var(--nl-ink);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
 }
 
@@ -1901,7 +1901,7 @@ button.set-row {
   min-height: 38px;
   min-width: 56px;
   padding: 4px 12px;
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .pf-menu-row {
@@ -1949,7 +1949,7 @@ button.set-row {
   border-radius: 999px;
   background: #a9581b;
   color: #fff;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 10px 22px rgba(146, 96, 52, 0.18);
@@ -1964,7 +1964,7 @@ button.set-row {
   margin: 0;
   text-align: center;
   color: var(--nl-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
 }
 
@@ -1992,13 +1992,13 @@ button.set-row {
 
 /* 11 设置：标题字号、行高、内缩分隔线 */
 .settings-shell .app-topbar h1 {
-  font-size: 31px !important;
+  font-size: 30px !important;
   font-weight: 500 !important;
   letter-spacing: 0.04em;
 }
 
 .messages-shell .app-topbar h1 {
-  font-size: 29px !important;
+  font-size: 28px !important;
   font-weight: 500 !important;
   letter-spacing: 0.04em;
 }
@@ -2020,7 +2020,7 @@ button.set-row {
 }
 
 .set-body strong {
-  font-size: 17px;
+  font-size: 16px;
 }
 
 .set-card {
@@ -2039,12 +2039,12 @@ button.set-row {
 }
 
 .set-group-title {
-  font-size: 23px;
+  font-size: 22px;
 }
 
 .set-body strong {
   color: #5a3a22;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
 }
 
@@ -2123,7 +2123,7 @@ button.set-row {
 }
 
 .set-body strong {
-  font-size: 15px;
+  font-size: 14px;
 }
 
 /* 热区折中：视觉密度按设计稿，热区用伪元素补到 44 */
@@ -2133,11 +2133,11 @@ button.set-row {
 }
 
 .pf-menu-label {
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .pf-menu-glyph {
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .set-row {
@@ -2150,7 +2150,7 @@ button.set-row {
 }
 
 .set-body strong {
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .set-row button[aria-pressed] {
@@ -2167,7 +2167,7 @@ button.set-row {
   position: relative;
   min-height: 33px;
   padding: 0 14px;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .search-chip::after {
@@ -2186,7 +2186,7 @@ button.set-row {
 }
 
 .msg-title {
-  font-size: 14px;
+  font-size: 13px;
 }
 
 .is-create .record-media-grid > * {
@@ -2257,7 +2257,7 @@ button.set-row {
 .lg-brand-name {
   margin: 0 0 0 24px;
   font-family: var(--nl-font-display);
-  font-size: 45px;
+  font-size: 44px;
   line-height: 1;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -2273,7 +2273,7 @@ button.set-row {
 
 .lg-brand-slogan {
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   letter-spacing: 0.02em;
 }
@@ -2324,7 +2324,7 @@ button.set-row {
   outline: none;
   background: transparent;
   color: var(--nl-ink);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 500;
 }
 
@@ -2335,7 +2335,7 @@ button.set-row {
   border: none;
   background: transparent;
   color: var(--nl-accent);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
 }
@@ -2351,7 +2351,7 @@ button.set-row {
   border-radius: 999px;
   background: #a9581b;
   color: #fff;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 14px 30px rgba(169, 88, 27, 0.24);
@@ -2367,7 +2367,7 @@ button.set-row {
 .lg-error {
   margin: 0;
   color: #c0392b;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
 }
 
@@ -2376,7 +2376,7 @@ button.set-row {
   align-items: flex-start;
   gap: 8px;
   color: var(--nl-muted);
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.75;
 }
 
@@ -2397,13 +2397,13 @@ button.set-row {
   margin: 0;
   text-align: center;
   color: var(--nl-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
 }
 
 /* ---------------- 20 账号资料 ---------------- */
 .account-shell .app-topbar h1 {
-  font-size: 29px !important;
+  font-size: 28px !important;
   font-weight: 500 !important;
 }
 
@@ -2453,7 +2453,7 @@ button.set-row {
 
 .ac-avatar-tip {
   color: var(--nl-accent);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
 }
 
@@ -2474,7 +2474,7 @@ button.set-row {
   flex-shrink: 0;
   width: 50px;
   color: var(--nl-muted);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
 }
 
@@ -2487,7 +2487,7 @@ button.set-row {
   background: transparent;
   text-align: left;
   color: var(--nl-ink);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
 }
 
@@ -2495,7 +2495,7 @@ button.set-row {
   flex: 1 1 auto;
   text-align: left;
   color: var(--nl-ink);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
 }
 
@@ -2510,7 +2510,7 @@ button.set-row {
   border-radius: 999px;
   background: linear-gradient(180deg, #c0702e 0%, #a9581b 100%);
   color: #fff;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 14px 30px rgba(169, 88, 27, 0.22);
@@ -2525,7 +2525,7 @@ button.set-row {
   margin: 0;
   text-align: center;
   color: var(--nl-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
 }
 
@@ -2533,12 +2533,12 @@ button.set-row {
   margin: 0;
   text-align: center;
   color: var(--nl-accent);
-  font-size: 12px;
+  font-size: 11px;
 }
 
 /* ---------------- 22/23/24/25/26/27 信息页共用 ---------------- */
 .info-shell .app-topbar h1 {
-  font-size: 29px !important;
+  font-size: 28px !important;
   font-weight: 500 !important;
   letter-spacing: 0.02em;
 }
@@ -2601,7 +2601,7 @@ button.set-row {
 }
 
 .security-form strong {
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .info-card .app-panel {
@@ -2628,7 +2628,7 @@ button.set-row {
   justify-content: space-between;
   gap: 12px;
   color: var(--nl-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
 }
 
@@ -2638,20 +2638,20 @@ button.set-row {
   border: none;
   background: transparent;
   color: var(--nl-accent);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
 }
 
 .notify-status-title {
   color: #5a3a22;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
 }
 
 .notify-status-desc {
   color: var(--nl-muted);
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .set-row.is-last::after {
@@ -2659,7 +2659,7 @@ button.set-row {
 }
 
 .archive-shell .app-topbar h1 {
-  font-size: 29px !important;
+  font-size: 28px !important;
   font-weight: 500 !important;
 }
 
@@ -2720,13 +2720,13 @@ button.set-row {
 .fam-detail-title {
   margin: 0 0 12px 2px;
   color: var(--nl-ink);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.02em;
 }
 
 .invite-shell .app-topbar h1 {
-  font-size: 29px !important;
+  font-size: 28px !important;
   font-weight: 500 !important;
 }
 
@@ -2738,7 +2738,7 @@ button.set-row {
 
 .invite-section-title {
   color: var(--nl-ink);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.02em;
 }
@@ -2770,7 +2770,7 @@ button.set-row {
   left: 18px;
   top: 8px;
   color: var(--nl-muted);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
 }
 
@@ -2781,7 +2781,7 @@ button.set-row {
   background: transparent !important;
   box-shadow: none !important;
   padding: 0 !important;
-  font-size: 16px !important;
+  font-size: 15px !important;
   line-height: 1.5 !important;
   font-weight: 500 !important;
 }
@@ -2794,7 +2794,7 @@ button.set-row {
   -webkit-backdrop-filter: blur(20px);
   box-shadow: 0 10px 24px rgba(150, 95, 50, 0.1) !important;
   padding: 14px 18px !important;
-  font-size: 14px !important;
+  font-size: 13px !important;
   line-height: 1.75 !important;
 }
 
@@ -2833,7 +2833,7 @@ button.set-row {
   background: rgba(255, 255, 255, 0.78);
   border-radius: 999px;
   color: var(--nl-muted-strong);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   backdrop-filter: blur(8px);
@@ -2875,7 +2875,7 @@ button.set-row {
   margin: 0;
   color: var(--nl-ink);
   font-family: var(--nl-font-display);
-  font-size: 28px;
+  font-size: 27px;
   line-height: 1.35;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -2884,7 +2884,7 @@ button.set-row {
 .wl-subtitle {
   margin: 0;
   color: var(--nl-muted);
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.75;
 }
 
@@ -2904,7 +2904,7 @@ button.set-row {
   border: 1px solid rgba(255, 255, 255, 0.86);
   background: rgba(255, 252, 247, 0.78);
   color: var(--nl-muted-strong);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
 }
 
@@ -2924,7 +2924,7 @@ button.set-row {
   border-radius: 999px;
   background: #a9581b;
   color: #fff;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 14px 30px rgba(169, 88, 27, 0.24);
@@ -2942,7 +2942,7 @@ button.set-row {
   border: none;
   background: transparent;
   color: var(--nl-accent);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
 }
@@ -2954,7 +2954,7 @@ button.set-row {
 
 /* 09：屏标题回到 34px/500，删除头像内层实心盘 */
 .onb-title {
-  font-size: 33px !important;
+  font-size: 32px !important;
   font-weight: 500 !important;
   letter-spacing: 0.02em !important;
 }
@@ -2970,7 +2970,7 @@ button.set-row {
   min-height: 36px !important;
   min-width: 56px !important;
   padding: 3px 12px !important;
-  font-size: 12px !important;
+  font-size: 11px !important;
   position: relative;
 }
 
@@ -2981,12 +2981,12 @@ button.set-row {
 }
 
 .msg-time {
-  font-size: 11px !important;
+  font-size: 10px !important;
 }
 
 /* 11：分组标题缩小、行高压到设计稿密度、底部留白 */
 .set-group-title {
-  font-size: 16px !important;
+  font-size: 15px !important;
 }
 
 .set-row {
@@ -3004,7 +3004,7 @@ button.set-row {
 
 /* 06：统计数字缩小、头卡收紧 */
 .pf-stats strong {
-  font-size: 25px !important;
+  font-size: 24px !important;
 }
 
 .pf-hero {
@@ -3076,7 +3076,7 @@ button.set-row {
 
 /* 11：分组标题再压到设计稿 24 */
 .set-group-title {
-  font-size: 16px !important;
+  font-size: 15px !important;
 }
 
 /* 10：消息卡再收一档 */
@@ -3088,7 +3088,7 @@ button.set-row {
 /* 03：详情大标题在 90 基础上再放大一档 */
 .rd-title,
 .rd-hero-title {
-  font-size: 33px !important;
+  font-size: 32px !important;
   font-weight: 600 !important;
 }
 
@@ -3158,7 +3158,7 @@ button.set-row {
   box-shadow: none !important;
   background: transparent !important;
   padding: 0 !important;
-  font-size: 15px !important;
+  font-size: 14px !important;
 }
 
 /* P0 修复：04 CTA 回到文档流，不再遮挡任何卡片 */
@@ -3278,7 +3278,7 @@ button.set-row {
 
 .is-create .record-media-section > button {
   min-height: 32px !important;
-  font-size: 11.5px !important;
+  font-size: 10.5px !important;
 }
 
 .is-create .record-editor-title-row {
@@ -3287,7 +3287,7 @@ button.set-row {
 
 .is-create #record-form .record-title-input {
   min-height: 44px !important;
-  font-size: 16px !important;
+  font-size: 15px !important;
 }
 
 .is-create #record-form .record-body-card .record-body-input {
@@ -3304,7 +3304,7 @@ button.set-row {
 }
 
 .is-create .record-inline-submit p {
-  font-size: 11px;
+  font-size: 10px;
 }
 
 .is-create .record-editor-title-row {
@@ -3334,7 +3334,7 @@ button.set-row {
   flex-wrap: nowrap;
   overflow: hidden;
   white-space: nowrap;
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1.4;
 }
 
@@ -3347,7 +3347,7 @@ button.set-row {
   box-sizing: border-box !important;
   min-height: 33px !important;
   padding: 0 14px !important;
-  font-size: 14px !important;
+  font-size: 13px !important;
 }
 
 .search-chip::after {
@@ -3376,7 +3376,7 @@ button.set-row {
 
 /* 11：分组标题按设计稿再降一档（仍 ≥13） */
 .set-group-title {
-  font-size: 16px !important;
+  font-size: 15px !important;
 }
 
 /* 10：未读点 7px + 2px 白环（不参与 box-sizing 压缩） */
@@ -3400,7 +3400,7 @@ button.set-row {
   padding: 0 2px !important;
   min-height: 44px;
   color: #8a4a16 !important;
-  font-size: 14px !important;
+  font-size: 13px !important;
   font-weight: 600 !important;
 }
 
@@ -3422,13 +3422,13 @@ button.set-row {
 /* 02：月标题、日期压字、渐变 */
 .tl-month-select select,
 .tl-month-select {
-  font-size: 17px !important;
+  font-size: 16px !important;
   font-weight: 500 !important;
 }
 
 .tl-thumb-date,
 .tl-tile-date {
-  font-size: 12px !important;
+  font-size: 11px !important;
 }
 
 .tl-tile-scrim {
@@ -3456,7 +3456,7 @@ button.set-row {
 }
 
 .fam-hero-title {
-  font-size: 29px !important;
+  font-size: 28px !important;
 }
 
 /* 06：行高、图标、字、统计数字 */
@@ -3466,7 +3466,7 @@ button.set-row {
 }
 
 .pf-menu-label {
-  font-size: 15px !important;
+  font-size: 14px !important;
 }
 
 .pf-menu-glyph svg,
@@ -3476,7 +3476,7 @@ button.set-row {
 }
 
 .pf-stats strong {
-  font-size: 22px !important;
+  font-size: 21px !important;
 }
 
 /* 05：meta 不再截断——允许换行，宁可两行也不裁字 */
@@ -3503,7 +3503,7 @@ button.set-row {
   min-height: 48px !important;
   padding: 0 18px !important;
   color: #3a2a1e !important;
-  font-size: 14px !important;
+  font-size: 13px !important;
   font-weight: 600 !important;
   box-shadow: none !important;
 }
@@ -3515,12 +3515,12 @@ button.set-row {
 
 .pf-logout strong {
   color: #c0392b !important;
-  font-size: 16px !important;
+  font-size: 15px !important;
 }
 
 .pf-logout small {
   display: block !important;
-  font-size: 12px !important;
+  font-size: 11px !important;
 }
 
 .pf-logout-icon {
@@ -3534,7 +3534,7 @@ button.set-row {
 
 .tl-tile-date,
 .tl-thumb-date {
-  font-size: 12px !important;
+  font-size: 11px !important;
   font-weight: 600 !important;
   color: #fff !important;
 }
@@ -3673,7 +3673,7 @@ body,
 }
 
 .pf-menu-label {
-  font-size: 15px !important;
+  font-size: 14px !important;
 }
 
 .set-row {
@@ -3686,15 +3686,15 @@ body,
 }
 
 .set-body strong {
-  font-size: 15px !important;
+  font-size: 14px !important;
 }
 
 .set-body small {
-  font-size: 12px !important;
+  font-size: 11px !important;
 }
 
 .set-group-title {
-  font-size: 16px !important;
+  font-size: 15px !important;
   letter-spacing: 0.02em;
 }
 
@@ -3724,7 +3724,7 @@ body,
 .account-shell .app-topbar h1,
 .archive-shell .app-topbar h1,
 .invite-shell .app-topbar h1 {
-  font-size: 23px !important;
+  font-size: 22px !important;
   font-weight: 500 !important;
 }
 
@@ -3734,11 +3734,11 @@ body,
 .rd-title,
 .rd-hero-title,
 .nl-moment-featured-title {
-  font-size: 21px !important;
+  font-size: 20px !important;
 }
 
 .nl-home-day-title {
-  font-size: 18px !important;
+  font-size: 17px !important;
 }
 
 /* 圆角必须小于内边距 */
@@ -3962,13 +3962,13 @@ body::before {
 
 /* 12 邀请：有效期说明 13px */
 .invite-shell p {
-  font-size: 12px;
+  font-size: 11px;
 }
 
 /* 18/17 分节标题统一无衬线 15/600 */
 .fam-detail-title {
   font-family: var(--nl-font-body, inherit) !important;
-  font-size: 14px !important;
+  font-size: 13px !important;
   font-weight: 600 !important;
   letter-spacing: 0;
 }
@@ -3984,7 +3984,7 @@ body::before {
   min-width: 0 !important;
   padding: 0 4px !important;
   white-space: nowrap;
-  font-size: 12px !important;
+  font-size: 11px !important;
 }
 
 /* 表单/信息页：防止输入控件溢出卡片 */
@@ -4063,7 +4063,7 @@ body::before {
   min-height: 36px !important;
   min-width: 56px !important;
   padding: 3px 12px !important;
-  font-size: 12px !important;
+  font-size: 11px !important;
 }
 
 .msg-text {
@@ -4072,7 +4072,7 @@ body::before {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  font-size: 12px !important;
+  font-size: 11px !important;
 }
 
 /* 16：相机角标 26px，图标 18–20，偏移 -2 */
@@ -4166,31 +4166,31 @@ textarea::placeholder {
 /* 帮助/反馈等页面的辅助文字提到 13 */
 .info-shell p,
 .info-shell small {
-  font-size: 12px;
+  font-size: 11px;
 }
 
 .info-shell .app-segmented,
 .info-shell .app-segmented * {
-  font-size: 12px;
+  font-size: 11px;
 }
 
 /* 行内“修改”等文字按钮：44 热区 + 13 字 */
 .info-card button,
 .info-row button,
 .ac-card button {
-  font-size: 12px !important;
+  font-size: 11px !important;
 }
 
 /* 页脚版权 13 */
 .set-footer,
 .info-shell > p:last-child {
-  font-size: 12px !important;
+  font-size: 11px !important;
 }
 
 /* 分段控件统一 13 */
 .app-segmented,
 .app-segmented * {
-  font-size: 12px;
+  font-size: 11px;
 }
 
 /* ===== 第三轮 P0 收口 ===== */
@@ -4235,7 +4235,7 @@ textarea::placeholder {
 .member-row-card span,
 .archive-shell span,
 .record-media-item span {
-  font-size: 12px !important;
+  font-size: 11px !important;
 }
 
 /* 禁用态文字对比 */
@@ -4379,7 +4379,7 @@ button[aria-disabled='true'] {
   padding: 14px 4px 6px;
   text-align: center;
   color: var(--nl-muted);
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1.6;
 }
 
@@ -4393,11 +4393,11 @@ button[aria-disabled='true'] {
   width: 100%;
 }
 
-.search-filter { display:inline-flex !important; align-items:center; gap:4px; min-height:44px; color:var(--nl-muted); font-size: 12px; font-weight:500; }
+.search-filter { display:inline-flex !important; align-items:center; gap:4px; min-height:44px; color:var(--nl-muted); font-size: 11px; font-weight:500; }
 
 .pf-menu-muted {
   color: var(--nl-muted);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
 }
 
@@ -4523,7 +4523,7 @@ button[aria-disabled='true'] {
   border-radius: 999px !important;
   background: #a9581b !important;
   color: #fff !important;
-  font-size: 14px !important;
+  font-size: 13px !important;
   font-weight: 600 !important;
 }
 
@@ -4611,7 +4611,7 @@ body,
 }
 
 .nl-home-day-title {
-  font-size: 18px !important;
+  font-size: 17px !important;
   font-weight: 600 !important;
 }
 
@@ -4619,7 +4619,7 @@ body,
 .tl-big-title {
   display: block !important;
   font-family: 'Songti SC', 'STSong', var(--nl-font-display, serif) !important;
-  font-size: 29px !important;
+  font-size: 28px !important;
   font-weight: 700 !important;
   line-height: 1.15 !important;
   color: #643e1d !important;
@@ -4684,7 +4684,7 @@ body,
   background: rgba(255, 255, 255, 0.78) !important;
   border: none !important;
   color: var(--nl-muted-strong) !important;
-  font-size: 13px !important;
+  font-size: 12px !important;
 }
 
 .wl-dots {
@@ -4761,7 +4761,7 @@ body,
   display: block !important;
   margin-top: 2px !important;
   color: var(--nl-muted) !important;
-  font-size: 12px !important;
+  font-size: 11px !important;
   font-weight: 500 !important;
 }
 
@@ -4775,24 +4775,24 @@ body,
   border-radius: 999px;
   background: #e9a05a !important;
   color: #fff !important;
-  font-size: 11px !important;
+  font-size: 10px !important;
   font-weight: 700 !important;
 }
 
 .pf-stat-num {
-  font-size: 29px !important;
+  font-size: 28px !important;
 }
 
 /* 03：标题与正文按设计稿放大 */
 .rd-title {
-  font-size: 27px !important;
+  font-size: 26px !important;
   font-weight: 600 !important;
   line-height: 1.2 !important;
 }
 
 .rd-copy,
 .rd-body {
-  font-size: 14px !important;
+  font-size: 13px !important;
   line-height: 1.75 !important;
 }
 
@@ -4816,7 +4816,7 @@ body,
 
 .ac-action {
   color: var(--nl-accent);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -4861,7 +4861,7 @@ body,
   margin: 0;
   padding: 0;
   color: var(--nl-muted);
-  font-size: 12px;
+  font-size: 11px;
   line-height: 1.6;
   text-align: center;
 }
@@ -4889,7 +4889,7 @@ body,
   border-radius: 999px !important;
   background: #a9581b !important;
   color: #fff !important;
-  font-size: 14px !important;
+  font-size: 13px !important;
   font-weight: 600 !important;
 }
 
@@ -4925,7 +4925,7 @@ body,
   border: none !important;
   background: rgba(30, 22, 16, 0.45) !important;
   color: #fff !important;
-  font-size: 14px !important;
+  font-size: 13px !important;
   line-height: 1 !important;
 }
 
@@ -4940,17 +4940,17 @@ body,
 
 .tl-month-select select,
 .tl-month-select {
-  font-size: 17px !important;
+  font-size: 16px !important;
 }
 
 .rd-title,
 .rd-hero-title,
 .nl-moment-featured-title {
-  font-size: 25px !important;
+  font-size: 24px !important;
 }
 
 .fam-detail-title {
-  font-size: 14px !important;
+  font-size: 13px !important;
   font-weight: 600 !important;
 }
 
@@ -4995,7 +4995,7 @@ body,
 /* 26：表单字段标签按设计稿放大 */
 .info-shell form label,
 .info-shell .field-label {
-  font-size: 14px !important;
+  font-size: 13px !important;
   font-weight: 700 !important;
   color: var(--nl-ink) !important;
 }
@@ -5026,7 +5026,7 @@ body,
 }
 
 .rd-title {
-  font-size: 25px !important;
+  font-size: 24px !important;
 }
 
 /* 03：头图裁切铺满，去掉底部灰带 */
@@ -5108,7 +5108,7 @@ body,
 
 .record-form-page .record-section-title,
 .record-form-page .record-details-title {
-  font-size: 14px !important;
+  font-size: 13px !important;
   font-weight: 700 !important;
   color: var(--nl-ink) !important;
   letter-spacing: 0.01em;
@@ -5120,7 +5120,7 @@ body,
 
 /* ===== 家人资料（18）统一 ===== */
 .account-shell .fam-detail-title {
-  font-size: 14px !important;
+  font-size: 13px !important;
   font-weight: 600 !important;
 }
 
@@ -5162,7 +5162,7 @@ body,
   border-radius: 999px !important;
   background: #a9581b !important;
   color: #fff !important;
-  font-size: 14px !important;
+  font-size: 13px !important;
   font-weight: 600 !important;
 }
 
@@ -5280,7 +5280,7 @@ body,
 
 .record-form-page .record-media-grid > button span:last-child {
   font-weight: 500 !important;
-  font-size: 12px !important;
+  font-size: 11px !important;
 }
 
 /* 04：标题/正文为两张独立卡，取消外层合并卡 */
@@ -5333,7 +5333,7 @@ body,
 .record-edit-sync-note {
   margin: 4px 0 0;
   color: var(--nl-muted);
-  font-size: 11px;
+  font-size: 10px;
   text-align: center;
 }
 
@@ -5355,7 +5355,7 @@ body,
   margin-top: 6px;
   text-align: right;
   color: var(--nl-muted);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
 }
 
@@ -5389,7 +5389,7 @@ body,
   border: 1px solid rgba(120, 80, 40, 0.14);
   background: transparent;
   color: var(--nl-muted-strong);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
 }
 
@@ -5428,7 +5428,7 @@ body,
   border-radius: 18px !important;
   min-height: 56px !important;
   padding: 0 16px !important;
-  font-size: 15px !important;
+  font-size: 14px !important;
 }
 
 .is-edit .record-tag-chips { display: none !important; }
@@ -5461,7 +5461,7 @@ body,
   border-radius: 18px !important;
   min-height: 56px !important;
   padding: 0 16px !important;
-  font-size: 15px !important;
+  font-size: 14px !important;
 }
 
 .is-create .record-location-row {
@@ -5517,7 +5517,7 @@ body,
   display: grid;
   place-items: center;
   color: var(--nl-accent);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
 }
 
@@ -5540,7 +5540,7 @@ body,
 }
 
 .is-edit #record-form .record-body-input {
-  font-size: 16px !important;
+  font-size: 15px !important;
   line-height: 1.9 !important;
 }
 
@@ -5558,7 +5558,7 @@ body,
   background: rgba(255, 255, 255, 0.55) !important;
   border: 1px solid rgba(255, 255, 255, 0.65) !important;
   box-shadow: none !important;
-  font-size: 17px !important;
+  font-size: 16px !important;
   margin-left: 2px;
 }
 
@@ -5578,7 +5578,7 @@ body,
   background: rgba(255, 255, 255, 0.55) !important;
   border: 1px solid rgba(255, 255, 255, 0.65) !important;
   box-shadow: none !important;
-  font-size: 19px !important;
+  font-size: 18px !important;
   font-weight: 600 !important;
   color: var(--nl-ink) !important;
 }
@@ -5619,7 +5619,7 @@ body,
   border: 1.5px dashed rgba(169, 88, 27, 0.35);
   background: transparent;
   color: var(--nl-accent);
-  font-size: 19px;
+  font-size: 18px;
   font-weight: 400;
   display: grid;
   place-items: center;
@@ -5628,7 +5628,7 @@ body,
 }
 
 .media-add-tile span {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
 }
 
@@ -5659,7 +5659,7 @@ body,
   width: 22px !important;
   height: 22px !important;
   min-height: 22px !important;
-  font-size: 11px !important;
+  font-size: 10px !important;
 }
 
 /* 15：保留日期行，只隐藏孩子头像按钮 */
@@ -5679,7 +5679,7 @@ body,
   border-radius: 18px !important;
   min-height: 56px !important;
   padding: 0 16px !important;
-  font-size: 15px !important;
+  font-size: 14px !important;
 }
 
 .is-edit #record-form > section:first-child {
@@ -5858,14 +5858,14 @@ body,
 .info-section-title,
 .fam-detail-title {
   font-family: inherit !important;
-  font-size: 16px !important;
+  font-size: 15px !important;
   font-weight: 600 !important;
   color: var(--nl-ink) !important;
   letter-spacing: 0.01em;
 }
 
 .fam-detail-title {
-  font-size: 14px !important;
+  font-size: 13px !important;
 }
 
 .is-edit .record-location-chips {
@@ -5935,7 +5935,7 @@ body,
 
 .record-form-page .record-location-row input {
   min-height: 48px !important;
-  font-size: 14px !important;
+  font-size: 13px !important;
 }
 
 #record-form {
@@ -6022,7 +6022,7 @@ body,
   width: 22px !important;
   height: 22px !important;
   min-height: 22px !important;
-  font-size: 11px !important;
+  font-size: 10px !important;
   padding: 0 !important;
 }
 
@@ -6148,7 +6148,7 @@ body,
   width: 22px !important;
   height: 22px !important;
   min-height: 22px !important;
-  font-size: 11px !important;
+  font-size: 10px !important;
   display: grid !important;
   place-items: center !important;
   margin: 0 !important;
@@ -6171,7 +6171,7 @@ body,
 /* 顶栏标题略小 */
 .is-create .app-topbar h1,
 .is-edit .app-topbar h1 {
-  font-size: 16px !important;
+  font-size: 15px !important;
 }
 
 /* ===== 全局修复（2026-11-15 差异清单 G1–G10） ===== */
@@ -6232,7 +6232,7 @@ body,
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
 }
 
@@ -6328,7 +6328,7 @@ body,
 
 .fam-member-role-sub {
   color: var(--nl-muted);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
 }
 
@@ -6442,23 +6442,23 @@ body,
 
 /* 06：粗衬线字重与更明显卡片 */
 .pf-hero-name {
-  font-size: 31px !important;
+  font-size: 30px !important;
   font-weight: 700 !important;
   letter-spacing: 0.01em !important;
 }
 
 .pf-stat-num {
-  font-size: 33px !important;
+  font-size: 32px !important;
   font-weight: 700 !important;
 }
 
 .pf-menu-label {
-  font-size: 16px !important;
+  font-size: 15px !important;
   font-weight: 700 !important;
 }
 
 .pf-hero-meta {
-  font-size: 13px !important;
+  font-size: 12px !important;
   font-weight: 500 !important;
   color: var(--nl-muted-strong) !important;
 }
@@ -6552,7 +6552,7 @@ body,
 
 .rd-title {
   font-family: var(--nl-font-display) !important;
-  font-size: 33px !important;
+  font-size: 32px !important;
   line-height: 1.24 !important;
   font-weight: 700 !important;
   letter-spacing: 0.01em;
@@ -6561,7 +6561,7 @@ body,
 }
 
 .rd-meta {
-  font-size: 15px !important;
+  font-size: 14px !important;
   color: var(--nl-muted-strong) !important;
   margin: 0 !important;
 }
@@ -6576,7 +6576,7 @@ body,
 .rd-chip {
   border-radius: 999px !important;
   padding: 8px 16px !important;
-  font-size: 13px !important;
+  font-size: 12px !important;
   font-weight: 600 !important;
   background: rgba(255, 250, 244, 0.9) !important;
   border: 1px solid rgba(255, 255, 255, 0.7) !important;
@@ -6590,7 +6590,7 @@ body,
 }
 
 .rd-copy {
-  font-size: 16px !important;
+  font-size: 15px !important;
   line-height: 1.8 !important;
   color: var(--nl-ink) !important;
   margin-top: 6px !important;
@@ -6630,7 +6630,7 @@ body,
 .rd-action-share {
   min-height: 56px;
   border-radius: 999px;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 700;
   font-family: var(--nl-font-display);
   cursor: pointer;
@@ -6677,7 +6677,7 @@ body,
 
 .rd-copy {
   margin-top: 4px !important;
-  font-size: 15px !important;
+  font-size: 14px !important;
   line-height: 1.7 !important;
 }
 
@@ -6791,7 +6791,7 @@ body,
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-size: 16px;
+  font-size: 15px;
   font-family: var(--nl-font-display);
   color: var(--nl-muted-strong);
   background: rgba(255, 240, 228, 0.66);
@@ -6821,13 +6821,13 @@ body,
   background: transparent !important;
   border: none !important;
   font-family: var(--nl-font-display) !important;
-  font-size: 19px !important;
+  font-size: 18px !important;
   font-weight: 700 !important;
   color: var(--nl-ink) !important;
 }
 
 .tl-summary {
-  font-size: 15px !important;
+  font-size: 14px !important;
   color: var(--nl-muted-strong) !important;
 }
 
@@ -6966,7 +6966,7 @@ body,
 .nl-home-row-body strong {
   font-family: var(--nl-font-sans, -apple-system, "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif) !important;
   font-weight: 600 !important;
-  font-size: 17px !important;
+  font-size: 16px !important;
 }
 
 body,
@@ -7028,11 +7028,11 @@ body,
 }
 
 .nl-home-title {
-  font-size: 18px !important;
+  font-size: 17px !important;
 }
 
 .nl-home-title-age {
-  font-size: 12px !important;
+  font-size: 11px !important;
 }
 
 .nl-home-avatar {
@@ -7153,7 +7153,7 @@ body,
   border: none !important;
   background: transparent !important;
   box-shadow: none !important;
-  font-size: 16px !important;
+  font-size: 15px !important;
   color: var(--nl-ink);
 }
 
@@ -7175,7 +7175,7 @@ body,
 .search-recent-title,
 .search-count {
   font-family: var(--nl-font-display) !important;
-  font-size: 21px !important;
+  font-size: 20px !important;
   font-weight: 700 !important;
   color: #4a2f1f !important;
   margin: 14px 0 10px !important;
@@ -7194,7 +7194,7 @@ body,
   border: 1px solid rgba(255, 255, 255, 0.7) !important;
   background: rgba(255, 247, 239, 0.82) !important;
   color: #4a2f1f !important;
-  font-size: 15px !important;
+  font-size: 14px !important;
   font-weight: 500 !important;
   box-shadow: 0 4px 12px rgba(176, 118, 78, 0.06) !important;
 }
@@ -7229,7 +7229,7 @@ body,
 }
 
 .search-title {
-  font-size: 18px !important;
+  font-size: 17px !important;
   font-weight: 600 !important;
   color: #3f2a1d !important;
 }
@@ -7241,7 +7241,7 @@ body,
 }
 
 .search-meta {
-  font-size: 13px !important;
+  font-size: 12px !important;
   color: #8a6c56 !important;
 }
 
@@ -7250,7 +7250,7 @@ body,
   padding: 6px 12px !important;
   background: rgba(246, 159, 77, 0.18) !important;
   color: #c4762f !important;
-  font-size: 12px !important;
+  font-size: 11px !important;
   font-weight: 600 !important;
 }
 
@@ -7283,7 +7283,7 @@ body,
 }
 
 .search-title {
-  font-size: 17px !important;
+  font-size: 16px !important;
 }
 
 .search-list {
@@ -7316,18 +7316,18 @@ body,
 
 .search-recent-title {
   margin: 18px 0 12px !important;
-  font-size: 22px !important;
+  font-size: 21px !important;
 }
 
 .search-count {
   margin: 20px 0 12px !important;
-  font-size: 22px !important;
+  font-size: 21px !important;
 }
 
 .search-chip {
   min-height: 46px !important;
   padding: 0 22px !important;
-  font-size: 16px !important;
+  font-size: 15px !important;
 }
 
 .search-row {
@@ -7398,7 +7398,7 @@ body,
 }
 
 .lg-brand-slogan {
-  font-size: 16px !important;
+  font-size: 15px !important;
   color: #6b4a33 !important;
   letter-spacing: 0.02em;
   margin: 0 !important;
@@ -7430,7 +7430,7 @@ body,
 }
 
 .lg-row input {
-  font-size: 16px !important;
+  font-size: 15px !important;
   color: #3f2a1d !important;
 }
 
@@ -7440,7 +7440,7 @@ body,
 
 .lg-code-button {
   color: #c4762f !important;
-  font-size: 16px !important;
+  font-size: 15px !important;
   font-weight: 600 !important;
 }
 
@@ -7449,7 +7449,7 @@ body,
   border-radius: 999px !important;
   background: linear-gradient(180deg, #f7a758 0%, #ef9440 100%) !important;
   color: #ffffff !important;
-  font-size: 18px !important;
+  font-size: 17px !important;
   font-weight: 600 !important;
   box-shadow: 0 10px 24px rgba(239, 148, 64, 0.28) !important;
   margin-top: 18px !important;
@@ -7461,7 +7461,7 @@ body,
 
 .lg-agreement {
   margin-top: 16px !important;
-  font-size: 11px !important;
+  font-size: 10px !important;
   color: #7a5a44 !important;
 }
 
@@ -7488,7 +7488,7 @@ body,
   border-radius: 999px !important;
   background: linear-gradient(180deg, #f7a758 0%, #ef9440 100%) !important;
   color: #ffffff !important;
-  font-size: 18px !important;
+  font-size: 17px !important;
   font-weight: 600 !important;
   box-shadow: 0 10px 24px rgba(239, 148, 64, 0.26) !important;
   opacity: 1 !important;
@@ -7503,7 +7503,7 @@ body,
   background: transparent !important;
   border: none !important;
   color: #7a5a44 !important;
-  font-size: 15px !important;
+  font-size: 14px !important;
   font-weight: 500 !important;
   text-align: center;
   width: 100%;
@@ -7583,7 +7583,7 @@ body,
 /* ===== 09 孩子建档：按 screens/09 还原 ===== */
 .onb-title {
   font-family: var(--nl-font-display) !important;
-  font-size: 37px !important;
+  font-size: 36px !important;
   font-weight: 700 !important;
   line-height: 1.2 !important;
   color: #4a2f1f !important;
@@ -7593,7 +7593,7 @@ body,
 
 .onb-sub {
   text-align: center !important;
-  font-size: 16px !important;
+  font-size: 15px !important;
   color: #7a5a44 !important;
   margin: 0 0 20px !important;
 }
@@ -7621,7 +7621,7 @@ body,
 }
 
 .onb-avatar-label {
-  font-size: 15px !important;
+  font-size: 14px !important;
   color: #7a5a44 !important;
   font-weight: 500;
 }
@@ -7645,14 +7645,14 @@ body,
 }
 
 .onb-label {
-  font-size: 17px !important;
+  font-size: 16px !important;
   font-weight: 600 !important;
   color: #4a2f1f !important;
   min-width: 96px;
 }
 
 .onb-input {
-  font-size: 17px !important;
+  font-size: 16px !important;
   color: #3f2a1d !important;
   text-align: left !important;
 }
@@ -7665,7 +7665,7 @@ body,
 }
 
 .onb-date-value {
-  font-size: 17px !important;
+  font-size: 16px !important;
   color: #3f2a1d !important;
 }
 
@@ -7683,7 +7683,7 @@ body,
   border: 1px solid rgba(255, 255, 255, 0.75) !important;
   background: rgba(255, 250, 244, 0.8) !important;
   color: #4a2f1f !important;
-  font-size: 17px !important;
+  font-size: 16px !important;
   font-weight: 600 !important;
 }
 
@@ -7700,7 +7700,7 @@ body,
   border-radius: 999px !important;
   background: linear-gradient(180deg, #f5a75c 0%, #ee9743 100%) !important;
   color: #ffffff !important;
-  font-size: 19px !important;
+  font-size: 18px !important;
   font-weight: 600 !important;
   box-shadow: 0 12px 26px rgba(238, 151, 67, 0.26) !important;
 }
@@ -7708,7 +7708,7 @@ body,
 .onb-footnote {
   text-align: center !important;
   color: #7a5a44 !important;
-  font-size: 14px !important;
+  font-size: 13px !important;
   margin-top: 14px !important;
 }
 
@@ -7721,12 +7721,12 @@ body,
 }
 
 .onb-title {
-  font-size: 33px !important;
+  font-size: 32px !important;
   margin: 10px 0 6px !important;
 }
 
 .onb-sub {
-  font-size: 15px !important;
+  font-size: 14px !important;
   margin-bottom: 14px !important;
 }
 
@@ -7741,7 +7741,7 @@ body,
 .onb-gender-opt {
   min-height: 46px !important;
   min-width: 100px !important;
-  font-size: 16px !important;
+  font-size: 15px !important;
 }
 
 /* 09：跳过胶囊、头像双层虚线+柔光、暖粉底、卡片暖色 */
@@ -7752,7 +7752,7 @@ body,
   border: 1px solid rgba(255, 255, 255, 0.7) !important;
   background: rgba(255, 250, 244, 0.82) !important;
   color: #4a2f1f !important;
-  font-size: 16px !important;
+  font-size: 15px !important;
   font-weight: 600 !important;
   box-shadow: 0 6px 16px rgba(176, 118, 78, 0.08) !important;
 }
@@ -7803,7 +7803,7 @@ body,
 /* 09：标题改黑体、纵向再收 */
 .onb-title {
   font-family: var(--nl-font-sans, -apple-system, "Noto Sans SC", "PingFang SC", sans-serif) !important;
-  font-size: 31px !important;
+  font-size: 30px !important;
   font-weight: 700 !important;
   margin: 2px 0 2px !important;
 }
@@ -7849,7 +7849,7 @@ body,
   border: none !important;
   background: transparent !important;
   color: #7a5a44 !important;
-  font-size: 18px !important;
+  font-size: 17px !important;
   font-weight: 600 !important;
 }
 
@@ -7892,20 +7892,20 @@ body,
 }
 
 .msg-title {
-  font-size: 19px !important;
+  font-size: 18px !important;
   font-weight: 700 !important;
   color: #3f2a1d !important;
   line-height: 1.3 !important;
 }
 
 .msg-text {
-  font-size: 14px !important;
+  font-size: 13px !important;
   color: #8a6c56 !important;
   line-height: 1.5 !important;
 }
 
 .msg-time {
-  font-size: 13px !important;
+  font-size: 12px !important;
   color: #9a7d66 !important;
 }
 
@@ -7964,7 +7964,7 @@ body,
   border: none !important;
   background: transparent !important;
   color: #7a5a44 !important;
-  font-size: 18px !important;
+  font-size: 17px !important;
   font-weight: 600 !important;
 }
 
@@ -7982,7 +7982,7 @@ body,
 }
 
 .msg-title {
-  font-size: 17px !important;
+  font-size: 16px !important;
   font-weight: 600 !important;
   white-space: nowrap !important;
   overflow: hidden !important;
@@ -8019,7 +8019,7 @@ body,
 }
 
 .msg-title {
-  font-size: 18px !important;
+  font-size: 17px !important;
   padding-right: 2px;
 }
 
@@ -8043,7 +8043,7 @@ body,
   display: -webkit-box !important;
   -webkit-line-clamp: 2 !important;
   -webkit-box-orient: vertical !important;
-  font-size: 18px !important;
+  font-size: 17px !important;
   line-height: 1.4 !important;
 }
 
@@ -8056,7 +8056,7 @@ body,
 
 .msg-title {
   font-weight: 700 !important;
-  font-size: 17px !important;
+  font-size: 16px !important;
 }
 
 .msg-title-rest {
@@ -8121,7 +8121,7 @@ header.app-topbar > div span {
   overflow: hidden !important;
   text-overflow: ellipsis !important;
   -webkit-line-clamp: unset !important;
-  font-size: 17px !important;
+  font-size: 16px !important;
   font-weight: 700 !important;
 }
 
@@ -8133,7 +8133,7 @@ header.app-topbar > div span {
 /* ===== 11 设置：分组标题衬线、行高、页脚 ===== */
 .set-group-title {
   font-family: var(--nl-font-display) !important;
-  font-size: 25px !important;
+  font-size: 24px !important;
   font-weight: 700 !important;
   color: #4a2f1f !important;
   margin: 22px 0 10px !important;
@@ -8162,13 +8162,13 @@ header.app-topbar > div span {
 }
 
 .set-body strong {
-  font-size: 18px !important;
+  font-size: 17px !important;
   font-weight: 600 !important;
   color: #3f2a1d !important;
 }
 
 .set-body small {
-  font-size: 13px !important;
+  font-size: 12px !important;
   color: #8a6c56 !important;
 }
 
@@ -8176,7 +8176,7 @@ header.app-topbar > div span {
   order: 9;
   text-align: center;
   margin: 26px 0 10px;
-  font-size: 14px;
+  font-size: 13px;
   color: #a08468;
   letter-spacing: 0.08em;
 }
@@ -8213,7 +8213,7 @@ header.app-topbar > div span {
 
 .settings-shell .set-group-title {
   font-family: var(--nl-font-display) !important;
-  font-size: 23px !important;
+  font-size: 22px !important;
   font-weight: 700 !important;
 }
 
@@ -8229,7 +8229,7 @@ header.app-topbar > div span {
 /* 11：行高与分组间距收紧，尽量一屏显示三组 */
 .settings-shell .set-group-title {
   margin: 16px 0 8px !important;
-  font-size: 22px !important;
+  font-size: 21px !important;
 }
 
 .settings-shell .set-row {
@@ -8237,11 +8237,11 @@ header.app-topbar > div span {
 }
 
 .settings-shell .set-body strong {
-  font-size: 17px !important;
+  font-size: 16px !important;
 }
 
 .settings-shell .set-body small {
-  font-size: 12px !important;
+  font-size: 11px !important;
 }
 
 .settings-shell .set-icon svg {
@@ -8264,7 +8264,7 @@ header.app-topbar > div span {
 
 .settings-shell .set-group-title {
   margin: 12px 0 6px !important;
-  font-size: 21px !important;
+  font-size: 20px !important;
 }
 
 .settings-shell .set-row {
@@ -8314,7 +8314,7 @@ header.app-topbar > div span {
 .invite-title {
   margin: 6px 0 0 !important;
   font-family: var(--nl-font-display) !important;
-  font-size: 29px !important;
+  font-size: 28px !important;
   font-weight: 700 !important;
   color: #4a2f1f !important;
   text-align: center;
@@ -8324,7 +8324,7 @@ header.app-topbar > div span {
 .invite-sub {
   margin: 0 !important;
   color: #8a6c56 !important;
-  font-size: 16px !important;
+  font-size: 15px !important;
 }
 
 .invite-code-pill {
@@ -8342,7 +8342,7 @@ header.app-topbar > div span {
 .invite-code-value {
   flex: 1;
   font-family: var(--nl-font-display) !important;
-  font-size: 25px !important;
+  font-size: 24px !important;
   font-weight: 600 !important;
   letter-spacing: 0.10em;
   color: #3f2a1d !important;
@@ -8357,7 +8357,7 @@ header.app-topbar > div span {
   border: none !important;
   background: #f2a55f !important;
   color: #ffffff !important;
-  font-size: 17px !important;
+  font-size: 16px !important;
   font-weight: 600 !important;
   cursor: pointer;
 }
@@ -8369,7 +8369,7 @@ header.app-topbar > div span {
   border: none !important;
   background: linear-gradient(180deg, #f5a75c 0%, #ee9743 100%) !important;
   color: #ffffff !important;
-  font-size: 19px !important;
+  font-size: 18px !important;
   font-weight: 600 !important;
   box-shadow: 0 10px 24px rgba(238, 151, 67, 0.26) !important;
   cursor: pointer;
@@ -8377,7 +8377,7 @@ header.app-topbar > div span {
 
 .invite-section-title {
   font-family: var(--nl-font-display) !important;
-  font-size: 25px !important;
+  font-size: 24px !important;
   font-weight: 700 !important;
   color: #4a2f1f !important;
 }
@@ -8404,7 +8404,7 @@ header.app-topbar > div span {
   margin: 18px 0 8px;
   text-align: center;
   color: #9a7d66;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 /* 12：二维码图片与已邀请卡片化 */
@@ -8472,20 +8472,20 @@ header.app-topbar > div span {
 
 .wl-title,
 .wl-heading {
-  font-size: 45px !important;
+  font-size: 44px !important;
   line-height: 1.22 !important;
   letter-spacing: 0.01em !important;
 }
 
 .wl-sub {
-  font-size: 18px !important;
+  font-size: 17px !important;
   color: #7a5a44 !important;
 }
 
 /* 14：照片铺满卡片、标题回调 */
 .wl-hero { padding: 0 !important; display: block !important; }
 .wl-hero img { width: 100% !important; height: 100% !important; object-fit: cover !important; margin: 0 !important; }
-.wl-title, .wl-heading { font-size: 41px !important; }
+.wl-title, .wl-heading { font-size: 40px !important; }
 
 /* 13：右上暖金光晕 + 节奏 */
 .nl-boot-shell,
@@ -8517,13 +8517,13 @@ main[aria-label="正在进入年轮"] {
 
 .wl-title,
 .wl-heading {
-  font-size: 39px !important;
+  font-size: 38px !important;
   margin: 18px 0 6px !important;
 }
 
 .wl-sub {
   margin: 4px 0 0 !important;
-  font-size: 17px !important;
+  font-size: 16px !important;
 }
 
 .wl-dots {
@@ -8567,7 +8567,7 @@ main[aria-label="正在进入年轮"] {
 .wl-title,
 .wl-heading {
   margin: 16px 0 4px !important;
-  font-size: 39px !important;
+  font-size: 38px !important;
 }
 
 .wl-sub {
@@ -8612,7 +8612,7 @@ main[aria-label="正在进入年轮"] {
 
 .archive-shell .ac-label {
   font-family: var(--nl-font-display) !important;
-  font-size: 19px !important;
+  font-size: 18px !important;
   font-weight: 600 !important;
   color: #4a2f1f !important;
   min-width: 108px !important;
@@ -8622,7 +8622,7 @@ main[aria-label="正在进入年轮"] {
 .archive-shell .ac-row input,
 .archive-shell .ac-input {
   font-family: var(--nl-font-display) !important;
-  font-size: 21px !important;
+  font-size: 20px !important;
   font-weight: 500 !important;
   color: #3f2a1d !important;
   background: transparent !important;
@@ -8633,7 +8633,7 @@ main[aria-label="正在进入年轮"] {
 .archive-shell .archive-hint {
   text-align: center !important;
   color: #9a7d66 !important;
-  font-size: 14px !important;
+  font-size: 13px !important;
   margin-top: 16px !important;
 }
 
@@ -8643,7 +8643,7 @@ main[aria-label="正在进入年轮"] {
   border-radius: 18px !important;
   background: #b4652a !important;
   color: #fff !important;
-  font-size: 21px !important;
+  font-size: 20px !important;
   font-weight: 600 !important;
   box-shadow: 0 10px 24px rgba(180, 101, 42, 0.24) !important;
 }
@@ -8669,7 +8669,7 @@ main[aria-label="正在进入年轮"] {
   text-align: right !important;
   padding-right: 4px !important;
   font-family: var(--nl-font-display) !important;
-  font-size: 21px !important;
+  font-size: 20px !important;
   color: #3f2a1d !important;
 }
 
@@ -8768,7 +8768,7 @@ main[aria-label="正在进入年轮"] {
   border: none !important;
   text-align: right !important;
   font-family: var(--nl-font-display) !important;
-  font-size: 21px !important;
+  font-size: 20px !important;
   color: #3f2a1d !important;
 }
 
@@ -8815,7 +8815,7 @@ main[aria-label="正在进入年轮"] {
   font-weight: 600 !important;
   padding: 8px 16px !important;
   border-radius: 999px !important;
-  font-size: 14px !important;
+  font-size: 13px !important;
 }
 
 .account-shell .fam-role.is-owner {
@@ -8833,7 +8833,7 @@ main[aria-label="正在进入年轮"] {
 
 .fam-members-page .fam-role-sub,
 .fam-members-page .fam-member-role-sub {
-  font-size: 13px !important;
+  font-size: 12px !important;
   color: #8a6c56 !important;
 }
 
@@ -8857,7 +8857,7 @@ main[aria-label="正在进入年轮"] {
 
 .account-shell .fam-role-sub,
 .fam-members-page .fam-role-sub {
-  font-size: 13px !important;
+  font-size: 12px !important;
   color: #8a6c56 !important;
   font-weight: 500 !important;
 }
@@ -8867,7 +8867,7 @@ main[aria-label="正在进入年轮"] {
 .account-shell [class*="perm-legend"] {
   font-weight: 500 !important;
   line-height: 1.75 !important;
-  font-size: 14px !important;
+  font-size: 13px !important;
 }
 
 /* 17：成员卡实际类名 member-row-card（inline 样式覆盖） */
@@ -8887,7 +8887,7 @@ main[aria-label="正在进入年轮"] {
   color: #7a4416 !important;
   border-radius: 999px !important;
   padding: 7px 16px !important;
-  font-size: 14px !important;
+  font-size: 13px !important;
   font-weight: 600 !important;
 }
 
@@ -8937,7 +8937,7 @@ main[aria-label="正在进入年轮"] {
 }
 .account-shell .member-row-card > span:last-child > span:first-child {
   padding: 5px 12px !important;
-  font-size: 13px !important;
+  font-size: 12px !important;
 }
 .app-page-shell.account-shell:has(.member-row-card) .app-panel {
   display: grid !important;
@@ -8947,7 +8947,7 @@ main[aria-label="正在进入年轮"] {
 /* ===== 18 成员详情：按 screens-v5/18 还原 ===== */
 .account-shell .fam-detail-title {
   font-family: var(--nl-font-display) !important;
-  font-size: 25px !important;
+  font-size: 24px !important;
   font-weight: 700 !important;
   color: #4a2f1f !important;
   margin: 20px 0 10px !important;
@@ -8971,12 +8971,12 @@ main[aria-label="正在进入年轮"] {
 
 .account-shell .perm-option strong {
   font-family: var(--nl-font-display) !important;
-  font-size: 19px !important;
+  font-size: 18px !important;
   font-weight: 600 !important;
 }
 
 .account-shell .perm-option > span:last-child > span {
-  font-size: 14px !important;
+  font-size: 13px !important;
   color: #7a5a44 !important;
 }
 
@@ -8996,7 +8996,7 @@ main[aria-label="正在进入年轮"] {
   border-radius: 18px !important;
   background: #b4652a !important;
   color: #fff !important;
-  font-size: 19px !important;
+  font-size: 18px !important;
   font-weight: 600 !important;
   box-shadow: 0 10px 24px rgba(180, 101, 42, 0.22) !important;
   margin: 14px 0 10px !important;
@@ -9007,7 +9007,7 @@ main[aria-label="正在进入年轮"] {
   margin: 12px 0 0 !important;
   text-align: center !important;
   color: #9a7d66 !important;
-  font-size: 14px !important;
+  font-size: 13px !important;
 }
 
 .account-shell .fam-detail-title {
@@ -9037,11 +9037,11 @@ main[aria-label="正在进入年轮"] {
 }
 
 .account-shell .perm-option strong {
-  font-size: 17px !important;
+  font-size: 16px !important;
 }
 
 .account-shell .perm-option > span:last-child > span {
-  font-size: 13px !important;
+  font-size: 12px !important;
 }
 
 .account-shell header > span:last-child {
@@ -9049,22 +9049,22 @@ main[aria-label="正在进入年轮"] {
 }
 
 .account-shell header h2 {
-  font-size: 27px !important;
+  font-size: 26px !important;
 }
 
 .account-shell .fam-detail-title {
-  font-size: 22px !important;
+  font-size: 21px !important;
   margin: 12px 0 6px !important;
 }
 
 .account-shell .perm-hint {
   margin: 8px 0 0 !important;
-  font-size: 13px !important;
+  font-size: 12px !important;
 }
 
 .account-shell .fam-detail-save {
   min-height: 54px !important;
-  font-size: 18px !important;
+  font-size: 17px !important;
   margin: 10px 0 8px !important;
 }
 
@@ -9098,11 +9098,11 @@ main[aria-label="正在进入年轮"] {
 }
 
 .account-shell header h2 {
-  font-size: 25px !important;
+  font-size: 24px !important;
 }
 
 .account-shell .fam-detail-title {
-  font-size: 21px !important;
+  font-size: 20px !important;
   margin: 8px 0 4px !important;
 }
 
@@ -9112,7 +9112,7 @@ main[aria-label="正在进入年轮"] {
 }
 
 .account-shell .perm-option strong {
-  font-size: 16px !important;
+  font-size: 15px !important;
 }
 
 .account-shell .perm-hint {
@@ -9131,7 +9131,7 @@ main[aria-label="正在进入年轮"] {
 
 .set-group[aria-label="提醒"] .set-body small,
 .set-group[aria-label="家人的动态"] .set-body small {
-  font-size: 14px !important;
+  font-size: 13px !important;
   color: #8a6c56 !important;
 }
 
@@ -9180,7 +9180,7 @@ main[aria-label="正在进入年轮"] {
 }
 
 .account-shell .ac-avatar-tip {
-  font-size: 16px !important;
+  font-size: 15px !important;
   color: #4a2f1f !important;
 }
 
@@ -9211,7 +9211,7 @@ main[aria-label="正在进入年轮"] {
 
 .account-shell:has(.ac-avatar) .ac-label {
   font-family: var(--nl-font-display) !important;
-  font-size: 20px !important;
+  font-size: 19px !important;
   font-weight: 600 !important;
   color: #4a2f1f !important;
 }
@@ -9219,7 +9219,7 @@ main[aria-label="正在进入年轮"] {
 .account-shell:has(.ac-avatar) .ac-input,
 .account-shell:has(.ac-avatar) .ac-value {
   font-family: var(--nl-font-display) !important;
-  font-size: 21px !important;
+  font-size: 20px !important;
   font-weight: 500 !important;
   color: #3f2a1d !important;
   background: transparent !important;
@@ -9228,7 +9228,7 @@ main[aria-label="正在进入年轮"] {
 
 .account-shell:has(.ac-avatar) .ac-action {
   color: #e08b3e !important;
-  font-size: 18px !important;
+  font-size: 17px !important;
   font-weight: 600 !important;
 }
 
@@ -9238,7 +9238,7 @@ main[aria-label="正在进入年轮"] {
   border-radius: 999px !important;
   background: #b4652a !important;
   color: #fff !important;
-  font-size: 23px !important;
+  font-size: 22px !important;
   font-weight: 600 !important;
   box-shadow: 0 12px 28px rgba(180, 101, 42, 0.26) !important;
 }
@@ -9287,7 +9287,7 @@ main[aria-label="正在进入年轮"] {
 .account-shell:has(.ac-avatar) .ac-value,
 .account-shell:has(.ac-avatar) .ac-input {
   white-space: nowrap !important;
-  font-size: 20px !important;
+  font-size: 19px !important;
 }
 
 /* 20：行高与留白收紧 */
@@ -9308,7 +9308,7 @@ main[aria-label="正在进入年轮"] {
 .account-shell:has(.ac-avatar) .ac-save,
 .account-shell:has(.ac-avatar) button[type="submit"] {
   min-height: 64px !important;
-  font-size: 21px !important;
+  font-size: 20px !important;
   margin-top: 14px !important;
 }
 
@@ -9319,7 +9319,7 @@ main[aria-label="正在进入年轮"] {
 .account-shell:has(.ac-avatar) .ac-note,
 .account-shell:has(.ac-avatar) .ac-footnote {
   margin-top: 8px !important;
-  font-size: 15px !important;
+  font-size: 14px !important;
 }
 
 /* 21 搜索空态：暖色半透明搜索框、深棕清空钮、内容下移、圆底半透明 */
@@ -9362,7 +9362,7 @@ main[aria-label="正在进入年轮"] {
   border-radius: 999px !important;
   background: transparent !important;
   color: #6b4a33 !important;
-  font-size: 18px !important;
+  font-size: 17px !important;
   font-weight: 600 !important;
   border: 1px solid transparent !important;
 }
@@ -9381,27 +9381,27 @@ main[aria-label="正在进入年轮"] {
 }
 
 .legal-shell h2 {
-  font-size: 31px !important;
+  font-size: 30px !important;
 }
 
 .legal-shell .app-panel p {
-  font-size: 16px !important;
+  font-size: 15px !important;
   line-height: 1.85 !important;
 }
 
 /* 22：字号/行距/页签高度回调 */
 .legal-shell .app-panel p {
-  font-size: 14px !important;
+  font-size: 13px !important;
   line-height: 1.75 !important;
 }
 
 .legal-shell h2 {
-  font-size: 27px !important;
+  font-size: 26px !important;
 }
 
 .legal-shell .app-segmented button {
   min-height: 50px !important;
-  font-size: 17px !important;
+  font-size: 16px !important;
 }
 
 .legal-shell .app-segmented button[aria-checked="true"] {
@@ -9411,7 +9411,7 @@ main[aria-label="正在进入年轮"] {
 .legal-shell .app-panel > p > span[aria-hidden="true"] {
   width: 22px !important;
   height: 22px !important;
-  font-size: 11px !important;
+  font-size: 10px !important;
 }
 
 .legal-shell .app-panel {
@@ -9450,7 +9450,7 @@ main[aria-label="正在进入年轮"] {
 
 /* 24 联系我们：复制按钮描边胶囊、副标题 */
 .info-shell:has(a[href^="mailto:"]) > p:first-of-type {
-  font-size: 16px !important;
+  font-size: 15px !important;
   color: #7a5a44 !important;
   margin: 4px 0 14px !important;
 }
@@ -9462,7 +9462,7 @@ main[aria-label="正在进入年轮"] {
   border: 1.5px solid #e0a061 !important;
   background: transparent !important;
   color: #c4762f !important;
-  font-size: 17px !important;
+  font-size: 16px !important;
   font-weight: 600 !important;
 }
 
@@ -9488,7 +9488,7 @@ main[aria-label="正在进入年轮"] {
 .info-shell:has(a[href^="mailto:"]) button[aria-label^="复制"] {
   min-width: 66px !important;
   min-height: 44px !important;
-  font-size: 15px !important;
+  font-size: 14px !important;
   padding: 0 12px !important;
 }
 
@@ -9498,7 +9498,7 @@ main[aria-label="正在进入年轮"] {
 }
 
 .info-shell:has(a[href^="mailto:"]) > div > div span[style*="8a6c56"] {
-  font-size: 12px !important;
+  font-size: 11px !important;
   white-space: nowrap !important;
 }
 
@@ -9513,7 +9513,7 @@ main[aria-label="正在进入年轮"] {
 /* ===== 25 账号与安全：密度对齐 ===== */
 .info-shell:has(.security-form) .set-group-title {
   font-family: var(--nl-font-display) !important;
-  font-size: 25px !important;
+  font-size: 24px !important;
   font-weight: 700 !important;
   color: #4a2f1f !important;
   margin: 6px 0 10px !important;
@@ -9540,7 +9540,7 @@ main[aria-label="正在进入年轮"] {
 
 .info-shell:has(.security-form) .security-form label,
 .info-shell:has(.security-form) .security-form > form > div > span {
-  font-size: 15px !important;
+  font-size: 14px !important;
   font-weight: 600 !important;
   color: #4a2f1f !important;
 }
@@ -9548,20 +9548,20 @@ main[aria-label="正在进入年轮"] {
 .info-shell:has(.security-form) .security-form input {
   min-height: 52px !important;
   border-radius: 14px !important;
-  font-size: 15px !important;
+  font-size: 14px !important;
 }
 
 .info-shell:has(.security-form) .security-form button[type="submit"] {
   min-height: 60px !important;
   border-radius: 16px !important;
   background: #b4652a !important;
-  font-size: 18px !important;
+  font-size: 17px !important;
 }
 
 /* ===== 26 帮助与反馈 ===== */
 .info-shell:has(textarea) label > span:first-child {
   font-family: var(--nl-font-display) !important;
-  font-size: 21px !important;
+  font-size: 20px !important;
   font-weight: 600 !important;
   color: #4a2f1f !important;
 }
@@ -9575,7 +9575,7 @@ main[aria-label="正在进入年轮"] {
 .info-shell:has(textarea) input,
 .info-shell:has(textarea) textarea {
   border-radius: 16px !important;
-  font-size: 16px !important;
+  font-size: 15px !important;
   background: rgba(255, 252, 248, 0.9) !important;
 }
 
@@ -9587,14 +9587,14 @@ main[aria-label="正在进入年轮"] {
   min-height: 64px !important;
   border-radius: 16px !important;
   background: #b4652a !important;
-  font-size: 21px !important;
+  font-size: 20px !important;
   font-weight: 600 !important;
 }
 
 .info-shell:has(textarea) h3,
 .info-shell:has(textarea) .set-group-title {
   font-family: var(--nl-font-display) !important;
-  font-size: 23px !important;
+  font-size: 22px !important;
   font-weight: 700 !important;
   color: #4a2f1f !important;
 }
@@ -9610,7 +9610,7 @@ main[aria-label="正在进入年轮"] {
 
 .info-shell:has(input[placeholder="请输入 注销账号"]) label > span:first-child {
   font-family: var(--nl-font-display) !important;
-  font-size: 21px !important;
+  font-size: 20px !important;
   font-weight: 600 !important;
   color: #4a2f1f !important;
 }
@@ -9618,7 +9618,7 @@ main[aria-label="正在进入年轮"] {
 .info-shell:has(input[placeholder="请输入 注销账号"]) input {
   min-height: 64px !important;
   border-radius: 999px !important;
-  font-size: 17px !important;
+  font-size: 16px !important;
   background: rgba(255, 252, 248, 0.9) !important;
   border: 1px solid rgba(255, 255, 255, 0.9) !important;
 }
@@ -9626,7 +9626,7 @@ main[aria-label="正在进入年轮"] {
 .info-shell:has(input[placeholder="请输入 注销账号"]) button[type="submit"] {
   min-height: 68px !important;
   border-radius: 999px !important;
-  font-size: 21px !important;
+  font-size: 20px !important;
   font-weight: 600 !important;
 }
 
@@ -9650,7 +9650,7 @@ main[aria-label="正在进入年轮"] {
 
 .info-shell:has(input[placeholder="请输入 注销账号"]) label > span:first-child {
   font-family: var(--nl-font-display) !important;
-  font-size: 20px !important;
+  font-size: 19px !important;
   font-weight: 600 !important;
   color: #4a2f1f !important;
 }
@@ -9690,20 +9690,20 @@ main[aria-label="正在进入年轮"] {
 }
 
 .error-shell h2 {
-  font-size: 33px !important;
+  font-size: 32px !important;
   font-weight: 600 !important;
   color: #3f2a1d !important;
 }
 
 .error-shell p {
-  font-size: 17px !important;
+  font-size: 16px !important;
   color: #6f5745 !important;
 }
 
 .error-shell button {
   min-height: 74px !important;
   border-radius: 999px !important;
-  font-size: 23px !important;
+  font-size: 22px !important;
   font-weight: 600 !important;
 }
 
@@ -9726,7 +9726,7 @@ main[aria-label="正在进入年轮"] {
 .error-shell .error-actions button {
   min-height: 74px !important;
   border-radius: 999px !important;
-  font-size: 23px !important;
+  font-size: 22px !important;
   font-weight: 600 !important;
 }
 
@@ -9741,7 +9741,7 @@ main[aria-label="正在进入年轮"] {
 }
 
 .error-shell p {
-  font-size: 16px !important;
+  font-size: 15px !important;
   max-width: 420px !important;
   margin-left: auto !important;
   margin-right: auto !important;
@@ -9784,7 +9784,7 @@ main[aria-label="正在进入年轮"] {
 /* 28：页脚说明单行小字 */
 .error-shell > div:last-child p,
 .error-shell p:last-of-type {
-  font-size: 14px !important;
+  font-size: 13px !important;
   color: #8a6c56 !important;
   white-space: nowrap !important;
   max-width: none !important;
@@ -9794,7 +9794,7 @@ main[aria-label="正在进入年轮"] {
 }
 
 .error-shell p {
-  font-size: 15px !important;
+  font-size: 14px !important;
   white-space: nowrap !important;
   max-width: none !important;
 }
@@ -9808,7 +9808,7 @@ main[aria-label="正在进入年轮"] {
   box-shadow: none !important;
 }
 .error-shell > div:last-child button {
-  font-size: 14px !important;
+  font-size: 13px !important;
   color: #8a6c56 !important;
   white-space: nowrap !important;
   min-height: 0 !important;
@@ -9818,7 +9818,7 @@ main[aria-label="正在进入年轮"] {
 .error-shell .error-actions > button {
   min-height: 74px !important;
   border-radius: 999px !important;
-  font-size: 23px !important;
+  font-size: 22px !important;
   font-weight: 600 !important;
   border: none !important;
 }
@@ -9833,7 +9833,7 @@ main[aria-label="正在进入年轮"] {
 
 #root .error-shell .error-actions > button {
   min-height: 74px !important;
-  font-size: 23px !important;
+  font-size: 22px !important;
   border-radius: 999px !important;
 }
 #root .error-shell .error-actions > button:first-child {
@@ -9847,13 +9847,13 @@ main[aria-label="正在进入年轮"] {
 
 /* 28：字号回调 */
 #root .error-shell h2 {
-  font-size: 29px !important;
+  font-size: 28px !important;
 }
 #root .error-shell p {
-  font-size: 15px !important;
+  font-size: 14px !important;
 }
 #root .error-shell > div:last-child button {
-  font-size: 13px !important;
+  font-size: 12px !important;
 }
 #root .error-shell span.error-badge {
   width: 180px !important;
@@ -9872,15 +9872,15 @@ main[aria-label="正在进入年轮"] {
 }
 
 .info-shell:has(a[href^="mailto:"]) > div > div strong {
-  font-size: 18px !important;
+  font-size: 17px !important;
 }
 
 .info-shell:has(a[href^="mailto:"]) > div > div a {
-  font-size: 15px !important;
+  font-size: 14px !important;
 }
 
 .info-shell:has(a[href^="mailto:"]) > div > div span[style*="8a6c56"] {
-  font-size: 11.5px !important;
+  font-size: 10.5px !important;
   line-height: 1.4 !important;
 }
 
@@ -9901,13 +9901,13 @@ main[aria-label="正在进入年轮"] {
 
 #root .account-shell .fam-members-summary {
   margin: 0 0 10px !important;
-  font-size: 15px !important;
+  font-size: 14px !important;
   color: #4a2f1f !important;
 }
 
 #root .account-shell .fam-perm-legend,
 #root .account-shell [class*="perm-legend"] {
-  font-size: 15px !important;
+  font-size: 14px !important;
   font-weight: 500 !important;
   line-height: 1.55 !important;
   color: #4a2f1f !important;
@@ -9932,11 +9932,11 @@ main[aria-label="正在进入年轮"] {
 }
 
 #root .pf-hero-name {
-  font-size: 33px !important;
+  font-size: 32px !important;
 }
 
 #root .pf-hero-meta {
-  font-size: 16px !important;
+  font-size: 15px !important;
 }
 
 #root .pf-menu-row {
@@ -9956,14 +9956,14 @@ main[aria-label="正在进入年轮"] {
 
 #root .wl-title,
 #root .wl-heading {
-  font-size: 41px !important;
+  font-size: 40px !important;
   font-weight: 700 !important;
   margin: 14px 0 2px !important;
 }
 
 #root .wl-sub,
 #root .wl-subtitle {
-  font-size: 20px !important;
+  font-size: 19px !important;
   margin: 2px 0 0 !important;
 }
 
@@ -9989,7 +9989,7 @@ main[aria-label="正在进入年轮"] {
 }
 #root .pf-menu-row strong,
 #root .pf-menu-row span {
-  font-size: 19px !important;
+  font-size: 18px !important;
 }
 #root .pf-stats {
   padding: 14px 18px !important;
@@ -9997,7 +9997,7 @@ main[aria-label="正在进入年轮"] {
 
 #root .wl-sub,
 #root .wl-subtitle {
-  font-size: 18px !important;
+  font-size: 17px !important;
   white-space: nowrap !important;
   max-width: none !important;
 }
