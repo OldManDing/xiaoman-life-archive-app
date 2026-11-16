@@ -5310,3 +5310,246 @@
 #root .rd-actions .rd-action-share {
   box-shadow: 0 6px 16px rgba(171, 90, 27, 0.22) !important;
 }
+
+/* ============================================================
+   133. 字号整体下调一档（记录页）
+   ============================================================ */
+
+/* 头部标题 */
+#root .record-form-page .app-topbar h1,
+#root .record-form-page .app-topbar strong,
+#root .app-topbar .app-topbar-title,
+#root .rd-topbar-title {
+  font-size: 21px !important;
+  font-weight: 600 !important;
+}
+
+/* 表单字段 */
+#root #record-form .record-field-label,
+#root #record-form .record-editor-title-row .record-field-label,
+#root #record-form .record-body-card .record-field-label {
+  font-size: 13px !important;
+  line-height: 16px !important;
+  color: #6B4A32 !important;
+}
+
+#root .record-form-page .record-title-input {
+  font-size: 21px !important;
+  line-height: 28px !important;
+}
+
+#root .record-form-page .record-title-input::placeholder {
+  font-size: 21px !important;
+}
+
+#root .record-form-page .record-body-card .record-body-input,
+#root .record-form-page .record-body-input,
+#root .record-form-page .record-body-input::placeholder {
+  font-size: 15px !important;
+  line-height: 1.55 !important;
+}
+
+#root .record-form-page .record-char-count {
+  font-size: 11px !important;
+}
+
+/* 日期行 / 地点行 */
+#root #record-form .app-date-control input,
+#root .record-form-page .app-date-control input,
+#root #record-form .record-location-row input,
+#root .record-form-page .record-location-row input,
+#root .record-location-row input::placeholder {
+  font-size: 15px !important;
+  font-weight: 500 !important;
+}
+
+/* 标签 chip */
+#root .record-quick-tags button,
+#root .rd-chip {
+  font-size: 14px !important;
+}
+
+#root .rd-chip {
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 16px !important;
+}
+
+#root .rd-chip.is-count {
+  font-size: 12px !important;
+}
+
+/* 主/次按钮 */
+#root #record-form .record-inline-submit-button,
+#root .rd-actions .rd-action-share {
+  font-size: 16px !important;
+  font-weight: 500 !important;
+}
+
+#root .rd-actions .rd-action-edit {
+  font-size: 15px !important;
+}
+
+/* 媒体卡文字 */
+#root .record-media-grid .record-media-single > button span {
+  font-size: 15px !important;
+}
+
+#root .media-add-tile,
+#root button.media-add-tile {
+  font-size: 13px !important;
+}
+
+/* 详情正文 */
+#root .rd-title {
+  font-size: 26px !important;
+  line-height: 1.18 !important;
+}
+
+#root .rd-meta {
+  font-size: 13px !important;
+}
+
+#root .rd-copy {
+  font-size: 15px !important;
+  line-height: 1.75 !important;
+}
+
+/* 编辑页说明 */
+#root .record-edit-sync-note {
+  font-size: 12px !important;
+}
+
+#root .record-media-section p,
+#root .record-media-section span {
+  font-size: 12px !important;
+}
+
+/* ============================================================
+   134. 字号二次下调（再小约 10%）
+   ============================================================ */
+
+#root .record-form-page .app-topbar h1,
+#root .record-form-page .app-topbar strong,
+#root .app-topbar .app-topbar-title,
+#root .rd-topbar-title {
+  font-size: 20px !important;
+  font-weight: 600 !important;
+}
+
+#root #record-form .record-field-label,
+#root #record-form .record-editor-title-row .record-field-label,
+#root #record-form .record-body-card .record-field-label,
+#root .record-form-page .record-field-label {
+  font-size: 12px !important;
+  line-height: 15px !important;
+  color: #6B4A32 !important;
+}
+
+#root .record-form-page .record-title-input,
+#root .record-form-page.is-edit .record-title-input,
+#root .record-form-page .record-title-input::placeholder,
+#root .record-form-page.is-edit .record-title-input::placeholder {
+  font-size: 20px !important;
+  line-height: 26px !important;
+}
+
+#root .record-form-page .record-body-card .record-body-input,
+#root .record-form-page .record-body-input,
+#root .record-form-page .record-body-input::placeholder {
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+}
+
+#root #record-form .app-date-control input,
+#root .record-form-page .app-date-control input,
+#root #record-form .record-location-row input,
+#root .record-form-page .record-location-row input,
+#root .record-location-row input::placeholder {
+  font-size: 14.5px !important;
+}
+
+#root .record-quick-tags button,
+#root .rd-chip {
+  font-size: 13px !important;
+}
+
+#root .rd-chip {
+  height: 34px !important;
+  min-height: 34px !important;
+  padding: 0 15px !important;
+}
+
+#root #record-form .record-inline-submit-button,
+#root .rd-actions .rd-action-share {
+  font-size: 15px !important;
+}
+
+#root .rd-actions .rd-action-edit {
+  font-size: 14px !important;
+}
+
+#root .rd-title {
+  font-size: 24px !important;
+  line-height: 1.2 !important;
+}
+
+#root .rd-meta {
+  font-size: 12px !important;
+}
+
+#root .rd-copy {
+  font-size: 14px !important;
+  line-height: 1.8 !important;
+}
+
+#root .record-media-grid .record-media-single > button span {
+  font-size: 14px !important;
+}
+
+#root .record-media-section p,
+#root .record-media-section span {
+  font-size: 11.5px !important;
+}
+
+/* 135. 字号三次微调 + 详情标题/标签高度收口 */
+#root .record-form-page .app-topbar h1,
+#root .record-form-page .app-topbar strong,
+#root .app-topbar .app-topbar-title,
+#root .rd-topbar-title {
+  font-size: 19px !important;
+}
+
+#root .record-form-page .record-title-input,
+#root .record-form-page.is-edit .record-title-input,
+#root .record-form-page .record-title-input::placeholder,
+#root .record-form-page.is-edit .record-title-input::placeholder {
+  font-size: 18px !important;
+  line-height: 24px !important;
+}
+
+#root .rd-body .rd-title,
+#root .rd-title {
+  font-size: 22px !important;
+  line-height: 1.25 !important;
+}
+
+#root .record-quick-tags button,
+#root .rd-chip {
+  height: 34px !important;
+  min-height: 34px !important;
+  padding: 0 15px !important;
+  font-size: 13px !important;
+}
+
+#root .rd-chip.is-count {
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  font-size: 12px !important;
+}
+
+#root #record-form .record-inline-submit-button,
+#root .rd-actions .rd-action-share {
+  font-size: 15px !important;
+}
