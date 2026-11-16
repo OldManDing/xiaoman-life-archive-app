@@ -4458,3 +4458,184 @@
   width: 24px !important;
   height: 24px !important;
 }
+
+/* ============================================================
+   117. 记录页全量样式复查后的统一修正
+   ============================================================ */
+
+/* 1) 字段排版统一：label 15 / 正文 16 / 标题 24 */
+#root .record-form-page .record-field-label {
+  font-size: 15px !important;
+  line-height: 18px !important;
+  color: #513522 !important;
+  font-weight: 500 !important;
+}
+
+#root .record-form-page .record-body-input {
+  font-size: 16px !important;
+  line-height: 1.6 !important;
+  color: #3F2A1C !important;
+}
+
+#root .record-form-page .record-title-input {
+  font-size: 24px !important;
+  line-height: 32px !important;
+  color: #3F2A1C !important;
+}
+
+#root .record-form-page .record-char-count {
+  font-size: 12px !important;
+  color: #8A6A55 !important;
+}
+
+/* 2) 日期行 / 地点行：两页统一高度 */
+#root .record-form-page form > section:has(.app-date-control) {
+  height: 43px !important;
+  min-height: 43px !important;
+  max-height: 43px !important;
+}
+
+#root .record-form-page .record-location-row {
+  height: 41px !important;
+  min-height: 41px !important;
+  max-height: 41px !important;
+}
+
+/* 3) 间距统一为 12：标题卡↔正文卡、日期↔地点 */
+#root .record-editor-card {
+  gap: 12px !important;
+}
+
+#root .record-editor-card > .record-body-card {
+  margin-top: 0 !important;
+}
+
+#root #record-form > .record-details {
+  margin-top: 0 !important;
+  row-gap: 12px !important;
+}
+
+#root #record-form > .record-details > section,
+#root #record-form > .record-details > .record-location-row {
+  margin: 0 !important;
+}
+
+/* 4) 媒体区圆角统一 20 */
+#root .record-media-section {
+  border-radius: 20px !important;
+}
+
+/* 5) 详情页正文区回到 20 左轴 */
+#root .rd-body {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin-left: 0 !important;
+}
+
+#root .rd-title,
+#root .rd-meta,
+#root .rd-copy,
+#root .rd-chips {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+/* 6) 详情 chips 统一 36 高 / 14 号 */
+#root .rd-chip {
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 16px !important;
+  font-size: 14px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+#root .rd-chip.is-count {
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  font-size: 13px !important;
+}
+
+/* 7) 主 CTA 加深，白字对比 ≥4.5 */
+#root #record-form .record-inline-submit-button,
+#root #record-form button.record-inline-submit-button,
+#root .rd-actions .rd-action-share {
+  background-color: #AB5A1B !important;
+  background-image: linear-gradient(135deg, #B96521 0%, #AB5A1B 55%, #9C5016 100%) !important;
+  color: #FFFFFF !important;
+}
+
+/* 118. 复查第二轮：压掉内联/页面级的字号与间距覆盖 */
+#root #record-form > .record-details {
+  margin-top: -12px !important;
+}
+
+/* 字段标签：两页统一 15 */
+#root .record-form-page .record-editor-card .record-field-label,
+#root .record-form-page .record-body-card .record-field-label {
+  font-size: 15px !important;
+  line-height: 18px !important;
+  color: #513522 !important;
+}
+
+/* 正文输入：两页统一 16 */
+#root .record-form-page .record-body-card .record-body-input {
+  font-size: 16px !important;
+  line-height: 1.6 !important;
+}
+
+/* 编辑页日期/地点行高度与新建一致 */
+#root .record-form-page.is-edit form > section:has(.app-date-control) {
+  height: 43px !important;
+  min-height: 43px !important;
+  max-height: 43px !important;
+}
+
+#root .record-form-page.is-edit .record-location-row {
+  height: 41px !important;
+  min-height: 41px !important;
+  max-height: 41px !important;
+}
+
+/* 详情：元信息→chips 12、chips→正文 16 */
+#root .rd-body .rd-meta {
+  margin-bottom: 0 !important;
+}
+
+#root .rd-body .rd-chips {
+  margin-top: 12px !important;
+  margin-bottom: 0 !important;
+}
+
+#root .rd-body .rd-copy {
+  margin-top: 16px !important;
+  padding-right: 0 !important;
+  width: 100% !important;
+}
+
+/* 119. 复查第三轮：ID 级压实编辑页地点行高度与字段标签 */
+#root #record-form .record-details .record-location-row,
+#root #record-form .record-location-row {
+  height: 41px !important;
+  min-height: 41px !important;
+  max-height: 41px !important;
+}
+
+#root #record-form .record-field-label,
+#root #record-form .record-editor-title-row .record-field-label,
+#root #record-form .record-body-card .record-field-label {
+  font-size: 15px !important;
+  line-height: 18px !important;
+  color: #513522 !important;
+}
+
+/* 详情 chips 与正文之间节奏 12/16 */
+#root .rd-body .rd-chips {
+  margin-top: 12px !important;
+  margin-bottom: 16px !important;
+}
+
+#root .rd-body .rd-copy {
+  margin-top: 0 !important;
+}
