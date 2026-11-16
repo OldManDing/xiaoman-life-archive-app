@@ -870,3 +870,57 @@
 #root button:disabled {
   color: #6B5A4C !important;
 }
+
+/* 28. 卡底色相修正 + 导航图标橙色（验证轮 #3/#4） */
+:root {
+  --gx-rose: rgba(255, 228, 224, 0.66);
+}
+
+#root .app-panel,
+#root .info-card,
+#root .ac-card,
+#root .member-row-card,
+#root .pf-hero,
+#root .pf-stats,
+#root .pf-menu,
+#root .set-card,
+#root .msg-card,
+#root .fam-hero,
+#root .fam-member-row,
+#root .invite-card,
+#root .nl-home-recent,
+#root .record-editor-card,
+#root .record-title-card,
+#root .onb-card,
+#root .help-row,
+#root .fr-card,
+#root .notify-status-card,
+#root .perm-card,
+#root .export-option {
+  background-color: var(--gx-rose) !important;
+  background-image:
+    linear-gradient(116deg, rgba(255, 255, 255, 0) 32%, rgba(255, 255, 255, 0.24) 44%, rgba(255, 255, 255, 0) 56%),
+    linear-gradient(154deg, rgba(255, 250, 250, 0.34) 0%, rgba(255, 228, 224, 0.34) 42%, rgba(252, 222, 209, 0.42) 100%) !important;
+}
+
+/* 导航激活图标：与文字一起变橙 */
+#root .app-bottom-nav .app-bottom-nav-link.is-active .app-bottom-nav-icon svg,
+#root .app-bottom-nav .app-bottom-nav-link.is-active > svg,
+#root .app-bottom-nav.is-quiet .app-bottom-nav-link.is-active .app-bottom-nav-icon svg,
+#root .app-bottom-nav.is-quiet .app-bottom-nav-link.is-active > svg {
+  color: #d97a22 !important;
+  stroke: #d97a22 !important;
+}
+
+/* 29. 02 时间轴左缘对齐（导轨/记录数与网格同轴） */
+#root .tl-axis,
+#root .tl-years,
+#root .tl-summary,
+#root .tl-big-title {
+  margin-left: 20px !important;
+}
+
+#root .tl-main {
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+}

@@ -1379,7 +1379,7 @@ export const SettingsPage = () => {
         <div className="set-card">
           <button type="button" className="set-row" onClick={() => navigate('/profile/export')}>
             <span className="set-icon"><DownloadCloud size={24} strokeWidth={1.8} /></span>
-            <span className="set-body"><strong>导出全部记录</strong><small>PDF · 相册</small></span>
+            <span className="set-body"><strong>导出全部记录</strong><small>全部数据 · 图片和视频</small></span>
             <ChevronRight size={20} className="set-chevron" />
           </button>
           <button type="button" className="set-row" disabled={cacheSize === '0 KB'} onClick={() => { if (!window.confirm('清理本机缓存后，图片需要重新下载。确认清理？')) return; clearLocalCaches(); setCacheSize('0 KB'); }}>
@@ -2284,7 +2284,9 @@ export const AccountDeletionPage = () => {
             </span>
             <div style={{ display: 'grid', gap: 2 }}>
               <strong style={{ color: '#4a2f1f', fontFamily: 'var(--nl-font-display)', fontSize: 19, fontWeight: 600 }}>注销后不可恢复</strong>
-              <p style={{ margin: 0, color: '#6f5745', fontSize: 11, lineHeight: 1.55 }}>账号凭据会失效，家庭档案将由其他管理员接管</p>
+              <p style={{ margin: 0, color: '#6f5745', fontSize: 11, lineHeight: 1.55 }}>{check && check.summary.owned_family_count > 0
+                ? `账号凭据会失效；你名下 ${check.summary.active_child_count} 份孩子档案、${check.summary.active_record_count} 条有效记录将交由其他管理员接管。若你是唯一管理员，请先新增一位管理员，或先申请导出与成年移交后再注销。`
+                : '账号凭据会失效，家庭档案将由其他管理员接管'}</p>
             </div>
           </div>
           {loading ? <p style={helperTextStyle}>正在检查当前账号状态…</p> : null}
@@ -2567,8 +2569,8 @@ const legalSections = [
     items: [
       '为提供成长档案服务，平台会处理账号、昵称、孩子档案资料、家庭成员关系、成长记录、媒体文件、登录时间和必要审计日志。',
       '上述信息用于登录校验、身份识别、档案展示、家庭协作、媒体上传与预览、内容审核、异常排查、安全风控和合规留存。',
-      '除用户授权、法律要求、保护未成年人权益或完成短信、对象存储、AI 处理等必要服务外，平台不会向无关第三方出售或出租个人信息。',
-      '用户可以查看和修改个人资料、孩子档案、家庭成员关系和成长记录；平台提供注销、删除申请和隐私问题反馈渠道。',
+      '除用户授权、法律要求、保护未成年人权益或完成短信、云存储、智能整理等必要服务外，平台不会向无关第三方出售或出租个人信息。',
+      '用户可以查看和修改个人资料、孩子档案、家庭成员关系和成长记录；年轮提供注销账号、删除数据和隐私问题反馈渠道。',
     ],
   },
   {
