@@ -583,7 +583,7 @@ export const FamilyChildPage = () => {
               </div>
               <div className="ac-row" style={{ position: 'relative' }}>
                 <span className="ac-label">性别</span>
-                <span className="ac-value">{form.gender === 'female' ? '女' : form.gender === 'male' ? '男' : '未知'}</span>
+                <span className="ac-value">{form.gender === 'female' ? '女' : form.gender === 'male' ? '男' : '未设置'}</span>
                 <button
                   type="button"
                   aria-label="选择性别"
@@ -602,7 +602,7 @@ export const FamilyChildPage = () => {
                       options={[
                         { value: 'female', label: '女' },
                         { value: 'male', label: '男' },
-                        { value: 'unknown', label: '未知' },
+                        { value: 'unknown', label: '不透露' },
                       ]}
                     />
                   </div>
@@ -718,7 +718,7 @@ export const FamilyMembersPage = () => {
                 <>
                   ·
                   <span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: 999, background: '#e9a05a', display: 'inline-block' }} />
-                  {members.filter((member) => member.status === 0).length}位待接受
+                  {members.filter((member) => member.status === 0).length} 位待接受（共 {members.length} 人）
                 </>
               ) : null}
             </p>
@@ -753,7 +753,7 @@ export const FamilyMembersPage = () => {
                     <FamilyAvatar src={member.avatar_url} mediaNo={member.avatar_media_no} label={getFamilyMemberDisplayName(member)} size={48} radius="999px" />
                     <span style={{ minWidth: 0, display: 'grid', gap: 2 }}>
                       <strong style={{ minWidth: 0, maxWidth: '100%', fontSize: '17px', lineHeight: 1.5, color: 'var(--nl-ink)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflowWrap: 'anywhere' }}>{getFamilyMemberDisplayName(member)}</strong>
-                      <span style={{ fontSize: '13px', color: '#6f5745', lineHeight: 1.4 }}>{memberRoleDescriptor(member.role)}</span>
+                      <span style={{ fontSize: '13px', color: '#6f5745', lineHeight: 1.4 }}>{pending ? '邀请中 · 加入后可查看' : memberRoleDescriptor(member.role)}</span>
                     </span>
                   </button>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10, justifySelf: 'end' }}>
@@ -964,7 +964,7 @@ export const FamilyMemberDetailPage = () => {
     return `加入于 ${joined.getFullYear()}年${joined.getMonth() + 1}月${joined.getDate()}日`;
   })();
   return (
-    <PageShell title="成员信息" backTo="/family" className="account-shell">
+    <PageShell title="家庭成员" backTo="/family" className="account-shell">
       {loading ? <Panel><EmptyState message="正在加载家人资料…" /></Panel> : null}
       {!loading && !member ? <Panel><EmptyState message="未找到该家庭成员。" /></Panel> : null}
       {member ? (
@@ -978,12 +978,12 @@ export const FamilyMemberDetailPage = () => {
           </header>
 
           <section>
-            <h2 className="fam-detail-title">TA 的权限</h2>
+            <h2 className="fam-detail-title">权限设置</h2>
             <div role="radiogroup" aria-label="成员权限" style={{ display: 'grid', gap: 8 }}>
               {([
-                { value: 'viewer' as const, title: '可查看 · 只能浏览记录', detail: '可以查看记录，但不能新增' },
-                { value: 'editor' as const, title: '可查看 · 可补充', detail: '可以查看并新增记录' },
-                { value: 'owner' as const, title: '可管理', detail: '可以添加成员、修改档案' },
+                { value: 'viewer' as const, title: '仅浏览', detail: '可以查看记录，但不能新增' },
+                { value: 'editor' as const, title: '可补充', detail: '可以查看并新增记录' },
+                { value: 'owner' as const, title: '管理员', detail: '可以添加成员、修改档案、调整权限' },
               ]).map((option) => {
                 const selected = (pendingRole ?? member.role) === option.value;
                 const disabled = !canEditRole || updating;
@@ -1035,7 +1035,7 @@ export const FamilyMemberDetailPage = () => {
                 );
               })}
             </div>
-            <p className="perm-hint">修改权限后点下方保存生效</p>
+            <p className="perm-hint">{canEditRole ? '修改权限后点下方保存生效' : '只有家庭管理员可以修改权限'}</p>
           </section>
 
           <section aria-label="记录贡献" style={{ display: 'grid', gap: 10 }}>
@@ -1048,7 +1048,7 @@ export const FamilyMemberDetailPage = () => {
                 {recordTotal} 条记录
               </span>
               {memberLatestRecordLabel ? (
-                <span style={{ color: '#6f5745', fontSize: 11 }}>{memberLatestRecordLabel}</span>
+                <span style={{ color: '#6f5745', fontSize: 11 }}>· {memberLatestRecordLabel}</span>
               ) : null}
             </div>
           </section>
@@ -1216,7 +1216,7 @@ const invitedMembers = members.filter((member) => member.role !== 'owner');
           <span className="invite-qr-dot" aria-hidden="true" />
         </div>
         <h2 className="invite-title">扫码加入{activeChild?.name ?? ''}的档案</h2>
-        <p className="invite-sub">有效期 7 天</p>
+        <p className="invite-sub">有效期 7 天{inviteResult?.expires_at ? ` · ${new Date(inviteResult.expires_at).getFullYear()}年${new Date(inviteResult.expires_at).getMonth() + 1}月${new Date(inviteResult.expires_at).getDate()}日前有效` : ''}</p>
 
         <div className="invite-code-pill">
           <strong className="invite-code-value">{inviteCode || (activeChild?.family_no ? '生成中…' : '暂无邀请码')}</strong>
@@ -1288,7 +1288,7 @@ style={{ display: 'grid', gap: 10 }}>
                 </strong>
                 <span aria-hidden="true" style={{ color: 'var(--nl-muted)', fontSize: 11 }}>·</span>
                 <span style={{ color: 'var(--nl-muted)', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {pending ? `已发送${formatRelativeJoinedAt(member.joined_at) ? ` ${formatRelativeJoinedAt(member.joined_at)}` : ''}` : '已加入'}
+                  {pending ? `已发送${formatRelativeJoinedAt(member.joined_at) ? ` ${formatRelativeJoinedAt(member.joined_at)}` : ''}` : (member.joined_at ? `${new Date(member.joined_at).getFullYear()}年${new Date(member.joined_at).getMonth() + 1}月${new Date(member.joined_at).getDate()}日加入` : '已加入')}
                 </span>
               </div>
               <span style={{

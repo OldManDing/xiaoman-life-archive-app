@@ -407,3 +407,466 @@
 #root .app-bottom-nav {
   z-index: 3 !important;
 }
+
+/* ============================================================
+   22. UI 三轮评审修复批次（2026-11-16）
+   ------------------------------------------------------------
+   1) 强调色统一：主 CTA 亮橙、开关亮琥珀
+   2) 底部导航激活态统一：浅橙圆角底板 + 橙色图标文字
+   3) 卡片底色回到粉米色相、描边改顶部亮底部弱
+   4) 头像统一正圆
+   5) 02 月份选择器去掉白底
+   6) 角色标签降饱和为浅米 + 橙字单层边
+   7) 05/17 邀请入口改橙色虚线
+   ============================================================ */
+
+/* 1. 强调色 */
+:root {
+  --nl-cta-from: #FBA24E;
+  --nl-cta-mid: #F99035;
+  --nl-cta-to: #EE8020;
+  --nl-cta-shadow: 0 12px 26px rgba(238, 128, 32, 0.28);
+}
+
+/* 主 CTA：内联深棕背景统一改成亮橙渐变 */
+#root [style*="background: rgb(169, 88, 27)"],
+#root [style*="background: #a9581b"],
+#root [style*="background-color: rgb(169, 88, 27)"] {
+  background-image: linear-gradient(135deg, var(--nl-cta-from) 0%, var(--nl-cta-mid) 55%, var(--nl-cta-to) 100%) !important;
+  background-color: var(--nl-cta-mid) !important;
+  border-color: rgba(255, 255, 255, 0.32) !important;
+  color: #fff !important;
+  box-shadow: var(--nl-cta-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.45) !important;
+}
+
+#root .ac-save,
+#root .fam-detail-save,
+#root .lg-submit,
+#root .onb-submit,
+#root .record-submit,
+#root .record-inline-submit,
+#root button[type="submit"] {
+  background-image: linear-gradient(135deg, var(--nl-cta-from) 0%, var(--nl-cta-mid) 55%, var(--nl-cta-to) 100%) !important;
+  background-color: var(--nl-cta-mid) !important;
+  color: #fff !important;
+  box-shadow: var(--nl-cta-shadow), inset 0 1px 0 rgba(255, 255, 255, 0.45) !important;
+}
+
+/* 开关开态：亮琥珀 */
+#root .app-toggle[aria-checked="true"],
+#root .app-switch[aria-checked="true"],
+#root [role="switch"][aria-checked="true"] {
+  background-color: #EC9842 !important;
+  background-image: linear-gradient(135deg, #F3AC5C 0%, #EC9842 100%) !important;
+}
+
+/* 2. 底部导航激活态统一 */
+#root .app-bottom-nav .app-bottom-nav-link.is-active,
+#root .app-bottom-nav.is-quiet .app-bottom-nav-link.is-active {
+  background: rgba(249, 144, 53, 0.16) !important;
+  border-radius: 18px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75) !important;
+}
+
+#root .app-bottom-nav .app-bottom-nav-link.is-active .app-bottom-nav-icon,
+#root .app-bottom-nav .app-bottom-nav-link.is-active .app-bottom-nav-label,
+#root .app-bottom-nav.is-quiet .app-bottom-nav-link.is-active .app-bottom-nav-icon,
+#root .app-bottom-nav.is-quiet .app-bottom-nav-link.is-active .app-bottom-nav-label {
+  background: transparent !important;
+  color: #d97a22 !important;
+  font-weight: 700 !important;
+}
+
+/* 3. 卡片底色回到粉米 + 描边顶部亮底部弱 */
+:root {
+  --gx-rose: rgba(253, 235, 223, 0.22);
+  --gx-border-top: rgba(255, 255, 255, 0.92);
+  --gx-border-side: rgba(255, 255, 255, 0.55);
+}
+
+#root .app-panel,
+#root .info-card,
+#root .ac-card,
+#root .member-row-card,
+#root .pf-hero,
+#root .pf-stats,
+#root .pf-menu,
+#root .set-card,
+#root .msg-card,
+#root .fam-hero,
+#root .fam-member-row,
+#root .invite-card,
+#root .nl-home-recent,
+#root .nl-home-hero-wrap,
+#root .record-editor-card,
+#root .record-title-card,
+#root .onb-card,
+#root .wl-hero,
+#root .help-row,
+#root .fr-card,
+#root .notify-status-card,
+#root .perm-card,
+#root .export-option {
+  background-color: var(--gx-rose) !important;
+  border-top-color: var(--gx-border-top) !important;
+  border-left-color: var(--gx-border-side) !important;
+  border-right-color: var(--gx-border-side) !important;
+  border-bottom-color: rgba(255, 255, 255, 0.38) !important;
+}
+
+/* 4. 头像统一正圆 */
+#root .ref-avatar,
+#root .ref-avatar img,
+#root .fam-hero-avatar,
+#root .fam-hero-avatar img,
+#root .family-avatar,
+#root .family-avatar img,
+#root .pf-hero img,
+#root .member-row-card img,
+#root .invite-card img,
+#root .nl-home-header-row img,
+#root [class*="avatar"] img {
+  border-radius: 999px !important;
+}
+
+/* 5. 02 月份选择器去白底 */
+#root .tl-month-select,
+#root .tl-month-select select {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  color: #d97a22 !important;
+  font-weight: 600 !important;
+  padding: 0 18px 0 0 !important;
+}
+
+#root .tl-month-select option {
+  color: #4a2f1f;
+  background: #fffaf4;
+}
+
+/* 6. 角色标签浅米 + 橙字 + 单层边 */
+#root .fam-role,
+#root .member-row-card > span:last-child > span:first-child {
+  background-image: none !important;
+  background-color: #FBDCC7 !important;
+  border: 1px solid rgba(233, 160, 90, 0.45) !important;
+  box-shadow: none !important;
+  color: #C4691F !important;
+  font-weight: 600 !important;
+}
+
+/* 7. 邀请入口橙色虚线 */
+#root .members-invite-cta,
+#root .fam-hero-cta,
+#root a[href="/family/invite"],
+#root [class*="invite-cta"] {
+  background: transparent !important;
+  background-image: none !important;
+  border: 1.5px dashed rgba(218, 129, 61, 0.75) !important;
+  color: #DA813D !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* 8. 06 资料卡箭头垂直居中 & 菜单分隔线两侧内缩 */
+#root .pf-hero button,
+#root .pf-bell.is-chevron {
+  align-self: center !important;
+  margin-top: 0 !important;
+}
+
+#root .pf-menu-row::after,
+#root .set-row::after {
+  right: 18px !important;
+  left: 60px !important;
+}
+
+/* 9. 05 加号改橙 */
+#root .fam-hero button[aria-label*="邀请"],
+#root .fam-header-plus,
+#root button[aria-label="邀请家人"] {
+  color: #DA813D !important;
+}
+
+/* 10. 底部安全留白（11 设置等） */
+#root .app-main-scroll {
+  padding-bottom: 104px !important;
+}
+
+/* ============================================================
+   23. UI 评审修复批次 2：版式与对齐
+   ============================================================ */
+
+/* 01 首页：头图与最近卡间距收到常规节奏；孩子切换器自适应宽度 */
+#root .nl-home-hero-wrap {
+  margin-bottom: 10px !important;
+}
+
+#root .nl-home-header-row {
+  width: fit-content !important;
+  min-width: 56% !important;
+  max-width: 100% !important;
+}
+
+#root .nl-home-header-row strong {
+  font-family: var(--nl-font-sans) !important;
+  font-weight: 500 !important;
+}
+
+/* 02 时间轴：三列等高 */
+#root .tl-tile {
+  height: auto !important;
+  aspect-ratio: 3 / 4 !important;
+  overflow: hidden !important;
+}
+
+#root .tl-tile img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+/* 03 记一笔：主按钮与卡片同边距、里程碑 chip 选中态 */
+#root .record-submit-bar button,
+#root .record-inline-submit {
+  width: 100% !important;
+}
+
+#root .record-tag-chips button[aria-pressed="true"],
+#root .record-tag-chips .is-selected,
+#root .record-chip.is-selected {
+  background: linear-gradient(135deg, #FBA24E 0%, #F99035 100%) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+  box-shadow: 0 6px 14px rgba(238, 128, 32, 0.24) !important;
+}
+
+/* 10 消息：标题占满到时间戳前 */
+#root .msg-card strong,
+#root .msg-title {
+  flex: 1 1 auto !important;
+  max-width: none !important;
+}
+
+/* 19 通知：页脚对比度 */
+#root .info-shell:has(.set-card) p,
+#root .info-shell:has(.set-card) small {
+  color: #6b5340 !important;
+}
+
+/* 21 搜索：清空按钮热区 ≥44 */
+#root .search-clear {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+}
+
+#root .search-field {
+  min-height: 52px !important;
+}
+
+/* 27 注销：危险主按钮红色、禁用态可读 */
+#root .info-shell:has(input[placeholder="请输入 确认注销"]) button[type="submit"]:not(:disabled) {
+  background-image: linear-gradient(135deg, #E0603F 0%, #C9482B 100%) !important;
+  background-color: #C9482B !important;
+  box-shadow: 0 12px 26px rgba(201, 72, 43, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+}
+
+#root .info-shell:has(input[placeholder="请输入 确认注销"]) button[type="submit"]:disabled {
+  background: #F1E2D3 !important;
+  color: #7a6350 !important;
+}
+
+/* 18 成员详情：压缩纵向，让保存权限进入首屏 */
+#root .account-shell:has(.fam-detail-hero) header {
+  padding: 4px 0 0 !important;
+  gap: 2px !important;
+}
+
+#root .account-shell:has(.fam-detail-hero) header > div:first-child,
+#root .account-shell:has(.fam-detail-hero) .ref-avatar {
+  width: 108px !important;
+  height: 108px !important;
+}
+
+#root .account-shell:has(.fam-detail-hero) header h2 {
+  font-size: 26px !important;
+}
+
+#root .account-shell:has(.fam-detail-hero) .fam-detail-title {
+  font-size: 20px !important;
+  margin: 8px 0 4px !important;
+}
+
+#root .account-shell:has(.fam-detail-hero) .perm-option {
+  min-height: 60px !important;
+  padding: 7px 12px !important;
+}
+
+#root .account-shell:has(.fam-detail-hero) section[aria-label="记录贡献"] > div {
+  min-height: 48px !important;
+}
+
+#root .account-shell:has(.fam-detail-hero) .perm-hint {
+  margin: 4px 0 0 !important;
+  font-size: 12px !important;
+}
+
+#root .account-shell:has(.fam-detail-hero) .fam-detail-save {
+  min-height: 50px !important;
+  font-size: 17px !important;
+  margin: 8px 0 6px !important;
+}
+
+/* 11 设置 / 06 我的：分隔线两端内缩 */
+#root .set-row::after,
+#root .pf-menu-row::after {
+  left: 56px !important;
+  right: 18px !important;
+}
+
+/* 24. 07 搜索：恢复放大镜图标与命中高亮 */
+#root .search-field-icon {
+  display: inline-flex !important;
+  color: rgba(217, 122, 34, 0.85) !important;
+}
+
+#root .search-title mark,
+#root .search-result mark,
+#root mark {
+  background: transparent !important;
+  color: #d97a22 !important;
+  font-weight: 600 !important;
+}
+
+#root .search-title {
+  font-weight: 500 !important;
+}
+
+/* 25. 18 成员详情：再压缩，让「保存权限」进入首屏 */
+#root .account-shell:has(.fam-detail-hero) header {
+  padding: 0 0 0 !important;
+  gap: 0 !important;
+}
+
+#root .account-shell:has(.fam-detail-hero) header > div:first-child,
+#root .account-shell:has(.fam-detail-hero) .ref-avatar {
+  width: 84px !important;
+  height: 84px !important;
+}
+
+#root .account-shell:has(.fam-detail-hero) header h2 {
+  font-size: 24px !important;
+  margin-top: 2px !important;
+}
+
+#root .account-shell:has(.fam-detail-hero) header > span:last-child {
+  font-size: 14px !important;
+  margin-top: 2px !important;
+}
+
+#root .account-shell:has(.fam-detail-hero) .fam-detail-title {
+  font-size: 18px !important;
+  margin: 6px 0 3px !important;
+}
+
+#root .account-shell:has(.fam-detail-hero) .perm-option {
+  min-height: 54px !important;
+  padding: 5px 10px !important;
+}
+
+#root .account-shell:has(.fam-detail-hero) .perm-option strong {
+  font-size: 15px !important;
+}
+
+#root .account-shell:has(.fam-detail-hero) .perm-option > span:last-child > span {
+  font-size: 12px !important;
+}
+
+#root .account-shell:has(.fam-detail-hero) section[aria-label="记录贡献"] > div {
+  min-height: 42px !important;
+}
+
+#root .account-shell:has(.fam-detail-hero) .perm-hint {
+  margin: 2px 0 0 !important;
+  font-size: 11px !important;
+}
+
+#root .account-shell:has(.fam-detail-hero) .fam-detail-save {
+  min-height: 46px !important;
+  font-size: 16px !important;
+  margin: 6px 0 4px !important;
+}
+
+
+/* 26. 18 成员详情：压缩（排除顶栏 header，避免误伤标题） */
+#root .account-shell:has([aria-label="成员权限"]) header:not(.app-topbar) {
+  padding: 0 !important;
+  gap: 0 !important;
+}
+
+#root .account-shell:has([aria-label="成员权限"]) header:not(.app-topbar) > div:first-child {
+  width: 84px !important;
+  height: 84px !important;
+}
+
+#root .account-shell:has([aria-label="成员权限"]) header:not(.app-topbar) > div:first-child img {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 999px !important;
+}
+
+#root .account-shell:has([aria-label="成员权限"]) header:not(.app-topbar) h2 {
+  font-size: 24px !important;
+  margin-top: 2px !important;
+}
+
+#root .account-shell:has([aria-label="成员权限"]) header:not(.app-topbar) > span:last-child {
+  font-size: 14px !important;
+}
+
+#root .account-shell:has([aria-label="成员权限"]) .fam-detail-title {
+  font-size: 18px !important;
+  margin: 6px 0 3px !important;
+}
+
+#root .account-shell:has([aria-label="成员权限"]) .perm-option {
+  min-height: 54px !important;
+  padding: 5px 10px !important;
+}
+
+#root .account-shell:has([aria-label="成员权限"]) section[aria-label="记录贡献"] > div {
+  min-height: 42px !important;
+}
+
+#root .account-shell:has([aria-label="成员权限"]) .fam-detail-save {
+  min-height: 46px !important;
+  font-size: 16px !important;
+  margin: 6px 0 4px !important;
+}
+
+/* 27. 危险/禁用按钮：避免被通用主 CTA 橙色覆盖 */
+#root .info-shell form button[type="submit"]:disabled {
+  background: #EADCCB !important;
+  background-image: none !important;
+  color: #6B5A4C !important;
+  box-shadow: none !important;
+}
+
+#root .info-shell:has(input[placeholder="请输入 确认注销"]) form button[type="submit"]:not(:disabled) {
+  background: #C0392B !important;
+  background-image: linear-gradient(135deg, #D4503C 0%, #C0392B 100%) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 10px 22px rgba(192, 57, 43, 0.22) !important;
+}
+
+/* 通用：禁用态文字保证可读 */
+#root button:disabled {
+  color: #6B5A4C !important;
+}

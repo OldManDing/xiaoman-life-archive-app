@@ -917,7 +917,7 @@ export const NotificationSettingsPage = () => {
     },
     {
       title: '免打扰',
-      items: [{ key: 'quiet', label: '免打扰时段', desc: '', icon: Moon, navigate: true }],
+      items: [{ key: 'quiet', label: '免打扰时段', desc: '22:00–07:00', icon: Moon }],
     },
   ];
 
@@ -979,7 +979,7 @@ export const AccountPage = () => {
   const maskMobile = (value?: string | null) => {
     const raw = (value ?? '').trim();
     if (!raw) return '当前未提供';
-    return raw.length >= 7 ? `${raw.slice(0, 3)} **** ${raw.slice(-4)}` : raw;
+    return raw.length >= 7 ? `${raw.slice(0, 3)}****${raw.slice(-4)}` : raw;
   };
   const displayMobile = settings.hideMobileMask ? '已隐藏' : maskMobile(user?.mobile);
 
@@ -1067,7 +1067,7 @@ export const AccountPage = () => {
   })();
 
   return (
-    <PageShell title="账号" backTo="/profile" className="account-shell">
+    <PageShell title="账号资料" backTo="/profile" className="account-shell">
       <div className="ac-hero" style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}>
         <label aria-label="更换头像" className="ac-avatar">
           <ProfileAvatar src={avatarPreviewUrl ?? user?.avatar_url} mediaNo={user?.avatar_media_no} label={user?.nickname ?? '我的头像'} />
@@ -1131,7 +1131,9 @@ export const AccountPage = () => {
         <div className="ac-row">
           <span className="ac-label">微信</span>
           <span className="ac-value">已绑定</span>
-          <ChevronRight size={20} strokeWidth={1.8} aria-hidden="true" className="ac-chevron" />
+          <button type="button" className="ac-action" aria-label="更换或解绑微信" style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#d97a22', fontWeight: 600 }}>
+            更换
+          </button>
         </div>
         <div className="ac-row is-static">
           <span className="ac-label">注册时间</span>
@@ -1380,7 +1382,7 @@ export const SettingsPage = () => {
             <span className="set-body"><strong>导出全部记录</strong><small>PDF · 相册</small></span>
             <ChevronRight size={20} className="set-chevron" />
           </button>
-          <button type="button" className="set-row" onClick={() => { clearLocalCaches(); setCacheSize('0 KB'); }}>
+          <button type="button" className="set-row" disabled={cacheSize === '0 KB'} onClick={() => { if (!window.confirm('清理本机缓存后，图片需要重新下载。确认清理？')) return; clearLocalCaches(); setCacheSize('0 KB'); }}>
             <span className="set-icon"><Trash2 size={24} strokeWidth={1.8} /></span>
             <span className="set-body"><strong>清理本机缓存</strong></span>
             <span className="set-value">{cacheSize}</span>
@@ -1863,7 +1865,7 @@ export const ExportBackupPage = () => {
           <button
             type="button"
             style={{ ...secondaryButtonStyle, minHeight: '46px', borderRadius: '8px', justifyContent: 'center' }}
-            onClick={() => void submitArchiveRequest('adult_handoff')}
+            onClick={() => { if (window.confirm('成年移交后，该成员将获得档案的完整控制权，当前管理员会失去管理权限。确认继续？')) void submitArchiveRequest('adult_handoff'); }}
             disabled={archiveRequestDisabled}
           >
             {submittingArchiveRequest === 'adult_handoff' ? '提交中…' : '成年移交'}
@@ -1943,9 +1945,10 @@ export const ExportBackupPage = () => {
           />
         </Panel>
       ) : null}
-      <button type="button" style={{ ...primaryButtonStyle, width: '100%', minHeight: '50px', borderRadius: '8px' }} onClick={() => void downloadSummary()} disabled={loading || downloadingSummary || Boolean(error) || !canExportArchive}>
+      <button type="button" style={{ ...primaryButtonStyle, width: '100%', minHeight: '50px', borderRadius: '8px', opacity: loading || downloadingSummary || Boolean(error) || !canExportArchive || archiveRequestsList.length === 0 ? 0.55 : 1 }} onClick={() => void downloadSummary()} disabled={loading || downloadingSummary || Boolean(error) || !canExportArchive || archiveRequestsList.length === 0}>
         {downloadingSummary ? '正在生成…' : '下载摘要'}
       </button>
+      {archiveRequestsList.length === 0 ? <p style={{ ...helperTextStyle, margin: 0, textAlign: 'center' }}>先提交一次打包申请，才能下载档案摘要</p> : null}
     </PageShell>
   );
 };
@@ -2153,13 +2156,13 @@ export const SecurityPage = () => {
               maxLength={12}
             />
           </Field>
-          <p style={{ ...helperTextStyle, margin: 0 }}>新密码需为 8 到 12 位</p>
+          <p style={{ ...helperTextStyle, margin: 0 }}>新密码 8–12 位；三项都填写后才可保存</p>
           {passwordMessage ? (
             <p style={{ ...helperTextStyle, color: isPositiveStatusMessage(passwordMessage) ? 'var(--nl-success)' : 'var(--nl-danger)' }}>
               {passwordMessage}
             </p>
           ) : null}
-          <button type="submit" disabled={passwordSubmitting} style={{ ...primaryButtonStyle, width: '100%', justifyContent: 'center', minHeight: '52px', borderRadius: '18px', opacity: passwordSubmitting ? 0.72 : 1 }}>
+          <button type="submit" disabled={passwordSubmitting || !currentPassword || !newPassword || !newPasswordConfirm} style={{ ...primaryButtonStyle, width: '100%', justifyContent: 'center', minHeight: '52px', borderRadius: '18px', opacity: passwordSubmitting || !currentPassword || !newPassword || !newPasswordConfirm ? 0.55 : 1 }}>
             {passwordSubmitting ? '保存中…' : '保存新密码'}
           </button>
         </form>
@@ -2503,17 +2506,19 @@ export const HelpFeedbackPage = () => {
               <option value="功能建议">功能建议</option>
             </AppSelect>
           </Field>
-          <Field label="反馈内容" labelSize={17}>
-            <textarea style={textareaStyle} value={content} onChange={(event) => setContent(event.target.value)} placeholder="问题、页面、操作" />
+          <Field label="反馈内容 *" labelSize={17}>
+            <textarea style={textareaStyle} value={content} maxLength={500} onChange={(event) => setContent(event.target.value)} placeholder="问题、页面、操作（必填）" />
           </Field>
+          <p style={{ ...helperTextStyle, margin: '-6px 0 0', textAlign: 'right' }}>{content.length}/500</p>
           <Field label="联系方式" labelSize={17}>
-            <input style={inputStyle} value={contact} onChange={(event) => setContact(event.target.value)} placeholder="选填，方便我们回复你" />
+            <input style={inputStyle} value={contact} onChange={(event) => setContact(event.target.value)} placeholder="选填，方便我们回复你（可选）" />
           </Field>
           {message ? <p style={{ ...helperTextStyle, color: isPositiveStatusMessage(message) ? 'var(--nl-success)' : 'var(--nl-danger)' }}>{message}</p> : null}
           <div style={buttonRowStyle}>
-            <button type="button" style={{ ...primaryButtonStyle, borderRadius: 12 }} onClick={() => void submitFeedback()} disabled={submitting}>
+            <button type="button" style={{ ...primaryButtonStyle, borderRadius: 12, opacity: submitting || !content.trim() ? 0.55 : 1 }} onClick={() => void submitFeedback()} disabled={submitting || !content.trim()}>
               {submitting ? '提交中…' : '提交反馈'}
             </button>
+            {!content.trim() ? <span style={{ ...helperTextStyle, alignSelf: 'center' }}>填写反馈内容后可提交</span> : null}
           </div>
         </div>
       </Panel>
@@ -2674,11 +2679,11 @@ export const AboutPage = () => {
           </g>
         </svg>
         <h2 style={{ margin: 0, color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '40px', lineHeight: 1.08, fontWeight: 600 }}>年轮</h2>
-        <p style={{ margin: '8px 0 0', color: '#7a5a44', fontSize: '17px', fontWeight: 500 }}>版本 {appVersion} · 构建 {appBuildNumberValue || 128}</p>
+        <p style={{ margin: '8px 0 0', color: '#7a5a44', fontSize: '17px', fontWeight: 500 }}>版本 {appVersion}</p>
       </section>
 
       <div className="info-card">
-        <AboutMenuLink icon={RefreshCw} label="检查更新" value={updateStatusText} isLast={!updateResult && !updateError} onClick={checkingUpdate ? undefined : () => void checkUpdate()} />
+        <AboutMenuLink icon={RefreshCw} label="检查更新" value={updateStatusText} isLast={!updateResult && !updateError} onClick={checkingUpdate || updateStatusText.includes('已是最新') ? undefined : () => void checkUpdate()} />
         {updateError ? <p style={{ ...helperTextStyle, color: 'var(--nl-danger)', margin: 0, padding: '0 16px 14px' }}>{updateError}</p> : null}
         {updateResult?.update_available ? (
           <div style={{ borderTop: '1px solid var(--nl-border-muted)', padding: '14px 0 16px', display: 'grid', gap: '9px', background: 'transparent' }}>
@@ -2734,8 +2739,9 @@ export const AboutPage = () => {
       </div>
 
       <div className="info-card">
-        <AboutMenuLink icon={FileText} label="用户服务协议" onClick={() => navigate('/profile/legal')} />
+        <AboutMenuLink icon={FileText} label="用户协议" onClick={() => navigate('/profile/legal')} />
         <AboutMenuLink icon={Shield} label="隐私政策" onClick={() => navigate('/profile/legal?doc=privacy')} />
+        <AboutMenuLink icon={ShieldCheck} label="儿童信息保护" onClick={() => navigate('/profile/legal?doc=child')} />
         <AboutMenuLink icon={Mail} label="联系我们" isLast onClick={() => navigate('/profile/contact')} />
       </div>
 
@@ -2898,7 +2904,7 @@ export const LegalPage = () => {
         <button
           type="button"
           aria-pressed={largeText}
-          aria-label="放大字号"
+          aria-label="字号 A+"
           onClick={() => setLargeText((value) => !value)}
           style={{
             minWidth: 44,
@@ -2912,7 +2918,7 @@ export const LegalPage = () => {
             cursor: 'pointer',
           }}
         >
-          A+
+          字号 A+
         </button>
       }
     >
@@ -2923,7 +2929,7 @@ export const LegalPage = () => {
         options={legalSections.map((item) => ({ value: item.title, label: item.title }))}
       />
       <Panel style={{ padding: '22px 18px', display: 'grid', gap: 20 }}>
-        <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.02em', color: 'var(--nl-muted)' }}>最后更新 2026年11月</span>
+        <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.02em', color: 'var(--nl-muted)' }}>最后更新：2026年11月11日</span>
         <h2 style={{ margin: 0, fontFamily: 'var(--nl-font-display)', fontSize: 28, fontWeight: 600, lineHeight: 1.25, color: 'var(--nl-ink)' }}>{section.title}</h2>
         <div style={{ display: 'grid', gap: 20 }}>
           {section.items.map((item, index) => (
