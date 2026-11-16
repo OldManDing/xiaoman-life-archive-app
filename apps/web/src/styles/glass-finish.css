@@ -4639,3 +4639,169 @@
 #root .rd-body .rd-copy {
   margin-top: 0 !important;
 }
+
+/* ============================================================
+   120. 日期行 / 地点行统一：同高 44、同图标 22、同间距 12、同箭头 20
+   ============================================================ */
+
+#root .record-form-page form > section:has(.app-date-control),
+#root .record-location-row {
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
+  padding: 0 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  box-sizing: border-box !important;
+}
+
+/* 日期控件撑满行高，去掉自身内边距与溢出 */
+#root .record-form-page .app-date-control {
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+#root .record-form-page .app-date-control svg {
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  flex: 0 0 22px !important;
+  color: #6B4A32 !important;
+}
+
+#root .record-form-page .app-date-control input,
+#root .record-form-page .app-date-control .app-date-time-input {
+  height: 44px !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  color: #3F2A1C !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+/* 地点行图标与输入 */
+#root .record-location-row label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  height: 44px !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+#root .record-location-row label > svg {
+  position: static !important;
+  left: auto !important;
+  top: auto !important;
+  transform: none !important;
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  flex: 0 0 22px !important;
+  color: #6B4A32 !important;
+}
+
+#root .record-location-row input {
+  height: 44px !important;
+  padding: 0 !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  color: #3F2A1C !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+/* 箭头：两行统一 20、贴右内边距 */
+#root .record-form-page .app-date-control > svg:last-child,
+#root .record-location-row > svg {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  flex: 0 0 20px !important;
+  color: #A98467 !important;
+  margin-left: auto !important;
+}
+
+/* 121. 日期/地点行最终压实（ID 级） */
+#root #record-form .record-details .record-location-row,
+#root #record-form .record-location-row {
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
+}
+
+#root #record-form .app-date-control {
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+
+#root #record-form .app-date-control svg {
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  flex: 0 0 22px !important;
+}
+
+#root #record-form .app-date-control > svg:last-child {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  flex: 0 0 20px !important;
+  margin-left: auto !important;
+}
+
+#root #record-form .app-date-control input {
+  height: 44px !important;
+  padding: 0 !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+}
+
+#root #record-form .record-location-row label > svg {
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  flex: 0 0 22px !important;
+}
+
+#root #record-form .record-location-row input {
+  height: 44px !important;
+  padding: 0 !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+}
+
+/* 122. 日期/地点行图标与箭头权重统一 */
+#root #record-form .app-date-control svg:first-child,
+#root #record-form .record-location-row label > svg {
+  stroke-width: 2 !important;
+  color: #6B4A32 !important;
+}
+
+#root #record-form .app-date-control > svg:last-child,
+#root #record-form .record-location-row > svg {
+  stroke-width: 1.9 !important;
+  color: #A98467 !important;
+  width: 20px !important;
+  height: 20px !important;
+}
+
+/* 123. 日历图标视觉线宽与定位针一致（24 viewBox 缩到 22 需补偿） */
+#root #record-form .app-date-control svg:first-child {
+  stroke-width: 2.2 !important;
+}
