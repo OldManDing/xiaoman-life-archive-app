@@ -42,4 +42,4 @@ export const getMediaDurationLimitMessage = (mediaType: SupportedMediaType) => {
 };
 
 export const getMediaLimitHint = () =>
-  `图片 ${RECORD_MEDIA_LIMITS.imageMaxCount} 张 · 视频 ${RECORD_MEDIA_LIMITS.videoMaxCount} 条 / ${formatMediaDurationLimit(RECORD_MEDIA_LIMITS.videoMaxDurationSeconds)} · 语音 ${RECORD_MEDIA_LIMITS.audioMaxCount} 条 / ${formatMediaDurationLimit(RECORD_MEDIA_LIMITS.audioMaxDurationSeconds)}`;
+  `图片 ${RECORD_MEDIA_LIMITS.imageMaxCount} 张 · 视频 ${RECORD_MEDIA_LIMITS.videoMaxCount} 条 / ${formatMediaDurationLimit(RECORD_MEDIA_LIMITS.videoMaxDurationSeconds)}`;

@@ -4118,3 +4118,25 @@
   min-height: 92px !important;
   margin: 0 !important;
 }
+
+/* 103. 编辑页：隐藏空的媒体操作网格（预览行已含「＋添加」），消除 100dp 死白 */
+#root .record-form-page.is-edit .record-media-grid {
+  display: none !important;
+}
+
+#root .record-form-page.is-edit .record-media-section {
+  gap: 8px !important;
+}
+
+#root .record-form-page.is-edit .record-media-section > p {
+  margin: 0 !important;
+}
+
+/* 104. 压过 rule 100 的 flex 声明：编辑页隐藏空的媒体操作网格 */
+#root .record-form-page.is-edit .record-media-section > .record-media-grid {
+  display: none !important;
+}
+
+#root .record-form-page.is-edit .record-media-section > .record-media-previews {
+  display: block !important;
+}
