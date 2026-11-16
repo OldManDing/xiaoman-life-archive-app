@@ -3999,9 +3999,6 @@
   display: inline-flex !important;
 }
 
-#root .record-form-page .app-topbar button:not(:has(svg)):not([aria-label*="关闭"]):not([aria-label*="返回"]):not([aria-label*="退出"]):not([aria-label*="取消"]) {
-  display: none !important;
-}
 
 /* 关闭键恢复可见并统一图标规格 */
 #root .record-form-page .app-topbar button[aria-label*="关闭"],
@@ -4414,4 +4411,50 @@
   background-color: #C4661F !important;
   background-image: linear-gradient(135deg, #D0762A 0%, #C4661F 55%, #B85C18 100%) !important;
   color: #FFFFFF !important;
+}
+
+/* 116. 头部按钮规则只作用于头部直接按钮，避免影响展开菜单里的按钮 */
+#root .app-topbar button,
+#root .rd-topbar button {
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+#root .app-topbar > button,
+#root .app-topbar > span > button,
+#root .rd-topbar > button,
+#root .rd-topbar > .rd-topbar-right > button {
+  width: 44px !important;
+  min-width: 44px !important;
+  max-width: 44px !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
+  border-radius: 999px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+#root .app-topbar summary {
+  width: 44px !important;
+  min-width: 44px !important;
+  height: 44px !important;
+  display: grid !important;
+  place-items: center !important;
+  border-radius: 999px !important;
+}
+
+#root .app-topbar summary svg,
+#root .rd-topbar svg {
+  width: 24px !important;
+  height: 24px !important;
 }

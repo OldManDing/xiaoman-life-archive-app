@@ -2378,18 +2378,7 @@ const RecordForm = ({
           onBack={leaveRecordForm}
           style={{ position: 'relative', top: 'auto', margin: '0 0 12px', padding: 'calc(var(--nl-statusbar-top) + 12px) 18px 10px' }}
           action={
-            mode === 'create' ? (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-                <button
-                  type="button"
-                  onClick={() => void submitRecord('published')}
-                  disabled={submitting}
-                  style={{ minHeight: 44, border: 'none', background: 'transparent', color: '#d97a22', fontSize: 15, fontWeight: 600, cursor: 'pointer', padding: '0 2px' }}
-                >
-                  {submitting ? '保存中' : '保存'}
-                </button>
-              </span>
-            ) : mode === 'edit' ? (
+            mode === 'edit' ? (
               <details style={{ position: 'relative' }}>
                 <summary
                   aria-label="更多操作"
