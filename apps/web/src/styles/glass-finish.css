@@ -2763,3 +2763,965 @@
 #root .record-form-page.is-edit .record-body-card .record-field-label {
   font-size: 16px !important;
 }
+
+/* ============================================================
+   73. 记录页按测量数据对齐设计稿（第一轮：尺寸与间距）
+   目标（dp）：04 顶栏46 媒体85 标题60 正文115 日期43 地点41 chips40 保存56
+              03 顶栏46 主图230 标题30 元信息14 chips32 正文16
+              15 顶栏46 日期37 地点36 chips40 保存56
+   ============================================================ */
+
+/* ---- 顶栏统一 46 ---- */
+#root .record-form-page .app-topbar,
+#root .rd-topbar {
+  height: 46px !important;
+  min-height: 46px !important;
+  max-height: 46px !important;
+  border-radius: 22px !important;
+  padding: 0 14px !important;
+  margin: 10px 20px 0 !important;
+  width: auto !important;
+}
+
+#root .record-form-page .app-topbar button:has(svg),
+#root .rd-topbar button:has(svg) {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+}
+
+#root .record-form-page .app-topbar button:has(svg) svg,
+#root .rd-topbar button:has(svg) svg {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+#root .record-form-page .app-topbar strong {
+  font-size: 23px !important;
+  font-family: var(--nl-font-display) !important;
+  font-weight: 600 !important;
+}
+
+#root .record-form-page .app-topbar button:not(:has(svg)) {
+  font-size: 17px !important;
+  color: #C86A24 !important;
+}
+
+/* ---- 04 媒体卡 85 ---- */
+#root .record-media-grid > button,
+#root .record-media-grid .media-add-tile {
+  min-height: 85px !important;
+  height: 85px !important;
+  border-radius: 20px !important;
+}
+
+#root .record-media-grid > button::after,
+#root .record-media-grid .media-add-tile::after {
+  inset: 8px !important;
+  border-radius: 15px !important;
+  border-color: rgba(232, 169, 108, 0.75) !important;
+}
+
+#root .record-media-grid > button svg,
+#root .record-media-grid .media-add-tile svg {
+  width: 30px !important;
+  height: 30px !important;
+  color: #C27F44 !important;
+}
+
+#root .record-media-grid > button span,
+#root .record-media-grid .media-add-tile span {
+  font-size: 15px !important;
+  color: #894F23 !important;
+}
+
+/* ---- 04 标题行 60 / 正文卡 115 ---- */
+#root .record-editor-title-row {
+  height: 60px !important;
+  min-height: 60px !important;
+  padding: 10px 18px 8px !important;
+  border-radius: 20px !important;
+}
+
+#root .record-title-input {
+  height: 34px !important;
+  font-size: 22px !important;
+}
+
+#root .record-body-card {
+  height: 115px !important;
+  min-height: 115px !important;
+  padding: 12px 18px 10px !important;
+  border-radius: 20px !important;
+}
+
+#root .record-body-input {
+  min-height: 64px !important;
+  height: 64px !important;
+  font-size: 16px !important;
+  line-height: 1.6 !important;
+}
+
+/* ---- 行高：日期 43 / 地点 41 ---- */
+#root .record-form-page form > section:has(.app-date-control) {
+  height: 43px !important;
+  min-height: 43px !important;
+  max-height: 43px !important;
+  padding: 0 16px !important;
+  border-radius: 20px !important;
+}
+
+#root .record-location-row {
+  height: 41px !important;
+  min-height: 41px !important;
+  max-height: 41px !important;
+  padding: 0 16px !important;
+  border-radius: 20px !important;
+}
+
+#root .record-form-page form > section:has(.app-date-control) svg,
+#root .record-location-row svg,
+#root .record-location-row .app-select svg {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+#root .app-date-time-input,
+#root .record-location-row input {
+  font-size: 16px !important;
+}
+
+/* ---- 间距：12 / 12 / 12 / 6 ---- */
+#root .record-form-page form {
+  row-gap: 12px !important;
+}
+
+#root .record-form-page form > section:has(.app-date-control) {
+  margin-bottom: 0 !important;
+}
+
+#root .record-form-page form > .record-details {
+  row-gap: 6px !important;
+  display: grid !important;
+}
+
+#root .record-details {
+  gap: 6px !important;
+}
+
+/* ---- chips 40 / 保存 56 ---- */
+#root .record-quick-tags {
+  gap: 8px !important;
+}
+
+#root .record-quick-tags button {
+  height: 40px !important;
+  padding: 0 18px !important;
+  font-size: 15px !important;
+}
+
+#root .record-inline-submit-button {
+  min-height: 56px !important;
+  height: 56px !important;
+  font-size: 18px !important;
+}
+
+/* ---- 03 详情：顶栏 46 已覆盖 ---- */
+#root .rd-hero {
+  height: 230px !important;
+  border-radius: 20px !important;
+  margin-top: 14px !important;
+}
+
+#root .rd-hero img {
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+#root .rd-title,
+#root .rd-body h1 {
+  font-size: 30px !important;
+  margin: 20px 0 8px !important;
+}
+
+#root .rd-meta {
+  font-size: 14px !important;
+  margin: 0 !important;
+}
+
+#root .rd-chips {
+  margin-top: 12px !important;
+  gap: 8px !important;
+}
+
+#root .rd-chip {
+  height: 32px !important;
+  padding: 0 14px !important;
+  font-size: 14px !important;
+}
+
+#root .rd-copy {
+  font-size: 16px !important;
+  line-height: 1.7 !important;
+  margin-top: 16px !important;
+}
+
+#root .rd-gallery {
+  gap: 8px !important;
+  margin-top: 16px !important;
+}
+
+#root .rd-gallery .nl-media-interaction {
+  border-radius: 16px !important;
+}
+
+/* 底部一条玻璃轨道包两个按钮 */
+#root .rd-actions {
+  background: rgba(255, 250, 244, 0.42) !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+  border-radius: 999px !important;
+  padding: 5px !important;
+  gap: 6px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.3) !important;
+  backdrop-filter: blur(18px) saturate(1.3) !important;
+}
+
+#root .rd-action-edit {
+  background: rgba(255, 252, 247, 0.92) !important;
+  border: none !important;
+  color: #3F2A1C !important;
+  box-shadow: none !important;
+}
+
+#root .rd-action-share {
+  background: linear-gradient(135deg, #F0A45C 0%, #E88A38 100%) !important;
+  border: none !important;
+  color: #FFFFFF !important;
+  box-shadow: none !important;
+}
+
+/* ---- 15 编辑：行高与保存按钮 ---- */
+#root .record-form-page.is-edit form > section:has(.app-date-control) {
+  height: 37px !important;
+  min-height: 37px !important;
+  max-height: 37px !important;
+}
+
+#root .record-form-page.is-edit .record-location-row {
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+}
+
+#root .record-form-page.is-edit form > .record-details {
+  row-gap: 6px !important;
+}
+
+#root .record-inline-submit.is-edit-inline .record-inline-submit-button,
+#root .record-form-page.is-edit .record-inline-submit-button {
+  min-height: 56px !important;
+  height: 56px !important;
+  background-image: linear-gradient(135deg, #B4652A 0%, #A9581B 100%) !important;
+  background-color: #A9581B !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 10px 22px rgba(169, 88, 27, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.28) !important;
+}
+
+/* 15 选中 chip：浅桃底 + 棕字 */
+#root .record-form-page.is-edit .record-quick-tags button[aria-pressed="true"],
+#root .record-form-page.is-edit .record-quick-tags button.is-on {
+  background: #F6C99A !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  color: #6B4A32 !important;
+  box-shadow: none !important;
+}
+
+/* 按钮→页脚 12 */
+#root .record-edit-sync-note {
+  margin: 12px 20px 0 !important;
+}
+
+/* ---- 通用色：描边与文字深度 ---- */
+#root .record-media-grid > button,
+#root .record-editor-title-row,
+#root .record-body-card,
+#root .record-form-page form > section:has(.app-date-control),
+#root .record-recorder,
+#root .record-location-row,
+#root .record-quick-tags,
+#root .rd-body {
+  border-color: rgba(255, 250, 239, 0.92) !important;
+}
+
+#root .record-field-label {
+  color: #513522 !important;
+}
+
+/* 74. 对齐第二轮：剩余 8 项 */
+/* 1) 04 地点行高度 */
+#root .record-form-page .record-location-row,
+#root .record-form-page form .record-location-row,
+#root .record-form-page form > .record-details .record-location-row {
+  height: 41px !important;
+  min-height: 41px !important;
+  max-height: 41px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* 2) 日期行与细节块之间 6（04/15 通用） */
+#root .record-form-page form > section:has(.app-date-control) {
+  margin-bottom: 6px !important;
+}
+
+#root .record-form-page form > .record-details {
+  margin-top: 0 !important;
+  row-gap: 6px !important;
+  gap: 6px !important;
+}
+
+#root .record-details {
+  gap: 6px !important;
+  row-gap: 6px !important;
+}
+
+#root .record-details > * {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* 3) 顶栏标题字号（h1 与 strong 都覆盖） */
+#root .record-form-page .app-topbar h1,
+#root .record-form-page .app-topbar strong,
+#root .record-form-page .app-topbar .app-topbar-title {
+  font-size: 23px !important;
+  font-family: var(--nl-font-display) !important;
+  font-weight: 600 !important;
+  color: #3F2A1C !important;
+}
+
+/* 4) 03 主图→标题 20 */
+#root .rd-body {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+#root .rd-title,
+#root .rd-body h1 {
+  margin-top: 20px !important;
+  margin-bottom: 8px !important;
+}
+
+/* 5) 03 标题→元信息 8 */
+#root .rd-meta {
+  margin-top: 8px !important;
+  margin-bottom: 0 !important;
+}
+
+/* 6) 03 元信息→chips 12 */
+#root .rd-chips {
+  margin-top: 12px !important;
+  padding-top: 0 !important;
+}
+
+/* 7) 15 按钮→页脚 */
+#root .record-edit-sync-note {
+  position: static !important;
+  margin: 12px 0 0 !important;
+  transform: none !important;
+}
+
+/* 75. 对齐第三轮：精确压掉残余间距（含 portal 节点） */
+
+/* 页脚说明可能在 portal 中，弱化 #root 限定 */
+.record-edit-sync-note,
+#root .record-edit-sync-note {
+  position: static !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  margin: 12px 0 0 !important;
+  transform: none !important;
+}
+
+/* 细节块：margin 与行间 gap 归零，只留 6 */
+#root .record-form-page.is-edit form > .record-details,
+#root .record-form-page.is-create form > .record-details,
+#root .record-form-page form > .record-details {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  padding-top: 0 !important;
+  row-gap: 6px !important;
+  gap: 6px !important;
+}
+
+#root .record-form-page.is-edit .record-details > .record-location-row {
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+}
+
+#root .record-form-page.is-edit .record-details > section,
+#root .record-form-page.is-create .record-details > section {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* 03：标题→元信息 8，元信息→chips 12 */
+#root .rd-title,
+#root .rd-body h1 {
+  margin-bottom: 0 !important;
+}
+
+#root .rd-meta {
+  margin-top: 8px !important;
+  margin-bottom: 0 !important;
+}
+
+#root .rd-chips {
+  margin-top: 12px !important;
+  padding: 0 !important;
+}
+
+#root .rd-body > * {
+  margin-top: 0 !important;
+}
+
+/* 76. 对齐第四轮：用 ID 级选择器压过页面原有 !important */
+
+/* 页脚说明：原来是 fixed 且 order 21，改为流内并排到最后 */
+#root #record-form > .record-edit-sync-note,
+#record-form > .record-edit-sync-note {
+  position: static !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  top: auto !important;
+  order: 99 !important;
+  margin: 12px 0 0 !important;
+  transform: none !important;
+}
+
+/* 日期行→细节块 6：清掉空占位 + 负补偿 row-gap */
+#root .record-form-page form > .record-details {
+  margin-top: -6px !important;
+  padding-top: 0 !important;
+  row-gap: 0 !important;
+  gap: 0 !important;
+}
+
+#root .record-form-page form > .record-details > div:not(:has(*)) {
+  display: none !important;
+}
+
+#root .record-form-page form > .record-details > section {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* 15 地点行 36（子选择器，避免被 section 内层级遮挡） */
+#root .record-form-page.is-edit .record-details .record-location-row,
+#root .record-form-page.is-edit form .record-location-row {
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+}
+
+/* 03 标题→元信息 8（去掉行高残留） */
+#root .rd-title,
+#root .rd-body h1 {
+  line-height: 1.1 !important;
+  margin-bottom: 0 !important;
+}
+
+#root .rd-meta {
+  margin-top: 8px !important;
+}
+
+/* 77. 对齐第五轮：逐项微调（以测量值为准） */
+
+/* 日期行→细节块：当前 24，目标 6.4 → 再压 18 */
+#root .record-form-page form > .record-details {
+  margin-top: -18px !important;
+}
+
+/* 详情页 body：取消 grid 行距，标题→元信息回到 8 */
+#root .rd-body {
+  display: block !important;
+  row-gap: 0 !important;
+  gap: 0 !important;
+}
+
+#root .rd-title,
+#root .rd-body h1 {
+  margin-bottom: 0 !important;
+}
+
+#root .rd-meta {
+  margin-top: 8px !important;
+}
+
+/* 15 页脚：当前 24，目标 12 → 去掉多余 margin */
+#root #record-form > .record-edit-sync-note,
+#record-form > .record-edit-sync-note {
+  margin-top: 0 !important;
+}
+
+/* 78. 对齐第六轮：用 #record-form ID 提升优先级（此前被同级 !important 覆盖） */
+#root #record-form > .record-details {
+  margin-top: -12px !important;
+}
+
+#root #record-form > section:has(.app-date-control) {
+  margin-bottom: 0 !important;
+}
+
+#root #record-form {
+  row-gap: 12px !important;
+}
+
+/* 03 元信息→chips 12（覆盖 .rd-body > * 的 0） */
+#root .rd-body > .rd-chips,
+#root .rd-body > .rd-chips + * {
+  margin-top: 12px !important;
+}
+
+/* 79. 日期→地点 6.4dp 微调 */
+#root #record-form > .record-details {
+  margin-top: -12px !important;
+}
+
+/* 80. 视觉修正（保持尺寸指标不变）：标题重叠、正文溢出、底部空白、卡片质感 */
+
+/* 标题行：标签与输入分行排布，不重叠 */
+#root .record-editor-title-row {
+  display: grid !important;
+  grid-template-rows: auto auto !important;
+  align-content: center !important;
+  row-gap: 2px !important;
+  height: 60px !important;
+  min-height: 60px !important;
+  padding: 8px 18px !important;
+}
+
+#root .record-editor-title-row .record-field-label {
+  font-size: 14px !important;
+  line-height: 16px !important;
+  height: 16px !important;
+}
+
+#root .record-title-input {
+  height: 30px !important;
+  min-height: 30px !important;
+  font-size: 24px !important;
+  line-height: 30px !important;
+  padding: 0 !important;
+}
+
+/* 正文卡：标签 16 + 文本 2 行，卡片 115 不再溢出 */
+#root .record-body-card {
+  height: 115px !important;
+  min-height: 115px !important;
+  padding: 10px 18px 8px !important;
+  display: grid !important;
+  grid-template-rows: auto minmax(0, 1fr) auto !important;
+  row-gap: 2px !important;
+  overflow: hidden !important;
+}
+
+#root .record-body-card .record-field-label {
+  font-size: 15px !important;
+  line-height: 18px !important;
+}
+
+#root .record-body-input {
+  height: auto !important;
+  min-height: 0 !important;
+  font-size: 15px !important;
+  line-height: 1.55 !important;
+  overflow: hidden !important;
+}
+
+#root .record-char-count {
+  font-size: 11px !important;
+  line-height: 12px !important;
+  text-align: right !important;
+}
+
+/* 媒体卡：图标与虚线回到设计稿比例 */
+#root .record-media-grid > button,
+#root .record-media-grid .media-add-tile {
+  justify-content: center !important;
+  align-content: center !important;
+  gap: 4px !important;
+}
+
+#root .record-media-grid > button svg,
+#root .record-media-grid .media-add-tile svg {
+  width: 32px !important;
+  height: 32px !important;
+}
+
+#root .record-media-grid > button::after,
+#root .record-media-grid .media-add-tile::after {
+  inset: 10px !important;
+}
+
+#root .record-media-grid > button span,
+#root .record-media-grid .media-add-tile span {
+  font-size: 16px !important;
+}
+
+/* 页面底部空白 */
+#root .record-form-page {
+  min-height: 0 !important;
+  padding-bottom: 12px !important;
+}
+
+#root .app-main-scroll:has(.record-form-page) {
+  padding-bottom: 0 !important;
+}
+
+/* 卡片质感：底色更接近设计稿的“近白” */
+#root .record-media-grid > button,
+#root .record-editor-title-row,
+#root .record-body-card,
+#root .record-form-page form > section:has(.app-date-control),
+#root .record-recorder,
+#root .record-location-row {
+  background-color: rgba(255, 251, 246, 0.55) !important;
+  background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 246, 238, 0.18) 100%) !important;
+  border-color: rgba(255, 250, 239, 0.95) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85), 0 6px 16px rgba(146, 88, 44, 0.07) !important;
+}
+
+/* 81. 修正「标题」伪元素与输入的重叠，正文卡内裁切 */
+#root .record-editor-title-row {
+  position: relative !important;
+  display: block !important;
+  height: 60px !important;
+  min-height: 60px !important;
+  padding: 18px 18px 8px !important;
+  align-content: initial !important;
+}
+
+#root .record-editor-title-row::before {
+  top: 4px !important;
+  left: 18px !important;
+  font-size: 13px !important;
+  line-height: 16px !important;
+  color: #6B4A32 !important;
+}
+
+#root .record-title-input {
+  display: block !important;
+  width: 100% !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  font-size: 24px !important;
+  line-height: 32px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* 正文文本区裁切在卡片内 */
+#root .record-body-input {
+  height: 62px !important;
+  min-height: 62px !important;
+  max-height: 62px !important;
+  overflow: hidden !important;
+  font-size: 15px !important;
+  line-height: 1.5 !important;
+}
+
+#root .record-body-card {
+  overflow: hidden !important;
+}
+
+/* 页面高度：内容决定，避免底部大空白 */
+#root .record-form-page {
+  display: block !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  padding-bottom: 12px !important;
+}
+
+#root .app-main-scroll:has(.record-form-page) {
+  min-height: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* 82. 新建页：按钮压到视口底部，消除页面尾巴空白 */
+#root .record-form-page {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: calc(100dvh - 12px) !important;
+  box-sizing: border-box !important;
+}
+
+#root .record-form-page > form {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+  row-gap: 12px !important;
+}
+
+#root #record-form > .record-inline-submit {
+  margin-top: auto !important;
+}
+
+#root #record-form > .record-details {
+  margin-bottom: 0 !important;
+}
+
+/* 正文占位两行，与设计稿一致 */
+#root .record-body-input::placeholder {
+  white-space: pre-line !important;
+  font-size: 15px !important;
+  color: #C3AC9B !important;
+}
+
+/* 83. 卡片边界可见度（设计稿是细白描边 + 极浅投影） */
+#root .record-media-grid > button,
+#root .record-media-grid .media-add-tile,
+#root .record-editor-title-row,
+#root .record-body-card,
+#root .record-form-page form > section:has(.app-date-control),
+#root .record-recorder,
+#root .record-location-row {
+  background-color: rgba(255, 252, 248, 0.62) !important;
+  background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 246, 238, 0.22) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  box-shadow: 0 3px 10px rgba(146, 88, 44, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+/* 标题卡与正文卡之间留出可见缝隙 */
+#root .record-editor-card {
+  gap: 10px !important;
+}
+
+/* 84. 编辑页铅笔按钮收进标题卡内 */
+#root .record-editor-title-row {
+  position: relative !important;
+}
+
+#root .record-title-pencil {
+  position: absolute !important;
+  right: 18px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  margin: 0 !important;
+  color: #6B4A32 !important;
+}
+
+/* 标题输入右侧给铅笔留位 */
+#root .record-form-page.is-edit .record-title-input {
+  padding-right: 36px !important;
+}
+
+/* 85. 04 媒体区：一张全宽卡 + 卡内麦克风圆钮（对齐设计稿单卡） */
+#root .record-media-grid {
+  grid-template-columns: 1fr !important;
+  gap: 0 !important;
+}
+
+#root .record-media-single {
+  position: relative;
+  display: block;
+}
+
+#root .record-media-single > button:first-child {
+  width: 100% !important;
+}
+
+#root .record-mic-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.62);
+  color: #C86A24;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(146, 88, 44, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3);
+  backdrop-filter: blur(12px) saturate(1.3);
+}
+
+#root .record-mic-btn.is-recording {
+  background: var(--nl-danger-soft);
+  border-color: var(--nl-danger-line);
+  color: var(--nl-danger);
+}
+
+/* 媒体卡内文字保持居中，给右侧麦克风留位 */
+#root .record-media-single > button:first-child {
+  padding-right: 64px !important;
+}
+
+/* 保存按钮回到内容流（设计稿紧接 chips） */
+#root #record-form > .record-inline-submit {
+  margin-top: 12px !important;
+}
+
+#root .record-form-page {
+  min-height: 0 !important;
+}
+
+/* 86. 单卡媒体区：文字/图标选择器更新，隐藏多余的「更多方式」 */
+#root .record-media-grid .record-media-single > button svg {
+  width: 32px !important;
+  height: 32px !important;
+  color: #C27F44 !important;
+}
+
+#root .record-media-grid .record-media-single > button span {
+  font-size: 17px !important;
+  color: #894F23 !important;
+  font-family: var(--nl-font-display) !important;
+}
+
+#root .record-more-toggle {
+  display: none !important;
+}
+
+#root .record-media-section {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+/* 87. 单卡媒体区固定高度 85，消除包装层多出的 39dp */
+#root .record-media-grid,
+#root .record-media-grid .record-media-single {
+  height: 85px !important;
+  min-height: 85px !important;
+  max-height: 85px !important;
+}
+
+#root .record-media-grid .record-media-single > button:first-child {
+  height: 85px !important;
+  min-height: 85px !important;
+  max-height: 85px !important;
+  padding: 0 64px 0 18px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+}
+
+/* 88. 媒体卡内麦克风：去白底，做纯图标次级动作 */
+#root .record-mic-btn {
+  width: 40px !important;
+  height: 40px !important;
+  right: 14px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #B06A2C !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  opacity: 0.9;
+}
+
+#root .record-mic-btn svg {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+#root .record-mic-btn.is-recording {
+  color: var(--nl-danger) !important;
+  background: rgba(255, 255, 255, 0.5) !important;
+}
+
+#root .record-media-grid .record-media-single > button:first-child {
+  padding-right: 60px !important;
+}
+
+/* 89. 麦克风层级 + 卡片边界最终可读性 */
+#root .record-mic-btn {
+  z-index: 3 !important;
+}
+
+#root .record-media-grid .record-media-single > button::after {
+  z-index: 1;
+}
+
+#root .record-editor-title-row,
+#root .record-body-card,
+#root .record-form-page form > section:has(.app-date-control),
+#root .record-location-row,
+#root .record-media-grid .record-media-single > button:first-child {
+  border-color: rgba(255, 255, 255, 1) !important;
+  box-shadow: 0 2px 8px rgba(146, 88, 44, 0.07), inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+}
+
+/* 标题卡与正文卡之间加一道极浅的阴影底，视觉上分层 */
+#root .record-editor-card {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+#root .record-editor-card > .record-body-card {
+  margin-top: 10px !important;
+}
+
+/* 90. 麦克风按钮最终规格（高优先级 + SVG 尺寸修正） */
+#root .record-media-single .record-mic-btn {
+  position: absolute !important;
+  right: 16px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 44px !important;
+  min-width: 44px !important;
+  max-width: 44px !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  background: rgba(255, 255, 255, 0.55) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 4px 12px rgba(146, 88, 44, 0.10) !important;
+  display: grid !important;
+  place-items: center !important;
+  color: #B06A2C !important;
+  opacity: 1 !important;
+  z-index: 3 !important;
+}
+
+#root .record-media-single .record-mic-btn svg {
+  width: 22px !important;
+  min-width: 22px !important;
+  max-width: 22px !important;
+  height: 22px !important;
+  min-height: 22px !important;
+  stroke: #B06A2C !important;
+  color: #B06A2C !important;
+  display: block !important;
+}
+
+/* 91. 麦克风按钮不再被媒体卡按钮规则命中 */
+#root .record-media-grid .record-media-single > button:first-child {
+  height: 85px !important;
+  min-height: 85px !important;
+  max-height: 85px !important;
+  padding: 0 64px 0 18px !important;
+}
+
+#root .record-media-single .record-mic-btn {
+  width: 44px !important;
+  max-width: 44px !important;
+  height: 44px !important;
+  max-height: 44px !important;
+}

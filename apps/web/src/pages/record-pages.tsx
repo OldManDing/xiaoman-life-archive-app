@@ -2641,17 +2641,19 @@ const RecordForm = ({
                     <MediaActionButton icon={<FileAudio size={17} strokeWidth={2.2} />} label="上传语音" displayLabel="上传语音" onClick={() => triggerMediaInput(audioLibraryInputRef.current)} disabled={uploading || audioRecording} />
                   </>
                 ) : mode === 'create' ? (
-                  <>
-                    <MediaActionButton icon={<CameraIcon size={22} strokeWidth={1.9} />} label="添加照片" displayLabel="添加照片" onClick={() => void openNativeGalleryImages()} disabled={uploading || audioRecording} />
-                    <MediaActionButton
-                      icon={audioRecording ? <Square size={18} strokeWidth={2.4} fill="currentColor" /> : <Mic size={20} strokeWidth={2} />}
-                      label={audioRecording ? '停止录音' : '按住说话'}
-                      displayLabel={audioRecording ? `停止 ${formatRecordingTime(audioRecordingSeconds)}` : '按住说话'}
+                  <div className="record-media-single">
+                    <MediaActionButton icon={<CameraIcon size={26} strokeWidth={1.8} />} label="添加照片" displayLabel="添加照片" onClick={() => void openNativeGalleryImages()} disabled={uploading || audioRecording} />
+                    <button
+                      type="button"
+                      className={audioRecording ? 'record-mic-btn is-recording' : 'record-mic-btn'}
+                      aria-label={audioRecording ? '停止录音' : '按住说话'}
+                      aria-pressed={audioRecording}
                       onClick={() => (audioRecording ? stopAudioRecording() : void startAudioRecording())}
                       disabled={uploading}
-                      style={audioRecording ? { color: 'var(--nl-danger)', background: 'var(--nl-danger-soft)', border: '1.5px dashed var(--nl-danger-line)' } : undefined}
-                    />
-                  </>
+                    >
+                      {audioRecording ? <Square size={16} strokeWidth={2.4} fill="currentColor" /> : <Mic size={18} strokeWidth={2} />}
+                    </button>
+                  </div>
                 ) : (
                   <>
                     <MediaActionButton icon={<CameraIcon size={18} strokeWidth={2.2} />} label="拍照记录" displayLabel="拍照" onClick={() => void openNativePhotoCapture()} disabled={uploading || audioRecording} />
@@ -2802,7 +2804,7 @@ const RecordForm = ({
                   color: 'var(--nl-muted-strong)',
                   boxSizing: 'border-box',
                 }}
-                placeholder={mode === "create" ? "写下这一刻的心情吧…比如：他学会了走路，真棒！" : "正文"}
+                placeholder={mode === "create" ? "写下这一刻的心情吧…\n比如：他学会了走路，真棒！" : "正文"}
               value={form.content_text}
               onChange={(event) => {
                 setError(null);
