@@ -3725,3 +3725,110 @@
   height: 44px !important;
   max-height: 44px !important;
 }
+
+/* ============================================================
+   92. 收尾三项：橙色降饱和、页面余白均分、chip 选中态
+   ============================================================ */
+
+/* 1) 橙色回到设计稿的柔和区间 #F2A45C → #E88A38 → #DE7C2B */
+#root .record-inline-submit-button,
+#root .record-form-page .app-topbar button:not(:has(svg)) {
+  background-image: linear-gradient(135deg, #F2A45C 0%, #E88A38 55%, #DE7C2B 100%) !important;
+  background-color: #E88A38 !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 10px 22px rgba(222, 124, 43, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
+}
+
+#root .record-form-page .app-topbar button:not(:has(svg)) {
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: #D07A2E !important;
+}
+
+#root .record-quick-tags button[aria-pressed="true"],
+#root .record-quick-tags button.is-on {
+  background-image: linear-gradient(135deg, #F2A45C 0%, #E88A38 100%) !important;
+  background-color: #E88A38 !important;
+  border-color: transparent !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 6px 14px rgba(232, 138, 56, 0.24) !important;
+}
+
+#root .record-media-grid .record-media-single > button svg,
+#root .record-mic-btn {
+  color: #C07B3C !important;
+}
+
+#root .record-media-grid .record-media-single > button span {
+  color: #8A5223 !important;
+}
+
+/* 2) 余白均分：表单在剩余空间内垂直居中，避免底部一大块空白 */
+#root .record-form-page {
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: calc(100dvh - 12px) !important;
+  box-sizing: border-box !important;
+}
+
+#root .record-form-page > form {
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  flex: 1 1 auto !important;
+  row-gap: 12px !important;
+}
+
+/* 3) chip 选中态（新建=橙底白字，编辑=浅桃底棕字，见前一条规则） */
+#root .record-quick-tags button {
+  transition: background-color 0.16s ease, color 0.16s ease, box-shadow 0.16s ease;
+}
+
+/* 93. 余白处理改法：内容贴顶、主按钮吸底（不再整体居中产生顶部大空白） */
+#root .record-form-page > form {
+  justify-content: flex-start !important;
+}
+
+#root #record-form > .record-inline-submit {
+  margin-top: auto !important;
+}
+
+#root .record-form-page {
+  min-height: calc(100dvh - 12px) !important;
+}
+
+/* 94. 编辑页媒体区顶部内边距归零（此前多出 97dp 空白） */
+#root .record-form-page .record-media-section {
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin-top: 0 !important;
+}
+
+#root .record-form-page .record-media-previews {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+#root .record-form-page.is-edit .record-media-section {
+  height: 92px !important;
+  min-height: 92px !important;
+}
+
+/* 95. 编辑页媒体区：取消固定高度，只用 auto + 零内边距 */
+#root .record-form-page.is-edit .record-media-section {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+#root .record-form-page.is-edit .record-media-previews {
+  height: 92px !important;
+  min-height: 92px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
