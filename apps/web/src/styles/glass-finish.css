@@ -1701,3 +1701,145 @@
 #root .members-invite-cta {
   margin-top: 12px !important;
 }
+
+/* ============================================================
+   48. 记录页第五轮：纵向节奏与控件形态
+   ============================================================ */
+
+/* 统一 12px 节奏（媒体区/编辑卡/日期/细节/提交条） */
+#root .record-media-section { margin-bottom: 12px !important; }
+#root .record-editor-card { margin-top: 12px !important; }
+#root .record-form-page > section:has(.app-date-control) { margin-top: 12px !important; }
+#root .record-form-page > section + .record-details { margin-top: 12px !important; }
+#root .record-details { gap: 8px !important; }
+#root .record-inline-submit { margin-top: 12px !important; }
+
+/* 日期行：高度 48、圆角 18，与其他行一致 */
+#root .record-form-page > section:has(.app-date-control) {
+  height: 48px !important;
+  min-height: 48px !important;
+  padding: 0 16px !important;
+}
+
+#root .app-date-time-input,
+#root .record-form-page .app-date-time-input,
+#root .record-form-page .app-date-control {
+  border-radius: 18px !important;
+  height: 46px !important;
+}
+
+/* 标题输入：去掉内层粉色底，与正文一致 */
+#root .record-title-input {
+  background: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+#root .record-body-input {
+  background: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding-left: 0 !important;
+}
+
+/* 记录人文字左缘与日期行文字对齐 */
+#root .record-recorder {
+  padding-left: 16px !important;
+}
+
+#root .record-recorder img,
+#root .record-recorder .ref-avatar {
+  width: 40px !important;
+  height: 40px !important;
+}
+
+#root .record-recorder-row {
+  padding-left: 0 !important;
+}
+
+/* 媒体卡高度 108，两卡都更紧凑 */
+#root .record-media-grid > button,
+#root .record-media-grid .media-add-tile {
+  min-height: 112px !important;
+}
+
+/* 提交条：按钮 56 + 文案 16，整体 76，避免 80 过高 */
+#root .record-inline-submit { gap: 4px !important; }
+#root .record-inline-submit-button { min-height: 54px !important; }
+#root .record-inline-submit > p { font-size: 12px !important; line-height: 16px !important; }
+
+/* 49. 记录页表单：父容器修正（date section 在 form 内，不在 page 下） */
+#root .record-form-page form {
+  row-gap: 12px !important;
+  column-gap: 0 !important;
+}
+
+#root .record-form-page form > section:has(.app-date-control) {
+  height: 48px !important;
+  min-height: 48px !important;
+  max-height: 48px !important;
+  padding: 0 16px !important;
+  border-radius: 22px !important;
+  margin: 12px 0 !important;
+}
+
+#root .record-form-page form > section:has(.app-date-control) .app-date-control {
+  height: 46px !important;
+  min-height: 46px !important;
+}
+
+/* 底部重复留白：页面自身 padding 与主滚动区 padding 叠加了 300px 空白 */
+#root .record-form-page {
+  padding-bottom: 8px !important;
+}
+
+#root .app-main-scroll:has(.record-form-page) {
+  padding-bottom: 0 !important;
+}
+
+/* 编辑页同样处理 */
+#root .record-form-page.is-edit {
+  padding-bottom: 8px !important;
+}
+
+/* 50. 记录页表单：只保留 12px row-gap，清掉各块自带 margin */
+#root .record-form-page form > * {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+#root .record-media-section,
+#root .record-editor-card,
+#root .record-details,
+#root .record-inline-submit {
+  margin: 0 !important;
+}
+
+#root .record-form-page form {
+  row-gap: 12px !important;
+}
+
+/* 51. 记录页表单子块 margin 归零（优先级足够高，覆盖各页 !important） */
+#root .record-form-page form > section,
+#root .record-form-page form > div,
+#root .record-form-page form > .record-details,
+#root .record-form-page form > .record-editor-card,
+#root .record-form-page form > .record-media-section,
+#root .record-form-page form > .record-inline-submit {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+#root .record-editor-card > * {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+#root .record-editor-card {
+  display: grid !important;
+  row-gap: 8px !important;
+}
