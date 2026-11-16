@@ -1957,3 +1957,406 @@
 #root .app-page-shell:has(.rd-actions) {
   padding-bottom: 24px !important;
 }
+
+/* ============================================================
+   57. 记录页玻璃统一：所有盒子走同一套磨砂配方
+   问题：媒体卡/日期行/记录人/地点/标签是"实心奶油块"，无模糊
+   ============================================================ */
+
+/* 通用玻璃配方（记录页全部盒子） */
+#root .record-media-grid > button,
+#root .record-media-grid .media-add-tile,
+#root .record-form-page form > section:has(.app-date-control),
+#root .record-recorder,
+#root .record-location-row,
+#root .record-quick-tags,
+#root .record-media-previews .nl-media-interaction,
+#root .record-media-previews .media-add-tile {
+  background-color: rgba(255, 246, 238, 0.34) !important;
+  background-image:
+    linear-gradient(118deg, rgba(255, 255, 255, 0) 32%, rgba(255, 255, 255, 0.28) 45%, rgba(255, 255, 255, 0) 58%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 244, 234, 0.18) 45%, rgba(255, 236, 224, 0.28) 100%) !important;
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: rgba(255, 255, 255, 0.72) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.35),
+    0 10px 26px rgba(146, 88, 44, 0.10) !important;
+  -webkit-backdrop-filter: blur(22px) saturate(1.45) brightness(1.02) !important;
+  backdrop-filter: blur(22px) saturate(1.45) brightness(1.02) !important;
+}
+
+/* 媒体卡保留虚线，但同样透明 + 磨砂 */
+#root .record-media-grid > button,
+#root .record-media-grid .media-add-tile,
+#root .record-media-previews .media-add-tile {
+  border-style: dashed !important;
+  border-color: rgba(190, 132, 82, 0.42) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 8px 22px rgba(146, 88, 44, 0.08) !important;
+}
+
+/* 标签行里的 chip 也改玻璃，不再是白底细线 */
+#root .record-quick-tags button {
+  background-color: rgba(255, 252, 248, 0.42) !important;
+  background-image: linear-gradient(150deg, rgba(255, 255, 255, 0.55), rgba(255, 244, 234, 0.16)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 4px 12px rgba(146, 88, 44, 0.08) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(1.4) !important;
+  backdrop-filter: blur(14px) saturate(1.4) !important;
+  color: #5a4433 !important;
+}
+
+#root .record-quick-tags button[aria-pressed="true"],
+#root .record-quick-tags button.is-on {
+  background-image: linear-gradient(135deg, #FBA24E 0%, #F99035 100%) !important;
+  border-color: rgba(255, 255, 255, 0.45) !important;
+  color: #fff !important;
+  box-shadow: 0 6px 16px rgba(238, 128, 32, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.45) !important;
+}
+
+/* 顶栏返回键：玻璃圆钮，与其它盒子同一套质感 */
+#root .record-form-page .app-topbar button,
+#root .rd-topbar button {
+  background-color: rgba(255, 255, 255, 0.38) !important;
+  background-image: linear-gradient(150deg, rgba(255, 255, 255, 0.55), rgba(255, 246, 238, 0.12)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.82) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 6px 16px rgba(146, 88, 44, 0.10) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.4) !important;
+  backdrop-filter: blur(16px) saturate(1.4) !important;
+  color: #4a3527 !important;
+}
+
+/* 编辑页缩略图容器也统一玻璃边框 */
+#root .record-media-previews {
+  border-radius: 22px !important;
+}
+
+/* 58. 修正玻璃配方误伤与顶栏/媒体区衔接 */
+#root .record-form-page .app-topbar button,
+#root .rd-topbar button {
+  background-color: rgba(255, 255, 255, 0.38) !important;
+  background-image: linear-gradient(150deg, rgba(255, 255, 255, 0.55), rgba(255, 246, 238, 0.12)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.82) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 6px 16px rgba(146, 88, 44, 0.10) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.4) !important;
+  backdrop-filter: blur(16px) saturate(1.4) !important;
+  color: #4a3527 !important;
+}
+
+/* 文字型动作（保存/草稿）去掉盒子外观 */
+#root .record-form-page .app-topbar button:not(:has(svg)),
+#root .rd-topbar button:not(:has(svg)) {
+  background: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  padding: 0 4px !important;
+}
+
+/* 顶栏是 page 直接子元素，form 需要与它留出 12 间距 */
+#root .record-form-page > form {
+  margin-top: 12px !important;
+}
+
+/* 媒体区容器透明，避免右侧露出白色竖条 */
+#root .record-media-section {
+  background: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+/* ============================================================
+   59. 编辑记录页（15）：返回键、缩略图、角标、间距
+   ============================================================ */
+
+/* 返回键：44×44 玻璃圆钮 */
+#root .record-form-page .app-topbar button:has(svg),
+#root .rd-topbar button:has(svg) {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  padding: 0 !important;
+  border-radius: 999px !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+/* 缩略图行：四等分、间距 8、正方形 */
+#root .record-media-previews {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 8px !important;
+  align-items: start !important;
+}
+
+#root .record-media-previews .nl-media-interaction,
+#root .record-media-previews .media-add-tile {
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 1 / 1 !important;
+  border-radius: 16px !important;
+}
+
+/* 删除角标：小胶囊，收进图内 */
+#root .record-media-previews .media-overlay-btn {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 0 !important;
+  top: 4px !important;
+  right: 4px !important;
+  padding: 0 !important;
+  border-radius: 999px !important;
+  font-size: 12px !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+/* 标题输入框去边框（与正文一致） */
+#root .record-form-page.is-edit .record-title-input,
+#root .record-form-page input.record-title-input {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  background-image: none !important;
+}
+
+/* 日期行与地点行间距 12 */
+#root .record-form-page form > section + .record-details,
+#root .record-form-page .record-details {
+  margin-top: 12px !important;
+}
+
+/* 去掉保存按钮上方多余分隔线 */
+#root .record-details {
+  border-bottom: none !important;
+}
+
+#root .record-quick-tags {
+  border-bottom: none !important;
+}
+
+/* 保存按钮与同步说明贴紧，消除底部 300px 空白 */
+#root .record-inline-submit.is-edit-inline {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+#root .record-edit-sync-note {
+  margin: 12px 20px 20px !important;
+  padding: 0 !important;
+}
+
+/* 60. 编辑页缩略图角标：查看按钮移除视觉干扰，删除键收进右下 */
+#root .record-media-previews .media-view-btn {
+  display: none !important;
+}
+
+#root .record-media-previews .media-remove-btn {
+  top: 6px !important;
+  right: 6px !important;
+  width: 26px !important;
+  height: 26px !important;
+  min-width: 26px !important;
+  min-height: 26px !important;
+  border-radius: 999px !important;
+  padding: 0 !important;
+  font-size: 14px !important;
+  line-height: 1 !important;
+  display: grid !important;
+  place-items: center !important;
+  background: rgba(255, 255, 255, 0.86) !important;
+  color: #4a3527 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* 缩略图容器裁剪，角标不越界 */
+#root .record-media-previews .nl-media-interaction {
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+/* 正文输入去掉首行缩进 */
+#root .record-body-input {
+  text-indent: 0 !important;
+  padding-top: 4px !important;
+}
+
+/* 日期行与地点行之间 12 */
+#root .record-form-page form > section:has(.app-date-control) + .record-details {
+  margin-top: 12px !important;
+}
+
+/* 编辑页底部收口：保存按钮后立即接同步说明 */
+#root .record-form-page.is-edit form {
+  padding-bottom: 0 !important;
+}
+
+#root .record-edit-sync-note {
+  margin-top: 12px !important;
+}
+
+/* 61. 编辑页：正文左缩进与底部说明定位 */
+#root .record-form-page .record-body-input,
+#root .record-form-page textarea.record-body-input {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+#root .record-edit-sync-note {
+  position: static !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  margin: 12px 0 8px !important;
+  text-align: center !important;
+}
+
+#root .record-form-page.is-edit {
+  min-height: 0 !important;
+}
+
+/* 62. 编辑页正文：与标注同左缘、去掉首行空行 */
+#root .record-form-page .record-body-input {
+  padding: 0 !important;
+  margin: 0 !important;
+  line-height: 1.55 !important;
+  min-height: 96px !important;
+}
+
+#root .record-form-page .record-body-card {
+  gap: 6px !important;
+  display: grid !important;
+  align-content: start !important;
+}
+
+/* 63. 全局状态弹窗：玻璃卡片 + 橙色胶囊按钮（原为白底 + 深棕 8px 圆角） */
+#root div[role="dialog"] {
+  background: rgba(58, 34, 20, 0.34) !important;
+  -webkit-backdrop-filter: blur(6px) saturate(1.2) !important;
+  backdrop-filter: blur(6px) saturate(1.2) !important;
+}
+
+#root div[role="dialog"] > section {
+  border-radius: 22px !important;
+  background-color: rgba(255, 250, 246, 0.84) !important;
+  background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.6), rgba(255, 244, 234, 0.3)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.92) !important;
+  box-shadow: 0 26px 60px -12px rgba(80, 44, 18, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(1.5) !important;
+  backdrop-filter: blur(26px) saturate(1.5) !important;
+  padding: 20px !important;
+}
+
+#root div[role="dialog"] > section > div > span {
+  border-radius: 14px !important;
+}
+
+#root div[role="dialog"] > section button {
+  border-radius: 999px !important;
+  border: none !important;
+  min-height: 48px !important;
+  font-size: 16px !important;
+  font-weight: 620 !important;
+  background-image: linear-gradient(135deg, #FBA24E 0%, #F99035 55%, #EE8020 100%) !important;
+  background-color: #F99035 !important;
+  color: #fff !important;
+  box-shadow: 0 12px 26px rgba(238, 128, 32, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.45) !important;
+}
+
+/* 64. 记录页玻璃收薄：顶栏图标钮/编辑按钮/照片 chip 不要实心白 */
+#root .record-form-page .app-topbar button:has(svg),
+#root .rd-topbar button:has(svg) {
+  background-color: rgba(255, 255, 255, 0.16) !important;
+  background-image: linear-gradient(150deg, rgba(255, 255, 255, 0.28), rgba(255, 246, 238, 0.06)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.55) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65) !important;
+}
+
+#root .rd-action-edit {
+  background-color: rgba(255, 255, 255, 0.34) !important;
+  background-image: linear-gradient(150deg, rgba(255, 255, 255, 0.45), rgba(255, 246, 238, 0.10)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 10px 22px rgba(146, 88, 44, 0.10) !important;
+}
+
+#root .rd-chip:not(.is-plain):not(.is-milestone):not(.is-amber) {
+  background-color: rgba(255, 252, 248, 0.26) !important;
+  border-color: rgba(255, 255, 255, 0.55) !important;
+}
+
+/* 65. 记录页顶栏图标去白盘（设计稿只有图标，无圆底） */
+#root .record-form-page .app-topbar button:has(svg),
+#root .rd-topbar button:has(svg) {
+  background: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  color: #3f2f22 !important;
+}
+
+#root .record-form-page .app-topbar button:has(svg):active,
+#root .rd-topbar button:has(svg):active {
+  background: rgba(255, 255, 255, 0.22) !important;
+}
+
+/* 66. 编辑页收尾：正文左缘、缩略图等高、底部间距 */
+#root .record-form-page.is-edit textarea.record-body-input {
+  padding: 0 !important;
+  text-indent: 0 !important;
+  line-height: 1.6 !important;
+}
+
+#root .record-form-page.is-edit .record-body-card {
+  display: grid !important;
+  align-content: start !important;
+  gap: 6px !important;
+}
+
+#root .record-media-previews .nl-media-interaction,
+#root .record-media-previews .media-add-tile {
+  height: 92px !important;
+  aspect-ratio: auto !important;
+}
+
+#root .record-form-page.is-edit .record-details {
+  margin-top: 12px !important;
+  gap: 10px !important;
+}
+
+#root .record-form-page.is-edit .record-inline-submit {
+  margin-top: 12px !important;
+}
+
+#root .record-edit-sync-note {
+  margin: 10px 0 0 !important;
+}
+
+/* 67. 编辑页/新建页：日期块与细节块之间只保留 12px */
+#root .record-form-page form > section:has(.app-date-control) {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+#root .record-form-page form > .record-details {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+#root .record-form-page form > .record-inline-submit {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+#root .record-form-page form {
+  row-gap: 12px !important;
+}
