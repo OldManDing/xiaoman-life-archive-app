@@ -2494,8 +2494,8 @@ const RecordForm = ({
                 <span style={{ color: 'var(--nl-ink)', fontSize: '15px', fontWeight: 680 }}>记录方式</span>
                 <span style={{ color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 520 }}>{recordTypeOptions.find((option) => option.value === form.record_type)?.label ?? '文字'}</span>
               </div>
-              <div role="group" aria-label="选择记录方式" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '8px' }}>
-                {recordTypeOptions.map((option) => {
+              <div role="group" aria-label="选择记录方式" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '8px' }}>
+                {recordTypeOptions.filter((option) => option.value !== 'audio').map((option) => {
                   const active = form.record_type === option.value;
                   const Icon = option.icon;
                   return (
@@ -2507,7 +2507,7 @@ const RecordForm = ({
                       onClick={() => {
                         setError(null);
                         setForm((current) => ({ ...current, record_type: option.value }));
-                        if (option.value === 'audio' || option.value === 'video') setMoreMediaOpen(true);
+                        if (option.value === 'video') setMoreMediaOpen(true);
                         if (option.value === 'text') setMoreMediaOpen(false);
                       }}
                       style={{
@@ -2643,16 +2643,6 @@ const RecordForm = ({
                 ) : mode === 'create' ? (
                   <div className="record-media-single">
                     <MediaActionButton icon={<CameraIcon size={26} strokeWidth={1.8} />} label="添加照片" displayLabel="添加照片" onClick={() => void openNativeGalleryImages()} disabled={uploading || audioRecording} />
-                    <button
-                      type="button"
-                      className={audioRecording ? 'record-mic-btn is-recording' : 'record-mic-btn'}
-                      aria-label={audioRecording ? '停止录音' : '按住说话'}
-                      aria-pressed={audioRecording}
-                      onClick={() => (audioRecording ? stopAudioRecording() : void startAudioRecording())}
-                      disabled={uploading}
-                    >
-                      {audioRecording ? <Square size={16} strokeWidth={2.4} fill="currentColor" /> : <Mic size={18} strokeWidth={2} />}
-                    </button>
                   </div>
                 ) : (
                   <>
@@ -2669,7 +2659,7 @@ const RecordForm = ({
                   onClick={() => setMoreMediaOpen((current) => !current)}
                   style={{ justifySelf: 'center', minHeight: 44, border: 'none', background: 'transparent', color: 'var(--nl-accent)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}
                 >
-                  {moreMediaOpen ? '收起更多方式' : '更多方式（视频 / 语音上传）'}
+                  {moreMediaOpen ? '收起更多方式' : '更多方式（视频）'}
                 </button>
               ) : null}
               <p style={{ margin: '0', color: 'var(--nl-muted)', fontSize: '10.5px', lineHeight: 1.45, fontWeight: 500, textAlign: 'center' }}>{getMediaLimitHint()}</p>

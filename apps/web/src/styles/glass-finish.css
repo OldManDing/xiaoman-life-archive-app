@@ -3832,3 +3832,13 @@
   padding: 0 !important;
   margin: 0 !important;
 }
+
+/* 96. 语音功能下线：媒体卡回到居中，不再为麦克风留右侧空间 */
+#root .record-media-grid .record-media-single > button:first-child {
+  padding: 0 18px !important;
+  justify-content: center !important;
+}
+
+#root .record-mic-btn {
+  display: none !important;
+}
