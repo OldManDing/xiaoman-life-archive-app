@@ -4287,3 +4287,131 @@
   font-family: var(--nl-font-sans) !important;
   font-weight: 500 !important;
 }
+
+/* ============================================================
+   111. 头部导航与内容区同宽、按钮尺寸统一
+   ============================================================ */
+
+/* 头部宽度与内容卡一致（左右 20） */
+#root .app-topbar,
+#root .rd-topbar {
+  margin-left: 20px !important;
+  margin-right: 20px !important;
+  margin-top: 10px !important;
+  width: auto !important;
+  max-width: none !important;
+  padding: 0 4px !important;
+  box-sizing: border-box !important;
+  height: 46px !important;
+  min-height: 46px !important;
+}
+
+/* 头部按钮：统一 44×44 命中区、统一图标 24 */
+#root .app-topbar button,
+#root .rd-topbar button {
+  width: 44px !important;
+  min-width: 44px !important;
+  max-width: 44px !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#root .app-topbar button svg,
+#root .rd-topbar button svg {
+  width: 24px !important;
+  height: 24px !important;
+  stroke-width: 2 !important;
+}
+
+/* 文字型关闭键与图标视觉同尺寸 */
+#root .app-topbar button:not(:has(svg)) {
+  font-size: 24px !important;
+  line-height: 1 !important;
+  font-weight: 500 !important;
+  color: #6B4A32 !important;
+}
+
+/* 隐藏的头部动作不占位 */
+#root .app-topbar button[style*="display: none"],
+#root .app-topbar button:disabled {
+  width: 0 !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+/* 详情页底部操作条与内容同宽 */
+#root .rd-actions {
+  margin-left: 20px !important;
+  margin-right: 20px !important;
+  width: auto !important;
+  box-sizing: border-box !important;
+}
+
+/* 头部标题在 46 高度内垂直居中 */
+#root .app-topbar,
+#root .rd-topbar {
+  align-items: center !important;
+}
+
+/* 112. 头部宽度修正：父容器已有 20 内边距，头部自身左右 margin 归零 = 与内容同宽 */
+#root .app-topbar,
+#root .rd-topbar {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  margin-top: 10px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  padding-left: 4px !important;
+  padding-right: 4px !important;
+}
+
+#root .rd-actions {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+/* 113. 覆盖页面级 !important：新建/编辑头部与内容同宽 */
+#root .record-form-page .app-topbar {
+  margin: 10px 0 12px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 0 4px !important;
+  box-sizing: border-box !important;
+}
+
+#root .record-form-page .app-topbar > * {
+  min-width: 0 !important;
+}
+
+#root .record-form-page .app-topbar button {
+  flex: 0 0 44px !important;
+}
+
+/* 114. 头部按钮盒与内容边缘对齐（内边距归零） */
+#root .record-form-page .app-topbar,
+#root .rd-topbar {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+
+/* 115. 主 CTA 再压一层（ID 级选择器，统一深橙） */
+#root #record-form .record-inline-submit-button,
+#root #record-form button.record-inline-submit-button,
+#root .rd-actions .rd-action-share {
+  background-color: #C4661F !important;
+  background-image: linear-gradient(135deg, #D0762A 0%, #C4661F 55%, #B85C18 100%) !important;
+  color: #FFFFFF !important;
+}
