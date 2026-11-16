@@ -78,7 +78,7 @@ const formatStreamDate = (value: string) => {
   const parts = new Intl.DateTimeFormat('en-CA', { timeZone: appTimeZone, month: 'numeric', day: 'numeric' }).formatToParts(date);
   const month = Number(parts.find((part) => part.type === 'month')?.value ?? 0);
   const day = Number(parts.find((part) => part.type === 'day')?.value ?? 0);
-  return month && day ? `${cnNumber(month)}月${cnNumber(day)}日` : '';
+  return month && day ? `${month}月${day}日` : '';
 };
 
 const formatStreamTime = (value: string) => {
