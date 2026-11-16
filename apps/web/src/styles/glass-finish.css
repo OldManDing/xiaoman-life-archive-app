@@ -3842,3 +3842,279 @@
 #root .record-mic-btn {
   display: none !important;
 }
+
+/* ============================================================
+   97. 记录页 P1 修复（按 UI 评审意见，不再对照设计稿）
+   ============================================================ */
+
+/* 1) 主 CTA 统一单色，白字对比 ≥4.5:1 */
+:root {
+  --rec-cta-1: #D0762A;
+  --rec-cta-2: #C4661F;
+  --rec-cta-3: #B85C18;
+}
+
+#root .record-inline-submit-button,
+#root .rd-action-share,
+#root .record-form-page.is-edit .record-inline-submit-button {
+  background-image: linear-gradient(135deg, var(--rec-cta-1) 0%, var(--rec-cta-2) 55%, var(--rec-cta-3) 100%) !important;
+  background-color: var(--rec-cta-2) !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 10px 22px rgba(180, 92, 24, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.32) !important;
+}
+
+/* 2) 新建页去掉头部「保存」，只保留底部主按钮 */
+#root .record-form-page .app-topbar button:not(:has(svg)) {
+  display: none !important;
+}
+
+/* 3) 日期行 / 地点行：同一图标框 24dp、同一内边距 20dp、同一文字起点 */
+#root .record-form-page form > section:has(.app-date-control),
+#root .record-location-row {
+  padding: 0 20px !important;
+  gap: 12px !important;
+  align-items: center !important;
+}
+
+#root .record-form-page form > section:has(.app-date-control) svg,
+#root .record-location-row svg,
+#root .record-location-row .app-select svg {
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  flex: 0 0 24px !important;
+  color: #6B4A32 !important;
+}
+
+#root .record-form-page form > section:has(.app-date-control) span,
+#root .record-location-row input,
+#root .record-location-row .app-select {
+  font-size: 16px !important;
+  color: #3F2A1C !important;
+}
+
+/* 4) 地点行补 › affordance，与日期行一致 */
+#root .record-location-row::after {
+  content: "›";
+  margin-left: auto;
+  font-size: 22px;
+  line-height: 1;
+  color: #A98467;
+  transform: translateY(-1px);
+}
+
+/* 5) 间距 token：字段 12、日期↔地点 12、组间 20 */
+#root .record-form-page form {
+  row-gap: 12px !important;
+}
+
+#root #record-form > .record-details {
+  margin-top: 0 !important;
+  row-gap: 12px !important;
+  gap: 12px !important;
+}
+
+#root .record-details > section,
+#root .record-details > .record-location-row,
+#root .record-details > .record-recorder {
+  margin: 0 !important;
+}
+
+/* 6) 编辑页：消除顶部 108dp 死白，底部改为主按钮吸底 */
+#root .record-form-page.is-edit .record-media-section {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+
+#root #record-form {
+  justify-content: flex-start !important;
+}
+
+#root #record-form > .record-inline-submit {
+  margin-top: auto !important;
+}
+
+#root .record-form-page.is-edit {
+  min-height: calc(100dvh - 12px) !important;
+}
+
+/* 7) 详情页：chips 与正文回到 20dp 左轴 */
+#root .rd-meta,
+#root .rd-chips,
+#root .rd-copy {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+#root .rd-chips {
+  padding: 0 !important;
+  gap: 8px !important;
+}
+
+#root .rd-chip {
+  height: 36px !important;
+  padding: 0 16px !important;
+}
+
+/* 附带 P2 快修：占位对比、关闭按钮、缩略图间距与角标 */
+#root .record-title-input::placeholder {
+  color: #9C7A61 !important;
+}
+
+#root .record-body-input::placeholder {
+  color: #8A6A55 !important;
+}
+
+#root .record-form-page .app-topbar button:has(svg) {
+  width: 44px !important;
+  height: 44px !important;
+  color: #6B4A32 !important;
+}
+
+#root .record-form-page .app-topbar button:has(svg) svg {
+  width: 22px !important;
+  height: 22px !important;
+  stroke-width: 2.2 !important;
+}
+
+#root .record-media-previews {
+  gap: 12px !important;
+}
+
+#root .record-media-previews .media-overlay-btn {
+  top: 8px !important;
+  right: 8px !important;
+  width: 28px !important;
+  height: 28px !important;
+}
+
+/* 98. 修正：保留关闭键、地点行左轴与 › 箭头 */
+#root .record-form-page .app-topbar button:not(:has(svg)) {
+  display: inline-flex !important;
+}
+
+#root .record-form-page .app-topbar button:not(:has(svg)):not([aria-label*="关闭"]):not([aria-label*="返回"]):not([aria-label*="退出"]):not([aria-label*="取消"]) {
+  display: none !important;
+}
+
+/* 关闭键恢复可见并统一图标规格 */
+#root .record-form-page .app-topbar button[aria-label*="关闭"],
+#root .record-form-page .app-topbar button[aria-label*="返回"],
+#root .record-form-page .app-topbar button[aria-label*="取消"] {
+  display: inline-flex !important;
+  width: 44px !important;
+  height: 44px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #6B4A32 !important;
+  font-size: 24px !important;
+  line-height: 1 !important;
+}
+
+/* 地点行：图标 24 定位在 20，文字起点 56，与日期行同轴 */
+#root .record-location-row {
+  position: relative !important;
+}
+
+#root .record-location-row label > svg {
+  left: 20px !important;
+  width: 24px !important;
+  height: 24px !important;
+  color: #6B4A32 !important;
+}
+
+#root .record-location-row input {
+  padding-left: 56px !important;
+  padding-right: 32px !important;
+  font-size: 16px !important;
+}
+
+#root .record-location-row::after {
+  content: "›";
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-52%);
+  font-size: 22px;
+  line-height: 1;
+  color: #A98467;
+  pointer-events: none;
+}
+
+/* 99. 地点行左轴最终对齐：图标 0 偏移、文字 36 起 */
+#root .record-location-row label > svg {
+  left: 0 !important;
+}
+
+#root .record-location-row input {
+  padding-left: 36px !important;
+}
+
+#root .record-location-row::after {
+  display: none !important;
+}
+
+/* 100. 撤销过度隐藏：恢复编辑页缩略图 */
+#root .record-form-page.is-edit .record-media-section > * {
+  display: revert !important;
+}
+
+#root .record-form-page.is-edit .record-media-section > .record-media-previews,
+#root .record-form-page.is-edit .record-media-section > .record-media-grid {
+  display: flex !important;
+}
+
+/* 只隐藏空节点 */
+#root .record-form-page .record-media-section > div:empty,
+#root .record-form-page .record-media-section > p:empty {
+  display: none !important;
+}
+
+/* 101. 编辑页缩略图恢复与媒体区高度收敛 */
+#root .record-form-page.is-edit .record-media-section > * {
+  display: revert !important;
+}
+
+#root .record-form-page.is-edit .record-media-section {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 12px !important;
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+#root .record-form-page.is-edit .record-media-section > *:empty {
+  display: none !important;
+}
+
+/* 102. 编辑页媒体区：网格行高收敛，消除标题与缩略图之间的死白 */
+#root .record-form-page.is-edit .record-media-section,
+#root .record-media-section {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  align-content: start !important;
+  grid-auto-rows: min-content !important;
+  gap: 8px !important;
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+#root .record-media-section > * {
+  min-height: 0 !important;
+}
+
+#root .record-form-page.is-edit .record-media-previews {
+  height: 92px !important;
+  min-height: 92px !important;
+  margin: 0 !important;
+}

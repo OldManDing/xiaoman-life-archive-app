@@ -2891,6 +2891,8 @@ const RecordForm = ({
                     placeholder="添加地点"
                   />
                 </label>
+                <ChevronRight size={18} strokeWidth={1.9} aria-hidden="true" style={{ alignSelf: 'center', color: '#A98467', flexShrink: 0 }} />
+
                 <button
                   type="button"
                   aria-label="手机定位"
