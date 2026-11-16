@@ -2360,3 +2360,39 @@
 #root .record-form-page form {
   row-gap: 12px !important;
 }
+
+/* 68. 编辑页：隐藏空的记录人行（设计稿 15 无此行），消除日期→地点 76px 空隙 */
+#root .record-form-page.is-edit .record-recorder {
+  display: none !important;
+}
+
+#root .record-form-page.is-edit .record-details {
+  gap: 10px !important;
+}
+
+/* 编辑页底部：保存后紧接说明，不留大段空白 */
+#root .record-form-page.is-edit form {
+  padding-bottom: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+#root .record-form-page.is-edit {
+  padding-bottom: 12px !important;
+}
+
+/* 69. 记录页：清掉空占位节点与多余内边距，日期→地点只留 12 */
+#root .record-details > div:empty,
+#root .record-details > section:empty,
+#root .record-form-page form > button:empty,
+#root .record-form-page form > div:empty {
+  display: none !important;
+}
+
+#root .record-details {
+  padding-bottom: 0 !important;
+}
+
+#root .record-details > section {
+  margin: 0 !important;
+  padding: 0 !important;
+}
