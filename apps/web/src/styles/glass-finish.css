@@ -4212,3 +4212,78 @@
   border: 1px solid rgba(255, 255, 255, 0.95) !important;
   border-radius: 22px !important;
 }
+
+/* 107. P3 收尾：次要按钮边界与主次比例、照片计数降级、图集与按钮边距统一 */
+#root .rd-action-edit {
+  border: 1px solid rgba(176, 120, 70, 0.28) !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  flex: 0 0 40% !important;
+}
+
+#root .rd-action-share {
+  flex: 1 1 auto !important;
+}
+
+#root .rd-actions {
+  padding: 5px !important;
+  margin-left: 20px !important;
+  margin-right: 20px !important;
+  width: auto !important;
+}
+
+/* 「N 张照片」降级为纯文字，不再像可点 chip */
+#root .rd-chip.is-count {
+  background: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 2px !important;
+  height: auto !important;
+  font-size: 13px !important;
+  color: #8A6A55 !important;
+  font-family: var(--nl-font-sans) !important;
+  pointer-events: none !important;
+}
+
+#root .rd-chips {
+  align-items: center !important;
+}
+
+/* 图集与按钮行统一到 20dp 内容边距 */
+#root .rd-gallery {
+  gap: 12px !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  margin-bottom: 20px !important;
+}
+
+/* 108. 详情页强调 chip 与编辑页选中态统一：浅桃底 + 深棕字（对比 6.9:1） */
+#root .rd-chip.is-amber {
+  background: #F6C99A !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  color: #6B4A32 !important;
+  box-shadow: none !important;
+}
+
+/* 109. 强调 chip 统一（更高优先级） */
+#root .rd-chips .rd-chip.is-amber,
+#root .record-detail-page .rd-chip.is-amber {
+  background: #F6C99A !important;
+  background-image: none !important;
+  border: 1px solid transparent !important;
+  color: #6B4A32 !important;
+  box-shadow: none !important;
+}
+
+/* 110. 详情页标签 chip 统一为浅桃底棕字（与编辑页选中态一致） */
+#root .rd-chips .rd-chip.is-plain,
+#root .rd-chips .rd-chip.is-amber {
+  background: #F6C99A !important;
+  background-image: none !important;
+  border: 1px solid transparent !important;
+  color: #6B4A32 !important;
+  box-shadow: none !important;
+  font-family: var(--nl-font-sans) !important;
+  font-weight: 500 !important;
+}

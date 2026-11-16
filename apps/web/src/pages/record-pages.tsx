@@ -3502,7 +3502,7 @@ export const ViewRecordPage = () => {
               <p className="rd-meta">{rdMetaText}</p>
               <div className="rd-chips">
                 {rdMilestone ? <span className="rd-chip is-amber">里程碑</span> : null}
-                {rdPhotoCount ? <span className="rd-chip">照片 {rdPhotoCount}</span> : null}
+                {rdPhotoCount ? <span className="rd-chip is-count">{rdPhotoCount} 张照片</span> : null}
                 {!rdMilestone ? data.tags.filter((tag) => tag !== rdLeadTag).slice(0, 1).map((tag, index) => <span key={`${data.record_no}-chip-${tag}-${index}`} className="rd-chip is-plain">{tag}</span>) : null}
               </div>
               <p className="rd-copy">
