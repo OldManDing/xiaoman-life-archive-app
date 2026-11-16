@@ -795,7 +795,7 @@
 
 #root .account-shell:has(.fam-detail-hero) .perm-hint {
   margin: 2px 0 0 !important;
-  font-size: 11px !important;
+  font-size: 12px !important;
 }
 
 #root .account-shell:has(.fam-detail-hero) .fam-detail-save {
@@ -945,7 +945,7 @@
   margin: 0 20px calc(14px + env(safe-area-inset-bottom)) !important;
   text-align: center !important;
   color: #8a6a52 !important;
-  font-size: 11px !important;
+  font-size: 12px !important;
   position: fixed !important;
   left: 0 !important;
   right: 0 !important;
@@ -1056,4 +1056,516 @@
   background: linear-gradient(135deg, #F2A552 0%, #E98A3C 100%) !important;
   border-color: transparent !important;
   color: #fff !important;
+}
+
+/* ============================================================
+   34. 记录页样式规范化（03 详情 / 04 新建 / 15 编辑）
+   实测发现：同页 6 种圆角、4 种内边距、10px 标注字、78px 断档
+   ============================================================ */
+
+/* 1) 顶栏统一：高度 60、圆角 22、左右各 20 */
+#root .record-form-page .app-topbar,
+#root .rd-topbar {
+  min-height: 60px !important;
+  height: 60px !important;
+  border-radius: 22px !important;
+  padding: 8px 12px !important;
+}
+
+#root .rd-topbar {
+  left: 20px !important;
+  right: 20px !important;
+  width: auto !important;
+  margin: 10px 20px 0 !important;
+}
+
+#root .record-form-page .app-topbar {
+  margin: 8px 0 0 !important;
+}
+
+/* 2) 卡片与行统一圆角 22 */
+#root .record-editor-title-row,
+#root .record-body-card,
+#root .record-recorder,
+#root .record-location-row,
+#root .record-quick-tags,
+#root .record-editor-card,
+#root .rd-body {
+  border-radius: 22px !important;
+}
+
+/* 3) 内层输入统一 18 */
+#root .record-title-input,
+#root .record-body-input,
+#root .record-location-row input,
+#root .record-form-page .app-date-time-input {
+  border-radius: 18px !important;
+}
+
+/* 4) 卡片内边距统一 16/18，文字左缘对齐 */
+#root .record-editor-title-row {
+  padding: 16px 18px 12px !important;
+}
+
+#root .record-body-card {
+  padding: 14px 18px 12px !important;
+}
+
+#root .record-quick-tags {
+  padding: 10px 14px !important;
+}
+
+/* 5) 标注字号 10px → 12px；计数 10px → 11px */
+#root .record-field-label {
+  font-size: 12px !important;
+  letter-spacing: 0.02em !important;
+}
+
+#root .record-char-count {
+  font-size: 12px !important;
+}
+
+/* 6) 标题输入与正文同宽 */
+#root .record-title-input {
+  width: 100% !important;
+}
+
+/* 7) 媒体区：卡高 120、间距 14、下留 16 */
+#root .record-media-section {
+  margin-bottom: 16px !important;
+}
+
+#root .record-media-grid {
+  gap: 14px !important;
+}
+
+#root .record-media-grid > button,
+#root .record-media-grid .media-add-tile {
+  min-height: 120px !important;
+  border-radius: 22px !important;
+}
+
+/* 8) 编辑页媒体缩略图：统一 92×92、圆角 16，角标收进卡内 */
+#root .record-media-previews .nl-media-interaction {
+  width: 92px !important;
+  height: 92px !important;
+  border-radius: 16px !important;
+}
+
+#root .record-media-previews .media-overlay-btn {
+  top: 4px !important;
+  right: 4px !important;
+  font-size: 12px !important;
+}
+
+#root .record-media-previews .media-add-tile {
+  width: 92px !important;
+  height: 92px !important;
+  border-radius: 16px !important;
+  font-size: 12px !important;
+}
+
+/* 9) 详情页：主图 22、缩略图 18、元信息与内容左缘对齐 20 */
+#root .rd-hero {
+  border-radius: 22px !important;
+}
+
+#root .rd-gallery .nl-media-interaction {
+  border-radius: 18px !important;
+}
+
+#root .rd-meta,
+#root .rd-chips,
+#root .rd-copy {
+  margin-left: 0 !important;
+  padding-left: 0 !important;
+}
+
+/* 10) 详情页 chip 字号 13、高度 38 */
+#root .rd-chip {
+  font-size: 13px !important;
+  height: 38px !important;
+  padding: 0 16px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+/* 11) 详情页底部两个按钮等宽 */
+#root .rd-actions {
+  display: flex !important;
+  gap: 12px !important;
+}
+
+#root .rd-action-edit,
+#root .rd-action-share {
+  flex: 1 1 0 !important;
+  width: auto !important;
+}
+
+/* 12) 详情页内容与顶栏间距 */
+#root .rd-hero {
+  margin-top: 16px !important;
+}
+
+/* 13) 编辑页：正文输入去圆角异常、同步说明留边距 */
+#root .record-form-page.is-edit .record-body-input {
+  border-radius: 18px !important;
+}
+
+#root .record-edit-sync-note {
+  margin: 12px 20px 0 !important;
+  text-align: center !important;
+}
+
+/* 14) 编辑页日期行圆角 22 */
+#root .record-form-page.is-edit .app-date-time-input {
+  border-radius: 18px !important;
+}
+
+/* 15) 吸底条：高度 60、圆角 999、左右 20 */
+#root .record-inline-submit {
+  height: 60px !important;
+  min-height: 60px !important;
+  padding: 0 !important;
+  border-radius: 999px !important;
+}
+
+#root .record-inline-submit-button {
+  height: 100% !important;
+  border-radius: 999px !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+}
+
+/* 16) 记录页 chip（里程碑/生日/第一次）字号与高度 */
+#root .record-quick-tags button {
+  height: 36px !important;
+  padding: 0 16px !important;
+  font-size: 13px !important;
+  border-radius: 999px !important;
+}
+
+/* 17) 新建页顶栏「保存」字号 */
+#root .record-form-page .app-topbar button {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+}
+
+/* 35. 记录页第二轮：82px 断档、吸底条内文案溢出、头像尺寸 */
+#root .is-create .record-details,
+#root .record-form-page .record-details {
+  margin-top: 16px !important;
+  padding-top: 0 !important;
+}
+
+/* 吸底条改为纵向 flex：按钮 + 「仅家人可见」，不再溢出被裁 */
+#root .record-inline-submit {
+  height: auto !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+#root .record-inline-submit > p {
+  margin: 0 !important;
+  font-size: 12px !important;
+  text-align: center !important;
+  color: #8a6a52 !important;
+}
+
+/* 页面底部让出吸底条 + 文案空间 */
+#root .record-form-page {
+  padding-bottom: 150px !important;
+}
+
+/* 记录人头像 44，行高统一 48 */
+#root .record-recorder {
+  min-height: 48px !important;
+  padding: 0 16px !important;
+}
+
+#root .record-recorder img,
+#root .record-recorder .ref-avatar {
+  width: 44px !important;
+  height: 44px !important;
+}
+
+/* 日期行/地点行高度统一 48 */
+#root .is-create .record-location-row,
+#root .is-create .record-recorder,
+#root .record-form-page.is-edit .record-location-row {
+  min-height: 48px !important;
+  height: 48px !important;
+}
+
+/* 日期行内部控件对齐 */
+#root .record-form-page .app-date-control {
+  min-height: 48px !important;
+}
+
+/* 36. 记录页吸底条：改用 sticky（不再 fixed 覆盖内容） */
+#root .record-inline-submit {
+  position: sticky !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: 8px !important;
+  width: 100% !important;
+  margin: 12px 0 0 !important;
+  z-index: 6 !important;
+  padding: 0 !important;
+}
+
+#root .record-inline-submit-button {
+  width: 100% !important;
+  min-height: 56px !important;
+}
+
+/* 其他地方仍用 fixed 的吸底条（编辑页）保持不变，但不再重叠内容 */
+#root .record-form-page.is-edit .record-inline-submit {
+  position: sticky !important;
+  bottom: 8px !important;
+}
+
+/* 37. 记录页第三轮：间距节奏统一 */
+#root .record-media-section {
+  margin-bottom: 16px !important;
+}
+
+#root .record-form-page > section,
+#root .record-form-page > .record-details {
+  margin-top: 0 !important;
+}
+
+/* 日期行与下方细节块：12 */
+#root .record-form-page > section + .record-details {
+  margin-top: 12px !important;
+}
+
+/* 记录人 / 地点 / 标签 之间 10 */
+#root .record-details {
+  display: grid !important;
+  gap: 10px !important;
+}
+
+#root .record-location-row {
+  margin-top: 0 !important;
+}
+
+/* 日期行高度收敛 60 */
+#root .record-form-page > section:has(.app-date-control) {
+  min-height: 60px !important;
+}
+
+/* 38. 记录页第四轮：日期行内边距、块间距、控件圆角最终对齐 */
+#root .record-form-page > section:has(.app-date-control) {
+  padding: 6px 0 !important;
+  min-height: 60px !important;
+  height: 60px !important;
+  border-radius: 22px !important;
+}
+
+#root .record-form-page > section {
+  margin-bottom: 0 !important;
+}
+
+#root .record-form-page .record-body-input,
+#root .record-form-page textarea.record-body-input {
+  border-radius: 18px !important;
+}
+
+#root .record-recorder {
+  min-height: 56px !important;
+  height: 56px !important;
+}
+
+#root .record-recorder img,
+#root .record-recorder .ref-avatar {
+  width: 44px !important;
+  height: 44px !important;
+  margin-left: 4px !important;
+}
+
+/* 记录人文字左缘与正文对齐 */
+#root .record-recorder-row {
+  padding-left: 4px !important;
+}
+
+/* 正文占位右侧留白 */
+#root .record-body-input {
+  padding-right: 10px !important;
+}
+
+/* 页脚大空白：容器别撑满整屏 */
+#root .record-form-page {
+  min-height: 0 !important;
+}
+
+/* ============================================================
+   39. 全站一致性收口（基于 18 路由 computedStyle 审计）
+   问题：同页圆角 8/16/18/20/22/24/26 混用；11px 标注过多
+   ============================================================ */
+
+/* 1) 圆角刻度：卡片 22 / 小控件 16 / 胶囊 999 */
+#root main .app-panel,
+#root main .info-card,
+#root main .set-card,
+#root main .msg-card,
+#root main .ac-card,
+#root main .pf-hero,
+#root main .pf-stats,
+#root main .pf-menu,
+#root main .fam-hero,
+#root main .member-row-card,
+#root main .invite-card,
+#root main .help-row,
+#root main .fr-card,
+#root main .notify-status-card,
+#root main .perm-card,
+#root main .export-option,
+#root main .fam-member-row,
+#root main .nl-home-recent,
+#root main .record-editor-card,
+#root main .rd-body {
+  border-radius: 22px !important;
+}
+
+#root .export-option,
+#root .help-row,
+#root .fr-card,
+#root .perm-option,
+#root .ac-action {
+  border-radius: 16px !important;
+}
+
+/* 2) 11px 标注统一提到 12px（保留纯图标/角标不在此列） */
+#root .pf-stat-label,
+#root .nl-home-title-age,
+#root .nl-home-row span,
+#root .fam-hero-meta,
+#root .fam-hero-meta-birth,
+#root .fam-hero-cta,
+#root .set-row small,
+#root .set-footer,
+#root .info-row span,
+#root .ac-note,
+#root .ac-hint,
+#root .help-row span,
+#root .rd-meta,
+#root .record-char-count,
+#root .record-field-label,
+#root .set-value,
+#root .pf-menu-row small,
+#root .member-row-card span,
+#root .record-inline-submit > p {
+  font-size: 12px !important;
+}
+
+/* 3) 详情/编辑页右缘与内容对齐 */
+#root .rd-meta,
+#root .rd-chips,
+#root .rd-copy,
+#root .record-edit-sync-note {
+  margin-left: 20px !important;
+  margin-right: 20px !important;
+}
+
+/* 4) 08/09 等页面的输入与按钮圆角统一 */
+#root .lg-submit,
+#root .onb-submit,
+#root .ac-save,
+#root .fam-detail-save {
+  border-radius: 999px !important;
+}
+
+/* 40. 残余小字（10–11px）统一到 12px 以上 */
+#root .fam-member-role-sub,
+#root .fam-section-link,
+#root .fam-role,
+#root .fam-role.is-owner,
+#root .info-row,
+#root .info-row span,
+#root .info-row strong,
+#root .help-chip,
+#root .record-media-grid span,
+#root .record-media-grid button span,
+#root .media-add-tile span,
+#root .app-date-control span,
+#root .app-date-control,
+#root .record-recorder span,
+#root .rd-chip,
+#root .ac-note,
+#root .set-row .set-value {
+  font-size: 12px !important;
+}
+
+/* 日期/时间控件的值需要 15px，覆盖上面的 12px */
+#root .app-date-time-input,
+#root .app-date-control input {
+  font-size: 15px !important;
+}
+
+/* 小按钮（重发/修改/收起/使用问题）字号 12、最小高度 32 */
+#root .member-row-card button,
+#root .security-inline-btn,
+#root .help-category-btn,
+#root .help-row button {
+  font-size: 12px !important;
+  min-height: 32px !important;
+}
+
+/* 导出页按钮 8px 圆角 → 16 */
+#root .export-option {
+  border-radius: 16px !important;
+}
+
+/* 41. 行内 10–11px 文案统一抬到 12px */
+#root main [style*="font-size: 12px"],
+#root main [style*="font-size:12px"],
+#root main [style*="font-size: 12px"],
+#root main [style*="font-size:12px"] {
+  font-size: 12px !important;
+}
+
+/* 但角标/图标容器不放大 */
+#root main [style*="font-size: 12px"][aria-hidden="true"],
+#root main [style*="font-size:12px"][aria-hidden="true"] {
+  font-size: 12px !important;
+}
+
+/* 42. 设置页节奏：分组间距与分隔线 */
+#root .set-group {
+  margin-bottom: 16px !important;
+  display: grid !important;
+  gap: 8px !important;
+}
+
+#root .set-group-title {
+  font-size: 18px !important;
+  margin: 0 0 2px !important;
+}
+
+#root .set-row::after,
+#root .pf-menu-row::after {
+  background: rgba(120, 80, 40, 0.10) !important;
+  height: 1px !important;
+  left: 58px !important;
+  right: 18px !important;
+}
+
+#root .set-row {
+  min-height: 68px !important;
+}
+
+/* 43. 分组标题与卡片左缘对齐 */
+#root .set-group-title,
+#root .pf-group-title,
+#root .fam-section-title {
+  padding-left: 12px !important;
+  margin-bottom: 8px !important;
 }

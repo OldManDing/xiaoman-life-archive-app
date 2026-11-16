@@ -231,12 +231,12 @@ const RecordSummaryCard = ({ record, onClick }: { record: RecordSummary; onClick
   <button type="button" onClick={onClick} style={{ width: '100%', minHeight: 82, border: '1px solid var(--nl-border-muted)', borderRadius: 8, background: 'rgba(var(--nl-surface-rgb),0.14)', padding: '12px', display: 'flex', gap: 13, alignItems: 'center', textAlign: 'left', cursor: 'pointer', boxShadow: 'inset 0 1px 0 var(--nl-inset-highlight)' }}>
     <span style={{ width: 42, display: 'grid', justifyItems: 'start', flexShrink: 0 }}>
       <strong style={{ color: 'var(--nl-ink)', fontSize: 16, lineHeight: 1, fontWeight: 600 }}>{formatDay(record.event_time)}</strong>
-      <span style={{ marginTop: 5, color: 'var(--nl-muted)', fontSize: 10, fontWeight: 500 }}>{formatMonth(record.event_time)}</span>
+      <span style={{ marginTop: 5, color: 'var(--nl-muted)', fontSize: 12, fontWeight: 500 }}>{formatMonth(record.event_time)}</span>
     </span>
     <span style={{ minWidth: 0, display: 'grid', gap: 6, flex: 1 }}>
       <strong style={{ color: 'var(--nl-ink)', fontSize: 12, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{record.title ?? '未命名记录'}</strong>
       <span style={{ ...refMutedTextStyle, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{record.summary ?? '这条记录还没有摘要。'}</span>
-      <span style={{ color: 'var(--nl-muted)', fontSize: 10, fontWeight: 500 }}>{record.tags?.length ? `${record.tags.length} 个标签` : normalizeDisplayName(record.creator_name, '家人')}</span>
+      <span style={{ color: 'var(--nl-muted)', fontSize: 12, fontWeight: 500 }}>{record.tags?.length ? `${record.tags.length} 个标签` : normalizeDisplayName(record.creator_name, '家人')}</span>
     </span>
   </button>
 );

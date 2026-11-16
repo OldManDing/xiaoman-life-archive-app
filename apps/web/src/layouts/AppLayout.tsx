@@ -63,7 +63,7 @@ const AppUpdateNotice = ({ bottomOffset }: { bottomOffset: string }) => {
     <div style={{ display: 'grid', gap: '8px' }}>
       {download.state === 'downloading' || download.state === 'verifying' ? (
         <>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 650 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 650 }}>
             <span>{updateDownloadStateLabel(download.state)}</span>
             <span>{Math.round(download.progress)}%</span>
           </div>
@@ -71,7 +71,7 @@ const AppUpdateNotice = ({ bottomOffset }: { bottomOffset: string }) => {
             <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, download.progress))}%`, background: 'var(--nl-primary-gradient)', transition: 'width 0.2s ease' }} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-            <span style={{ color: 'var(--nl-muted)', fontSize: '11px' }}>{formatUpdateBytes(download.downloadedBytes)}{download.totalBytes ? ` / ${formatUpdateBytes(download.totalBytes)}` : ''}</span>
+            <span style={{ color: 'var(--nl-muted)', fontSize: '12px' }}>{formatUpdateBytes(download.downloadedBytes)}{download.totalBytes ? ` / ${formatUpdateBytes(download.totalBytes)}` : ''}</span>
             <button type="button" onClick={() => void download.cancelDownload()} style={{ ...updateActionStyle, minHeight: '32px', padding: '0 10px', background: 'transparent', color: 'var(--nl-muted-strong)' }}>取消</button>
           </div>
         </>
@@ -88,8 +88,8 @@ const AppUpdateNotice = ({ bottomOffset }: { bottomOffset: string }) => {
           {download.state === 'error' ? '重试下载' : '下载并安装'}
         </button>
       )}
-      {download.error ? <p style={{ margin: 0, color: 'var(--nl-danger)', fontSize: '11px', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{download.error}</p> : null}
-      {download.state === 'installing' ? <span style={{ color: 'var(--nl-muted)', fontSize: '11px' }}>{updateDownloadStateLabel(download.state)}</span> : null}
+      {download.error ? <p style={{ margin: 0, color: 'var(--nl-danger)', fontSize: '12px', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{download.error}</p> : null}
+      {download.state === 'installing' ? <span style={{ color: 'var(--nl-muted)', fontSize: '12px' }}>{updateDownloadStateLabel(download.state)}</span> : null}
     </div>
   ) : (
     <p style={{ margin: 0, color: 'var(--nl-danger)', fontSize: '12px', lineHeight: 1.55 }}>更新包暂不可下载，请联系管理员或稍后再试。</p>

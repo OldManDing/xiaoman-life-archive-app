@@ -81,7 +81,7 @@ const NotificationSwitchRow = ({
   >
     <span style={{ minWidth: 0, display: 'grid', gap: 4 }}>
       <strong style={{ color: 'var(--nl-ink)', fontSize: 13, lineHeight: 1.2, fontWeight: 680, letterSpacing: 0 }}>{title}</strong>
-      {description ? <span style={{ color: 'var(--nl-muted)', fontSize: 10, lineHeight: 1.45, fontWeight: 460 }}>{description}</span> : null}
+      {description ? <span style={{ color: 'var(--nl-muted)', fontSize: 12, lineHeight: 1.45, fontWeight: 460 }}>{description}</span> : null}
     </span>
     <span
       aria-hidden="true"
@@ -223,7 +223,7 @@ const ProfileListItem = ({
       <div style={{ minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '15px', fontWeight: 700, color: 'var(--nl-ink)' }}>{title}</span>
-          {badge ? <span style={{ fontSize: '11px', color: 'var(--nl-muted)', fontWeight: 520 }}>{badge}</span> : null}
+          {badge ? <span style={{ fontSize: '12px', color: 'var(--nl-muted)', fontWeight: 520 }}>{badge}</span> : null}
         </div>
         {description ? <p style={{ ...helperTextStyle, marginTop: '3px', lineHeight: 1.5 }}>{description}</p> : null}
       </div>
@@ -314,7 +314,7 @@ const toggleTrackStyle = (enabled: boolean) =>
     height: '30px',
     borderRadius: '999px',
     border: 'none',
-    background: enabled ? '#b4652a' : '#e6d5c3',
+    background: enabled ? '#EC9842' : '#E6D5C3',
     padding: '3px',
     display: 'flex',
     alignItems: 'center',
@@ -552,7 +552,7 @@ const NotificationListItem = ({
           <strong style={{ color: 'var(--nl-ink)', fontSize: '14px', fontWeight: item.read_at ? 620 : 760, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</strong>
         </span>
         <span style={{ color: 'var(--nl-muted-strong)', fontSize: '13px', lineHeight: 1.55, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{body}</span>
-        <span style={{ color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 520 }}>{formatProfileDateTime(item.created_at)}</span>
+        <span style={{ color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 520 }}>{formatProfileDateTime(item.created_at)}</span>
       </span>
       {item.target_type === 'record' && item.target_no ? <ChevronRight size={16} color="var(--nl-muted)" strokeWidth={2.2} /> : null}
     </button>
@@ -1541,7 +1541,7 @@ export const ReportsPage = () => {
               ].map((item) => (
                 <div key={item.label} style={{ borderRadius: '8px', background: 'rgba(var(--nl-surface-rgb),0.72)', border: '1px solid var(--nl-border)', padding: '12px', textAlign: 'center' }}>
                   <strong style={{ display: 'block', fontSize: '19px', color: 'var(--nl-ink)', lineHeight: 1 }}>{item.value}</strong>
-                  <span style={{ display: 'block', marginTop: '6px', color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 700 }}>{item.label}</span>
+                  <span style={{ display: 'block', marginTop: '6px', color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 700 }}>{item.label}</span>
                 </div>
               ))}
             </div>
@@ -1549,7 +1549,7 @@ export const ReportsPage = () => {
             {monthlyKeywords.length ? (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
               {monthlyKeywords.map((item) => (
-                <span key={item} style={{ borderRadius: '8px', border: '1px solid var(--nl-border-muted)', background: 'transparent', color: 'var(--nl-muted-strong)', padding: '6px 10px', fontSize: '11px', fontWeight: 600 }}>#{item}</span>
+                <span key={item} style={{ borderRadius: '8px', border: '1px solid var(--nl-border-muted)', background: 'transparent', color: 'var(--nl-muted-strong)', padding: '6px 10px', fontSize: '12px', fontWeight: 600 }}>#{item}</span>
               ))}
             </div>
             ) : null}
@@ -1598,10 +1598,10 @@ export const ReportsPage = () => {
             {bookRequestsList.slice(0, 3).map((item) => (
               <div key={item.request_no} style={{ borderTop: '1px solid var(--nl-border)', paddingTop: 10, display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
                 <span style={{ minWidth: 0, display: 'grid', gap: 3 }}>
-                  <strong style={{ color: 'var(--nl-ink)', fontSize: 11, fontWeight: 660 }}>{item.year}年纪念册</strong>
-                  <span style={{ color: 'var(--nl-muted)', fontSize: 10, fontWeight: 600 }}>{formatProfileDateTime(item.created_at)}</span>
+                  <strong style={{ color: 'var(--nl-ink)', fontSize: 12, fontWeight: 660 }}>{item.year}年纪念册</strong>
+                  <span style={{ color: 'var(--nl-muted)', fontSize: 12, fontWeight: 600 }}>{formatProfileDateTime(item.created_at)}</span>
                 </span>
-                <span style={{ color: membershipBookStatusColor(item.status), fontSize: 10, fontWeight: 700, whiteSpace: 'nowrap' }}>{membershipBookStatusText(item.status)}</span>
+                <span style={{ color: membershipBookStatusColor(item.status), fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap' }}>{membershipBookStatusText(item.status)}</span>
               </div>
             ))}
           </Panel>
@@ -1923,7 +1923,7 @@ export const ExportBackupPage = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px', alignItems: 'center' }}>
             <span style={{ minWidth: 0, display: 'grid', gap: '3px' }}>
               <strong style={{ color: 'var(--nl-ink)', fontSize: '15px', fontWeight: 660 }}>档案摘要</strong>
-              <span style={{ color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 620, overflowWrap: 'anywhere' }}>{summaryPreview.file_name}</span>
+              <span style={{ color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 620, overflowWrap: 'anywhere' }}>{summaryPreview.file_name}</span>
             </span>
             <button type="button" style={{ ...secondaryButtonStyle, minHeight: '40px', padding: '8px 12px', borderRadius: '8px', boxShadow: 'none', flexShrink: 0 }} onClick={() => void copySummary()}>
               {summaryCopied ? '已复制' : '复制摘要'}
@@ -1988,7 +1988,7 @@ export const MembershipPage = () => {
               <span style={{ display: 'block', marginTop: '5px', color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 650 }}>{membershipTypeLabel(user?.membership_type)}</span>
             </div>
           </div>
-          <span style={{ borderRadius: '8px', background: 'transparent', color: hasEnhancedAccess ? 'var(--nl-primary-2)' : 'var(--nl-muted-strong)', border: hasEnhancedAccess ? '1px solid rgba(var(--nl-primary-rgb),0.18)' : '1px solid var(--nl-border-muted)', padding: '4px 8px', fontSize: '10px', fontWeight: 620 }}>{serviceBadge}</span>
+          <span style={{ borderRadius: '8px', background: 'transparent', color: hasEnhancedAccess ? 'var(--nl-primary-2)' : 'var(--nl-muted-strong)', border: hasEnhancedAccess ? '1px solid rgba(var(--nl-primary-rgb),0.18)' : '1px solid var(--nl-border-muted)', padding: '4px 8px', fontSize: '12px', fontWeight: 620 }}>{serviceBadge}</span>
         </div>
         <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: '12px' }}>
           <p style={{ margin: 0, color: 'var(--nl-muted)', fontSize: '12px', lineHeight: 1.6 }}>
@@ -2182,7 +2182,7 @@ export const SecurityPage = () => {
         </span>
         <ChevronRight size={18} strokeWidth={1.9} style={{ color: 'var(--nl-muted)' }} />
       </button>
-      <p style={{ ...helperTextStyle, margin: 0, fontSize: 11, lineHeight: 1.6 }}>注销前会先检查家庭所有权和儿童信息</p>
+      <p style={{ ...helperTextStyle, margin: 0, fontSize: 12, lineHeight: 1.6 }}>注销前会先检查家庭所有权和儿童信息</p>
     </PageShell>
   );
 };
@@ -2284,7 +2284,7 @@ export const AccountDeletionPage = () => {
             </span>
             <div style={{ display: 'grid', gap: 2 }}>
               <strong style={{ color: '#4a2f1f', fontFamily: 'var(--nl-font-display)', fontSize: 19, fontWeight: 600 }}>注销后不可恢复</strong>
-              <p style={{ margin: 0, color: '#6f5745', fontSize: 11, lineHeight: 1.55 }}>{check && check.summary.owned_family_count > 0
+              <p style={{ margin: 0, color: '#6f5745', fontSize: 12, lineHeight: 1.55 }}>{check && check.summary.owned_family_count > 0
                 ? `账号凭据会失效；你名下 ${check.summary.active_child_count} 份孩子档案、${check.summary.active_record_count} 条有效记录将交由其他管理员接管。若你是唯一管理员，请先新增一位管理员，或先申请导出与成年移交后再注销。`
                 : '账号凭据会失效，家庭档案将由其他管理员接管'}</p>
             </div>
@@ -2310,10 +2310,10 @@ export const AccountDeletionPage = () => {
                 })}
               </div>
               {check.blockers.length ? (
-                <p style={{ margin: 0, color: '#6f5745', fontSize: 11, lineHeight: 1.6 }}>
+                <p style={{ margin: 0, color: '#6f5745', fontSize: 12, lineHeight: 1.6 }}>
                   {check.blockers[0]}
                   {' '}
-                  <button type="button" onClick={() => navigate('/profile/help?topic=account-delete')} style={{ border: 'none', background: 'transparent', color: '#8a4e14', fontSize: 11, textDecoration: 'underline', textUnderlineOffset: 2, cursor: 'pointer', padding: 0 }}>
+                  <button type="button" onClick={() => navigate('/profile/help?topic=account-delete')} style={{ border: 'none', background: 'transparent', color: '#8a4e14', fontSize: 12, textDecoration: 'underline', textUnderlineOffset: 2, cursor: 'pointer', padding: 0 }}>
                     提交协助
                   </button>
                 </p>
@@ -2355,9 +2355,9 @@ export const AccountDeletionPage = () => {
           })()}
         </form>
       </Panel>
-      <p style={{ margin: 0, textAlign: 'center', color: '#6f5745', fontSize: 11, lineHeight: 1.6 }}>
+      <p style={{ margin: 0, textAlign: 'center', color: '#6f5745', fontSize: 12, lineHeight: 1.6 }}>
         也可以先{' '}
-        <button type="button" onClick={() => navigate('/profile/help?topic=account-delete')} style={{ border: 'none', background: 'transparent', color: '#8a4e14', fontSize: 11, textDecoration: 'underline', textUnderlineOffset: 2, cursor: 'pointer', padding: 0 }}>
+        <button type="button" onClick={() => navigate('/profile/help?topic=account-delete')} style={{ border: 'none', background: 'transparent', color: '#8a4e14', fontSize: 12, textDecoration: 'underline', textUnderlineOffset: 2, cursor: 'pointer', padding: 0 }}>
           提交协助
         </button>
         ，由人工核对后再处理
@@ -2534,20 +2534,20 @@ export const HelpFeedbackPage = () => {
         <Panel className="info-card" style={{ borderRadius: 24, display: 'grid', gap: 6 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center' }}>
             <strong style={{ color: 'var(--nl-ink)', fontSize: 13, fontWeight: 600 }}>使用问题</strong>
-            <span style={{ display: 'inline-flex', alignItems: 'center', padding: '5px 12px', borderRadius: 999, background: '#f7e4c9', color: '#8a4e14', fontSize: 11, fontWeight: 500 }}>处理中</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', padding: '5px 12px', borderRadius: 999, background: '#f7e4c9', color: '#8a4e14', fontSize: 12, fontWeight: 500 }}>处理中</span>
           </div>
           <p style={{ margin: 0, color: 'var(--nl-ink)', fontSize: 13, lineHeight: 1.75 }}>反馈提交后会在这里显示处理进度。</p>
-          <p style={{ margin: 0, color: '#8b7160', fontSize: 11 }}>示例 · 已于 11月10日 提交</p>
+          <p style={{ margin: 0, color: '#8b7160', fontSize: 12 }}>示例 · 已于 11月10日 提交</p>
         </Panel>
       ) : null}
       {(feedbackTickets ?? []).slice(0, 5).map((item) => (
         <Panel key={item.ticket_no} className="info-card" style={{ borderRadius: 24, display: 'grid', gap: 6 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center' }}>
             <strong style={{ color: 'var(--nl-ink)', fontSize: 13, fontWeight: 600 }}>{item.category}</strong>
-            <span style={{ display: 'inline-flex', alignItems: 'center', padding: '5px 12px', borderRadius: 999, background: item.status === 'processing' ? '#f7e4c9' : 'rgba(255, 255, 255, 0.44)', color: feedbackStatusColor(item.status), fontSize: 11, fontWeight: 500 }}>{feedbackStatusText(item.status)}</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', padding: '5px 12px', borderRadius: 999, background: item.status === 'processing' ? '#f7e4c9' : 'rgba(255, 255, 255, 0.44)', color: feedbackStatusColor(item.status), fontSize: 12, fontWeight: 500 }}>{feedbackStatusText(item.status)}</span>
           </div>
           <p style={{ margin: 0, color: 'var(--nl-ink)', fontSize: 13, lineHeight: 1.75 }}>{item.content}</p>
-          <p style={{ margin: 0, color: '#8b7160', fontSize: 11 }}>已于 {formatAppDateTime(item.created_at)} 提交</p>
+          <p style={{ margin: 0, color: '#8b7160', fontSize: 12 }}>已于 {formatAppDateTime(item.created_at)} 提交</p>
           {item.handle_note ? <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.6 }}>处理备注：{item.handle_note}</p> : null}
         </Panel>
       ))}
@@ -2705,7 +2705,7 @@ export const AboutPage = () => {
               <div style={{ display: 'grid', gap: '8px' }}>
                 {download.state === 'downloading' || download.state === 'verifying' ? (
                   <>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 650 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 650 }}>
                       <span>{updateDownloadStateLabel(download.state)}</span>
                       <span>{Math.round(download.progress)}%</span>
                     </div>
@@ -2713,7 +2713,7 @@ export const AboutPage = () => {
                       <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, download.progress))}%`, background: 'var(--nl-primary-gradient)', transition: 'width 0.2s ease' }} />
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ color: 'var(--nl-muted)', fontSize: '11px' }}>{formatUpdateBytes(download.downloadedBytes)}{download.totalBytes ? ` / ${formatUpdateBytes(download.totalBytes)}` : ''}</span>
+                      <span style={{ color: 'var(--nl-muted)', fontSize: '12px' }}>{formatUpdateBytes(download.downloadedBytes)}{download.totalBytes ? ` / ${formatUpdateBytes(download.totalBytes)}` : ''}</span>
                       <button type="button" onClick={() => void download.cancelDownload()} style={{ ...secondaryButtonStyle, minHeight: '34px', padding: '0 11px' }}>取消</button>
                     </div>
                   </>
@@ -2843,7 +2843,7 @@ export const ContactPage = () => {
         <ChevronRight size={18} strokeWidth={1.9} style={{ color: 'var(--nl-muted)' }} />
       </button>
 
-      <p style={{ margin: 0, textAlign: 'center', color: '#8b7160', fontSize: 11, lineHeight: 1.6 }}>请勿在邮件中发送孩子照片原件</p>
+      <p style={{ margin: 0, textAlign: 'center', color: '#8b7160', fontSize: 12, lineHeight: 1.6 }}>请勿在邮件中发送孩子照片原件</p>
 
     </PageShell>
   );
@@ -2931,17 +2931,17 @@ export const LegalPage = () => {
         options={legalSections.map((item) => ({ value: item.title, label: item.title }))}
       />
       <Panel style={{ padding: '22px 18px', display: 'grid', gap: 20 }}>
-        <span style={{ fontSize: 11, fontWeight: 500, letterSpacing: '0.02em', color: 'var(--nl-muted)' }}>最后更新：2026年11月11日</span>
+        <span style={{ fontSize: 12, fontWeight: 500, letterSpacing: '0.02em', color: 'var(--nl-muted)' }}>最后更新：2026年11月11日</span>
         <h2 style={{ margin: 0, fontFamily: 'var(--nl-font-display)', fontSize: 28, fontWeight: 600, lineHeight: 1.25, color: 'var(--nl-ink)' }}>{section.title}</h2>
         <div style={{ display: 'grid', gap: 20 }}>
           {section.items.map((item, index) => (
             <p key={item} style={{ margin: 0, color: 'var(--nl-ink)', fontSize: 13, lineHeight: 1.75, fontWeight: 400, letterSpacing: '0.01em', display: 'flex', alignItems: 'flex-start' }}>
-              <span aria-hidden="true" style={{ width: 26, height: 26, borderRadius: 999, background: '#f0c08d', color: '#5b3a17', fontSize: 11, fontWeight: 600, display: 'inline-grid', placeItems: 'center', marginRight: 12, flexShrink: 0, marginTop: 1 }}>{index + 1}</span>
+              <span aria-hidden="true" style={{ width: 26, height: 26, borderRadius: 999, background: '#f0c08d', color: '#5b3a17', fontSize: 12, fontWeight: 600, display: 'inline-grid', placeItems: 'center', marginRight: 12, flexShrink: 0, marginTop: 1 }}>{index + 1}</span>
               <span style={{ minWidth: 0, flex: 1 }}>{item}</span>
             </p>
           ))}
         </div>
-        <p style={{ margin: '4px 0 0', textAlign: 'center', fontSize: 11, color: '#8b7160', marginTop: 24 }}>年轮 · 儿童信息保护优先</p>
+        <p style={{ margin: '4px 0 0', textAlign: 'center', fontSize: 12, color: '#8b7160', marginTop: 24 }}>年轮 · 儿童信息保护优先</p>
       </Panel>
     </PageShell>
   );
@@ -2989,7 +2989,7 @@ export const ErrorPage = () => {
           <button type="button" onClick={() => window.location.reload()} style={{ ...primaryButtonStyle, width: '100%', minHeight: 52, borderRadius: 999, background: '#b0662a', boxShadow: '0 10px 22px rgba(146, 96, 52, 0.18)' }}>重试</button>
           <button type="button" onClick={() => navigate('/home')} style={{ ...secondaryButtonStyle, width: '100%', minHeight: 52, borderRadius: 999, boxShadow: 'none' }}>返回首页</button>
         </div>
-        <button type="button" onClick={() => navigate('/profile/help')} style={{ border: 'none', background: 'transparent', color: '#8b7160', fontSize: 11, textDecoration: 'none', padding: '4px 0', minHeight: 32, marginTop: 90 }}>如果一直失败，可以在「我的 · 帮助与反馈」里告诉我们</button>
+        <button type="button" onClick={() => navigate('/profile/help')} style={{ border: 'none', background: 'transparent', color: '#8b7160', fontSize: 12, textDecoration: 'none', padding: '4px 0', minHeight: 32, marginTop: 90 }}>如果一直失败，可以在「我的 · 帮助与反馈」里告诉我们</button>
       </div>
     </PageShell>
   );

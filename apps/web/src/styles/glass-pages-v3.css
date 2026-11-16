@@ -52,7 +52,7 @@
 }
 
 .fam-invite-btn span {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.06em;
   margin-top: 2px;
@@ -100,7 +100,7 @@
 .fam-hero-meta {
   margin: 7px 0 0;
   color: var(--nl-muted);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.45;
   font-weight: 500;
 }
@@ -117,7 +117,7 @@
   background: #f3a85c;
   border: 1px solid rgba(169, 88, 27, 0.12);
   color: #8a4e14;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   text-decoration: none;
   white-space: nowrap;
@@ -148,7 +148,7 @@
   min-height: 32px;
   padding-left: 10px;
   color: var(--nl-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   text-decoration: none;
 }
@@ -196,7 +196,7 @@
   flex-shrink: 0;
   padding: 8px 14px;
   border-radius: 999px;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.2;
   font-weight: 500;
   white-space: nowrap;
@@ -304,7 +304,7 @@
   border-radius: 999px;
   background: #e9a05a;
   color: #fff;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   display: grid;
   place-items: center;
@@ -352,7 +352,7 @@
   display: block;
   margin-top: 4px;
   color: var(--nl-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -430,7 +430,7 @@
   border-radius: 999px;
   background: #e9a05a;
   color: #fff;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   display: grid;
   place-items: center;
@@ -477,7 +477,7 @@
   display: block;
   margin-top: 3px;
   color: var(--nl-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -677,7 +677,7 @@
 .search-meta {
   margin: 0;
   color: var(--nl-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   line-height: 1.5;
   overflow: hidden;
@@ -691,7 +691,7 @@
   border-radius: 999px;
   background: #f3c08a;
   color: #8a4e14;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -913,14 +913,14 @@
   display: block;
   margin-top: 3px;
   color: var(--nl-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 }
 
 .onb-error {
   margin: 12px 0 0;
   color: #c0392b;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -949,7 +949,7 @@
   margin: 22px 0 0;
   text-align: center;
   color: var(--nl-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -1085,7 +1085,7 @@
   left: 9px;
   bottom: 7px;
   color: #fff;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.02em;
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.32);
@@ -1134,7 +1134,7 @@
 .tl-tile.is-text .tl-tile-date {
   color: var(--nl-muted);
   text-shadow: none;
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .tl-empty {
@@ -1241,7 +1241,7 @@
 .rd-meta {
   margin: 0;
   color: var(--nl-muted);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.5;
   font-weight: 500;
 }
@@ -1272,7 +1272,7 @@
   border: none;
   background: #f3e4d0;
   color: var(--nl-ink);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -1479,7 +1479,7 @@
   left: 20px;
   top: 10px;
   color: var(--nl-muted);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.02em;
 }
@@ -1512,7 +1512,7 @@
   margin-bottom: -6px;
   padding-left: 6px;
   color: var(--nl-muted);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.02em;
 }
@@ -1633,7 +1633,7 @@
 
 .msg-time {
   color: var(--nl-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
 }
@@ -1649,7 +1649,7 @@
   border: 1px solid rgba(169, 88, 27, 0.22);
   background: rgba(233, 160, 90, 0.14);
   color: var(--nl-accent);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -1732,7 +1732,7 @@ button.set-row {
 
 .set-body small {
   color: #8b7160;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.5;
   font-weight: 500;
 }
@@ -1753,7 +1753,7 @@ button.set-row {
   margin: 8px 0 0;
   text-align: center;
   color: var(--nl-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.06em;
 }
@@ -1776,14 +1776,14 @@ button.set-row {
 }
 
 .msg-time {
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .msg-reply {
   min-width: 56px;
   min-height: 36px;
   padding: 4px 10px;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 /* create：详情区做成设计稿的 pill 行 + chip 行 */
@@ -1901,7 +1901,7 @@ button.set-row {
   min-height: 38px;
   min-width: 56px;
   padding: 4px 12px;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .pf-menu-row {
@@ -1964,7 +1964,7 @@ button.set-row {
   margin: 0;
   text-align: center;
   color: var(--nl-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -2367,7 +2367,7 @@ button.set-row {
 .lg-error {
   margin: 0;
   color: #c0392b;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -2397,7 +2397,7 @@ button.set-row {
   margin: 0;
   text-align: center;
   color: var(--nl-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -2453,7 +2453,7 @@ button.set-row {
 
 .ac-avatar-tip {
   color: var(--nl-accent);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -2525,7 +2525,7 @@ button.set-row {
   margin: 0;
   text-align: center;
   color: var(--nl-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -2533,7 +2533,7 @@ button.set-row {
   margin: 0;
   text-align: center;
   color: var(--nl-accent);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 /* ---------------- 22/23/24/25/26/27 信息页共用 ---------------- */
@@ -2628,7 +2628,7 @@ button.set-row {
   justify-content: space-between;
   gap: 12px;
   color: var(--nl-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -2638,7 +2638,7 @@ button.set-row {
   border: none;
   background: transparent;
   color: var(--nl-accent);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
 }
@@ -2651,7 +2651,7 @@ button.set-row {
 
 .notify-status-desc {
   color: var(--nl-muted);
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .set-row.is-last::after {
@@ -2770,7 +2770,7 @@ button.set-row {
   left: 18px;
   top: 8px;
   color: var(--nl-muted);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -2904,7 +2904,7 @@ button.set-row {
   border: 1px solid rgba(255, 255, 255, 0.86);
   background: rgba(255, 252, 247, 0.78);
   color: var(--nl-muted-strong);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -2970,7 +2970,7 @@ button.set-row {
   min-height: 36px !important;
   min-width: 56px !important;
   padding: 3px 12px !important;
-  font-size: 11px !important;
+  font-size: 12px !important;
   position: relative;
 }
 
@@ -2981,7 +2981,7 @@ button.set-row {
 }
 
 .msg-time {
-  font-size: 10px !important;
+  font-size: 12px !important;
 }
 
 /* 11：分组标题缩小、行高压到设计稿密度、底部留白 */
@@ -3304,7 +3304,7 @@ button.set-row {
 }
 
 .is-create .record-inline-submit p {
-  font-size: 10px;
+  font-size: 12px;
 }
 
 .is-create .record-editor-title-row {
@@ -3334,7 +3334,7 @@ button.set-row {
   flex-wrap: nowrap;
   overflow: hidden;
   white-space: nowrap;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.4;
 }
 
@@ -3428,7 +3428,7 @@ button.set-row {
 
 .tl-thumb-date,
 .tl-tile-date {
-  font-size: 11px !important;
+  font-size: 12px !important;
 }
 
 .tl-tile-scrim {
@@ -3520,7 +3520,7 @@ button.set-row {
 
 .pf-logout small {
   display: block !important;
-  font-size: 11px !important;
+  font-size: 12px !important;
 }
 
 .pf-logout-icon {
@@ -3534,7 +3534,7 @@ button.set-row {
 
 .tl-tile-date,
 .tl-thumb-date {
-  font-size: 11px !important;
+  font-size: 12px !important;
   font-weight: 600 !important;
   color: #fff !important;
 }
@@ -3690,7 +3690,7 @@ body,
 }
 
 .set-body small {
-  font-size: 11px !important;
+  font-size: 12px !important;
 }
 
 .set-group-title {
@@ -3962,7 +3962,7 @@ body::before {
 
 /* 12 邀请：有效期说明 13px */
 .invite-shell p {
-  font-size: 11px;
+  font-size: 12px;
 }
 
 /* 18/17 分节标题统一无衬线 15/600 */
@@ -3984,7 +3984,7 @@ body::before {
   min-width: 0 !important;
   padding: 0 4px !important;
   white-space: nowrap;
-  font-size: 11px !important;
+  font-size: 12px !important;
 }
 
 /* 表单/信息页：防止输入控件溢出卡片 */
@@ -4063,7 +4063,7 @@ body::before {
   min-height: 36px !important;
   min-width: 56px !important;
   padding: 3px 12px !important;
-  font-size: 11px !important;
+  font-size: 12px !important;
 }
 
 .msg-text {
@@ -4072,7 +4072,7 @@ body::before {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  font-size: 11px !important;
+  font-size: 12px !important;
 }
 
 /* 16：相机角标 26px，图标 18–20，偏移 -2 */
@@ -4166,31 +4166,31 @@ textarea::placeholder {
 /* 帮助/反馈等页面的辅助文字提到 13 */
 .info-shell p,
 .info-shell small {
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .info-shell .app-segmented,
 .info-shell .app-segmented * {
-  font-size: 11px;
+  font-size: 12px;
 }
 
 /* 行内“修改”等文字按钮：44 热区 + 13 字 */
 .info-card button,
 .info-row button,
 .ac-card button {
-  font-size: 11px !important;
+  font-size: 12px !important;
 }
 
 /* 页脚版权 13 */
 .set-footer,
 .info-shell > p:last-child {
-  font-size: 11px !important;
+  font-size: 12px !important;
 }
 
 /* 分段控件统一 13 */
 .app-segmented,
 .app-segmented * {
-  font-size: 11px;
+  font-size: 12px;
 }
 
 /* ===== 第三轮 P0 收口 ===== */
@@ -4235,7 +4235,7 @@ textarea::placeholder {
 .member-row-card span,
 .archive-shell span,
 .record-media-item span {
-  font-size: 11px !important;
+  font-size: 12px !important;
 }
 
 /* 禁用态文字对比 */
@@ -4379,7 +4379,7 @@ button[aria-disabled='true'] {
   padding: 14px 4px 6px;
   text-align: center;
   color: var(--nl-muted);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.6;
 }
 
@@ -4393,11 +4393,11 @@ button[aria-disabled='true'] {
   width: 100%;
 }
 
-.search-filter { display:inline-flex !important; align-items:center; gap:4px; min-height:44px; color:var(--nl-muted); font-size: 11px; font-weight:500; }
+.search-filter { display:inline-flex !important; align-items:center; gap:4px; min-height:44px; color:var(--nl-muted); font-size: 12px; font-weight:500; }
 
 .pf-menu-muted {
   color: var(--nl-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -4761,7 +4761,7 @@ body,
   display: block !important;
   margin-top: 2px !important;
   color: var(--nl-muted) !important;
-  font-size: 11px !important;
+  font-size: 12px !important;
   font-weight: 500 !important;
 }
 
@@ -4775,7 +4775,7 @@ body,
   border-radius: 999px;
   background: #e9a05a !important;
   color: #fff !important;
-  font-size: 10px !important;
+  font-size: 12px !important;
   font-weight: 700 !important;
 }
 
@@ -4816,7 +4816,7 @@ body,
 
 .ac-action {
   color: var(--nl-accent);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -4861,7 +4861,7 @@ body,
   margin: 0;
   padding: 0;
   color: var(--nl-muted);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.6;
   text-align: center;
 }
@@ -5280,7 +5280,7 @@ body,
 
 .record-form-page .record-media-grid > button span:last-child {
   font-weight: 500 !important;
-  font-size: 11px !important;
+  font-size: 12px !important;
 }
 
 /* 04：标题/正文为两张独立卡，取消外层合并卡 */
@@ -5333,7 +5333,7 @@ body,
 .record-edit-sync-note {
   margin: 4px 0 0;
   color: var(--nl-muted);
-  font-size: 10px;
+  font-size: 12px;
   text-align: center;
 }
 
@@ -5355,7 +5355,7 @@ body,
   margin-top: 6px;
   text-align: right;
   color: var(--nl-muted);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -5389,7 +5389,7 @@ body,
   border: 1px solid rgba(120, 80, 40, 0.14);
   background: transparent;
   color: var(--nl-muted-strong);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
 }
 
@@ -5517,7 +5517,7 @@ body,
   display: grid;
   place-items: center;
   color: var(--nl-accent);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -5628,7 +5628,7 @@ body,
 }
 
 .media-add-tile span {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -5659,7 +5659,7 @@ body,
   width: 22px !important;
   height: 22px !important;
   min-height: 22px !important;
-  font-size: 10px !important;
+  font-size: 12px !important;
 }
 
 /* 15：保留日期行，只隐藏孩子头像按钮 */
@@ -6022,7 +6022,7 @@ body,
   width: 22px !important;
   height: 22px !important;
   min-height: 22px !important;
-  font-size: 10px !important;
+  font-size: 12px !important;
   padding: 0 !important;
 }
 
@@ -6148,7 +6148,7 @@ body,
   width: 22px !important;
   height: 22px !important;
   min-height: 22px !important;
-  font-size: 10px !important;
+  font-size: 12px !important;
   display: grid !important;
   place-items: center !important;
   margin: 0 !important;
@@ -6328,7 +6328,7 @@ body,
 
 .fam-member-role-sub {
   color: var(--nl-muted);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -7032,7 +7032,7 @@ body,
 }
 
 .nl-home-title-age {
-  font-size: 11px !important;
+  font-size: 12px !important;
 }
 
 .nl-home-avatar {
@@ -7250,7 +7250,7 @@ body,
   padding: 6px 12px !important;
   background: rgba(246, 159, 77, 0.18) !important;
   color: #c4762f !important;
-  font-size: 11px !important;
+  font-size: 12px !important;
   font-weight: 600 !important;
 }
 
@@ -7461,7 +7461,7 @@ body,
 
 .lg-agreement {
   margin-top: 16px !important;
-  font-size: 10px !important;
+  font-size: 12px !important;
   color: #7a5a44 !important;
 }
 
@@ -8241,7 +8241,7 @@ header.app-topbar > div span {
 }
 
 .settings-shell .set-body small {
-  font-size: 11px !important;
+  font-size: 12px !important;
 }
 
 .settings-shell .set-icon svg {
@@ -9411,7 +9411,7 @@ main[aria-label="正在进入年轮"] {
 .legal-shell .app-panel > p > span[aria-hidden="true"] {
   width: 22px !important;
   height: 22px !important;
-  font-size: 10px !important;
+  font-size: 12px !important;
 }
 
 .legal-shell .app-panel {
@@ -9498,7 +9498,7 @@ main[aria-label="正在进入年轮"] {
 }
 
 .info-shell:has(a[href^="mailto:"]) > div > div span[style*="8a6c56"] {
-  font-size: 11px !important;
+  font-size: 12px !important;
   white-space: nowrap !important;
 }
 

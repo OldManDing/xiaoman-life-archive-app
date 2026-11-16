@@ -650,12 +650,12 @@ const MediaPreviewTile = ({
         </div>
       ) : null}
       {statusLabel ? (
-        <span style={{ position: 'absolute', right: '10px', bottom: '10px', borderRadius: '8px', background: media.upload_status === 'failed' ? 'var(--nl-danger-soft)' : 'rgba(var(--nl-success-rgb),0.14)', color: media.upload_status === 'failed' ? 'var(--nl-danger)' : 'var(--nl-success)', border: '1px solid var(--nl-border-muted)', padding: '6px 10px', fontSize: '11px', fontWeight: 700 }}>
+        <span style={{ position: 'absolute', right: '10px', bottom: '10px', borderRadius: '8px', background: media.upload_status === 'failed' ? 'var(--nl-danger-soft)' : 'rgba(var(--nl-success-rgb),0.14)', color: media.upload_status === 'failed' ? 'var(--nl-danger)' : 'var(--nl-success)', border: '1px solid var(--nl-border-muted)', padding: '6px 10px', fontSize: '12px', fontWeight: 700 }}>
           {statusLabel}
         </span>
       ) : null}
       {media.upload_status === 'failed' && media.error_message ? (
-        <span style={{ position: 'absolute', left: '10px', right: '10px', top: '10px', borderRadius: '8px', background: 'var(--nl-danger-soft)', color: 'var(--nl-danger)', border: '1px solid var(--nl-danger-line)', padding: '7px 9px', fontSize: '11px', lineHeight: 1.45, fontWeight: 750 }}>
+        <span style={{ position: 'absolute', left: '10px', right: '10px', top: '10px', borderRadius: '8px', background: 'var(--nl-danger-soft)', color: 'var(--nl-danger)', border: '1px solid var(--nl-danger-line)', padding: '7px 9px', fontSize: '12px', lineHeight: 1.45, fontWeight: 750 }}>
           {media.error_message}
         </span>
       ) : null}
@@ -1284,7 +1284,7 @@ const MediaFullscreenDialog = ({
             bottom: 'calc(26px + env(safe-area-inset-bottom))',
             transform: 'translateX(-50%)',
             color: 'var(--nl-on-dark-muted)',
-            fontSize: 10,
+            fontSize: 12,
             lineHeight: 1,
             fontWeight: 700,
             pointerEvents: 'none',
@@ -2492,7 +2492,7 @@ const RecordForm = ({
             <section aria-label="记录类型" style={{ order: 3, display: 'grid', gap: '10px', padding: '2px 0 14px', borderBottom: '1px solid var(--nl-border-muted)' }}>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '12px' }}>
                 <span style={{ color: 'var(--nl-ink)', fontSize: '15px', fontWeight: 680 }}>记录方式</span>
-                <span style={{ color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 520 }}>{recordTypeOptions.find((option) => option.value === form.record_type)?.label ?? '文字'}</span>
+                <span style={{ color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 520 }}>{recordTypeOptions.find((option) => option.value === form.record_type)?.label ?? '文字'}</span>
               </div>
               <div role="group" aria-label="选择记录方式" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '8px' }}>
                 {recordTypeOptions.map((option) => {
@@ -2521,7 +2521,7 @@ const RecordForm = ({
                         display: 'grid',
                         placeItems: 'center',
                         gap: '5px',
-                        fontSize: '11px',
+                        fontSize: '12px',
                         fontWeight: active ? 700 : 560,
                         cursor: 'pointer',
                         boxShadow: active ? 'inset 0 1px 0 var(--nl-inset-highlight)' : 'none',
@@ -2620,7 +2620,7 @@ const RecordForm = ({
             >
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '12px' }}>
                 <strong style={{ color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-sans)', fontSize: '16px', lineHeight: 1.2, fontWeight: 720 }}>影像与声音</strong>
-                {uploading ? <span style={{ minWidth: 0, color: 'var(--nl-muted)', fontSize: '11px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>正在上传…</span> : null}
+                {uploading ? <span style={{ minWidth: 0, color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>正在上传…</span> : null}
               </div>
               <div className="record-media-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
                 {form.record_type === 'video' ? (
@@ -2665,7 +2665,7 @@ const RecordForm = ({
                   type="button"
                   className="record-more-toggle"
                   onClick={() => setMoreMediaOpen((current) => !current)}
-                  style={{ justifySelf: 'center', minHeight: 44, border: 'none', background: 'transparent', color: 'var(--nl-accent)', fontSize: 11, fontWeight: 500, cursor: 'pointer' }}
+                  style={{ justifySelf: 'center', minHeight: 44, border: 'none', background: 'transparent', color: 'var(--nl-accent)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}
                 >
                   {moreMediaOpen ? '收起更多方式' : '更多方式（视频 / 语音上传）'}
                 </button>
@@ -2842,7 +2842,7 @@ const RecordForm = ({
                   {aiPreviewTags.length ? (
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '7px', paddingLeft: '38px' }}>
                       {aiPreviewTags.map((tag, index) => (
-                        <span key={`${tag}-${index}`} style={{ borderRadius: '8px', background: 'transparent', border: '1px solid var(--nl-border-muted)', color: 'var(--nl-primary-2)', padding: '5px 9px', fontSize: '11px', fontWeight: 540 }}>
+                        <span key={`${tag}-${index}`} style={{ borderRadius: '8px', background: 'transparent', border: '1px solid var(--nl-border-muted)', color: 'var(--nl-primary-2)', padding: '5px 9px', fontSize: '12px', fontWeight: 540 }}>
                           #{tag}
                         </span>
                       ))}
@@ -2933,7 +2933,7 @@ const RecordForm = ({
                     <button
                       type="button"
                       aria-label={`使用手动地点：${manualLocationText}`}
-                      style={{ ...compactChoiceButtonStyle, minHeight: '36px', padding: '6px 10px', fontSize: '11px' }}
+                      style={{ ...compactChoiceButtonStyle, minHeight: '36px', padding: '6px 10px', fontSize: '12px' }}
                       onClick={() => {
                         setForm((current) => ({ ...current, location_text: manualLocationText }));
                         setSelectorMessage(
@@ -2950,7 +2950,7 @@ const RecordForm = ({
                     <button
                       key={location.id}
                       type="button"
-                      style={{ ...compactChoiceButtonStyle, minHeight: '36px', padding: '6px 10px', fontSize: '11px' }}
+                      style={{ ...compactChoiceButtonStyle, minHeight: '36px', padding: '6px 10px', fontSize: '12px' }}
                       title={[location.name, location.district, location.address].filter(Boolean).join(' · ')}
                       onClick={() => {
                         setForm((current) => ({ ...current, location_text: formatLocationText(location) }));
@@ -2998,7 +2998,7 @@ const RecordForm = ({
               {selectedTags.length ? (
                 <div className="record-tag-chips" style={{ display: 'flex', flexWrap: 'wrap', gap: '7px', paddingTop: '1px' }}>
                   {selectedTags.map((tag, index) => (
-                    <button key={`${tag}-${index}`} type="button" onClick={() => removeSelectedTag(tag)} style={{ ...selectedChipButtonStyle, minHeight: '34px', padding: '5px 9px', fontSize: '11px' }}>
+                    <button key={`${tag}-${index}`} type="button" onClick={() => removeSelectedTag(tag)} style={{ ...selectedChipButtonStyle, minHeight: '34px', padding: '5px 9px', fontSize: '12px' }}>
                       #{tag}
                       <X size={12} strokeWidth={2.4} />
                     </button>

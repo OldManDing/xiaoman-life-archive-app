@@ -307,7 +307,7 @@ textarea {
 
 .app-date-sheet-kicker {
   color: var(--nl-muted);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -325,7 +325,7 @@ textarea {
   color: var(--nl-muted-strong);
   background: var(--nl-control-bg);
   font: inherit;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 740;
   cursor: pointer;
 }
@@ -371,7 +371,7 @@ textarea {
 .app-date-sheet-nav button:first-child,
 .app-date-sheet-nav button:last-child {
   color: var(--nl-muted);
-  font-size: 10px;
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
 
@@ -384,7 +384,7 @@ textarea {
 
 .app-date-weekdays span {
   color: var(--nl-muted);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 720;
   text-align: center;
 }
@@ -435,7 +435,7 @@ textarea {
 
 .app-date-time-panel > span {
   color: var(--nl-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 760;
 }
 
@@ -467,7 +467,7 @@ textarea {
 
 .app-date-time-panel small {
   color: var(--nl-muted);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 
@@ -1042,7 +1042,7 @@ select:focus {
   min-width: 0;
   overflow: hidden;
   color: var(--nl-home-muted);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 520;
   line-height: 1.25;
   letter-spacing: -0.01em;
@@ -1066,7 +1066,7 @@ select:focus {
   padding: 0 11px;
   background: transparent;
   color: var(--nl-home-brand);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 680;
   cursor: pointer;
   box-shadow: none;
@@ -1093,7 +1093,7 @@ select:focus {
 
 .nl-home-status p {
   margin: 0;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.6;
 }
 
@@ -1131,7 +1131,7 @@ select:focus {
   margin: 0;
   color: var(--nl-home-ink);
   font-family: var(--nl-font-sans);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 680;
   line-height: 1.2;
   letter-spacing: 0;
@@ -1139,7 +1139,7 @@ select:focus {
 
 .nl-home-day-count {
   color: var(--nl-home-faint);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 640;
   font-variant-numeric: tabular-nums;
 }
@@ -1200,7 +1200,7 @@ select:focus {
   gap: 8px;
   background: var(--nl-home-brand-soft);
   color: var(--nl-home-brand);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
 }
@@ -1222,7 +1222,7 @@ select:focus {
   background: rgba(255, 254, 250, 0.92);
   color: var(--nl-home-clay);
   padding: 4px 9px;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 760;
   box-shadow: none;
 }
@@ -1315,7 +1315,7 @@ select:focus {
 .nl-moment-card.is-featured.is-text-card .nl-moment-excerpt {
   color: var(--nl-home-muted);
   font-family: var(--nl-font-sans);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.6;
 }
 
@@ -1323,7 +1323,7 @@ select:focus {
   display: -webkit-box;
   overflow: hidden;
   color: var(--nl-home-muted);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.65;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -1350,7 +1350,7 @@ select:focus {
   background: linear-gradient(140deg, #f6e7db, var(--nl-home-brand-soft));
   color: var(--nl-home-brand);
   font-family: var(--nl-font-display);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 760;
 }
 
@@ -1364,7 +1364,7 @@ select:focus {
 .nl-moment-id strong {
   overflow: hidden;
   color: var(--nl-home-ink);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 730;
   line-height: 1.2;
   text-overflow: ellipsis;
@@ -1431,7 +1431,7 @@ select:focus {
 
 .nl-home-more-hint {
   color: var(--nl-home-faint);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 520;
 }
 
@@ -1506,7 +1506,7 @@ select:focus {
   gap: 7px;
   background: var(--nl-home-paper-deep);
   color: var(--nl-home-faint);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 650;
   letter-spacing: 0.01em;
 }
@@ -1959,7 +1959,7 @@ select:focus {
   padding: 0 18px;
   background: transparent;
   color: var(--nl-ink);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 650;
   cursor: pointer;
 }
@@ -2040,7 +2040,7 @@ select:focus {
 
 .tl-day-head span {
   color: var(--nl-muted);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 560;
 }
 
@@ -2069,7 +2069,7 @@ select:focus {
   gap: 6px;
   background: linear-gradient(140deg, var(--nl-plan-mint), #f2f9f0);
   color: var(--nl-success);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 

@@ -368,7 +368,7 @@
    提到 11px + 中灰 #6a6055，对比度约 5.4:1 */
 .nl-home-day-cards .nl-moment-meta {
   font-family: var(--nl-font-sans);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   letter-spacing: 0.1em;
   color: var(--nl-home-muted);
@@ -452,7 +452,7 @@
 
 .nl-home-status {
   padding: 40px 0;
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.14em;
   color: var(--nl-home-faint);
 }
