@@ -5121,3 +5121,192 @@
 #root .nl-media-interaction .media-view-btn {
   display: none !important;
 }
+
+/* ============================================================
+   131. UI 专家复审整改：头部/CTA token 化 + chip/媒体/浮层统一
+   ============================================================ */
+
+/* 1) 头部：三页同一 top inset、同一底色、同一标题字号 26 */
+#root .app-topbar,
+#root .rd-topbar {
+  margin-top: 10px !important;
+  min-height: 46px !important;
+  height: 46px !important;
+  background: var(--nl-glass-surface) !important;
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 246, 238, 0.32)) !important;
+  border: 1px solid var(--nl-glass-border) !important;
+  border-radius: 999px !important;
+}
+
+#root .record-form-page .app-topbar h1,
+#root .record-form-page .app-topbar strong,
+#root .app-topbar .app-topbar-title,
+#root .rd-topbar-title {
+  font-family: var(--nl-font-display) !important;
+  font-size: 26px !important;
+  font-weight: 600 !important;
+  line-height: 1.1 !important;
+  color: #3F2A1C !important;
+}
+
+/* 2) 主 CTA 统一 56 / 18px / 500；次按钮 16/500 */
+#root #record-form .record-inline-submit-button,
+#root .rd-actions .rd-action-share {
+  height: 56px !important;
+  min-height: 56px !important;
+  font-size: 18px !important;
+  font-weight: 500 !important;
+}
+
+#root .rd-actions .rd-action-edit {
+  height: 56px !important;
+  min-height: 56px !important;
+  font-size: 16px !important;
+  font-weight: 500 !important;
+  border: none !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+}
+
+/* 3) 详情底部操作条：容器四边等距 4、按钮间距 8、40/60 */
+#root .rd-actions {
+  padding: 4px !important;
+  gap: 8px !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  width: 100% !important;
+  height: 64px !important;
+}
+
+#root .rd-actions .rd-action-edit {
+  flex: 0 0 38% !important;
+}
+
+#root .rd-actions .rd-action-share {
+  flex: 1 1 auto !important;
+}
+
+/* 4) 关闭菜单时彻底隐藏，不再压在说明文字上 */
+#root .app-topbar details:not([open]) > div {
+  display: none !important;
+}
+
+#root .app-topbar details > summary {
+  list-style: none !important;
+}
+
+/* 5) chip 三页统一 40 / 15px */
+#root .rd-chip {
+  height: 40px !important;
+  min-height: 40px !important;
+  padding: 0 20px !important;
+  font-size: 15px !important;
+}
+
+#root .rd-chip.is-count {
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  font-size: 13px !important;
+  color: #8A6A55 !important;
+}
+
+/* 6) 添加媒体入口统一：r20 + 虚线 + 图标 24 + 标签 15 + 更实的底 */
+#root .media-add-tile {
+  border-radius: 20px !important;
+  border: 1px dashed rgba(190, 132, 82, 0.5) !important;
+  background: rgba(255, 249, 243, 0.72) !important;
+  color: #8A4E14 !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  display: grid !important;
+  place-items: center !important;
+  gap: 6px !important;
+}
+
+#root .media-add-tile svg {
+  width: 24px !important;
+  height: 24px !important;
+  color: #B06A2C !important;
+}
+
+/* 7) 日期/地点行：图标与箭头统一颜色，可点整行 */
+#root #record-form .app-date-control svg:first-child,
+#root #record-form .record-location-row label > svg {
+  color: #6B4A32 !important;
+  stroke-width: 2.1 !important;
+}
+
+#root #record-form .app-date-control > svg:last-child,
+#root #record-form .record-location-row > svg {
+  color: #8A6A55 !important;
+  stroke-width: 2 !important;
+}
+
+/* 8) 详情缩略图圆角与其它媒体容器统一 20；新建媒体卡 22→20 */
+#root .rd-gallery .nl-media-interaction,
+#root .record-media-grid .record-media-single > button {
+  border-radius: 20px !important;
+}
+
+/* 9) 缩略图移除键：视觉 32、命中区 44 */
+#root .media-remove-btn {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  box-shadow: 0 2px 6px rgba(120, 80, 40, 0.18) !important;
+  color: #4A3527 !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+#root .media-remove-btn::before {
+  content: "" !important;
+  position: absolute !important;
+  inset: -6px !important;
+  border-radius: 999px !important;
+}
+
+/* 10) 底部 CTA 统一距屏底 24dp */
+#root .record-form-page {
+  padding-bottom: 24px !important;
+}
+
+#root .rd-actions {
+  margin-bottom: 24px !important;
+}
+
+/* 11) 媒体焦点态：可点提示 */
+#root .nl-media-interaction[role="button"] {
+  cursor: zoom-in;
+}
+
+#root .nl-media-interaction[role="button"]:active {
+  transform: scale(0.995);
+}
+
+/* 132. 收口：关闭键字形、占位对比、详情操作条边缘 */
+#root .record-form-page .app-topbar button[aria-label="返回"]:not(:has(svg)),
+#root .record-form-page .app-topbar button[aria-label="关闭"] {
+  font-size: 26px !important;
+  font-weight: 400 !important;
+  line-height: 1 !important;
+}
+
+#root .record-location-row input::placeholder {
+  color: #7E6656 !important;
+  opacity: 1 !important;
+}
+
+#root .rd-actions {
+  border: 1px solid rgba(255, 246, 236, 0.85) !important;
+  background: rgba(255, 250, 244, 0.42) !important;
+  box-shadow: 0 10px 24px rgba(146, 88, 44, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+#root .rd-actions .rd-action-share {
+  box-shadow: 0 6px 16px rgba(171, 90, 27, 0.22) !important;
+}

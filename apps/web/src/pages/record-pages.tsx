@@ -585,11 +585,11 @@ const MediaPreviewTile = ({
     <div
       className="nl-media-interaction"
       aria-label={label}
-      role={canOpenFullscreen && !hasNestedActions ? 'button' : undefined}
-      tabIndex={canOpenFullscreen && !hasNestedActions ? 0 : undefined}
-      onClick={canOpenFullscreen && !hasNestedActions ? openFullscreen : undefined}
+      role={canOpenFullscreen ? 'button' : undefined}
+      tabIndex={canOpenFullscreen ? 0 : undefined}
+      onClick={canOpenFullscreen ? openFullscreen : undefined}
       onKeyDown={
-        canOpenFullscreen && !hasNestedActions
+        canOpenFullscreen
           ? (event) => {
               if (event.key === 'Enter' || event.key === ' ') {
                 event.preventDefault();
@@ -687,33 +687,6 @@ const MediaPreviewTile = ({
         >
           <RotateCcw size={14} strokeWidth={2.2} />
           重试
-        </button>
-      ) : null}
-      {canOpenFullscreen && hasNestedActions ? (
-        <button
-          type="button"
-          className="media-overlay-btn media-view-btn"
-          aria-label={media.media_type === 'video' ? undefined : label}
-          onClick={(event) => {
-            event.stopPropagation();
-            openFullscreen();
-          }}
-          style={{
-            position: 'absolute',
-            left: '10px',
-            top: '10px',
-            minHeight: '44px',
-            borderRadius: '8px',
-            border: '1px solid var(--nl-border-strong)',
-            background: 'var(--nl-surface-soft)',
-            color: 'var(--nl-ink)',
-            padding: '8px 11px',
-            fontSize: '12px',
-            fontWeight: 700,
-            cursor: 'pointer',
-          }}
-        >
-          查看
         </button>
       ) : null}
       {onRemove ? (
