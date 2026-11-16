@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type CSSProperties, type FormEvent } from 'react';
-import { AlertCircle, BookOpen, Camera as CameraIcon, Pencil as PencilIcon, CheckCircle2, ChevronLeft, ChevronRight, Clock, Eye, FileAudio, FileText, Image, ImagePlus, MapPin, Mic, MoreHorizontal, PlayCircle, RotateCcw, Ruler, Sparkles, Square, Star, Tag, Trash2, Video, X } from 'lucide-react';
+import { AlertCircle, ArrowLeft, BookOpen, Camera as CameraIcon, Pencil as PencilIcon, CheckCircle2, ChevronLeft, ChevronRight, Clock, Eye, FileAudio, FileText, Image, ImagePlus, MapPin, Mic, MoreHorizontal, PlayCircle, RotateCcw, Ruler, Sparkles, Square, Star, Tag, Trash2, Video, X } from 'lucide-react';
 import { Camera, CameraResultType, CameraSource, type GalleryPhoto, type Photo } from '@capacitor/camera';
 import { Capacitor } from '@capacitor/core';
 import type { PointerEvent as ReactPointerEvent, ReactNode, RefObject } from 'react';
@@ -3412,8 +3412,9 @@ export const ViewRecordPage = () => {
             navigate('/timeline');
           }}
         >
-          <ChevronLeft size={24} strokeWidth={1.8} />
+          <ArrowLeft size={24} strokeWidth={1.9} />
         </button>
+        <span className="rd-topbar-title">记录详情</span>
         <div className="rd-topbar-right">
           {canManageRecord ? (
           <button type="button" aria-label="更多操作" aria-haspopup="menu" aria-expanded={moreOpen} onClick={() => setMoreOpen((current) => !current)}>

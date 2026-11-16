@@ -4140,3 +4140,75 @@
 #root .record-form-page.is-edit .record-media-section > .record-media-previews {
   display: block !important;
 }
+
+/* 105. P2 收尾：头部统一、媒体卡对比、字数计数可见 */
+#root .record-form-page .app-topbar,
+#root .rd-topbar {
+  padding: 0 16px !important;
+}
+
+#root .record-form-page .app-topbar button:has(svg),
+#root .rd-topbar button:has(svg) {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+#root .record-form-page .app-topbar button:has(svg) svg,
+#root .rd-topbar button:has(svg) svg {
+  width: 24px !important;
+  height: 24px !important;
+}
+
+/* 详情页头部标题（居中，滚动时有上下文） */
+#root .rd-topbar {
+  position: relative !important;
+  justify-content: space-between !important;
+}
+
+#root .rd-topbar-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--nl-font-display) !important;
+  font-size: 19px !important;
+  font-weight: 600 !important;
+  color: #3F2A1C !important;
+  pointer-events: none;
+}
+
+/* 「添加照片」与其他输入同一套实心卡，虚线只作内框 */
+#root .record-media-grid .record-media-single > button {
+  background-color: rgba(255, 252, 248, 0.9) !important;
+  background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.7), rgba(255, 246, 238, 0.55)) !important;
+  border: none !important;
+  box-shadow: 0 3px 10px rgba(146, 88, 44, 0.07) !important;
+}
+
+/* 新建页字数计数恢复可见 */
+#root .record-body-card {
+  overflow: visible !important;
+}
+
+#root .record-body-card .record-char-count {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  text-align: right !important;
+  font-size: 12px !important;
+  color: #8A6A55 !important;
+  margin-top: 4px !important;
+}
+
+#root .record-body-card {
+  grid-template-rows: auto minmax(0, 1fr) auto !important;
+}
+
+/* 106. 媒体卡补回 1px 白色描边，与其它输入卡同一语言 */
+#root .record-media-grid .record-media-single > button {
+  border: 1px solid rgba(255, 255, 255, 0.95) !important;
+  border-radius: 22px !important;
+}
