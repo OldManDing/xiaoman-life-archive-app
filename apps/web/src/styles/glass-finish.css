@@ -924,3 +924,136 @@
   padding-left: 20px !important;
   padding-right: 20px !important;
 }
+
+/* 30. 记录页（04 新建 / 15 编辑）：吸底条宽度修正 + 与设计稿节奏对齐 */
+#root .record-inline-submit {
+  left: 20px !important;
+  right: 20px !important;
+  width: auto !important;
+  bottom: calc(10px + env(safe-area-inset-bottom)) !important;
+  border-radius: 999px !important;
+  box-shadow: 0 14px 30px rgba(238, 128, 32, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.45) !important;
+}
+
+/* 记录页底部脚注（仅家人可见）留出空间，避免被吸底条压住 */
+#root .record-form-page {
+  padding-bottom: 168px !important;
+}
+
+#root .record-submit-hint,
+#root .record-inline-submit + p {
+  margin: 0 20px calc(14px + env(safe-area-inset-bottom)) !important;
+  text-align: center !important;
+  color: #8a6a52 !important;
+  font-size: 11px !important;
+  position: fixed !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: calc(2px + env(safe-area-inset-bottom)) !important;
+  z-index: 4 !important;
+}
+
+/* 媒体区：单列全宽虚线卡（对齐设计稿 04） */
+#root .record-media-grid {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 10px !important;
+}
+
+#root .record-media-grid > * {
+  width: 100% !important;
+}
+
+/* 记录详情页：编辑按钮改玻璃、底栏浮起 */
+#root .record-detail-actions button,
+#root .record-action-edit {
+  background: rgba(255, 255, 255, 0.55) !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  color: #4a3729 !important;
+  box-shadow: 0 8px 20px rgba(146, 96, 52, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.4) !important;
+  backdrop-filter: blur(18px) saturate(1.4) !important;
+}
+
+/* 31. 记录页媒体区高度与间距（对齐设计稿 04 的单行节奏） */
+#root .record-media-section {
+  margin-top: 12px !important;
+}
+
+#root .record-media-grid > button,
+#root .record-media-grid .media-add-tile {
+  min-height: 108px !important;
+  padding: 12px !important;
+  border-radius: 20px !important;
+}
+
+#root .record-media-grid > button svg,
+#root .record-media-grid .media-add-tile svg {
+  margin-bottom: 2px !important;
+}
+
+/* 记录详情：里程碑/标签 chip 填充琥珀，照片数 chip 保持白 */
+#root .record-detail-chips button[data-kind="milestone"],
+#root .record-detail-chips button[data-kind="tag"],
+#root .rec-detail-chips button[data-kind="milestone"],
+#root .rec-detail-chips button[data-kind="tag"] {
+  background: linear-gradient(135deg, #F2A552 0%, #E98A3C 100%) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+  box-shadow: 0 6px 14px rgba(233, 138, 60, 0.22) !important;
+}
+
+/* 32. 记录详情（03）与新建（04）收尾 */
+#root .rd-action-edit {
+  background: rgba(255, 255, 255, 0.55) !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  color: #3a2a1e !important;
+  box-shadow: 0 10px 22px rgba(146, 96, 52, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.85) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.4) !important;
+  backdrop-filter: blur(18px) saturate(1.4) !important;
+}
+
+#root .rd-chip.is-plain,
+#root .rd-chip.is-milestone {
+  background: linear-gradient(135deg, #F2A552 0%, #E98A3C 100%) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+  box-shadow: 0 6px 14px rgba(233, 138, 60, 0.22) !important;
+}
+
+/* 标签 chip 去掉 # 前缀的视觉突兀：统一内边距与字重 */
+#root .rd-chip {
+  padding: 7px 14px !important;
+  font-weight: 600 !important;
+}
+
+/* 新建页：标签行容器去卡片底色 */
+#root .record-form-page .record-tags,
+#root .record-form-page .record-tag-row,
+#root .record-form-page .record-tag-chips {
+  background: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  padding: 0 !important;
+}
+
+/* 新建页底部留白收到 120，避免长时间空白 */
+#root .record-form-page {
+  padding-bottom: 128px !important;
+}
+
+/* 33. 记录详情：底部操作条留安全边距 */
+#root .rd-actions,
+#root .rd-action-bar {
+  margin-bottom: calc(10px + env(safe-area-inset-bottom)) !important;
+  padding: 0 20px !important;
+}
+
+#root .rd-chip.is-amber {
+  background: linear-gradient(135deg, #F2A552 0%, #E98A3C 100%) !important;
+  border-color: transparent !important;
+  color: #fff !important;
+}

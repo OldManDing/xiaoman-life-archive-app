@@ -2382,11 +2382,11 @@ const RecordForm = ({
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
                 <button
                   type="button"
-                  onClick={() => void submitRecord('draft')}
+                  onClick={() => void submitRecord('published')}
                   disabled={submitting}
-                  style={{ minHeight: 44, border: 'none', background: 'transparent', color: 'var(--nl-muted-strong)', fontSize: 13, fontWeight: 500, cursor: 'pointer', padding: '0 2px' }}
+                  style={{ minHeight: 44, border: 'none', background: 'transparent', color: '#d97a22', fontSize: 15, fontWeight: 600, cursor: 'pointer', padding: '0 2px' }}
                 >
-                  {submitting ? '保存中' : '草稿'}
+                  {submitting ? '保存中' : '保存'}
                 </button>
               </span>
             ) : mode === 'edit' ? (
@@ -2802,7 +2802,7 @@ const RecordForm = ({
                   color: 'var(--nl-muted-strong)',
                   boxSizing: 'border-box',
                 }}
-                placeholder={mode === "create" ? "写几句话，或者按住上面的麦克风说" : "正文"}
+                placeholder={mode === "create" ? "写下这一刻的心情吧…比如：他学会了走路，真棒！" : "正文"}
               value={form.content_text}
               onChange={(event) => {
                 setError(null);
@@ -3382,15 +3382,17 @@ export const ViewRecordPage = () => {
     const eventTime = new Date(data.event_time);
     const stamp = Number.isNaN(eventTime.getTime())
       ? '时间待确认'
-      : new Intl.DateTimeFormat('zh-CN', {
+      : `${new Intl.DateTimeFormat('zh-CN', {
           timeZone: 'Asia/Shanghai',
           year: 'numeric',
           month: 'long',
           day: 'numeric',
+        }).format(eventTime)} · ${new Intl.DateTimeFormat('zh-CN', {
+          timeZone: 'Asia/Shanghai',
           hour: '2-digit',
           minute: '2-digit',
           hour12: false,
-        }).format(eventTime);
+        }).format(eventTime)}`;
     const place = normalizeLocationText(data.location_text);
     return place ? `${stamp} · ${place}` : stamp;
   })() : '';
@@ -3433,7 +3435,16 @@ export const ViewRecordPage = () => {
         </div>
       </div>
       {loading ? <Panel><EmptyState message="正在加载记录详情…" /></Panel> : null}
-      {error ? <Panel><EmptyState message={`加载失败：${error}`} /></Panel> : null}
+      {error ? (
+        <Panel>
+          <div style={{ display: 'grid', gap: 12, justifyItems: 'center', padding: '8px 0' }}>
+            <EmptyState message={`加载失败：${error}`} />
+            <button type="button" onClick={() => window.location.reload()} style={{ ...compactSecondaryButtonStyle, minHeight: 42, padding: '0 20px', fontSize: 13 }}>
+              重新加载
+            </button>
+          </div>
+        </Panel>
+      ) : null}
       {data ? (
         <article style={{ display: 'grid', gap: '22px', paddingBottom: '10px' }}>
           <section style={{ borderRadius: 0, border: 'none', background: 'transparent', overflow: 'visible', boxShadow: 'none', padding: 0 }}>
@@ -3497,7 +3508,7 @@ export const ViewRecordPage = () => {
               <div className="rd-chips">
                 {rdMilestone ? <span className="rd-chip is-amber">里程碑</span> : null}
                 {rdPhotoCount ? <span className="rd-chip">照片 {rdPhotoCount}</span> : null}
-                {!rdMilestone ? data.tags.filter((tag) => tag !== rdLeadTag).slice(0, 1).map((tag, index) => <span key={`${data.record_no}-chip-${tag}-${index}`} className="rd-chip is-plain">#{tag}</span>) : null}
+                {!rdMilestone ? data.tags.filter((tag) => tag !== rdLeadTag).slice(0, 1).map((tag, index) => <span key={`${data.record_no}-chip-${tag}-${index}`} className="rd-chip is-plain">{tag}</span>) : null}
               </div>
               <p className="rd-copy">
                 {rdLeadTag && rdContentText.includes(rdLeadTag) ? (
