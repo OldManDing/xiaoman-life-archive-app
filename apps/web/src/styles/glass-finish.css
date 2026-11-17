@@ -8723,3 +8723,49 @@
 #root .ac-time-col button {
   transition: none !important;
 }
+
+/* ============================================================
+   202. 档案四行触发区域统一：整行可点、箭头仅作指示
+   ============================================================ */
+#root .archive-shell .ac-row {
+  cursor: default !important;
+}
+
+#root .archive-shell .ac-row.ac-row-date,
+#root .archive-shell .ac-row.ac-row-time,
+#root .archive-shell .ac-row.ac-row-gender {
+  cursor: pointer !important;
+  -webkit-tap-highlight-color: transparent !important;
+  touch-action: manipulation !important;
+}
+
+/* 行内箭头不再单独可点，避免出现“只有箭头能点” */
+#root .archive-shell .ac-row.ac-row-date > svg,
+#root .archive-shell .ac-row.ac-row-time > svg,
+#root .archive-shell .ac-row.ac-row-gender > svg,
+#root .archive-shell .ac-row.ac-row-gender > button,
+#root .archive-shell .ac-row.ac-row-time > button {
+  pointer-events: none !important;
+}
+
+/* 整行按下反馈 */
+#root .archive-shell .ac-row.ac-row-date:active,
+#root .archive-shell .ac-row.ac-row-time:active,
+#root .archive-shell .ac-row.ac-row-gender:active {
+  background: rgba(255, 255, 255, 0.22) !important;
+}
+
+/* 日期交互层也不再单独响应，由整行负责 */
+#root .archive-shell .ac-date-ghost,
+#root .archive-shell .ac-date-ghost * {
+  pointer-events: none !important;
+}
+
+/* 203. 日期交互层恢复可点（覆盖整行，实现整行点击） */
+#root .archive-shell .ac-date-ghost {
+  pointer-events: auto !important;
+}
+
+#root .archive-shell .ac-date-ghost * {
+  pointer-events: auto !important;
+}

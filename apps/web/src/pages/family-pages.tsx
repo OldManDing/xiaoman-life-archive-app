@@ -583,7 +583,27 @@ export const FamilyChildPage = () => {
                   />
                 </div>
               </div>
-              <div className="ac-row" style={{ position: 'relative' }}>
+              <div
+                className="ac-row ac-row-time"
+                style={{ position: 'relative' }}
+                role="button"
+                tabIndex={0}
+                onClick={() => {
+                  const [h, m] = (form.birth_time || '12:00').split(':');
+                  setBirthHour(h || '12');
+                  setBirthMinute(m || '00');
+                  setBirthTimeOpen(true);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    const [h, m] = (form.birth_time || '12:00').split(':');
+                    setBirthHour(h || '12');
+                    setBirthMinute(m || '00');
+                    setBirthTimeOpen(true);
+                  }
+                }}
+              >
                 <span className="ac-label">出生时间</span>
                 <button
                   type="button"
@@ -653,7 +673,19 @@ export const FamilyChildPage = () => {
                   document.body,
                 ) : null}
               </div>
-              <div className="ac-row" style={{ position: 'relative' }}>
+              <div
+                className="ac-row ac-row-gender"
+                style={{ position: 'relative' }}
+                role="button"
+                tabIndex={0}
+                onClick={() => setGenderPickerOpen(true)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    setGenderPickerOpen(true);
+                  }
+                }}
+              >
                 <span className="ac-label">性别</span>
                 <span className="ac-value">{form.gender === 'female' ? '女' : form.gender === 'male' ? '男' : '未设置'}</span>
                 <button
