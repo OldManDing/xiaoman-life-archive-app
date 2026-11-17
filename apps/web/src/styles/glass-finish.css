@@ -7267,3 +7267,102 @@
   overflow: hidden !important;
   text-overflow: ellipsis !important;
 }
+
+/* 170. 地点行标签：左对齐、桃色水泡（压过全局 chip 规则） */
+#root .record-location-row .record-location-value {
+  padding: 0 !important;
+  justify-content: flex-start !important;
+  gap: 10px !important;
+  width: auto !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+#root .record-location-row .record-location-chip,
+#root .record-location-chip.record-location-chip {
+  background: rgba(246, 201, 154, 0.62) !important;
+  background-color: rgba(246, 201, 154, 0.62) !important;
+  background-image: linear-gradient(140deg, rgba(255, 236, 214, 0.85), rgba(246, 201, 154, 0.5)) !important;
+  border: 1px solid rgba(255, 252, 246, 0.95) !important;
+  color: #5A3718 !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
+  padding: 0 10px 0 16px !important;
+  border-radius: 999px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.95),
+    inset 0 -6px 10px -6px rgba(255, 240, 222, 0.85),
+    0 4px 10px rgba(198, 132, 74, 0.16) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(1.4) !important;
+  backdrop-filter: blur(10px) saturate(1.4) !important;
+}
+
+#root .record-location-row .record-location-chip-clear {
+  width: 18px !important;
+  height: 18px !important;
+  font-size: 12px !important;
+  background: rgba(255, 255, 255, 0.7) !important;
+  color: #7A5B44 !important;
+  border-radius: 999px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+}
+
+#root .record-location-row .record-location-placeholder {
+  font-size: 14.5px !important;
+  color: #8A6A55 !important;
+}
+
+/* 171. 地点标签改用独立类名，避免命中全局 chip 规则 */
+#root .record-location-row .record-location-tag {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  height: 32px !important;
+  max-width: 100% !important;
+  padding: 0 10px 0 16px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 252, 246, 0.95) !important;
+  background: linear-gradient(140deg, rgba(255, 236, 214, 0.95) 0%, rgba(246, 201, 154, 0.82) 100%) !important;
+  background-color: rgba(246, 201, 154, 0.82) !important;
+  background-image: linear-gradient(140deg, rgba(255, 236, 214, 0.95) 0%, rgba(246, 201, 154, 0.82) 100%) !important;
+  color: #5A3718 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.95),
+    inset 0 -6px 10px -6px rgba(255, 240, 222, 0.85),
+    0 4px 10px rgba(198, 132, 74, 0.16) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(1.4) !important;
+  backdrop-filter: blur(10px) saturate(1.4) !important;
+  overflow: hidden !important;
+}
+
+#root .record-location-row .record-location-tag-clear {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 18px !important;
+  height: 18px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.75) !important;
+  border: none !important;
+  color: #7A5B44 !important;
+  font-size: 12px !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+}
+
+#root .record-location-row .record-location-placeholder {
+  font-size: 14.5px !important;
+  font-weight: 500 !important;
+  color: #8A6A55 !important;
+}

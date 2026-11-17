@@ -2837,13 +2837,32 @@ const RecordForm = ({
                     onClick={() => setLocationPickerOpen(true)}
                   >
                     {form.location_text ? (
-                      <span className="record-location-chip">
+                      <span
+                        className="record-location-tag"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          height: 32,
+                          maxWidth: '100%',
+                          padding: '0 10px 0 16px',
+                          borderRadius: 999,
+                          border: '1px solid rgba(255,252,246,0.95)',
+                          background:
+                            'linear-gradient(140deg, rgba(255,236,214,0.92) 0%, rgba(246,201,154,0.78) 100%)',
+                          color: '#5A3718',
+                          fontSize: 13,
+                          fontWeight: 600,
+                          boxShadow:
+                            'inset 0 1px 1px rgba(255,255,255,0.95), inset 0 -6px 10px -6px rgba(255,240,222,0.85), 0 4px 10px rgba(198,132,74,0.16)',
+                        }}
+                      >
                         {form.location_text}
                         <span
                           role="button"
                           tabIndex={0}
                           aria-label="清除地点"
-                          className="record-location-chip-clear"
+                          className="record-location-tag-clear"
                           onClick={(event) => {
                             event.stopPropagation();
                             setError(null);
