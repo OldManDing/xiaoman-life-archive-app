@@ -6869,3 +6869,71 @@
   min-height: calc(100dvh - 12px) !important;
   padding-bottom: 24px !important;
 }
+
+/* 161. 日历日期格尺寸收敛：38x38，行列更紧凑 */
+.app-date-grid {
+  grid-template-columns: repeat(7, 1fr) !important;
+  gap: 6px 4px !important;
+}
+
+.app-date-day {
+  width: 38px !important;
+  height: 38px !important;
+  min-width: 38px !important;
+  min-height: 38px !important;
+  max-width: 38px !important;
+  max-height: 38px !important;
+  margin: 0 auto !important;
+  font-size: 13px !important;
+  line-height: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.app-date-weekdays span {
+  font-size: 12px !important;
+  line-height: 1 !important;
+}
+
+.app-date-sheet-actions button {
+  height: 38px !important;
+  min-height: 38px !important;
+}
+
+.app-date-sheet-nav button {
+  height: 30px !important;
+  min-height: 30px !important;
+}
+
+.app-date-sheet {
+  padding: 16px 20px 20px !important;
+}
+
+/* 162. 编辑页日期行高度归位 50（此前 43，内部控件 50 溢出） */
+#root #record-form > section:has(.app-date-control),
+#root .record-form-page.is-edit form > section:has(.app-date-control),
+#root .record-form-page.is-edit #record-form > section:has(.app-date-control),
+#root .record-form-page form > section:has(.app-date-control) {
+  height: 50px !important;
+  min-height: 50px !important;
+  max-height: 50px !important;
+  padding: 0 22px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+#root #record-form > section:has(.app-date-control) .app-date-control,
+#root .record-form-page form > section:has(.app-date-control) .app-date-control {
+  height: 50px !important;
+  min-height: 50px !important;
+  max-height: 50px !important;
+}
+
+#root #record-form > section:has(.app-date-control) .app-date-control input,
+#root .record-form-page form > section:has(.app-date-control) .app-date-control input {
+  height: 50px !important;
+  min-height: 50px !important;
+  font-size: 14.5px !important;
+  padding: 0 !important;
+}
