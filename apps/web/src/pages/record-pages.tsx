@@ -2830,29 +2830,43 @@ const RecordForm = ({
               >
                 <label style={{ position: 'relative', minWidth: 0, display: 'flex', alignItems: 'center' }}>
                   <MapPin size={15} strokeWidth={2.2} style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: 'var(--nl-muted)', pointerEvents: 'none' }} />
-                  <input
+                  <button
+                    type="button"
                     aria-label="选择地点"
-                    readOnly
-                    role="button"
+                    className="record-location-value"
                     onClick={() => setLocationPickerOpen(true)}
-                    onFocus={() => setLocationPickerOpen(true)}
-                    style={{
-                      width: '100%',
-                      minWidth: 0,
-                      minHeight: '46px',
-                      border: 'none',
-                      outline: 'none',
-                      background: 'transparent',
-                      color: 'var(--nl-ink)',
-                      padding: '0 10px 0 38px',
-                      boxSizing: 'border-box',
-                      fontSize: '13px',
-                      fontWeight: 650,
-                      cursor: 'pointer',
-                    }}
-                    value={form.location_text}
-                    placeholder="选择地点"
-                  />
+                  >
+                    {form.location_text ? (
+                      <span className="record-location-chip">
+                        {form.location_text}
+                        <span
+                          role="button"
+                          tabIndex={0}
+                          aria-label="清除地点"
+                          className="record-location-chip-clear"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setError(null);
+                            setSelectorMessage(null);
+                            setForm((current) => ({ ...current, location_text: '' }));
+                          }}
+                          onKeyDown={(event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault();
+                              event.stopPropagation();
+                              setError(null);
+                              setSelectorMessage(null);
+                              setForm((current) => ({ ...current, location_text: '' }));
+                            }
+                          }}
+                        >
+                          ×
+                        </span>
+                      </span>
+                    ) : (
+                      <span className="record-location-placeholder">选择地点</span>
+                    )}
+                  </button>
                 </label>
                 <ChevronRight size={18} strokeWidth={1.9} aria-hidden="true" style={{ alignSelf: 'center', color: '#A98467', flexShrink: 0 }} />
 

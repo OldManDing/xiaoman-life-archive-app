@@ -7139,3 +7139,131 @@
   background-color: rgba(255, 251, 246, 0.88) !important;
   background-image: linear-gradient(160deg, rgba(255, 255, 255, 0.86) 0%, rgba(255, 246, 236, 0.78) 100%) !important;
 }
+
+/* ============================================================
+   168. 地点选中后显示为标签 + 选择器改为居中弹窗
+   ============================================================ */
+
+/* 1) 地点行内的值 -> 标签 */
+#root .record-location-value {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: 100% !important;
+  height: 50px !important;
+  min-height: 50px !important;
+  padding: 0 10px 0 38px !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+  text-align: left !important;
+  overflow: visible !important;
+}
+
+#root .record-location-placeholder {
+  font-size: 14.5px !important;
+  font-weight: 500 !important;
+  color: #8A6A55 !important;
+}
+
+#root .record-location-chip {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  height: 34px !important;
+  max-width: 100% !important;
+  padding: 0 12px 0 16px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 252, 246, 0.92) !important;
+  background: rgba(246, 201, 154, 0.55) !important;
+  background-image: none !important;
+  color: #5A3718 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.95),
+    inset 0 -7px 12px -6px rgba(255, 240, 222, 0.85),
+    0 4px 10px rgba(198, 132, 74, 0.14) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(1.4) !important;
+  backdrop-filter: blur(10px) saturate(1.4) !important;
+  overflow: hidden !important;
+}
+
+#root .record-location-chip::before {
+  content: "" !important;
+  position: absolute !important;
+  top: 3px !important;
+  left: 16% !important;
+  width: 30% !important;
+  height: 30% !important;
+  border-radius: 999px !important;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0)) !important;
+  pointer-events: none !important;
+  z-index: 2 !important;
+}
+
+#root .record-location-chip-clear {
+  position: relative !important;
+  z-index: 3 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.55) !important;
+  color: #7A5B44 !important;
+  font-size: 13px !important;
+  line-height: 1 !important;
+  cursor: pointer !important;
+}
+
+/* 2) 选择器改为居中弹窗 */
+#root .record-location-sheet-backdrop {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 24px !important;
+}
+
+#root .record-form-page .record-location-sheet,
+#root .record-location-sheet {
+  width: 100% !important;
+  max-width: 336px !important;
+  max-height: 68vh !important;
+  border-radius: 24px !important;
+  padding: 20px 20px 22px !important;
+  box-shadow: 0 24px 60px rgba(90, 55, 25, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+}
+
+#root .record-location-sheet-head strong {
+  font-size: 17px !important;
+}
+
+#root .record-location-options {
+  gap: 8px !important;
+}
+
+#root .record-location-options button {
+  height: 34px !important;
+  padding: 0 14px !important;
+  font-size: 12.5px !important;
+}
+
+/* 169. 隐藏旧的行内地点建议条（已改为弹窗选择） */
+#root .record-location-chips {
+  display: none !important;
+}
+
+/* 地点行内 chip 与行同高居中 */
+#root .record-location-row .record-location-chip {
+  height: 32px !important;
+  max-width: calc(100% - 24px) !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
