@@ -7520,3 +7520,27 @@
 #root .rd-copy {
   margin-bottom: 0 !important;
 }
+
+/* 176. 详情页主次按钮改为等宽等大 */
+#root .rd-actions {
+  display: flex !important;
+  gap: 8px !important;
+  align-items: stretch !important;
+}
+
+#root .rd-actions .rd-action-edit,
+#root .rd-actions .rd-action-share {
+  flex: 1 1 0 !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: 56px !important;
+  min-height: 56px !important;
+  max-height: 56px !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  border-radius: 999px !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
