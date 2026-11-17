@@ -560,19 +560,28 @@ export const FamilyChildPage = () => {
                 <input className="ac-input" value={form.name} onChange={(event) => { formDirtyRef.current = true; setForm((current) => ({ ...current, name: event.target.value })); }} aria-label="孩子姓名" />
                 <Pencil size={18} strokeWidth={1.8} aria-hidden="true" color="#8b7160" />
               </div>
-              <div className="ac-row">
+              <div className="ac-row ac-row-date" style={{ position: 'relative' }}>
                 <span className="ac-label">出生日期</span>
-                <AppDateInput
-                  aria-label="生日"
-                  variant="line"
-                  value={form.birthday}
-                  displayValue={form.birthday ? (() => {
+                <span className="ac-value">
+                  {form.birthday ? (() => {
                     const [y, m, d] = form.birthday.split('-');
                     return y && m && d ? `${Number(y)}年${Number(m)}月${Number(d)}日` : form.birthday;
-                  })() : undefined}
-                  placeholder="年/月/日"
-                  onChange={(event) => { formDirtyRef.current = true; setForm((current) => ({ ...current, birthday: event.target.value })); }}
-                />
+                  })() : '未设置'}
+                </span>
+                <ChevronRight size={18} strokeWidth={1.8} aria-hidden="true" color="#8b7160" />
+                <div className="ac-date-ghost" aria-hidden="true">
+                  <AppDateInput
+                    aria-label="生日"
+                    variant="line"
+                    value={form.birthday}
+                    displayValue={form.birthday ? (() => {
+                      const [y, m, d] = form.birthday.split('-');
+                      return y && m && d ? `${Number(y)}年${Number(m)}月${Number(d)}日` : form.birthday;
+                    })() : undefined}
+                    placeholder="年/月/日"
+                    onChange={(event) => { formDirtyRef.current = true; setForm((current) => ({ ...current, birthday: event.target.value })); }}
+                  />
+                </div>
               </div>
               <div className="ac-row" style={{ position: 'relative' }}>
                 <span className="ac-label">出生时间</span>

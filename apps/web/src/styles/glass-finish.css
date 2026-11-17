@@ -8135,3 +8135,379 @@
   color: #FFFFFF !important;
   box-shadow: 0 10px 20px rgba(216, 134, 58, 0.24) !important;
 }
+
+/* 186. 档案行右侧箭头统一列位 */
+#root .archive-shell .ac-row {
+  display: grid !important;
+  grid-template-columns: 104px minmax(0, 1fr) 32px !important;
+  align-items: center !important;
+  column-gap: 12px !important;
+  padding: 0 !important;
+}
+
+#root .archive-shell .ac-row > svg {
+  justify-self: end !important;
+  align-self: center !important;
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  color: #A98467 !important;
+}
+
+#root .archive-shell .ac-row > button:last-child {
+  justify-self: end !important;
+  width: 32px !important;
+  min-width: 32px !important;
+  max-width: 32px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+#root .archive-shell .ac-row > button:last-child svg {
+  width: 20px !important;
+  height: 20px !important;
+  color: #A98467 !important;
+}
+
+#root .archive-shell .ac-row > button.ac-time-trigger {
+  justify-self: start !important;
+  width: auto !important;
+  max-width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  display: inline-flex !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+/* 187. 用 lucide 类名统一箭头绝对定位到右列 */
+#root .archive-shell .ac-row {
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: 104px minmax(0, 1fr) !important;
+  align-items: center !important;
+  column-gap: 12px !important;
+  padding: 0 28px 0 0 !important;
+}
+
+#root .archive-shell .ac-row svg.lucide-chevron-right {
+  position: absolute !important;
+  right: 0 !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  margin: 0 !important;
+  color: #A98467 !important;
+  pointer-events: none !important;
+}
+
+#root .archive-shell .ac-row > button:last-child {
+  justify-self: end !important;
+  width: 32px !important;
+  min-width: 32px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+#root .archive-shell .ac-row > button:last-child svg:not(.lucide-chevron-right) {
+  width: 20px !important;
+  height: 20px !important;
+}
+
+#root .archive-shell .ac-row input.ac-input {
+  padding-right: 0 !important;
+}
+
+/* 188. 档案行：三列 + 箭头绝对定位（修正换行与偏移） */
+#root .archive-shell .ac-row {
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: 104px minmax(0, 1fr) 32px !important;
+  align-items: center !important;
+  column-gap: 12px !important;
+  padding: 0 4px 0 0 !important;
+}
+
+#root .archive-shell .ac-row svg.lucide-chevron-right {
+  position: absolute !important;
+  right: 4px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 20px !important;
+  height: 20px !important;
+  margin: 0 !important;
+  pointer-events: none !important;
+}
+
+#root .archive-shell .ac-row > button:last-child {
+  grid-column: 3 !important;
+}
+
+/* 189. 让嵌套容器不成为箭头定位参照 */
+#root .archive-shell .ac-row .app-date-control,
+#root .archive-shell .ac-row .app-date-control * {
+  position: static !important;
+}
+
+#root .archive-shell .ac-row > button,
+#root .archive-shell .ac-row > button * {
+  position: static !important;
+}
+
+#root .archive-shell .ac-row > button:last-child {
+  position: relative !important;
+}
+
+#root .archive-shell .ac-row > button:last-child svg.lucide-chevron-right {
+  position: absolute !important;
+  right: -6px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}
+
+/* 190. 按钮内箭头归位 */
+#root .archive-shell .ac-row > button:last-child svg.lucide-chevron-right {
+  position: absolute !important;
+  right: 0 !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 20px !important;
+  height: 20px !important;
+}
+
+/* 191. 撤回对日期控件内部子节点的 static，避免布局塌陷 */
+#root .archive-shell .ac-row .app-date-control {
+  position: static !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: 100% !important;
+  height: 100% !important;
+  padding-right: 28px !important;
+}
+
+#root .archive-shell .ac-row .app-date-control > svg.lucide-chevron-right {
+  display: none !important;
+}
+
+#root .archive-shell .ac-row .app-date-control svg:not(.lucide-chevron-right) {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  margin: 0 !important;
+  color: #A98467 !important;
+}
+
+#root .archive-shell .ac-row .app-date-control span {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: #3F2A1C !important;
+}
+
+#root .archive-shell .ac-row > button * {
+  position: static !important;
+}
+
+#root .archive-shell .ac-row > button svg.lucide-chevron-right {
+  position: absolute !important;
+  right: 4px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+}
+
+/* 192. 日期控件恢复原始布局，箭头仅在行内右对齐 */
+#root .archive-shell .ac-row .app-date-control,
+#root .archive-shell .ac-row .app-date-control * {
+  position: revert !important;
+}
+
+#root .archive-shell .ac-row .app-date-control {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+#root .archive-shell .ac-row .app-date-control input {
+  flex: 0 1 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: #3F2A1C !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+#root .archive-shell .ac-row .app-date-control > svg:last-child {
+  display: block !important;
+  margin-left: auto !important;
+  width: 20px !important;
+  height: 20px !important;
+  color: #A98467 !important;
+}
+
+#root .archive-shell .ac-row .app-date-control > svg:first-child {
+  width: 20px !important;
+  height: 20px !important;
+  color: #A98467 !important;
+}
+
+/* 193. 日期值恢复可见：输入框吃掉剩余宽度 */
+#root .archive-shell .ac-row .app-date-control input {
+  flex: 1 1 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+#root .archive-shell .ac-row .app-date-control > svg:last-child {
+  margin-left: 0 !important;
+  flex: 0 0 20px !important;
+}
+
+/* 194. 日期控件恢复页面原始样式（显示“2025年3月8日”） */
+#root .archive-shell .ac-row .app-date-control,
+#root .archive-shell .ac-row .app-date-control * {
+  all: revert !important;
+}
+
+/* 195. 日期行：隐藏原生输入只显示格式化文案，箭头常显 */
+#root .archive-shell .ac-row .app-date-control {
+  position: relative !important;
+}
+
+#root .archive-shell .ac-row .app-date-control input,
+#root .archive-shell .ac-row .app-date-control .app-date-time-input {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  opacity: 0 !important;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  cursor: pointer !important;
+}
+
+#root .archive-shell .ac-row .app-date-control > span {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: #3F2A1C !important;
+  padding-right: 30px !important;
+}
+
+#root .archive-shell .ac-row .app-date-control > svg {
+  position: static !important;
+  width: 20px !important;
+  height: 20px !important;
+  margin: 0 !important;
+  color: #A98467 !important;
+}
+
+#root .archive-shell .ac-row .app-date-control > svg.lucide-chevron-right {
+  position: absolute !important;
+  right: 0 !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  display: block !important;
+}
+
+/* 196. 日期行两个图标都显示：日历在左、箭头在右 */
+#root .archive-shell .ac-row .app-date-control > svg {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  color: #A98467 !important;
+}
+
+#root .archive-shell .ac-row .app-date-control > svg:first-child {
+  order: 0 !important;
+  margin-right: 2px !important;
+}
+
+#root .archive-shell .ac-row .app-date-control > span {
+  order: 1 !important;
+  flex: 1 1 auto !important;
+  padding-right: 0 !important;
+}
+
+#root .archive-shell .ac-row .app-date-control > svg.lucide-chevron-right {
+  order: 2 !important;
+  position: static !important;
+  transform: none !important;
+  margin-left: 0 !important;
+}
+
+/* 197. 日期行改为纯文本 + 透明交互层（与其它行同构） */
+#root .archive-shell .ac-row.ac-row-date {
+  position: relative !important;
+  display: grid !important;
+  grid-template-columns: 104px minmax(0, 1fr) 32px !important;
+  align-items: center !important;
+  column-gap: 12px !important;
+  padding: 0 4px 0 0 !important;
+}
+
+#root .archive-shell .ac-row.ac-row-date > .ac-value {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: #3F2A1C !important;
+}
+
+#root .archive-shell .ac-row.ac-row-date > svg {
+  justify-self: end !important;
+  width: 20px !important;
+  height: 20px !important;
+  color: #A98467 !important;
+}
+
+#root .archive-shell .ac-date-ghost {
+  position: absolute !important;
+  inset: 0 !important;
+  opacity: 0 !important;
+  overflow: hidden !important;
+}
+
+#root .archive-shell .ac-date-ghost * {
+  pointer-events: auto !important;
+}
+
+#root .archive-shell .ac-date-ghost .app-date-control,
+#root .archive-shell .ac-date-ghost .app-date-control * {
+  all: revert !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+#root .archive-shell .ac-date-ghost input {
+  width: 100% !important;
+  height: 100% !important;
+  cursor: pointer !important;
+}
