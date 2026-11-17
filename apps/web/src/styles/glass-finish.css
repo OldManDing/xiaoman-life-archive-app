@@ -7814,3 +7814,92 @@
 #root .archive-shell .ac-card {
   padding: 2px 16px !important;
 }
+
+/* ============================================================
+   182. 孩子档案行内取值统一为纯文本（去掉长短不一的输入框）
+   ============================================================ */
+#root .archive-shell .ac-row .ac-input,
+#root .archive-shell .ac-row .app-date-time-input {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: #3F2A1C !important;
+  width: 100% !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+#root .archive-shell .ac-row .ac-input:focus,
+#root .archive-shell .ac-row .app-date-time-input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+#root .archive-shell .ac-row .app-date-control {
+  height: auto !important;
+  min-height: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  gap: 8px !important;
+}
+
+/* 行内四列对齐：标签 104 + 值 + 右侧图标 */
+#root .archive-shell .ac-row {
+  display: grid !important;
+  grid-template-columns: 104px minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  column-gap: 12px !important;
+  padding: 0 !important;
+}
+
+#root .archive-shell .ac-label {
+  width: 104px !important;
+  min-width: 104px !important;
+  font-size: 14px !important;
+  color: #6B4A32 !important;
+}
+
+#root .archive-shell .ac-value {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: #3F2A1C !important;
+}
+
+/* 183. 压实：档案行输入框彻底透明（高优先级） */
+#root .archive-shell .app-panel .ac-card .ac-row .ac-input.ac-input,
+#root .archive-shell .app-panel .ac-card .ac-row .app-date-time-input.app-date-time-input,
+#root .archive-shell .ac-row input.ac-input,
+#root .archive-shell .ac-row input.app-date-time-input {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  border-radius: 0 !important;
+  color: #3F2A1C !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+#root .archive-shell .ac-row input::placeholder {
+  color: #9C7A61 !important;
+}

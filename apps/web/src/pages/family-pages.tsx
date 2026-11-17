@@ -570,16 +570,18 @@ export const FamilyChildPage = () => {
                   onChange={(event) => { formDirtyRef.current = true; setForm((current) => ({ ...current, birthday: event.target.value })); }}
                 />
               </div>
-              <div className="ac-row">
+              <div className="ac-row" style={{ position: 'relative' }}>
                 <span className="ac-label">出生时间</span>
+                <span className="ac-value">{form.birth_time ? form.birth_time : '未设置'}</span>
+                <ChevronRight size={18} strokeWidth={1.8} aria-hidden="true" color="#8b7160" />
                 <input
-                  className="ac-input"
+                  className="ac-input ac-input-ghost"
                   type="time"
                   value={form.birth_time ?? ''}
                   onChange={(event) => { formDirtyRef.current = true; setForm((current) => ({ ...current, birth_time: event.target.value || null })); }}
                   aria-label="出生时间"
+                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
                 />
-                <ChevronRight size={18} strokeWidth={1.8} aria-hidden="true" color="#8b7160" />
               </div>
               <div className="ac-row" style={{ position: 'relative' }}>
                 <span className="ac-label">性别</span>
