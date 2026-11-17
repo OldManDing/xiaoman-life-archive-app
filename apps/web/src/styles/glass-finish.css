@@ -7544,3 +7544,273 @@
   align-items: center !important;
   justify-content: center !important;
 }
+
+/* ============================================================
+   177. 孩子档案页（/family/child）玻璃化与规格统一
+   ============================================================ */
+#root .archive-shell {
+  padding-bottom: 12px !important;
+  min-height: 0 !important;
+}
+
+/* 头部返回键透明化（与记录页一致） */
+#root .archive-shell .app-topbar a,
+#root .archive-shell .app-topbar button {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: #6B4A32 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+#root .archive-shell .app-topbar svg {
+  width: 22px !important;
+  height: 22px !important;
+  color: #6B4A32 !important;
+}
+
+#root .archive-shell .app-topbar h1 {
+  font-size: 19px !important;
+  font-weight: 600 !important;
+  color: #3F2A1C !important;
+}
+
+/* 表单卡：粉色实心 -> 玻璃 */
+#root .archive-shell .ac-card {
+  background-color: rgba(255, 255, 255, 0.18) !important;
+  background-image: linear-gradient(150deg, rgba(255, 255, 255, 0.42) 0%, rgba(255, 248, 240, 0.10) 55%, rgba(255, 240, 226, 0.16) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.62) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 8px 22px rgba(146, 88, 44, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.75) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.35) !important;
+  backdrop-filter: blur(18px) saturate(1.35) !important;
+  padding: 4px 16px !important;
+}
+
+/* 行：透明、分隔线改浅白 */
+#root .archive-shell .ac-row {
+  height: 64px !important;
+  min-height: 64px !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.5) !important;
+  background: transparent !important;
+}
+
+#root .archive-shell .ac-row:last-child {
+  border-bottom: none !important;
+}
+
+/* 行内输入：去掉白色实心块 */
+#root .archive-shell .ac-row input,
+#root .archive-shell .ac-row textarea,
+#root .archive-shell .ac-row select {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: #3F2A1C !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  padding: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+#root .archive-shell .ac-row input::placeholder {
+  color: #8A6A55 !important;
+}
+
+/* 行内左侧标题与值 */
+#root .archive-shell .ac-row > span:first-child,
+#root .archive-shell .ac-row > label:first-child {
+  font-size: 14px !important;
+  color: #6B4A32 !important;
+  font-weight: 500 !important;
+}
+
+#root .archive-shell .ac-row strong,
+#root .archive-shell .ac-row .ac-value {
+  font-size: 15px !important;
+  color: #3F2A1C !important;
+  font-weight: 600 !important;
+}
+
+#root .archive-shell .ac-row svg {
+  width: 20px !important;
+  height: 20px !important;
+  color: #A98467 !important;
+}
+
+/* 提示文字 */
+#root .archive-shell .archive-hint {
+  font-size: 12px !important;
+  color: #8A6A55 !important;
+  text-align: center !important;
+}
+
+/* 更换头像 → 水泡标签 */
+#root .archive-shell .ac-hero span,
+#root .archive-shell .ac-hero button {
+  height: 34px !important;
+  min-height: 34px !important;
+  padding: 0 16px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.82) !important;
+  background: rgba(255, 255, 255, 0.14) !important;
+  color: #6B4A32 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.95), inset 0 -6px 10px -6px rgba(255, 250, 244, 0.85), 0 4px 10px rgba(178, 113, 60, 0.12) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(1.5) !important;
+  backdrop-filter: blur(10px) saturate(1.5) !important;
+}
+
+/* 保存按钮 → 全站主 CTA 规格 */
+#root .archive-shell button[type="submit"],
+#root .archive-shell .ac-card ~ div button {
+  height: 56px !important;
+  min-height: 56px !important;
+  border-radius: 999px !important;
+  border: none !important;
+  background-color: #D9863A !important;
+  background-image: linear-gradient(135deg, #EFA35A 0%, #E08C3D 55%, #D27F33 100%) !important;
+  color: #FFFFFF !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 10px 22px rgba(216, 134, 58, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+}
+
+/* 头像外圈更轻 */
+#root .archive-shell .ac-hero img {
+  box-shadow: 0 8px 20px rgba(146, 88, 44, 0.16) !important;
+}
+
+/* 178. 孩子档案：输入框改浅玻璃、相机徽标复位 */
+#root .archive-shell .ac-row .ac-input,
+#root .archive-shell .ac-row .app-date-time-input {
+  background: rgba(255, 255, 255, 0.22) !important;
+  background-color: rgba(255, 255, 255, 0.22) !important;
+  border: 1px solid rgba(255, 255, 255, 0.55) !important;
+  border-radius: 10px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  max-height: 34px !important;
+  padding: 0 10px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.75) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+#root .archive-shell .ac-row .app-date-control {
+  height: 34px !important;
+  min-height: 34px !important;
+}
+
+#root .archive-shell .ac-row .app-date-control svg {
+  width: 18px !important;
+  height: 18px !important;
+}
+
+/* 相机徽标恢复 34 圆形 */
+#root .archive-shell .ac-hero label > span {
+  width: 34px !important;
+  min-width: 34px !important;
+  max-width: 34px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  max-height: 34px !important;
+  padding: 0 !important;
+  border-radius: 999px !important;
+  display: grid !important;
+  place-items: center !important;
+  background: rgba(255, 255, 255, 0.55) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  box-shadow: 0 4px 10px rgba(146, 88, 44, 0.14) !important;
+}
+
+#root .archive-shell .ac-hero label > span svg {
+  width: 16px !important;
+  height: 16px !important;
+  color: #6B4A32 !important;
+}
+
+/* 更换头像标签保持水泡但不被相机规则影响 */
+#root .archive-shell .ac-hero > span {
+  height: 34px !important;
+  padding: 0 16px !important;
+  border-radius: 999px !important;
+}
+
+/* 179. 孩子档案输入框再柔化，与玻璃卡一体 */
+#root .archive-shell .ac-row .ac-input,
+#root .archive-shell .ac-row .app-date-time-input {
+  background: rgba(255, 255, 255, 0.14) !important;
+  background-color: rgba(255, 255, 255, 0.14) !important;
+  border: 1px solid rgba(255, 255, 255, 0.45) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+}
+
+#root .archive-shell .ac-row .ac-input::placeholder,
+#root .archive-shell .ac-row .app-date-time-input::placeholder {
+  color: #9C7A61 !important;
+}
+
+/* 180. 孩子档案高度收敛到一屏 */
+#root .archive-shell {
+  padding-bottom: 4px !important;
+}
+
+#root .archive-shell .ac-hero {
+  height: 168px !important;
+  min-height: 168px !important;
+  max-height: 168px !important;
+  padding-bottom: 2px !important;
+}
+
+#root .archive-shell .ac-hero label,
+#root .archive-shell .ac-hero label img {
+  width: 112px !important;
+  height: 112px !important;
+}
+
+#root .archive-shell .ac-card {
+  margin-bottom: 10px !important;
+}
+
+#root .archive-shell .archive-hint {
+  margin: 2px 0 10px !important;
+}
+
+#root .archive-shell .app-panel {
+  padding-bottom: 4px !important;
+}
+
+/* 181. 孩子档案再收一档，确保一屏 */
+#root .archive-shell .ac-row {
+  height: 58px !important;
+  min-height: 58px !important;
+}
+
+#root .archive-shell .ac-hero {
+  height: 152px !important;
+  min-height: 152px !important;
+  max-height: 152px !important;
+}
+
+#root .archive-shell .ac-hero label,
+#root .archive-shell .ac-hero label img {
+  width: 104px !important;
+  height: 104px !important;
+}
+
+#root .archive-shell .ac-card {
+  padding: 2px 16px !important;
+}
