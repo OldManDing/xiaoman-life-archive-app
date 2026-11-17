@@ -2581,10 +2581,7 @@ const RecordForm = ({
                 boxShadow: '0 12px 26px rgba(var(--nl-shadow-rgb), 0.05)',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '12px' }}>
-                <strong style={{ color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-sans)', fontSize: '16px', lineHeight: 1.2, fontWeight: 720 }}>影像与声音</strong>
-                {uploading ? <span style={{ minWidth: 0, color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>正在上传…</span> : null}
-              </div>
+              {uploading ? <span style={{ minWidth: 0, color: 'var(--nl-muted)', fontSize: '12px', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>正在上传…</span> : null}
               <div className="record-media-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px' }}>
                 {form.record_type === 'video' ? (
                   <>
