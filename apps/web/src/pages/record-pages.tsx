@@ -1468,6 +1468,7 @@ const RecordForm = ({
   const [poiLoading, setPoiLoading] = useState(false);
   const [poiSearchFailed, setPoiSearchFailed] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
+  const [locationPickerOpen, setLocationPickerOpen] = useState(false);
   const [aiPreviewLoading, setAiPreviewLoading] = useState(false);
   const [aiPreviewSummary, setAiPreviewSummary] = useState<string | null>(null);
   const [aiPreviewTags, setAiPreviewTags] = useState<string[]>([]);
@@ -2830,7 +2831,11 @@ const RecordForm = ({
                 <label style={{ position: 'relative', minWidth: 0, display: 'flex', alignItems: 'center' }}>
                   <MapPin size={15} strokeWidth={2.2} style={{ position: 'absolute', left: '13px', top: '50%', transform: 'translateY(-50%)', color: 'var(--nl-muted)', pointerEvents: 'none' }} />
                   <input
-                    aria-label="搜索地点"
+                    aria-label="选择地点"
+                    readOnly
+                    role="button"
+                    onClick={() => setLocationPickerOpen(true)}
+                    onFocus={() => setLocationPickerOpen(true)}
                     style={{
                       width: '100%',
                       minWidth: 0,
@@ -2843,14 +2848,10 @@ const RecordForm = ({
                       boxSizing: 'border-box',
                       fontSize: '13px',
                       fontWeight: 650,
+                      cursor: 'pointer',
                     }}
                     value={form.location_text}
-                    onChange={(event) => {
-                      setError(null);
-                      setSelectorMessage(null);
-                      setForm((current) => ({ ...current, location_text: event.target.value }));
-                    }}
-                    placeholder="添加地点"
+                    placeholder="选择地点"
                   />
                 </label>
                 <ChevronRight size={18} strokeWidth={1.9} aria-hidden="true" style={{ alignSelf: 'center', color: '#A98467', flexShrink: 0 }} />
@@ -2882,6 +2883,72 @@ const RecordForm = ({
                   {locationLoading ? '定位中' : '定位'}
                 </button>
               </div>
+
+              {locationPickerOpen ? (
+                <div
+                  className="record-location-sheet-backdrop"
+                  role="presentation"
+                  onClick={() => setLocationPickerOpen(false)}
+                >
+                  <div className="record-location-sheet" role="dialog" aria-label="选择地点" onClick={(event) => event.stopPropagation()}>
+                    <div className="record-location-sheet-head">
+                      <strong>选择地点</strong>
+                      <button type="button" onClick={() => setLocationPickerOpen(false)}>完成</button>
+                    </div>
+                    <button
+                      type="button"
+                      className="record-location-here"
+                      onClick={() => void useCurrentLocation()}
+                      disabled={locationLoading}
+                    >
+                      <MapPin size={16} strokeWidth={2.2} />
+                      {locationLoading ? '定位中…' : '使用当前位置'}
+                    </button>
+                    <div className="record-location-options">
+                      {locationOptions.map((option) => (
+                        <button
+                          key={`loc-${option}`}
+                          type="button"
+                          className={form.location_text === option ? 'is-on' : ''}
+                          onClick={() => {
+                            setError(null);
+                            setSelectorMessage(null);
+                            setForm((current) => ({ ...current, location_text: option }));
+                            setLocationPickerOpen(false);
+                          }}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                    {mergedLocationSuggestions.filter((location) => !locationOptions.includes(formatLocationText(location))).length ? (
+                      <>
+                        <p className="record-location-sheet-sub">附近与搜索建议</p>
+                        <div className="record-location-options">
+                          {mergedLocationSuggestions.filter((location) => !locationOptions.includes(formatLocationText(location))).slice(0, 8).map((location) => {
+                            const text = formatLocationText(location);
+                            return (
+                              <button
+                                key={`poi-${text}`}
+                                type="button"
+                                className={form.location_text === text ? 'is-on' : ''}
+                                onClick={() => {
+                                  setError(null);
+                                  setSelectorMessage(null);
+                                  setForm((current) => ({ ...current, location_text: text }));
+                                  setLocationPickerOpen(false);
+                                }}
+                              >
+                                {text}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
 
               {form.location_text.trim() || poiLoading ? (
                 <div className="record-location-chips" style={{ display: 'flex', gap: '7px', flexWrap: 'wrap', paddingTop: '1px' }}>
