@@ -665,19 +665,46 @@ export const FamilyChildPage = () => {
                 >
                   <ChevronRight size={18} strokeWidth={1.8} aria-hidden="true" />
                 </button>
-                {genderPickerOpen ? (
-                  <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 18, left: 62, zIndex: 20, borderRadius: 18, background: '#fffaf4', border: '1px solid rgba(255, 255, 255, 0.9)', boxShadow: '0 14px 34px rgba(120, 80, 40, 0.16)', padding: 10 }}>
-                    <AppSegmentedControl
-                      ariaLabel="性别"
-                      value={form.gender}
-                      onChange={(value) => { formDirtyRef.current = true; setForm((current) => ({ ...current, gender: value })); }}
-                      options={[
-                        { value: 'female', label: '女' },
-                        { value: 'male', label: '男' },
-                        { value: 'unknown', label: '不透露' },
-                      ]}
-                    />
-                  </div>
+                {genderPickerOpen ? createPortal(
+                  <div
+                    className="ac-gender-backdrop"
+                    role="presentation"
+                    onClick={() => setGenderPickerOpen(false)}
+                  >
+                    <div
+                      className="ac-gender-sheet"
+                      role="dialog"
+                      aria-modal="true"
+                      aria-label="选择性别"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <strong className="ac-gender-title">选择性别</strong>
+                      <div className="ac-gender-options">
+                        {[
+                          { value: 'female', label: '女' },
+                          { value: 'male', label: '男' },
+                          { value: 'unknown', label: '不透露' },
+                        ].map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            className={form.gender === option.value ? 'is-on' : ''}
+                            onClick={() => {
+                              formDirtyRef.current = true;
+                              setForm((current) => ({ ...current, gender: option.value }));
+                              setGenderPickerOpen(false);
+                            }}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                      <button type="button" className="ac-gender-cancel" onClick={() => setGenderPickerOpen(false)}>
+                        取消
+                      </button>
+                    </div>
+                  </div>,
+                  document.body,
                 ) : null}
               </div>
               <details className="ac-more" style={{ padding: '0 18px 12px' }}>
