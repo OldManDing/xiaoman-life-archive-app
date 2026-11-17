@@ -6645,3 +6645,97 @@
   background-color: rgba(255, 255, 255, 0.18) !important;
   background-image: linear-gradient(140deg, rgba(255, 255, 255, 0.32), rgba(255, 246, 236, 0.10)) !important;
 }
+
+/* ============================================================
+   157. 日历弹层内按钮改为水泡样式
+   ============================================================ */
+.app-date-sheet-actions button {
+  position: relative !important;
+  overflow: hidden !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  padding: 0 18px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.82) !important;
+  color: #4A3527 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.95),
+    inset 0 -7px 12px -6px rgba(255, 250, 244, 0.85),
+    inset 0 6px 10px -8px rgba(180, 120, 70, 0.28),
+    0 6px 12px rgba(178, 113, 60, 0.12) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(1.6) brightness(1.05) !important;
+  backdrop-filter: blur(12px) saturate(1.6) brightness(1.05) !important;
+}
+
+.app-date-sheet-actions button::before {
+  content: "" !important;
+  position: absolute !important;
+  top: 3px !important;
+  left: 18% !important;
+  width: 32% !important;
+  height: 30% !important;
+  border-radius: 999px !important;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0)) !important;
+  pointer-events: none !important;
+  z-index: 2 !important;
+}
+
+.app-date-sheet-actions button.app-date-sheet-confirm {
+  background: rgba(246, 201, 154, 0.42) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 252, 246, 0.92) !important;
+  color: #5A3718 !important;
+  font-weight: 700 !important;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.95),
+    inset 0 -7px 12px -6px rgba(255, 240, 222, 0.85),
+    inset 0 6px 10px -8px rgba(170, 105, 55, 0.30),
+    0 7px 14px rgba(198, 132, 74, 0.16) !important;
+}
+
+/* 月份导航按钮也做成小水泡 */
+.app-date-sheet-nav button {
+  position: relative !important;
+  overflow: hidden !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.10) !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  color: #5A4433 !important;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.9),
+    inset 0 -5px 9px -5px rgba(255, 250, 244, 0.8) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(1.5) !important;
+  backdrop-filter: blur(10px) saturate(1.5) !important;
+}
+
+.app-date-sheet-nav button::before {
+  content: "" !important;
+  position: absolute !important;
+  top: 2px !important;
+  left: 20% !important;
+  width: 30% !important;
+  height: 28% !important;
+  border-radius: 999px !important;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0)) !important;
+  pointer-events: none !important;
+  z-index: 2 !important;
+}
+
+/* 未选中日期格也给淡淡的水泡，hover/active 更明显 */
+.app-date-day {
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.28) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  backdrop-filter: blur(8px) !important;
+}
+
+.app-date-day:active {
+  background: rgba(255, 255, 255, 0.22) !important;
+}
