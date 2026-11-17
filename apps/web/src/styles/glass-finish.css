@@ -6046,3 +6046,22 @@
   width: 14px !important;
   height: 14px !important;
 }
+
+/* ============================================================
+   147. 主按钮提亮一档
+   ============================================================ */
+#root #record-form .record-inline-submit-button,
+#root #record-form button.record-inline-submit-button,
+#root .rd-actions .rd-action-share {
+  background-color: #D9863A !important;
+  background-image: linear-gradient(135deg, #EFA35A 0%, #E08C3D 55%, #D27F33 100%) !important;
+  color: #FFFFFF !important;
+  font-weight: 600 !important;
+  box-shadow: 0 10px 22px rgba(216, 134, 58, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+}
+
+/* 次按钮同步提亮 */
+#root .rd-actions .rd-action-edit {
+  background: rgba(255, 235, 214, 0.85) !important;
+  color: #6B4A32 !important;
+}
