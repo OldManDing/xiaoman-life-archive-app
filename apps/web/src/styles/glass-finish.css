@@ -7486,3 +7486,37 @@
 #root [role="dialog"][aria-label="状态"] > section > div > span {
   background: rgba(255, 255, 255, 0.55) !important;
 }
+
+/* ============================================================
+   175. 详情页高度收敛：去掉重复底部留白，操作条贴安全区
+   ============================================================ */
+#root .app-main-scroll:has(.rd-topbar),
+#root .app-main-scroll:has(.rd-hero),
+#root .record-detail-page {
+  padding-bottom: 12px !important;
+  min-height: 0 !important;
+}
+
+#root .record-detail-page,
+#root .app-main-scroll:has(.rd-hero) > * {
+  min-height: 0 !important;
+}
+
+#root .rd-actions {
+  position: sticky !important;
+  bottom: 12px !important;
+  margin: 16px 0 0 !important;
+  width: 100% !important;
+}
+
+#root .rd-body {
+  margin-bottom: 0 !important;
+}
+
+#root .rd-gallery {
+  margin-bottom: 0 !important;
+}
+
+#root .rd-copy {
+  margin-bottom: 0 !important;
+}
