@@ -8742,3 +8742,237 @@
 #root#root .nl-home-recent-head h2 { font-size: 16px !important; }
 #root#root .nl-home-title-row,
 #root#root .nl-home-title-row strong { font-size: 16px !important; }
+
+
+/* ============================================================
+   212. 全站统一令牌：标题/正文/按钮/标签/卡片/背景
+   ============================================================ */
+
+/* ---- 1. 页面标题统一 18px ---- */
+#root#root .app-topbar h1,
+#root#root .rd-topbar h1,
+#root#root .archive-shell .app-topbar h1,
+#root#root .fam-title,
+#root#root .pf-hero-name,
+#root#root .fam-hero-name,
+#root#root .tl-big-title,
+#root#root .nl-moment-featured-title,
+#root#root .rd-title,
+#root#root .nl-home-title-row,
+#root#root .nl-home-title-row strong,
+#root#root .search-head h1,
+#root#root .search-head strong {
+  font-size: 18px !important;
+  line-height: 1.3 !important;
+  font-weight: 600 !important;
+}
+
+/* ---- 2. 区块标题统一 16px ---- */
+#root#root .nl-home-main h2,
+#root#root .nl-home-recent-head h2,
+#root#root .nl-home-recent-head strong,
+#root#root .fam-section-title,
+#root#root .tl-month-title,
+#root#root .search-section-title,
+#root#root .record-section-title,
+#root#root .pf-section-title {
+  font-size: 16px !important;
+  line-height: 1.35 !important;
+  font-weight: 600 !important;
+}
+
+/* ---- 3. 卡片标题统一 15px ---- */
+#root#root .nl-home-row-title,
+#root#root .nl-moment-title,
+#root#root .tl-card-title,
+#root#root .fam-member-name,
+#root#root .pf-menu-item,
+#root#root .pf-menu-label,
+#root#root .record-card-title,
+#root#root .rd-card-title {
+  font-size: 15px !important;
+  line-height: 1.4 !important;
+}
+
+/* ---- 4. 正文统一 14px ---- */
+#root#root .nl-home-row-meta,
+#root#root .nl-moment-meta,
+#root#root .tl-card-meta,
+#root#root .fam-hero-meta,
+#root#root .fam-member-role,
+#root#root .pf-hero-meta,
+#root#root .rd-body p,
+#root#root .rd-copy,
+#root#root .record-editor-body-input,
+#root#root .rd-meta,
+#root#root .search-input,
+#root#root .search-field input {
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+}
+
+/* ---- 5. 辅助信息统一 12px ---- */
+#root#root .fam-hero-meta,
+#root#root .pf-stat-label,
+#root#root .nl-home-row-meta,
+#root#root .tl-card-meta,
+#root#root .rd-meta,
+#root#root .record-hint,
+#root#root .archive-hint {
+  font-size: 12px !important;
+  line-height: 1.5 !important;
+}
+
+/* ---- 6. 统计数字统一 20px ---- */
+#root#root .pf-stat-num,
+#root#root .fam-stat-num,
+#root#root .tl-stats-capsule strong {
+  font-size: 20px !important;
+  font-weight: 600 !important;
+}
+
+/* ---- 7. 标签/胶囊统一：高 32、字 12、圆角 999 ---- */
+#root#root .record-quick-tags button,
+#root#root .rd-chips .rd-chip,
+#root#root .search-chip,
+#root#root .tl-year,
+#root#root .fam-role,
+#root#root .record-location-tag,
+#root#root .record-location-options button,
+#root#root .ac-gender-options button,
+#root#root .app-date-shortcut {
+  height: 32px !important;
+  min-height: 32px !important;
+  max-height: 32px !important;
+  padding: 0 14px !important;
+  border-radius: 999px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* ---- 8. 普通按钮统一：高 44、字 14、圆角 999 ---- */
+#root#root button.rd-action-edit,
+#root#root button.rd-action-share,
+#root#root .record-inline-submit-button,
+#root#root .ac-time-actions button,
+#root#root .ac-gender-cancel,
+#root#root .app-date-sheet-actions button,
+#root#root .fam-invite-row button,
+#root#root .media-overlay-btn {
+  height: 44px !important;
+  min-height: 44px !important;
+  max-height: 44px !important;
+  border-radius: 999px !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+}
+
+/* 主 CTA 单独 52 高 */
+#root#root .record-inline-submit-button {
+  height: 52px !important;
+  min-height: 52px !important;
+  font-size: 15px !important;
+}
+
+/* ---- 9. 卡片统一：玻璃底、20 圆角、16 内边距、同一投影 ---- */
+#root#root .nl-home-recent,
+#root#root .tl-grid,
+#root#root .fam-hero,
+#root#root .fam-member-card,
+#root#root .pf-hero,
+#root#root .pf-menu,
+#root#root .pf-stats,
+#root#root .record-editor-title-row,
+#root#root .record-body-card,
+#root#root .record-location-row,
+#root#root .archive-shell .ac-card,
+#root#root .tl-card,
+#root#root .nl-home-row,
+#root#root .search-result-card {
+  border-radius: 20px !important;
+  padding: 16px !important;
+  background-color: rgba(255, 252, 248, 0.42) !important;
+  border: 1px solid rgba(255, 255, 255, 0.72) !important;
+  box-shadow: 0 6px 18px rgba(146, 88, 44, 0.08) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.3) !important;
+  backdrop-filter: blur(16px) saturate(1.3) !important;
+}
+
+/* ---- 10. 页面背景统一 ---- */
+#root#root .app-page-shell,
+#root#root .record-form-page,
+#root#root .record-detail-page,
+#root#root .archive-shell,
+#root#root .nl-home-shell,
+#root#root .tl-page,
+#root#root .fam-page,
+#root#root .pf-page,
+#root#root .search-page {
+  background-image:
+    radial-gradient(45% 32% at 12% 6%, rgba(255, 214, 170, 0.55), transparent 72%),
+    radial-gradient(40% 28% at 92% 24%, rgba(255, 188, 140, 0.40), transparent 74%),
+    linear-gradient(180deg, #FBE6D4 0%, #FCEFE2 60%, #FBEDE0 100%) !important;
+  background-repeat: no-repeat !important;
+}
+
+
+/* 213. 统一收口：剩余字号与按钮高度对齐 */
+#root#root .rd-topbar-title,
+#root#root .rd-topbar h1,
+#root#root .rd-topbar strong { font-size: 18px !important; }
+
+#root#root .pf-stat-num { font-size: 18px !important; }
+
+/* 所有主操作按钮统一 52 高 / r999 / 15px */
+#root#root .record-inline-submit-button,
+#root#root .archive-shell button[type="submit"],
+#root#root .rd-actions .rd-action-edit,
+#root#root .rd-actions .rd-action-share,
+#root#root .fam-invite-row button,
+#root#root .ac-time-actions button.is-primary,
+#root#root .ac-gender-options button {
+  height: 52px !important;
+  min-height: 52px !important;
+  max-height: 52px !important;
+  border-radius: 999px !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+}
+
+/* 顶栏图标按钮统一 44 圆形 */
+#root#root .app-topbar button,
+#root#root .app-topbar a,
+#root#root .rd-topbar button,
+#root#root .rd-topbar a,
+#root#root .search-back {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  border-radius: 999px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 18px !important;
+}
+
+/* 214. 孩子档案页高度归位（统一按钮后多出 15dp） */
+#root#root .archive-shell .ac-hero {
+  height: 136px !important;
+  min-height: 136px !important;
+  max-height: 136px !important;
+}
+
+#root#root .archive-shell .ac-hero label,
+#root#root .archive-shell .ac-hero label img {
+  width: 96px !important;
+  height: 96px !important;
+}
+
+#root#root .archive-shell .archive-hint {
+  margin: 0 0 6px !important;
+}
