@@ -105,3 +105,20 @@
 #root#root .search-input,
 #root#root .search-field input { font-size: 14px !important; }
 #root#root .search-section-title { font-size: 16px !important; }
+
+/* 211. 字号再收一档：主标题不超过 22，常规标题 17-19 */
+#root#root .nl-moment-featured-title { font-size: 19px !important; }
+#root#root .tl-big-title { font-size: 19px !important; }
+#root#root .fam-title { font-size: 22px !important; }
+#root#root .fam-hero-name { font-size: 21px !important; }
+#root#root .pf-hero-name { font-size: 21px !important; }
+#root#root .pf-stat-num { font-size: 20px !important; }
+#root#root .rd-title { font-size: 19px !important; }
+#root#root .app-topbar h1,
+#root#root .rd-topbar h1,
+#root#root .archive-shell .app-topbar h1 { font-size: 17px !important; }
+#root#root .fam-section-title,
+#root#root .nl-home-main h2,
+#root#root .nl-home-recent-head h2 { font-size: 16px !important; }
+#root#root .nl-home-title-row,
+#root#root .nl-home-title-row strong { font-size: 16px !important; }
