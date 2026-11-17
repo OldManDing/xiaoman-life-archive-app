@@ -8976,3 +8976,68 @@
 #root#root .archive-shell .archive-hint {
   margin: 0 0 6px !important;
 }
+
+
+/* ============================================================
+   215. 自查收口：把游离字号/圆角拉回令牌
+   ============================================================ */
+#root#root .nl-home-title,
+#root#root .nl-home-title-row,
+#root#root .nl-home-title-row strong { font-size: 16px !important; }
+
+#root#root .tl-stats-capsule strong,
+#root#root .tl-stats-capsule span { font-size: 16px !important; }
+#root#root .tl-month-trigger,
+#root#root .tl-month-switch,
+#root#root .tl-month-switch button { font-size: 16px !important; }
+
+#root#root .search-head,
+#root#root .search-head h1,
+#root#root .search-head strong,
+#root#root .search-title { font-size: 18px !important; }
+#root#root .search-page .search-main > * { font-size: 14px !important; }
+
+#root#root .record-form-page .record-hint,
+#root#root .record-form-page p,
+#root#root .record-form-page small { font-size: 12px !important; }
+
+#root#root .account-shell .member-row-title,
+#root#root .account-shell h2,
+#root#root .account-shell h3 { font-size: 16px !important; }
+
+#root#root .invite-shell h1,
+#root#root .invite-shell h2,
+#root#root .invite-shell .invite-title,
+#root#root .invite-shell .invite-code { font-size: 18px !important; }
+
+/* 圆角统一为 20 / 24 */
+#root#root .account-shell .member-row-card,
+#root#root .account-shell section,
+#root#root .invite-shell section,
+#root#root .invite-shell .invite-card {
+  border-radius: 20px !important;
+}
+
+#root#root .account-shell .member-row-card,
+#root#root .invite-shell .invite-card {
+  font-size: 14px !important;
+}
+
+
+/* 216. 精确收口：剩余 4 处游离字号 */
+#root#root .search-recent-title,
+#root#root .search-count { font-size: 16px !important; }
+#root#root .search-count { font-size: 12px !important; }
+
+#root#root .record-char-count { font-size: 12px !important; }
+#root#root .record-location-placeholder { font-size: 14px !important; }
+
+#root#root .account-shell strong,
+#root#root .account-shell .member-row-title,
+#root#root .account-shell .member-name { font-size: 15px !important; }
+
+#root#root .invite-code-value { font-size: 20px !important; letter-spacing: 0.06em !important; }
+#root#root .invite-section-title { font-size: 16px !important; }
+
+/* 217. 邀请码字号归入令牌 */
+#root#root .invite-code-value { font-size: 18px !important; }
