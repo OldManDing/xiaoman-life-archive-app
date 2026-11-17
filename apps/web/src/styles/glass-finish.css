@@ -6065,3 +6065,208 @@
   background: rgba(255, 235, 214, 0.85) !important;
   color: #6B4A32 !important;
 }
+
+/* ============================================================
+   148. 标签改为「水泡」质感（玻璃泡泡）
+   ============================================================ */
+
+/* 未选中：透明水泡 + 高光 + 底部反射 */
+#root .record-quick-tags button,
+#root .record-quick-tags button:not(.is-on),
+#root .rd-chips .rd-chip.is-plain,
+#root .rd-chips .rd-chip.is-amber,
+#root .rd-chips .rd-chip.is-milestone {
+  background-color: transparent !important;
+  background-image:
+    radial-gradient(130% 150% at 30% 16%, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.42) 26%, rgba(255, 255, 255, 0.08) 52%, rgba(255, 246, 236, 0.16) 74%, rgba(255, 255, 255, 0.34) 100%),
+    linear-gradient(158deg, rgba(255, 255, 255, 0.34) 0%, rgba(255, 243, 231, 0.16) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.78) !important;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.98),
+    inset 0 -7px 12px rgba(255, 255, 255, 0.20),
+    inset 0 -1px 2px rgba(206, 150, 100, 0.22),
+    0 6px 14px rgba(178, 113, 60, 0.13) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.5) !important;
+  backdrop-filter: blur(16px) saturate(1.5) !important;
+  color: #5A4433 !important;
+}
+
+/* 选中：桃色水泡，保持通透与高光 */
+#root .record-quick-tags button.is-on,
+#root .rd-chips .rd-chip.is-amber,
+#root .rd-chips .rd-chip.is-milestone {
+  background-color: transparent !important;
+  background-image:
+    radial-gradient(130% 150% at 30% 14%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 241, 222, 0.55) 24%, rgba(247, 205, 160, 0.55) 56%, rgba(238, 178, 122, 0.62) 82%, rgba(255, 226, 196, 0.55) 100%),
+    linear-gradient(158deg, rgba(252, 214, 176, 0.55), rgba(238, 178, 122, 0.42)) !important;
+  border: 1px solid rgba(255, 250, 244, 0.85) !important;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.95),
+    inset 0 -8px 14px rgba(255, 255, 255, 0.28),
+    inset 0 -1px 2px rgba(198, 132, 74, 0.30),
+    0 7px 16px rgba(198, 132, 74, 0.20) !important;
+  color: #5A3718 !important;
+}
+
+/* 高光小点：模拟泡泡反光 */
+#root .record-quick-tags button,
+#root .rd-chips .rd-chip.is-plain,
+#root .rd-chips .rd-chip.is-amber,
+#root .rd-chips .rd-chip.is-milestone {
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+#root .record-quick-tags button::after,
+#root .rd-chips .rd-chip.is-plain::after,
+#root .rd-chips .rd-chip.is-amber::after,
+#root .rd-chips .rd-chip.is-milestone::after {
+  content: "" !important;
+  position: absolute !important;
+  top: 4px !important;
+  left: 12% !important;
+  width: 42% !important;
+  height: 38% !important;
+  border-radius: 999px !important;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0)) !important;
+  pointer-events: none !important;
+  z-index: 2 !important;
+}
+
+/* 水泡不挡文字 */
+#root .record-quick-tags button > *,
+#root .rd-chips .rd-chip > * {
+  position: relative !important;
+  z-index: 3 !important;
+}
+
+/* 149. 水泡细化：去掉过强高光点，改为柔和内高光 + 底部反射 */
+#root .record-quick-tags button::after,
+#root .rd-chips .rd-chip.is-plain::after,
+#root .rd-chips .rd-chip.is-amber::after,
+#root .rd-chips .rd-chip.is-milestone::after {
+  display: none !important;
+}
+
+#root .record-quick-tags button,
+#root .record-quick-tags button:not(.is-on),
+#root .rd-chips .rd-chip.is-plain {
+  background-color: rgba(255, 252, 247, 0.26) !important;
+  background-image:
+    radial-gradient(115% 130% at 32% 12%, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0.28) 30%, rgba(255, 255, 255, 0.04) 55%, rgba(255, 244, 232, 0.12) 78%, rgba(255, 255, 255, 0.26) 100%),
+    linear-gradient(158deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 243, 231, 0.10) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.72) !important;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.85),
+    inset 0 -6px 10px rgba(255, 255, 255, 0.16),
+    inset 0 -1px 1px rgba(200, 146, 96, 0.18),
+    0 5px 12px rgba(178, 113, 60, 0.10) !important;
+}
+
+#root .record-quick-tags button.is-on,
+#root .rd-chips .rd-chip.is-amber,
+#root .rd-chips .rd-chip.is-milestone {
+  background-color: rgba(247, 205, 160, 0.55) !important;
+  background-image:
+    radial-gradient(115% 130% at 32% 10%, rgba(255, 255, 255, 0.80) 0%, rgba(255, 240, 219, 0.40) 30%, rgba(246, 200, 154, 0.40) 60%, rgba(234, 172, 116, 0.52) 84%, rgba(255, 228, 200, 0.46) 100%),
+    linear-gradient(158deg, rgba(250, 211, 172, 0.46), rgba(236, 175, 120, 0.40)) !important;
+  border: 1px solid rgba(255, 250, 244, 0.80) !important;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.90),
+    inset 0 -7px 12px rgba(255, 255, 255, 0.22),
+    inset 0 -1px 2px rgba(190, 126, 70, 0.26),
+    0 6px 14px rgba(198, 132, 74, 0.16) !important;
+  color: #5A3718 !important;
+}
+
+/* 150. 水泡质感加强：透明芯 + 明亮边缘 + 顶部反光 + 底部反射 */
+#root .record-quick-tags button,
+#root .record-quick-tags button:not(.is-on),
+#root .rd-chips .rd-chip.is-plain {
+  background-color: rgba(255, 255, 255, 0.10) !important;
+  background-image:
+    radial-gradient(70% 90% at 26% 8%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.45) 22%, rgba(255, 255, 255, 0.06) 46%, rgba(255, 255, 255, 0) 60%),
+    radial-gradient(90% 120% at 50% 118%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 246, 236, 0.18) 35%, rgba(255, 255, 255, 0) 62%),
+    linear-gradient(160deg, rgba(255, 255, 255, 0.16), rgba(255, 240, 226, 0.06)) !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.35),
+    inset 0 2px 5px rgba(255, 255, 255, 0.55),
+    inset 0 -3px 8px rgba(255, 246, 236, 0.45),
+    0 6px 14px rgba(178, 113, 60, 0.12) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(1.6) brightness(1.04) !important;
+  backdrop-filter: blur(14px) saturate(1.6) brightness(1.04) !important;
+  color: #4A3527 !important;
+}
+
+#root .record-quick-tags button.is-on,
+#root .rd-chips .rd-chip.is-amber,
+#root .rd-chips .rd-chip.is-milestone {
+  background-color: rgba(246, 201, 154, 0.42) !important;
+  background-image:
+    radial-gradient(70% 90% at 26% 8%, rgba(255, 255, 255, 0.92) 0%, rgba(255, 250, 240, 0.42) 24%, rgba(255, 255, 255, 0) 58%),
+    radial-gradient(90% 120% at 50% 118%, rgba(255, 255, 255, 0.50) 0%, rgba(246, 201, 154, 0.30) 38%, rgba(255, 255, 255, 0) 64%),
+    linear-gradient(160deg, rgba(250, 214, 176, 0.50), rgba(232, 168, 110, 0.42)) !important;
+  border: 1px solid rgba(255, 252, 246, 0.92) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.30),
+    inset 0 2px 5px rgba(255, 255, 255, 0.60),
+    inset 0 -3px 8px rgba(255, 240, 222, 0.50),
+    0 7px 16px rgba(198, 132, 74, 0.18) !important;
+  color: #5A3718 !important;
+}
+
+/* 151. 水泡最终版：近透明芯 + 小高光 + 亮边 + 底部反射 */
+#root .record-quick-tags button,
+#root .record-quick-tags button:not(.is-on),
+#root .rd-chips .rd-chip.is-plain {
+  background: rgba(255, 255, 255, 0.07) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.82) !important;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.95),
+    inset 0 -7px 12px -6px rgba(255, 250, 244, 0.85),
+    inset 0 6px 10px -8px rgba(180, 120, 70, 0.30),
+    0 6px 12px rgba(178, 113, 60, 0.12) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(1.6) brightness(1.05) !important;
+  backdrop-filter: blur(12px) saturate(1.6) brightness(1.05) !important;
+  color: #4A3527 !important;
+}
+
+#root .record-quick-tags button.is-on,
+#root .rd-chips .rd-chip.is-amber,
+#root .rd-chips .rd-chip.is-milestone {
+  background: rgba(246, 201, 154, 0.38) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 252, 246, 0.92) !important;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.95),
+    inset 0 -7px 12px -6px rgba(255, 240, 222, 0.85),
+    inset 0 6px 10px -8px rgba(170, 105, 55, 0.32),
+    0 7px 14px rgba(198, 132, 74, 0.16) !important;
+  color: #5A3718 !important;
+}
+
+#root .record-quick-tags button::before,
+#root .rd-chips .rd-chip.is-plain::before,
+#root .rd-chips .rd-chip.is-amber::before,
+#root .rd-chips .rd-chip.is-milestone::before {
+  content: "" !important;
+  position: absolute !important;
+  top: 3px !important;
+  left: 18% !important;
+  width: 32% !important;
+  height: 30% !important;
+  border-radius: 999px !important;
+  background: radial-gradient(closest-side, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0)) !important;
+  pointer-events: none !important;
+  z-index: 2 !important;
+}
+
+#root .record-quick-tags button,
+#root .rd-chips .rd-chip.is-plain,
+#root .rd-chips .rd-chip.is-amber,
+#root .rd-chips .rd-chip.is-milestone {
+  position: relative !important;
+  overflow: hidden !important;
+}
