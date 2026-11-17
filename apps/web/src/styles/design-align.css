@@ -1,0 +1,347 @@
+/* ============================================================
+   design-align.css —— 设计还原单一令牌层
+   依据：artifacts/design-directions/DESIGN-SPEC-v3.md
+         docs/设计还原差异清单_28屏_2026-11-14.md（G1–G10）
+   规则：本文件是全站视觉的唯一覆盖层，必须最后引入。
+        后续新增样式请优先改这里的令牌，不要再新建覆盖块。
+   ============================================================ */
+
+:root {
+  /* 底 */
+  --nl2-bg-top: #FDF6EC;
+  --nl2-bg-mid: #FBEEE0;
+  --nl2-bg-bot: #F6DCCB;
+  --nl2-glass-1: rgba(255, 250, 244, 0.78);
+  --nl2-glass-2: rgba(255, 250, 244, 0.62);
+  --nl2-glass-3: rgba(255, 250, 244, 0.46);
+  --nl2-line: rgba(58, 42, 28, 0.10);
+
+  /* 文字 */
+  --nl2-ink-900: #3A2A1E;
+  --nl2-ink-500: #6F5745;
+  --nl2-ink-400: #8B7160;
+
+  /* 琥珀 */
+  --nl2-amber: #E9A05A;
+  --nl2-amber-ink: #8A4E14;
+  --nl2-amber-tint: rgba(200, 140, 70, 0.14);
+  --nl2-amber-soft: rgba(233, 160, 90, 0.24);
+
+  /* 动作 */
+  --nl2-btn: #A9581B;
+  --nl2-btn-text: #FFFFFF;
+  --nl2-danger: #C0392B;
+
+  /* 几何 */
+  --nl2-r-float: 26px;
+  --nl2-r-card: 24px;
+  --nl2-r-row: 18px;
+  --nl2-r-thumb: 14px;
+  --nl2-r-control: 16px;
+  --nl2-shadow-l2: 0 10px 24px rgba(146, 96, 52, 0.10);
+  --nl2-shadow-btn: 0 10px 22px rgba(146, 96, 52, 0.18);
+}
+
+/* ---------------- G1 页面底色 ---------------- */
+#root#root .nl-home-shell,
+#root#root .tl-page,
+#root#root .fam-page,
+#root#root .pf-page,
+#root#root .search-page,
+#root#root .record-form-page,
+#root#root .record-detail-page,
+#root#root .archive-shell,
+#root#root .app-page-shell {
+  background-color: var(--nl2-bg-mid) !important;
+  background-image: linear-gradient(
+    180deg,
+    var(--nl2-bg-top) 0%,
+    var(--nl2-bg-mid) 52%,
+    var(--nl2-bg-bot) 100%
+  ) !important;
+  background-attachment: scroll !important;
+  background-repeat: no-repeat !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+/* ---------------- G5 字号阶梯 ---------------- */
+/* 品牌字 / 独立页大标题（衬线，仅允许这几类） */
+#root#root .fam-title,
+#root#root .tl-big-title,
+#root#root .nl-moment-featured-title,
+#root#root .rd-title {
+  font-family: var(--nl-font-display, "Songti SC", serif) !important;
+  font-size: 30px !important;
+  line-height: 1.3 !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+/* 屏标题（胶囊条内，20 衬线） */
+#root#root .app-topbar h1,
+#root#root .rd-topbar h1,
+#root#root .rd-topbar-title,
+#root#root .archive-shell .app-topbar h1 {
+  font-family: var(--nl-font-display, "Songti SC", serif) !important;
+  font-size: 20px !important;
+  line-height: 1.2 !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+/* 卡标题 17/1.5 无衬线 500 */
+#root#root .nl-home-row-title,
+#root#root .nl-moment-title,
+#root#root .tl-card-title,
+#root#root .fam-member-name,
+#root#root .fam-hero-name,
+#root#root .pf-menu-item,
+#root#root .pf-menu-label,
+#root#root .record-card-title,
+#root#root .rd-card-title,
+#root#root .search-result-title {
+  font-family: var(--nl-font-sans, system-ui) !important;
+  font-size: 17px !important;
+  line-height: 1.5 !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.01em !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+/* 正文 15/1.75 */
+#root#root .rd-body p,
+#root#root .rd-copy,
+#root#root .record-editor-body-input,
+#root#root .nl-moment-meta,
+#root#root .search-input {
+  font-family: var(--nl-font-sans, system-ui) !important;
+  font-size: 15px !important;
+  line-height: 1.75 !important;
+  font-weight: 400 !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+/* 副标 / 元信息 13/1.5 */
+#root#root .nl-home-row-meta,
+#root#root .tl-card-meta,
+#root#root .fam-hero-meta,
+#root#root .fam-member-role,
+#root#root .pf-hero-meta,
+#root#root .rd-meta,
+#root#root .record-hint,
+#root#root .archive-hint,
+#root#root .record-char-count,
+#root#root .search-count {
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  font-weight: 400 !important;
+  color: var(--nl2-ink-500) !important;
+}
+
+/* 小标签 11/1.4 + 字距 */
+#root#root .fam-role,
+#root#root .rd-chip.is-count,
+#root#root .record-media-count,
+#root#root .media-add-tile span,
+#root#root .nl-home-same-day {
+  font-size: 11px !important;
+  line-height: 1.4 !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.12em !important;
+  color: var(--nl2-ink-500) !important;
+}
+
+/* 数字等宽 */
+#root#root .pf-stat-num,
+#root#root .fam-stat-num,
+#root#root .tl-stats-capsule strong,
+#root#root .record-char-count {
+  font-variant-numeric: tabular-nums !important;
+}
+
+/* 区块标题 17/600 */
+#root#root .fam-section-title,
+#root#root .nl-home-main h2,
+#root#root .nl-home-recent-head h2,
+#root#root .nl-home-recent-head strong,
+#root#root .tl-month-title,
+#root#root .search-section-title,
+#root#root .search-recent-title,
+#root#root .record-section-title,
+#root#root .invite-section-title {
+  font-family: var(--nl-font-sans, system-ui) !important;
+  font-size: 17px !important;
+  line-height: 1.5 !important;
+  font-weight: 600 !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+/* ---------------- G2 主按钮：平涂 #A9581B ---------------- */
+#root#root#root .record-inline-submit-button,
+#root#root .archive-shell button[type="submit"],
+#root#root .rd-actions .rd-action-share,
+#root#root .fam-invite-row button,
+#root#root .ac-time-actions button.is-primary,
+#root#root .ac-gender-options button.is-on {
+  background: var(--nl2-btn) !important;
+  background-image: none !important;
+  background-color: var(--nl2-btn) !important;
+  color: var(--nl2-btn-text) !important;
+  border: none !important;
+  border-radius: 999px !important;
+  height: 52px !important;
+  min-height: 52px !important;
+  font-family: var(--nl-font-sans, system-ui) !important;
+  font-size: 16px !important;
+  line-height: 1 !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.01em !important;
+  box-shadow: var(--nl2-shadow-btn) !important;
+}
+
+/* 次级按钮：玻璃胶囊 + 墨字 */
+#root#root .rd-actions .rd-action-edit,
+#root#root .ac-time-actions button:not(.is-primary),
+#root#root .ac-gender-cancel,
+#root#root .app-date-sheet-actions button:not(:last-child) {
+  background: var(--nl2-glass-2) !important;
+  background-image: none !important;
+  color: var(--nl2-ink-900) !important;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+  border-radius: 999px !important;
+  height: 52px !important;
+  min-height: 52px !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  box-shadow: var(--nl2-shadow-l2) !important;
+}
+
+/* ---------------- G3 Chip：tint 面 + 墨字，选中 1px 琥珀边 ---------------- */
+#root#root .record-quick-tags button,
+#root#root .rd-chips .rd-chip,
+#root#root .search-chip,
+#root#root .record-location-tag,
+#root#root .record-location-options button,
+#root#root .ac-gender-options button:not(.is-on),
+#root#root .tl-year {
+  height: 30px !important;
+  min-height: 30px !important;
+  max-height: 30px !important;
+  padding: 0 14px !important;
+  border-radius: 999px !important;
+  border: 1px solid transparent !important;
+  background: var(--nl2-amber-tint) !important;
+  background-image: none !important;
+  color: var(--nl2-ink-900) !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+}
+
+#root#root .record-quick-tags button.is-on,
+#root#root .record-quick-tags button[aria-pressed="true"],
+#root#root .rd-chips .rd-chip.is-amber,
+#root#root .rd-chips .rd-chip.is-milestone,
+#root#root .ac-gender-options button.is-on {
+  background: var(--nl2-amber-soft) !important;
+  background-image: none !important;
+  color: var(--nl2-amber-ink) !important;
+  border: 1px solid rgba(169, 88, 27, 0.45) !important;
+  box-shadow: none !important;
+}
+
+#root#root .record-quick-tags button::before,
+#root#root .record-quick-tags button::after,
+#root#root .rd-chips .rd-chip::before,
+#root#root .rd-chips .rd-chip::after {
+  display: none !important;
+}
+
+/* ---------------- G7 玻璃三档 ---------------- */
+/* L2 内容卡 */
+#root#root .nl-home-recent,
+#root#root .tl-grid,
+#root#root .fam-hero,
+#root#root .fam-member-card,
+#root#root .pf-hero,
+#root#root .pf-menu,
+#root#root .pf-stats,
+#root#root .record-editor-title-row,
+#root#root .record-body-card,
+#root#root .record-location-row,
+#root#root .archive-shell .ac-card,
+#root#root .tl-card,
+#root#root .nl-home-row,
+#root#root .search-result-card,
+#root#root .member-row-card,
+#root#root .invite-card {
+  background: var(--nl2-glass-2) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  border-radius: var(--nl2-r-card) !important;
+  box-shadow: var(--nl2-shadow-l2) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+/* L3 行：不模糊 + 细线 + r18 */
+#root#root .fam-member-row,
+#root#root .pf-menu-row,
+#root#root .member-row,
+#root#root .nl-home-row,
+#root#root .search-result-row {
+  background: var(--nl2-glass-3) !important;
+  border: 1px solid var(--nl2-line) !important;
+  border-radius: var(--nl2-r-row) !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  min-height: 64px !important;
+}
+
+/* ---------------- 顶栏胶囊 52 / r26 ---------------- */
+#root#root .app-topbar,
+#root#root .rd-topbar {
+  height: 52px !important;
+  min-height: 52px !important;
+  border-radius: var(--nl2-r-float) !important;
+  background: var(--nl2-glass-1) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+  box-shadow: 0 4px 14px rgba(146, 96, 52, 0.08) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  backdrop-filter: blur(12px) !important;
+}
+
+/* ---------------- G9 底部导航 ---------------- */
+#root#root .app-tabbar,
+#root#root .bottom-nav,
+#root#root .nl-bottom-nav {
+  height: 64px !important;
+  border-radius: var(--nl2-r-float) !important;
+  background: var(--nl2-glass-1) !important;
+  background-image: none !important;
+  box-shadow: 0 4px 16px rgba(146, 96, 52, 0.10) !important;
+}
+
+#root#root .app-tabbar a[aria-current="page"],
+#root#root .app-tabbar a.is-active,
+#root#root .bottom-nav a.is-active,
+#root#root .nl-bottom-nav a.is-active {
+  background: #F2B45C !important;
+  background-image: none !important;
+  color: var(--nl2-ink-900) !important;
+  border-radius: 20px !important;
+}
+
+/* ---------------- G8 图标 24 / 1.8 ---------------- */
+#root#root .app-topbar svg,
+#root#root .rd-topbar svg,
+#root#root .app-tabbar svg,
+#root#root .nl-bottom-nav svg {
+  width: 24px !important;
+  height: 24px !important;
+  stroke-width: 1.8 !important;
+}

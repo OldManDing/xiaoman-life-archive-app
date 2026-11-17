@@ -15,6 +15,8 @@ import './styles/glass-pages-v3.css';
 import './styles/bubble.css';
 // 玻璃质感收口层：背景折射 + 26px 模糊玻璃面 + 统一高光；删除此 import 即回滚
 import './styles/glass-finish.css';
+// 设计还原单一令牌层（DESIGN-SPEC-v3 / 28 屏差异清单 G1–G10）：必须最后引入
+import './styles/design-align.css';
 import { installBubbleEffect } from './shared/bubble';
 
 installBubbleEffect();
