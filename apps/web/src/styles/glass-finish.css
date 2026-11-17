@@ -46,3 +46,62 @@
   margin-left: 0 !important;
   margin-right: 0 !important;
 }
+
+/* ============================================================
+   210. 全局字号再降两档（恢复小字号规格）
+   ============================================================ */
+/* 首页 */
+#root#root .nl-home-title-row { font-size: 17px !important; }
+#root#root .nl-home-title-row strong { font-size: 17px !important; }
+#root#root .nl-moment-featured-title { font-size: 21px !important; }
+#root#root .nl-home-main h2,
+#root#root .nl-home-recent-head h2,
+#root#root .nl-home-recent-head strong { font-size: 17px !important; }
+#root#root .nl-home-row-title,
+#root#root .nl-moment-title { font-size: 15px !important; }
+#root#root .nl-home-row-meta,
+#root#root .nl-moment-meta { font-size: 12px !important; }
+
+/* 时间轴 */
+#root#root .tl-big-title { font-size: 21px !important; }
+#root#root .tl-month-title,
+#root#root .tl-year { font-size: 15px !important; }
+#root#root .tl-card-title { font-size: 14px !important; }
+#root#root .tl-card-meta { font-size: 12px !important; }
+#root#root .tl-stats-capsule strong { font-size: 15px !important; }
+
+/* 家庭 */
+#root#root .fam-title { font-size: 25px !important; }
+#root#root .fam-hero-name { font-size: 23px !important; }
+#root#root .fam-hero-meta { font-size: 12px !important; }
+#root#root .fam-section-title { font-size: 17px !important; }
+#root#root .fam-member-name { font-size: 15px !important; }
+#root#root .fam-member-role { font-size: 12px !important; }
+#root#root .fam-role { font-size: 12px !important; }
+
+/* 我的 */
+#root#root .pf-hero-name { font-size: 24px !important; }
+#root#root .pf-hero-meta { font-size: 12px !important; }
+#root#root .pf-stat-num { font-size: 22px !important; }
+#root#root .pf-stat-label { font-size: 12px !important; }
+#root#root .pf-menu-item,
+#root#root .pf-menu-label { font-size: 14px !important; }
+
+/* 记录表单 / 详情 */
+#root#root .app-topbar h1,
+#root#root .rd-topbar h1 { font-size: 18px !important; }
+#root#root .app-topbar button,
+#root#root .app-topbar a,
+#root#root .rd-topbar button { font-size: 18px !important; }
+#root#root .rd-title { font-size: 20px !important; }
+#root#root .rd-body p,
+#root#root .rd-copy { font-size: 14px !important; }
+#root#root .rd-meta { font-size: 12px !important; }
+#root#root .record-editor-title-input { font-size: 17px !important; }
+#root#root .record-editor-body-input { font-size: 14px !important; }
+#root#root .archive-shell .app-topbar h1 { font-size: 18px !important; }
+
+/* 搜索 */
+#root#root .search-input,
+#root#root .search-field input { font-size: 14px !important; }
+#root#root .search-section-title { font-size: 16px !important; }
