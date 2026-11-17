@@ -17,3 +17,32 @@
 #root#root .record-media-section .record-media-grid {
   gap: 8px !important;
 }
+
+/* ============================================================
+   209. 恢复家庭/我的/搜索页的左右 20dp 边距
+   ============================================================ */
+#root#root .fam-main,
+#root#root .pf-main,
+#root#root .search-page {
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+  box-sizing: border-box !important;
+}
+
+#root#root .fam-head,
+#root#root .pf-head,
+#root#root .search-head {
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+  box-sizing: border-box !important;
+}
+
+/* 内部容器不要再叠加边距 */
+#root#root .fam-main .fam-hero,
+#root#root .fam-main > section,
+#root#root .pf-main .pf-hero,
+#root#root .pf-main > section,
+#root#root .search-main > * {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
