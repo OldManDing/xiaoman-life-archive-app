@@ -1,5 +1,6 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { createPortal } from 'react-dom';
 import { useRef } from 'react';
 import { Camera, Check, ChevronDown, ChevronRight, Clipboard, Clock, Copy, FileText, Image as ImageIcon, MessageCircle, MessageCircleMore, Mic, Pencil, PlayCircle, Plus, QrCode, UserMinus, UserPlus } from 'lucide-react';
 
@@ -404,6 +405,9 @@ export const FamilyChildPage = () => {
     remark: '',
   });
   const [genderPickerOpen, setGenderPickerOpen] = useState(false);
+  const [birthTimeOpen, setBirthTimeOpen] = useState(false);
+  const [birthHour, setBirthHour] = useState('12');
+  const [birthMinute, setBirthMinute] = useState('00');
   const [saving, setSaving] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
@@ -572,16 +576,73 @@ export const FamilyChildPage = () => {
               </div>
               <div className="ac-row" style={{ position: 'relative' }}>
                 <span className="ac-label">出生时间</span>
-                <span className="ac-value">{form.birth_time ? form.birth_time : '未设置'}</span>
+                <button
+                  type="button"
+                  className="ac-value ac-time-trigger"
+                  aria-label="选择出生时间"
+                  onClick={() => {
+                    const [h, m] = (form.birth_time || '12:00').split(':');
+                    setBirthHour(h || '12');
+                    setBirthMinute(m || '00');
+                    setBirthTimeOpen(true);
+                  }}
+                >
+                  {form.birth_time ? form.birth_time : '未设置'}
+                </button>
                 <ChevronRight size={18} strokeWidth={1.8} aria-hidden="true" color="#8b7160" />
-                <input
-                  className="ac-input ac-input-ghost"
-                  type="time"
-                  value={form.birth_time ?? ''}
-                  onChange={(event) => { formDirtyRef.current = true; setForm((current) => ({ ...current, birth_time: event.target.value || null })); }}
-                  aria-label="出生时间"
-                  style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0, cursor: 'pointer' }}
-                />
+                {birthTimeOpen ? createPortal(
+                  <div
+                    className="ac-time-backdrop"
+                    role="presentation"
+                    onClick={() => setBirthTimeOpen(false)}
+                  >
+                    <div className="ac-time-sheet" role="dialog" aria-modal="true" aria-label="选择出生时间" onClick={(event) => event.stopPropagation()}>
+                      <strong className="ac-time-title">选择出生时间</strong>
+                      <p className="ac-time-preview">{birthHour}:{birthMinute}</p>
+                      <div className="ac-time-cols">
+                        <div className="ac-time-col">
+                          {Array.from({ length: 24 }, (_, i) => String(i).padStart(2, '0')).map((h) => (
+                            <button
+                              key={`h-${h}`}
+                              type="button"
+                              className={h === birthHour ? 'is-on' : ''}
+                              onClick={() => setBirthHour(h)}
+                            >
+                              {h}
+                            </button>
+                          ))}
+                        </div>
+                        <div className="ac-time-col">
+                          {Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, '0')).map((m) => (
+                            <button
+                              key={`m-${m}`}
+                              type="button"
+                              className={m === birthMinute ? 'is-on' : ''}
+                              onClick={() => setBirthMinute(m)}
+                            >
+                              {m}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="ac-time-actions">
+                        <button type="button" onClick={() => setBirthTimeOpen(false)}>取消</button>
+                        <button
+                          type="button"
+                          className="is-primary"
+                          onClick={() => {
+                            formDirtyRef.current = true;
+                            setForm((current) => ({ ...current, birth_time: `${birthHour}:${birthMinute}` }));
+                            setBirthTimeOpen(false);
+                          }}
+                        >
+                          确定
+                        </button>
+                      </div>
+                    </div>
+                  </div>,
+                  document.body,
+                ) : null}
               </div>
               <div className="ac-row" style={{ position: 'relative' }}>
                 <span className="ac-label">性别</span>
