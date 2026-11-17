@@ -6739,3 +6739,133 @@
 .app-date-day:active {
   background: rgba(255, 255, 255, 0.22) !important;
 }
+
+/* ============================================================
+   158. 新建记录页：整体放松留白（不放大字号）
+   ============================================================ */
+
+/* 区块间距 12 → 18 */
+#root .record-form-page form,
+#root #record-form {
+  row-gap: 18px !important;
+}
+
+#root #record-form > .record-details {
+  row-gap: 14px !important;
+  gap: 14px !important;
+}
+
+#root .record-editor-card {
+  gap: 14px !important;
+}
+
+/* 媒体卡加高 */
+#root .record-media-grid,
+#root .record-media-grid .record-media-single {
+  height: 96px !important;
+  min-height: 96px !important;
+  max-height: 96px !important;
+}
+
+#root .record-media-grid .record-media-single > button:first-child {
+  height: 96px !important;
+  min-height: 96px !important;
+  max-height: 96px !important;
+}
+
+/* 标题卡与正文卡加高、内边距加大 */
+#root .record-editor-title-row {
+  height: 68px !important;
+  min-height: 68px !important;
+  padding: 14px 20px 10px !important;
+}
+
+#root .record-body-card {
+  height: 132px !important;
+  min-height: 132px !important;
+  padding: 14px 20px 12px !important;
+  row-gap: 4px !important;
+}
+
+#root .record-body-card .record-body-input,
+#root .record-form-page .record-body-input {
+  height: 70px !important;
+  min-height: 70px !important;
+  max-height: 70px !important;
+}
+
+/* 日期与地点行加高、内边距加大 */
+#root .record-form-page form > section:has(.app-date-control),
+#root .record-location-row {
+  height: 50px !important;
+  min-height: 50px !important;
+  max-height: 50px !important;
+  padding: 0 22px !important;
+}
+
+#root #record-form .app-date-control,
+#root #record-form .app-date-control input,
+#root .record-location-row label,
+#root .record-location-row input {
+  height: 50px !important;
+  min-height: 50px !important;
+}
+
+/* 标签区更松 */
+#root .record-quick-tags {
+  margin-top: 18px !important;
+  gap: 10px !important;
+}
+
+#root .record-quick-tags button,
+#root .rd-chips .rd-chip {
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  padding: 0 18px !important;
+}
+
+/* 页面顶部与底部留白 */
+#root .record-form-page .app-topbar {
+  margin-bottom: 18px !important;
+}
+
+#root .record-form-page {
+  padding-bottom: 28px !important;
+}
+
+/* 主按钮与上方留出呼吸 */
+#root #record-form > .record-inline-submit {
+  margin-top: 20px !important;
+}
+
+/* 159. 地点行与日期行同高 50（ID 级压实） */
+#root #record-form .record-location-row,
+#root #record-form .record-details .record-location-row,
+#root .record-details > .record-location-row {
+  height: 50px !important;
+  min-height: 50px !important;
+  max-height: 50px !important;
+  padding: 0 22px !important;
+}
+
+#root #record-form .record-location-row label,
+#root #record-form .record-location-row input {
+  height: 50px !important;
+  min-height: 50px !important;
+}
+
+/* 说明文字与主按钮之间也给点空隙 */
+#root #record-form > .record-edit-sync-note {
+  margin-top: 16px !important;
+}
+
+/* 160. 主按钮回到吸底，留白集中在内容与按钮之间 */
+#root #record-form > .record-inline-submit {
+  margin-top: auto !important;
+}
+
+#root .record-form-page {
+  min-height: calc(100dvh - 12px) !important;
+  padding-bottom: 24px !important;
+}
