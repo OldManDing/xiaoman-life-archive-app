@@ -3954,3 +3954,47 @@
 #root#root#root .account-shell [class*="member-list"] {
   gap: 12px !important;
 }
+
+
+/* ============================================================
+   245. 18 成员信息：按 20 条清单收口
+   ============================================================ */
+/* #2 记录贡献行 76 高 */
+#root#root#root .account-shell .permission-section + section,
+#root#root#root .account-shell section[aria-label*="记录贡献"] {
+  min-height: 76px !important;
+}
+
+/* #17 单选圈 18 / 细描边 */
+#root#root#root .account-shell [role="radio"] > span:first-child,
+#root#root#root .account-shell .perm-radio {
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  border-width: 1.5px !important;
+  border-color: #8B7160 !important;
+}
+
+/* #14 选项行 68 高 */
+#root#root#root .account-shell [role="radio"] {
+  min-height: 68px !important;
+}
+
+/* #15 去掉选中左竖条 */
+#root#root#root .account-shell [role="radio"][aria-checked="true"] {
+  border-left: none !important;
+}
+
+/* #10 加入日期 15 / 副色 */
+#root#root#root .account-shell [class*="joined"],
+#root#root#root .account-shell p[class*="join"] {
+  font-size: 15px !important;
+  color: #6F5745 !important;
+}
+
+/* #19 权限说明弱化 */
+#root#root#root .account-shell [class*="perm-note"],
+#root#root#root .account-shell [class*="hint"] {
+  font-size: 13px !important;
+  color: var(--nl2-ink-500) !important;
+}
