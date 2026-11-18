@@ -856,3 +856,178 @@
   height: 112px !important;
   max-height: 140px !important;
 }
+
+
+/* ============================================================
+   05 家庭：标题 30 衬线 / 孩子卡 / 成员行 / 邀请虚线
+   ============================================================ */
+#root#root .fam-title {
+  font-family: var(--nl-font-display, "Songti SC", serif) !important;
+  font-size: 30px !important;
+  line-height: 1.2 !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+#root#root .fam-hero {
+  display: grid !important;
+  grid-template-columns: 88px minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 16px !important;
+  padding: 16px !important;
+  border-radius: var(--nl2-r-card) !important;
+  background: var(--nl2-glass-2) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  box-shadow: var(--nl2-shadow-l2) !important;
+}
+
+#root#root .fam-hero img,
+#root#root .fam-hero .fam-hero-avatar {
+  width: 88px !important;
+  height: 88px !important;
+  border-radius: 999px !important;
+  object-fit: cover !important;
+}
+
+#root#root .fam-hero-name {
+  font-family: var(--nl-font-display, "Songti SC", serif) !important;
+  font-size: 30px !important;
+  line-height: 1.2 !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+#root#root .fam-hero-meta {
+  font-size: 15px !important;
+  line-height: 1.5 !important;
+  color: var(--nl2-ink-500) !important;
+  margin-top: 6px !important;
+}
+
+#root#root .fam-hero-action {
+  height: 40px !important;
+  min-height: 40px !important;
+  padding: 0 16px !important;
+  border-radius: 999px !important;
+  background: var(--nl2-amber-soft) !important;
+  background-image: none !important;
+  border: none !important;
+  color: var(--nl2-amber-ink) !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  box-shadow: none !important;
+}
+
+#root#root .fam-section-title {
+  font-family: var(--nl-font-display, "Songti SC", serif) !important;
+  font-size: 20px !important;
+  line-height: 1.3 !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+#root#root .fam-member-row,
+#root#root .fam-member-card {
+  display: grid !important;
+  grid-template-columns: 56px minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 14px !important;
+  min-height: 72px !important;
+  padding: 8px 14px !important;
+  border-radius: var(--nl2-r-card) !important;
+  background: var(--nl2-glass-2) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  box-shadow: none !important;
+}
+
+#root#root .fam-member-row img,
+#root#root .fam-member-card img {
+  width: 56px !important;
+  height: 56px !important;
+  border-radius: 999px !important;
+  object-fit: cover !important;
+}
+
+#root#root .fam-member-name {
+  font-size: 17px !important;
+  line-height: 1.5 !important;
+  font-weight: 500 !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+#root#root .fam-role {
+  height: 34px !important;
+  min-height: 34px !important;
+  padding: 0 14px !important;
+  border-radius: 999px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+  background: var(--nl2-glass-3) !important;
+  background-image: none !important;
+  border: none !important;
+  color: var(--nl2-ink-500) !important;
+  box-shadow: none !important;
+}
+
+#root#root .fam-role.is-manage,
+#root#root .fam-role.is-owner {
+  background: var(--nl2-amber-soft) !important;
+  color: var(--nl2-amber-ink) !important;
+}
+
+#root#root .fam-invite-row {
+  min-height: 64px !important;
+  border-radius: var(--nl2-r-card) !important;
+  border: 1.5px dashed rgba(169, 88, 27, 0.34) !important;
+  background: rgba(255, 250, 244, 0.35) !important;
+  background-image: none !important;
+  color: var(--nl2-amber-ink) !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+}
+
+
+/* 05：成员行只保留姓名 + 权限胶囊（设计无副行）；孩子卡 meta 单行 */
+#root#root .fam-member-row .fam-member-role,
+#root#root .fam-member-card .fam-member-role,
+#root#root .fam-member-row small,
+#root#root .fam-member-card small {
+  display: none !important;
+}
+
+#root#root .fam-hero-meta {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 6px !important;
+  font-size: 13px !important;
+  white-space: normal !important;
+}
+
+
+/* 05：隐藏成员副行（设计只有姓名 + 权限），孩子卡 meta 合成一行 */
+#root#root .fam-member-role-sub {
+  display: none !important;
+}
+
+#root#root .fam-hero-meta {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 4px !important;
+  font-size: 13px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+#root#root .fam-hero-meta > span {
+  font-size: 13px !important;
+  color: var(--nl2-ink-500) !important;
+}
