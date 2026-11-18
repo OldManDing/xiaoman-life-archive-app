@@ -3647,7 +3647,7 @@ export const ViewRecordPage = () => {
                 }
               }}
             >
-              分享
+              回应一句
             </button>
           </section>
         </article>

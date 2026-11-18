@@ -49,7 +49,7 @@
 #root#root .pf-page,
 #root#root .search-page,
 #root#root .record-form-page,
-#root#root .record-detail-page,
+#root#root .app-page-shell:has(.rd-topbar),
 #root#root .archive-shell,
 #root#root .app-page-shell {
   background-color: var(--nl2-bg-mid) !important;
@@ -625,3 +625,110 @@
 }
 
 #root#root .tl-tile-date { font-size: 15px !important; }
+
+
+/* ============================================================
+   记录详情（03）：整幅首图 + 悬浮圆形按钮，标题 30 衬线
+   ============================================================ */
+#root#root .app-page-shell:has(.rd-topbar) {
+  padding: 0 !important;
+  background-color: var(--nl2-bg-top) !important;
+  background-image: linear-gradient(180deg, var(--nl2-bg-top) 0%, var(--nl2-bg-mid) 60%, var(--nl2-bg-bot) 100%) !important;
+}
+
+/* 顶栏改为悬浮在原图上的两个圆形按钮 */
+#root#root .app-page-shell:has(.rd-topbar) .rd-topbar {
+  position: absolute !important;
+  top: 12px !important;
+  left: 16px !important;
+  right: 16px !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  background: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  z-index: 30 !important;
+}
+
+#root#root .app-page-shell:has(.rd-topbar) .rd-topbar-title {
+  display: none !important;
+}
+
+#root#root .app-page-shell:has(.rd-topbar) .rd-topbar button,
+#root#root .app-page-shell:has(.rd-topbar) .rd-topbar a {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 250, 244, 0.92) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  box-shadow: 0 4px 12px rgba(146, 96, 52, 0.14) !important;
+  color: var(--nl2-ink-900) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* 首图整幅，底部圆角 24 */
+#root#root .app-page-shell:has(.rd-topbar) article,
+#root#root .app-page-shell:has(.rd-topbar) .rd-body {
+  padding: 0 20px !important;
+}
+
+#root#root .app-page-shell:has(.rd-topbar) .rd-hero {
+  margin: 0 -20px 18px !important;
+  width: calc(100% + 40px) !important;
+  height: 300px !important;
+  border-radius: 0 0 24px 24px !important;
+  overflow: hidden !important;
+}
+
+#root#root .app-page-shell:has(.rd-topbar) .rd-title {
+  font-family: var(--nl-font-display, "Songti SC", serif) !important;
+  font-size: 30px !important;
+  line-height: 1.3 !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  color: var(--nl2-ink-900) !important;
+  margin: 6px 0 10px !important;
+}
+
+#root#root .app-page-shell:has(.rd-topbar) .rd-meta {
+  order: -1 !important;
+  font-size: 15px !important;
+  line-height: 1.5 !important;
+  color: var(--nl2-ink-500) !important;
+  margin: 0 0 4px !important;
+}
+
+#root#root .app-page-shell:has(.rd-topbar) .rd-actions {
+  position: sticky !important;
+  bottom: 12px !important;
+  gap: 10px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+#root#root .app-page-shell:has(.rd-topbar) .rd-actions .rd-action-share {
+  background: var(--nl2-btn) !important;
+  background-image: none !important;
+  color: #FFFFFF !important;
+}
+
+
+/* 详情：元信息置于标题之上（设计 03） */
+#root#root .app-page-shell:has(.rd-topbar) .rd-body {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+#root#root .app-page-shell:has(.rd-topbar) .rd-meta { order: 0 !important; }
+#root#root .app-page-shell:has(.rd-topbar) .rd-title { order: 1 !important; }
+#root#root .app-page-shell:has(.rd-topbar) .rd-chips { order: 2 !important; }
+#root#root .app-page-shell:has(.rd-topbar) .rd-copy { order: 3 !important; }
+#root#root .app-page-shell:has(.rd-topbar) .rd-gallery { order: 4 !important; }
