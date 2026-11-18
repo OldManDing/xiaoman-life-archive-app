@@ -4228,3 +4228,68 @@
   line-height: 1.3 !important;
   letter-spacing: normal !important;
 }
+
+
+/* ============================================================
+   249. 22 关于与协议：按 20 条清单收口
+   ============================================================ */
+/* #2 小节标题 30 衬线 */
+#root#root#root .legal-shell h2,
+#root#root#root .info-shell h2 {
+  font-size: 30px !important;
+  line-height: 1.25 !important;
+}
+
+/* #7 #8 正文卡 r26、内距 22 18 */
+#root#root#root .legal-shell section,
+#root#root#root .legal-shell .app-panel {
+  border-radius: 26px !important;
+  padding: 22px 18px !important;
+}
+
+/* #9 条款段间距 20 */
+#root#root#root .legal-shell section > div {
+  gap: 20px !important;
+}
+
+/* #11 #12 编号圆 26 / 数字 13 / 右距 12 */
+#root#root#root .legal-shell section span[aria-hidden="true"] {
+  width: 26px !important;
+  height: 26px !important;
+  min-width: 26px !important;
+  background: #F0C08D !important;
+  color: #5B3A17 !important;
+  font-size: 13px !important;
+  margin-right: 12px !important;
+}
+
+/* #13 最后更新 13 / 字距 .02em */
+#root#root#root .legal-shell section span,
+#root#root#root .legal-shell section > span {
+  font-size: 13px !important;
+  letter-spacing: 0.02em !important;
+}
+
+/* #4 #6 Tab 选中：琥珀 30% 渐变 + 1px #DDAF78 边、圆角 20 */
+#root#root#root .legal-shell [role="tablist"] button[aria-selected="true"],
+#root#root#root .legal-shell [class*="segment"] button[aria-selected="true"] {
+  background: linear-gradient(180deg, rgba(233, 160, 90, 0.34) 0%, rgba(233, 160, 90, 0.26) 100%) !important;
+  background-image: linear-gradient(180deg, rgba(233, 160, 90, 0.34) 0%, rgba(233, 160, 90, 0.26) 100%) !important;
+  border: 1px solid #DDAF78 !important;
+  color: #8A4E14 !important;
+  border-radius: 20px !important;
+}
+
+#root#root#root .legal-shell [role="tablist"] button,
+#root#root#root .legal-shell [class*="segment"] button {
+  border-radius: 20px !important;
+  font-size: 15px !important;
+}
+
+/* #18 A+ 20 / 500 无底色 */
+#root#root#root .legal-shell .app-topbar button {
+  font-size: 20px !important;
+  font-weight: 500 !important;
+  background: transparent !important;
+  color: #8A4E14 !important;
+}
