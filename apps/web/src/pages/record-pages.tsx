@@ -2708,6 +2708,7 @@ const RecordForm = ({
                 </button>
               ) : null}
               <p style={{ margin: '0', color: 'var(--nl-muted)', fontSize: '10.5px', lineHeight: 1.45, fontWeight: 500, textAlign: 'center' }}>{getMediaLimitHint()}</p>
+            <p className="record-media-system-hint">视频和录音会打开手机的相机 / 录音机，拍完自动回到这里</p>
               {form.record_type !== 'audio' && form.record_type !== 'video' && moreMediaOpen ? (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '10px', borderTop: '1px solid var(--nl-border-soft)', paddingTop: '12px' }}>
                   <MediaActionButton icon={<Video size={17} strokeWidth={2.2} />} label="拍摄视频" displayLabel="视频" onClick={() => { if (ensureMediaCountAvailable('video')) triggerMediaInput(videoCaptureInputRef.current); }} disabled={uploading || audioRecording} />
