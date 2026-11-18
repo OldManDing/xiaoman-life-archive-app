@@ -2914,13 +2914,14 @@ export const LegalPage = () => {
             border: 'none',
             borderRadius: 999,
             background: largeText ? 'rgba(233, 160, 90, 0.3)' : 'transparent',
-            color: 'var(--nl-accent)',
-            fontSize: 13,
+            color: '#8A4E14',
+            fontSize: 17,
             fontWeight: 600,
             cursor: 'pointer',
+            whiteSpace: 'nowrap',
           }}
         >
-          字号 A+
+          A+
         </button>
       }
     >
@@ -2931,17 +2932,17 @@ export const LegalPage = () => {
         options={legalSections.map((item) => ({ value: item.title, label: item.title }))}
       />
       <Panel style={{ padding: '22px 18px', display: 'grid', gap: 20 }}>
-        <span style={{ fontSize: 12, fontWeight: 500, letterSpacing: '0.02em', color: 'var(--nl-muted)' }}>最后更新：2026年11月11日</span>
-        <h2 style={{ margin: 0, fontFamily: 'var(--nl-font-display)', fontSize: 28, fontWeight: 600, lineHeight: 1.25, color: 'var(--nl-ink)' }}>{section.title}</h2>
+        <span style={{ fontSize: 13, fontWeight: 500, letterSpacing: '0.02em', color: 'var(--nl-muted)' }}>最后更新：2026年11月11日</span>
+        <h2 style={{ margin: 0, fontFamily: 'var(--nl-font-display)', fontSize: 30, fontWeight: 600, lineHeight: 1.3, letterSpacing: '0.02em', color: 'var(--nl-ink)' }}>{section.title}</h2>
         <div style={{ display: 'grid', gap: 20 }}>
           {section.items.map((item, index) => (
-            <p key={item} style={{ margin: 0, color: 'var(--nl-ink)', fontSize: 13, lineHeight: 1.75, fontWeight: 400, letterSpacing: '0.01em', display: 'flex', alignItems: 'flex-start' }}>
+            <p key={item} style={{ margin: 0, color: 'var(--nl-ink)', fontSize: 15, lineHeight: 1.75, fontWeight: 400, letterSpacing: '0.01em', display: 'flex', alignItems: 'flex-start' }}>
               <span aria-hidden="true" style={{ width: 26, height: 26, borderRadius: 999, background: '#f0c08d', color: '#5b3a17', fontSize: 12, fontWeight: 600, display: 'inline-grid', placeItems: 'center', marginRight: 12, flexShrink: 0, marginTop: 1 }}>{index + 1}</span>
               <span style={{ minWidth: 0, flex: 1 }}>{item}</span>
             </p>
           ))}
         </div>
-        <p style={{ margin: '4px 0 0', textAlign: 'center', fontSize: 12, color: '#8b7160', marginTop: 24 }}>年轮 · 儿童信息保护优先</p>
+        <p style={{ margin: '4px 0 0', textAlign: 'center', fontSize: 13, color: '#8b7160', marginTop: 24 }}>年轮 · 儿童信息保护优先</p>
       </Panel>
     </PageShell>
   );
