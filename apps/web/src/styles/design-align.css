@@ -2391,3 +2391,61 @@
 #root#root .record-form-page .record-media-single > button {
   border-radius: 16px !important;
 }
+
+
+/* ============================================================
+   227. 加载骨架（替代纯文字 loading）
+   ============================================================ */
+@keyframes nlSkelShimmer {
+  0% { background-position: 130% 0; }
+  100% { background-position: -130% 0; }
+}
+
+#root#root .nl-skel {
+  display: grid;
+  gap: 14px;
+  padding: 4px 0 8px;
+}
+
+#root#root .nl-skel-head {
+  width: 46%;
+  height: 24px;
+  border-radius: 6px;
+}
+
+#root#root .nl-skel-hero {
+  width: 100%;
+  height: 300px;
+  border-radius: var(--nl2-r-card);
+}
+
+#root#root .nl-skel-row {
+  width: 100%;
+  height: 76px;
+  border-radius: var(--nl2-r-row);
+}
+
+#root#root .nl-skel-head,
+#root#root .nl-skel-hero,
+#root#root .nl-skel-row {
+  background-color: rgba(255, 250, 244, 0.5);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 250, 244, 0.35) 0%,
+    rgba(255, 255, 255, 0.78) 45%,
+    rgba(255, 250, 244, 0.35) 90%
+  );
+  background-size: 220% 100%;
+  background-repeat: no-repeat;
+  animation: nlSkelShimmer 1.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #root#root .nl-skel-head,
+  #root#root .nl-skel-hero,
+  #root#root .nl-skel-row {
+    animation: none;
+    background-image: none;
+    background-color: rgba(255, 250, 244, 0.6);
+  }
+}

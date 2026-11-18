@@ -425,6 +425,15 @@ const MomentMilestoneBadge = () => (
   </span>
 );
 
+const HomeSkeleton = () => (
+  <div className="nl-skel" role="status" aria-label="正在整理成长时刻" aria-busy="true">
+    <div className="nl-skel-head" />
+    <div className="nl-skel-hero" />
+    <div className="nl-skel-row" />
+    <div className="nl-skel-row" />
+  </div>
+);
+
 const HomeStatus = ({ message, action }: { message: string; action?: { label: string; onClick: () => void } }) => (
   <section className="nl-home-status" role="status" aria-live="polite">
     <p>{message}</p>
@@ -605,7 +614,7 @@ export const HomePage = () => {
 
         <main aria-label="成长时刻流" data-home-stream="true" className="nl-home-main nl-home-stream">
           {!activeChild ? <HomeStatus message="请先选择孩子档案。" action={{ label: '选择孩子', onClick: () => navigate('/onboarding/child?mode=add') }} /> : null}
-          {activeChild && loading ? <HomeStatus message="正在整理成长时刻…" /> : null}
+          {activeChild && loading ? <HomeSkeleton /> : null}
           {activeChild && !loading && error ? <HomeStatus message="成长时刻暂时无法加载。" action={{ label: '重新加载', onClick: () => setReloadKey((value) => value + 1) }} /> : null}
 
           {activeChild && !loading && !error && !records.length ? (

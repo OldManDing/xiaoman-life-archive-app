@@ -277,11 +277,49 @@ const disabledSubmitButtonStyle: CSSProperties = {
 
 export const SplashPage = () => {
   const navigate = useNavigate();
+  const [leaving, setLeaving] = useState(false);
+
   useEffect(() => {
-    const timer = window.setTimeout(() => navigate('/home', { replace: true }), 900);
-    return () => window.clearTimeout(timer);
+    let cancelled = false;
+    const startedAt = performance.now();
+    const MIN_VISIBLE_MS = 700;
+    const MAX_WAIT_MS = 3200;
+
+    const finish = () => {
+      if (cancelled) return;
+      setLeaving(true);
+      window.setTimeout(() => {
+        if (!cancelled) navigate('/home', { replace: true });
+      }, 240);
+    };
+
+    const maxTimer = window.setTimeout(finish, MAX_WAIT_MS);
+
+    const waitReady = async () => {
+      // 字体就绪即可认为首帧排版稳定；不再用固定 900ms 假装加载
+      try {
+        const fonts = (document as Document & { fonts?: FontFaceSet }).fonts;
+        if (fonts?.ready) await fonts.ready;
+      } catch {
+        /* 字体 API 不可用时直接进入最短展示时间 */
+      }
+      const elapsed = performance.now() - startedAt;
+      if (elapsed < MIN_VISIBLE_MS) {
+        await new Promise((resolve) => window.setTimeout(resolve, MIN_VISIBLE_MS - elapsed));
+      }
+      window.clearTimeout(maxTimer);
+      finish();
+    };
+
+    void waitReady();
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(maxTimer);
+    };
   }, [navigate]);
-  return <BrandBootMotion />;
+
+  return <BrandBootMotion leaving={leaving} />;
 };
 
 const welcomePosters = [

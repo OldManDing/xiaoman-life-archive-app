@@ -4,6 +4,8 @@ type BrandBootMotionProps = {
   showRecovery?: boolean;
   onRetry?: () => void;
   onExit?: () => void;
+  /** 退出时淡出，避免硬切到首页 */
+  leaving?: boolean;
 };
 
 const shellStyle: CSSProperties = {
@@ -13,8 +15,9 @@ const shellStyle: CSSProperties = {
   background: 'var(--nl-page-bg)',
   color: 'var(--nl-muted-strong)',
   display: 'grid',
-  gridTemplateRows: 'auto 1fr auto',
+  gridTemplateRows: '1fr auto',
   justifyItems: 'center',
+  alignContent: 'stretch',
   overflow: 'hidden',
   // 13 #3：暖琥珀径向光晕
   backgroundImage:
@@ -81,8 +84,17 @@ const recoveryButtonStyle: CSSProperties = {
   cursor: 'pointer',
 };
 
-export const BrandBootMotion = ({ showRecovery = false, onRetry, onExit }: BrandBootMotionProps) => (
-  <main aria-busy="true" aria-label="正在进入年轮" style={shellStyle}>
+export const BrandBootMotion = ({ showRecovery = false, onRetry, onExit, leaving = false }: BrandBootMotionProps) => (
+  <main
+    aria-busy={leaving ? 'false' : 'true'}
+    aria-label="正在进入年轮"
+    style={{
+      ...shellStyle,
+      opacity: leaving ? 0 : 1,
+      transform: leaving ? 'scale(0.992)' : 'none',
+      transition: 'opacity 240ms ease-out, transform 240ms ease-out',
+    }}
+  >
     <style>
       {`
         @keyframes nlBootRingTurn {
@@ -164,16 +176,21 @@ export const BrandBootMotion = ({ showRecovery = false, onRetry, onExit }: Brand
       `}
     </style>
 
-    <section style={{ ...motionBlockStyle, alignContent: 'start', marginTop: '28vh' }}>
+    <section style={{ ...motionBlockStyle, alignSelf: 'center', alignContent: 'center' }}>
       <span aria-hidden="true" style={{ width: 11, height: 11, borderRadius: '999px', background: '#e9a05a', marginBottom: 14 }} />
       <strong style={{ color: '#5a3a22', fontFamily: 'var(--nl-font-display)', fontSize: '78px', lineHeight: 1.02, fontWeight: 600, letterSpacing: '0.01em' }}>年轮</strong>
       <span aria-hidden="true" style={{ width: 120, height: 1, background: 'rgba(120, 80, 40, 0.28)', margin: '10px 0 8px' }} />
       <p style={{ margin: 0, color: '#6f5745', fontSize: '21px', fontWeight: 500, letterSpacing: '0.02em' }}>把每一天，都留给以后</p>
     </section>
 
-    <section style={{ ...motionBlockStyle, alignContent: 'end', justifyItems: 'center', paddingBottom: 24 }}>
-      <div role="progressbar" aria-label="正在准备你的档案" style={{ ...timelineTrackStyle, width: '48%', maxWidth: '320px', height: '4px', background: 'rgba(120, 80, 40, 0.14)' }}>
-        <span className="nl-boot-progress" style={{ display: 'block', width: '46%', height: '100%', borderRadius: '999px', background: '#e28b3b', animation: 'none' }} />
+    <section style={{ ...motionBlockStyle, alignSelf: 'end', alignContent: 'end', justifyItems: 'center', paddingBottom: 28 }}>
+      <div
+        role="progressbar"
+        aria-label="正在准备你的档案"
+        aria-valuetext="正在准备你的档案"
+        style={{ ...timelineTrackStyle, width: '48%', maxWidth: '320px', height: '4px', background: 'rgba(120, 80, 40, 0.14)' }}
+      >
+        <span className="nl-boot-progress" style={{ display: 'block', height: '100%', borderRadius: '999px', background: '#e28b3b' }} />
       </div>
       <p style={{ margin: '14px 0 0', color: '#6f5745', fontSize: '15px', fontWeight: 500, letterSpacing: '0.04em' }}>正在准备你的档案</p>
     </section>
