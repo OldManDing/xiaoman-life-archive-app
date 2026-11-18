@@ -140,6 +140,8 @@ export interface CreateRecordPayload {
   visibility_scope?: string;
   is_milestone?: boolean;
   status?: string;
+  /** 回应某条记录时带上来源记录号（后端支持后即可建立关联） */
+  reply_to?: string;
 }
 
 export interface UploadTokenPayload {

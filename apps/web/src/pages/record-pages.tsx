@@ -1433,9 +1433,11 @@ const RecordForm = ({
   initialValue,
   initialFocus,
   initialMetricMode,
+  replyTo,
   onSubmit,
 }: {
   mode: 'create' | 'edit';
+  replyTo?: string;
   initialFocus?: 'media' | 'content' | null;
   initialMetricMode?: 'height' | null;
   initialValue: RecordFormInitialValue;
@@ -1631,7 +1633,7 @@ const RecordForm = ({
 
   useEffect(() => {
     if (initialFocus === 'content') {
-      titleInputRef.current?.focus({ preventScroll: true });
+      contentInputRef.current?.focus({ preventScroll: true });
     }
     if (initialFocus === 'media') {
       titleInputRef.current?.blur();
@@ -2467,6 +2469,24 @@ const RecordForm = ({
             />
             </section>
 
+{replyTo ? (
+            <div className="record-reply-banner" role="status">
+              <span className="record-reply-text">正在回应家人的一条记录，提交后会出现在同一条时间线上</span>
+              <button
+                type="button"
+                className="record-reply-cancel"
+                onClick={() => {
+                  const url = new URL(window.location.href);
+                  url.searchParams.delete('reply_to');
+                  window.history.replaceState({}, '', `${url.pathname}${url.search}`);
+                  window.location.reload();
+                }}
+              >
+                取消回应
+              </button>
+            </div>
+          ) : null}
+
           {!isHeightRecord ? (
             <section aria-label="记录类型" style={{ order: 3, display: 'grid', gap: '10px', padding: '2px 0 14px', borderBottom: '1px solid var(--nl-border-muted)' }}>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '12px' }}>
@@ -2701,6 +2721,7 @@ const RecordForm = ({
           ) : null}
 
           {!isHeightRecord ? (
+
           <div className="record-editor-card" style={{ order: 1, display: 'grid', gap: '12px', borderRadius: 0, border: 'none', background: 'transparent', padding: '8px 0 10px', boxShadow: 'none' }}>
             <div className="record-editor-title-row" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', alignItems: 'center', gap: '10px', borderBottom: '1px solid var(--nl-border-soft)', padding: '0 0 14px' }}>
               <input
@@ -3282,6 +3303,7 @@ export const CreateRecordPage = () => {
   const [defaultEventTime] = useState(() => formatDateTimeLocal(new Date().toISOString()));
   const requestedType = searchParams.get('type');
   const requestedFocus = searchParams.get('focus');
+  const requestedReplyTo = searchParams.get('reply_to');
   const initialMetricMode = requestedType === 'height' ? 'height' : null;
   const initialRecordType = initialMetricMode ? 'text' : ['mixed', 'text', 'video', 'audio', 'milestone'].includes(requestedType ?? '') ? requestedType! : 'mixed';
   const initialFocus = requestedFocus === 'media' || requestedFocus === 'content' ? requestedFocus : null;
@@ -3302,6 +3324,7 @@ export const CreateRecordPage = () => {
   return (
     <RecordForm
       mode="create"
+      replyTo={requestedReplyTo ?? undefined}
       initialFocus={initialFocus}
       initialMetricMode={initialMetricMode}
       initialValue={initialValue}
@@ -3646,22 +3669,8 @@ export const ViewRecordPage = () => {
             ) : null}
             <button
               type="button"
-              className="rd-action-share"
-              onClick={async () => {
-                const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
-                const shareData = { title: displayTitle || '年轮记录', text: rdContentText || displayTitle || '', url: shareUrl };
-                try {
-                  if (typeof navigator !== 'undefined' && navigator.share) {
-                    await navigator.share(shareData);
-                    return;
-                  }
-                  if (typeof navigator !== 'undefined' && navigator.clipboard) {
-                    await navigator.clipboard.writeText(`${shareData.title} ${shareUrl}`);
-                  }
-                } catch {
-                  /* 用户取消分享 */
-                }
-              }}
+              className="rd-action-reply"
+              onClick={() => navigate(`/record/create?reply_to=${encodeURIComponent(params.record_no ?? '')}&focus=content`)}
             >
               回应一句
             </button>

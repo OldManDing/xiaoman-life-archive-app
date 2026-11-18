@@ -5182,3 +5182,36 @@
   font-size: 13px !important;
   font-weight: 600 !important;
 }
+
+
+/* 04/15 回应上下文提示条 */
+#root#root#root .record-reply-banner {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  margin: 0 0 12px !important;
+  padding: 10px 14px !important;
+  border-radius: 16px !important;
+  background: rgba(233, 160, 90, 0.14) !important;
+  border: 1px solid rgba(233, 160, 90, 0.28) !important;
+}
+
+#root#root#root .record-reply-text {
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  color: #8A4E14 !important;
+}
+
+#root#root#root .record-reply-cancel {
+  flex: 0 0 auto !important;
+  min-height: 32px !important;
+  height: 32px !important;
+  padding: 0 12px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(138, 78, 20, 0.32) !important;
+  background: transparent !important;
+  color: #8A4E14 !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
