@@ -1717,3 +1717,40 @@
   font-size: 17px !important;
   color: var(--nl2-ink-900) !important;
 }
+
+
+/* ============================================================
+   15 编辑记录：标题 30 衬线 + 下划线、正文 17/1.6、字数 13
+   ============================================================ */
+#root#root .record-form-page .record-title-input,
+#root#root .record-form-page .record-editor-title-input,
+#root#root .record-form-page .record-title-card input {
+  font-family: var(--nl-font-display, "Songti SC", serif) !important;
+  font-size: 30px !important;
+  line-height: 1.3 !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  color: var(--nl2-ink-900) !important;
+  border-bottom: 1px solid var(--nl2-line) !important;
+  padding-bottom: 6px !important;
+}
+
+#root#root .record-form-page .record-body-card textarea,
+#root#root .record-form-page .record-editor-body-input {
+  font-size: 17px !important;
+  line-height: 1.6 !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+#root#root .record-form-page .record-field-label,
+#root#root .record-form-page .record-char-count {
+  font-size: 13px !important;
+  color: var(--nl2-ink-500) !important;
+}
+
+/* 编辑页隐藏大块「拍照」入口与媒体提示，保留缩略图 + 添加格（设计 15） */
+#root#root .record-form-page.is-edit .record-media-section > button,
+#root#root .record-form-page.is-edit .record-media-section > p,
+#root#root .record-form-page.is-edit .record-media-section > div:not(:has(.record-media-grid)):not(:has(img)) {
+  display: none !important;
+}
