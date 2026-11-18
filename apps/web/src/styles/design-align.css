@@ -460,7 +460,7 @@
   display: none !important;
 }
 
-#root#root .nl-home-day-body .nl-moment-card .nl-moment-body {
+#root#root .nl-home-day-body .nl-moment-card:not(.is-text-card) .nl-moment-body {
   display: none !important;
 }
 
@@ -2448,4 +2448,138 @@
     background-image: none;
     background-color: rgba(255, 250, 244, 0.6);
   }
+}
+
+
+/* ============================================================
+   228. 01 首页：按差异清单 #3/#6/#11/#15/#16 收口
+   ============================================================ */
+#root#root .nl-home-page .nl-moment-card .nl-moment-media {
+  aspect-ratio: 4 / 3 !important;
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+#root#root .nl-home-page .nl-moment-card .nl-moment-media img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: 50% 34% !important;
+}
+
+#root#root .nl-home-page .nl-moment-card {
+  border-radius: 26px !important;
+}
+
+#root#root .nl-home-page .nl-home-today-empty button {
+  background: #E9A05A !important;
+  background-image: none !important;
+  color: #3A2A1E !important;
+  font-weight: 600 !important;
+  box-shadow: none !important;
+}
+
+#root#root .nl-home-page .nl-home-today-empty {
+  font-size: 15px !important;
+  color: #6F5745 !important;
+  font-weight: 500 !important;
+}
+
+#root#root .nl-nav-item.is-active > span:first-child,
+#root#root .nl-nav-item.is-active > div:first-child {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 14px !important;
+}
+
+
+/* 01 首页 #11/#12：激活块落在图标上，44×44 r14 浅琥珀；链接本身不铺底色 */
+#root#root#root .app-bottom-nav-link.is-active {
+  background: transparent !important;
+  border-radius: 0 !important;
+}
+
+#root#root#root .app-bottom-nav-link.is-active .app-bottom-nav-icon {
+  width: 44px !important;
+  height: 44px !important;
+  border-radius: 14px !important;
+  background: #F2B45C !important;
+  color: #3A2A1E !important;
+}
+
+#root#root#root .app-bottom-nav-link.is-active svg {
+  color: #3A2A1E !important;
+}
+
+
+/* 01 首页 #4/#7/#8/#9/#10/#13/#20：纯文字卡按设计补成 L2 玻璃行 */
+#root#root .nl-home-day-body .nl-moment-card.is-text-card {
+  background: var(--nl2-glass-2) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  border-radius: var(--nl2-r-card) !important;
+  padding: 16px 18px !important;
+  box-shadow: 0 8px 20px rgba(146, 96, 52, 0.10) !important;
+  display: grid !important;
+  grid-template-columns: 1fr auto !important;
+  align-items: center !important;
+  gap: 12px !important;
+  text-align: left !important;
+}
+
+#root#root .nl-home-day-body .nl-moment-card.is-text-card .nl-moment-body {
+  display: grid !important;
+  gap: 6px !important;
+  min-width: 0 !important;
+}
+
+#root#root .nl-home-day-body .nl-moment-card.is-text-card .nl-moment-meta,
+#root#root .nl-home-day-body .nl-moment-card.is-text-card .nl-moment-meta span {
+  font-size: 13px !important;
+  color: var(--nl2-ink-500) !important;
+  letter-spacing: 0.01em !important;
+}
+
+#root#root .nl-home-day-body .nl-moment-card.is-text-card .nl-moment-title {
+  font-size: 17px !important;
+  line-height: 1.5 !important;
+  font-weight: 600 !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+#root#root .nl-home-day-body .nl-moment-card.is-text-card .nl-moment-excerpt {
+  font-size: 15px !important;
+  line-height: 1.55 !important;
+  color: var(--nl2-ink-700) !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  overflow: hidden !important;
+}
+
+#root#root .nl-home-day-body .nl-moment-card.is-text-card .nl-moment-chevron {
+  display: inline-flex !important;
+  align-items: center !important;
+  color: var(--nl2-ink-500) !important;
+}
+
+
+/* 01 首页 #4：缩略行封面 96×72（4:3） r14 */
+#root#root .nl-home-day-body .nl-moment-thumb,
+#root#root .nl-home-day-body .nl-moment-card:not(.is-featured) .nl-moment-thumb img,
+#root#root .nl-home-day-body .nl-moment-card:not(.is-featured) img.nl-moment-thumb {
+  width: 96px !important;
+  height: 72px !important;
+  border-radius: 14px !important;
+  object-fit: cover !important;
+}
+
+
+/* 01 首页 #4：同日缩略行封面 96×72（4:3） r14（原 60×60） */
+#root#root .nl-home-row-thumb {
+  width: 96px !important;
+  height: 72px !important;
+  border-radius: 14px !important;
+  object-fit: cover !important;
+  flex: 0 0 96px !important;
 }

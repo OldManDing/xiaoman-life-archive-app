@@ -541,7 +541,7 @@ const MomentCard = ({ record, featured = false, onClick }: { record: RecordSumma
           <span className="nl-moment-summary">{summary}</span>
         ) : null}
       </span>
-      {!featured ? (
+      {!featured || isTextCard ? (
         <span className="nl-moment-chevron" aria-hidden="true">
           <ChevronRight size={20} strokeWidth={1.8} />
         </span>
