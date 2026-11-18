@@ -4655,3 +4655,88 @@
   height: 24px !important;
   stroke-width: 1.8px !important;
 }
+
+
+/* ============================================================
+   255. 28 错误页：按 20 条清单收口
+   ============================================================ */
+/* #4 #5 玻璃圆盘 98：固定尺寸、不外溢、L2 78% + blur20 */
+#root#root#root .error-badge {
+  width: 98px !important;
+  height: 98px !important;
+  min-width: 98px !important;
+  max-width: 98px !important;
+  max-height: 98px !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.78) !important;
+  border: none !important;
+  overflow: hidden !important;
+  display: grid !important;
+  place-items: center !important;
+  flex: 0 0 auto !important;
+  box-shadow: 0 14px 34px rgba(146, 96, 52, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+#root#root#root .error-badge svg {
+  width: 66px !important;
+  height: 66px !important;
+  max-width: 66px !important;
+  max-height: 66px !important;
+  display: block !important;
+}
+
+/* #2 #3 标题 22 衬线 500 */
+#root#root#root .error-badge + h2,
+#root#root#root .info-shell .error-badge ~ h2 {
+  font-family: var(--nl-font-display) !important;
+  font-size: 22px !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+  margin: 0 !important;
+}
+
+/* #6 副标 15 / 1.75 */
+#root#root#root .error-badge + h2 + p {
+  font-size: 15px !important;
+  line-height: 1.75 !important;
+  color: #6F5745 !important;
+  max-width: 300px !important;
+}
+
+/* #15 #16 按钮 314 宽、间距 14 */
+#root#root#root .error-actions {
+  max-width: 314px !important;
+  gap: 14px !important;
+}
+
+/* #13 主按钮 #B0662A */
+#root#root#root .error-actions button:first-child {
+  background: #B0662A !important;
+  background-image: none !important;
+  color: #FFFFFF !important;
+  min-height: 52px !important;
+  height: 52px !important;
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  border-radius: 999px !important;
+}
+
+/* #14 次按钮更透 */
+#root#root#root .error-actions button:nth-child(2) {
+  background: rgba(255, 250, 244, 0.62) !important;
+  border: 1px solid rgba(255, 255, 255, 0.5) !important;
+  color: #3A2A1E !important;
+  min-height: 52px !important;
+  height: 52px !important;
+  font-size: 17px !important;
+  border-radius: 999px !important;
+}
+
+/* #18 帮助行 13 弱色无下划线，距按钮 90 */
+#root#root#root .info-shell button[style*="transparent"] {
+  text-decoration: none !important;
+  color: #8B7160 !important;
+  font-size: 13px !important;
+}
