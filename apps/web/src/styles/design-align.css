@@ -4532,3 +4532,57 @@
   height: 24px !important;
   stroke-width: 1.8px !important;
 }
+
+
+/* ============================================================
+   253. 26 帮助与反馈：按 20 条清单收口
+   ============================================================ */
+/* #3 表单标签 17 / 墨色 */
+#root#root#root .info-shell label,
+#root#root#root .info-shell .field-label {
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+/* #12 #13 #14 控件圆角 12、底 .62、字 17 */
+#root#root#root .info-shell textarea,
+#root#root#root .info-shell input,
+#root#root#root .info-shell select {
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.62) !important;
+  font-size: 17px !important;
+  line-height: 1.75 !important;
+}
+
+/* #2 #11 提交按钮 方角 12 / 52 高 */
+#root#root#root .info-shell button[type="submit"] {
+  border-radius: 12px !important;
+  min-height: 52px !important;
+  height: 52px !important;
+  font-size: 17px !important;
+}
+
+/* #10 状态胶囊 13 / #F7E4C9 / #8A4E14 */
+#root#root#root .info-shell span[class*="status"],
+#root#root#root .info-shell span:has(> span) {
+  font-size: 13px !important;
+}
+
+/* #5 最近反馈标题卡外 + 细线 */
+#root#root#root .info-shell [class*="recent"] {
+  font-size: 17px !important;
+  font-weight: 600 !important;
+}
+
+/* #20 工单分类 15 / 600 */
+#root#root#root .info-shell .info-card strong {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+}
+
+/* #18 顶栏与卡同边 */
+#root#root#root .info-shell .app-topbar {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
