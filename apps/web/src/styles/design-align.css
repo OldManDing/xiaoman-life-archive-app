@@ -3381,3 +3381,133 @@
     radial-gradient(70% 40% at 50% 0%, rgba(255, 214, 178, 0.5) 0%, rgba(255, 214, 178, 0) 70%),
     linear-gradient(180deg, #FDF6EC 0%, #FBEBD9 55%, #FEDFC3 100%) !important;
 }
+
+
+/* ============================================================
+   237. 10 消息：按 20 条清单收口
+   ============================================================ */
+/* #9 头像 48 */
+#root#root#root .msg-avatar {
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+}
+
+/* #7 系统消息不套圆底 */
+#root#root#root .msg-avatar.is-system {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* #11 列表间距 10 */
+#root#root#root .msg-list {
+  gap: 10px !important;
+}
+
+/* #14 卡片圆角 18 */
+#root#root#root .msg-card,
+#root#root#root .msg-item {
+  border-radius: 18px !important;
+}
+
+/* #5 #6 分段控件：整体 48、按钮 40、选中渐变 + 内高光 */
+#root#root#root .msg-tabs,
+#root#root#root [class*="segment"] {
+  min-height: 48px !important;
+  height: 48px !important;
+  border: none !important;
+  background: rgba(255, 250, 244, 0.62) !important;
+}
+
+#root#root#root .msg-tabs button,
+#root#root#root [class*="segment"] button {
+  min-height: 40px !important;
+  height: 40px !important;
+  border-radius: 999px !important;
+}
+
+#root#root#root .msg-tabs button[aria-selected="true"],
+#root#root#root .msg-tabs button.is-active,
+#root#root#root [class*="segment"] button[aria-selected="true"],
+#root#root#root [class*="segment"] button.is-active {
+  background: linear-gradient(180deg, #F6C68C 0%, #E9A05A 100%) !important;
+  color: #3A2A1E !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55) !important;
+}
+
+/* #8 回应胶囊 36 高 / 13px */
+#root#root#root .msg-reply,
+#root#root#root .msg-card .msg-action {
+  min-height: 34px !important;
+  height: 34px !important;
+  min-width: 56px !important;
+  padding: 0 12px !important;
+  font-size: 13px !important;
+  border-radius: 999px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* #16 顶栏 blur 20 */
+#root#root#root .app-topbar {
+  -webkit-backdrop-filter: blur(20px) saturate(1.08) !important;
+  backdrop-filter: blur(20px) saturate(1.08) !important;
+}
+
+/* #19 背景琥珀色块 */
+#root#root#root .msg-page,
+#root#root#root .app-page-shell:has(.msg-list) {
+  background-image:
+    radial-gradient(42% 26% at 12% 86%, rgba(233, 160, 90, 0.12) 0%, rgba(233, 160, 90, 0) 70%),
+    radial-gradient(38% 24% at 88% 92%, rgba(233, 160, 90, 0.10) 0%, rgba(233, 160, 90, 0) 72%),
+    linear-gradient(180deg, #FDF6EC 0%, #FBEFDF 55%, #F6DCCB 100%) !important;
+}
+
+
+/* 10 #7 系统消息图标裸放（.msg-system-icon），不套琥珀圆底 */
+#root#root#root .msg-system-icon {
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  border-radius: 999px !important;
+  background: transparent !important;
+  background-image: none !important;
+  color: #A9581B !important;
+}
+
+#root#root#root .msg-system-icon svg {
+  width: 26px !important;
+  height: 26px !important;
+  stroke-width: 1.8px !important;
+}
+
+#root#root#root .msg-system-thumb {
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  border-radius: 12px !important;
+  object-fit: cover !important;
+  flex: 0 0 48px !important;
+}
+
+#root#root#root .msg-body {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+#root#root#root .msg-title {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+#root#root#root .msg-dot {
+  width: 6px !important;
+  height: 6px !important;
+  min-width: 6px !important;
+  border-radius: 999px !important;
+  background: #E9A05A !important;
+  box-shadow: 0 0 0 2px #FDF6EC !important;
+}
