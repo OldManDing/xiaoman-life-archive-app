@@ -4983,3 +4983,114 @@
 #root#root#root .wl-subtitle {
   margin-bottom: 0 !important;
 }
+
+
+/* ============================================================
+   258. 令牌统一（治跨屏污染：同一语义只有一个值）
+   ============================================================ */
+
+/* ---- 06 底部导航 quiet 态：别被 02 的饱和琥珀规则压掉 ---- */
+#root#root#root .app-bottom-nav.is-quiet .app-bottom-nav-link.is-active {
+  background: transparent !important;
+  color: #E98A3C !important;
+  box-shadow: none !important;
+}
+
+#root#root#root .app-bottom-nav.is-quiet .app-bottom-nav-link.is-active .app-bottom-nav-icon {
+  background: transparent !important;
+  box-shadow: none !important;
+  color: #E98A3C !important;
+  width: auto !important;
+  height: auto !important;
+  border-radius: 0 !important;
+}
+
+#root#root#root .app-bottom-nav.is-quiet .app-bottom-nav-link.is-active svg,
+#root#root#root .app-bottom-nav.is-quiet .app-bottom-nav-link.is-active .app-bottom-nav-label {
+  color: #E98A3C !important;
+}
+
+/* ---- 开关：11 与 19 统一 46×26，开 #A9581B、关 #E8D9C9、圆点 18 ---- */
+#root#root#root .settings-shell [aria-pressed] > span:first-child,
+#root#root#root .settings-shell [role="switch"] > span:first-child {
+  width: 46px !important;
+  height: 26px !important;
+  min-width: 46px !important;
+  border-radius: 999px !important;
+  border: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  transition: background-color 0.18s ease !important;
+}
+
+#root#root#root .settings-shell [aria-pressed="true"] > span:first-child,
+#root#root#root .settings-shell [role="switch"][aria-checked="true"] > span:first-child {
+  background: #A9581B !important;
+}
+
+#root#root#root .settings-shell [aria-pressed="false"] > span:first-child,
+#root#root#root .settings-shell [role="switch"][aria-checked="false"] > span:first-child {
+  background: #E8D9C9 !important;
+}
+
+#root#root#root .settings-shell [aria-pressed] > span:first-child > span,
+#root#root#root .settings-shell [role="switch"] > span:first-child > span {
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  max-height: 18px !important;
+  border-radius: 999px !important;
+  background: #FFFFFF !important;
+  box-shadow: 0 1px 3px rgba(58, 42, 28, 0.24) !important;
+}
+
+/* ---- 信息页表单控件：统一 18 圆角 / 62% 白底 / 17 号 ---- */
+#root#root#root .security-shell input,
+#root#root#root .delete-shell input,
+#root#root#root .help-shell input,
+#root#root#root .help-shell textarea,
+#root#root#root .help-shell select,
+#root#root#root .contact-shell input,
+#root#root#root .about-shell input {
+  border-radius: 18px !important;
+  background: rgba(255, 255, 255, 0.62) !important;
+  font-size: 17px !important;
+}
+
+/* ---- 信息页行高统一 68 ---- */
+#root#root#root .security-shell .info-card > *,
+#root#root#root .delete-shell .info-card > *,
+#root#root#root .about-shell .info-card > * {
+  min-height: 68px !important;
+}
+
+/* ---- 区块标题统一 17 / 600（不含 22 屏法务正文卡里的大标题） ---- */
+#root#root#root .settings-shell .set-group-title,
+#root#root#root .security-shell .set-group-title,
+#root#root#root .notify-shell .set-group-title {
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  font-family: "HarmonyOS Sans SC", MiSans, sans-serif !important;
+  letter-spacing: 0 !important;
+}
+
+/* ---- 26 帮助页表单标签（只作用于帮助页，不再泄漏到 23/24/25/27） ---- */
+#root#root#root .help-shell label,
+#root#root#root .help-shell .field-label {
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+/* ---- 23 关于我们：行高 68（压掉早期 92 的规则） ---- */
+#root#root#root .about-shell .info-card > a,
+#root#root#root .about-shell .info-card > button {
+  min-height: 68px !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* ---- 27 注销：统计卡独立、警示标题 17 ---- */
+#root#root#root .delete-shell .delete-warning-title {
+  font-size: 17px !important;
+}

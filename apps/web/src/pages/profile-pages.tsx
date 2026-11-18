@@ -931,7 +931,7 @@ export const NotificationSettingsPage = () => {
   ];
 
   return (
-    <PageShell title="通知设置" backTo="/profile" className="settings-shell">
+    <PageShell title="通知设置" backTo="/profile" className="settings-shell notify-shell">
       <div style={{ display: 'grid', gap: 18 }}>
         {notifyGroups.map((group) => (
           <section className="set-group" key={group.title} aria-label={group.title}>
@@ -1076,7 +1076,7 @@ export const AccountPage = () => {
   })();
 
   return (
-    <PageShell title="账号" backTo="/profile" className="account-shell">
+    <PageShell title="账号" backTo="/profile" className="account-shell profile-account-shell">
       <div className="ac-hero" style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}>
         <label aria-label="更换头像" className="ac-avatar">
           <ProfileAvatar src={avatarPreviewUrl ?? user?.avatar_url} mediaNo={user?.avatar_media_no} label={user?.nickname ?? '我的头像'} />
@@ -1321,7 +1321,7 @@ export const SettingsPage = () => {
   };
 
   return (
-    <PageShell title="设置" backTo="/profile" className="settings-shell">
+    <PageShell title="设置" backTo="/profile" className="settings-shell pref-shell">
       <section className="set-group" aria-label="记录">
         <h2 className="set-group-title">记录</h2>
         <div className="set-card">
@@ -2107,7 +2107,7 @@ export const SecurityPage = () => {
   };
 
   return (
-    <PageShell className="info-shell" title="账号与安全" backTo="/profile">
+    <PageShell className="info-shell security-shell" title="账号与安全" backTo="/profile">
       <h3 className="set-group-title">登录方式</h3>
       <Panel className="info-card" style={{ padding: 0, overflow: 'hidden', background: 'transparent', border: 'none', boxShadow: 'none' }}>
         {rows.map((item, index) => {
@@ -2305,7 +2305,7 @@ export const AccountDeletionPage = () => {
   };
 
   return (
-    <PageShell className="info-shell" title="注销账号" backTo="/profile/security">
+    <PageShell className="info-shell delete-shell" title="注销账号" backTo="/profile/security">
       <Panel className="info-card" style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: '18px' }}>
         <div style={rowStyle}>
           <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start', borderRadius: '18px', background: 'rgba(255, 250, 244, 0.86)', border: '1px solid rgba(255, 255, 255, 0.7)', padding: '16px 18px' }}>
@@ -2527,7 +2527,7 @@ export const HelpFeedbackPage = () => {
   };
 
   return (
-    <PageShell className="info-shell" title="帮助与反馈" backTo="/profile">
+    <PageShell className="info-shell help-shell" title="帮助与反馈" backTo="/profile">
       <Panel className="info-card" style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: '14px 16px 16px' }}>
         <div style={rowStyle}>
           <Field label="问题类型" labelSize={17}>
@@ -2698,7 +2698,7 @@ export const AboutPage = () => {
   const updateStatusText = checkingUpdate ? '检查中' : updateResult ? (updateResult.update_available ? (updateResult.force_update ? '强制更新' : '有更新') : '已是最新') : '手动检查';
 
   return (
-    <PageShell title="关于我们" backTo="/profile" className="info-shell">
+    <PageShell title="关于我们" backTo="/profile" className="info-shell about-shell">
       <section style={{ display: 'grid', justifyItems: 'center', padding: '24px 0 12px' }}>
         <svg width="150" height="150" viewBox="0 0 150 150" role="img" aria-label="年轮" style={{ marginBottom: '18px', display: 'block' }}>
           <circle cx="75" cy="75" r="75" fill="#E9A050" />
@@ -2804,7 +2804,7 @@ export const ContactPage = () => {
   };
 
   return (
-    <PageShell className="info-shell" title="联系我们" backTo="/profile/about">
+    <PageShell className="info-shell contact-shell" title="联系我们" backTo="/profile/about">
       <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.7, whiteSpace: 'normal' }}>账号、档案、隐私和数据交付相关事项</p>
 
       <div style={{ display: 'grid', gap: 10 }}>

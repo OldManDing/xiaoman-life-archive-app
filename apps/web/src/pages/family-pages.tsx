@@ -835,7 +835,7 @@ export const FamilyMembersPage = () => {
   const hiddenMemberCount = Math.max(members.length - visibleMembers.length, 0);
 
   return (
-    <PageShell title="家庭成员" backTo="/family" className="account-shell">
+    <PageShell title="家庭成员" backTo="/family" className="account-shell members-shell">
       <Panel style={{ padding: 0, background: 'transparent', border: 'none', boxShadow: 'none' }}>
         {!activeChild?.family_no ? <EmptyState message="当前孩子尚未关联家庭编号。" /> : null}
         {loading ? <EmptyState message="正在加载家庭成员…" /> : null}
@@ -1095,7 +1095,7 @@ export const FamilyMemberDetailPage = () => {
     return `加入于 ${joined.getFullYear()}年${joined.getMonth() + 1}月${joined.getDate()}日`;
   })();
   return (
-    <PageShell title="成员信息" backTo="/family" className="account-shell">
+    <PageShell title="成员信息" backTo="/family" className="account-shell member-detail-shell">
       {loading ? <Panel><EmptyState message="正在加载家人资料…" /></Panel> : null}
       {!loading && !member ? <Panel><EmptyState message="未找到该家庭成员。" /></Panel> : null}
       {member ? (
