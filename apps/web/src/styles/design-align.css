@@ -2173,3 +2173,31 @@
   color: var(--nl2-ink-500) !important;
   text-align: center !important;
 }
+
+
+/* 28 错误页：只调整图标圆与标题，避免误伤顶栏/页脚按钮 */
+#root#root .error-shell .error-badge {
+  width: 250px !important;
+  height: 250px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 250, 244, 0.78) !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  box-shadow: 0 10px 30px rgba(146, 96, 52, 0.10) !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+#root#root .error-shell .error-badge svg {
+  width: 96px !important;
+  height: 96px !important;
+  stroke-width: 1.6 !important;
+  color: #B4652A !important;
+}
+
+#root#root .error-shell h1 {
+  font-family: var(--nl-font-display, "Songti SC", serif) !important;
+  font-size: 30px !important;
+  line-height: 1.3 !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+}
