@@ -1034,6 +1034,14 @@ export const FamilyMemberDetailPage = () => {
 
   const member = userNo ? members.find((item) => item.user_no === userNo) ?? null : null;
   const memberName = member ? getFamilyMemberDisplayName(member) : '';
+  const memberOwnRecords = member
+    ? records.filter((record) => (record.creator_user_no ? record.creator_user_no === member.user_no : record.creator_name === member.nickname))
+    : [];
+  // 记录列表可能被分页截断，截断时用「已加载」口径并标注「约」
+  const memberContributionLabel = records.length < recordTotal
+    ? `约 ${memberOwnRecords.length} 条记录`
+    : `${memberOwnRecords.length} 条记录`;
+
   const memberRecords = member
     ? records
         .filter((record) => (record.creator_user_no ? record.creator_user_no === member.user_no : record.creator_name === member.nickname))
@@ -1142,7 +1150,9 @@ export const FamilyMemberDetailPage = () => {
               {([
                 { value: 'viewer' as const, title: '仅浏览', detail: '可以查看记录，但不能新增' },
                 { value: 'editor' as const, title: '可补充', detail: '可以查看并新增记录' },
-                { value: 'owner' as const, title: '管理员', detail: '可以添加成员、修改档案、调整权限' },
+                ...(member?.role === 'owner'
+                  ? [{ value: 'owner' as const, title: '管理员', detail: '家庭创建者，可添加成员、修改档案、调整权限' }]
+                  : []),
               ]).map((option) => {
                 const selected = (pendingRole ?? member.role) === option.value;
                 const disabled = !canEditRole || updating;
@@ -1204,7 +1214,7 @@ export const FamilyMemberDetailPage = () => {
                 <FileText size={24} strokeWidth={1.8} />
               </span>
               <span style={{ flex: 1, minWidth: 0, color: 'var(--nl-ink)', fontSize: 13, fontWeight: 500 }}>
-                {recordTotal} 条记录
+                {memberContributionLabel}
               </span>
               {memberLatestRecordLabel ? (
                 <span style={{ color: '#6f5745', fontSize: 12 }}>· {memberLatestRecordLabel}</span>

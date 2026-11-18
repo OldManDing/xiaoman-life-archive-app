@@ -1025,6 +1025,34 @@ export const AccountPage = () => {
     };
   }, [avatarPreviewUrl]);
 
+  const [mobileCode, setMobileCode] = useState('');
+  const [mobileCodeCountdown, setMobileCodeCountdown] = useState(0);
+  const [sendingMobileCode, setSendingMobileCode] = useState(false);
+  const [mobileCodeSentTo, setMobileCodeSentTo] = useState('');
+  const mobileValid = mobilePattern.test(mobile.trim());
+
+  useEffect(() => {
+    if (mobileCodeCountdown <= 0) return undefined;
+    const timer = window.setInterval(() => setMobileCodeCountdown((n) => (n > 0 ? n - 1 : 0)), 1000);
+    return () => window.clearInterval(timer);
+  }, [mobileCodeCountdown]);
+
+  const sendMobileChangeCode = async () => {
+    if (!mobileValid || sendingMobileCode || mobileCodeCountdown > 0) return;
+    setSendingMobileCode(true);
+    setMessage(null);
+    try {
+      await webApi.sendCode(mobile.trim());
+      setMobileCodeSentTo(mobile.trim());
+      setMobileCodeCountdown(60);
+      setMessage('验证码已发送，请查收短信');
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : '验证码发送失败，请稍后重试');
+    } finally {
+      setSendingMobileCode(false);
+    }
+  };
+
   const onSave = async () => {
     const trimmed = nickname.trim();
     const trimmedMobile = mobile.trim();
@@ -1035,6 +1063,16 @@ export const AccountPage = () => {
     if (trimmedMobile && !mobilePattern.test(trimmedMobile)) {
       setMessage('手机号需为 11 位数字');
       return;
+    }
+    if (editingMobile && trimmedMobile) {
+      if (mobileCodeSentTo !== trimmedMobile) {
+        setMessage('请先获取新手机号的验证码');
+        return;
+      }
+      if (mobileCode.trim().length !== 6) {
+        setMessage('请输入 6 位短信验证码');
+        return;
+      }
     }
 
     setSaving(true);
@@ -1127,22 +1165,7 @@ export const AccountPage = () => {
         </div>
         <div className="ac-row">
           <span className="ac-label">手机号</span>
-          {editingMobile ? (
-            <input
-              className="ac-input"
-              value={mobile}
-              onChange={(event) => {
-                const digits = event.target.value.replace(/[^\d]/g, '');
-                const withoutCountryCode = digits.length > 11 && digits.startsWith('86') ? digits.slice(2) : digits;
-                setMobile(withoutCountryCode.slice(0, 11));
-              }}
-              placeholder="输入新手机号"
-              inputMode="tel"
-              aria-label="新手机号"
-            />
-          ) : (
-            <span className="ac-value">{displayMobile}</span>
-          )}
+          <span className="ac-value">{editingMobile ? '换绑中' : displayMobile}</span>
           <button
             type="button"
             className="ac-action"
@@ -1156,11 +1179,60 @@ export const AccountPage = () => {
             {editingMobile ? '收起' : '换绑'}
           </button>
         </div>
+
+        {editingMobile ? (
+          <div className="ac-rebind">
+            <label className="ac-rebind-field">
+              <span>新手机号</span>
+              <input
+                className="ac-input"
+                value={mobile}
+                onChange={(event) => {
+                  const digits = event.target.value.replace(/[^\d]/g, '');
+                  const withoutCountryCode = digits.length > 11 && digits.startsWith('86') ? digits.slice(2) : digits;
+                  setMobile(withoutCountryCode.slice(0, 11));
+                  setMobileCode('');
+                }}
+                placeholder="11 位手机号"
+                inputMode="tel"
+                aria-label="新手机号"
+              />
+            </label>
+            <label className="ac-rebind-field">
+              <span>短信验证码</span>
+              <span className="ac-rebind-code">
+                <input
+                  className="ac-input"
+                  value={mobileCode}
+                  onChange={(event) => setMobileCode(event.target.value.replace(/[^\d]/g, '').slice(0, 6))}
+                  placeholder="6 位验证码"
+                  inputMode="numeric"
+                  aria-label="新手机号验证码"
+                />
+                <button
+                  type="button"
+                  className="ac-rebind-send"
+                  disabled={!mobileValid || mobileCodeCountdown > 0 || sendingMobileCode}
+                  onClick={() => void sendMobileChangeCode()}
+                >
+                  {sendingMobileCode ? '发送中…' : mobileCodeCountdown > 0 ? `${mobileCodeCountdown}s 后重发` : '获取验证码'}
+                </button>
+              </span>
+            </label>
+            <p className="ac-rebind-hint">换绑后旧手机号将无法登录，请确认新号码可用。</p>
+          </div>
+        ) : null}
         <div className="ac-row">
           <span className="ac-label">微信</span>
-          <span className="ac-value">已绑定</span>
-          <button type="button" className="ac-action" aria-label="更换或解绑微信" style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#d97a22', fontWeight: 600 }}>
-            更换
+          <span className="ac-value" style={{ color: '#8B7160' }}>未绑定</span>
+          <button
+            type="button"
+            className="ac-action"
+            aria-label="了解微信绑定"
+            style={{ border: 'none', background: 'transparent', cursor: 'pointer', color: '#8A4E14', fontWeight: 600 }}
+            onClick={() => setMessage('微信绑定暂未开放，目前使用手机号登录。')}
+          >
+            了解
           </button>
         </div>
         <div className="ac-row is-static">

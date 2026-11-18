@@ -5272,3 +5272,70 @@
   font-size: 13px !important;
   font-weight: 600 !important;
 }
+
+
+/* 20 账号：换绑手机号的独立编辑区块（不再塞进 .ac-row 挤压） */
+#root#root#root .profile-account-shell .ac-rebind {
+  display: grid !important;
+  gap: 12px !important;
+  padding: 14px 18px 18px !important;
+  border-bottom: 1px solid rgba(58, 42, 28, 0.16) !important;
+  background: rgba(233, 160, 90, 0.08) !important;
+}
+
+#root#root#root .profile-account-shell .ac-rebind-field {
+  display: grid !important;
+  gap: 6px !important;
+}
+
+#root#root#root .profile-account-shell .ac-rebind-field > span:first-child {
+  font-size: 13px !important;
+  color: #6F5745 !important;
+}
+
+#root#root#root .profile-account-shell .ac-rebind .ac-input {
+  height: 46px !important;
+  min-height: 46px !important;
+  border-radius: 18px !important;
+  background: rgba(255, 255, 255, 0.82) !important;
+  border: 1px solid rgba(58, 42, 28, 0.12) !important;
+  padding: 0 14px !important;
+  font-size: 17px !important;
+  width: 100% !important;
+}
+
+#root#root#root .profile-account-shell .ac-rebind-code {
+  display: flex !important;
+  gap: 10px !important;
+  align-items: center !important;
+}
+
+#root#root#root .profile-account-shell .ac-rebind-code .ac-input {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+#root#root#root .profile-account-shell .ac-rebind-send {
+  flex: 0 0 auto !important;
+  height: 46px !important;
+  min-height: 46px !important;
+  padding: 0 16px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(169, 88, 27, 0.4) !important;
+  background: transparent !important;
+  color: #8A4E14 !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  white-space: nowrap !important;
+}
+
+#root#root#root .profile-account-shell .ac-rebind-send:disabled {
+  opacity: 0.5 !important;
+}
+
+#root#root#root .profile-account-shell .ac-rebind-hint {
+  margin: 0 !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+  color: #8B7160 !important;
+}
