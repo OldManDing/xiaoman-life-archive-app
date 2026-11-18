@@ -3565,3 +3565,49 @@
     radial-gradient(150% 22% at 20% 108%, rgba(242, 190, 143, 0.4) 0%, rgba(242, 190, 143, 0) 70%),
     linear-gradient(180deg, #FDF6EC 0%, #FBECE0 55%, #F6DCCB 100%) !important;
 }
+
+
+/* ============================================================
+   239. 12 邀请家人：按 20 条清单收口
+   ============================================================ */
+/* #12 主卡 L1 26 */
+#root#root#root .invite-card,
+#root#root#root [class*="invite-card"] {
+  border-radius: 26px !important;
+  background: rgba(255, 250, 244, 0.78) !important;
+  padding: 18px !important;
+}
+
+/* #19 列表行 78% 玻璃、无描边 */
+#root#root#root [class*="invite-row"],
+#root#root#root [class*="invite-list"] > * {
+  background: rgba(255, 250, 244, 0.78) !important;
+  border: none !important;
+  border-radius: 20px !important;
+  padding: 10px 16px !important;
+}
+
+/* #20 状态药丸 28 高 / 13 号 */
+#root#root#root [class*="invite-status"],
+#root#root#root [class*="invite-pill"] {
+  min-height: 28px !important;
+  height: 28px !important;
+  padding: 0 14px !important;
+  font-size: 13px !important;
+  border-radius: 999px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+/* #4 已加入实心琥珀 + 琥珀墨字 */
+#root#root#root [class*="invite-status"].is-joined,
+#root#root#root [class*="invite-status"][data-status="joined"] {
+  background: #E9A05A !important;
+  color: #8A4E14 !important;
+}
+
+/* #11 邀请码行内距统一 18 */
+#root#root#root [class*="invite-code"] {
+  padding: 14px 16px !important;
+  border-radius: 18px !important;
+}
