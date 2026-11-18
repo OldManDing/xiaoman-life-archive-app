@@ -3236,3 +3236,95 @@
   text-overflow: ellipsis !important;
   -webkit-line-clamp: 1 !important;
 }
+
+
+/* ============================================================
+   235. 08 登录：按 20 条清单收口
+   ============================================================ */
+/* #2 CTA 保持琥珀识别（禁用态用琥珀 45%，不用米灰） */
+#root#root#root .lg-submit,
+#root#root#root button[type="submit"] {
+  min-height: 52px !important;
+  height: 52px !important;
+  border-radius: 999px !important;
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  color: #FFFFFF !important;
+}
+
+#root#root#root .lg-submit:disabled,
+#root#root#root button[type="submit"]:disabled {
+  background: rgba(169, 88, 27, 0.45) !important;
+  background-image: none !important;
+  color: #FFFFFF !important;
+  box-shadow: none !important;
+}
+
+#root#root#root .lg-submit:not(:disabled) {
+  background: #A9581B !important;
+  background-image: none !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 10px 22px rgba(146, 96, 52, 0.18) !important;
+}
+
+/* #8 协议行 15 / 1.75 */
+#root#root#root input[type="checkbox"] ~ *,
+#root#root#root .lg-agree,
+#root#root#root .lg-agree span {
+  font-size: 15px !important;
+  line-height: 1.75 !important;
+}
+
+/* #16 协议链接琥珀 */
+#root#root#root .lg-agree a,
+#root#root#root a[href*="terms"],
+#root#root#root a[href*="privacy"] {
+  color: #A9581B !important;
+}
+
+/* #9 品牌分隔线 160 */
+#root#root#root .lg-rule,
+#root#root#root [class*="brand-rule"] {
+  width: 160px !important;
+}
+
+/* #6 协议勾选框 24 自绘 */
+#root#root#root input[type="checkbox"] {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 6px !important;
+  border: 1px solid rgba(169, 88, 27, 0.5) !important;
+  background-color: rgba(255, 250, 244, 0.9) !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  box-shadow: none !important;
+}
+
+#root#root#root input[type="checkbox"]:checked {
+  background-color: #A9581B !important;
+  border-color: #A9581B !important;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 13l4 4L19 7'/%3E%3C/svg%3E") !important;
+  background-size: 16px 16px !important;
+}
+
+/* #3 hero 渐隐拉长：44% 起，57% 过半 */
+#root#root#root [class*="scrim"] {
+  background-image: linear-gradient(180deg, rgba(255, 246, 237, 0) 38%, rgba(253, 240, 228, 0.55) 58%, rgba(253, 246, 236, 0.96) 76%, #FDF6EC 100%) !important;
+}
+
+
+/* 08 #8 协议行（含 label 内文字）15 / 1.75 */
+#root#root#root .lg-body label,
+#root#root#root .lg-body label span,
+#root#root#root .lg-body p,
+#root#root#root .lg-page [class*="agree"] {
+  font-size: 15px !important;
+  line-height: 1.75 !important;
+}
+
+#root#root#root .lg-body label a,
+#root#root#root .lg-body p a {
+  color: #A9581B !important;
+}
