@@ -2246,3 +2246,97 @@
   font-weight: 600 !important;
   letter-spacing: 0.02em !important;
 }
+
+
+/* ============================================================
+   09 孩子建档：标题 30 衬线 / 卡片行 90 / 性别琥珀选中 / CTA 深棕
+   ============================================================ */
+#root#root .onb-page .onb-title {
+  font-family: var(--nl-font-display, "Songti SC", serif) !important;
+  font-size: 30px !important;
+  line-height: 1.3 !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  text-align: center !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+#root#root .onb-page .onb-sub {
+  font-size: 17px !important;
+  text-align: center !important;
+  color: var(--nl2-ink-500) !important;
+}
+
+#root#root .onb-page .onb-dot {
+  width: 10px !important;
+  height: 10px !important;
+  border-radius: 999px !important;
+  background: rgba(58, 42, 28, 0.16) !important;
+}
+
+#root#root .onb-page .onb-dot.is-active { background: var(--nl2-amber) !important; }
+
+#root#root .onb-page .onb-avatar {
+  width: 200px !important;
+  height: 200px !important;
+  border-radius: 999px !important;
+  border: 1.5px dashed rgba(169, 88, 27, 0.4) !important;
+  background: rgba(255, 250, 244, 0.45) !important;
+}
+
+#root#root .onb-page .onb-card {
+  border-radius: var(--nl2-r-card) !important;
+  background: var(--nl2-glass-2) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  box-shadow: none !important;
+  padding: 0 18px !important;
+}
+
+#root#root .onb-page .onb-row {
+  min-height: 90px !important;
+  border-bottom: 1px solid var(--nl2-line) !important;
+}
+
+#root#root .onb-page .onb-label { font-size: 17px !important; color: var(--nl2-ink-900) !important; }
+#root#root .onb-page .onb-input,
+#root#root .onb-page .onb-date-value { font-size: 17px !important; color: var(--nl2-ink-900) !important; }
+
+#root#root .onb-page .onb-gender-opt {
+  height: 52px !important;
+  min-width: 120px !important;
+  border-radius: 999px !important;
+  font-size: 17px !important;
+  font-weight: 500 !important;
+  background: rgba(255, 250, 244, 0.55) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.75) !important;
+  color: var(--nl2-ink-500) !important;
+  box-shadow: none !important;
+}
+
+#root#root .onb-page .onb-gender-opt.is-selected {
+  background: var(--nl2-amber) !important;
+  background-image: none !important;
+  border-color: transparent !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+#root#root .onb-page .onb-submit {
+  height: 68px !important;
+  min-height: 68px !important;
+  border-radius: 999px !important;
+  background: var(--nl2-btn) !important;
+  background-image: none !important;
+  color: #FFFFFF !important;
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  box-shadow: var(--nl2-shadow-btn) !important;
+}
+
+#root#root .onb-page .onb-foot { font-size: 15px !important; color: var(--nl2-ink-500) !important; }
+
+
+/* 09 性别胶囊：避免右侧被卡片裁切 */
+#root#root .onb-page .onb-gender { display: flex !important; gap: 8px !important; flex-wrap: nowrap !important; }
+#root#root .onb-page .onb-gender-opt { min-width: 96px !important; padding: 0 14px !important; }
