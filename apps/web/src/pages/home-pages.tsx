@@ -1128,7 +1128,15 @@ export const TimelinePage = () => {
           </label>
         </div>
         <h1 className="tl-big-title">{bigTitle}</h1>
-        <p className="tl-summary">{sortedRecords.length} 条记录</p>
+        {!loading && !error && activeChild && sortedRecords.length ? (
+          <p className="tl-summary">
+            {yearLabel} <strong>{yearRecords.length}</strong> 条
+            <span className="tl-summary-sep" aria-hidden="true">·</span>
+            里程碑 <strong>{milestoneCount}</strong> 个
+          </p>
+        ) : (
+          <p className="tl-summary">{records.length} 条记录</p>
+        )}
       </header>
 
       <main className="tl-main">
@@ -1153,13 +1161,6 @@ export const TimelinePage = () => {
           <div className="tl-empty">
             <EmptyState message={records.length ? `${bigTitle}还没有记录。` : '还没有记录，去记下第一刻吧。'} />
             <button type="button" className="tl-empty-cta" onClick={() => navigate('/record/create')}>去记录</button>
-          </div>
-        ) : null}
-        {!loading && !error && activeChild && sortedRecords.length ? (
-          <div className="tl-stats-capsule">
-            <span>{yearLabel} <strong>{yearRecords.length}</strong> 条</span>
-            <span className="tl-dot-sep" aria-hidden="true">·</span>
-            <span>里程碑 <strong>{milestoneCount}</strong> 个</span>
           </div>
         ) : null}
         {hasMoreRecords ? (
