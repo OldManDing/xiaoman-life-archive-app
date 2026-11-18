@@ -3754,3 +3754,79 @@
   width: 100% !important;
   height: 100% !important;
 }
+
+
+/* ============================================================
+   242. 15 编辑记录：按 20 条清单收口
+   ============================================================ */
+/* #2 #5 卡片 L1 78% + blur20 */
+#root#root#root .record-form-page.is-edit .record-editor-title-row,
+#root#root#root .record-form-page.is-edit .record-body-card {
+  background: rgba(255, 250, 244, 0.78) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.08) !important;
+  backdrop-filter: blur(20px) saturate(1.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.62) !important;
+}
+
+#root#root#root .record-form-page.is-edit .record-editor-title-row {
+  border-radius: 26px !important;
+}
+
+#root#root#root .record-form-page.is-edit .record-body-card {
+  border-radius: 24px !important;
+}
+
+/* #6 #7 输入框去圆角，只留底边线 */
+#root#root#root .record-form-page.is-edit .record-editor-title-row input,
+#root#root#root .record-form-page.is-edit textarea {
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/* #9 正文 15/1.75 无衬线 */
+#root#root#root .record-form-page.is-edit textarea,
+#root#root#root .record-form-page.is-edit input {
+  font-family: "HarmonyOS Sans SC", MiSans, var(--nl-font-sans, sans-serif) !important;
+  font-size: 15px !important;
+  line-height: 1.75 !important;
+}
+
+/* #8 日期/地点行 64 高 */
+#root#root#root .record-form-page.is-edit .record-location-row,
+#root#root#root .record-form-page.is-edit .app-date-control {
+  min-height: 64px !important;
+  height: 64px !important;
+}
+
+/* #10 删除角标贴角外沿、只留 22 圆点 */
+#root#root#root .record-form-page.is-edit [class*="delete"],
+#root#root#root .record-form-page.is-edit [class*="remove"] {
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  top: -4px !important;
+  right: -4px !important;
+  border-radius: 999px !important;
+}
+
+/* #17 卡内距 14 18 */
+#root#root#root .record-form-page.is-edit .record-editor-title-row,
+#root#root#root .record-form-page.is-edit .record-body-card {
+  padding: 14px 18px !important;
+}
+
+
+/* 15 编辑：提示弹窗按钮回主色，标题不用「状态」这种泛称 */
+#root#root#root [role="dialog"] button,
+.ac-modal button,
+.modal-card button {
+  background: #A9581B !important;
+  background-image: none !important;
+  color: #FFFFFF !important;
+  border-radius: 999px !important;
+  min-height: 52px !important;
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 10px 22px rgba(146, 96, 52, 0.18) !important;
+}
