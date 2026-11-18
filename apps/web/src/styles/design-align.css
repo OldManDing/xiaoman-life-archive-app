@@ -1176,3 +1176,74 @@
 #root#root .pf-menu {
   overflow: hidden !important;
 }
+
+
+/* ============================================================
+   216. 字号残留收口：全部归入 11/13/15/16/17/20/30
+   ============================================================ */
+/* 首页头部 */
+#root#root .nl-home-avatar { font-size: 15px !important; }
+#root#root .nl-home-id-text,
+#root#root .nl-home-title,
+#root#root .nl-home-identity { font-size: 17px !important; }
+#root#root .nl-home-title-age { font-size: 13px !important; }
+
+/* 底部导航 */
+#root#root .app-bottom-nav-label { font-size: 13px !important; }
+#root#root .app-bottom-nav-icon { font-size: 13px !important; }
+
+/* 我的 */
+#root#root .pf-bell { font-size: 24px !important; }
+#root#root .pf-menu-icon { font-size: 24px !important; }
+
+/* 搜索 */
+#root#root .search-title { font-size: 20px !important; }
+#root#root .search-meta { font-size: 13px !important; }
+
+/* 表单 */
+#root#root .record-form-page .app-topbar button,
+#root#root .record-form-page .app-topbar a { font-size: 20px !important; }
+#root#root .record-location-value,
+#root#root .record-location-placeholder { font-size: 17px !important; }
+#root#root .record-field-label { font-size: 13px !important; }
+#root#root .record-inline-submit-button { font-size: 16px !important; }
+
+/* 孩子档案 */
+#root#root .archive-shell .ac-label { font-size: 13px !important; }
+#root#root .archive-shell .ac-value { font-size: 17px !important; }
+#root#root .archive-shell .app-topbar button { font-size: 20px !important; }
+
+/* 家庭成员 */
+#root#root .fam-members-summary { font-size: 15px !important; }
+
+/* 邀请家人 */
+#root#root .invite-title { font-size: 20px !important; }
+#root#root .invite-code-value { font-size: 20px !important; }
+#root#root .invite-code-copy { font-size: 15px !important; }
+#root#root .invite-share { font-size: 16px !important; }
+#root#root .invite-footer { font-size: 13px !important; }
+
+/* 详情页按钮（16 属设计按钮字号，保持） */
+#root#root .rd-action-edit,
+#root#root .rd-action-share { font-size: 16px !important; }
+
+
+/* 217. 收口二：三倍 id 压平剩余残留 + 详情顶栏越界 */
+#root#root#root .search-page .search-back { font-size: 20px !important; }
+#root#root#root .record-form-page .record-field-label { font-size: 13px !important; }
+#root#root#root .account-shell span,
+#root#root#root .account-shell button { font-size: 13px !important; }
+#root#root#root .invite-shell .invite-qr-dot { font-size: 13px !important; }
+#root#root#root .invite-shell .invite-title { font-size: 20px !important; }
+#root#root#root .invite-shell .invite-share { font-size: 16px !important; }
+#root#root#root .invite-shell .invite-code-value { font-size: 20px !important; }
+
+/* 详情：悬浮顶栏不得越界 */
+#root#root .app-page-shell:has(.rd-topbar) .rd-topbar {
+  left: 16px !important;
+  right: 16px !important;
+  width: auto !important;
+  max-width: calc(100vw - 32px) !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+}
