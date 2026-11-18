@@ -1428,6 +1428,9 @@ const buildRecordDraftSignature = (
     metricNote: metricState.metricNote,
   });
 
+/** 正文上限：与右下角计数保持一致（原来只显示 /500 但不拦截） */
+const RECORD_CONTENT_MAX_LENGTH = 500;
+
 const RecordForm = ({
   mode,
   initialValue,
@@ -1801,6 +1804,15 @@ const RecordForm = ({
     if (!mediaType) {
       setError('暂不支持该媒体格式，请选择图片、视频或语音文件。');
       return;
+    }
+
+    // 11 设置「仅 Wi-Fi 上传照片」的真实消费点
+    if (recordPrefs.wifiUploadOnly) {
+      const connectionType = (navigator as unknown as { connection?: { type?: string } }).connection?.type;
+      if (connectionType === 'cellular') {
+        setError('已开启「仅 Wi-Fi 上传照片」，请连接 Wi-Fi 后再上传。');
+        return;
+      }
     }
 
     const uploadFile = withResolvedFileMimeType(file);
@@ -2186,6 +2198,11 @@ const RecordForm = ({
       }
     }
 
+    if ((form.content_text ?? '').length > RECORD_CONTENT_MAX_LENGTH) {
+      setError(`正文最多 ${RECORD_CONTENT_MAX_LENGTH} 字，请精简后再保存`);
+      return;
+    }
+
     if (form.record_type === 'text' && mediaNos.length > 0) {
       const confirmed = await appConfirm({
         title: '保存后移除媒体？',
@@ -2321,6 +2338,38 @@ const RecordForm = ({
       setDeleting(false);
     }
   };
+
+  const recordPrefs = (() => {
+    try {
+      const raw = window.localStorage.getItem('nianlun:record-prefs:v1');
+      return raw
+        ? { dailyReminder: true, autoLocation: true, wifiUploadOnly: false, ...(JSON.parse(raw) as Record<string, boolean>) }
+        : { dailyReminder: true, autoLocation: true, wifiUploadOnly: false };
+    } catch {
+      return { dailyReminder: true, autoLocation: true, wifiUploadOnly: false };
+    }
+  })();
+
+  /** 11 设置里「记录时自动带位置」的真实消费点：新建记录时若无地点，自动带一次当前位置 */
+  useEffect(() => {
+    if (mode !== 'create' || !recordPrefs.autoLocation) return undefined;
+    if ((normalizedInitialValue.location_text ?? '').trim()) return undefined;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const location = await getCurrentDeviceLocation();
+        if (cancelled) return;
+        const nearby = await webApi.searchLocations({ keyword: '附近地点', latitude: location.latitude, longitude: location.longitude }).catch(() => null);
+        const nearest = normalizeLocationSuggestions(nearby?.list).find((item) => item.name.trim() || item.address?.trim());
+        if (cancelled || !nearest) return;
+        setForm((current) => (current.location_text ? current : { ...current, location_text: formatLocationText(nearest) }));
+      } catch {
+        // 定位失败或用户拒绝授权时保持空白，不打扰用户
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode]);
 
   const useCurrentLocation = async () => {
     setLocationLoading(true);
@@ -2793,12 +2842,15 @@ const RecordForm = ({
                 }}
                 placeholder={mode === "create" ? "写下这一刻的心情吧…\n比如：他学会了走路，真棒！" : "正文"}
               value={form.content_text}
+              maxLength={RECORD_CONTENT_MAX_LENGTH}
               onChange={(event) => {
                 setError(null);
-                setForm((current) => ({ ...current, content_text: event.target.value }));
+                setForm((current) => ({ ...current, content_text: event.target.value.slice(0, RECORD_CONTENT_MAX_LENGTH) }));
               }}
             />
-              <span className="record-char-count">{(form.content_text ?? '').length} / 500</span>
+              <span className={`record-char-count${(form.content_text ?? '').length >= RECORD_CONTENT_MAX_LENGTH ? ' is-limit' : ''}`}>
+                {(form.content_text ?? '').length} / {RECORD_CONTENT_MAX_LENGTH}
+              </span>
               </div>
               {canUseAi ? (
                 <p style={{ ...helperTextStyle, margin: 0, lineHeight: 1.58, fontSize: '11.5px' }}>

@@ -5339,3 +5339,13 @@
   line-height: 1.6 !important;
   color: #8B7160 !important;
 }
+
+
+/* 09 建档：必填提示（原来无任何校验提示） */
+#root#root#root .onb-required-hint {
+  margin: 8px 0 0 !important;
+  text-align: center !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  color: #8B7160 !important;
+}

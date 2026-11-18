@@ -646,8 +646,21 @@ export const OnboardingChildPage = () => {
   const onSubmit = async (event: FormEvent) => {
     event.preventDefault();
     if (submitting) return;
-    setSubmitting(true);
     setError(null);
+    // 必填校验：姓名与出生日期（原来可以全空提交，靠服务端报错）
+    if (!form.name.trim()) {
+      setError('请填写宝贝的名字');
+      return;
+    }
+    if (!form.birthday) {
+      setError('请选择出生日期');
+      return;
+    }
+    if (form.birthday > new Date().toISOString().slice(0, 10)) {
+      setError('出生日期不能晚于今天');
+      return;
+    }
+    setSubmitting(true);
     try {
       const child = await webApi.createChild(form);
       let completedChild = child;
@@ -785,6 +798,9 @@ export const OnboardingChildPage = () => {
         <button type="submit" className="onb-submit" disabled={submitting}>
           {submitting ? '提交中…' : '继续'}
         </button>
+        {!form.name.trim() || !form.birthday ? (
+          <p className="onb-required-hint">填写名字和出生日期后即可继续</p>
+        ) : null}
         <p className="onb-foot">随时可以在「家庭」里修改</p>
       </form>
     </div>

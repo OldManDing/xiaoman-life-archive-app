@@ -1383,9 +1383,8 @@ export const SettingsPage = () => {
         <h2 className="set-group-title">记录</h2>
         <div className="set-card">
           {[
-            { key: 'dailyReminder' as const, label: '每天提醒我记录', desc: '不错过每一个重要的日子', icon: <Bell size={24} strokeWidth={1.8} /> },
-            { key: 'autoLocation' as const, label: '记录时自动带位置', desc: '记录更有意义', icon: <MapPin size={24} strokeWidth={1.8} /> },
-            { key: 'wifiUploadOnly' as const, label: '仅 Wi-Fi 上传照片', desc: '节省移动数据流量', icon: <Wifi size={24} strokeWidth={1.8} /> },
+            { key: 'autoLocation' as const, label: '记录时自动带位置', desc: '打开后新建记录会自动填上当前位置', icon: <MapPin size={24} strokeWidth={1.8} /> },
+            { key: 'wifiUploadOnly' as const, label: '仅 Wi-Fi 上传照片', desc: '移动网络下会提示稍后上传', icon: <Wifi size={24} strokeWidth={1.8} /> },
           ].map((item) => {
             const enabled = Boolean(recordPrefs[item.key]);
             return (
@@ -2618,14 +2617,7 @@ export const HelpFeedbackPage = () => {
       {feedbackLoading ? <p style={helperTextStyle}>正在同步反馈状态…</p> : null}
       {feedbackError ? <p style={{ ...helperTextStyle, color: 'var(--nl-danger)' }}>反馈状态同步失败：{feedbackError}</p> : null}
       {!feedbackLoading && !feedbackError && !(feedbackTickets ?? []).length ? (
-        <Panel className="info-card" style={{ borderRadius: 24, display: 'grid', gap: 6 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'center' }}>
-            <strong style={{ color: 'var(--nl-ink)', fontSize: 13, fontWeight: 600 }}>使用问题</strong>
-            <span style={{ display: 'inline-flex', alignItems: 'center', padding: '5px 12px', borderRadius: 999, background: '#f7e4c9', color: '#8a4e14', fontSize: 12, fontWeight: 500 }}>处理中</span>
-          </div>
-          <p style={{ margin: 0, color: 'var(--nl-ink)', fontSize: 13, lineHeight: 1.75 }}>反馈提交后会在这里显示处理进度。</p>
-          <p style={{ margin: 0, color: '#8b7160', fontSize: 12 }}>示例 · 已于 11月10日 提交</p>
-        </Panel>
+        <p className="help-empty" role="status">目前还没有提交过反馈，提交后可在这里查看处理进度。</p>
       ) : null}
       {(feedbackTickets ?? []).slice(0, 5).map((item) => (
         <Panel key={item.ticket_no} className="info-card" style={{ borderRadius: 24, display: 'grid', gap: 6 }}>
