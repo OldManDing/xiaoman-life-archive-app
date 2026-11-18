@@ -2706,3 +2706,197 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28) !important;
   letter-spacing: 0.01em !important;
 }
+
+
+/* ============================================================
+   230. 03 记录详情：按 20 条清单收口
+   ============================================================ */
+/* #1 #16 首图内缩 20、圆角 16 */
+#root#root .rd-hero {
+  margin: 16px 20px 18px !important;
+  width: auto !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+}
+
+#root#root .rd-hero img {
+  border-radius: 16px !important;
+}
+
+/* #5 正文 15 / 1.75 */
+#root#root .rd-copy,
+#root#root .rd-body p {
+  font-size: 15px !important;
+  line-height: 1.75 !important;
+}
+
+/* #6 首词高亮：浅琥珀底 + 琥珀字 */
+#root#root .rd-copy mark,
+#root#root .rd-copy [class*="mark"] {
+  background: #FBE1B2 !important;
+  color: #8A4E14 !important;
+  border-radius: 4px !important;
+  padding: 0 4px !important;
+}
+
+/* #14 副标 13 */
+#root#root .rd-meta,
+#root#root .rd-meta span {
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+
+/* #11 #13 标签 32 高、内距 4/12；里程碑柔琥珀 #F6C57D + 琥珀字 */
+#root#root .rd-chip {
+  min-height: 32px !important;
+  height: 32px !important;
+  padding: 0 12px !important;
+  font-size: 13px !important;
+  border-radius: 999px !important;
+}
+
+#root#root .rd-chip:nth-child(odd),
+#root#root .rd-chip[class*="milestone"] {
+  background: #F6C57D !important;
+  color: #8A4E14 !important;
+}
+
+/* #4 图集单图 1.5:1 */
+#root#root .rd-gallery img {
+  aspect-ratio: 1.5 / 1 !important;
+  height: auto !important;
+  width: 100% !important;
+  object-fit: cover !important;
+}
+
+#root#root .rd-gallery > * {
+  overflow: hidden !important;
+  border-radius: 20px !important;
+}
+
+/* #9 顶栏圆按钮 40 */
+#root#root .rd-topbar button {
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+}
+
+
+/* 03 记录详情：以 3 个 id 压过早期 #root#root:has() 规则 */
+#root#root#root .app-page-shell:has(.rd-topbar) .rd-hero {
+  margin: 16px 20px 18px !important;
+  width: auto !important;
+  height: 300px !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+}
+
+#root#root#root .app-page-shell:has(.rd-topbar) .rd-hero img {
+  border-radius: 16px !important;
+}
+
+#root#root#root .app-page-shell:has(.rd-topbar) .rd-meta {
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+
+#root#root#root .app-page-shell:has(.rd-topbar) .rd-copy {
+  font-size: 15px !important;
+  line-height: 1.75 !important;
+}
+
+#root#root#root .rd-chips .rd-chip {
+  min-height: 32px !important;
+  height: 32px !important;
+  padding: 0 12px !important;
+  font-size: 13px !important;
+}
+
+#root#root#root .rd-chips .rd-chip.is-milestone,
+#root#root#root .rd-chips .rd-chip.is-amber {
+  background: #F6C57D !important;
+  color: #8A4E14 !important;
+}
+
+#root#root#root .rd-gallery img {
+  aspect-ratio: 1.5 / 1 !important;
+  height: auto !important;
+  object-fit: cover !important;
+}
+
+#root#root#root .rd-topbar button {
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+}
+
+
+/* 03 首图内距：父级已有 20 内距，故横向 margin 归零（总内距 20） */
+#root#root#root .app-page-shell:has(.rd-topbar) .rd-hero {
+  margin: 16px 0 18px !important;
+  width: auto !important;
+}
+
+/* 03 正文（含段落子元素）15 / 1.75 */
+#root#root#root .app-page-shell:has(.rd-topbar) .rd-copy,
+#root#root#root .app-page-shell:has(.rd-topbar) .rd-copy p,
+#root#root#root .app-page-shell:has(.rd-topbar) .rd-body,
+#root#root#root .app-page-shell:has(.rd-topbar) .rd-body p {
+  font-size: 15px !important;
+  line-height: 1.75 !important;
+}
+
+
+/* 03 副标需高于 .rd-body p 的正文规则（同权重时后者会赢） */
+#root#root#root .app-page-shell:has(.rd-topbar) .rd-body p.rd-meta,
+#root#root#root .app-page-shell:has(.rd-topbar) p.rd-meta {
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  color: var(--nl2-ink-500) !important;
+}
+
+
+/* 03 图集：容器高度随图自适应，去掉图下方空带 */
+#root#root#root .rd-gallery {
+  height: auto !important;
+  align-items: start !important;
+}
+
+#root#root#root .rd-gallery > * {
+  display: block !important;
+  height: auto !important;
+}
+
+#root#root#root .rd-gallery img {
+  display: block !important;
+}
+
+
+/* 03 图集容器同步 1.5:1，消除图片下部空带 */
+#root#root#root .rd-gallery .nl-media-interaction {
+  aspect-ratio: 1.5 / 1 !important;
+  height: auto !important;
+}
+
+
+/* 03 图集：两列等分，禁止溢出 */
+#root#root#root .rd-gallery {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+  height: auto !important;
+}
+
+#root#root#root .rd-gallery .nl-media-interaction,
+#root#root#root .rd-gallery > * {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+}
+
+#root#root#root .rd-gallery img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
