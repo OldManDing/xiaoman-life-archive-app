@@ -3830,3 +3830,66 @@
   font-weight: 600 !important;
   box-shadow: 0 10px 22px rgba(146, 96, 52, 0.18) !important;
 }
+
+
+/* ============================================================
+   243. 16 孩子档案：按 20 条清单收口
+   ============================================================ */
+/* #7 卡片 L2 62% + blur20 */
+#root#root#root .archive-shell .ac-card {
+  background: rgba(255, 250, 244, 0.62) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.08) !important;
+  backdrop-filter: blur(20px) saturate(1.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.62) !important;
+}
+
+/* #9 保存按钮圆角 26（非全胶囊） */
+#root#root#root .archive-shell button[type="submit"],
+#root#root#root .archive-shell .ac-submit {
+  border-radius: 26px !important;
+  min-height: 52px !important;
+  height: 52px !important;
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  background: #A9581B !important;
+  background-image: none !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 10px 22px rgba(146, 96, 52, 0.18) !important;
+}
+
+/* #16 相机角标 26 */
+#root#root#root .archive-shell [class*="avatar-edit"],
+#root#root#root .archive-shell [class*="camera"] {
+  width: 26px !important;
+  height: 26px !important;
+  min-width: 26px !important;
+  border-radius: 999px !important;
+  right: -2px !important;
+  bottom: -2px !important;
+}
+
+#root#root#root .archive-shell [class*="avatar-edit"] svg,
+#root#root#root .archive-shell [class*="camera"] svg {
+  width: 18px !important;
+  height: 18px !important;
+  stroke-width: 1.8px !important;
+}
+
+/* #15 标签用副标色 #6F5745 */
+#root#root#root .archive-shell .ac-label {
+  color: #6F5745 !important;
+  font-size: 15px !important;
+}
+
+/* #18 值 17/600 高于标签 */
+#root#root#root .archive-shell .ac-value {
+  font-size: 17px !important;
+  font-weight: 600 !important;
+}
+
+/* #11 底部回浅米白 */
+#root#root#root .archive-shell {
+  background-image:
+    radial-gradient(70% 36% at 50% 0%, rgba(255, 214, 178, 0.5) 0%, rgba(255, 214, 178, 0) 70%),
+    linear-gradient(180deg, #FBEFE2 0%, #FDF6EC 62%, #FDF6EC 100%) !important;
+}
