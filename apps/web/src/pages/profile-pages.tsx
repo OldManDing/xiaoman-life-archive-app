@@ -615,7 +615,6 @@ const MessageCard = ({ item, onClick, onReply }: { item: UserNotificationItem; o
         })()}</strong>
         {body ? <span className="msg-text">{body}</span> : null}
       </span>
-      {isSystem ? <img className="msg-system-thumb" src="/photos/kids/kid-03.jpg" alt="" loading="lazy" /> : null}
       <span className="msg-side">
         <span className="msg-time">{formatMessageTime(item.created_at)}</span>
         {hasReply ? (
@@ -2307,7 +2306,7 @@ export const AccountDeletionPage = () => {
         }
       } catch (error) {
         if (!cancelled) {
-          setMessage(error instanceof Error ? error.message : '暂时无法读取注销条件，请稍后再试');
+          setDeleteError(error instanceof Error ? error.message : '暂时无法读取注销条件，请稍后再试');
         }
       } finally {
         if (!cancelled) {
@@ -2322,25 +2321,35 @@ export const AccountDeletionPage = () => {
     };
   }, []);
 
+  const [deleteMessageIsError, setDeleteMessageIsError] = useState(false);
+  const setDeleteError = (text: string) => {
+    setDeleteMessageIsError(true);
+    setMessage(text);
+  };
+  const setDeleteSuccess = (text: string) => {
+    setDeleteMessageIsError(false);
+    setMessage(text);
+  };
+
   const submit = async (event?: FormEvent<HTMLFormElement>) => {
     event?.preventDefault();
     if (!check) return;
     const normalizedPassword = password.trim();
     const normalizedConfirmText = confirmText.trim();
     if (!check.can_delete) {
-      setMessage(check.blockers[0] ?? '当前账号暂时不能直接注销');
+      setDeleteError(check.blockers[0] ?? '当前账号暂时不能直接注销');
       return;
     }
     if (check.requires_password && !normalizedPassword) {
-      setMessage('请输入当前登录密码');
+      setDeleteError('请输入当前登录密码');
       return;
     }
     if (check.requires_password && normalizedPassword.length < 8) {
-      setMessage('登录密码至少 8 位');
+      setDeleteError('登录密码至少 8 位');
       return;
     }
     if (normalizedConfirmText !== check.confirm_text) {
-      setMessage(`请输入“${check.confirm_text}”后再继续`);
+      setDeleteError(`请输入“${check.confirm_text}”后再继续`);
       return;
     }
 
@@ -2350,11 +2359,11 @@ export const AccountDeletionPage = () => {
         password: normalizedPassword,
         confirm_text: normalizedConfirmText,
       });
-      setMessage(result.message);
+      setDeleteSuccess(result.message);
       clearSession();
       navigate('/auth/login', { replace: true });
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : '账号注销失败，请稍后再试');
+      setDeleteError(error instanceof Error ? error.message : '账号注销失败，请稍后再试');
     } finally {
       setSubmitting(false);
     }
@@ -2414,10 +2423,20 @@ export const AccountDeletionPage = () => {
           <Field label="当前登录密码">
             <input style={inputStyle} type="password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="请输入当前登录密码" />
           </Field>
-          <p style={{ ...helperTextStyle, margin: 0 }}>两个输入都正确后，下方按钮才可点击</p>
-          {message ? <p style={{ ...helperTextStyle, color: message.includes('已') ? 'var(--nl-success)' : 'var(--nl-danger)' }}>{message}</p> : null}
+          <p style={{ ...helperTextStyle, margin: 0 }}>
+            {(() => {
+              const expected = (check?.confirm_text ?? '注销账号').trim();
+              if (confirmText.trim() !== expected) return `请输入「${expected}」以确认`;
+              if (check?.requires_password && password.trim().length < 8) return '请输入当前登录密码（至少 8 位）';
+              return '信息已填写完整，可以点下方按钮注销';
+            })()}
+          </p>
+          {message ? <p role="status" style={{ ...helperTextStyle, color: deleteMessageIsError ? 'var(--nl-danger)' : 'var(--nl-success)' }}>{message}</p> : null}
           {(() => {
-            const inputReady = Boolean(confirmText.trim()) && (!check?.requires_password || password.trim().length >= 8);
+            const expectedConfirmText = (check?.confirm_text ?? '注销账号').trim();
+            const confirmMatched = confirmText.trim() === expectedConfirmText;
+            const passwordReady = !check?.requires_password || password.trim().length >= 8;
+            const inputReady = confirmMatched && passwordReady;
             const enabled = Boolean(check?.can_delete) && inputReady && !submitting && !loading;
             return (
               <div style={buttonRowStyle}>
@@ -2571,11 +2590,10 @@ export const HelpFeedbackPage = () => {
       }
       try {
         window.localStorage.setItem('xiaoman-web-feedback-list', JSON.stringify([item, ...list].slice(0, 20)));
-        setContent('');
-        setContact('');
-        setMessage('暂时无法同步服务器，已先保存在本机，请稍后再提交。');
+        // 关键：保留用户已经写好的内容，只提示可重试，避免「内容消失」
+        setMessage('网络不通，内容已暂存本机。恢复网络后点「重试提交」即可，不必重新填写。');
       } catch {
-        setMessage('暂时无法同步服务器，本机也无法保存，请稍后重试或复制内容后联系支持。');
+        setMessage('网络不通，且本机无法暂存。请复制下面的内容再重试，避免内容丢失。');
       }
     } finally {
       setSubmitting(false);
@@ -2604,7 +2622,7 @@ export const HelpFeedbackPage = () => {
           {message ? <p style={{ ...helperTextStyle, color: isPositiveStatusMessage(message) ? 'var(--nl-success)' : 'var(--nl-danger)' }}>{message}</p> : null}
           <div style={{ ...buttonRowStyle, display: 'grid', gridTemplateColumns: '1fr', gap: 8 }}>
             <button type="button" style={{ ...primaryButtonStyle, background: '#A9581B', backgroundImage: 'none', borderRadius: 999, minHeight: 68, width: '100%', boxShadow: '0 10px 22px rgba(146,96,52,0.18)', fontSize: 17, opacity: submitting || !content.trim() ? 0.55 : 1 }} onClick={() => void submitFeedback()} disabled={submitting || !content.trim()}>
-              {submitting ? '提交中…' : '提交反馈'}
+              {submitting ? '提交中…' : message && message.includes('重试') ? '重试提交' : '提交反馈'}
             </button>
             {!content.trim() ? <span style={{ ...helperTextStyle, alignSelf: 'center' }}>填写反馈内容后可提交</span> : null}
           </div>
