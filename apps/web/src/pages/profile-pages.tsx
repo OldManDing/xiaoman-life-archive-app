@@ -2278,13 +2278,13 @@ export const AccountDeletionPage = () => {
     <PageShell className="info-shell" title="注销账号" backTo="/profile/security">
       <Panel className="info-card" style={{ background: 'transparent', border: 'none', boxShadow: 'none', padding: '18px' }}>
         <div style={rowStyle}>
-          <div style={{ display: 'flex', gap: '14px', alignItems: 'center', borderRadius: '18px', background: 'rgba(255, 250, 244, 0.86)', border: '1px solid rgba(255, 255, 255, 0.7)', padding: '16px 18px' }}>
+          <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start', borderRadius: '18px', background: 'rgba(255, 250, 244, 0.86)', border: '1px solid rgba(255, 255, 255, 0.7)', padding: '16px 18px' }}>
             <span style={{ display: 'grid', placeItems: 'center', color: '#b4652a' }}>
               <AlertTriangle size={34} strokeWidth={1.8} aria-hidden="true" />
             </span>
             <div style={{ display: 'grid', gap: 2 }}>
               <strong style={{ color: '#4a2f1f', fontFamily: 'var(--nl-font-display)', fontSize: 19, fontWeight: 600 }}>注销后不可恢复</strong>
-              <p style={{ margin: 0, color: '#6f5745', fontSize: 12, lineHeight: 1.55 }}>{check && check.summary.owned_family_count > 0
+              <p style={{ margin: 0, color: '#6f5745', fontSize: 13, lineHeight: 1.75, display: 'block', overflow: 'visible', WebkitLineClamp: 'unset', maxHeight: 'none' }}>{check && check.summary.owned_family_count > 0
                 ? `账号凭据会失效；你名下 ${check.summary.active_child_count} 份孩子档案、${check.summary.active_record_count} 条有效记录将交由其他管理员接管。若你是唯一管理员，请先新增一位管理员，或先申请导出与成年移交后再注销。`
                 : '账号凭据会失效，家庭档案将由其他管理员接管'}</p>
             </div>

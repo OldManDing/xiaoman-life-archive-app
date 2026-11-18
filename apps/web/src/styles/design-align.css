@@ -4586,3 +4586,72 @@
   margin-left: 0 !important;
   margin-right: 0 !important;
 }
+
+
+/* ============================================================
+   254. 27 注销账号：按 20 条清单收口
+   ============================================================ */
+/* #2 危险按钮启用态：实心 #C0392B + 白字 */
+#root#root#root .info-shell button[class*="danger"],
+#root#root#root .info-shell button[aria-disabled="false"] {
+  background: #C0392B !important;
+  background-image: none !important;
+  color: #FFFFFF !important;
+  border: none !important;
+  box-shadow: 0 10px 22px rgba(192, 57, 43, 0.18) !important;
+}
+
+/* 禁用态保持琥珀 45% */
+#root#root#root .info-shell button[class*="danger"]:disabled {
+  background: rgba(169, 88, 27, 0.45) !important;
+  box-shadow: none !important;
+}
+
+/* #15 #20 按钮 52 / 17 / 700 */
+#root#root#root .info-shell button[class*="danger"] {
+  min-height: 52px !important;
+  height: 52px !important;
+  font-size: 17px !important;
+  font-weight: 700 !important;
+}
+
+/* #12 警示标题 17 */
+#root#root#root .info-shell strong:has(+ p),
+#root#root#root .info-shell [class*="warn"] strong {
+  font-size: 17px !important;
+}
+
+/* #8 输入框圆角 26 */
+#root#root#root .info-shell input {
+  border-radius: 26px !important;
+}
+
+/* #19 卡内距 18 */
+#root#root#root .info-shell .info-card {
+  padding: 18px !important;
+}
+
+
+/* 27 修正：警示文案被裁切（高度/溢出限制）→ 允许自然撑高 */
+#root#root#root .info-shell [class*="warn"],
+#root#root#root .info-shell [class*="danger"] {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  -webkit-line-clamp: unset !important;
+}
+
+#root#root#root .info-shell [class*="warn"] p,
+#root#root#root .info-shell [class*="danger"] p {
+  display: block !important;
+  overflow: visible !important;
+  -webkit-line-clamp: unset !important;
+  max-height: none !important;
+}
+
+/* 统计 tile 保持两列，但内部图标 24/1.8 */
+#root#root#root .info-shell [class*="tile"] svg {
+  width: 24px !important;
+  height: 24px !important;
+  stroke-width: 1.8px !important;
+}
