@@ -3511,3 +3511,57 @@
   background: #E9A05A !important;
   box-shadow: 0 0 0 2px #FDF6EC !important;
 }
+
+
+/* ============================================================
+   238. 11 设置：按 20 条清单收口
+   ============================================================ */
+/* #9 分组标题 16/600 */
+#root#root#root .set-group-title {
+  font-size: 16px !important;
+  line-height: 1.4 !important;
+  font-weight: 600 !important;
+}
+
+/* #12 副标弱墨 #8B7160 */
+#root#root#root .set-row small,
+#root#root#root .set-body small {
+  color: #8B7160 !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+
+/* #18 行尾箭头 20 / #8B7160 */
+#root#root#root .set-row svg.set-chevron,
+#root#root#root .set-chevron {
+  width: 20px !important;
+  height: 20px !important;
+  color: #8B7160 !important;
+  opacity: 1 !important;
+}
+
+/* #15 开关 46×22（关闭态浅暖 #EFE3D5 无描边） */
+#root#root#root .set-row button[aria-pressed] > span:first-child {
+  width: 46px !important;
+  height: 22px !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+#root#root#root .set-row button[aria-pressed="false"] > span:first-child {
+  background: #EFE3D5 !important;
+}
+
+/* #7 卡片圆角 24 */
+#root#root#root .set-card {
+  border-radius: 24px !important;
+}
+
+/* #13 底部暖色波浪（两层同心径向模拟沙丘） */
+#root#root#root .set-page,
+#root#root#root .app-page-shell:has(.set-card) {
+  background-image:
+    radial-gradient(120% 18% at 50% 104%, rgba(246, 208, 168, 0.55) 0%, rgba(246, 208, 168, 0) 72%),
+    radial-gradient(150% 22% at 20% 108%, rgba(242, 190, 143, 0.4) 0%, rgba(242, 190, 143, 0) 70%),
+    linear-gradient(180deg, #FDF6EC 0%, #FBECE0 55%, #F6DCCB 100%) !important;
+}
