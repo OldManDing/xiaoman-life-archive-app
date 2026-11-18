@@ -3611,3 +3611,44 @@
   padding: 14px 16px !important;
   border-radius: 18px !important;
 }
+
+
+/* ============================================================
+   240. 13 启动页：按 20 条清单收口
+   ============================================================ */
+/* #9 进度条动效恢复（不确定态） */
+@keyframes nlSplashProgress {
+  0% { transform: translateX(-110%); }
+  100% { transform: translateX(260%); }
+}
+
+#root#root#root .nl-boot-progress {
+  width: 40% !important;
+  animation: nlSplashProgress 1.8s ease-in-out infinite !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #root#root#root .nl-boot-progress { animation: none !important; }
+}
+
+/* #14 分隔线 85（仅命中 1px 高的分隔线，避免误伤琥珀圆点） */
+#root#root#root main[aria-label="正在进入年轮"] span[aria-hidden="true"][style*="height: 1px"],
+#root#root#root main[aria-label="正在进入年轮"] span[aria-hidden="true"][style*="height:1px"] {
+  width: 85px !important;
+}
+
+/* 琥珀点保持 11 圆 */
+#root#root#root main[aria-label="正在进入年轮"] span[aria-hidden="true"] {
+  border-radius: 999px !important;
+}
+
+/* #19 说明文案 12（设计 11，可读性下限取 12） */
+#root#root#root main[aria-label="正在进入年轮"] p {
+  font-size: 12px !important;
+  letter-spacing: 0.04em !important;
+}
+
+/* 标题 slogan 20 */
+#root#root#root main[aria-label="正在进入年轮"] p:first-of-type {
+  font-size: 20px !important;
+}
