@@ -1,6 +1,7 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { createPortal } from 'react-dom';
+import QRCode from 'qrcode';
 import { useRef } from 'react';
 import { Camera, Check, ChevronDown, ChevronRight, Clipboard, Clock, Copy, FileText, Image as ImageIcon, MessageCircle, MessageCircleMore, Mic, Pencil, PlayCircle, Plus, QrCode, UserMinus, UserPlus } from 'lucide-react';
 
@@ -831,6 +832,27 @@ export const FamilyMembersPage = () => {
   };
   const selfMember = members.find((item) => item.user_no === user?.user_no) ?? null;
   const canManageMembers = selfMember?.role === 'owner';
+  const [resendingUserNo, setResendingUserNo] = useState<string | null>(null);
+  const [resendNotice, setResendNotice] = useState<string | null>(null);
+
+  const resendInvite = async (member: FamilyMemberItem) => {
+    const familyNo = activeChild?.family_no;
+    if (!familyNo) return;
+    setResendingUserNo(member.user_no);
+    setResendNotice(null);
+    try {
+      const invite = await getOrCreateInvite(familyNo);
+      const link = `${window.location.origin}/auth/login?invite=${invite.invite_token}`;
+      await navigator.clipboard.writeText(link);
+      setResendNotice(`已生成新的邀请链接并复制，发给${normalizeDisplayName(member.nickname, '家人')}即可`);
+    } catch {
+      setResendNotice('重发失败，请到邀请页重试');
+    } finally {
+      setResendingUserNo(null);
+      window.setTimeout(() => setResendNotice(null), 4000);
+    }
+  };
+
   const visibleMembers = showAllMembers ? members : members.slice(0, 6);
   const hiddenMemberCount = Math.max(members.length - visibleMembers.length, 0);
 
@@ -841,6 +863,7 @@ export const FamilyMembersPage = () => {
         {loading ? <EmptyState message="正在加载家庭成员…" /> : null}
         {error ? <EmptyState message={`加载失败：${error}`} /> : null}
         {message ? <p style={{ ...helperTextStyle, color: message === '成员角色已更新' ? 'var(--nl-success)' : 'var(--nl-danger)' }}>{message}</p> : null}
+        {resendNotice ? <p role="status" style={{ ...helperTextStyle, color: resendNotice.includes('失败') ? 'var(--nl-danger)' : 'var(--nl-success)' }}>{resendNotice}</p> : null}
         {members.length ? (
           <div style={{ display: 'grid', gap: '12px' }}>
             <p className="fam-members-summary" style={{ margin: 0, color: 'var(--nl-muted-strong)', fontSize: 13, lineHeight: 1.5, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -905,8 +928,13 @@ export const FamilyMembersPage = () => {
                     {pending ? (
                       <>
                         <span aria-hidden="true" style={{ width: 1, height: 14, background: 'rgba(58, 42, 28, 0.16)' }} />
-                        <button type="button" onClick={() => navigate('/family/invite')} style={{ border: 'none', background: 'transparent', color: 'var(--nl-accent)', fontSize: 12, fontWeight: 500, textDecoration: 'underline', textUnderlineOffset: 2, cursor: 'pointer', padding: 0 }}>
-                          重发
+                        <button
+                          type="button"
+                          onClick={() => void resendInvite(member)}
+                          disabled={resendingUserNo === member.user_no}
+                          style={{ border: 'none', background: 'transparent', color: 'var(--nl-accent)', fontSize: 12, fontWeight: 500, textDecoration: 'underline', textUnderlineOffset: 2, cursor: 'pointer', padding: '0 2px', minHeight: 24 }}
+                        >
+                          {resendingUserNo === member.user_no ? '重发中…' : '重发'}
                         </button>
                       </>
                     ) : null}
@@ -1278,6 +1306,7 @@ export const FamilyInvitePage = () => {
   const [members, setMembers] = useState<FamilyMemberItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
   const familyNo = activeChild?.family_no;
 
   const copyText = async (value: string, successMessage: string) => {
@@ -1306,13 +1335,33 @@ export const FamilyInvitePage = () => {
       }
     })();
     return () => { cancelled = true; };
-  }, [familyNo]);
+  }, [familyNo, reloadKey]);
 
+  const [inviteQrSrc, setInviteQrSrc] = useState('');
   const inviteCode = inviteResult?.invite_token ?? '';
   const inviteText = inviteCode
     ? `我在「年轮」记录${activeChild?.name ?? '孩子'}的成长，邀请你一起看。邀请码：${inviteCode}`
     : '我在「年轮」记录孩子的成长，邀请你一起看。';
   const inviteLink = inviteCode ? `${window.location.origin}/auth/login?invite=${inviteCode}` : window.location.origin;
+
+  useEffect(() => {
+    if (!inviteCode) {
+      setInviteQrSrc('');
+      return undefined;
+    }
+    let cancelled = false;
+    void QRCode.toDataURL(inviteLink, {
+      errorCorrectionLevel: 'M',
+      margin: 1,
+      width: 480,
+      color: { dark: '#3A2A1E', light: '#FFFFFF' },
+    }).then((url) => {
+      if (!cancelled) setInviteQrSrc(url);
+    }).catch(() => {
+      if (!cancelled) setInviteQrSrc('');
+    });
+    return () => { cancelled = true; };
+  }, [inviteCode, inviteLink]);
 
   const inviteByWechat = () => {
     void copyText(inviteText, '邀请信息已复制，去微信粘贴给家人');
@@ -1346,11 +1395,46 @@ const invitedMembers = members.filter((member) => member.role !== 'owner');
           <img src="/photos/welcome-hero.jpg" alt="家人牵着孩子在草地上散步" />
         </div>
         <div className="invite-qr">
-          <img src="/photos/invite-qr.png" alt="邀请二维码" />
+          {inviteQrSrc ? (
+            <img src={inviteQrSrc} alt={`邀请${activeChild?.name ?? '孩子'}家人的二维码`} />
+          ) : (
+            <img src="/photos/invite-qr.png" alt="" aria-hidden="true" style={{ opacity: 0.4 }} />
+          )}
           <span className="invite-qr-dot" aria-hidden="true" />
         </div>
         <h2 className="invite-title">扫码加入{activeChild?.name ?? ''}的档案</h2>
         <p className="invite-sub">有效期 7 天{inviteResult?.expires_at ? ` · ${new Date(inviteResult.expires_at).getFullYear()}年${new Date(inviteResult.expires_at).getMonth() + 1}月${new Date(inviteResult.expires_at).getDate()}日前有效` : ''}</p>
+
+        {error ? (
+          <div className="invite-error" role="alert">
+            <p>{/邀请/.test(error) ? error : `邀请信息加载失败：${error}`}</p>
+            <button type="button" onClick={() => { setError(null); setReloadKey((n) => n + 1); }}>
+              重新加载
+            </button>
+          </div>
+        ) : null}
+
+        <div className="invite-actions">
+          <button
+            type="button"
+            className="invite-action-primary"
+            onClick={() => void copyText(inviteText, '邀请文案已复制，去微信粘贴给家人')}
+            disabled={!inviteCode}
+          >
+            <MessageCircle size={20} strokeWidth={1.8} aria-hidden="true" />
+            微信邀请家人
+          </button>
+          <div className="invite-action-row">
+            <button type="button" className="invite-action-ghost" onClick={() => void copyText(inviteLink, '邀请链接已复制')} disabled={!inviteCode}>
+              <Copy size={18} strokeWidth={1.8} aria-hidden="true" />
+              复制链接
+            </button>
+            <button type="button" className="invite-action-ghost" onClick={() => { if (inviteCode) inviteBySms(); }} disabled={!inviteCode}>
+              <MessageCircleMore size={18} strokeWidth={1.8} aria-hidden="true" />
+              短信邀请
+            </button>
+          </div>
+        </div>
 
         <div className="invite-code-pill">
           <strong className="invite-code-value">{inviteCode || (activeChild?.family_no ? '生成中…' : '暂无邀请码')}</strong>
