@@ -3072,3 +3072,71 @@
   overflow: visible !important;
   text-overflow: clip !important;
 }
+
+
+/* ============================================================
+   233. 06 我的：按 20 条清单收口
+   ============================================================ */
+/* #4 头卡 L1 78% + blur20 + r26 */
+#root#root#root .pf-hero,
+#root#root#root [class*="profile-hero"] {
+  background: rgba(255, 250, 244, 0.78) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.08) !important;
+  backdrop-filter: blur(20px) saturate(1.08) !important;
+  border-radius: 26px !important;
+  border: 1px solid rgba(255, 255, 255, 0.76) !important;
+}
+
+/* #3 #16 菜单卡 L2 62% + 内距 18 */
+#root#root#root .pf-menu,
+#root#root#root [class*="menu-card"] {
+  background: rgba(255, 250, 244, 0.62) !important;
+  padding: 0 18px !important;
+}
+
+/* #17 退出卡圆角 18 */
+#root#root#root .pf-menu button[class*="logout"],
+#root#root#root .pf-menu a[class*="logout"],
+#root#root#root .pf-logout {
+  border-radius: 18px !important;
+  min-height: 68px !important;
+}
+
+/* #14 #15 角标 16px 统一 #E9A05A */
+#root#root#root .pf-menu-dot,
+#root#root#root [class*="menu-dot"],
+#root#root#root [class*="badge"] {
+  width: 16px !important;
+  height: 16px !important;
+  min-width: 16px !important;
+  border-radius: 999px !important;
+  background: #E9A05A !important;
+  font-size: 11px !important;
+}
+
+/* #18 右侧值 13 */
+#root#root#root .pf-menu .pf-value,
+#root#root#root .pf-menu [class*="value"] {
+  font-size: 13px !important;
+  color: var(--nl2-ink-500) !important;
+}
+
+/* #19 箭头弱色实色 #8B7160 */
+#root#root#root .pf-menu svg[class*="chevron"],
+#root#root#root .pf-menu-chevron {
+  color: #8B7160 !important;
+  opacity: 1 !important;
+}
+
+
+/* 06 #17 退出卡圆角 18（.pf-menu-row.is-danger） */
+#root#root#root .pf-menu-row.is-danger {
+  border-radius: 18px !important;
+  min-height: 68px !important;
+}
+
+/* 06 #13 退出图标与文字同为危险色 */
+#root#root#root .pf-menu-row.is-danger svg {
+  color: #C0392B !important;
+  stroke: #C0392B !important;
+}
