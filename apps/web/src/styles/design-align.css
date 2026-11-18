@@ -2047,3 +2047,39 @@
 #root#root .app-page-shell:not(.archive-shell) .ac-value { font-size: 17px !important; }
 #root#root .app-footnote,
 #root#root .ac-footnote { font-size: 13px !important; color: var(--nl2-ink-500) !important; }
+
+
+/* ============================================================
+   23 关于我们 / 24 联系我们：信息页行 92 / 图标 24 / 标签 17
+   ============================================================ */
+#root#root .info-shell [class*="row"],
+#root#root .info-shell .ac-row {
+  min-height: 92px !important;
+  border-bottom: 1px solid var(--nl2-line) !important;
+}
+
+#root#root .info-shell svg {
+  width: 24px !important;
+  height: 24px !important;
+  stroke-width: 1.8 !important;
+}
+
+#root#root .info-shell span,
+#root#root .info-shell strong,
+#root#root .info-shell p {
+  font-size: 17px !important;
+}
+
+#root#root .info-shell p { font-size: 15px !important; line-height: 1.75 !important; }
+
+#root#root .info-shell [class*="card"],
+#root#root .info-shell section {
+  border-radius: var(--nl2-r-card) !important;
+  background: var(--nl2-glass-2) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  box-shadow: none !important;
+}
+
+#root#root .info-shell footer,
+#root#root .info-shell [class*="footer"] { font-size: 13px !important; color: var(--nl2-ink-500) !important; }
