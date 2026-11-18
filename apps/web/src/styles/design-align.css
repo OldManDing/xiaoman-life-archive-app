@@ -3140,3 +3140,99 @@
   color: #C0392B !important;
   stroke: #C0392B !important;
 }
+
+
+/* ============================================================
+   234. 07 搜索：按 20 条清单收口
+   ============================================================ */
+/* #5 搜索框 44 高 */
+#root#root#root .search-field {
+  height: 44px !important;
+  min-height: 44px !important;
+  border-radius: 999px !important;
+  border-color: rgba(255, 255, 255, 0.9) !important;
+  background: rgba(255, 250, 244, 0.86) !important;
+}
+
+/* #4 头部三列收紧：返回 40 + gap 6 */
+#root#root#root .search-head {
+  display: grid !important;
+  grid-template-columns: 40px minmax(0, 1fr) !important;
+  gap: 6px !important;
+  align-items: center !important;
+}
+
+#root#root#root .search-back {
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+}
+
+/* #8 结果行 76 高 */
+#root#root#root .search-row {
+  min-height: 76px !important;
+  height: 76px !important;
+  padding: 8px 12px !important;
+  border-radius: 24px !important;
+  background: rgba(255, 250, 244, 0.78) !important;
+  box-shadow: 0 8px 18px rgba(146, 96, 52, 0.06) !important;
+}
+
+/* #11 缩略图 60×60 r14 */
+#root#root#root .search-row img,
+#root#root#root .search-thumb {
+  width: 60px !important;
+  height: 60px !important;
+  min-width: 60px !important;
+  border-radius: 14px !important;
+  object-fit: cover !important;
+}
+
+/* #17 卡标题 17 / 1.5 / 单行 */
+#root#root#root .search-title {
+  font-size: 17px !important;
+  line-height: 1.5 !important;
+  font-weight: 600 !important;
+  -webkit-line-clamp: 1 !important;
+  display: block !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+#root#root#root .search-meta {
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  color: #6F5745 !important;
+}
+
+/* #19 行尾箭头 20 / 1.8 / #8B7160 */
+#root#root#root .search-row svg {
+  width: 20px !important;
+  height: 20px !important;
+  stroke-width: 1.8px !important;
+  color: #8B7160 !important;
+  opacity: 1 !important;
+}
+
+/* #15 返回键与标题同左缘 */
+#root#root#root .search-main {
+  padding-left: 20px !important;
+  padding-right: 20px !important;
+}
+
+
+/* 07 #17 结果行标题（含 strong 变体）17/1.5 单行 */
+#root#root#root .search-row strong,
+#root#root#root .search-row .search-title,
+#root#root#root .search-title {
+  font-size: 17px !important;
+  line-height: 1.5 !important;
+  font-weight: 600 !important;
+  color: var(--nl2-ink-900) !important;
+  display: block !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  -webkit-line-clamp: 1 !important;
+}
