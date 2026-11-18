@@ -3893,3 +3893,64 @@
     radial-gradient(70% 36% at 50% 0%, rgba(255, 214, 178, 0.5) 0%, rgba(255, 214, 178, 0) 70%),
     linear-gradient(180deg, #FBEFE2 0%, #FDF6EC 62%, #FDF6EC 100%) !important;
 }
+
+
+/* ============================================================
+   244. 17 家庭成员：按 20 条清单收口
+   ============================================================ */
+/* #6 #7 行卡 L1 78% + blur20 + r26 */
+#root#root#root .account-shell .fam-member-row,
+#root#root#root .account-shell [class*="member-row"] {
+  border-radius: 26px !important;
+  background: rgba(255, 250, 244, 0.78) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.08) !important;
+  backdrop-filter: blur(20px) saturate(1.08) !important;
+}
+
+/* #16 头像 48、去白环 */
+#root#root#root .account-shell [class*="member-row"] img,
+#root#root#root .account-shell [class*="member-avatar"] {
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* #9 徽标 13 / 内距 5 10 / r10 / 高 20 */
+#root#root#root .account-shell [class*="role-badge"],
+#root#root#root .account-shell [class*="member-role"] span {
+  font-size: 13px !important;
+  padding: 2px 10px !important;
+  border-radius: 10px !important;
+  min-height: 20px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+/* #13 主徽标 #E9A05A + #8A4E14 */
+#root#root#root .account-shell [class*="role-badge"].is-owner,
+#root#root#root .account-shell [class*="role"][data-role="owner"] {
+  background: #E9A05A !important;
+  color: #8A4E14 !important;
+}
+
+/* #11 权限说明 15/1.75 */
+#root#root#root .account-shell [class*="perm"] p,
+#root#root#root .account-shell [class*="perm"] span {
+  font-size: 15px !important;
+  line-height: 1.75 !important;
+}
+
+/* #15 摘要行 15 + 圆点 */
+#root#root#root .account-shell [class*="member-summary"] {
+  font-size: 15px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+}
+
+/* #17 卡间距 12 */
+#root#root#root .account-shell [class*="member-list"] {
+  gap: 12px !important;
+}
