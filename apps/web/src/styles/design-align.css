@@ -345,3 +345,137 @@
   height: 24px !important;
   stroke-width: 1.8 !important;
 }
+
+
+/* ============================================================
+   首页（01）结构：日期分组头 / 今天还没记录 / 每日 1 大图 + N 行
+   ============================================================ */
+#root#root .nl-home-day {
+  margin: 0 0 18px !important;
+}
+
+#root#root .nl-home-day-head {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  height: 34px !important;
+  margin: 0 0 10px !important;
+}
+
+#root#root .nl-home-day-bar {
+  width: 4px !important;
+  height: 24px !important;
+  border-radius: 2px !important;
+  background: var(--nl2-amber) !important;
+  flex: 0 0 auto !important;
+}
+
+#root#root .nl-home-day-title {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  font-family: var(--nl-font-display, "Songti SC", serif) !important;
+  font-size: 20px !important;
+  line-height: 1.2 !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+#root#root .nl-home-day-count {
+  flex: 0 0 auto !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  color: var(--nl2-ink-500) !important;
+  font-variant-numeric: tabular-nums !important;
+}
+
+#root#root .nl-home-day-body {
+  display: grid !important;
+  gap: 10px !important;
+}
+
+/* 今天还没记录 + 记一笔 */
+#root#root .nl-home-today-empty {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  min-height: 56px !important;
+  padding: 8px 10px 8px 18px !important;
+  margin: 0 0 16px !important;
+  border-radius: var(--nl2-r-card) !important;
+  background: var(--nl2-glass-2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+}
+
+#root#root .nl-home-today-empty > span {
+  font-size: 15px !important;
+  line-height: 1.5 !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+#root#root .nl-home-today-empty > button {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  height: 40px !important;
+  padding: 0 16px !important;
+  border: none !important;
+  border-radius: 999px !important;
+  background: var(--nl2-amber-soft) !important;
+  color: var(--nl2-amber-ink) !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  box-shadow: none !important;
+}
+
+/* 每日首图与行：卡片圆角 24 / 行 18 */
+#root#root .nl-home-day-body .nl-moment-card {
+  border-radius: var(--nl2-r-card) !important;
+  overflow: hidden !important;
+}
+
+#root#root .nl-home-day-body .nl-home-row {
+  border-radius: var(--nl2-r-row) !important;
+  min-height: 76px !important;
+  padding: 8px 14px 8px 8px !important;
+  background: var(--nl2-glass-2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.62) !important;
+  box-shadow: none !important;
+}
+
+#root#root .nl-home-day-body .nl-home-row-thumb {
+  width: 60px !important;
+  height: 60px !important;
+  border-radius: var(--nl2-r-thumb) !important;
+  object-fit: cover !important;
+}
+
+
+/* 首页：去掉旧的伪元素竖条 + 首图只保留图内标题（与设计 01 一致） */
+#root#root .nl-home-day-head::before,
+#root#root .nl-home-day-head::after {
+  content: none !important;
+  display: none !important;
+}
+
+#root#root .nl-home-day-body .nl-moment-card .nl-moment-body {
+  display: none !important;
+}
+
+#root#root .nl-home-day-body .nl-moment-card {
+  box-shadow: var(--nl2-shadow-l2) !important;
+  background: transparent !important;
+}
+
+#root#root .nl-home-day-body .nl-moment-media {
+  height: 300px !important;
+  border-radius: var(--nl2-r-card) !important;
+}
+
+#root#root .nl-home-day-body .nl-moment-featured-title {
+  font-size: 30px !important;
+  color: #FFFFFF !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35) !important;
+}

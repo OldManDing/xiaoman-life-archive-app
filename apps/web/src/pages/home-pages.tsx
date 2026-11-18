@@ -13,6 +13,7 @@ import {
   Mic,
   Play,
   PlayCircle,
+  Plus,
   Search,
   Sparkles,
   Star,
@@ -619,64 +620,59 @@ export const HomePage = () => {
           ) : null}
 
           {activeChild && !loading && !error && records.length ? (
-            <section className="nl-home-hero-wrap" aria-label="最新记录">
-              <MomentCard
-                record={records[0]}
-                featured
-                onClick={() => navigate(`/record/${records[0].record_no}`)}
-              />
-            </section>
+            <>
+              {!hasTodayRecord ? (
+                <div className="nl-home-today-empty">
+                  <span>今天还没记录</span>
+                  <button type="button" onClick={() => navigate('/record/create')}>
+                    记一笔
+                    <Plus size={16} strokeWidth={2} aria-hidden="true" />
+                  </button>
+                </div>
+              ) : null}
+
+              {dayGroups.map((group) => (
+                <section key={group.key} className="nl-home-day" aria-label={group.label}>
+                  <div className="nl-home-day-head">
+                    <span className="nl-home-day-bar" aria-hidden="true" />
+                    <h2 className="nl-home-day-title">{group.label}</h2>
+                    <span className="nl-home-day-count">{group.records.length} 条</span>
+                  </div>
+                  <div className="nl-home-day-body">
+                    {group.records.map((record, index) => (
+                      index === 0 ? (
+                        <MomentCard
+                          key={`day-${record.record_no}`}
+                          record={record}
+                          featured
+                          onClick={() => navigate(`/record/${record.record_no}`)}
+                        />
+                      ) : (
+                        <button
+                          key={`day-row-${record.record_no}`}
+                          type="button"
+                          className="nl-home-row"
+                          onClick={() => navigate(`/record/${record.record_no}`)}
+                        >
+                          {record.cover_url ? (
+                            <img className="nl-home-row-thumb" src={record.cover_url} alt="" loading="lazy" decoding="async" />
+                          ) : (
+                            <span className="nl-home-row-thumb is-text" aria-hidden="true"><FileText size={18} strokeWidth={1.6} /></span>
+                          )}
+                          <span className="nl-home-row-body">
+                            <strong>{record.title ?? '未命名记录'}</strong>
+                            <span>{formatStreamDate(record.event_time)}{record.location_text ? ` · ${record.location_text}` : ''}</span>
+                          </span>
+                          <ChevronRight size={18} strokeWidth={1.8} className="nl-home-row-chevron" aria-hidden="true" />
+                        </button>
+                      )
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </>
           ) : null}
 
-          {activeChild && !loading && !error && records.length > 1 ? (
-            <section className="nl-home-recent" aria-label="最近记录">
-              <div className="nl-home-recent-head">
-                <h2>最近</h2>
-                <button type="button" onClick={() => navigate('/timeline')}>
-                  查看更多
-                  <ChevronRight size={16} strokeWidth={2} aria-hidden="true" />
-                </button>
-              </div>
-              <div className="nl-home-recent-thumbs">
-                {records.slice(1, 4).map((record) => (
-                  <button
-                    key={`recent-${record.record_no}`}
-                    type="button"
-                    className="nl-home-thumb"
-                    aria-label={record.title ?? '未命名记录'}
-                    onClick={() => navigate(`/record/${record.record_no}`)}
-                  >
-                    {record.cover_url ? (
-                      <img src={record.cover_url} alt="" loading="lazy" decoding="async" />
-                    ) : (
-                      <span className="nl-home-thumb-fallback" aria-hidden="true"><FileText size={20} strokeWidth={1.6} /></span>
-                    )}
-                  </button>
-                ))}
-              </div>
-              <div className="nl-home-rows">
-                {records.slice(1, 7).map((record) => (
-                  <button
-                    key={`row-${record.record_no}`}
-                    type="button"
-                    className="nl-home-row"
-                    onClick={() => navigate(`/record/${record.record_no}`)}
-                  >
-                    {record.cover_url ? (
-                      <img className="nl-home-row-thumb" src={record.cover_url} alt="" loading="lazy" decoding="async" />
-                    ) : (
-                      <span className="nl-home-row-thumb is-text" aria-hidden="true"><FileText size={18} strokeWidth={1.6} /></span>
-                    )}
-                    <span className="nl-home-row-body">
-                      <strong>{record.title ?? '未命名记录'}</strong>
-                      <span>{formatStreamDate(record.event_time)}{record.location_text ? ` · ${record.location_text}` : ''}</span>
-                    </span>
-                    <ChevronRight size={18} strokeWidth={1.8} className="nl-home-row-chevron" aria-hidden="true" />
-                  </button>
-                ))}
-              </div>
-            </section>
-          ) : null}
         </main>
       </section>
     </div>
