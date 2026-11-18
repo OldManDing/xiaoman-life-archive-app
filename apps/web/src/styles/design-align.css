@@ -4127,3 +4127,104 @@
   color: #5B4534 !important;
   font-size: 13px !important;
 }
+
+
+/* ============================================================
+   248. 21 搜索空态：按 20 条清单收口
+   ============================================================ */
+/* #4 空态标题 32 / 500 / 字距 normal */
+#root#root#root .search-page h2,
+#root#root#root .search-page .search-empty-title {
+  font-size: 32px !important;
+  font-weight: 500 !important;
+  line-height: 1.3 !important;
+  letter-spacing: normal !important;
+}
+
+/* #5 副文案 15 / 1.75 */
+#root#root#root .search-page .search-empty p,
+#root#root#root .search-page .search-empty span {
+  font-size: 15px !important;
+  line-height: 1.75 !important;
+  color: #6F5745 !important;
+}
+
+/* #1 #15 空态 CTA：玻璃胶囊 + 琥珀字 16 / 44 高 */
+#root#root#root .search-page .search-empty button,
+#root#root#root .search-page .search-empty a {
+  height: 44px !important;
+  min-height: 44px !important;
+  padding: 0 26px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 255, 255, 0.6) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  color: #A9581B !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  box-shadow: none !important;
+}
+
+/* #6 #7 #14 空态圆盘 115 / L1 78% + blur20 / 无硬描边 */
+#root#root#root .search-page .search-empty > div:first-child,
+#root#root#root .search-page .search-empty [class*="icon"] {
+  width: 115px !important;
+  height: 115px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 250, 244, 0.78) !important;
+  border: none !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  backdrop-filter: blur(20px) !important;
+  box-shadow: 0 14px 34px rgba(146, 96, 52, 0.1) !important;
+}
+
+/* #18 图标 52 / 1.8 */
+#root#root#root .search-page .search-empty svg {
+  width: 52px !important;
+  height: 52px !important;
+  stroke-width: 1.8px !important;
+}
+
+/* #8 清除键 22 深棕实心 + 白 × */
+#root#root#root .search-clear {
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  border-radius: 999px !important;
+  background: rgba(90, 58, 34, 0.92) !important;
+  color: #FFFFFF !important;
+}
+
+#root#root#root .search-clear svg {
+  width: 12px !important;
+  height: 12px !important;
+  color: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+}
+
+/* #10 #11 搜索框 44 高、去前置图标内距 20 */
+#root#root#root .search-field {
+  height: 44px !important;
+  padding-left: 20px !important;
+  background: rgba(255, 251, 246, 0.8) !important;
+}
+
+#root#root#root .search-field-icon {
+  display: none !important;
+}
+
+/* #17 页头遮罩降到 .35 */
+#root#root#root .search-head {
+  background-image: linear-gradient(rgba(253, 246, 236, 0.35) 0%, rgba(253, 246, 236, 0) 100%) !important;
+}
+
+
+/* 21 修正：3 个 id 同时覆盖 h2 与 strong，压过早期 26/600 规则 */
+#root#root#root .search-page .search-empty strong,
+#root#root#root .search-page .search-empty h2,
+#root#root#root .search-page .search-empty-title {
+  font-size: 32px !important;
+  font-weight: 500 !important;
+  line-height: 1.3 !important;
+  letter-spacing: normal !important;
+}

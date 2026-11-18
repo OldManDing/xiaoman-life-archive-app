@@ -903,7 +903,7 @@ export const SearchPage = () => {
                   <Search size={54} strokeWidth={1.8} />
                   <Sparkles size={20} strokeWidth={1.8} style={{ position: 'absolute', top: 22, right: 24, color: '#e9a05a' }} />
                 </span>
-                <strong style={{ fontFamily: 'var(--nl-font-display)', fontSize: 31, fontWeight: 600, color: 'var(--nl-ink)', lineHeight: 1.3, marginTop: 10 }}>没有找到「{normalizedKeyword}」</strong>
+                <strong style={{ fontFamily: 'var(--nl-font-display)', fontSize: 32, fontWeight: 500, letterSpacing: 'normal', color: 'var(--nl-ink)', lineHeight: 1.3, marginTop: 10 }}>没有找到「{normalizedKeyword}」</strong>
                 <p style={{ ...helperTextStyle, margin: 0, fontSize: 13, lineHeight: 1.75, maxWidth: 268 }}>换个词试试，或者去时间轴看看这一年</p>
                 <button
                   type="button"
