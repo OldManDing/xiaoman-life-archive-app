@@ -1,4 +1,5 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import { chooseImageSource } from '../shared/imageSourceSheet';
 import { appConfirm } from '../shared/app-confirm';
 import { useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -1091,6 +1092,20 @@ export const AccountPage = () => {
     }
   };
 
+  const avatarFileInputRef = useRef<HTMLInputElement | null>(null);
+  const [avatarCapture, setAvatarCapture] = useState<'user' | undefined>(undefined);
+
+  const openAvatarPicker = async () => {
+    const source = await chooseImageSource('更换头像');
+    if (!source) return;
+    setAvatarCapture(source === 'camera' ? 'user' : undefined);
+  };
+
+  useEffect(() => {
+    if (avatarCapture === undefined) return;
+    avatarFileInputRef.current?.click();
+  }, [avatarCapture]);
+
   const onAvatarChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -1134,11 +1149,26 @@ export const AccountPage = () => {
   return (
     <PageShell title="账号" backTo="/profile" className="account-shell profile-account-shell">
       <div className="ac-hero" style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}>
-        <label aria-label="更换头像" className="ac-avatar">
+        <button
+          type="button"
+          aria-label="更换头像"
+          className="ac-avatar"
+          onClick={() => void openAvatarPicker()}
+          disabled={avatarUploading}
+          style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer' }}
+        >
           <ProfileAvatar src={avatarPreviewUrl ?? user?.avatar_url} mediaNo={user?.avatar_media_no} label={user?.nickname ?? '我的头像'} />
           <span className="ac-avatar-badge" aria-hidden="true"><Camera size={16} strokeWidth={1.8} /></span>
-          <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" disabled={avatarUploading} onChange={(event) => void onAvatarChange(event)} style={{ display: 'none' }} />
-        </label>
+        </button>
+        <input
+          ref={avatarFileInputRef}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+          capture={avatarCapture}
+          disabled={avatarUploading}
+          onChange={(event) => void onAvatarChange(event)}
+          style={{ display: 'none' }}
+        />
         <span className="ac-avatar-tip">{avatarUploading ? '头像上传中…' : '更换头像'}</span>
       </div>
 
