@@ -18,8 +18,10 @@ import './styles/glass-finish.css';
 // 设计还原单一令牌层（DESIGN-SPEC-v3 / 28 屏差异清单 G1–G10）：必须最后引入
 import './styles/design-align.css';
 import { installBubbleEffect } from './shared/bubble';
+import { bootstrapDisplayPreferences } from './shared/displayPreferences';
 
 installBubbleEffect();
+bootstrapDisplayPreferences();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

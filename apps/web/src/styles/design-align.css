@@ -5215,3 +5215,60 @@
   font-size: 13px !important;
   font-weight: 600 !important;
 }
+
+
+/* 19 通知设置：系统通知权限状态条 */
+#root#root#root .notify-permission {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  margin: 0 0 16px !important;
+  padding: 14px 16px !important;
+  border-radius: 22px !important;
+  background: rgba(255, 250, 244, 0.86) !important;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 0 8px 20px rgba(146, 96, 52, 0.06) !important;
+}
+
+#root#root#root .notify-permission-icon {
+  flex: 0 0 auto !important;
+  width: 40px !important;
+  height: 40px !important;
+  border-radius: 14px !important;
+  display: grid !important;
+  place-items: center !important;
+  background: rgba(233, 160, 90, 0.16) !important;
+  color: #B4652A !important;
+}
+
+#root#root#root .notify-permission-body {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  display: grid !important;
+  gap: 2px !important;
+}
+
+#root#root#root .notify-permission-body strong {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: #3A2A1E !important;
+}
+
+#root#root#root .notify-permission-body small {
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  color: #8B7160 !important;
+}
+
+#root#root#root .notify-permission-action {
+  flex: 0 0 auto !important;
+  min-height: 36px !important;
+  height: 36px !important;
+  padding: 0 16px !important;
+  border-radius: 999px !important;
+  border: none !important;
+  background: #A9581B !important;
+  color: #FFFFFF !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}

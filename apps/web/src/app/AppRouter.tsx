@@ -221,6 +221,8 @@ export const AppRouter = () => {
             <Route path="search" element={<SearchPage />} />
             <Route path="timeline" element={<TimelinePage />} />
             <Route path="record/create" element={<CreateRecordPage />} />
+            {/* /record/new 会被 record/:record_no 吃掉，显示成一条真实记录 */}
+            <Route path="record/new" element={<Navigate to="/record/create" replace />} />
             <Route path="record/:record_no" element={<ViewRecordPage />} />
             <Route path="record/:record_no/edit" element={<EditRecordPage />} />
             <Route path="family" element={<FamilyPage />} />
@@ -229,6 +231,10 @@ export const AppRouter = () => {
             <Route path="family/members/:user_no" element={<FamilyMemberDetailPage />} />
             <Route path="family/invite" element={<FamilyInvitePage />} />
             <Route path="profile" element={<ProfilePage />} />
+            {/* 旧路径别名：避免外部链接/深链落到错误页（审计 6/10/11 屏） */}
+            <Route path="settings" element={<Navigate to="/profile/settings" replace />} />
+            <Route path="messages" element={<Navigate to="/profile/messages" replace />} />
+            <Route path="notifications" element={<Navigate to="/profile/notifications" replace />} />
             <Route path="profile/messages" element={<MessagesPage />} />
             <Route path="profile/notifications" element={<NotificationSettingsPage />} />
             <Route path="profile/account" element={<AccountPage />} />

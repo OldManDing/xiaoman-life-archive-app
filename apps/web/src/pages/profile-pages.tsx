@@ -12,6 +12,7 @@ import { hasVerifiedAppUpdateMetadata } from '../shared/appUpdater';
 import { useAsyncData, useStoredMediaUrl } from '../shared/hooks';
 import { membershipTypeLabel } from '../shared/labels';
 import { createPersistableAvatarPreview, saveLocalMediaPreview, saveRuntimeMediaPreview, toStoredMediaReference } from '../shared/localMediaPreview';
+import { applyDisplayPreferences, readDisplayPreferences, saveDisplayPreferences, type DisplayPreferences } from '../shared/displayPreferences';
 import { loadLocalSettings, localSettingsToPreferences, preferencesToLocalSettings, saveLocalSettings, type LocalSettings } from '../shared/localSettings';
 import { isSupportedImageFile, resolveFileMimeType, withResolvedFileMimeType } from '../shared/mediaFiles';
 import { normalizeUploadErrorMessage, readUploadMetadata } from '../shared/mediaMetadata';
@@ -896,6 +897,10 @@ export const NotificationSettingsPage = () => {
   });
 
   const toggleNotifyPref = (key: string) => {
+    const willEnable = !notifyPrefs[key];
+    if (willEnable && permissionStatus !== 'granted' && permissionStatus !== 'web' && permissionStatus !== 'checking') {
+      void requestPermission();
+    }
     setNotifyPrefs((current) => {
       const next = { ...current, [key]: !current[key] };
       try {
@@ -932,6 +937,20 @@ export const NotificationSettingsPage = () => {
 
   return (
     <PageShell title="通知设置" backTo="/profile" className="settings-shell notify-shell">
+      <section className="notify-permission" aria-label="手机通知状态">
+        <span className="notify-permission-icon" aria-hidden="true">
+          <BellRing size={22} strokeWidth={1.8} />
+        </span>
+        <span className="notify-permission-body">
+          <strong>{remotePushText}</strong>
+          <small>{permissionText}</small>
+        </span>
+        {shouldShowPermissionButton ? (
+          <button type="button" className="notify-permission-action" onClick={() => void requestPermission()} disabled={permissionBusy}>
+            {permissionBusy ? '请求中…' : '去开启'}
+          </button>
+        ) : null}
+      </section>
       <div style={{ display: 'grid', gap: 18 }}>
         {notifyGroups.map((group) => (
           <section className="set-group" key={group.title} aria-label={group.title}>
@@ -1158,40 +1177,6 @@ export const AccountPage = () => {
       <p className="ac-footnote">昵称会显示在家人看到的记录里</p>
     </PageShell>
   );
-};
-
-const displayPreferenceKey = 'nianlun:display-prefs:v1';
-
-type DisplayPreferences = { elder: boolean; night: boolean };
-
-const readDisplayPreferences = (): DisplayPreferences => {
-  if (typeof window === 'undefined') return { elder: false, night: false };
-  try {
-    const raw = window.localStorage.getItem(displayPreferenceKey);
-    if (!raw) return { elder: false, night: false };
-    const parsed = JSON.parse(raw) as Partial<DisplayPreferences>;
-    return { elder: Boolean(parsed.elder), night: Boolean(parsed.night) };
-  } catch {
-    return { elder: false, night: false };
-  }
-};
-
-const applyDisplayPreferences = ({ elder, night }: DisplayPreferences) => {
-  if (typeof document === 'undefined') return;
-  const root = document.documentElement;
-  if (elder) root.dataset.elder = 'true';
-  else delete root.dataset.elder;
-  if (night) root.dataset.theme = 'night';
-  else delete root.dataset.theme;
-};
-
-const saveDisplayPreferences = (preferences: DisplayPreferences) => {
-  if (typeof window === 'undefined') return;
-  try {
-    window.localStorage.setItem(displayPreferenceKey, JSON.stringify(preferences));
-  } catch {
-    // A blocked storage write must not break the settings screen.
-  }
 };
 
 const recordPrefsStorageKey = 'nianlun:record-prefs:v1';
