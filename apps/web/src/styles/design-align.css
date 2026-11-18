@@ -5349,3 +5349,92 @@
   line-height: 1.5 !important;
   color: #8B7160 !important;
 }
+
+
+/* ============================================================
+   259. 分段控件统一（09 / 10 / 22 三套 → 同一套）
+   与 shared/ui.tsx 的 AppSegmentedControl 对齐：
+   容器 999 + 4px 内距、选中 20 圆角 + 琥珀渐变 + 琥珀墨字 + 15/600
+   ============================================================ */
+#root#root#root .msg-tabs,
+#root#root#root .messages-shell [class*="segment"] {
+  display: flex !important;
+  gap: 6px !important;
+  padding: 4px !important;
+  min-height: 0 !important;
+  height: auto !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  background: rgba(255, 250, 244, 0.62) !important;
+  background-image: none !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+}
+
+#root#root#root .msg-tabs button,
+#root#root#root .messages-shell [class*="segment"] button {
+  flex: 1 1 0 !important;
+  min-width: 0 !important;
+  min-height: 44px !important;
+  height: 44px !important;
+  border-radius: 20px !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  background-image: none !important;
+  color: #6F5745 !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+  box-shadow: none !important;
+}
+
+#root#root#root .msg-tabs button[aria-selected="true"],
+#root#root#root .msg-tabs button.is-active,
+#root#root#root .messages-shell [class*="segment"] button[aria-selected="true"],
+#root#root#root .messages-shell [class*="segment"] button.is-active {
+  border-color: rgba(221, 175, 120, 0.9) !important;
+  background: linear-gradient(180deg, rgba(246, 198, 140, 0.9) 0%, rgba(233, 160, 90, 0.78) 100%) !important;
+  background-image: linear-gradient(180deg, rgba(246, 198, 140, 0.9) 0%, rgba(233, 160, 90, 0.78) 100%) !important;
+  color: #8A4E14 !important;
+  font-weight: 600 !important;
+}
+
+/* 22 法务页分段：与上面完全一致（去掉早期 26% 的淡渐变） */
+#root#root#root .legal-shell [role="tablist"] button[aria-selected="true"],
+#root#root#root .legal-shell [class*="segment"] button[aria-selected="true"] {
+  background: linear-gradient(180deg, rgba(246, 198, 140, 0.9) 0%, rgba(233, 160, 90, 0.78) 100%) !important;
+  background-image: linear-gradient(180deg, rgba(246, 198, 140, 0.9) 0%, rgba(233, 160, 90, 0.78) 100%) !important;
+  border: 1px solid rgba(221, 175, 120, 0.9) !important;
+  color: #8A4E14 !important;
+  border-radius: 20px !important;
+}
+
+#root#root#root .legal-shell [role="tablist"] button,
+#root#root#root .legal-shell [class*="segment"] button {
+  min-height: 44px !important;
+  height: 44px !important;
+  border-radius: 20px !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+}
+
+/* 09 建档的分段（性别）：同一套形状与字号 */
+#root#root#root .onb-gender {
+  gap: 6px !important;
+  padding: 4px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 250, 244, 0.62) !important;
+}
+
+#root#root#root .onb-gender-opt {
+  min-height: 44px !important;
+  border-radius: 20px !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+}
+
+#root#root#root .onb-gender-opt.is-selected {
+  border-color: rgba(221, 175, 120, 0.9) !important;
+  background: linear-gradient(180deg, rgba(246, 198, 140, 0.9) 0%, rgba(233, 160, 90, 0.78) 100%) !important;
+  background-image: linear-gradient(180deg, rgba(246, 198, 140, 0.9) 0%, rgba(233, 160, 90, 0.78) 100%) !important;
+  color: #8A4E14 !important;
+  font-weight: 600 !important;
+}
