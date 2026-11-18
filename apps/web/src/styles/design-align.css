@@ -2364,3 +2364,22 @@
 #root#root .account-shell section {
   border-radius: 24px !important;
 }
+
+
+/* 224. 搜索计数标题（h2.search-count）定格 20 衬线 */
+#root#root#root .search-page h2.search-count,
+#root#root#root .search-count-row h2 {
+  font-family: var(--nl-font-display, "Songti SC", serif) !important;
+  font-size: 20px !important;
+  line-height: 1.4 !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+
+/* 225. 搜索结果行容器字号归位（子元素已有 17/13） */
+#root#root .search-row,
+#root#root .search-page .search-main section {
+  font-size: 15px !important;
+}
