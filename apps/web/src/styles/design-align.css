@@ -5613,3 +5613,37 @@
   font-weight: 600 !important;
   cursor: pointer !important;
 }
+
+
+/* 07 搜索：标签筛选（原来是一个永久 disabled 的假按钮） */
+#root#root#root .search-filter.is-active {
+  color: #8A4E14 !important;
+  background: rgba(233, 160, 90, 0.22) !important;
+  border-color: rgba(221, 175, 120, 0.9) !important;
+}
+
+#root#root#root .search-tags {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  margin: 10px 0 4px !important;
+}
+
+#root#root#root .search-tag {
+  height: 34px !important;
+  min-height: 34px !important;
+  padding: 0 14px !important;
+  border-radius: 999px !important;
+  border: 1px solid rgba(255, 255, 255, 0.86) !important;
+  background: rgba(255, 250, 244, 0.72) !important;
+  color: #6F5745 !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+}
+
+#root#root#root .search-tag.is-active {
+  background: #E9A05A !important;
+  color: #FFFFFF !important;
+  border-color: #E9A05A !important;
+  font-weight: 600 !important;
+}

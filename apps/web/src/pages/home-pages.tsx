@@ -779,6 +779,8 @@ export const SearchPage = () => {
   const [searchKeyword, setSearchKeyword] = useState('');
   const searchScope = user?.user_no ?? null;
   const [history, setHistory] = useState<string[]>(() => readSearchHistory(searchScope));
+  const [tagFilter, setTagFilter] = useState<string | null>(null);
+  const [filterOpen, setFilterOpen] = useState(false);
   useEffect(() => setHistory(readSearchHistory(searchScope)), [searchScope]);
   const normalizedKeyword = keyword.trim();
   useEffect(() => {
@@ -800,6 +802,8 @@ export const SearchPage = () => {
     [activeChild?.child_no, searchKeyword],
   );
   const records = data?.list ?? [];
+  const availableTags = Array.from(new Set(records.flatMap((record) => record.tags ?? []))).slice(0, 6);
+  const visibleRecords = tagFilter ? records.filter((record) => (record.tags ?? []).includes(tagFilter)) : records;
   const resultTotal = data?.total ?? records.length;
   const debouncing = normalizedKeyword !== searchKeyword;
   const searchBusy = loading || debouncing;
@@ -855,7 +859,7 @@ export const SearchPage = () => {
         {!normalizedKeyword ? (
           <section>
             <div className="search-count-row">
-              <h2 className="search-count">最近 {Math.min(records.length, SEARCH_RECENT_LIMIT)} 条</h2>
+              <h2 className="search-count">最近 {Math.min(visibleRecords.length, SEARCH_RECENT_LIMIT)} 条</h2>
             </div>
             {loading ? <EmptyState message="正在加载最近记录…" /> : null}
             {error ? <EmptyState message={`加载失败：${error}`} /> : null}
@@ -863,17 +867,17 @@ export const SearchPage = () => {
             {!loading && !error && activeChild && records.length ? (
               <>
               <div className="search-list">
-                {records.slice(0, SEARCH_RECENT_LIMIT).map((record) => (
+                {visibleRecords.slice(0, SEARCH_RECENT_LIMIT).map((record) => (
                   <SearchResultRow key={record.record_no} record={record} keyword={history[0] ?? ''} onClick={() => navigate(`/record/${record.record_no}`)} />
                 ))}
               </div>
-              {records.length > SEARCH_RECENT_LIMIT ? (
+              {visibleRecords.length > SEARCH_RECENT_LIMIT ? (
                 <button
                   type="button"
                   className="search-more"
                   onClick={() => navigate('/timeline')}
                 >
-                  查看全部 {records.length} 条记录
+                  查看全部 {visibleRecords.length} 条记录
                 </button>
               ) : null}
               </>
@@ -892,16 +896,43 @@ export const SearchPage = () => {
             {!error && records.length > 0 ? (
               <div className="search-count-row">
                 <h2 className="search-count">{searchBusy ? '正在搜索…' : `找到 ${resultTotal} 条${records.length < resultTotal ? ` · 显示前 ${records.length} 条` : ''}`}</h2>
-                <button type="button" className="search-filter" disabled aria-label="筛选（即将上线）">
+                <button
+                  type="button"
+                  className={tagFilter ? 'search-filter is-active' : 'search-filter'}
+                  aria-label={tagFilter ? `筛选：${tagFilter}` : '按标签筛选'}
+                  aria-expanded={filterOpen}
+                  onClick={() => setFilterOpen((open) => !open)}
+                >
                   <Filter size={20} strokeWidth={1.8} />
-                  <span>筛选</span>
+                  <span>{tagFilter ?? '筛选'}</span>
                 </button>
+              </div>
+            ) : null}
+            {filterOpen && availableTags.length ? (
+              <div className="search-tags" role="group" aria-label="按标签筛选">
+                {['全部', ...availableTags].map((tag) => {
+                  const active = tag === '全部' ? !tagFilter : tagFilter === tag;
+                  return (
+                    <button
+                      key={tag}
+                      type="button"
+                      className={active ? 'search-tag is-active' : 'search-tag'}
+                      aria-pressed={active}
+                      onClick={() => {
+                        setTagFilter(tag === '全部' ? null : tag);
+                        setFilterOpen(false);
+                      }}
+                    >
+                      {tag}
+                    </button>
+                  );
+                })}
               </div>
             ) : null}
             {error ? <EmptyState message={`搜索失败：${error}`} /> : null}
             {!loading && !error && records.length ? (
               <div className="search-list">
-                {records.map((record) => (
+                {visibleRecords.map((record) => (
                   <SearchResultRow
                     key={record.record_no}
                     record={record}
