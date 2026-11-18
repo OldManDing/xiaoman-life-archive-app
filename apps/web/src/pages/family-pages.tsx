@@ -5,6 +5,7 @@ import QRCode from 'qrcode';
 import { useRef } from 'react';
 import { Camera, Check, ChevronDown, ChevronRight, Clipboard, Clock, Copy, FileText, Image as ImageIcon, MessageCircle, MessageCircleMore, Mic, Pencil, PlayCircle, Plus, QrCode, UserMinus, UserPlus } from 'lucide-react';
 
+import { chooseImageSource } from '../shared/imageSourceSheet';
 import { useAuth } from '../shared/AuthContext';
 import { webApi } from '../shared/api/webApi';
 import type { ChildRecord, FamilyInviteResponse, FamilyMemberItem, FamilyMemberOperationItem, RecordSummary } from '../shared/api/types';
@@ -487,6 +488,20 @@ export const FamilyChildPage = () => {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, []);
 
+  const childAvatarInputRef = useRef<HTMLInputElement | null>(null);
+  const [childAvatarCapture, setChildAvatarCapture] = useState<'user' | undefined>(undefined);
+
+  const openChildAvatarPicker = async () => {
+    const source = await chooseImageSource('更换孩子照片');
+    if (!source) return;
+    setChildAvatarCapture(source === 'camera' ? 'user' : undefined);
+  };
+
+  useEffect(() => {
+    if (childAvatarCapture === undefined) return;
+    childAvatarInputRef.current?.click();
+  }, [childAvatarCapture]);
+
   const onAvatarChange = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -527,6 +542,10 @@ export const FamilyChildPage = () => {
             <div className="ac-hero" style={{ display: 'grid', justifyItems: 'center', gap: 10, background: 'transparent', border: 'none', boxShadow: 'none' }}>
               <label
                 aria-label="更换孩子头像"
+                onClick={(event) => {
+                  event.preventDefault();
+                  if (!avatarUploading) void openChildAvatarPicker();
+                }}
                 style={{ position: 'relative', display: 'block', flexShrink: 0, cursor: avatarUploading ? 'not-allowed' : 'pointer', opacity: avatarUploading ? 0.7 : 1 }}
               >
                 <ChildAvatarPreview src={avatarPreviewUrl ?? (form.avatar_url || data.avatar_url)} mediaNo={data.avatar_media_no} label={form.name || data.name} />
@@ -549,7 +568,7 @@ export const FamilyChildPage = () => {
                 >
                   <Camera size={18} strokeWidth={1.8} />
                 </span>
-                <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" disabled={avatarUploading} onChange={(event) => void onAvatarChange(event)} style={{ display: 'none' }} />
+                <input ref={childAvatarInputRef} type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" capture={childAvatarCapture} disabled={avatarUploading} onChange={(event) => void onAvatarChange(event)} style={{ display: 'none' }} />
               </label>
               <span style={{ color: 'var(--nl-accent)', fontSize: 12, fontWeight: 500 }}>
                 {avatarUploading ? '头像上传中…' : '更换头像'}
@@ -1146,6 +1165,9 @@ export const FamilyMemberDetailPage = () => {
 
           <section>
             <h2 className="fam-detail-title">权限设置</h2>
+            {!canEditRole ? (
+              <p className="fam-detail-readonly" role="status">你没有修改权限的资格，下面的选项仅作查看。</p>
+            ) : null}
             <div role="radiogroup" aria-label="成员权限" style={{ display: 'grid', gap: 8 }}>
               {([
                 { value: 'viewer' as const, title: '仅浏览', detail: '可以查看记录，但不能新增' },
