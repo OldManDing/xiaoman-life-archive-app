@@ -2900,3 +2900,73 @@
   height: 100% !important;
   object-fit: cover !important;
 }
+
+
+/* ============================================================
+   231. 04 新建记录：按 20 条清单收口
+   ============================================================ */
+/* #13 标题 17/1.5/500（新建页，编辑页 15 保持 30 衬线另行作用域） */
+#root#root#root .record-form-page.is-create .record-editor-title-row input,
+#root#root#root .record-form-page.is-create input[aria-label*="标题"] {
+  font-family: inherit !important;
+  font-size: 17px !important;
+  line-height: 1.5 !important;
+  font-weight: 500 !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+/* #14 正文 15 / 1.75 */
+#root#root#root .record-form-page.is-create textarea {
+  font-size: 15px !important;
+  line-height: 1.75 !important;
+}
+
+/* #7 选中 chip：#F7CB99 + #4A2F12 + 1px 琥珀边 */
+#root#root#root .record-form-page.is-create .record-quick-tags button[aria-pressed="true"],
+#root#root#root .record-form-page.is-create .record-quick-tags .is-on {
+  background: #F7CB99 !important;
+  color: #4A2F12 !important;
+  border: 1px solid rgba(169, 88, 27, 0.28) !important;
+}
+
+/* #9 标签容器：#F8DDC5 / r18 / 内距 10 12 */
+#root#root#root .record-form-page.is-create .record-quick-tags {
+  background: #F8DDC5 !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
+  border-radius: 18px !important;
+  padding: 10px 12px !important;
+}
+
+/* #2 记录人行：44 高，文字 15 */
+#root#root#root .record-form-page.is-create .record-recorder {
+  min-height: 44px !important;
+  height: 44px !important;
+  font-size: 15px !important;
+}
+
+#root#root#root .record-form-page.is-create .record-recorder img,
+#root#root#root .record-form-page.is-create .record-recorder [class*="avatar"] {
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 999px !important;
+}
+
+/* #15 日期行与地点行等高 46 */
+#root#root#root .record-form-page.is-create .record-location-row,
+#root#root#root .record-form-page.is-create .app-date-control {
+  min-height: 46px !important;
+  height: 46px !important;
+}
+
+
+/* 04 #17/#19 图标线宽统一 1.8 */
+#root#root#root .record-form-page.is-create svg {
+  stroke-width: 1.8px !important;
+}
+
+#root#root#root .record-form-page.is-create .record-location-row svg,
+#root#root#root .record-form-page.is-create .app-date-control svg {
+  width: 20px !important;
+  height: 20px !important;
+}
