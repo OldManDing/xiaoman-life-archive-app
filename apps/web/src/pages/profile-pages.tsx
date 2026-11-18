@@ -600,47 +600,38 @@ const MessageCard = ({ item, onClick, onReply }: { item: UserNotificationItem; o
   const isSystem = item.notification_type === 'system';
   const hasReply = item.notification_type !== 'system' && item.target_type === 'record' && Boolean(item.target_no);
   return (
-    <button type="button" className="msg-card" onClick={onClick}>
+    <div className="msg-card">
       {!item.read_at ? <span className="msg-dot" aria-label="未读" /> : null}
-      {isSystem || !avatar ? (
-        <span className="msg-system-icon" aria-hidden="true">
-          <ShieldCheck size={26} strokeWidth={1.9} />
+      <button type="button" className="msg-open" onClick={onClick} aria-label="查看这条消息">
+        {isSystem || !avatar ? (
+          <span className="msg-system-icon" aria-hidden="true">
+            <ShieldCheck size={26} strokeWidth={1.9} />
+          </span>
+        ) : (
+          <img className="msg-avatar" src={avatar} alt="" />
+        )}
+        <span className="msg-body">
+          <strong className="msg-title">{(() => {
+            const actor = ['妈妈', '爸爸', '外婆', '外公', '奶奶', '爷爷', '小满', '系统'].find((name) => title.startsWith(name));
+            return actor ? (<>{actor} <span className="msg-title-rest">{title.slice(actor.length).trim()}</span></>) : title;
+          })()}</strong>
+          {body ? <span className="msg-text">{body}</span> : null}
         </span>
-      ) : (
-        <img className="msg-avatar" src={avatar} alt="" />
-      )}
-      <span className="msg-body">
-        <strong className="msg-title">{(() => {
-          const actor = ['妈妈', '爸爸', '外婆', '外公', '奶奶', '爷爷', '小满', '系统'].find((name) => title.startsWith(name));
-          return actor ? (<>{actor} <span className="msg-title-rest">{title.slice(actor.length).trim()}</span></>) : title;
-        })()}</strong>
-        {body ? <span className="msg-text">{body}</span> : null}
-      </span>
+      </button>
       <span className="msg-side">
         <span className="msg-time">{formatMessageTime(item.created_at)}</span>
         {hasReply ? (
-          <span
-            role="button"
-            tabIndex={0}
+          <button
+            type="button"
             className="msg-reply"
             aria-label="回应这条记录"
-            onClick={(event) => {
-              event.stopPropagation();
-              onReply();
-            }}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                event.stopPropagation();
-                onReply();
-              }
-            }}
+            onClick={() => onReply()}
           >
             回应
-          </span>
+          </button>
         ) : null}
       </span>
-    </button>
+    </div>
   );
 };
 

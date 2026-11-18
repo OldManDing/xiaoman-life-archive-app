@@ -5584,3 +5584,32 @@
   font-size: 13px !important;
   font-weight: 600 !important;
 }
+
+
+/* 10 消息卡片：内容区独立按钮（消除 button 嵌套），布局与原来一致 */
+#root#root#root .msg-card .msg-open {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  text-align: left !important;
+  font: inherit !important;
+  color: inherit !important;
+  cursor: pointer !important;
+}
+
+#root#root#root .msg-card .msg-reply {
+  border: none !important;
+  background: rgba(233, 160, 90, 0.16) !important;
+  color: #8A4E14 !important;
+  border-radius: 999px !important;
+  min-height: 36px !important;
+  padding: 0 16px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+}
