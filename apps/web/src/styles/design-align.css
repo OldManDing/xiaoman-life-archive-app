@@ -3328,3 +3328,56 @@
 #root#root#root .lg-body p a {
   color: #A9581B !important;
 }
+
+
+/* ============================================================
+   236. 09 孩子建档：按 20 条清单收口
+   ============================================================ */
+/* #1 行高 72（原 90），卡高回收 */
+#root#root#root .onb-row {
+  min-height: 72px !important;
+  height: 72px !important;
+  padding: 10px 18px !important;
+}
+
+/* #10 卡片圆角 16、#9 描边降到 .28 */
+#root#root#root .onb-card {
+  border-radius: 16px !important;
+  border-color: rgba(255, 255, 255, 0.28) !important;
+  background: rgba(255, 250, 244, 0.62) !important;
+}
+
+/* #3 #8 性别选中：#FEECDE 级浅琥珀 + 琥珀字 */
+#root#root#root .onb-gender-opt.is-selected {
+  background: rgba(233, 160, 90, 0.18) !important;
+  background-image: none !important;
+  color: #8A4E14 !important;
+  border-color: rgba(169, 88, 27, 0.24) !important;
+}
+
+/* #5 头像 160 */
+#root#root#root .onb-avatar {
+  width: 160px !important;
+  height: 160px !important;
+}
+
+/* #15 相机图标 42 / 1.8 */
+#root#root#root .onb-avatar svg {
+  width: 42px !important;
+  height: 42px !important;
+  stroke-width: 1.8px !important;
+}
+
+/* #13 副标统一 13 */
+#root#root#root .onb-foot,
+#root#root#root [class*="hint"] {
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+}
+
+/* #7 底部暖奶油 */
+#root#root#root .onb-page {
+  background-image:
+    radial-gradient(70% 40% at 50% 0%, rgba(255, 214, 178, 0.5) 0%, rgba(255, 214, 178, 0) 70%),
+    linear-gradient(180deg, #FDF6EC 0%, #FBEBD9 55%, #FEDFC3 100%) !important;
+}
