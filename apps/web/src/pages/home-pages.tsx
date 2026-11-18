@@ -769,6 +769,9 @@ const SearchResultRow = ({ record, keyword, onClick }: { record: RecordSummary; 
   );
 };
 
+/** 搜索首页「最近记录」展示条数（原来写死 4 条，且没有查看全部入口） */
+const SEARCH_RECENT_LIMIT = 8;
+
 export const SearchPage = () => {
   const { activeChild, user } = useAuth();
   const navigate = useNavigate();
@@ -852,17 +855,28 @@ export const SearchPage = () => {
         {!normalizedKeyword ? (
           <section>
             <div className="search-count-row">
-              <h2 className="search-count">最近 {Math.min(records.length, 4)} 条</h2>
+              <h2 className="search-count">最近 {Math.min(records.length, SEARCH_RECENT_LIMIT)} 条</h2>
             </div>
             {loading ? <EmptyState message="正在加载最近记录…" /> : null}
             {error ? <EmptyState message={`加载失败：${error}`} /> : null}
             {!activeChild ? <EmptyState message="还没有孩子档案，先创建一个孩子档案再开始记录。" /> : null}
             {!loading && !error && activeChild && records.length ? (
+              <>
               <div className="search-list">
-                {records.slice(0, 4).map((record) => (
+                {records.slice(0, SEARCH_RECENT_LIMIT).map((record) => (
                   <SearchResultRow key={record.record_no} record={record} keyword={history[0] ?? ''} onClick={() => navigate(`/record/${record.record_no}`)} />
                 ))}
               </div>
+              {records.length > SEARCH_RECENT_LIMIT ? (
+                <button
+                  type="button"
+                  className="search-more"
+                  onClick={() => navigate('/timeline')}
+                >
+                  查看全部 {records.length} 条记录
+                </button>
+              ) : null}
+              </>
             ) : null}
             {!loading && !error && activeChild && !records.length ? (
               <div style={{ display: 'grid', justifyItems: 'center', gap: 14, padding: '32px 0 12px', textAlign: 'center' }}>
