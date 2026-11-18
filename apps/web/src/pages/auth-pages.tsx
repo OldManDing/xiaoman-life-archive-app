@@ -737,23 +737,21 @@ export const OnboardingChildPage = () => {
 
           <div className="onb-row">
             <span className="onb-label">出生日期</span>
-            <label className="onb-date">
-              <span className="onb-date-value">
-                {form.birthday
-                  ? (() => {
-                    const [year, month, day] = form.birthday.split('-');
-                    return year && month && day ? `${Number(year)}年${Number(month)}月${Number(day)}日` : form.birthday;
-                  })()
-                  : '年/月/日'}
-              </span>
-              <input
-                type="date"
-                className="onb-date-input"
-                aria-label="出生日期"
-                value={form.birthday}
-                onChange={(event) => setForm((current) => ({ ...current, birthday: event.target.value }))}
-              />
-            </label>
+            <AppDateInput
+              className="onb-date-input"
+              variant="line"
+              type="date"
+              aria-label="出生日期"
+              placeholder="年/月/日"
+              displayValue={form.birthday
+                ? (() => {
+                  const [year, month, day] = form.birthday.split('-');
+                  return year && month && day ? `${Number(year)}年${Number(month)}月${Number(day)}日` : form.birthday;
+                })()
+                : undefined}
+              value={form.birthday}
+              onChange={(event) => setForm((current) => ({ ...current, birthday: event.target.value }))}
+            />
             <ChevronRight size={24} strokeWidth={1.8} color="#8b7160" />
           </div>
 

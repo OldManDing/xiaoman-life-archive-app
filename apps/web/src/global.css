@@ -2123,3 +2123,76 @@ select:focus {
   font-size: 10.5px;
   font-weight: 600;
 }
+
+
+/* ============================================================
+   系统皮肤归一化：所有控件外观必须由我们接管
+   （2026-11-18 原生控件审计 D2–D6）
+   ============================================================ */
+
+/* D2 自动填充黄/蓝底 → 保持暖色控件底 */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+textarea:-webkit-autofill:focus,
+select:-webkit-autofill {
+  -webkit-text-fill-color: var(--nl-ink, #3A2A1E) !important;
+  -webkit-box-shadow: 0 0 0 1000px rgba(255, 250, 244, 0.92) inset !important;
+  box-shadow: 0 0 0 1000px rgba(255, 250, 244, 0.92) inset !important;
+  caret-color: var(--nl-ink, #3A2A1E) !important;
+  transition: background-color 9999s ease-in-out 0s !important;
+}
+
+/* D3 点击高亮全量关闭 */
+*,
+*::before,
+*::after {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* D4 长按选词：交互元素与行禁止选择，正文保持可选中 */
+a,
+summary,
+[role="button"],
+[role="tab"],
+[role="radio"],
+[role="switch"],
+.app-bottom-nav-link,
+.ac-row,
+.set-row,
+.pf-menu-row,
+.tl-year,
+.tl-month-select,
+.lg-agreement,
+label,
+input,
+textarea {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* D5 图片长按系统菜单 */
+img {
+  -webkit-touch-callout: none;
+  -webkit-user-drag: none;
+}
+
+/* D6 details/summary 系统三角 */
+summary {
+  list-style: none;
+}
+
+summary::-webkit-details-marker {
+  display: none !important;
+}
+
+summary::marker {
+  content: '';
+}
+
+/* 兜底：滚动条（部分 WebView 只认 scrollbar-width） */
+* {
+  scrollbar-width: none;
+}

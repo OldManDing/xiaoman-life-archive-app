@@ -26,7 +26,7 @@ import { webApi } from '../shared/api/webApi';
 import type { RecordSummary, RecordsListResponse } from '../shared/api/types';
 import { useAsyncData } from '../shared/hooks';
 import { useCachedMediaUrl } from '../shared/useCachedMediaUrl';
-import { helperTextStyle } from '../shared/ui';
+import { AppSelect, helperTextStyle } from '../shared/ui';
 import { EmptyState, normalizeDisplayName } from './shared';
 import {
   RefChip,
@@ -1123,7 +1123,7 @@ export const TimelinePage = () => {
             ))}
           </div>
           <label className="tl-month-select">
-            <select
+            <AppSelect
               aria-label="月份"
               value={activeMonth}
               onChange={(event) => setSelectedMonth(event.target.value)}
@@ -1132,8 +1132,7 @@ export const TimelinePage = () => {
               {monthOptions.map((month) => (
                 <option key={month} value={String(month)}>{month}月</option>
               ))}
-            </select>
-            <ChevronDown size={18} strokeWidth={2} aria-hidden="true" />
+            </AppSelect>
           </label>
         </div>
         <h1 className="tl-big-title">{bigTitle}</h1>

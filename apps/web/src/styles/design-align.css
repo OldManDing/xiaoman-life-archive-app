@@ -1621,7 +1621,7 @@
   padding-right: 16px !important;
 }
 
-#root#root .messages-shell .app-topbar > *:last-child,
+/* 注意：只限制真正的动作按钮，不能命中 grid 容器（否则标题会被压成 0 宽） */
 #root#root .messages-shell .app-topbar button:last-child,
 #root#root .messages-shell .app-topbar a:last-child {
   font-size: 14px !important;
@@ -4862,4 +4862,124 @@
 /* 12 横幅取景：保留孩子与牵手，避免裁到脸部 */
 #root#root#root .invite-banner img {
   object-position: center 46% !important;
+}
+
+
+/* 02 月选择器：容器撑满胶囊、下拉与按钮同宽并右对齐 */
+#root#root#root .tl-month-select {
+  display: inline-flex !important;
+  align-items: center !important;
+  min-width: 96px !important;
+}
+
+#root#root#root .tl-month-select > span,
+#root#root#root .tl-month-select button {
+  width: 100% !important;
+}
+
+#root#root#root .tl-month-select [role="listbox"] {
+  min-width: 116px !important;
+  right: 0 !important;
+  left: auto !important;
+  border-radius: 18px !important;
+  box-shadow: 0 14px 32px rgba(115, 58, 16, 0.16) !important;
+  background: rgba(255, 250, 244, 0.98) !important;
+}
+
+
+/* 02 月选择器：去掉 label 自带的胶囊皮，只留 AppSelect 按钮本体 */
+#root#root#root .tl-month-select {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  width: auto !important;
+  min-width: 0 !important;
+  gap: 0 !important;
+}
+
+#root#root#root .tl-month-select > span {
+  display: inline-flex !important;
+  width: auto !important;
+}
+
+#root#root#root .tl-month-select button {
+  width: auto !important;
+  min-width: 96px !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 250, 244, 0.92) !important;
+  border: 1px solid rgba(255, 255, 255, 0.86) !important;
+  padding: 0 14px !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: #3A2A1E !important;
+}
+
+
+/* ============================================================
+   257. 修审计发现的系统性缺陷
+   ============================================================ */
+
+/* 10 消息：顶栏标题被压成 0 宽（> *:last-child 误命中 grid 容器） */
+#root#root#root .messages-shell .app-topbar > *:last-child {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  display: grid !important;
+  grid-template-columns: minmax(44px, auto) minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+#root#root#root .messages-shell .app-topbar h1 {
+  min-width: 0 !important;
+  width: auto !important;
+  flex: 1 1 auto !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  font-size: 20px !important;
+}
+
+/* 10 消息：顶栏动作按钮保持可读 */
+#root#root#root .messages-shell .app-topbar > *:last-child button,
+#root#root#root .messages-shell .app-topbar > *:last-child a {
+  min-height: 44px !important;
+  padding: 0 6px !important;
+  white-space: nowrap !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: var(--nl2-amber-ink) !important;
+}
+
+/* 19 通知：开关圆点不得大于轨道（46×22 轨道里塞了 24 圆点会切边） */
+#root#root#root .settings-shell [aria-pressed] > span:first-child > span {
+  width: 18px !important;
+  height: 18px !important;
+  min-width: 18px !important;
+  max-height: 18px !important;
+  border-radius: 999px !important;
+}
+
+#root#root#root .settings-shell [aria-pressed] > span:first-child {
+  height: 22px !important;
+  min-height: 22px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+/* 14 欢迎：隐藏分页点后的巨大空档，改回紧凑纵向节奏 */
+#root#root#root .wl-body {
+  align-content: space-between !important;
+  gap: 0 !important;
+}
+
+#root#root#root .wl-title {
+  margin-bottom: 10px !important;
+}
+
+#root#root#root .wl-subtitle {
+  margin-bottom: 0 !important;
 }

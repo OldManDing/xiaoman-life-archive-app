@@ -1,4 +1,5 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import { appConfirm } from '../shared/app-confirm';
 import { useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Baby, AlertTriangle, Bell, BellRing, Layers, MapPin, Wifi, BookHeart, AlertCircle, Unlink, Cake, CalendarDays, Star, Camera, ChevronUp, Clock, CheckCircle2, ChevronRight, Copy, DownloadCloud, FileBox, FileText, HelpCircle, Home, Info, KeyRound, Lock, LogOut, Mail, MessageCircle, MessageCircleMore, Moon, Pencil, RefreshCw, Settings, Shield, ShieldCheck, Smartphone, Sparkles, Trash2, Type, UploadCloud, UserPlus, UserRound, Users } from 'lucide-react';
@@ -437,6 +438,7 @@ export const ProfilePage = () => {
   const menuItems: Array<{ key: string; icon: typeof Mail; label: string; value?: string; onClick: () => void }> = [
     { key: 'messages', icon: Mail, label: '消息中心', onClick: () => navigate('/profile/messages') },
     { key: 'notifications', icon: BellRing, label: '通知设置', onClick: () => navigate('/profile/notifications') },
+    { key: 'settings', icon: Settings, label: '设置', onClick: () => navigate('/profile/settings') },
     { key: 'security', icon: ShieldCheck, label: '账号与安全', onClick: () => navigate('/profile/security') },
     { key: 'export', icon: UploadCloud, label: '导出与备份', onClick: () => navigate('/profile/export') },
     { key: 'help', icon: HelpCircle, label: '帮助与反馈', onClick: () => navigate('/profile/help') },
@@ -496,7 +498,14 @@ export const ProfilePage = () => {
             type="button"
             className="pf-menu-row is-danger"
             onClick={async () => {
-              if (typeof window !== 'undefined' && !window.confirm('确定退出当前账号吗？')) return;
+              const okToLogout = await appConfirm({
+                title: '退出当前账号？',
+                message: '退出后需要重新用手机号登录，本机缓存的数据不会删除。',
+                confirmText: '退出登录',
+                cancelText: '取消',
+                tone: 'danger',
+              });
+              if (!okToLogout) return;
               await logout();
               navigate('/auth/login', { replace: true });
             }}
@@ -1382,7 +1391,18 @@ export const SettingsPage = () => {
             <span className="set-body"><strong>导出全部记录</strong><small>全部数据 · 图片和视频</small></span>
             <ChevronRight size={20} className="set-chevron" />
           </button>
-          <button type="button" className="set-row" disabled={cacheSize === '0 KB'} onClick={() => { if (!window.confirm('清理本机缓存后，图片需要重新下载。确认清理？')) return; clearLocalCaches(); setCacheSize('0 KB'); }}>
+          <button type="button" className="set-row" disabled={cacheSize === '0 KB'} onClick={async () => {
+              const okToClear = await appConfirm({
+                title: '清理本机缓存？',
+                message: '清理后图片需要重新下载，记录本身不会删除。',
+                confirmText: '清理',
+                cancelText: '取消',
+                tone: 'danger',
+              });
+              if (!okToClear) return;
+              clearLocalCaches();
+              setCacheSize('0 KB');
+            }}>
             <span className="set-icon"><Trash2 size={24} strokeWidth={1.8} /></span>
             <span className="set-body"><strong>清理本机缓存</strong></span>
             <span className="set-value">{cacheSize}</span>
@@ -1865,7 +1885,17 @@ export const ExportBackupPage = () => {
           <button
             type="button"
             style={{ ...secondaryButtonStyle, minHeight: '46px', borderRadius: '8px', justifyContent: 'center' }}
-            onClick={() => { if (window.confirm('成年移交后，该成员将获得档案的完整控制权，当前管理员会失去管理权限。确认继续？')) void submitArchiveRequest('adult_handoff'); }}
+            onClick={async () => {
+              const okToHandoff = await appConfirm({
+                title: '确认成年移交？',
+                message: '移交后该成员将获得档案的完整控制权，你会失去管理权限。',
+                confirmText: '确认移交',
+                cancelText: '取消',
+                tone: 'danger',
+              });
+              if (!okToHandoff) return;
+              void submitArchiveRequest('adult_handoff');
+            }}
             disabled={archiveRequestDisabled}
           >
             {submittingArchiveRequest === 'adult_handoff' ? '提交中…' : '成年移交'}
@@ -2802,7 +2832,11 @@ export const ContactPage = () => {
               </span>
               <span style={{ minWidth: 0, display: 'grid', gap: '4px' }}>
                 <strong style={{ color: '#3f2a1d', fontSize: '20px', fontWeight: 600 }}>{item.title}</strong>
-                <a href={`mailto:${item.value}`} style={{ color: '#4a2f1f', fontSize: '17px', fontWeight: 600, lineHeight: 1.6, overflowWrap: 'anywhere', textDecoration: 'none' }}>{item.value}</a>
+                {item.value.includes('@') ? (
+                  <a href={`mailto:${item.value}`} style={{ color: '#4a2f1f', fontSize: '17px', fontWeight: 600, lineHeight: 1.6, overflowWrap: 'anywhere', textDecoration: 'none' }}>{item.value}</a>
+                ) : (
+                  <span style={{ color: '#4a2f1f', fontSize: '17px', fontWeight: 600, lineHeight: 1.6, overflowWrap: 'anywhere' }}>{item.value}</span>
+                )}
                 <span style={{ color: '#8a6c56', fontSize: '13px', lineHeight: 1.45, whiteSpace: 'normal', overflow: 'visible', textOverflow: 'clip', display: 'block' }}>{item.detail}</span>
               </span>
               {copyable ? (

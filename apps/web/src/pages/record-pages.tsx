@@ -14,6 +14,7 @@ import { aiJobStatusLabel, recordStatusLabel, recordTypeLabel, visibilityScopeLa
 import { createPersistableMediaPreview, removeRuntimeMediaPreview, resolveMediaPreviewUrl, resolveStoredMediaUrl, saveLocalMediaPreview, saveRuntimeMediaPreview } from '../shared/localMediaPreview';
 import { useCachedMediaUrl } from '../shared/useCachedMediaUrl';
 import { getCurrentDeviceLocation } from '../shared/deviceLocation';
+import { appConfirm } from '../shared/app-confirm';
 import { AppDateInput, AppSelect, AppTopBar, PageShell, Panel, compactSecondaryButtonStyle, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle } from '../shared/ui';
 import { EmptyState, buttonRowStyle, formSubmitSpacingStyle, formatAppDate, formatAppDateTime, formatDateTimeLocal, normalizeDisplayName, rowStyle } from './shared';
 import { referenceAssets } from './reference-ui';
@@ -1665,11 +1666,20 @@ const RecordForm = ({
     if (!hasUnsavedChanges || allowNavigationWithoutPromptRef.current) return undefined;
     const onPopState = () => {
       if (allowNavigationWithoutPromptRef.current) return;
-      if (window.confirm('离开后当前编辑内容不会保存，确定返回吗？')) {
-        allowNavigationWithoutPromptRef.current = true;
-        return;
-      }
+      // 先把被消费掉的历史条目补回来，避免用户停在错误的 URL 上
       window.history.pushState({ guard: Date.now() }, '', window.location.href);
+      void appConfirm({
+        title: '放弃这次编辑？',
+        message: '离开后当前编辑内容不会保存。',
+        confirmText: '离开',
+        cancelText: '继续编辑',
+        tone: 'danger',
+      }).then((ok) => {
+        if (!ok) return;
+        allowNavigationWithoutPromptRef.current = true;
+        // 补回一条再回退两次：一次抵消刚补的 guard，一次真正离开
+        window.history.go(-2);
+      });
     };
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
@@ -2175,7 +2185,13 @@ const RecordForm = ({
     }
 
     if (form.record_type === 'text' && mediaNos.length > 0) {
-      const confirmed = window.confirm(`记录方式已选「文字」，保存会移除已添加的 ${mediaNos.length} 项媒体，继续吗？`);
+      const confirmed = await appConfirm({
+        title: '保存后移除媒体？',
+        message: `记录方式已选「文字」，保存会移除已添加的 ${mediaNos.length} 项图片或视频。`,
+        confirmText: '继续保存',
+        cancelText: '再想想',
+        tone: 'danger',
+      });
       if (!confirmed) return;
     }
     setSubmitting(true);
