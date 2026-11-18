@@ -1,4 +1,16 @@
-android
+# 原生工程纳入版本管理（启动图 / 应用图标 / 原生配置需要随仓库走）
+# 只有构建产物与本地机器相关文件被忽略
+/android/**/build/
+/android/build/
+/android/.gradle/
+/android/app/src/main/assets/public/
+/android/local.properties
+/android/.idea/
+/android/app/release/
+/android/app/debug/
+/android/capacitor-cordova-android-plugins/src/
+/android/capacitor-cordova-android-plugins/build/
+
 ios
 www
 node_modules

@@ -779,7 +779,7 @@ export const SearchPage = () => {
   const [searchKeyword, setSearchKeyword] = useState('');
   const searchScope = user?.user_no ?? null;
   const [history, setHistory] = useState<string[]>(() => readSearchHistory(searchScope));
-  const [tagFilter, setTagFilter] = useState<string | null>(null);
+  const [timeFilter, setTimeFilter] = useState<'all' | 'week' | 'month' | 'year' | 'older'>('all');
   const [filterOpen, setFilterOpen] = useState(false);
   useEffect(() => setHistory(readSearchHistory(searchScope)), [searchScope]);
   const normalizedKeyword = keyword.trim();
@@ -802,8 +802,31 @@ export const SearchPage = () => {
     [activeChild?.child_no, searchKeyword],
   );
   const records = data?.list ?? [];
-  const availableTags = Array.from(new Set(records.flatMap((record) => record.tags ?? []))).slice(0, 6);
-  const visibleRecords = tagFilter ? records.filter((record) => (record.tags ?? []).includes(tagFilter)) : records;
+  // 时间维度筛选：全部 / 本周 / 本月 / 今年 / 更早
+  const timeFilterOptions: Array<{ value: 'all' | 'week' | 'month' | 'year' | 'older'; label: string }> = [
+    { value: 'all', label: '全部' },
+    { value: 'week', label: '本周' },
+    { value: 'month', label: '本月' },
+    { value: 'year', label: '今年' },
+    { value: 'older', label: '更早' },
+  ];
+  const visibleRecords = (() => {
+    if (timeFilter === 'all') return records;
+    const now = new Date();
+    const startOfYear = new Date(now.getFullYear(), 0, 1).getTime();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+    const dayOfWeek = (now.getDay() + 6) % 7; // 周一为一周起点
+    const startOfWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek).getTime();
+    return records.filter((record) => {
+      const time = new Date(record.event_time).getTime();
+      if (!Number.isFinite(time)) return false;
+      if (timeFilter === 'week') return time >= startOfWeek;
+      if (timeFilter === 'month') return time >= startOfMonth;
+      if (timeFilter === 'year') return time >= startOfYear;
+      return time < startOfYear;
+    });
+  })();
+  const activeTimeFilterLabel = timeFilterOptions.find((option) => option.value === timeFilter)?.label ?? '筛选';
   const resultTotal = data?.total ?? records.length;
   const debouncing = normalizedKeyword !== searchKeyword;
   const searchBusy = loading || debouncing;
@@ -895,39 +918,46 @@ export const SearchPage = () => {
           <section>
             {!error && records.length > 0 ? (
               <div className="search-count-row">
-                <h2 className="search-count">{searchBusy ? '正在搜索…' : `找到 ${resultTotal} 条${records.length < resultTotal ? ` · 显示前 ${records.length} 条` : ''}`}</h2>
+                <h2 className="search-count">{searchBusy
+                  ? '正在搜索…'
+                  : timeFilter === 'all'
+                    ? `找到 ${resultTotal} 条${records.length < resultTotal ? ` · 显示前 ${records.length} 条` : ''}`
+                    : `找到 ${visibleRecords.length} 条 · ${activeTimeFilterLabel}`}</h2>
                 <button
                   type="button"
-                  className={tagFilter ? 'search-filter is-active' : 'search-filter'}
-                  aria-label={tagFilter ? `筛选：${tagFilter}` : '按标签筛选'}
+                  className={timeFilter !== 'all' ? 'search-filter is-active' : 'search-filter'}
+                  aria-label={timeFilter !== 'all' ? `时间筛选：${activeTimeFilterLabel}` : '按时间筛选'}
                   aria-expanded={filterOpen}
                   onClick={() => setFilterOpen((open) => !open)}
                 >
                   <Filter size={20} strokeWidth={1.8} />
-                  <span>{tagFilter ?? '筛选'}</span>
+                  <span>{timeFilter === 'all' ? '筛选' : activeTimeFilterLabel}</span>
                 </button>
               </div>
             ) : null}
-            {filterOpen && availableTags.length ? (
-              <div className="search-tags" role="group" aria-label="按标签筛选">
-                {['全部', ...availableTags].map((tag) => {
-                  const active = tag === '全部' ? !tagFilter : tagFilter === tag;
+            {filterOpen ? (
+              <div className="search-tags" role="group" aria-label="按时间筛选">
+                {timeFilterOptions.map((option) => {
+                  const active = timeFilter === option.value;
                   return (
                     <button
-                      key={tag}
+                      key={option.value}
                       type="button"
                       className={active ? 'search-tag is-active' : 'search-tag'}
                       aria-pressed={active}
                       onClick={() => {
-                        setTagFilter(tag === '全部' ? null : tag);
+                        setTimeFilter(option.value);
                         setFilterOpen(false);
                       }}
                     >
-                      {tag}
+                      {option.label}
                     </button>
                   );
                 })}
               </div>
+            ) : null}
+            {!error && timeFilter !== 'all' && records.length > 0 && visibleRecords.length === 0 ? (
+              <p className="search-filter-empty" role="status">{activeTimeFilterLabel}没有找到相关记录，试试「全部」。</p>
             ) : null}
             {error ? <EmptyState message={`搜索失败：${error}`} /> : null}
             {!loading && !error && records.length ? (

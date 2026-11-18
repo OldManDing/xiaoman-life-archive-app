@@ -5647,3 +5647,47 @@
   border-color: #E9A05A !important;
   font-weight: 600 !important;
 }
+
+
+/* 07 搜索：筛选按钮选中态做成胶囊，不再是方块 */
+#root#root#root .search-filter {
+  border-radius: 999px !important;
+  padding: 0 12px !important;
+  min-height: 34px !important;
+  height: 34px !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+}
+
+
+/* 07 搜索：时间筛选无结果时的提示 */
+#root#root#root .search-filter-empty {
+  margin: 18px 0 0 !important;
+  text-align: center !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+  color: #8B7160 !important;
+}
+
+
+/* 07 搜索：筛选胶囊被固定宽度裁字（「更早」被切成「更」） */
+#root#root#root .search-count-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 12px !important;
+  overflow: visible !important;
+}
+
+#root#root#root .search-count-row .search-filter {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  white-space: nowrap !important;
+  overflow: visible !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  margin-right: 0 !important;
+}
