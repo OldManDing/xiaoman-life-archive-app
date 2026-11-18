@@ -4073,3 +4073,57 @@
 #root#root#root .settings-shell {
   padding-bottom: max(28px, 8vh) !important;
 }
+
+
+/* ============================================================
+   247. 20 账号资料：按 20 条清单收口
+   ============================================================ */
+/* #2 #12 头像 126 + 3px 白环 */
+#root#root#root .account-shell .ac-avatar img,
+#root#root#root .account-shell .ac-avatar {
+  width: 126px !important;
+  height: 126px !important;
+  border-radius: 999px !important;
+  border: 3px solid rgba(255, 255, 255, 0.9) !important;
+}
+
+/* #13 相机徽标 27 无边框 */
+#root#root#root .account-shell .ac-avatar [class*="camera"],
+#root#root#root .account-shell .ac-avatar svg {
+  width: 27px !important;
+  height: 27px !important;
+  border: none !important;
+  border-radius: 999px !important;
+}
+
+/* #10 #19 标签列 50、15px #6F5745 */
+#root#root#root .account-shell .ac-label {
+  width: 50px !important;
+  min-width: 50px !important;
+  font-size: 15px !important;
+  color: #6F5745 !important;
+}
+
+/* #3 #17 值左对齐、墨色 15 */
+#root#root#root .account-shell .ac-value {
+  font-size: 15px !important;
+  color: var(--nl2-ink-900) !important;
+  text-align: left !important;
+  flex: 1 1 auto !important;
+}
+
+/* #14 分隔线加深 */
+#root#root#root .account-shell .ac-row {
+  border-bottom: 1px solid rgba(58, 42, 28, 0.16) !important;
+}
+
+/* #15 卡面暖调、透出底图 */
+#root#root#root .account-shell .ac-card {
+  background: rgba(255, 250, 244, 0.72) !important;
+}
+
+/* #20 页脚深棕 */
+#root#root#root .account-shell .ac-footnote {
+  color: #5B4534 !important;
+  font-size: 13px !important;
+}

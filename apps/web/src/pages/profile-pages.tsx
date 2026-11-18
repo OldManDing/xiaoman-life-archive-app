@@ -1067,7 +1067,7 @@ export const AccountPage = () => {
   })();
 
   return (
-    <PageShell title="账号资料" backTo="/profile" className="account-shell">
+    <PageShell title="账号" backTo="/profile" className="account-shell">
       <div className="ac-hero" style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}>
         <label aria-label="更换头像" className="ac-avatar">
           <ProfileAvatar src={avatarPreviewUrl ?? user?.avatar_url} mediaNo={user?.avatar_media_no} label={user?.nickname ?? '我的头像'} />
