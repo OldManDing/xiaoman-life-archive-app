@@ -1247,3 +1247,115 @@
   box-sizing: border-box !important;
   overflow: visible !important;
 }
+
+
+/* ============================================================
+   07 搜索：标题 20 衬线 / 结果卡 90 缩略 + 17 标题 + 13 meta
+   ============================================================ */
+#root#root .search-page .search-head {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 0 !important;
+}
+
+#root#root .search-page .search-back {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 250, 244, 0.92) !important;
+  border: 1px solid rgba(255, 255, 255, 0.9) !important;
+  box-shadow: 0 4px 12px rgba(146, 96, 52, 0.12) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+#root#root .search-field,
+#root#root .search-page input[type="search"],
+#root#root .search-page input[type="text"] {
+  height: 44px !important;
+  border-radius: 999px !important;
+  background: var(--nl2-glass-1) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 0 2px 8px rgba(146, 96, 52, 0.06) !important;
+  font-size: 17px !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+#root#root .search-field svg,
+#root#root .search-page .search-head svg {
+  color: var(--nl2-ink-500) !important;
+  stroke-width: 1.8 !important;
+}
+
+#root#root .search-recent-title,
+#root#root .search-page .search-section-title {
+  font-family: var(--nl-font-display, "Songti SC", serif) !important;
+  font-size: 20px !important;
+  line-height: 1.3 !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+#root#root .search-count {
+  font-family: var(--nl-font-display, "Songti SC", serif) !important;
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+#root#root .search-result-card,
+#root#root .search-result-row {
+  display: grid !important;
+  grid-template-columns: 90px minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 14px !important;
+  padding: 12px !important;
+  min-height: 114px !important;
+  border-radius: var(--nl2-r-card) !important;
+  background: var(--nl2-glass-2) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  box-shadow: none !important;
+}
+
+#root#root .search-result-card img,
+#root#root .search-result-row img {
+  width: 90px !important;
+  height: 90px !important;
+  border-radius: var(--nl2-r-thumb) !important;
+  object-fit: cover !important;
+}
+
+#root#root .search-result-title {
+  font-size: 17px !important;
+  line-height: 1.5 !important;
+  font-weight: 500 !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+#root#root .search-result-meta,
+#root#root .search-meta {
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  color: var(--nl2-ink-500) !important;
+}
+
+#root#root .search-chip {
+  height: 40px !important;
+  min-height: 40px !important;
+  padding: 0 20px !important;
+  border-radius: 999px !important;
+  background: rgba(255, 250, 244, 0.72) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+  color: var(--nl2-ink-900) !important;
+  font-size: 17px !important;
+  font-weight: 400 !important;
+  box-shadow: 0 2px 8px rgba(146, 96, 52, 0.06) !important;
+}
