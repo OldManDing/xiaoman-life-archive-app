@@ -1630,3 +1630,90 @@
   overflow: visible !important;
   text-overflow: clip !important;
 }
+
+
+/* ============================================================
+   12 邀请家人：主卡玻璃 r24 / 标题 20 衬线 / CTA 深棕 / 邀请码 30 / 已邀请行
+   ============================================================ */
+#root#root .invite-shell .invite-card {
+  background: var(--nl2-glass-2) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  border-radius: var(--nl2-r-card) !important;
+  box-shadow: var(--nl2-shadow-l2) !important;
+  padding: 16px !important;
+}
+
+#root#root .invite-shell .invite-qr {
+  width: 200px !important;
+  height: 200px !important;
+  margin: 0 auto !important;
+  border-radius: var(--nl2-r-row) !important;
+  background: #FFFFFF !important;
+  overflow: hidden !important;
+}
+
+#root#root .invite-shell .invite-title {
+  font-family: var(--nl-font-display, "Songti SC", serif) !important;
+  font-size: 20px !important;
+  line-height: 1.3 !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  color: var(--nl2-ink-900) !important;
+  text-align: center !important;
+}
+
+#root#root .invite-shell .invite-code-pill {
+  height: 72px !important;
+  border-radius: var(--nl2-r-control) !important;
+  background: rgba(255, 250, 244, 0.55) !important;
+  border: 1px solid var(--nl2-line) !important;
+  padding: 0 16px !important;
+}
+
+#root#root .invite-shell .invite-code-value {
+  font-family: var(--nl-font-display, "Songti SC", serif) !important;
+  font-size: 30px !important;
+  letter-spacing: 0.12em !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+#root#root .invite-shell .invite-share {
+  height: 68px !important;
+  border-radius: 999px !important;
+  background: var(--nl2-btn) !important;
+  background-image: none !important;
+  color: #FFFFFF !important;
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  box-shadow: var(--nl2-shadow-btn) !important;
+}
+
+/* 已邀请区 */
+#root#root .invite-shell .app-panel > section,
+#root#root .invite-shell section {
+  border-radius: var(--nl2-r-card) !important;
+  background: var(--nl2-glass-2) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  box-shadow: none !important;
+}
+
+#root#root .invite-shell section > div {
+  min-height: 64px !important;
+  border-radius: var(--nl2-r-row) !important;
+  background: rgba(255, 250, 244, 0.55) !important;
+  border: none !important;
+}
+
+#root#root .invite-shell section img {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 999px !important;
+  object-fit: cover !important;
+}
+
+#root#root .invite-shell section span {
+  font-size: 17px !important;
+  color: var(--nl2-ink-900) !important;
+}
