@@ -1031,3 +1031,148 @@
   font-size: 13px !important;
   color: var(--nl2-ink-500) !important;
 }
+
+
+/* ============================================================
+   06 我的：资料卡 / 三列统计 / 六行菜单 / 退出登录
+   ============================================================ */
+#root#root .pf-main .pf-hero,
+#root#root .pf-hero {
+  display: grid !important;
+  grid-template-columns: 88px minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 16px !important;
+  padding: 16px !important;
+  border-radius: var(--nl2-r-card) !important;
+  background: var(--nl2-glass-2) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  box-shadow: var(--nl2-shadow-l2) !important;
+}
+
+#root#root .pf-hero img,
+#root#root .pf-hero .pf-avatar {
+  width: 88px !important;
+  height: 88px !important;
+  border-radius: 999px !important;
+  object-fit: cover !important;
+}
+
+#root#root .pf-hero-name {
+  font-family: var(--nl-font-display, "Songti SC", serif) !important;
+  font-size: 30px !important;
+  line-height: 1.2 !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+#root#root .pf-hero-meta {
+  font-size: 15px !important;
+  line-height: 1.5 !important;
+  color: var(--nl2-ink-500) !important;
+  margin-top: 6px !important;
+}
+
+#root#root .pf-stats {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 0 !important;
+  padding: 16px 8px !important;
+  border-radius: var(--nl2-r-card) !important;
+  background: var(--nl2-glass-2) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  box-shadow: none !important;
+}
+
+#root#root .pf-stat-num {
+  font-family: var(--nl-font-display, "Songti SC", serif) !important;
+  font-size: 30px !important;
+  line-height: 1.2 !important;
+  font-weight: 600 !important;
+  color: var(--nl2-amber-ink) !important;
+  text-align: center !important;
+}
+
+#root#root .pf-stat-label {
+  margin-top: 4px !important;
+  font-size: 15px !important;
+  color: var(--nl2-ink-500) !important;
+  text-align: center !important;
+}
+
+#root#root .pf-menu {
+  padding: 0 16px !important;
+  border-radius: var(--nl2-r-card) !important;
+  background: var(--nl2-glass-2) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  box-shadow: none !important;
+}
+
+#root#root .pf-menu-item,
+#root#root .pf-menu-row,
+#root#root .pf-menu > a,
+#root#root .pf-menu > button {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;
+  min-height: 76px !important;
+  padding: 0 !important;
+  border-bottom: 1px solid var(--nl2-line) !important;
+  background: transparent !important;
+  font-size: 17px !important;
+  font-weight: 400 !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+#root#root .pf-menu > *:last-child {
+  border-bottom: none !important;
+}
+
+#root#root .pf-menu-item svg,
+#root#root .pf-menu-row svg {
+  width: 24px !important;
+  height: 24px !important;
+  stroke-width: 1.8 !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+#root#root .pf-logout,
+#root#root .pf-menu .is-danger {
+  min-height: 76px !important;
+  border-radius: var(--nl2-r-card) !important;
+  background: var(--nl2-glass-2) !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  color: var(--nl2-danger) !important;
+  font-size: 17px !important;
+}
+
+
+/* 06：菜单行合并进一张卡（只留细线分隔，不再各自成卡） */
+#root#root .pf-menu > *,
+#root#root .pf-menu > * > a,
+#root#root .pf-menu > * > button,
+#root#root .pf-menu-item,
+#root#root .pf-menu-row {
+  background: transparent !important;
+  background-image: none !important;
+  border: none !important;
+  border-bottom: 1px solid var(--nl2-line) !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-height: 76px !important;
+}
+
+#root#root .pf-menu > *:last-child,
+#root#root .pf-menu > *:last-child > a,
+#root#root .pf-menu > *:last-child > button {
+  border-bottom: none !important;
+}
+
+#root#root .pf-menu {
+  overflow: hidden !important;
+}
