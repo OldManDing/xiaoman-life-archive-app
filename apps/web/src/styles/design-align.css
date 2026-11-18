@@ -2223,3 +2223,26 @@
 /* 18 成员信息：标题与卡片不再重叠（标题进入卡片内上方留白） */
 #root#root .account-shell section { padding-top: 12px !important; }
 #root#root .account-shell h2 { margin: 0 0 10px !important; }
+
+
+/* 21 搜索空态：仅调整清除按钮与标题字号（避免误伤容器） */
+#root#root .search-clear {
+  width: 26px !important;
+  height: 26px !important;
+  min-width: 26px !important;
+  border-radius: 999px !important;
+  background: rgba(58, 42, 28, 0.10) !important;
+  background-image: none !important;
+  border: none !important;
+  color: var(--nl2-ink-500) !important;
+  box-shadow: none !important;
+}
+
+#root#root .search-page .search-empty h2,
+#root#root .search-page .search-empty strong {
+  font-family: var(--nl-font-display, "Songti SC", serif) !important;
+  font-size: 26px !important;
+  line-height: 1.3 !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+}
