@@ -3234,7 +3234,7 @@ const RecordForm = ({
             </span>
           </button>
 
-          {mode === 'edit' ? (
+          {mode === 'edit' && !isDraftRecord ? (
             <div className="record-inline-submit is-edit-inline">
               <button
                 type="submit"
