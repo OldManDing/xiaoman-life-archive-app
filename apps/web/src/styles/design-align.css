@@ -4447,3 +4447,46 @@
   font-size: 14px !important;
   color: #7A5A44 !important;
 }
+
+
+/* ============================================================
+   251. 24 联系我们：按 20 条清单收口
+   ============================================================ */
+/* #4 #13 #14 复制按钮：方角 12、40 高、14 号 */
+#root#root#root .app-main-scroll button[class*="copy"],
+#root#root#root .contact-shell button[class*="copy"] {
+  min-height: 40px !important;
+  height: 40px !important;
+  border-radius: 12px !important;
+  font-size: 14px !important;
+  padding: 0 14px !important;
+}
+
+/* #2 #10 图标块：浅琥珀底 + 同色 1px 描边，图标琥珀描边 */
+#root#root#root .contact-shell [class*="icon"],
+#root#root#root .app-main-scroll [class*="icon-block"] {
+  background: rgba(233, 160, 90, 0.14) !important;
+  border: 1px solid rgba(233, 160, 90, 0.32) !important;
+  color: #E9A05A !important;
+}
+
+#root#root#root .contact-shell [class*="icon"] svg,
+#root#root#root .app-main-scroll [class*="icon-block"] svg {
+  width: 22px !important;
+  height: 22px !important;
+  stroke-width: 1.8px !important;
+  color: #E9A05A !important;
+}
+
+/* #7 #8 #9 卡标题 17、值 15、说明 13 */
+#root#root#root .contact-shell strong,
+#root#root#root .app-main-scroll .info-card strong {
+  font-size: 17px !important;
+  font-weight: 600 !important;
+}
+
+/* #18 卡片柔影 */
+#root#root#root .contact-shell [class*="card"],
+#root#root#root .app-main-scroll .info-card {
+  box-shadow: 0 8px 20px rgba(146, 96, 52, 0.08) !important;
+}
