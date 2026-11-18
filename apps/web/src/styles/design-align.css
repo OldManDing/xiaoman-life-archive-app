@@ -2583,3 +2583,126 @@
   object-fit: cover !important;
   flex: 0 0 96px !important;
 }
+
+
+/* ============================================================
+   229. 02 时间轴：按 20 条清单收口
+   ============================================================ */
+/* #1 月份下拉 18px / 胶囊 44 高 / 内距 14 */
+#root#root .tl-head select,
+#root#root .tl-month-select {
+  font-size: 18px !important;
+  color: #8A4E14 !important;
+}
+
+#root#root .tl-head .tl-month,
+#root#root .tl-head > * > select {
+  height: 44px !important;
+  padding: 0 12px 0 14px !important;
+  border-radius: 999px !important;
+}
+
+/* #2 #14 年份选中胶囊 #FBB757 + 暖深棕字 */
+#root#root .tl-year.is-active {
+  background: #FBB757 !important;
+  background-image: none !important;
+  color: #693904 !important;
+  border-color: transparent !important;
+}
+
+#root#root .tl-year:not(.is-active) {
+  color: var(--nl2-ink-500) !important;
+}
+
+/* #3 #15 #16 #17 底部导航选中：深棕图标文字 + #F1B252 47×48 r12 无光晕 */
+#root#root#root .app-bottom-nav-link.is-active .app-bottom-nav-icon {
+  width: 47px !important;
+  height: 48px !important;
+  border-radius: 12px !important;
+  background: #F1B252 !important;
+  box-shadow: none !important;
+}
+
+#root#root#root .app-bottom-nav-link.is-active,
+#root#root#root .app-bottom-nav-link.is-active span,
+#root#root#root .app-bottom-nav-link.is-active svg {
+  color: #693904 !important;
+}
+
+/* #4 #7 宫格 1:1.064、圆角 10 */
+#root#root .tl-tile {
+  aspect-ratio: 1 / 1.064 !important;
+  border-radius: 10px !important;
+}
+
+/* #12 列距 6 */
+#root#root .tl-grid {
+  gap: 6px !important;
+}
+
+/* #13 页面左右边距 17 */
+#root#root .tl-head,
+#root#root .tl-main {
+  padding-left: 17px !important;
+  padding-right: 17px !important;
+}
+
+/* #9 #10 大标题 30 / #643E1D */
+#root#root .tl-title {
+  font-size: 30px !important;
+  line-height: 1.15 !important;
+  color: #643E1D !important;
+  margin: 14px 0 10px !important;
+}
+
+/* #5 底部渐变终点回到暖杏 */
+#root#root .tl-page,
+#root#root .app-page-shell:has(.tl-grid) {
+  background-image:
+    radial-gradient(70% 40% at 50% 0%, rgba(255, 214, 178, 0.55) 0%, rgba(255, 214, 178, 0) 70%),
+    linear-gradient(180deg, #FDF6EC 0%, #FBEFDF 52%, #FDE3C3 100%) !important;
+}
+
+/* #11 #19 日期标签 13 / 距卡左 9 底 7 */
+#root#root .tl-tile-date,
+#root#root .tl-tile time,
+#root#root .tl-card-date {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  left: 9px !important;
+  bottom: 7px !important;
+}
+
+/* #18 里程碑点 6px #F5AC3F 间距 3 */
+#root#root .tl-tile-milestone,
+#root#root .tl-dot,
+#root#root .tl-tile [class*="milestone"] {
+  width: 6px !important;
+  height: 6px !important;
+  min-width: 6px !important;
+  border-radius: 999px !important;
+  background: #F5AC3F !important;
+  margin-right: 3px !important;
+}
+
+
+/* 02 #9/#10/#20 大标题：句号处补强（3 个 id 优先） */
+#root#root#root .tl-title,
+#root#root#root .tl-head h1 {
+  font-size: 30px !important;
+  line-height: 1.15 !important;
+  color: #643E1D !important;
+  margin: 14px 0 10px !important;
+}
+
+
+/* 02 时间轴：纯文字格上的日期用墨色，避免白字压浅底看不清 */
+#root#root .tl-tile.is-text .tl-tile-date {
+  color: #6F5745 !important;
+  text-shadow: none !important;
+}
+
+#root#root .tl-tile-date {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.28) !important;
+  letter-spacing: 0.01em !important;
+}
