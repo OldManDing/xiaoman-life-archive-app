@@ -2201,3 +2201,20 @@
   font-weight: 600 !important;
   letter-spacing: 0.02em !important;
 }
+
+
+/* 18 成员信息：仅放大头像与加入时间，避免影响顶栏标题 */
+#root#root .account-shell img[alt=""],
+#root#root .account-shell .member-detail-avatar img {
+  width: 230px !important;
+  height: 230px !important;
+  border-radius: 999px !important;
+  border: 3px solid rgba(255, 255, 255, 0.9) !important;
+}
+
+
+/* 18 成员信息：小节标题与卡片留出间距（修标题压卡） */
+#root#root .account-shell h2 {
+  margin: 20px 0 10px !important;
+  line-height: 1.3 !important;
+}

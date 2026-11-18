@@ -1095,7 +1095,7 @@ export const FamilyMemberDetailPage = () => {
     return `加入于 ${joined.getFullYear()}年${joined.getMonth() + 1}月${joined.getDate()}日`;
   })();
   return (
-    <PageShell title="家庭成员" backTo="/family" className="account-shell">
+    <PageShell title="成员信息" backTo="/family" className="account-shell">
       {loading ? <Panel><EmptyState message="正在加载家人资料…" /></Panel> : null}
       {!loading && !member ? <Panel><EmptyState message="未找到该家庭成员。" /></Panel> : null}
       {member ? (
