@@ -45,14 +45,45 @@ const parseDisplayDate = (value: string | Date | null | undefined) => {
   return Number.isNaN(date.getTime()) ? null : date;
 };
 
+/**
+ * 全站唯一的日期展示口径（审计：原来各页手拼出 6 种写法）。
+ *  - 日期：2025年12月12日
+ *  - 日期+时间：2025年12月12日 09:24
+ *  - 短日期：12月12日
+ */
+const appDateFormatter = new Intl.DateTimeFormat('zh-CN', {
+  timeZone: appTimeZone,
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+
+const appTimeFormatter = new Intl.DateTimeFormat('zh-CN', {
+  timeZone: appTimeZone,
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+});
+
+const appShortDateFormatter = new Intl.DateTimeFormat('zh-CN', {
+  timeZone: appTimeZone,
+  month: 'long',
+  day: 'numeric',
+});
+
 export const formatAppDate = (value: string | Date | null | undefined, fallback = '时间待确认') => {
   const date = parseDisplayDate(value);
-  return date ? date.toLocaleDateString('zh-CN', { timeZone: appTimeZone }) : fallback;
+  return date ? appDateFormatter.format(date) : fallback;
 };
 
 export const formatAppDateTime = (value: string | Date | null | undefined, fallback = '时间待确认') => {
   const date = parseDisplayDate(value);
-  return date ? date.toLocaleString('zh-CN', { timeZone: appTimeZone, hour12: false }) : fallback;
+  return date ? `${appDateFormatter.format(date)} ${appTimeFormatter.format(date)}` : fallback;
+};
+
+export const formatAppShortDate = (value: string | Date | null | undefined, fallback = '') => {
+  const date = parseDisplayDate(value);
+  return date ? appShortDateFormatter.format(date) : fallback;
 };
 
 const invalidQuestionMarkTextPattern = /^[?\uFF1F\uFFFD\s]+$/u;

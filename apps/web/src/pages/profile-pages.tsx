@@ -21,7 +21,7 @@ import { saveTextFileToDownloads } from '../shared/nativeExport';
 import { getNativeNotificationPermissionStatus, requestNativeNotificationPermission, type NativeNotificationPermissionStatus } from '../shared/nativeNotifications';
 import { useCachedMediaUrl } from '../shared/useCachedMediaUrl';
 import { AppSegmentedControl, AppSelect, Field, PageShell, Panel, compactSecondaryButtonStyle, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle, textareaStyle } from '../shared/ui';
-import { EmptyState, buttonRowStyle, formatAppDateTime, normalizeDisplayName, rowStyle } from './shared';
+import { EmptyState, buttonRowStyle, formatAppDate, formatAppDateTime, normalizeDisplayName, rowStyle } from './shared';
 import { RefAvatar, RefListRow, RefSectionTitle, isReferencePlaceholderAvatar, refPageStyle, referenceAssets } from './reference-ui';
 
 
@@ -1128,7 +1128,7 @@ export const AccountPage = () => {
     if (!raw) return '未记录';
     const date = new Date(raw);
     if (Number.isNaN(date.getTime())) return '未记录';
-    return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`;
+    return formatAppDate(date);
   })();
 
   return (

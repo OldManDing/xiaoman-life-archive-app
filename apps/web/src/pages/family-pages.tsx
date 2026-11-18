@@ -1413,7 +1413,7 @@ const invitedMembers = members.filter((member) => member.role !== 'owner');
           <span className="invite-qr-dot" aria-hidden="true" />
         </div>
         <h2 className="invite-title">扫码加入{activeChild?.name ?? ''}的档案</h2>
-        <p className="invite-sub">有效期 7 天{inviteResult?.expires_at ? ` · ${new Date(inviteResult.expires_at).getFullYear()}年${new Date(inviteResult.expires_at).getMonth() + 1}月${new Date(inviteResult.expires_at).getDate()}日前有效` : ''}</p>
+        <p className="invite-sub">有效期 7 天{inviteResult?.expires_at ? ` · ${formatAppDate(inviteResult.expires_at)}前有效` : ''}</p>
 
         {error ? (
           <div className="invite-error" role="alert">
@@ -1516,7 +1516,7 @@ style={{ display: 'grid', gap: 10 }}>
                 </strong>
                 <span aria-hidden="true" style={{ color: 'var(--nl-muted)', fontSize: 12 }}>·</span>
                 <span style={{ color: 'var(--nl-muted)', fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {pending ? `已发送${formatRelativeJoinedAt(member.joined_at) ? ` ${formatRelativeJoinedAt(member.joined_at)}` : ''}` : (member.joined_at ? `${new Date(member.joined_at).getFullYear()}年${new Date(member.joined_at).getMonth() + 1}月${new Date(member.joined_at).getDate()}日加入` : '已加入')}
+                  {pending ? `已发送${formatRelativeJoinedAt(member.joined_at) ? ` ${formatRelativeJoinedAt(member.joined_at)}` : ''}` : (member.joined_at ? `${formatAppDate(member.joined_at)}加入` : '已加入')}
                 </span>
               </div>
               <span style={{
