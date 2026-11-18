@@ -2083,3 +2083,46 @@
 
 #root#root .info-shell footer,
 #root#root .info-shell [class*="footer"] { font-size: 13px !important; color: var(--nl2-ink-500) !important; }
+
+
+/* ============================================================
+   25 账号与安全：密码表单输入 68/r999、标签 15、提示 13、CTA 深棕
+   ============================================================ */
+#root#root .info-shell input[type="password"],
+#root#root .info-shell input[type="text"] {
+  height: 68px !important;
+  border-radius: 999px !important;
+  background: #FFFBF6 !important;
+  border: 1px solid var(--nl2-line) !important;
+  box-shadow: none !important;
+  padding: 0 22px !important;
+  font-size: 17px !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+#root#root .info-shell label,
+#root#root .info-shell label span {
+  font-size: 15px !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+#root#root .info-shell small,
+#root#root .info-shell [class*="hint"] {
+  font-size: 13px !important;
+  color: var(--nl2-ink-500) !important;
+}
+
+#root#root .info-shell button[type="submit"] {
+  height: 68px !important;
+  min-height: 68px !important;
+  border-radius: 999px !important;
+  font-size: 17px !important;
+  font-weight: 600 !important;
+}
+
+#root#root .info-shell button[type="submit"]:not(:disabled) {
+  background: var(--nl2-btn) !important;
+  background-image: none !important;
+  color: #FFFFFF !important;
+  box-shadow: var(--nl2-shadow-btn) !important;
+}
