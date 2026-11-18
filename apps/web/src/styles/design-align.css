@@ -1754,3 +1754,125 @@
 #root#root .record-form-page.is-edit .record-media-section > div:not(:has(.record-media-grid)):not(:has(img)) {
   display: none !important;
 }
+
+
+/* ============================================================
+   16 孩子档案：头像裸图 + 4 行档案卡 + 保存深棕
+   ============================================================ */
+#root#root .archive-shell .app-topbar h1 {
+  font-family: var(--nl-font-display, "Songti SC", serif) !important;
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+}
+
+#root#root .archive-shell .ac-hero {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  padding: 6px 0 14px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+#root#root .archive-shell .ac-hero label,
+#root#root .archive-shell .ac-hero label img {
+  width: 150px !important;
+  height: 150px !important;
+}
+
+#root#root .archive-shell .ac-hero label img {
+  border: 3px solid rgba(255, 255, 255, 0.9) !important;
+  box-shadow: 0 10px 26px rgba(146, 96, 52, 0.14) !important;
+}
+
+/* 更换头像：纯文字 17，不用胶囊 */
+#root#root .archive-shell .ac-hero > span,
+#root#root .archive-shell .ac-hero > button {
+  height: auto !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  font-size: 17px !important;
+  font-weight: 400 !important;
+  color: var(--nl2-ink-500) !important;
+  margin-top: 12px !important;
+}
+
+#root#root .archive-shell .ac-card {
+  border-radius: var(--nl2-r-card) !important;
+  background: var(--nl2-glass-2) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  box-shadow: var(--nl2-shadow-l2) !important;
+  padding: 0 18px !important;
+}
+
+#root#root .archive-shell .ac-row {
+  height: 90px !important;
+  min-height: 90px !important;
+  grid-template-columns: 120px minmax(0, 1fr) 32px !important;
+  border-bottom: 1px solid var(--nl2-line) !important;
+}
+
+#root#root .archive-shell .ac-label {
+  font-size: 17px !important;
+  color: var(--nl2-ink-900) !important;
+  font-weight: 400 !important;
+}
+
+#root#root .archive-shell .ac-value,
+#root#root .archive-shell .ac-time-trigger,
+#root#root .archive-shell .ac-row input.ac-input {
+  font-size: 17px !important;
+  color: var(--nl2-ink-900) !important;
+  font-weight: 500 !important;
+}
+
+/* 名字用 30 衬线 */
+#root#root .archive-shell .ac-row:first-child .ac-input {
+  font-family: var(--nl-font-display, "Songti SC", serif) !important;
+  font-size: 30px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+}
+
+#root#root .archive-shell .archive-hint {
+  font-size: 15px !important;
+  color: var(--nl2-ink-500) !important;
+  margin: 12px 0 14px !important;
+}
+
+#root#root .archive-shell button[type="submit"] {
+  height: 68px !important;
+  min-height: 68px !important;
+  max-height: 68px !important;
+  border-radius: 999px !important;
+  background: var(--nl2-btn) !important;
+  background-image: none !important;
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  box-shadow: var(--nl2-shadow-btn) !important;
+}
+
+
+/* 16 档案页高度收敛到一屏 */
+#root#root .archive-shell { padding-bottom: 8px !important; }
+#root#root .archive-shell .app-panel { padding: 0 !important; margin: 0 !important; gap: 0 !important; }
+#root#root .archive-shell form { gap: 0 !important; }
+#root#root .archive-shell .ac-hero { padding: 0 0 8px !important; margin: 0 0 6px !important; gap: 8px !important; }
+#root#root .archive-shell .ac-card { margin: 0 !important; }
+#root#root .archive-shell .archive-hint { margin: 10px 0 10px !important; }
+#root#root .archive-shell .ac-hero > span { margin-top: 6px !important; }
+
+
+/* 16 档案页再收一档（目标 ≤900，允许轻微滚动） */
+#root#root .archive-shell .ac-row { height: 80px !important; min-height: 80px !important; }
+#root#root .archive-shell .ac-hero label,
+#root#root .archive-shell .ac-hero label img { width: 132px !important; height: 132px !important; }
+#root#root .archive-shell button[type="submit"] { height: 60px !important; min-height: 60px !important; max-height: 60px !important; }
+#root#root .archive-shell .archive-hint { margin: 8px 0 8px !important; }
