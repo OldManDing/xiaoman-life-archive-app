@@ -1876,3 +1876,21 @@
 #root#root .archive-shell .ac-hero label img { width: 132px !important; height: 132px !important; }
 #root#root .archive-shell button[type="submit"] { height: 60px !important; min-height: 60px !important; max-height: 60px !important; }
 #root#root .archive-shell .archive-hint { margin: 8px 0 8px !important; }
+
+
+/* 17 家庭成员：保守对齐（只改尺寸与字重，不动布局） */
+#root#root .account-shell .member-row-card img { width: 72px !important; height: 72px !important; border-radius: 999px !important; }
+#root#root .account-shell .member-row-card { min-height: 100px !important; border-radius: var(--nl2-r-card) !important; }
+#root#root .account-shell .member-row-title,
+#root#root .account-shell .member-row-card strong {
+  font-family: var(--nl-font-display, "Songti SC", serif) !important;
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+}
+#root#root .account-shell h2 { font-family: var(--nl-font-display, "Songti SC", serif) !important; font-size: 20px !important; font-weight: 600 !important; }
+
+
+/* 17：成员副行 13，避免换行 */
+#root#root .account-shell .member-row-card p,
+#root#root .account-shell .member-row-sub { font-size: 13px !important; white-space: nowrap !important; }
