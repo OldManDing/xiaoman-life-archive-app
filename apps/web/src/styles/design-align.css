@@ -1894,3 +1894,66 @@
 /* 17：成员副行 13，避免换行 */
 #root#root .account-shell .member-row-card p,
 #root#root .account-shell .member-row-sub { font-size: 13px !important; white-space: nowrap !important; }
+
+
+/* ============================================================
+   19 通知设置：分组标题 20 衬线、开关用深棕
+   ============================================================ */
+#root#root .set-group-title {
+  font-family: var(--nl-font-display, "Songti SC", serif) !important;
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  margin: 22px 0 10px !important;
+}
+
+#root#root [class*="switch"][class*="on"],
+#root#root [class*="toggle"].is-on,
+#root#root button[role="switch"][aria-checked="true"] {
+  background: #8F4C16 !important;
+  background-image: none !important;
+}
+
+#root#root [class*="switch"],
+#root#root [class*="toggle"] {
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+
+/* 19 通知：真实开关结构（button[role=switch] > span 轨道） */
+#root#root button[role="switch"] strong {
+  font-size: 17px !important;
+  font-weight: 500 !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+#root#root button[role="switch"] span span,
+#root#root button[role="switch"] > span[style] {
+  font-size: 13px !important;
+  color: var(--nl2-ink-500) !important;
+}
+
+#root#root button[role="switch"] > span[aria-hidden="true"] {
+  width: 52px !important;
+  height: 32px !important;
+  min-width: 52px !important;
+  border-radius: 999px !important;
+  box-shadow: none !important;
+}
+
+#root#root button[role="switch"][aria-checked="true"] > span[aria-hidden="true"] {
+  background: #8F4C16 !important;
+  background-image: none !important;
+}
+
+#root#root button[role="switch"][aria-checked="false"] > span[aria-hidden="true"] {
+  background: #D8C7B6 !important;
+  background-image: none !important;
+}
+
+#root#root button[role="switch"] > span[aria-hidden="true"] > span {
+  width: 26px !important;
+  height: 26px !important;
+  background: #FFFBF6 !important;
+}

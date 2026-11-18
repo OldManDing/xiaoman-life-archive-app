@@ -311,10 +311,10 @@ const toggleButtonStyle = (enabled: boolean) =>
 const toggleTrackStyle = (enabled: boolean) =>
   ({
     width: '52px',
-    height: '30px',
+    height: '32px',
     borderRadius: '999px',
     border: 'none',
-    background: enabled ? '#EC9842' : '#E6D5C3',
+    background: enabled ? '#8F4C16' : '#D8C7B6',
     padding: '3px',
     display: 'flex',
     alignItems: 'center',
