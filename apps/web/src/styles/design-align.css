@@ -1957,3 +1957,93 @@
   height: 26px !important;
   background: #FFFBF6 !important;
 }
+
+
+/* ============================================================
+   20 账号资料：资料卡去粉色 / CTA 深棕 / 头像 170 / 操作链接琥珀墨
+   ============================================================ */
+#root#root .account-shell .account-card,
+#root#root .account-shell section,
+#root#root .account-shell form > div {
+  background: var(--nl2-glass-2) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  border-radius: var(--nl2-r-card) !important;
+  box-shadow: var(--nl2-shadow-l2) !important;
+}
+
+#root#root .account-shell img[alt=""],
+#root#root .account-shell .account-avatar {
+  width: 170px !important;
+  height: 170px !important;
+  border-radius: 999px !important;
+  border: 3px solid rgba(255, 255, 255, 0.9) !important;
+  object-fit: cover !important;
+}
+
+#root#root .account-shell button[type="submit"] {
+  height: 68px !important;
+  min-height: 68px !important;
+  border-radius: 999px !important;
+  background: var(--nl2-btn) !important;
+  background-image: none !important;
+  color: #FFFFFF !important;
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  box-shadow: var(--nl2-shadow-btn) !important;
+}
+
+#root#root .account-shell .account-row a,
+#root#root .account-shell .account-row button:not([type="submit"]),
+#root#root .account-shell .account-action {
+  color: var(--nl2-amber-ink) !important;
+  font-size: 17px !important;
+  font-weight: 500 !important;
+}
+
+#root#root .account-shell .account-row,
+#root#root .account-shell form > div > div {
+  min-height: 90px !important;
+  border-bottom: 1px solid var(--nl2-line) !important;
+}
+
+#root#root .account-shell p { font-size: 13px !important; color: var(--nl2-ink-500) !important; }
+
+
+/* 20 账号资料：保存按钮深棕 68、操作链接琥珀墨、资料卡玻璃（复用 ac-* 类） */
+#root#root .ac-save {
+  height: 68px !important;
+  min-height: 68px !important;
+  border-radius: 999px !important;
+  background: var(--nl2-btn) !important;
+  background-image: none !important;
+  color: #FFFFFF !important;
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  border: none !important;
+  box-shadow: var(--nl2-shadow-btn) !important;
+}
+
+#root#root .ac-action {
+  color: var(--nl2-amber-ink) !important;
+  font-size: 17px !important;
+  font-weight: 500 !important;
+}
+
+#root#root .app-page-shell:not(.archive-shell) .ac-card {
+  background: var(--nl2-glass-2) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  border-radius: var(--nl2-r-card) !important;
+  box-shadow: var(--nl2-shadow-l2) !important;
+}
+
+#root#root .app-page-shell:not(.archive-shell) .ac-row {
+  min-height: 90px !important;
+  border-bottom: 1px solid var(--nl2-line) !important;
+}
+
+#root#root .app-page-shell:not(.archive-shell) .ac-label { font-size: 17px !important; }
+#root#root .app-page-shell:not(.archive-shell) .ac-value { font-size: 17px !important; }
+#root#root .app-footnote,
+#root#root .ac-footnote { font-size: 13px !important; color: var(--nl2-ink-500) !important; }
