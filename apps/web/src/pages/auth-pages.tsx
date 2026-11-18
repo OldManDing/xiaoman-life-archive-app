@@ -7,6 +7,7 @@ import { BrandBootMotion } from '../components/BrandBootMotion';
 import { webApi } from '../shared/api/webApi';
 import { uploadChildAvatar } from '../shared/avatarUpload';
 import { isSupportedImageFile, withResolvedFileMimeType } from '../shared/mediaFiles';
+import { chooseImageSource } from '../shared/imageSourceSheet';
 import { AppDateInput, Field, PageShell, Panel, helperTextStyle, inputStyle, primaryButtonStyle, secondaryButtonStyle } from '../shared/ui';
 import { markWelcomeIntroSeen } from '../shared/welcome';
 import { referenceAssets } from './reference-ui';
@@ -626,6 +627,20 @@ export const OnboardingChildPage = () => {
     };
   }, [avatarPreviewUrl]);
 
+  const onbAvatarInputRef = useRef<HTMLInputElement | null>(null);
+  const [onbAvatarCapture, setOnbAvatarCapture] = useState<'user' | undefined>(undefined);
+
+  const openAvatarPicker = async () => {
+    const source = await chooseImageSource('添加宝宝照片');
+    if (!source) return;
+    setOnbAvatarCapture(source === 'camera' ? 'user' : undefined);
+  };
+
+  useEffect(() => {
+    if (onbAvatarCapture === undefined) return;
+    onbAvatarInputRef.current?.click();
+  }, [onbAvatarCapture]);
+
   const onAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -722,7 +737,13 @@ export const OnboardingChildPage = () => {
         <p className="onb-sub">这些信息只会给家人看到</p>
 
         <div className="onb-avatar-wrap">
-          <label className="onb-avatar">
+          <button
+            type="button"
+            className="onb-avatar"
+            aria-label="添加宝宝照片"
+            onClick={() => void openAvatarPicker()}
+            style={{ border: 'none', background: 'transparent', padding: 0, cursor: 'pointer' }}
+          >
             {childAvatarPreviewSrc && !avatarPreviewFailed ? (
               <img src={childAvatarPreviewSrc} alt="宝宝头像预览" decoding="async" onError={() => setAvatarPreviewFailed(true)} />
             ) : (
@@ -731,8 +752,15 @@ export const OnboardingChildPage = () => {
                 <span className="onb-avatar-label">添加照片</span>
               </>
             )}
-            <input type="file" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" onChange={onAvatarChange} style={{ display: 'none' }} />
-          </label>
+          </button>
+          <input
+            ref={onbAvatarInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/heic,image/heif"
+            capture={onbAvatarCapture}
+            onChange={onAvatarChange}
+            style={{ display: 'none' }}
+          />
         </div>
 
         <div className="onb-card">
