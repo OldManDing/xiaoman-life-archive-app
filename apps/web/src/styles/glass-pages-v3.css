@@ -4084,8 +4084,8 @@ body::before {
 }
 
 /* 12/24：复制/次级圆钮 44 */
-.invite-shell button,
-.info-shell button {
+.invite-shell button:not([class*="copy"]):not([data-compact="true"]),
+.info-shell button:not([class*="copy"]):not([data-compact="true"]) {
   min-height: 44px;
 }
 

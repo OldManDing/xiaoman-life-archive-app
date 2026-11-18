@@ -1534,7 +1534,7 @@ export const ReportsPage = () => {
             </div>
 
             <div style={{ padding: '18px 18px 20px', display: 'grid', gap: '16px' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '10px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
               {[
                 { label: '记录数量', value: monthlyRecords.length },
                 { label: '影像记录', value: imageCount },
@@ -2283,7 +2283,7 @@ export const AccountDeletionPage = () => {
               <AlertTriangle size={34} strokeWidth={1.8} aria-hidden="true" />
             </span>
             <div style={{ display: 'grid', gap: 2 }}>
-              <strong style={{ color: '#4a2f1f', fontFamily: 'var(--nl-font-display)', fontSize: 19, fontWeight: 600 }}>注销后不可恢复</strong>
+              <strong className="delete-warning-title" style={{ color: '#4a2f1f', fontFamily: 'var(--nl-font-display)', fontSize: 17, fontWeight: 600 }}>注销后不可恢复</strong>
               <p style={{ margin: 0, color: '#6f5745', fontSize: 13, lineHeight: 1.75, display: 'block', overflow: 'visible', WebkitLineClamp: 'unset', maxHeight: 'none' }}>{check && check.summary.owned_family_count > 0
                 ? `账号凭据会失效；你名下 ${check.summary.active_child_count} 份孩子档案、${check.summary.active_record_count} 条有效记录将交由其他管理员接管。若你是唯一管理员，请先新增一位管理员，或先申请导出与成年移交后再注销。`
                 : '账号凭据会失效，家庭档案将由其他管理员接管'}</p>
@@ -2301,7 +2301,7 @@ export const AccountDeletionPage = () => {
                 ].map((item) => {
                   const Icon = item.icon;
                   return (
-                    <div key={item.label} style={{ padding: '14px 16px', borderRadius: '18px', background: 'rgba(255, 250, 244, 0.82)', border: '1px solid rgba(255, 255, 255, 0.7)', display: 'grid', gridTemplateColumns: '34px minmax(0, 1fr)', columnGap: 10, rowGap: 2, alignContent: 'center' }}>
+                    <div key={item.label} style={{ padding: '16px', borderRadius: '24px', background: 'rgba(255, 250, 244, 0.62)', border: '1px solid rgba(255, 255, 255, 0.62)', boxShadow: '0 8px 20px rgba(146, 96, 52, 0.06)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', display: 'grid', gridTemplateColumns: '34px minmax(0, 1fr)', columnGap: 10, rowGap: 2, alignContent: 'center' }}>
                       <span style={{ gridRow: '1 / span 2', alignSelf: 'center', color: '#b4652a', display: 'grid', placeItems: 'center' }}><Icon size={26} strokeWidth={1.8} /></span>
                       <span style={{ color: '#4a2f1f', fontSize: 14, fontWeight: 500, whiteSpace: 'nowrap' }}>{item.label}</span>
                       <strong style={{ fontSize: '26px', color: '#3f2a1d', fontVariantNumeric: 'tabular-nums', lineHeight: 1.15 }}>{item.value}</strong>
@@ -2808,17 +2808,19 @@ export const ContactPage = () => {
               {copyable ? (
                 <button
                   type="button"
+                  data-compact="true"
                   aria-label={`复制${item.title}`}
                   onClick={() => void copyEmail(item.value)}
                   style={{
                     minWidth: 64,
                     minHeight: 40,
+                    height: 40,
                     padding: '0 14px',
                     border: '1px solid var(--nl-primary-border)',
-                    borderRadius: 10,
+                    borderRadius: 12,
                     background: 'transparent',
                     color: 'var(--nl-accent)',
-                    fontSize: 12,
+                    fontSize: 14,
                     fontWeight: 600,
                     cursor: 'pointer',
                   }}

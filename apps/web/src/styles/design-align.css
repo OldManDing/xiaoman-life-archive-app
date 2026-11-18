@@ -4740,3 +4740,126 @@
   color: #8B7160 !important;
   font-size: 13px !important;
 }
+
+
+/* ============================================================
+   256. 全局按钮统一（2026-11-18 用户指令）
+   主按钮一律走 primaryButtonStyle：#A9581B / 52 / 999 / 17-600。
+   危险操作用主题棕红 #A8482C（不用正红 #C0392B）。
+   ============================================================ */
+
+/* 之前为各屏单独收的圆角一律回归胶囊 */
+#root#root#root .archive-shell button[type="submit"],
+#root#root#root .archive-shell .ac-submit,
+#root#root#root .info-shell button[type="submit"],
+#root#root#root .contact-shell button[type="submit"] {
+  border-radius: 999px !important;
+  min-height: 52px !important;
+  height: 52px !important;
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  background: #A9581B !important;
+  background-image: none !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 10px 22px rgba(146, 96, 52, 0.18) !important;
+}
+
+/* 24 复制按钮恢复设计 40 高、12 圆角（次级小按钮，不受 44 热区约束） */
+#root#root#root button[class*="copy"] {
+  min-height: 40px !important;
+  height: 40px !important;
+  border-radius: 12px !important;
+  font-size: 14px !important;
+  padding: 0 14px !important;
+}
+
+/* 危险色统一为棕红 #A8482C */
+#root#root#root .info-shell button[class*="danger"],
+#root#root#root .info-shell button[aria-disabled="false"] {
+  background: #A8482C !important;
+  box-shadow: 0 10px 22px rgba(168, 72, 44, 0.18) !important;
+}
+
+#root#root#root .pf-menu-row.is-danger svg {
+  color: #A8482C !important;
+  stroke: #A8482C !important;
+}
+
+
+/* 23 关于我们：行高 68 真正生效（AboutMenuLink 内部行） */
+#root#root#root .info-shell a[class*="about"],
+#root#root#root .info-shell .info-card > a,
+#root#root#root .info-shell .info-card > button {
+  min-height: 68px !important;
+}
+
+#root#root#root .info-shell .info-card a:first-child {
+  padding-top: 4px !important;
+}
+
+/* 28 错误页：导航高度收到 44（仅错误页作用域） */
+#root#root#root .app-page-shell:has(.error-badge) .app-topbar {
+  min-height: 44px !important;
+  height: 44px !important;
+}
+
+#root#root#root .app-page-shell:has(.error-badge) .app-topbar h1 {
+  font-size: 21px !important;
+}
+
+
+/* 12 邀请家人：顶部横幅（设计 3.07:1），用现有 hero-park 素材 */
+#root#root#root .invite-banner {
+  width: 100% !important;
+  aspect-ratio: 825 / 302 !important;
+  border-radius: 18px !important;
+  overflow: hidden !important;
+  margin-bottom: 18px !important;
+  background: rgba(255, 250, 244, 0.5) !important;
+}
+
+#root#root#root .invite-banner img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center 42% !important;
+  display: block !important;
+}
+
+/* 14 欢迎页：只有 1 页内容时不显示多点指示器（避免假交互） */
+#root#root#root .wl-dots {
+  display: none !important;
+}
+
+
+/* 24 复制按钮：data-compact 显式豁免 44 热区 */
+#root#root#root button[data-compact="true"] {
+  min-height: 40px !important;
+  height: 40px !important;
+  border-radius: 12px !important;
+  font-size: 14px !important;
+}
+
+
+/* 27 修正：统一主按钮规则不覆盖禁用态；警示标题 17 不受全局 15 影响 */
+#root#root#root .info-shell button[type="submit"]:disabled {
+  background: rgba(169, 88, 27, 0.45) !important;
+  color: #FFFFFF !important;
+  box-shadow: none !important;
+}
+
+#root#root#root .info-shell .delete-warning-title {
+  font-size: 17px !important;
+  font-weight: 600 !important;
+}
+
+#root#root#root .info-shell button[data-compact="true"],
+#root#root#root button[data-compact="true"] {
+  font-size: 14px !important;
+}
+
+
+/* 12 横幅取景：保留孩子与牵手，避免裁到脸部 */
+#root#root#root .invite-banner img {
+  object-position: center 46% !important;
+}

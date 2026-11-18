@@ -1342,6 +1342,9 @@ const invitedMembers = members.filter((member) => member.role !== 'owner');
   return (
     <PageShell title="邀请家人" backTo="/family" className="invite-shell">
       <Panel style={{ padding: '20px 20px 22px' }} className="invite-card">
+        <div className="invite-banner">
+          <img src="/photos/welcome-hero.jpg" alt="家人牵着孩子在草地上散步" />
+        </div>
         <div className="invite-qr">
           <img src="/photos/invite-qr.png" alt="邀请二维码" />
           <span className="invite-qr-dot" aria-hidden="true" />
