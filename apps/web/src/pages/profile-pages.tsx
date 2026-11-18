@@ -2556,6 +2556,41 @@ export const HelpFeedbackPage = () => {
   const initialContent = getHelpFeedbackContent(topic, memberNo);
   const [category, setCategory] = useState(initialCategory);
   const [content, setContent] = useState(initialContent);
+  type PendingFeedback = { category: string; content: string; contact: string; topic?: string; created_at: string; sync_status?: string };
+  const readPendingFeedback = (): PendingFeedback[] => {
+    try {
+      const raw = window.localStorage.getItem('xiaoman-web-feedback-list');
+      return raw ? (JSON.parse(raw) as PendingFeedback[]) : [];
+    } catch {
+      return [];
+    }
+  };
+  const [pendingFeedback, setPendingFeedback] = useState<PendingFeedback[]>(() => readPendingFeedback());
+  const [retryingIndex, setRetryingIndex] = useState<number | null>(null);
+
+  const rewritePendingFeedback = (list: PendingFeedback[]) => {
+    setPendingFeedback(list);
+    try {
+      window.localStorage.setItem('xiaoman-web-feedback-list', JSON.stringify(list));
+    } catch {
+      // 存储不可用时只影响本机暂存，不阻断页面
+    }
+  };
+
+  const retryPendingFeedback = async (index: number) => {
+    const item = pendingFeedback[index];
+    if (!item || retryingIndex !== null) return;
+    setRetryingIndex(index);
+    try {
+      await webApi.submitFeedback({ category: item.category, content: item.content, contact: item.contact || undefined, topic: item.topic });
+      rewritePendingFeedback(pendingFeedback.filter((_, i) => i !== index));
+      setMessage('待提交的反馈已补发成功');
+    } catch {
+      setMessage('仍然无法连接服务器，稍后再试');
+    } finally {
+      setRetryingIndex(null);
+    }
+  };
   const [contact, setContact] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -2620,6 +2655,7 @@ export const HelpFeedbackPage = () => {
       }
       try {
         window.localStorage.setItem('xiaoman-web-feedback-list', JSON.stringify([item, ...list].slice(0, 20)));
+        setPendingFeedback(readPendingFeedback());
         // 关键：保留用户已经写好的内容，只提示可重试，避免「内容消失」
         setMessage('网络不通，内容已暂存本机。恢复网络后点「重试提交」即可，不必重新填写。');
       } catch {
@@ -2662,6 +2698,27 @@ export const HelpFeedbackPage = () => {
         <strong style={{ color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '20px', fontWeight: 600, letterSpacing: '0.02em', flexShrink: 0 }}>最近反馈</strong>
         <span aria-hidden="true" style={{ flex: 1, height: 1, background: 'rgba(58, 42, 28, 0.12)' }} />
       </div>
+      {pendingFeedback.length ? (
+        <section aria-label="待提交的反馈" className="help-pending">
+          <h3 className="help-pending-title">待提交（{pendingFeedback.length}）</h3>
+          {pendingFeedback.map((item, index) => (
+            <div key={`${item.created_at}-${index}`} className="help-pending-item">
+              <span className="help-pending-body">
+                <strong>{item.category}</strong>
+                <small>{item.content.slice(0, 40)}{item.content.length > 40 ? '…' : ''}</small>
+              </span>
+              <button
+                type="button"
+                className="help-pending-retry"
+                disabled={retryingIndex !== null}
+                onClick={() => void retryPendingFeedback(index)}
+              >
+                {retryingIndex === index ? '提交中…' : '重试'}
+              </button>
+            </div>
+          ))}
+        </section>
+      ) : null}
       {feedbackLoading ? <p style={helperTextStyle}>正在同步反馈状态…</p> : null}
       {feedbackError ? <p style={{ ...helperTextStyle, color: 'var(--nl-danger)' }}>反馈状态同步失败：{feedbackError}</p> : null}
       {!feedbackLoading && !feedbackError && !(feedbackTickets ?? []).length ? (

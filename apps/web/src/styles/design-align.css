@@ -5525,3 +5525,62 @@
   font-size: 15px !important;
   font-weight: 600 !important;
 }
+
+
+/* 26 帮助：本机待提交反馈列表 */
+#root#root#root .help-pending {
+  display: grid !important;
+  gap: 10px !important;
+  margin: 8px 0 4px !important;
+  padding: 14px 16px !important;
+  border-radius: 20px !important;
+  background: rgba(233, 160, 90, 0.12) !important;
+  border: 1px solid rgba(233, 160, 90, 0.26) !important;
+}
+
+#root#root#root .help-pending-title {
+  margin: 0 !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  color: #8A4E14 !important;
+}
+
+#root#root#root .help-pending-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+
+#root#root#root .help-pending-body {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  display: grid !important;
+  gap: 2px !important;
+}
+
+#root#root#root .help-pending-body strong {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: #3A2A1E !important;
+}
+
+#root#root#root .help-pending-body small {
+  font-size: 13px !important;
+  color: #6F5745 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+#root#root#root .help-pending-retry {
+  flex: 0 0 auto !important;
+  min-height: 36px !important;
+  height: 36px !important;
+  padding: 0 16px !important;
+  border-radius: 999px !important;
+  border: none !important;
+  background: #A9581B !important;
+  color: #FFFFFF !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
