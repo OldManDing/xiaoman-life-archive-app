@@ -5438,3 +5438,47 @@
   color: #8A4E14 !important;
   font-weight: 600 !important;
 }
+
+
+/* ============================================================
+   260. 行高收敛：全站只保留 64（信息行）与 76（成员/消息行）
+   原状：64 / 68 / 72 / 76 / 80 / 90 / 92 七档并存
+   ============================================================ */
+
+/* —— 76：成员行、消息卡、联系方式行（带双行内容或头像） —— */
+#root#root#root .fam-member-row,
+#root#root#root .family-shell [class*="member-row"],
+#root#root#root .members-shell [class*="member-row"],
+#root#root#root .msg-card,
+#root#root#root .msg-item,
+#root#root#root .contact-shell .info-card > *,
+#root#root#root .about-shell .info-card > a,
+#root#root#root .about-shell .info-card > button {
+  min-height: 76px !important;
+}
+
+/* —— 64：纯信息行（账号资料、孩子档案、成员详情、安全页） —— */
+#root#root#root .profile-account-shell .ac-row,
+#root#root#root .archive-shell .ac-row,
+#root#root#root .member-detail-shell .info-card > *,
+#root#root#root .security-shell .info-card > *,
+#root#root#root .delete-shell .info-card > * {
+  min-height: 64px !important;
+}
+
+/* 账号页的行是「标签 + 输入/值」，64 会被输入框顶高，允许到 68 但不再到 90 */
+#root#root#root .profile-account-shell .ac-row {
+  min-height: 68px !important;
+  max-height: none !important;
+}
+
+/* —— 设置类行统一 76（11 与 19 同源） —— */
+#root#root#root .settings-shell .set-row {
+  min-height: 76px !important;
+}
+
+/* —— 消息卡内边距随行高收敛，避免内容贴边 —— */
+#root#root#root .msg-card {
+  padding-top: 12px !important;
+  padding-bottom: 12px !important;
+}

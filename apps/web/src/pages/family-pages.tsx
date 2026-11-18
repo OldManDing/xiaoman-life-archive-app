@@ -932,7 +932,7 @@ export const FamilyMembersPage = () => {
                           type="button"
                           onClick={() => void resendInvite(member)}
                           disabled={resendingUserNo === member.user_no}
-                          style={{ border: 'none', background: 'transparent', color: 'var(--nl-accent)', fontSize: 12, fontWeight: 500, textDecoration: 'underline', textUnderlineOffset: 2, cursor: 'pointer', padding: '0 2px', minHeight: 24 }}
+                          style={{ border: 'none', background: 'transparent', color: 'var(--nl-accent)', fontSize: 13, fontWeight: 600, textDecoration: 'underline', textUnderlineOffset: 2, cursor: 'pointer', padding: '0 4px', minHeight: 44, display: 'inline-flex', alignItems: 'center' }}
                         >
                           {resendingUserNo === member.user_no ? '重发中…' : '重发'}
                         </button>
