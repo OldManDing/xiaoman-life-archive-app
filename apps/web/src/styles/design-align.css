@@ -4293,3 +4293,157 @@
   background: transparent !important;
   color: #8A4E14 !important;
 }
+
+
+/* ============================================================
+   250. 23 关于我们：按 20 条清单收口
+   ============================================================ */
+/* #1 #4 品牌圆盘 96、无阴影、无白底 */
+#root#root#root .about-shell [class*="brand"] > *:first-child,
+#root#root#root .about-shell section:first-of-type > div:first-child {
+  width: 96px !important;
+  height: 96px !important;
+  min-width: 96px !important;
+  border-radius: 999px !important;
+  background: #E99E4F !important;
+  box-shadow: none !important;
+  border: none !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+#root#root#root .about-shell section:first-of-type svg {
+  width: 64px !important;
+  height: 64px !important;
+  stroke: #FFFFFF !important;
+  stroke-width: 1.8px !important;
+}
+
+/* #2 头部区去卡片 */
+#root#root#root .about-shell section:first-of-type {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* #3 字标 34 / 600 */
+#root#root#root .about-shell section:first-of-type strong,
+#root#root#root .about-shell section:first-of-type h1 {
+  font-size: 34px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+}
+
+/* #5 行高 68 */
+#root#root#root .about-shell [class*="row"],
+#root#root#root .about-shell .info-row {
+  min-height: 68px !important;
+  height: 68px !important;
+}
+
+/* #6 #19 行图标 24 / 1.8 / 墨棕 */
+#root#root#root .about-shell [class*="row"] svg:first-child {
+  width: 24px !important;
+  height: 24px !important;
+  stroke-width: 1.8px !important;
+  color: #6F5745 !important;
+}
+
+/* #7 行标签 17 / 500 */
+#root#root#root .about-shell [class*="row"] strong,
+#root#root#root .about-shell [class*="row"] span {
+  font-size: 17px !important;
+  font-weight: 500 !important;
+}
+
+/* #9 #12 页脚 13 近墨 */
+#root#root#root .about-shell footer,
+#root#root#root .about-shell [class*="footer"] {
+  font-size: 13px !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+/* #11 卡面 L2 62% */
+#root#root#root .about-shell section {
+  background: rgba(255, 250, 244, 0.62) !important;
+  border: 1px solid rgba(255, 255, 255, 0.62) !important;
+}
+
+/* #10 页底收口 */
+#root#root#root .about-shell {
+  background-image: linear-gradient(180deg, #FDF6EC 0%, #FBEFDF 55%, #F6DCCB 100%) !important;
+}
+
+
+/* 23 关于我们：品牌圆盘 95、字标 34（修正上一条把 SVG 缩到 64 的写法） */
+#root#root#root .about-shell section:first-of-type svg {
+  width: 95px !important;
+  height: 95px !important;
+  margin-bottom: 14px !important;
+}
+
+#root#root#root .about-shell section:first-of-type h2 {
+  font-size: 34px !important;
+  font-weight: 600 !important;
+  line-height: 1.1 !important;
+}
+
+#root#root#root .about-shell section:first-of-type p {
+  font-size: 14px !important;
+  color: #7A5A44 !important;
+}
+
+
+/* 23 关于我们：用 :has(h2) 精确命中品牌区 */
+#root#root#root .about-shell section:has(h2) {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  padding: 24px 0 12px !important;
+}
+
+#root#root#root .about-shell section:has(h2) svg {
+  width: 95px !important;
+  height: 95px !important;
+  margin-bottom: 14px !important;
+}
+
+#root#root#root .about-shell section:has(h2) h2 {
+  font-size: 34px !important;
+  font-weight: 600 !important;
+  line-height: 1.1 !important;
+}
+
+#root#root#root .about-shell section:has(h2) p {
+  font-size: 14px !important;
+  color: #7A5A44 !important;
+}
+
+
+/* 23 关于我们：真实类名是 info-shell（AboutPage 用 info-shell） */
+#root#root#root .info-shell section:has(h2) {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  padding: 24px 0 12px !important;
+}
+
+#root#root#root .info-shell section:has(h2) svg {
+  width: 95px !important;
+  height: 95px !important;
+  margin-bottom: 14px !important;
+}
+
+#root#root#root .info-shell section:has(h2) h2 {
+  font-size: 34px !important;
+  font-weight: 600 !important;
+  line-height: 1.1 !important;
+}
+
+#root#root#root .info-shell section:has(h2) p {
+  font-size: 14px !important;
+  color: #7A5A44 !important;
+}
