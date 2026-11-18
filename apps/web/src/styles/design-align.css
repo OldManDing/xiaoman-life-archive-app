@@ -1359,3 +1359,143 @@
   font-weight: 400 !important;
   box-shadow: 0 2px 8px rgba(146, 96, 52, 0.06) !important;
 }
+
+
+/* 218. 收口三：剩余 12/14 归位 */
+#root#root#root .search-page .search-count-row { font-size: 20px !important; }
+
+#root#root#root .record-media-grid .record-media-single span,
+#root#root#root .record-media-section button span { font-size: 15px !important; font-weight: 500 !important; }
+
+#root#root#root .invite-shell span,
+#root#root#root .invite-shell div,
+#root#root#root .invite-shell p {
+  font-size: 13px !important;
+}
+#root#root#root .invite-shell .invite-title,
+#root#root#root .invite-shell .invite-code-value { font-size: 20px !important; }
+
+
+/* 219. 最后两处：搜索计数行与邀请页所有文本 */
+#root#root#root .search-count-row,
+#root#root#root .search-count-row span,
+#root#root#root .search-count-row strong { font-size: 20px !important; }
+
+#root#root#root [class*="invite"] span,
+#root#root#root [class*="invite"] p,
+#root#root#root [class*="invite"] small { font-size: 13px !important; }
+
+
+/* 220. 邀请页内联按钮字号归位 */
+#root#root#root [class*="invite"] button,
+#root#root#root [class*="invite"] a { font-size: 15px !important; }
+
+
+/* 221. 搜索结果真实类名对齐（.search-row / .search-body / .search-chips） */
+#root#root#root .search-chips { font-size: 17px !important; }
+
+#root#root#root .search-row {
+  display: grid !important;
+  grid-template-columns: 90px minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 14px !important;
+  padding: 12px !important;
+  min-height: 114px !important;
+  border-radius: var(--nl2-r-card) !important;
+  background: var(--nl2-glass-2) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  box-shadow: none !important;
+  text-align: left !important;
+}
+
+#root#root#root .search-row img {
+  width: 90px !important;
+  height: 90px !important;
+  border-radius: var(--nl2-r-thumb) !important;
+  object-fit: cover !important;
+}
+
+#root#root#root .search-body { font-size: 13px !important; }
+
+#root#root#root .search-body strong,
+#root#root#root .search-row strong {
+  display: block !important;
+  font-size: 17px !important;
+  line-height: 1.5 !important;
+  font-weight: 500 !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+#root#root#root .search-body span { font-size: 13px !important; color: var(--nl2-ink-500) !important; }
+
+
+/* ============================================================
+   11 设置：分组标题 17 / 组卡玻璃 r24 / 行 76 / 开关琥珀
+   ============================================================ */
+#root#root .set-group-title {
+  font-size: 17px !important;
+  line-height: 1.5 !important;
+  font-weight: 600 !important;
+  color: var(--nl2-ink-900) !important;
+  margin: 18px 0 8px !important;
+}
+
+#root#root .set-card {
+  background: var(--nl2-glass-2) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  border-radius: var(--nl2-r-card) !important;
+  box-shadow: none !important;
+  overflow: hidden !important;
+}
+
+#root#root .set-row {
+  min-height: 76px !important;
+  border-bottom: 1px solid var(--nl2-line) !important;
+  background: transparent !important;
+  padding: 0 16px !important;
+}
+
+#root#root .set-card > .set-row:last-child {
+  border-bottom: none !important;
+}
+
+#root#root .set-row svg {
+  width: 24px !important;
+  height: 24px !important;
+  stroke-width: 1.8 !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+#root#root .set-row-title,
+#root#root .set-row strong {
+  font-size: 17px !important;
+  line-height: 1.5 !important;
+  font-weight: 500 !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+#root#root .set-row-sub,
+#root#root .set-row small,
+#root#root .set-row-desc {
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  color: var(--nl2-ink-500) !important;
+}
+
+/* 开关：开=#A9581B 实心，关=灰米 */
+#root#root .set-row [role="switch"],
+#root#root .set-row .set-switch {
+  width: 52px !important;
+  height: 32px !important;
+  border-radius: 999px !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+#root#root .set-row [role="switch"][aria-checked="true"],
+#root#root .set-row .set-switch.is-on {
+  background: var(--nl2-btn) !important;
+  background-image: none !important;
+}
