@@ -732,3 +732,127 @@
 #root#root .app-page-shell:has(.rd-topbar) .rd-chips { order: 2 !important; }
 #root#root .app-page-shell:has(.rd-topbar) .rd-copy { order: 3 !important; }
 #root#root .app-page-shell:has(.rd-topbar) .rd-gallery { order: 4 !important; }
+
+
+/* ============================================================
+   04 新建/15 编辑：媒体虚线块、记录人行、标签卡、仅家人可见
+   ============================================================ */
+/* 媒体添加块：110 高、r18 虚线、图标 + 15 文案 */
+#root#root .record-media-section {
+  display: grid !important;
+  gap: 10px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  min-height: 0 !important;
+}
+
+#root#root .record-media-section .record-media-grid {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 10px !important;
+}
+
+#root#root .record-media-section .record-media-grid > button,
+#root#root .record-media-section .media-add-tile,
+#root#root .record-media-section .record-media-action {
+  height: 110px !important;
+  min-height: 110px !important;
+  border-radius: var(--nl2-r-row) !important;
+  border: 1.5px dashed rgba(169, 88, 27, 0.38) !important;
+  background: rgba(255, 250, 244, 0.45) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  color: var(--nl2-ink-500) !important;
+  font-size: 15px !important;
+  font-weight: 500 !important;
+}
+
+#root#root .record-media-section .record-media-grid > button svg,
+#root#root .record-media-section .media-add-tile svg {
+  width: 26px !important;
+  height: 26px !important;
+  color: var(--nl2-ink-500) !important;
+  stroke-width: 1.8 !important;
+}
+
+/* 记录人行：64 高、头像 32 */
+#root#root .record-form-page .record-recorder {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  min-height: 64px !important;
+  padding: 0 18px !important;
+  border-radius: var(--nl2-r-card) !important;
+  background: var(--nl2-glass-2) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  box-shadow: none !important;
+  margin: 10px 0 0 !important;
+  order: 99 !important;
+}
+
+#root#root .record-form-page .record-recorder img,
+#root#root .record-form-page .record-recorder .ref-avatar {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 999px !important;
+  object-fit: cover !important;
+  flex: 0 0 auto !important;
+}
+
+#root#root .record-form-page .record-recorder span {
+  font-size: 15px !important;
+  line-height: 1.5 !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+/* 标签区：玻璃卡内 3 个 chip */
+#root#root .record-form-page .record-quick-tags {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
+  padding: 12px 14px !important;
+  border-radius: var(--nl2-r-card) !important;
+  background: var(--nl2-glass-2) !important;
+  background-image: none !important;
+  border: 1px solid rgba(255, 255, 255, 0.7) !important;
+  box-shadow: none !important;
+  margin: 10px 0 0 !important;
+}
+
+/* 仅家人可见 */
+#root#root .record-inline-submit p {
+  margin: 8px 0 0 !important;
+  text-align: center !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  color: var(--nl2-ink-500) !important;
+}
+
+
+/* 04：仅家人可见必须可见，并为它腾出 30dp（压缩正文卡） */
+#root#root#root .record-form-page.is-create .record-inline-submit p,
+#root#root#root .record-inline-submit p {
+  display: block !important;
+  visibility: visible !important;
+  height: auto !important;
+  margin: 8px 0 0 !important;
+  text-align: center !important;
+  font-size: 13px !important;
+  color: var(--nl2-ink-500) !important;
+}
+
+#root#root .record-form-page.is-create .record-body-card,
+#root#root .record-form-page.is-create .record-body-card textarea,
+#root#root .record-form-page.is-create .record-editor-body-input {
+  min-height: 112px !important;
+  height: 112px !important;
+  max-height: 140px !important;
+}
