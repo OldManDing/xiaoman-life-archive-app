@@ -2970,3 +2970,105 @@
   width: 20px !important;
   height: 20px !important;
 }
+
+
+/* ============================================================
+   232. 05 家庭：按 20 条清单收口
+   ============================================================ */
+/* #1 #10 孩子卡 L1 78% + 圆角 26 */
+#root#root#root .fam-hero {
+  background: rgba(255, 250, 244, 0.78) !important;
+  border-radius: 26px !important;
+  border: 1px solid rgba(255, 255, 255, 0.76) !important;
+  box-shadow: 0 10px 28px rgba(146, 96, 52, 0.10) !important;
+}
+
+/* #6 查看档案：实心琥珀面 + 墨字 13 */
+#root#root#root .fam-hero button,
+#root#root#root .fam-hero a[class*="archive"] {
+  background: #F3A85C !important;
+  background-image: none !important;
+  color: #3A2A1E !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* #8 成员行 72 高、横向内距 18 */
+#root#root#root .fam-member-row {
+  min-height: 72px !important;
+  height: 72px !important;
+  padding: 0 18px !important;
+}
+
+/* #15 邀请圆钮 44 */
+#root#root#root .fam-hero [class*="invite"],
+#root#root#root .fam-invite-btn,
+#root#root#root .fam-invite-circle {
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+}
+
+/* #16 虚线邀请行圆角与卡片同族 24 */
+#root#root#root [class*="invite-row"],
+#root#root#root .fam-dashed {
+  border-radius: 24px !important;
+}
+
+/* #17 管理入口 32 高 */
+#root#root#root .fam-manage,
+#root#root#root [class*="manage"] {
+  min-height: 32px !important;
+  height: 32px !important;
+}
+
+
+/* 05 #6 查看档案（.fam-hero-cta）：实心琥珀 + 墨字 13 */
+#root#root#root .fam-hero-cta {
+  background: #F3A85C !important;
+  background-image: none !important;
+  color: #3A2A1E !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 16px !important;
+  height: 36px !important;
+  border-radius: 999px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+
+/* 05 #5 孩子卡副标：单行「1岁8个月 · 2025年3月出生」 */
+#root#root#root .fam-hero-meta {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  color: var(--nl2-ink-500) !important;
+  flex-wrap: nowrap !important;
+  white-space: nowrap !important;
+}
+
+#root#root#root .fam-hero-meta-birth::before {
+  content: "·" !important;
+  margin-right: 6px !important;
+  color: rgba(58, 42, 28, 0.35) !important;
+}
+
+
+/* 05 副标不被裁切：给内容列留空间 */
+#root#root#root .fam-hero-body {
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  overflow: visible !important;
+}
+
+#root#root#root .fam-hero-meta {
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
