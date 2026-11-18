@@ -2340,3 +2340,27 @@
 /* 09 性别胶囊：避免右侧被卡片裁切 */
 #root#root .onb-page .onb-gender { display: flex !important; gap: 8px !important; flex-wrap: nowrap !important; }
 #root#root .onb-page .onb-gender-opt { min-width: 96px !important; padding: 0 14px !important; }
+
+
+/* 222. 记录页卡片圆角统一到 24（设计：内容 24 / 行 18） */
+#root#root .record-form-page .record-editor-title-row,
+#root#root .record-form-page .record-body-card,
+#root#root .record-form-page .record-location-row,
+#root#root .record-form-page .record-recorder,
+#root#root .record-form-page .record-quick-tags {
+  border-radius: 24px !important;
+}
+
+#root#root .app-page-shell:has(.rd-topbar) .rd-gallery,
+#root#root .app-page-shell:has(.rd-topbar) .rd-chips,
+#root#root .app-page-shell:has(.rd-topbar) .rd-body > section {
+  border-radius: 24px !important;
+}
+
+
+/* 223. 卡片圆角收口：记录表单与账号页内容卡统一 24 */
+#root#root .record-form-page form > section,
+#root#root .record-form-page .record-card,
+#root#root .account-shell section {
+  border-radius: 24px !important;
+}
