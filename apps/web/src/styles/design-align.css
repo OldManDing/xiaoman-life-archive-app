@@ -2126,3 +2126,50 @@
   color: #FFFFFF !important;
   box-shadow: var(--nl2-shadow-btn) !important;
 }
+
+
+/* ============================================================
+   26 帮助与反馈：字段标题 20 衬线、提交按钮整宽 68 深棕
+   ============================================================ */
+#root#root .info-shell form label,
+#root#root .info-shell form > div > label {
+  font-family: var(--nl-font-display, "Songti SC", serif) !important;
+  font-size: 20px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  color: var(--nl2-ink-900) !important;
+}
+
+#root#root .info-shell form {
+  display: grid !important;
+  gap: 16px !important;
+}
+
+#root#root .info-shell form button[type="submit"] {
+  width: 100% !important;
+  height: 68px !important;
+  min-height: 68px !important;
+  border-radius: 999px !important;
+  font-size: 17px !important;
+  font-weight: 600 !important;
+}
+
+#root#root .info-shell form button[type="submit"]:not(:disabled) {
+  background: var(--nl2-btn) !important;
+  background-image: none !important;
+  color: #FFFFFF !important;
+  box-shadow: var(--nl2-shadow-btn) !important;
+}
+
+/* 提交按钮右侧的内联提示改为块级说明（设计为整宽按钮） */
+#root#root .info-shell form > div:has(button[type="submit"]) {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 8px !important;
+}
+
+#root#root .info-shell form > div:has(button[type="submit"]) > *:not(button) {
+  font-size: 13px !important;
+  color: var(--nl2-ink-500) !important;
+  text-align: center !important;
+}

@@ -2516,8 +2516,8 @@ export const HelpFeedbackPage = () => {
             <input style={inputStyle} value={contact} onChange={(event) => setContact(event.target.value)} placeholder="选填，方便我们回复你（可选）" />
           </Field>
           {message ? <p style={{ ...helperTextStyle, color: isPositiveStatusMessage(message) ? 'var(--nl-success)' : 'var(--nl-danger)' }}>{message}</p> : null}
-          <div style={buttonRowStyle}>
-            <button type="button" style={{ ...primaryButtonStyle, borderRadius: 12, opacity: submitting || !content.trim() ? 0.55 : 1 }} onClick={() => void submitFeedback()} disabled={submitting || !content.trim()}>
+          <div style={{ ...buttonRowStyle, display: 'grid', gridTemplateColumns: '1fr', gap: 8 }}>
+            <button type="button" style={{ ...primaryButtonStyle, background: '#A9581B', backgroundImage: 'none', borderRadius: 999, minHeight: 68, width: '100%', boxShadow: '0 10px 22px rgba(146,96,52,0.18)', fontSize: 17, opacity: submitting || !content.trim() ? 0.55 : 1 }} onClick={() => void submitFeedback()} disabled={submitting || !content.trim()}>
               {submitting ? '提交中…' : '提交反馈'}
             </button>
             {!content.trim() ? <span style={{ ...helperTextStyle, alignSelf: 'center' }}>填写反馈内容后可提交</span> : null}
@@ -2525,7 +2525,7 @@ export const HelpFeedbackPage = () => {
         </div>
       </Panel>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '6px 2px 0' }}>
-        <strong style={{ color: 'var(--nl-ink)', fontSize: '17px', fontWeight: 600, flexShrink: 0 }}>最近反馈</strong>
+        <strong style={{ color: 'var(--nl-ink)', fontFamily: 'var(--nl-font-display)', fontSize: '20px', fontWeight: 600, letterSpacing: '0.02em', flexShrink: 0 }}>最近反馈</strong>
         <span aria-hidden="true" style={{ flex: 1, height: 1, background: 'rgba(58, 42, 28, 0.12)' }} />
       </div>
       {feedbackLoading ? <p style={helperTextStyle}>正在同步反馈状态…</p> : null}
