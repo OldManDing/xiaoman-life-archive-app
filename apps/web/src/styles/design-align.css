@@ -3998,3 +3998,78 @@
   font-size: 13px !important;
   color: var(--nl2-ink-500) !important;
 }
+
+
+/* ============================================================
+   246. 19 通知设置：按 20 条清单收口
+   ============================================================ */
+/* #8 #18 卡片 L1 78% 白 + r26 */
+#root#root#root .settings-shell .set-card {
+  background: rgba(255, 255, 255, 0.78) !important;
+  border-radius: 26px !important;
+  padding: 6px 18px !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  backdrop-filter: blur(20px) !important;
+}
+
+/* #11 组标题 17/600 无衬线 */
+#root#root#root .settings-shell .set-group-title {
+  font-family: "HarmonyOS Sans SC", MiSans, sans-serif !important;
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0 !important;
+}
+
+/* #9 开关开态 #A9581B、关态 #E8D9C9 无描边 */
+#root#root#root .settings-shell [aria-pressed="true"] > span:first-child {
+  background: #A9581B !important;
+}
+
+#root#root#root .settings-shell [aria-pressed="false"] > span:first-child {
+  background: #E8D9C9 !important;
+  border: none !important;
+}
+
+/* #19 轨道 42×24 */
+#root#root#root .settings-shell [aria-pressed] > span:first-child {
+  width: 42px !important;
+  height: 24px !important;
+}
+
+/* #14 分隔线从图标列起、右侧留 18 */
+#root#root#root .settings-shell .set-row {
+  border-bottom: none !important;
+  position: relative !important;
+}
+
+#root#root#root .settings-shell .set-row:not(.is-last)::after {
+  content: "" !important;
+  position: absolute !important;
+  left: 62px !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  height: 1px !important;
+  background: rgba(58, 42, 28, 0.08) !important;
+}
+
+/* #6 去掉行级 opacity */
+#root#root#root .settings-shell .set-row {
+  opacity: 1 !important;
+}
+
+/* #10 页脚 13 居中 */
+#root#root#root .settings-shell .set-footer {
+  font-size: 13px !important;
+  text-align: center !important;
+  color: var(--nl2-ink-500) !important;
+}
+
+/* #17 背景回规范双色 */
+#root#root#root .settings-shell {
+  background-image: linear-gradient(180deg, #FDF6EC 0%, #FBEFDF 55%, #F6DCCB 100%) !important;
+}
+
+/* #20 底部留白 */
+#root#root#root .settings-shell {
+  padding-bottom: max(28px, 8vh) !important;
+}

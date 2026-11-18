@@ -917,7 +917,7 @@ export const NotificationSettingsPage = () => {
     },
     {
       title: '免打扰',
-      items: [{ key: 'quiet', label: '免打扰时段', desc: '22:00–07:00', icon: Moon }],
+      items: [{ key: 'quiet', label: '免打扰', desc: '', icon: Moon, navigate: true }],
     },
   ];
 
