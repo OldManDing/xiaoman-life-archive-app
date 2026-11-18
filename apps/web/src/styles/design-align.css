@@ -2383,3 +2383,11 @@
 #root#root .search-page .search-main section {
   font-size: 15px !important;
 }
+
+
+/* 226. 记录表单内控件圆角归位：日期控件/媒体格 16（控件档） */
+#root#root .record-form-page .app-date-control,
+#root#root .record-form-page .record-media-single,
+#root#root .record-form-page .record-media-single > button {
+  border-radius: 16px !important;
+}
